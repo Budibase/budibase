@@ -5,7 +5,6 @@
     Label,
     Select,
     Toggle,
-    RadioGroup,
     Icon,
     DatePicker,
     Modal,
@@ -26,14 +25,16 @@
     ALLOWABLE_STRING_TYPES,
     ALLOWABLE_NUMBER_TYPES,
     SWITCHABLE_TYPES,
+    PrettyRelationshipDefinitions,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { truncate } from "lodash"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
+  import { FieldType } from "@budibase/types"
+  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -42,6 +43,7 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
+  const USER_REFRENCE_TYPE = FIELDS.BB_REFERENCE_USER.compositeType
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -57,6 +59,12 @@
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
 
+  let relationshipPart1 = PrettyRelationshipDefinitions.Many
+  let relationshipPart2 = PrettyRelationshipDefinitions.One
+
+  let relationshipTableIdPrimary = null
+  let relationshipTableIdSecondary = null
+
   let table = $tables.selected
   let confirmDeleteDialog
   let savingColumn
@@ -64,18 +72,65 @@
   let jsonSchemaModal
   let allowedTypes = []
   let editableColumn = {
-    type: "string",
+    type: fieldDefinitions.STRING.type,
     constraints: fieldDefinitions.STRING.constraints,
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
   }
+  let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+  let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
 
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
 
+  let relationshipMap = {
+    [RelationshipType.ONE_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.ONE,
+    },
+    [RelationshipType.MANY_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+    [RelationshipType.MANY_TO_ONE]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
+    },
+  }
+
+  $: {
+    // this parses any changes the user has made when creating a new internal relationship
+    // into what we expect the schema to look like
+    if (editableColumn.type === LINK_TYPE) {
+      relationshipTableIdPrimary = table._id
+      if (relationshipPart1 === PrettyRelationshipDefinitions.ONE) {
+        relationshipOpts2 = relationshipOpts2.filter(
+          opt => opt !== PrettyRelationshipDefinitions.ONE
+        )
+      } else {
+        relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
+      }
+
+      if (relationshipPart2 === PrettyRelationshipDefinitions.ONE) {
+        relationshipOpts1 = relationshipOpts1.filter(
+          opt => opt !== PrettyRelationshipDefinitions.ONE
+        )
+      } else {
+        relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+      }
+      // Determine the relationship type based on the selected values of both parts
+      editableColumn.relationshipType = Object.entries(relationshipMap).find(
+        ([_, parts]) =>
+          parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
+      )?.[0]
+      // Set the tableId based on the selected table
+      editableColumn.tableId = relationshipTableIdSecondary
+    }
+  }
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
+
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
@@ -83,6 +138,23 @@
       primaryDisplay =
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
+
+      if (editableColumn.type === FieldType.BB_REFERENCE) {
+        editableColumn.type = `${editableColumn.type}_${editableColumn.subtype}`
+      }
+      // Here we are setting the relationship values based on the editableColumn
+      // This part of the code is used when viewing an existing field hence the check
+      // for the tableId
+      if (editableColumn.type === LINK_TYPE && editableColumn.tableId) {
+        relationshipTableIdPrimary = table._id
+        relationshipTableIdSecondary = editableColumn.tableId
+        if (editableColumn.relationshipType in relationshipMap) {
+          const { part1, part2 } =
+            relationshipMap[editableColumn.relationshipType]
+          relationshipPart1 = part1
+          relationshipPart2 = part2
+        }
+      }
     } else if (!savingColumn) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
@@ -99,6 +171,7 @@
         editableColumn.name = "Column 01"
       }
     }
+
     allowedTypes = getAllowedTypes()
   }
 
@@ -157,14 +230,10 @@
     !uneditable &&
     editableColumn?.type !== AUTO_TYPE &&
     !editableColumn.autocolumn
-  $: relationshipOptions = getRelationshipOptions(editableColumn)
   $: external = table.type === "external"
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
-    opt =>
-      opt._id !== $tables.selected._id &&
-      opt.type === table.type &&
-      table.sourceId === opt.sourceId
+    opt => opt.type === table.type && table.sourceId === opt.sourceId
   )
   $: typeEnabled =
     !originalName ||
@@ -179,6 +248,14 @@
     }
 
     let saveColumn = cloneDeep(editableColumn)
+
+    // Handle types on composite types
+    const definition = fieldDefinitions[saveColumn.type.toUpperCase()]
+    if (definition && saveColumn.type === definition.compositeType) {
+      saveColumn.type = definition.type
+      saveColumn.subtype = definition.subtype
+      delete saveColumn.compositeType
+    }
 
     if (saveColumn.type === AUTO_TYPE) {
       saveColumn = buildAutoColumn(
@@ -258,9 +335,10 @@
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
-    }
-    if (editableColumn.type === FORMULA_TYPE) {
+    } else if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
+    } else if (editableColumn.type === USER_REFRENCE_TYPE) {
+      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
     }
   }
 
@@ -288,35 +366,6 @@
     return match ? parseInt(match[1]) : 0
   }
 
-  function getRelationshipOptions(field) {
-    if (!field || !field.tableId) {
-      return null
-    }
-    const linkTable = tableOptions?.find(table => table._id === field.tableId)
-    if (!linkTable) {
-      return null
-    }
-    const thisName = truncate(table.name, { length: 14 }),
-      linkName = truncate(linkTable.name, { length: 14 })
-    return [
-      {
-        name: `Many ${thisName} rows → many ${linkName} rows`,
-        alt: `Many ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_MANY,
-      },
-      {
-        name: `One ${linkName} row → many ${thisName} rows`,
-        alt: `One ${linkTable.name} rows → many ${table.name} rows`,
-        value: RelationshipType.ONE_TO_MANY,
-      },
-      {
-        name: `One ${thisName} row → many ${linkName} rows`,
-        alt: `One ${table.name} rows → many ${linkTable.name} rows`,
-        value: RelationshipType.MANY_TO_ONE,
-      },
-    ]
-  }
-
   function getAllowedTypes() {
     if (
       originalName &&
@@ -328,7 +377,9 @@
       ALLOWABLE_NUMBER_TYPES.indexOf(editableColumn.type) !== -1
     ) {
       return ALLOWABLE_NUMBER_OPTIONS
-    } else if (!external) {
+    }
+
+    if (!external) {
       return [
         ...Object.values(fieldDefinitions),
         { name: "Auto Column", type: AUTO_TYPE },
@@ -344,6 +395,7 @@
         FIELDS.BOOLEAN,
         FIELDS.FORMULA,
         FIELDS.BIGINT,
+        FIELDS.BB_REFERENCE_USER,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
@@ -357,8 +409,9 @@
     if (!fieldToCheck) {
       return
     }
+
     // most types need this, just make sure its always present
-    if (fieldToCheck && !fieldToCheck.constraints) {
+    if (!fieldToCheck.constraints) {
       fieldToCheck.constraints = {}
     }
     // some string types may have been built by server, may not always have constraints
@@ -438,7 +491,7 @@
     on:change={handleTypeChange}
     options={allowedTypes}
     getOptionLabel={field => field.name}
-    getOptionValue={field => field.type}
+    getOptionValue={field => field.compositeType || field.type}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
       if (option.type == AUTO_TYPE) {
@@ -500,9 +553,9 @@
         <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
       </div>
     </div>
-    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER"}
+    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER" && !editableColumn.dateOnly}
       <div>
-        <div>
+        <div class="row">
           <Label>Time zones</Label>
           <AbsTooltip
             position="top"
@@ -520,10 +573,11 @@
         />
       </div>
     {/if}
+    <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
   {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
-        <Label size="M">Max Value</Label>
+        <Label size="M">Min Value</Label>
       </div>
       <div class="input-length">
         <Input
@@ -546,30 +600,17 @@
       </div>
     </div>
   {:else if editableColumn.type === "link"}
-    <Select
-      label="Table"
-      disabled={linkEditDisabled}
-      bind:value={editableColumn.tableId}
-      options={tableOptions}
-      getOptionLabel={table => table.name}
-      getOptionValue={table => table._id}
-    />
-    {#if relationshipOptions && relationshipOptions.length > 0}
-      <RadioGroup
-        disabled={linkEditDisabled}
-        label="Define the relationship"
-        bind:value={editableColumn.relationshipType}
-        options={relationshipOptions}
-        getOptionLabel={option => option.name}
-        getOptionValue={option => option.value}
-        getOptionTitle={option => option.alt}
-      />
-    {/if}
-    <Input
-      disabled={linkEditDisabled}
-      label={`Column name in other table`}
-      bind:value={editableColumn.fieldName}
-      error={errors.relatedName}
+    <RelationshipSelector
+      bind:relationshipPart1
+      bind:relationshipPart2
+      bind:relationshipTableIdPrimary
+      bind:relationshipTableIdSecondary
+      bind:editableColumn
+      {relationshipOpts1}
+      {relationshipOpts2}
+      {linkEditDisabled}
+      {tableOptions}
+      {errors}
     />
   {:else if editableColumn.type === FORMULA_TYPE}
     {#if !table.sql}
@@ -616,6 +657,17 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
+  {:else if editableColumn.type === USER_REFRENCE_TYPE}
+    <Toggle
+      value={editableColumn.relationshipType === RelationshipType.MANY_TO_MANY}
+      on:change={e =>
+        (editableColumn.relationshipType = e.detail
+          ? RelationshipType.MANY_TO_MANY
+          : RelationshipType.ONE_TO_MANY)}
+      disabled={!isCreating}
+      thin
+      text="Allow multiple users"
+    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
@@ -690,18 +742,19 @@
     display: flex;
     align-items: center;
   }
-
   .tooltip-alignment {
     display: flex;
     align-items: center;
     gap: var(--spacing-xs);
   }
-
   .label-length {
     flex-basis: 40%;
   }
-
   .input-length {
     flex-grow: 1;
+  }
+  .row {
+    gap: 8px;
+    display: flex;
   }
 </style>
