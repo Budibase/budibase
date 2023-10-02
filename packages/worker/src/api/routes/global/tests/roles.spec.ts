@@ -1,6 +1,5 @@
 import { structures, TestConfiguration } from "../../../../tests"
 import { context, db, permissions, roles } from "@budibase/backend-core"
-import { Mock } from "jest-mock"
 import { Database } from "@budibase/types"
 
 jest.mock("@budibase/backend-core", () => {
@@ -47,7 +46,7 @@ describe("/api/global/roles", () => {
   beforeEach(async () => {
     appId = db.generateAppID(config.tenantId)
     appDb = db.getDB(appId)
-    const mockAppDB = context.getAppDB as Mock
+    const mockAppDB = context.getAppDB as jest.Mock
     mockAppDB.mockReturnValue(appDb)
 
     await addAppMetadata()
