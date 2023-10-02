@@ -125,9 +125,10 @@
   }
 
   function validate() {
-    if (!allRequiredAttributesSet() && !hasValidated) {
+    if (!allRequiredAttributesSet(relationshipType) && !hasValidated) {
       return
     }
+
     hasValidated = true
     errorChecker.setType(relationshipType)
     const fromTable = getTable(fromId),
