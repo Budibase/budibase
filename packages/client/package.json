@@ -33,7 +33,7 @@
     "@spectrum-css/typography": "^3.0.2",
     "@spectrum-css/vars": "^3.0.1",
     "apexcharts": "^3.22.1",
-    "dayjs": "^1.10.5",
+    "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
     "html5-qrcode": "^2.2.1",
     "leaflet": "^1.7.1",
@@ -70,14 +70,26 @@
         "dependsOn": [
           {
             "projects": [
+              "@budibase/shared-core",
               "@budibase/string-templates",
-              "@budibase/shared-core"
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/shared-core",
+              "@budibase/string-templates",
+              "@budibase/types"
             ],
             "target": "build"
           }
         ]
       }
     }
-  },
-  "gitHead": "d1836a898cab3f8ab80ee6d8f42be1a9eed7dcdc"
+  }
 }

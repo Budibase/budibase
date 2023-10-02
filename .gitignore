@@ -97,12 +97,8 @@ typings/
 
 bin/
 hosting/.generated*
-packages/builder/cypress.env.json
-packages/builder/cypress/reports
 stats.html
 
-# TypeScript cache
-*.tsbuildinfo
 
 # plugins
 budibase-component

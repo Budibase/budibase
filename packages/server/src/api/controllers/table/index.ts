@@ -1,14 +1,16 @@
 import * as internal from "./internal"
 import * as external from "./external"
 import {
-  validate as validateSchema,
-  isSchema,
   isRows,
+  isSchema,
+  validate as validateSchema,
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   FetchTablesResponse,
+  SaveTableRequest,
+  SaveTableResponse,
   Table,
   TableResponse,
   UserCtx,
@@ -16,6 +18,7 @@ import {
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
+import { cloneDeep } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -33,24 +36,23 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
 export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   const internal = await sdk.tables.getAllInternalTables()
 
-  const externalTables = await sdk.datasources.getExternalDatasources()
+  const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = externalTables.flatMap(table => {
-    let entities = table.entities
+  const external = datasources.flatMap(datasource => {
+    let entities = datasource.entities
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
         type: "external",
-        sourceId: table._id,
-        sql: isSQL(table),
+        sourceId: datasource._id,
+        sql: isSQL(datasource),
       }))
     } else {
       return []
     }
   })
 
-  const response = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
-  ctx.body = response
+  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
 }
 
 export async function find(ctx: UserCtx<void, TableResponse>) {
@@ -60,7 +62,7 @@ export async function find(ctx: UserCtx<void, TableResponse>) {
   ctx.body = sdk.tables.enrichViewSchemas(table)
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const table = ctx.request.body
   const isImport = table.rows
@@ -77,9 +79,9 @@ export async function save(ctx: UserCtx) {
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
+    ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
-  builderSocket?.emitTableUpdate(ctx, savedTable)
+  builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -92,7 +94,7 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
-  builderSocket?.emitTableDeletion(ctx, tableId)
+  builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
 export async function bulkImport(ctx: UserCtx) {

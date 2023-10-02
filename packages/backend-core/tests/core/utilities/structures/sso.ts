@@ -13,9 +13,8 @@ import {
 } from "@budibase/types"
 import { generator } from "./generator"
 import { email, uuid } from "./common"
-import * as shared from "./shared"
-import { user } from "./shared"
-import _ from "lodash"
+import * as users from "./users"
+import sample from "lodash/sample"
 
 export function OAuth(): OAuth2 {
   return {
@@ -26,7 +25,7 @@ export function OAuth(): OAuth2 {
 
 export function authDetails(userDoc?: User): SSOAuthDetails {
   if (!userDoc) {
-    userDoc = user()
+    userDoc = users.user()
   }
 
   const userId = userDoc._id || uuid()
@@ -47,12 +46,12 @@ export function authDetails(userDoc?: User): SSOAuthDetails {
 }
 
 export function providerType(): SSOProviderType {
-  return _.sample(Object.values(SSOProviderType)) as SSOProviderType
+  return sample(Object.values(SSOProviderType)) as SSOProviderType
 }
 
 export function ssoProfile(user?: User): SSOProfile {
   if (!user) {
-    user = shared.user()
+    user = users.user()
   }
   return {
     id: user._id!,

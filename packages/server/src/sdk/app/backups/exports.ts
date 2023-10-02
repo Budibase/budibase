@@ -8,11 +8,7 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import {
-  DB_EXPORT_FILE,
-  GLOBAL_DB_EXPORT_FILE,
-  STATIC_APP_FILES,
-} from "./constants"
+import { DB_EXPORT_FILE, STATIC_APP_FILES } from "./constants"
 import fs from "fs"
 import { join } from "path"
 import env from "../../../environment"
@@ -60,7 +56,7 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
 export async function exportDB(
   dbName: string,
   opts: DBDumpOpts = {}
-): Promise<DBDumpOpts> {
+): Promise<string> {
   const exportOpts = {
     filter: opts?.filter,
     batch_size: 1000,

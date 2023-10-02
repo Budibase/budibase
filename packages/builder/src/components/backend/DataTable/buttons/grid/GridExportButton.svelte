@@ -2,7 +2,7 @@
   import ExportButton from "../ExportButton.svelte"
   import { getContext } from "svelte"
 
-  const { rows, columns, tableId, sort, selectedRows, filter } =
+  const { rows, columns, datasource, sort, selectedRows, filter } =
     getContext("grid")
 
   $: disabled = !$rows.length || !$columns.length
@@ -12,7 +12,7 @@
 <span data-ignore-click-outside="true">
   <ExportButton
     {disabled}
-    view={$tableId}
+    view={$datasource.tableId}
     filters={$filter}
     sorting={{
       sortColumn: $sort.column,

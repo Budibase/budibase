@@ -30,6 +30,7 @@ import {
   objectStore,
   roles,
   tenancy,
+  users,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import {
@@ -38,9 +39,8 @@ import {
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream } from "../../utilities"
-import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
+import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
-import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
@@ -49,7 +49,6 @@ import {
   MigrationType,
   PlanType,
   Screen,
-  SocketSession,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
@@ -167,7 +166,7 @@ export const addSampleData = async (ctx: UserCtx) => {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
   } catch (err: any) {
-    const defaultDbDocs = buildDefaultDocs()
+    const defaultDbDocs = await buildDefaultDocs()
 
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
@@ -177,32 +176,10 @@ export const addSampleData = async (ctx: UserCtx) => {
 }
 
 export async function fetch(ctx: UserCtx) {
-  const dev = ctx.query && ctx.query.status === AppStatus.DEV
-  const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
-
-  const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
-
-  // get the locks for all the dev apps
-  if (dev || all) {
-    const locks = await getLocksById(appIds)
-    for (let app of apps) {
-      const lock = locks[app.appId]
-      if (lock) {
-        app.lockedBy = lock
-      } else {
-        // make sure its definitely not present
-        delete app.lockedBy
-      }
-    }
-  }
-
-  // Enrich apps with all builder user sessions
-  const enrichedApps = await sdk.users.sessions.enrichApps(apps)
-
-  ctx.body = await checkAppMetadata(enrichedApps)
+  ctx.body = await sdk.applications.fetch(
+    ctx.query.status as AppStatus,
+    ctx.user
+  )
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
@@ -222,6 +199,7 @@ export async function fetchAppDefinition(ctx: UserCtx) {
 
 export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
+  const appId = context.getAppId()
   let application = await db.get<any>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
@@ -233,7 +211,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user.builder && ctx.user.builder.global)) {
+  if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
@@ -303,12 +281,7 @@ async function performAppCreate(ctx: UserCtx) {
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-100)",
-        links: [
-          {
-            url: "/home",
-            text: "Home",
-          },
-        ],
+        links: [],
       },
       theme: "spectrum--light",
       customTheme: {
@@ -336,6 +309,11 @@ async function performAppCreate(ctx: UserCtx) {
           newApplication[key] = existing[key]
         }
       })
+
+      // Keep existing validation setting
+      if (!existing.features?.componentValidation) {
+        newApplication.features!.componentValidation = false
+      }
 
       // Migrate navigation settings and screens if required
       if (existing) {
@@ -593,6 +571,28 @@ export async function sync(ctx: UserCtx) {
   } catch (err: any) {
     ctx.throw(err.status || 400, err.message)
   }
+}
+
+export async function importToApp(ctx: UserCtx) {
+  const { appId } = ctx.params
+  const appExport = ctx.request.files?.appExport
+  const password = ctx.request.body.encryptionPassword as string
+  if (!appExport) {
+    ctx.throw(400, "Must supply app export to import")
+  }
+  if (Array.isArray(appExport)) {
+    ctx.throw(400, "Must only supply one app export")
+  }
+  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  try {
+    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  } catch (err: any) {
+    ctx.throw(
+      500,
+      `Unable to perform update, please retry - ${err?.message || err}`
+    )
+  }
+  ctx.body = { message: "app updated" }
 }
 
 export async function updateAppPackage(appPackage: any, appId: any) {

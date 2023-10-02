@@ -9,7 +9,10 @@ export enum Feature {
   BRANDING = "branding",
   SCIM = "scim",
   SYNC_AUTOMATIONS = "syncAutomations",
+  APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
+  EXPANDED_PUBLIC_API = "expandedPublicApi",
+  VIEW_PERMISSIONS = "viewPermissions",
 }
 
 export type PlanFeatures = { [key in PlanType]: Feature[] | undefined }

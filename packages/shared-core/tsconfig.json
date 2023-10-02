@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
+    "baseUrl": "..",
+    "rootDir": "src",
     "composite": true,
-    "baseUrl": ".",
-    "paths": {
-      "@budibase/types": ["../types/src"]
-    }
-  }
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "exclude": ["node_modules", "dist"]
 }

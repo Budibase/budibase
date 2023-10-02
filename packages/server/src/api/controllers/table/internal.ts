@@ -9,9 +9,17 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "@budibase/types"
+import {
+  RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  UserCtx,
+  ViewStatisticsSchema,
+  ViewV2,
+} from "@budibase/types"
 import { quotas } from "@budibase/pro"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 
@@ -33,10 +41,12 @@ function checkAutoColumns(table: Table, oldTable?: Table) {
   return table
 }
 
-export async function save(ctx: any) {
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const db = context.getAppDB()
   const { rows, ...rest } = ctx.request.body
-  let tableToSave = {
+  let tableToSave: Table & {
+    _rename?: { old: string; updated: string } | undefined
+  } = {
     type: "table",
     _id: generateTableID(),
     views: {},
@@ -44,7 +54,7 @@ export async function save(ctx: any) {
   }
 
   // if the table obj had an _id then it will have been retrieved
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
@@ -77,10 +87,10 @@ export async function save(ctx: any) {
   }
 
   // Don't rename if the name is the same
-  let { _rename } = tableToSave
+  let _rename: RenameColumn | undefined = tableToSave._rename
   /* istanbul ignore next */
   if (_rename && _rename.old === _rename.updated) {
-    _rename = null
+    _rename = undefined
     delete tableToSave._rename
   }
 
@@ -97,7 +107,20 @@ export async function save(ctx: any) {
     const tableView = tableToSave.views[view]
     if (!tableView) continue
 
-    if (tableView.schema.group || tableView.schema.field) continue
+    if (sdk.views.isV2(tableView)) {
+      tableToSave.views[view] = sdk.views.syncSchema(
+        oldTable!.views![view] as ViewV2,
+        tableToSave.schema,
+        _rename
+      )
+      continue
+    }
+
+    if (
+      (tableView.schema as ViewStatisticsSchema).group ||
+      tableView.schema.field
+    )
+      continue
     tableView.schema = tableToSave.schema
   }
 
@@ -112,7 +135,7 @@ export async function save(ctx: any) {
       tableToSave._rev = linkResp._rev
     }
   } catch (err) {
-    ctx.throw(400, err)
+    ctx.throw(400, err as string)
   }
 
   // don't perform any updates until relationships have been

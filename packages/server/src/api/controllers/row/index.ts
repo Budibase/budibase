@@ -9,10 +9,15 @@ import {
   DeleteRow,
   DeleteRows,
   Row,
-  SearchResponse,
-  SortOrder,
-  SortType,
-  ViewV2,
+  PatchRowRequest,
+  PatchRowResponse,
+  SearchRowResponse,
+  SearchRowRequest,
+  SearchParams,
+  GetRowResponse,
+  ValidateResponse,
+  ExportRowsRequest,
+  ExportRowsResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -21,6 +26,7 @@ import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+export * as views from "./views"
 
 function pickApi(tableId: any) {
   if (isExternalTable(tableId)) {
@@ -29,16 +35,19 @@ function pickApi(tableId: any) {
   return internal
 }
 
-export async function patch(ctx: any): Promise<any> {
+export async function patch(
+  ctx: UserCtx<PatchRowRequest, PatchRowResponse>
+): Promise<any> {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
   // if it doesn't have an _id then its save
   if (body && !body._id) {
     return save(ctx)
   }
   try {
-    const { row, table } = await quotas.addQuery<any>(
+    const { row, table } = await quotas.addQuery(
       () => pickApi(tableId).patch(ctx),
       {
         datasourceId: tableId,
@@ -53,18 +62,24 @@ export async function patch(ctx: any): Promise<any> {
     ctx.message = `${table.name} updated successfully.`
     ctx.body = row
     gridSocket?.emitRowUpdate(ctx, row)
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
-export const save = async (ctx: any) => {
+export const save = async (ctx: UserCtx<Row, Row>) => {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
+
+  // user metadata doesn't exist yet - don't allow creation
+  if (utils.isUserMetadataTable(tableId) && !body._rev) {
+    ctx.throw(400, "Cannot create new user entry.")
+  }
+
   // if it has an ID already then its a patch
   if (body && body._id) {
-    return patch(ctx)
+    return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
     quotas.addQuery(() => pickApi(tableId).save(ctx), {
@@ -78,6 +93,7 @@ export const save = async (ctx: any) => {
   ctx.body = row || squashed
   gridSocket?.emitRowUpdate(ctx, row || squashed)
 }
+
 export async function fetchView(ctx: any) {
   const tableId = utils.getTableId(ctx)
   const viewName = decodeURIComponent(ctx.params.viewName)
@@ -88,7 +104,7 @@ export async function fetchView(ctx: any) {
     () =>
       sdk.rows.fetchView(tableId, viewName, {
         calculation,
-        group,
+        group: calculation ? group : null,
         field,
       }),
     {
@@ -104,7 +120,7 @@ export async function fetch(ctx: any) {
   })
 }
 
-export async function find(ctx: any) {
+export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
     datasourceId: tableId,
@@ -142,7 +158,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   const rowDeletes: Row[] = await processDeleteRowsRequest(ctx)
   deleteRequest.rows = rowDeletes
 
-  let { rows } = await quotas.addQuery<any>(
+  const { rows } = await quotas.addQuery(
     () => pickApi(tableId).bulkDestroy(ctx),
     {
       datasourceId: tableId,
@@ -152,7 +168,7 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
 
   for (let row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
-    gridSocket?.emitRowDeletion(ctx, row._id!)
+    gridSocket?.emitRowDeletion(ctx, row)
   }
 
   return rows
@@ -162,13 +178,13 @@ async function deleteRow(ctx: UserCtx<DeleteRowRequest>) {
   const appId = ctx.appId
   const tableId = utils.getTableId(ctx)
 
-  let resp = await quotas.addQuery<any>(() => pickApi(tableId).destroy(ctx), {
+  const resp = await quotas.addQuery(() => pickApi(tableId).destroy(ctx), {
     datasourceId: tableId,
   })
   await quotas.removeRow()
 
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, resp.row)
-  gridSocket?.emitRowDeletion(ctx, resp.row._id)
+  gridSocket?.emitRowDeletion(ctx, resp.row)
 
   return resp
 }
@@ -193,10 +209,10 @@ export async function destroy(ctx: UserCtx<DeleteRowRequest>) {
   ctx.body = response
 }
 
-export async function search(ctx: any) {
+export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   const tableId = utils.getTableId(ctx)
 
-  const searchParams = {
+  const searchParams: SearchParams = {
     ...ctx.request.body,
     tableId,
   }
@@ -207,87 +223,13 @@ export async function search(ctx: any) {
   })
 }
 
-function getSortOptions(
-  ctx: Ctx,
-  view: ViewV2
-):
-  | {
-      sort: string
-      sortOrder?: SortOrder
-      sortType?: SortType
-    }
-  | undefined {
-  const { sort_column, sort_order, sort_type } = ctx.query
-  if (Array.isArray(sort_column)) {
-    ctx.throw(400, "sort_column cannot be an array")
-  }
-  if (Array.isArray(sort_order)) {
-    ctx.throw(400, "sort_order cannot be an array")
-  }
-  if (Array.isArray(sort_type)) {
-    ctx.throw(400, "sort_type cannot be an array")
-  }
-
-  if (sort_column) {
-    return {
-      sort: sort_column,
-      sortOrder: sort_order as SortOrder,
-      sortType: sort_type as SortType,
-    }
-  }
-  if (view.sort) {
-    return {
-      sort: view.sort.field,
-      sortOrder: view.sort.order,
-      sortType: view.sort.type,
-    }
-  }
-
-  return
-}
-
-export async function searchView(ctx: Ctx<void, SearchResponse>) {
-  const { viewId } = ctx.params
-
-  const view = await sdk.views.get(viewId)
-  if (!view) {
-    ctx.throw(404, `View ${viewId} not found`)
-  }
-
-  if (view.version !== 2) {
-    ctx.throw(400, `This method only supports viewsV2`)
-  }
-
-  const table = await sdk.tables.getTable(view?.tableId)
-
-  const viewFields =
-    (view.columns &&
-      Object.entries(view.columns).length &&
-      Object.keys(sdk.views.enrichSchema(view, table.schema).schema)) ||
-    undefined
-
-  ctx.status = 200
-  ctx.body = await quotas.addQuery(
-    () =>
-      sdk.rows.search({
-        tableId: view.tableId,
-        query: view.query || {},
-        fields: viewFields,
-        ...getSortOptions(ctx, view),
-      }),
-    {
-      datasourceId: view.tableId,
-    }
-  )
-}
-
-export async function validate(ctx: Ctx) {
+export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   const tableId = utils.getTableId(ctx)
   // external tables are hard to validate currently
   if (isExternalTable(tableId)) {
-    ctx.body = { valid: true }
+    ctx.body = { valid: true, errors: {} }
   } else {
-    ctx.body = await utils.validate({
+    ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
       tableId,
     })
@@ -304,7 +246,9 @@ export async function fetchEnrichedRow(ctx: any) {
   )
 }
 
-export const exportRows = async (ctx: any) => {
+export const exportRows = async (
+  ctx: Ctx<ExportRowsRequest, ExportRowsResponse>
+) => {
   const tableId = utils.getTableId(ctx)
 
   const format = ctx.query.format

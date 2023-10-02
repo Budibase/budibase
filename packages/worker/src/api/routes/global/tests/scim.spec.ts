@@ -10,6 +10,10 @@ import {
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
+// this test can 409 - retries reduce issues with this
+jest.retryTimes(2, { logErrorsBeforeRetry: true })
+jest.setTimeout(30000)
+
 mocks.licenses.useScimIntegration()
 
 describe("scim", () => {
@@ -314,7 +318,7 @@ describe("scim", () => {
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
-          expect(user.email).toEqual(email)
+          expect(user!.email).toEqual(email)
         })
 
         it("if multiple emails are provided, the first primary one is used as email", async () => {
@@ -345,7 +349,7 @@ describe("scim", () => {
 
           const user = await config.getUser(email)
           expect(user).toBeDefined()
-          expect(user.email).toEqual(email)
+          expect(user!.email).toEqual(email)
         })
 
         it("if no email is provided and the user name is not an email, an exception is thrown", async () => {

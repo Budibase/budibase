@@ -45,6 +45,22 @@
   let enrichedSearchColumns
   let schemaLoaded = false
 
+  $: deleteLabel = setDeleteLabel(sidePanelDeleteLabel, sidePanelShowDelete)
+
+  const setDeleteLabel = sidePanelDeleteLabel => {
+    // Accommodate old config to ensure delete button does not reappear
+    let labelText = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+
+    // Empty text is considered hidden.
+    if (labelText?.trim() === "") {
+      return ""
+    }
+
+    // Default to "Delete" if the value is unset
+    return labelText || "Delete"
+  }
+
+  $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
     val => (enrichedSearchColumns = val)
@@ -53,7 +69,7 @@
   $: editTitle = getEditTitle(detailsFormBlockId, primaryDisplay)
   $: normalFields = getNormalFields(schema)
   $: rowClickActions =
-    clickBehaviour === "actions" || dataSource?.type !== "table"
+    clickBehaviour === "actions" || !isDSPlus
       ? onClick
       : [
           {
@@ -75,7 +91,7 @@
           },
         ]
   $: buttonClickActions =
-    titleButtonClickBehaviour === "actions" || dataSource?.type !== "table"
+    titleButtonClickBehaviour === "actions" || !isDSPlus
       ? onClickTitleButton
       : [
           {
@@ -245,10 +261,8 @@
             bind:id={detailsFormBlockId}
             props={{
               dataSource,
-              showSaveButton: true,
-              showDeleteButton: sidePanelShowDelete,
-              saveButtonLabel: sidePanelSaveLabel,
-              deleteButtonLabel: sidePanelDeleteLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
+              deleteButtonLabel: deleteLabel,
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,
@@ -274,7 +288,7 @@
               dataSource,
               showSaveButton: true,
               showDeleteButton: false,
-              saveButtonLabel: sidePanelSaveLabel,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
               actionType: "Create",
               fields: sidePanelFields || normalFields,
               title: "Create Row",

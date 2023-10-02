@@ -1,13 +1,35 @@
 import {
   AdminUser,
+  AdminOnlyUser,
   BuilderUser,
   SSOAuthDetails,
   SSOUser,
+  User,
 } from "@budibase/types"
-import { user } from "./shared"
 import { authDetails } from "./sso"
+import { uuid } from "./common"
+import { generator } from "./generator"
+import { tenant } from "."
 
-export { user, newEmail } from "./shared"
+export const newEmail = () => {
+  return `${uuid()}@test.com`
+}
+
+export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
+  const userId = userProps?._id
+  return {
+    _id: userId,
+    userId,
+    email: newEmail(),
+    password: "test",
+    roles: { app_test: "admin" },
+    firstName: generator.first(),
+    lastName: generator.last(),
+    pictureUrl: "http://test.com",
+    tenantId: tenant.id(),
+    ...userProps,
+  }
+}
 
 export const adminUser = (userProps?: any): AdminUser => {
   return {
@@ -21,11 +43,29 @@ export const adminUser = (userProps?: any): AdminUser => {
   }
 }
 
-export const builderUser = (userProps?: any): BuilderUser => {
+export const adminOnlyUser = (userProps?: any): AdminOnlyUser => {
+  return {
+    ...user(userProps),
+    admin: {
+      global: true,
+    },
+  }
+}
+
+export const builderUser = (userProps?: Partial<User>): BuilderUser => {
   return {
     ...user(userProps),
     builder: {
       global: true,
+    },
+  }
+}
+
+export const appBuilderUser = (appId: string, userProps?: any): BuilderUser => {
+  return {
+    ...user(userProps),
+    builder: {
+      apps: [appId],
     },
   }
 }

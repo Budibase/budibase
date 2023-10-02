@@ -4,7 +4,6 @@ import { csv, json, jsonWithSchema, Format, isFormat } from "./exporters"
 import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
 import { context, events } from "@budibase/backend-core"
-import { DocumentType } from "../../../db/utils"
 import sdk from "../../../sdk"
 import { FieldTypes } from "../../../constants"
 import {
@@ -14,10 +13,12 @@ import {
   TableExportFormat,
   TableSchema,
   View,
+  DocumentType,
 } from "@budibase/types"
 import { builderSocket } from "../../../websockets"
 
-const { cloneDeep, isEqual } = require("lodash")
+const cloneDeep = require("lodash/cloneDeep")
+import isEqual from "lodash/isEqual"
 
 export async function fetch(ctx: Ctx) {
   ctx.body = await getViews()

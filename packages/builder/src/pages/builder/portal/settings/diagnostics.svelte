@@ -13,6 +13,7 @@
   import { redirect } from "@roxi/routify"
   import { API } from "api"
   import { onMount } from "svelte"
+  import { sdk } from "@budibase/shared-core"
 
   let diagnosticInfo = ""
 
@@ -46,7 +47,7 @@
   })
 </script>
 
-{#if $auth.isAdmin && diagnosticInfo}
+{#if sdk.users.isAdmin($auth.user) && diagnosticInfo}
   <Layout noPadding>
     <Layout gap="XS">
       <Heading size="M">Diagnostics</Heading>

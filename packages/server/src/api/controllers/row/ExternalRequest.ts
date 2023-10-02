@@ -1,4 +1,5 @@
 import {
+  AutoReason,
   Datasource,
   FieldSchema,
   FieldType,
@@ -27,7 +28,7 @@ import {
   sqlOutputProcessing,
 } from "./utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
-import { FieldTypes } from "../../../constants"
+import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
@@ -118,7 +119,8 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   // filter out fields which cannot be keys
   const fieldNames = Object.entries(table.schema)
     .filter(schema => primaryOptions.find(val => val === schema[1].type))
-    .map(([fieldName]) => fieldName)
+    // map to fieldName
+    .map(entry => entry[0])
   const iterateObject = (obj: { [key: string]: any }) => {
     for (let [field, value] of Object.entries(obj)) {
       if (fieldNames.find(name => name === field) && isRowId(value)) {
@@ -165,13 +167,34 @@ function isOneSide(field: FieldSchema) {
   )
 }
 
-export class ExternalRequest {
-  private operation: Operation
-  private tableId: string
+function isEditableColumn(column: FieldSchema) {
+  const isExternalAutoColumn =
+    column.autocolumn &&
+    column.autoReason !== AutoReason.FOREIGN_KEY &&
+    column.subtype !== AutoFieldSubTypes.AUTO_ID
+  const isFormula = column.type === FieldTypes.FORMULA
+  return !(isExternalAutoColumn || isFormula)
+}
+
+export type ExternalRequestReturnType<T> = T extends Operation.READ
+  ?
+      | Row[]
+      | {
+          row: Row
+          table: Table
+        }
+  : {
+      row: Row
+      table: Table
+    }
+
+export class ExternalRequest<T extends Operation> {
+  private readonly operation: T
+  private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
 
-  constructor(operation: Operation, tableId: string, datasource?: Datasource) {
+  constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
     this.tableId = tableId
     this.datasource = datasource
@@ -201,16 +224,7 @@ export class ExternalRequest {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (
-        row[key] == null ||
-        newRow[key] ||
-        !sdk.tables.isEditableColumn(field)
-      ) {
-        continue
-      }
-      // if its an empty string then it means return the column to null (if possible)
-      if (row[key] === "") {
-        newRow[key] = null
+      if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
         continue
       }
       // parse floats/numbers
@@ -233,10 +247,16 @@ export class ExternalRequest {
       // one to many
       if (isOneSide(field)) {
         let id = row[key][0]
-        if (typeof row[key] === "string") {
-          id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+        if (id) {
+          if (typeof row[key] === "string") {
+            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+          }
+          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
+        } else {
+          // Removing from both new and row, as we don't know if it has already been processed
+          row[field.foreignKey || linkTablePrimary] = null
+          newRow[field.foreignKey || linkTablePrimary] = null
         }
-        newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
       }
       // many to many
       else if (field.through) {
@@ -292,7 +312,7 @@ export class ExternalRequest {
     const primaryKey = table.primary[0]
     // make a new request to get the row with all its relationships
     // we need this to work out if any relationships need removed
-    for (let field of Object.values(table.schema)) {
+    for (let field of Object.values(table.schema) as FieldSchema[]) {
       if (
         field.type !== FieldTypes.LINK ||
         !field.fieldName ||
@@ -426,7 +446,42 @@ export class ExternalRequest {
     await Promise.all(promises)
   }
 
-  async run(config: RunConfig) {
+  /**
+   * This function is a bit crazy, but the exact purpose of it is to protect against the scenario in which
+   * you have column overlap in relationships, e.g. we join a few different tables and they all have the
+   * concept of an ID, but for some of them it will be null (if they say don't have a relationship).
+   * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
+   * is more performant and has the added benefit of protecting against this scenario.
+   */
+  buildFields(table: Table, includeRelations: boolean) {
+    function extractRealFields(table: Table, existing: string[] = []) {
+      return Object.entries(table.schema)
+        .filter(
+          column =>
+            column[1].type !== FieldTypes.LINK &&
+            column[1].type !== FieldTypes.FORMULA &&
+            !existing.find((field: string) => field === column[0])
+        )
+        .map(column => `${table.name}.${column[0]}`)
+    }
+    let fields = extractRealFields(table)
+    for (let field of Object.values(table.schema)) {
+      if (field.type !== FieldTypes.LINK || !includeRelations) {
+        continue
+      }
+      const { tableName: linkTableName } = breakExternalTableId(field.tableId)
+      if (linkTableName) {
+        const linkTable = this.tables[linkTableName]
+        if (linkTable) {
+          const linkedFields = extractRealFields(linkTable, fields)
+          fields = fields.concat(linkedFields)
+        }
+      }
+    }
+    return fields
+  }
+
+  async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!tableName) {
@@ -459,7 +514,9 @@ export class ExternalRequest {
           delete sort?.[sortColumn]
           break
         case FieldType.NUMBER:
-          sort[sortColumn].type = SortType.number
+          if (sort && sort[sortColumn]) {
+            sort[sortColumn].type = SortType.number
+          }
           break
       }
     }
@@ -509,7 +566,7 @@ export class ExternalRequest {
     // can't really use response right now
     const response = await getDatasourceAndQuery(json)
     // handle many to many relationships now if we know the ID (could be auto increment)
-    if (operation !== Operation.READ && processed.manyRelationships) {
+    if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",
         response[0],
@@ -523,8 +580,11 @@ export class ExternalRequest {
       relationships
     )
     // if reading it'll just be an array of rows, return whole thing
-    return operation === Operation.READ && Array.isArray(response)
-      ? output
-      : { row: output[0], table }
+    const result = (
+      operation === Operation.READ && Array.isArray(response)
+        ? output
+        : { row: output[0], table }
+    ) as ExternalRequestReturnType<T>
+    return result
   }
 }

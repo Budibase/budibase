@@ -136,7 +136,7 @@
     // Check arrays - remove any values not present in the field schema and
     // convert any values supplied to strings
     if (Array.isArray(value) && type === "array" && schema) {
-      const options = schema?.constraints.inclusion || []
+      const options = schema?.constraints?.inclusion || []
       return value.map(opt => String(opt)).filter(opt => options.includes(opt))
     }
     return value
@@ -230,10 +230,16 @@
       // We want to validate every field (even if validation fails early) to
       // ensure that all fields are populated with errors if invalid
       let valid = true
+      let hasScrolled = false
       stepFields.forEach(field => {
         const fieldValid = get(field).fieldApi.validate()
         valid = valid && fieldValid
+        if (!valid && !hasScrolled) {
+          handleScrollToField({ field: get(field) })
+          hasScrolled = true
+        }
       })
+
       return valid
     },
     reset: () => {
@@ -250,7 +256,7 @@
       } else if (type === "first") {
         currentStep.set(1)
       } else if (type === "specific" && number && !isNaN(number)) {
-        currentStep.set(number)
+        currentStep.set(parseInt(number))
       }
     },
     setStep: step => {
@@ -409,10 +415,15 @@
   }
 
   const handleScrollToField = ({ field }) => {
-    const fieldId = get(getField(field)).fieldState.fieldId
+    if (!field.fieldState) {
+      field = get(getField(field))
+    }
+    const fieldId = field.fieldState.fieldId
+    const fieldElement = document.getElementById(fieldId)
+    fieldElement.focus({ preventScroll: true })
     const label = document.querySelector(`label[for="${fieldId}"]`)
-    document.getElementById(fieldId).focus({ preventScroll: true })
-    label.scrollIntoView({ behavior: "smooth" })
+    label.style.scrollMargin = "100px"
+    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }
 
   // Action context to pass to children

@@ -14,9 +14,12 @@
   export let autocomplete = false
   export let sort = false
   export let autoWidth = false
-  export let fetchTerm = null
-  export let useFetch = false
+  export let searchTerm = null
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
+  export let open = false
+  export let loading
 
   const dispatch = createEventDispatcher()
 
@@ -79,6 +82,7 @@
 </script>
 
 <Picker
+  on:loadMore
   {id}
   {error}
   {disabled}
@@ -87,8 +91,8 @@
   {options}
   isPlaceholder={!arrayValue.length}
   {autocomplete}
-  bind:fetchTerm
-  {useFetch}
+  bind:searchTerm
+  bind:open
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
@@ -96,4 +100,7 @@
   {sort}
   {autoWidth}
   {customPopoverHeight}
+  {customPopoverOffsetBelow}
+  {customPopoverMaxHeight}
+  {loading}
 />

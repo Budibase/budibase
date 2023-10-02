@@ -1,15 +1,16 @@
 import { existsSync, readFileSync } from "fs"
+import { ServiceType } from "@budibase/types"
 
 function isTest() {
-  return isCypress() || isJest()
+  return isJest()
 }
 
 function isJest() {
-  return !!(process.env.NODE_ENV === "jest" || process.env.JEST_WORKER_ID)
-}
-
-function isCypress() {
-  return process.env.NODE_ENV === "cypress"
+  return (
+    process.env.NODE_ENV === "jest" ||
+    (process.env.JEST_WORKER_ID != null &&
+      process.env.JEST_WORKER_ID !== "null")
+  )
 }
 
 function isDev() {
@@ -83,10 +84,20 @@ function getPackageJsonFields(): {
   }
 }
 
+function isWorker() {
+  return environment.SERVICE_TYPE === ServiceType.WORKER
+}
+
+function isApps() {
+  return environment.SERVICE_TYPE === ServiceType.APPS
+}
+
 const environment = {
   isTest,
   isJest,
   isDev,
+  isWorker,
+  isApps,
   isProd: () => {
     return !isDev()
   },
@@ -154,6 +165,7 @@ const environment = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
   BLACKLIST_IPS: process.env.BLACKLIST_IPS,
+  SERVICE_TYPE: "unknown",
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.

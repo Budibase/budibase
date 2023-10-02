@@ -1,7 +1,6 @@
 import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 import { Writable } from "stream"
-import PouchDB from "pouchdb"
 
 export enum SearchIndex {
   ROWS = "rows",

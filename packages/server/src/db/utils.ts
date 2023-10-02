@@ -1,13 +1,14 @@
 import newid from "./newid"
 import { db as dbCore } from "@budibase/backend-core"
-import { SQLiteType } from "@budibase/types"
+import { DocumentType, VirtualDocumentType } from "@budibase/types"
+export { DocumentType, VirtualDocumentType } from "@budibase/types"
 
 type Optional = string | null
 
-export const AppStatus = {
-  DEV: "development",
-  ALL: "all",
-  DEPLOYED: "published",
+export const enum AppStatus {
+  DEV = "development",
+  ALL = "all",
+  DEPLOYED = "published",
 }
 
 export const BudibaseInternalDB = {
@@ -20,7 +21,6 @@ export const BudibaseInternalDB = {
 
 export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
-export const DocumentType = dbCore.DocumentType
 export const APP_PREFIX = dbCore.APP_PREFIX
 export const APP_DEV_PREFIX = dbCore.APP_DEV_PREFIX
 export const isDevAppID = dbCore.isDevAppID
@@ -299,10 +299,22 @@ export function getMultiIDParams(ids: string[]) {
  * @returns {string} The new view ID which the view doc can be stored under.
  */
 export function generateViewID(tableId: string) {
-  return `${tableId}${SEPARATOR}${newid()}`
+  return `${
+    VirtualDocumentType.VIEW
+  }${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+}
+
+export function isViewID(viewId: string) {
+  return viewId?.split(SEPARATOR)[0] === VirtualDocumentType.VIEW
 }
 
 export function extractViewInfoFromID(viewId: string) {
+  if (!isViewID(viewId)) {
+    throw new Error("Unable to extract table ID, is not a view ID")
+  }
+  const split = viewId.split(SEPARATOR)
+  split.shift()
+  viewId = split.join(SEPARATOR)
   const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
   const res = regex.exec(viewId)
   return {

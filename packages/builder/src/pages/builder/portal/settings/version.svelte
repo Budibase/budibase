@@ -14,6 +14,7 @@
   import { API } from "api"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   let version
   let loaded = false
@@ -25,7 +26,7 @@
 
   // Only admins allowed here
   $: {
-    if (!$auth.isAdmin || $admin.cloud) {
+    if (!sdk.users.isAdmin($auth.user) || $admin.cloud) {
       $redirect("../../portal")
     }
   }
@@ -62,8 +63,7 @@
       )
       const githubResponse = await githubCheck.json()
 
-      //Get tag and remove the v infront of the tage name e.g. v1.0.0 is 1.0.0
-      githubVersion = githubResponse.tag_name.slice(1)
+      githubVersion = githubResponse.tag_name
 
       //Get the release date and output it in the local time format
       githubPublishedDate = new Date(githubResponse.published_at)
@@ -89,7 +89,7 @@
   })
 </script>
 
-{#if $auth.isAdmin}
+{#if sdk.users.isAdmin($auth.user)}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Version</Heading>

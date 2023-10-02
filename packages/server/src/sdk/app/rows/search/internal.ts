@@ -5,14 +5,16 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../../environment"
 import { fullSearch, paginatedSearch } from "./internalSearch"
-import {
-  InternalTables,
-  getRowParams,
-  DocumentType,
-} from "../../../../db/utils"
+import { InternalTables, getRowParams } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row, Table } from "@budibase/types"
+import {
+  Database,
+  Row,
+  Table,
+  SearchParams,
+  DocumentType,
+} from "@budibase/types"
 import {
   Format,
   csv,
@@ -27,16 +29,11 @@ import {
   getFromMemoryDoc,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult, SearchParams } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "../search"
 import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
-
-  // Fetch the whole table when running in cypress, as search doesn't work
-  if (!env.COUCH_DB_URL && env.isCypress()) {
-    return { rows: await fetch(tableId) }
-  }
 
   const { paginate, query } = options
 
@@ -146,8 +143,8 @@ export async function exportRows(
 export async function fetch(tableId: string) {
   const db = context.getAppDB()
 
-  let table = await sdk.tables.getTable(tableId)
-  let rows = await getRawTableData(db, tableId)
+  const table = await sdk.tables.getTable(tableId)
+  const rows = await getRawTableData(db, tableId)
   const result = await outputProcessing(table, rows)
   return result
 }
@@ -170,7 +167,7 @@ async function getRawTableData(db: Database, tableId: string) {
 export async function fetchView(
   viewName: string,
   options: { calculation: string; group: string; field: string }
-) {
+): Promise<Row[]> {
   // if this is a table view being looked for just transfer to that
   if (viewName.startsWith(DocumentType.TABLE)) {
     return fetch(viewName)
@@ -196,7 +193,7 @@ export async function fetchView(
     )
   }
 
-  let rows
+  let rows: Row[] = []
   if (!calculation) {
     response.rows = response.rows.map(row => row.doc)
     let table: Table

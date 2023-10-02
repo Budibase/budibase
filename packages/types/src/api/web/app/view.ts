@@ -1,9 +1,14 @@
-import { TableSchema, ViewV2 } from "../../../documents"
+import { ViewV2, UIFieldMetadata } from "../../../documents"
 
 export interface ViewResponse {
   data: ViewV2
 }
 
-export type CreateViewRequest = Omit<ViewV2, "version" | "id">
+export interface CreateViewRequest
+  extends Omit<ViewV2, "version" | "id" | "schema"> {
+  schema?: Record<string, UIFieldMetadata>
+}
 
-export type UpdateViewRequest = ViewV2
+export interface UpdateViewRequest extends Omit<ViewV2, "schema"> {
+  schema?: Record<string, UIFieldMetadata>
+}

@@ -31,6 +31,7 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import ScimBanner from "../_components/SCIMBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   export let userId
 
@@ -87,8 +88,8 @@
 
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
-  $: readonly = !$auth.isAdmin || scimEnabled
-  $: privileged = user?.admin?.global || user?.builder?.global
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
+  $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
@@ -97,28 +98,25 @@
       return y._id === userId
     })
   })
-  $: globalRole = user?.admin?.global
-    ? "admin"
-    : user?.builder?.global
-    ? "developer"
-    : "appUser"
+  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
     if (!privileged) {
       availableApps = availableApps.filter(x => {
-        return Object.keys(roles || {}).find(y => {
+        let roleKeys = Object.keys(roles || {})
+        return roleKeys.concat(user?.builder?.apps).find(y => {
           return x.appId === apps.extractAppId(y)
         })
       })
     }
     return availableApps.map(app => {
-      const prodAppId = apps.getProdAppID(app.appId)
+      const prodAppId = apps.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: privileged ? Constants.Roles.ADMIN : roles[prodAppId],
+        role: getRole(prodAppId, roles),
       }
     })
   }
@@ -129,6 +127,18 @@
     }
     search = search.toLowerCase()
     return groups.filter(group => group.name?.toLowerCase().includes(search))
+  }
+
+  const getRole = (prodAppId, roles) => {
+    if (privileged) {
+      return Constants.Roles.ADMIN
+    }
+
+    if (user?.builder?.apps?.includes(prodAppId)) {
+      return Constants.Roles.CREATOR
+    }
+
+    return roles[prodAppId]
   }
 
   const getNameLabel = user => {
@@ -285,7 +295,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
-              disabled={!$auth.isAdmin}
+              disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
               on:change={updateUserRole}

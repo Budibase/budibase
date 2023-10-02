@@ -40,24 +40,24 @@ spec:
       - image: budibase/proxy:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         name: proxy-service
+        {{- if .Values.services.proxy.startupProbe }}
+        {{- with .Values.services.proxy.startupProbe }}
+        startupProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.proxy.livenessProbe }}
+        {{- with .Values.services.proxy.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.proxy.port }}
-          initialDelaySeconds: 0
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
-          timeoutSeconds: 3
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.proxy.readinessProbe }}
+        {{- with .Values.services.proxy.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.proxy.port }}
-          initialDelaySeconds: 0
-          periodSeconds: 5
-          successThreshold: 1
-          failureThreshold: 2
-          timeoutSeconds: 3
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
         ports:
         - containerPort: {{ .Values.services.proxy.port }}
         env:

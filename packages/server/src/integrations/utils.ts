@@ -1,5 +1,5 @@
-import { SqlQuery, Table } from "@budibase/types"
-import { DocumentType, SEPARATOR } from "../db/utils"
+import { DocumentType, SqlQuery, Table, Datasource } from "@budibase/types"
+import { SEPARATOR } from "../db/utils"
 import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
 import { helpers } from "@budibase/shared-core"
 
@@ -180,14 +180,17 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   }
 }
 
-export const isSQL = helpers.isSQL
+export function isSQL(datasource: Datasource) {
+  return helpers.isSQL(datasource)
+}
 
 export function isIsoDateString(str: string) {
-  if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {
+  const trimmedValue = str.trim()
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(trimmedValue)) {
     return false
   }
-  let d = new Date(str)
-  return d.toISOString() === str
+  let d = new Date(trimmedValue)
+  return d.toISOString() === trimmedValue
 }
 
 /**
@@ -315,7 +318,11 @@ export function finaliseExternalTables(
   }
   // sort the tables by name
   finalTables = Object.entries(finalTables)
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort((entryA, entryB) => {
+      const keyA = entryA[0],
+        keyB = entryB[0]
+      return keyA.localeCompare(keyB[0])
+    })
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
 }
@@ -342,4 +349,8 @@ export function getPrimaryDisplay(testValue: unknown): string | undefined {
     return undefined
   }
   return testValue as string
+}
+
+export function isValidFilter(value: any) {
+  return value != null && value !== ""
 }

@@ -152,7 +152,7 @@ export async function sqlSearch(ctx: UserCtx) {
     const rows = await db.sql<Row[]>(sql)
 
     return {
-      rows: sqlOutputProcessing(rows, table, allTablesMap, relationships, {
+      rows: sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
         internal: true,
       }),
     }

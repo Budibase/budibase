@@ -1,3 +1,4 @@
+import { Ctx } from "@budibase/types"
 import mapping from "../../../controllers/public/mapping"
 
 enum Resources {
@@ -9,11 +10,19 @@ enum Resources {
   SEARCH = "search",
 }
 
-function isArrayResponse(ctx: any) {
+function isAttachment(ctx: Ctx) {
+  return ctx.body?.path && ctx.body?.flags && ctx.body?.mode
+}
+
+function isArrayResponse(ctx: Ctx) {
   return ctx.url.endsWith(Resources.SEARCH) || Array.isArray(ctx.body)
 }
 
-function processApplications(ctx: any) {
+function noResponse(ctx: Ctx) {
+  return !Array.isArray(ctx.body) && Object.keys(ctx.body).length === 0
+}
+
+function processApplications(ctx: Ctx) {
   if (isArrayResponse(ctx)) {
     return mapping.mapApplications(ctx)
   } else {
@@ -21,7 +30,7 @@ function processApplications(ctx: any) {
   }
 }
 
-function processTables(ctx: any) {
+function processTables(ctx: Ctx) {
   if (isArrayResponse(ctx)) {
     return mapping.mapTables(ctx)
   } else {
@@ -29,7 +38,7 @@ function processTables(ctx: any) {
   }
 }
 
-function processRows(ctx: any) {
+function processRows(ctx: Ctx) {
   if (isArrayResponse(ctx)) {
     return mapping.mapRowSearch(ctx)
   } else {
@@ -37,7 +46,7 @@ function processRows(ctx: any) {
   }
 }
 
-function processUsers(ctx: any) {
+function processUsers(ctx: Ctx) {
   if (isArrayResponse(ctx)) {
     return mapping.mapUsers(ctx)
   } else {
@@ -45,7 +54,7 @@ function processUsers(ctx: any) {
   }
 }
 
-function processQueries(ctx: any) {
+function processQueries(ctx: Ctx) {
   if (isArrayResponse(ctx)) {
     return mapping.mapQueries(ctx)
   } else {
@@ -53,8 +62,8 @@ function processQueries(ctx: any) {
   }
 }
 
-export default async (ctx: any, next: any) => {
-  if (!ctx.body) {
+export default async (ctx: Ctx, next: any) => {
+  if (!ctx.body || noResponse(ctx) || isAttachment(ctx)) {
     return await next()
   }
   let urlParts = ctx.url.split("/")

@@ -3,6 +3,7 @@
   import { goto } from "@roxi/routify"
   import { auth, admin, licensing } from "stores/portal"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import { sdk } from "@budibase/shared-core"
 </script>
 
 {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING) && !$licensing.isEnterprisePlan}
@@ -17,7 +18,7 @@
     >
       Upgrade
     </Button>
-  {:else if !$admin.cloud && $auth.isAdmin}
+  {:else if !$admin.cloud && sdk.users.isAdmin($auth.user)}
     <Button
       cta
       size="S"

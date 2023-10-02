@@ -6,9 +6,9 @@ import {
 } from "../../../db/utils"
 import * as userController from "../user"
 import {
+  cleanupAttachments,
   inputProcessing,
   outputProcessing,
-  cleanupAttachments,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
@@ -19,8 +19,15 @@ import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
-import { UserCtx, LinkDocumentValue, Row, Table } from "@budibase/types"
 import { sqlSearch } from "./internalSql"
+import {
+  LinkDocumentValue,
+  PatchRowRequest,
+  PatchRowResponse,
+  Row,
+  Table,
+  UserCtx,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
 // const CALCULATION_TYPES = {
@@ -29,16 +36,16 @@ import sdk from "../../../sdk"
 //   STATS: "stats",
 // }
 
-export async function patch(ctx: UserCtx) {
+export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
+  const tableId = utils.getTableId(ctx)
   const inputs = ctx.request.body
-  const tableId = inputs.tableId
   const isUserTable = tableId === InternalTables.USER_METADATA
   let oldRow
+  const dbTable = await sdk.tables.getTable(tableId)
   try {
-    let dbTable = await sdk.tables.getTable(tableId)
     oldRow = await outputProcessing(
       dbTable,
-      await utils.findRow(ctx, tableId, inputs._id)
+      await utils.findRow(ctx, tableId, inputs._id!)
     )
   } catch (err) {
     if (isUserTable) {
@@ -51,7 +58,7 @@ export async function patch(ctx: UserCtx) {
       throw "Row does not exist"
     }
   }
-  let dbTable = await sdk.tables.getTable(tableId)
+
   // need to build up full patch fields before coerce
   let combinedRow: any = cloneDeep(oldRow)
   for (let key of Object.keys(inputs)) {
@@ -63,8 +70,12 @@ export async function patch(ctx: UserCtx) {
   const tableClone = cloneDeep(dbTable)
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
-  const validateResult = await utils.validate({
+  let { table, row } = await inputProcessing(
+    ctx.user?._id,
+    tableClone,
+    combinedRow
+  )
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })
@@ -85,7 +96,7 @@ export async function patch(ctx: UserCtx) {
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
-    ctx.request.body = row
+    ctx.request.body = row as any
     await userController.updateMetadata(ctx)
     return { row: ctx.body as Row, table }
   }
@@ -98,7 +109,7 @@ export async function patch(ctx: UserCtx) {
 
 export async function save(ctx: UserCtx) {
   let inputs = ctx.request.body
-  inputs.tableId = ctx.params.tableId
+  inputs.tableId = utils.getTableId(ctx)
 
   if (!inputs._rev && !inputs._id) {
     inputs._id = generateRowID(inputs.tableId)
@@ -110,9 +121,9 @@ export async function save(ctx: UserCtx) {
   // need to copy the table so it can be differenced on way out
   const tableClone = cloneDeep(dbTable)
 
-  let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
+  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
 
-  const validateResult = await utils.validate({
+  const validateResult = await sdk.rows.utils.validate({
     row,
     table,
   })
@@ -135,20 +146,23 @@ export async function save(ctx: UserCtx) {
   })
 }
 
-export async function find(ctx: UserCtx) {
-  const table = await sdk.tables.getTable(ctx.params.tableId)
-  let row = await utils.findRow(ctx, ctx.params.tableId, ctx.params.rowId)
+export async function find(ctx: UserCtx): Promise<Row> {
+  const tableId = utils.getTableId(ctx),
+    rowId = ctx.params.rowId
+  const table = await sdk.tables.getTable(tableId)
+  let row = await utils.findRow(ctx, tableId, rowId)
   row = await outputProcessing(table, row)
   return row
 }
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
+  const tableId = utils.getTableId(ctx)
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
   let _rev = ctx.request.body._rev || row._rev
 
-  if (row.tableId !== ctx.params.tableId) {
+  if (row.tableId !== tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
   const table = await sdk.tables.getTable(row.tableId)
@@ -166,7 +180,7 @@ export async function destroy(ctx: UserCtx) {
   await updateRelatedFormula(table, row)
 
   let response
-  if (ctx.params.tableId === InternalTables.USER_METADATA) {
+  if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
       id: _id,
     }
@@ -179,8 +193,7 @@ export async function destroy(ctx: UserCtx) {
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const table = await sdk.tables.getTable(tableId)
   let { rows } = ctx.request.body
 
@@ -208,6 +221,7 @@ export async function bulkDestroy(ctx: UserCtx) {
       })
     )
   } else {
+    const db = context.getAppDB()
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
@@ -218,7 +232,7 @@ export async function bulkDestroy(ctx: UserCtx) {
 }
 
 export async function search(ctx: UserCtx) {
-  return sqlSearch(ctx)
+  return await sqlSearch(ctx)
   // // Fetch the whole table when running in cypress, as search doesn't work
   // if (!env.COUCH_DB_URL && env.isCypress()) {
   //   return { rows: await fetch(ctx) }
@@ -315,7 +329,7 @@ export async function exportRows(ctx: UserCtx) {
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
   const db = context.getAppDB()
-  const tableId = ctx.params.tableId
+  const tableId = utils.getTableId(ctx)
   const rowId = ctx.params.rowId
   // need table to work out where links go in row
   let [table, row] = await Promise.all([
