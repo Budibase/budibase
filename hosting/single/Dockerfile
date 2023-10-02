@@ -1,7 +1,7 @@
 FROM node:18-slim as build
 
 # install node-gyp dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python3
+RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
 
 
 # copy and install dependencies
@@ -11,17 +11,23 @@ COPY yarn.lock .
 COPY lerna.json .
 COPY .yarnrc .
 
-COPY packages/server/package.json packages/server/
-COPY packages/worker/package.json packages/worker/
+
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN ./scripts/removeWorkspaceDependencies.sh package.json
+RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
+RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
+
 
 # We will never want to sync pro, but the script is still required
-RUN mkdir scripts && echo '' > scripts/syncProPackage.js
+RUN echo '' > scripts/syncProPackage.js
 RUN yarn install --frozen-lockfile && yarn cache clean
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
 COPY packages/server/client packages/server/client
 COPY packages/worker/dist packages/server/dist
+
+RUN rm -rf scripts/
 
 
 FROM budibase/couchdb
