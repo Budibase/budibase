@@ -1,7 +1,7 @@
 name: Deploy Budibase Single Container Image to DockerHub
 
 on:
-  workflow_dispatch:
+  push:
 
 env:
   CI: true
@@ -20,14 +20,14 @@ jobs:
         with:
           root-reserve-mb: 35000
           swap-size-mb: 1024
-          remove-android: 'true'
-          remove-dotnet: 'true'
-      - name: Fail if not a tag
-        run: |
-          if [[ $GITHUB_REF != refs/tags/* ]]; then 
-            echo "Workflow Dispatch can only be run on tags" 
-            exit 1 
-          fi
+          remove-android: "true"
+          remove-dotnet: "true"
+      # - name: Fail if not a tag
+      #   run: |
+      #     if [[ $GITHUB_REF != refs/tags/* ]]; then
+      #       echo "Workflow Dispatch can only be run on tags"
+      #       exit 1
+      #     fi
       - name: "Checkout"
         uses: actions/checkout@v2
         with:
@@ -35,12 +35,12 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - name: Fail if tag is not in master
-        run: |
-          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
-            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
-            exit 1
-          fi
+      # - name: Fail if tag is not in master
+      #   run: |
+      #     if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+      #       echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+      #       exit 1
+      #     fi
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
