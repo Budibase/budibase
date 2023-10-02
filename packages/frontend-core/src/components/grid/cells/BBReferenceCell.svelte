@@ -3,6 +3,8 @@
   import RelationshipCell from "./RelationshipCell.svelte"
   import { FieldSubtype } from "@budibase/types"
 
+  export let api
+
   const { API } = getContext("grid")
   const { subtype } = $$props.schema
 
@@ -17,8 +19,10 @@
       throw `Search for '${subtype}' not implemented`
     }
 
+    const email = Object.values(searchParams.query.string)[0]
+
     const results = await API.searchUsers({
-      ...searchParams,
+      email,
     })
 
     // Mapping to the expected data within RelationshipCell
@@ -31,6 +35,7 @@
 </script>
 
 <RelationshipCell
+  bind:api
   {...$$props}
   {schema}
   {searchFunction}
