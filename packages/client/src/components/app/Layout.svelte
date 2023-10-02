@@ -3,6 +3,7 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { FieldTypes } from "constants"
+  import { Constants } from "@budibase/frontend-core"
   import active from "svelte-spa-router/active"
 
   const sdk = getContext("sdk")
@@ -103,7 +104,8 @@
     let validLinks = (allLinks || []).filter(link => link.text && link.url)
     // Filter to only links allowed by the current role
     return validLinks.filter(link => {
-      return userRoleHierarchy?.find(roleId => roleId === link.roleId)
+      const role = link.roleId || Constants.Roles.BASIC
+      return userRoleHierarchy?.find(roleId => roleId === role)
     })
   }
 
