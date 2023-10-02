@@ -1,4 +1,4 @@
-name: Deploy Budibase Single Container Image to DockerHub
+name: Test
 
 on:
   push:
