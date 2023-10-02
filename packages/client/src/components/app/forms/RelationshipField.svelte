@@ -60,6 +60,12 @@
       // even if they are not in the inital fetch results
       initialValuesProcessed = true
       optionsObj = (fieldState?.value || []).reduce((accumulator, value) => {
+        // fieldState has to be an array of strings to be valid for an update
+        // therefore we cannot guarantee value will be an object
+        // https://linear.app/budibase/issue/BUDI-7577/refactor-the-relationshipfield-component-to-have-better-support-for
+        if (!value._id) {
+          return accumulator
+        }
         accumulator[value._id] = {
           _id: value._id,
           [primaryDisplay]: value.primaryDisplay,
@@ -121,7 +127,12 @@
     if (!Array.isArray(values)) {
       values = [values]
     }
-    return values.map(value => (typeof value === "object" ? value._id : value))
+    values = values.map(value =>
+      typeof value === "object" ? value._id : value
+    )
+    // Make sure field state is valid
+    fieldApi.setValue(values)
+    return values
   }
 
   const getDisplayName = row => {

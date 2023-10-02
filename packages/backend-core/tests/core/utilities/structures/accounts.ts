@@ -1,4 +1,4 @@
-import { generator, uuid, quotas } from "."
+import { generator, quotas, uuid } from "."
 import { generateGlobalUserID } from "../../../../src/docIds"
 import {
   Account,
@@ -6,10 +6,11 @@ import {
   AccountSSOProviderType,
   AuthType,
   CloudAccount,
-  Hosting,
-  SSOAccount,
   CreateAccount,
   CreatePassswordAccount,
+  CreateVerifiableSSOAccount,
+  Hosting,
+  SSOAccount,
 } from "@budibase/types"
 import sample from "lodash/sample"
 
@@ -68,6 +69,23 @@ export function ssoAccount(account: Account = cloudAccount()): SSOAccount {
   }
 }
 
+export function verifiableSsoAccount(
+  account: Account = cloudAccount()
+): SSOAccount {
+  return {
+    ...account,
+    authType: AuthType.SSO,
+    oauth2: {
+      accessToken: generator.string(),
+      refreshToken: generator.string(),
+    },
+    pictureUrl: generator.url(),
+    provider: AccountSSOProvider.MICROSOFT,
+    providerType: AccountSSOProviderType.MICROSOFT,
+    thirdPartyProfile: { id: "abc123" },
+  }
+}
+
 export const cloudCreateAccount: CreatePassswordAccount = {
   email: "cloud@budibase.com",
   tenantId: "cloud",
@@ -89,6 +107,19 @@ export const cloudSSOCreateAccount: CreateAccount = {
   name: "Budi Armstrong",
   size: "10+",
   profession: "Software Engineer",
+}
+
+export const cloudVerifiableSSOCreateAccount: CreateVerifiableSSOAccount = {
+  email: "cloud-sso@budibase.com",
+  tenantId: "cloud-sso",
+  hosting: Hosting.CLOUD,
+  authType: AuthType.SSO,
+  tenantName: "cloudsso",
+  name: "Budi Armstrong",
+  size: "10+",
+  profession: "Software Engineer",
+  provider: AccountSSOProvider.MICROSOFT,
+  thirdPartyProfile: { id: "abc123" },
 }
 
 export const selfCreateAccount: CreatePassswordAccount = {
