@@ -58,7 +58,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
-    on:row-click={e => handleRowClick?.({ row: e.detail })}
+    on:rowclick={e => handleRowClick?.({ row: e.detail })}
   />
 </div>
 
