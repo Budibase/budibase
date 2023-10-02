@@ -31,7 +31,7 @@
   on:focus
   on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-  on:click={() => dispatch("row-click", row)}
+  on:click={() => dispatch("rowclick", row)}
 >
   {#each $renderedColumns as column, columnIdx (column.name)}
     {@const cellId = `${row._id}-${column.name}`}
