@@ -19,6 +19,7 @@
       throw `Search for '${subtype}' not implemented`
     }
 
+    // As we are overriding the search function from RelationshipCell, we want to map one shape to the expected one for the specific API
     const email = Object.values(searchParams.query.string)[0]
 
     const results = await API.searchUsers({
