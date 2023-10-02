@@ -25,7 +25,7 @@ RUN yarn install --frozen-lockfile && yarn cache clean
 # copy the actual code
 COPY packages/server/dist packages/server/dist
 COPY packages/server/client packages/server/client
-COPY packages/worker/dist packages/server/dist
+COPY packages/worker/dist packages/worker/dist
 
 RUN rm -rf scripts/
 
