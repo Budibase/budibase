@@ -15,11 +15,7 @@ const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
 var argv = require("minimist")(process.argv.slice(2))
 
-function runBuild(
-  entry,
-  outfile,
-  opts = { skipMeta: false, bundle: true, silent: false }
-) {
+function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
   const tsconfigPathPluginContent = JSON.parse(
@@ -40,16 +36,12 @@ function runBuild(
     ]
   }
 
-  const metafile = !opts.skipMeta
-  const { bundle } = opts
-
   const sharedConfig = {
     entryPoints: [entry],
-    bundle,
+    bundle: true,
     minify: !isDev,
     sourcemap: isDev,
     tsconfig,
-    format: opts?.forcedFormat,
     plugins: [
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin(),
@@ -58,10 +50,15 @@ function runBuild(
     loader: {
       ".svelte": "copy",
     },
-    metafile,
-    external: bundle
-      ? ["deasync", "mock-aws-s3", "nock", "pino", "koa-pino-logger", "bull"]
-      : undefined,
+    metafile: true,
+    external: [
+      "deasync",
+      "mock-aws-s3",
+      "nock",
+      "pino",
+      "koa-pino-logger",
+      "bull",
+    ],
   }
 
   build({
@@ -74,19 +71,16 @@ function runBuild(
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
       }
 
-      !opts.silent &&
-        console.log(
-          "\x1b[32m%s\x1b[0m",
-          `Build successfully in ${(Date.now() - start) / 1000} seconds`
-        )
+      console.log(
+        "\x1b[32m%s\x1b[0m",
+        `Build successfully in ${(Date.now() - start) / 1000} seconds`
+      )
     })
 
-    if (metafile) {
-      fs.writeFileSync(
-        `dist/${path.basename(outfile)}.meta.json`,
-        JSON.stringify(result.metafile)
-      )
-    }
+    fs.writeFileSync(
+      `dist/${path.basename(outfile)}.meta.json`,
+      JSON.stringify(result.metafile)
+    )
   })
 }
 
