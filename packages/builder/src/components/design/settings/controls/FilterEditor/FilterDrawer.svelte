@@ -306,8 +306,9 @@
               {:else if filter.type === FieldType.BB_REFERENCE}
                 <FilterUsers
                   bind:value={filter.value}
-                  multiselect={filter.operator ===
-                    OperatorOptions.ContainsAny.value}
+                  multiselect={getSchema(filter).relationshipType ===
+                    RelationshipType.MANY_TO_MANY ||
+                    filter.operator === OperatorOptions.ContainsAny.value}
                   disabled={filter.noValue}
                 />
               {:else}
