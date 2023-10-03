@@ -178,7 +178,7 @@
 
   const onOperatorChange = filter => {
     sanitizeOperator(filter)
-    sanitizeValue(filter)
+    sanitizeValue(filter, filter.type)
   }
 
   const onValueTypeChange = filter => {
