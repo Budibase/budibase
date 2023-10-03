@@ -1,12 +1,12 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, Multiselect } from "@budibase/bbui"
   import { fetchData } from "@budibase/frontend-core"
 
   import { API } from "api"
 
   export let value = null
   export let disabled
-  export let multiple = false
+  export let multiselect = false
 
   $: fetch = fetchData({
     API,
@@ -29,10 +29,13 @@
     }
   }
 
-  $: selectedValue = multiple || !value ? value : value[0]
+  $: selectedValue = multiselect || !value ? value : value[0]
+
+  $: component = multiselect ? Multiselect : Select
 </script>
 
-<Select
+<svelte:component
+  this={component}
   value={selectedValue}
   autocomplete
   on:change={onChange}

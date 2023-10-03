@@ -306,6 +306,8 @@
               {:else if filter.type === FieldType.BB_REFERENCE}
                 <FilterUsers
                   bind:value={filter.value}
+                  multiselect={filter.operator ===
+                    OperatorOptions.ContainsAny.value}
                   disabled={filter.noValue}
                 />
               {:else}
