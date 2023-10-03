@@ -184,25 +184,21 @@
   }
 
   const getValidOperatorsForType = filter => {
+    const fieldSchema = getSchema(filter)
+    const type =
+      fieldSchema.type !== FieldType.BB_REFERENCE
+        ? field.type
+        : {
+            type: fieldSchema.type,
+            multiple:
+              fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
+          }
+
     let operators = LuceneUtils.getValidOperatorsForType(
-      filter.type,
+      type,
       filter.field,
       datasource
     )
-
-    const fieldSchema = getSchema(filter)
-    if (
-      fieldSchema.type === FieldType.BB_REFERENCE &&
-      fieldSchema.relationshipType !== RelationshipType.MANY_TO_MANY
-    ) {
-      operators = operators.filter(
-        o =>
-          ![
-            OperatorOptions.Contains.value,
-            OperatorOptions.NotContains.value,
-          ].includes(o.value)
-      )
-    }
 
     return operators
   }
