@@ -4,7 +4,7 @@
 
   import { API } from "api"
 
-  export let filter
+  export let value = null
 
   $: fetch = fetchData({
     API,
@@ -21,7 +21,7 @@
 
 <Select
   autocomplete
-  bind:value={filter.value}
+  bind:value
   {options}
   getOptionLabel={option => option.email}
   getOptionValue={option => option._id}
