@@ -17,7 +17,10 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
+  import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
+  import FilterUsers from "./FilterUsers.svelte"
+  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
@@ -29,7 +32,6 @@
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions } = Constants
-  const { getValidOperatorsForType } = LuceneUtils
   const KeyedFieldRegex = /\d[0-9]*:/g
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
@@ -131,11 +133,7 @@
 
   const santizeOperator = filter => {
     // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(
-      filter.type,
-      filter.field,
-      datasource
-    ).map(x => x.value)
+    const operators = getValidOperatorsForType(filter).map(x => x.value)
     if (!operators.includes(filter.operator)) {
       filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
@@ -148,7 +146,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const santizeValue = filter => {
+  const santizeValue = (filter, previousType) => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -162,13 +160,20 @@
       }
     } else if (filter.type === "array" && filter.valueType === "Value") {
       filter.value = []
+    } else if (
+      previousType !== filter.type &&
+      (previousType === FieldType.BB_REFERENCE ||
+        filter.type === FieldType.BB_REFERENCE)
+    ) {
+      filter.value = filter.type === "array" ? [] : null
     }
   }
 
   const onFieldChange = filter => {
+    const previousType = filter.type
     santizeTypes(filter)
     santizeOperator(filter)
-    santizeValue(filter)
+    santizeValue(filter, previousType)
   }
 
   const onOperatorChange = filter => {
@@ -183,6 +188,32 @@
   const getFieldOptions = field => {
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
+  }
+
+  const getValidOperatorsForType = filter => {
+    if (!filter) {
+      return []
+    }
+
+    let type = filter.type
+    if (type === FieldType.BB_REFERENCE) {
+      const fieldSchema = getSchema(filter)
+      if (fieldSchema) {
+        type = {
+          type: fieldSchema.type,
+          multiple:
+            fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
+        }
+      }
+    }
+
+    const operators = LuceneUtils.getValidOperatorsForType(
+      type,
+      filter.field,
+      datasource
+    )
+
+    return operators
   }
 </script>
 
@@ -228,11 +259,7 @@
               />
               <Select
                 disabled={!filter.field}
-                options={getValidOperatorsForType(
-                  filter.type,
-                  filter.field,
-                  datasource
-                )}
+                options={getValidOperatorsForType(filter)}
                 bind:value={filter.operator}
                 on:change={() => onOperatorChange(filter)}
                 placeholder={null}
@@ -284,6 +311,14 @@
                   enableTime={!getSchema(filter)?.dateOnly}
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.BB_REFERENCE}
+                <FilterUsers
+                  bind:value={filter.value}
+                  multiselect={getSchema(filter).relationshipType ===
+                    RelationshipType.MANY_TO_MANY ||
+                    filter.operator === OperatorOptions.In.value}
+                  disabled={filter.noValue}
                 />
               {:else}
                 <DrawerBindableInput disabled />
