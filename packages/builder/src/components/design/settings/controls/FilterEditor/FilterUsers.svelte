@@ -5,6 +5,7 @@
   import { API } from "api"
 
   export let value = null
+  export let disabled
   export let multiple = false
 
   $: fetch = fetchData({
@@ -38,4 +39,5 @@
   {options}
   getOptionLabel={option => option.email}
   getOptionValue={option => option._id}
+  {disabled}
 />
