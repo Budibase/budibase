@@ -70,8 +70,8 @@ fi
 
 # Read in the .env file and export the variables
 for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
-ln -s ${DATA_DIR}/.env /app/server/.env
-ln -s ${DATA_DIR}/.env /app/worker/.env
+ln -s ${DATA_DIR}/.env /app/.env
+ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
 mkdir -p ${DATA_DIR}/minio
 chown -R couchdb:couchdb ${DATA_DIR}/couch

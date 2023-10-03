@@ -10,12 +10,15 @@ COPY package.json .
 COPY yarn.lock .
 COPY lerna.json .
 COPY .yarnrc .
+COPY packageNames.txt .
+
+COPY packages/server/package.json packages/server/package.json
+COPY packages/worker/package.json packages/worker/package.json
 
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
-RUN ./scripts/removeWorkspaceDependencies.sh package.json
-RUN ./scripts/removeWorkspaceDependencies.sh packages/server/package.json
-RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
+RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+RUN ./scripts/removeWorkspaceDependencies.sh
 
 
 # We will never want to sync pro, but the script is still required
@@ -27,8 +30,6 @@ RUN yarn install --production && yarn cache clean
 COPY packages/server/dist packages/server/dist
 COPY packages/server/client packages/server/client
 COPY packages/worker/dist packages/worker/dist
-
-RUN rm -rf scripts/
 
 
 FROM budibase/couchdb as runner
@@ -89,7 +90,16 @@ COPY hosting/single/ssh/sshd_config /etc/
 COPY hosting/single/ssh/ssh_setup.sh /tmp
 RUN /build-target-paths.sh
 
-COPY --from=build /app /app
+
+#  setup letsencrypt certificate
+RUN apt-get install -y certbot python3-certbot-nginx
+COPY hosting/letsencrypt /app/letsencrypt
+RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
+
+COPY --from=build /app/node_modules /node_modules
+COPY --from=build /app/package.json /package.json
+COPY --from=build /app/packages/server /app
+COPY --from=build /app/packages/worker /worker
 
 
 EXPOSE 80
@@ -98,10 +108,6 @@ EXPOSE 443
 EXPOSE 2222
 VOLUME /data
 
-#  setup letsencrypt certificate
-RUN apt-get install -y certbot python3-certbot-nginx
-COPY hosting/letsencrypt /app/letsencrypt
-RUN chmod +x /app/letsencrypt/certificate-request.sh /app/letsencrypt/certificate-renew.sh
 # Remove cached files
 RUN rm -rf \
   /root/.cache \
