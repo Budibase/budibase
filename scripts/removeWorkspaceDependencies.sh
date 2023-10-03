@@ -1,4 +1,25 @@
 #!/bin/bash
+
+
+exclude_packages=()
+
+while getopts "e:" opt; do
+  case $opt in
+    e)
+      exclude_packages+=("$OPTARG")
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+    :)
+      echo "Option -$OPTARG requires an argument." >&2
+      exit 1
+      ;;
+  esac
+done
+
+
 root_package_json=$(cat "package.json")
 
 process_package() {
@@ -9,6 +30,12 @@ process_package() {
   
 
   while IFS= read -r package_name; do
+    for exclude_package in "${exclude_packages[@]}"; do
+      if [ "$package_name" == "$exclude_package" ]; then
+        continue 2  # Skip this package and continue with the next one
+      fi
+    done
+
     if echo "$package_json" | jq -e --arg package_name "$package_name" '.dependencies | has($package_name)' > /dev/null; then
       package_json=$(echo "$package_json" | jq "del(.dependencies[\"$package_name\"])")
       has_changes=true

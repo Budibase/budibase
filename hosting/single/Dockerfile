@@ -14,6 +14,8 @@ COPY packageNames.txt .
 
 COPY packages/server/package.json packages/server/package.json
 COPY packages/worker/package.json packages/worker/package.json
+# string-templates does not get bundled during the esbuild process, so we want to use the local version
+COPY packages/string-templates/package.json packages/string-templates/package.json
 
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
@@ -30,6 +32,7 @@ RUN yarn install --production && yarn cache clean
 COPY packages/server/dist packages/server/dist
 COPY packages/server/client packages/server/client
 COPY packages/worker/dist packages/worker/dist
+COPY packages/string-templates packages/string-templates
 
 
 FROM budibase/couchdb as runner
