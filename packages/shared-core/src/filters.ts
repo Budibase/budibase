@@ -72,7 +72,8 @@ export const getValidOperatorsForType = (
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
   } else if (!isFieldType(type) && type.type === FieldType.BB_REFERENCE) {
     if (type.multiple) {
-      ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
+      // Temporally disabled
+      ops = []
     } else {
       ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
     }
