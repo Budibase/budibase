@@ -74,7 +74,7 @@ export const getValidOperatorsForType = (
     if (type.multiple) {
       ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
     } else {
-      ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.ContainsAny]
+      ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
     }
   }
 
