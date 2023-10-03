@@ -1,9 +1,13 @@
-import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
 } from "../../../integrations/utils"
-import { ExternalRequest, RunConfig } from "./ExternalRequest"
+import {
+  ExternalRequest,
+  ExternalRequestReturnType,
+  RunConfig,
+} from "./ExternalRequest"
 import {
   Datasource,
   IncludeRelationship,
@@ -18,14 +22,17 @@ import {
 import sdk from "../../../sdk"
 import * as utils from "./utils"
 import { dataFilters } from "@budibase/shared-core"
-import { inputProcessing } from "../../../utilities/rowProcessor"
+import {
+  inputProcessing,
+  outputProcessing,
+} from "../../../utilities/rowProcessor"
 import { cloneDeep, isEqual } from "lodash"
 
-export async function handleRequest(
-  operation: Operation,
+export async function handleRequest<T extends Operation>(
+  operation: T,
   tableId: string,
   opts?: RunConfig
-) {
+): Promise<ExternalRequestReturnType<T>> {
   // make sure the filters are cleaned up, no empty strings for equals, fuzzy or string
   if (opts && opts.filters) {
     opts.filters = sdk.rows.removeEmptyFilters(opts.filters)
@@ -34,7 +41,7 @@ export async function handleRequest(
     !dataFilters.hasFilters(opts?.filters) &&
     opts?.filters?.onEmptyFilter === EmptyFilterOption.RETURN_NONE
   ) {
-    return []
+    return [] as any
   }
 
   return new ExternalRequest(operation, tableId, opts?.datasource).run(
@@ -46,24 +53,34 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = utils.getTableId(ctx)
   const { _id, ...rowData } = ctx.request.body
 
+  const table = await sdk.tables.getTable(tableId)
+  const { row: dataToUpdate } = await inputProcessing(
+    ctx.user?._id,
+    cloneDeep(table),
+    rowData
+  )
+
   const validateResult = await sdk.rows.utils.validate({
-    row: rowData,
+    row: dataToUpdate,
     tableId,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
+
   const response = await handleRequest(Operation.UPDATE, tableId, {
     id: breakRowIdField(_id),
-    row: rowData,
+    row: dataToUpdate,
   })
   const row = await sdk.rows.external.getRow(tableId, _id, {
     relationships: true,
   })
-  const table = await sdk.tables.getTable(tableId)
+  const enrichedRow = await outputProcessing(table, row, {
+    preserveLinks: true,
+  })
   return {
     ...response,
-    row,
+    row: enrichedRow,
     table,
   }
 }
@@ -71,39 +88,38 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
 export async function save(ctx: UserCtx) {
   const inputs = ctx.request.body
   const tableId = utils.getTableId(ctx)
+
+  const table = await sdk.tables.getTable(tableId)
+  const { table: updatedTable, row } = await inputProcessing(
+    ctx.user?._id,
+    cloneDeep(table),
+    inputs
+  )
+
   const validateResult = await sdk.rows.utils.validate({
-    row: inputs,
+    row,
     tableId,
   })
   if (!validateResult.valid) {
     throw { validation: validateResult.errors }
   }
 
-  const table = await sdk.tables.getTable(tableId)
-  const { table: updatedTable, row } = inputProcessing(
-    ctx.user,
-    cloneDeep(table),
-    inputs
-  )
-
   const response = await handleRequest(Operation.CREATE, tableId, {
     row,
   })
-
-  const responseRow = response as { row: Row }
 
   if (!isEqual(table, updatedTable)) {
     await sdk.tables.saveTable(updatedTable)
   }
 
-  const rowId = responseRow.row._id
+  const rowId = response.row._id
   if (rowId) {
     const row = await sdk.rows.external.getRow(tableId, rowId, {
       relationships: true,
     })
     return {
       ...response,
-      row,
+      row: await outputProcessing(table, row, { preserveLinks: true }),
     }
   } else {
     return response
@@ -121,7 +137,12 @@ export async function find(ctx: UserCtx): Promise<Row> {
     ctx.throw(404)
   }
 
-  return row
+  const table = await sdk.tables.getTable(tableId)
+  // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
+  return await outputProcessing(table, row, {
+    squash: false,
+    preserveLinks: true,
+  })
 }
 
 export async function destroy(ctx: UserCtx) {

@@ -53,7 +53,6 @@ import {
   View,
   FieldType,
   RelationshipType,
-  ViewV2,
   CreateViewRequest,
 } from "@budibase/types"
 
@@ -424,6 +423,15 @@ class TestConfiguration {
     headers[constants.Header.TENANT_ID] = this.getTenantId()
 
     return headers
+  }
+
+  async basicRoleHeaders() {
+    return await this.roleHeaders({
+      email: this.defaultUserValues.email,
+      builder: false,
+      prodApp: true,
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
   }
 
   async roleHeaders({
