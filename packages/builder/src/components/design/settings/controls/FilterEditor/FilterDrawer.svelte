@@ -20,6 +20,7 @@
   import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
+  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
@@ -31,7 +32,6 @@
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions } = Constants
-  const { getValidOperatorsForType } = LuceneUtils
   const KeyedFieldRegex = /\d[0-9]*:/g
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
@@ -133,11 +133,7 @@
 
   const santizeOperator = filter => {
     // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(
-      filter.type,
-      filter.field,
-      datasource
-    ).map(x => x.value)
+    const operators = getValidOperatorsForType(filter).map(x => x.value)
     if (!operators.includes(filter.operator)) {
       filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
@@ -186,6 +182,30 @@
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
   }
+
+  const getValidOperatorsForType = filter => {
+    let operators = LuceneUtils.getValidOperatorsForType(
+      filter.type,
+      filter.field,
+      datasource
+    )
+
+    const fieldSchema = getSchema(filter)
+    if (
+      fieldSchema.type === FieldType.BB_REFERENCE &&
+      fieldSchema.relationshipType !== RelationshipType.MANY_TO_MANY
+    ) {
+      operators = operators.filter(
+        o =>
+          ![
+            OperatorOptions.Contains.value,
+            OperatorOptions.NotContains.value,
+          ].includes(o.value)
+      )
+    }
+
+    return operators
+  }
 </script>
 
 <DrawerContent>
@@ -230,11 +250,7 @@
               />
               <Select
                 disabled={!filter.field}
-                options={getValidOperatorsForType(
-                  filter.type,
-                  filter.field,
-                  datasource
-                )}
+                options={getValidOperatorsForType(filter)}
                 bind:value={filter.operator}
                 on:change={() => onOperatorChange(filter)}
                 placeholder={null}
