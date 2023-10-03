@@ -195,20 +195,8 @@
       return []
     }
 
-    let type = filter.type
-    if (type === FieldType.BB_REFERENCE) {
-      const fieldSchema = getSchema(filter)
-      if (fieldSchema) {
-        type = {
-          type: fieldSchema.type,
-          multiple:
-            fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
-        }
-      }
-    }
-
     const operators = LuceneUtils.getValidOperatorsForType(
-      type,
+      filter.type,
       filter.field,
       datasource
     )
