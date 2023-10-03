@@ -26,7 +26,7 @@ RUN ./scripts/removeWorkspaceDependencies.sh
 # We will never want to sync pro, but the script is still required
 RUN echo '' > scripts/syncProPackage.js
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
-RUN yarn install --production
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn  yarn install --production
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
