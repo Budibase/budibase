@@ -27,10 +27,12 @@
       value = Array.isArray(val) ? val : [val]
     }
   }
+
+  $: selectedValue = multiple || !value ? value : value[0]
 </script>
 
 <Select
-  value={multiple ? value : value[0]}
+  value={selectedValue}
   autocomplete
   on:change={onChange}
   {options}
