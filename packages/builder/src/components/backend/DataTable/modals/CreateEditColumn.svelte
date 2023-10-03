@@ -85,7 +85,7 @@
   }
 
   let relationshipMap = {
-    [RelationshipType.MANY_TO_ONE]: {
+    [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
     },
@@ -93,7 +93,7 @@
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.MANY,
     },
-    [RelationshipType.ONE_TO_MANY]: {
+    [RelationshipType.MANY_TO_ONE]: {
       part1: PrettyRelationshipDefinitions.ONE,
       part2: PrettyRelationshipDefinitions.MANY,
     },

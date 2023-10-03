@@ -7,7 +7,6 @@
     Detail,
     Modal,
     Button,
-    Select,
     ActionButton,
     notifications,
     Label,
@@ -39,9 +38,6 @@
     step => step.stepId === ActionStepID.COLLECT
   )
   $: automationId = $selectedAutomation?._id
-  $: showBindingPicker =
-    block.stepId === ActionStepID.CREATE_ROW ||
-    block.stepId === ActionStepID.UPDATE_ROW
   $: isTrigger = block.type === "TRIGGER"
   $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
@@ -94,15 +90,6 @@
     } catch (error) {
       notifications.error("Error saving automation")
     }
-  }
-
-  /**
-   * "rowControl" appears to be the name of the flag used to determine whether
-   * a certain automation block uses values or bindings as inputs
-   */
-  function toggleRowControl(evt) {
-    const rowControl = evt.detail !== "Use values"
-    automationStore.actions.toggleRowControl(block, rowControl)
   }
 
   async function addLooping() {
@@ -188,16 +175,6 @@
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>
-              {/if}
-              {#if showBindingPicker}
-                <Select
-                  on:change={toggleRowControl}
-                  defaultValue="Use values"
-                  autoWidth
-                  value={block.rowControl ? "Use bindings" : "Use values"}
-                  options={["Use values", "Use bindings"]}
-                  placeholder={null}
-                />
               {/if}
               <ActionButton
                 on:click={() => deleteStep()}
