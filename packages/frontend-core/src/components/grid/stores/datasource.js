@@ -1,4 +1,5 @@
 import { derived, get, writable } from "svelte/store"
+import { getDatasourceDefinition } from "../../../fetch"
 
 export const createStores = () => {
   const definition = writable(null)
@@ -18,6 +19,14 @@ export const deriveStores = context => {
         return null
       }
       let newSchema = { ...$definition?.schema }
+
+      // Ensure schema is configured as objects.
+      // Certain datasources like queries use primitives.
+      Object.keys(newSchema).forEach(key => {
+        if (typeof newSchema[key] !== "object") {
+          newSchema[key] = { type: newSchema[key] }
+        }
+      })
 
       // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
@@ -48,7 +57,16 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { datasource, definition, config, dispatch, table, viewV2 } = context
+  const {
+    API,
+    datasource,
+    definition,
+    config,
+    dispatch,
+    table,
+    viewV2,
+    query,
+  } = context
 
   // Gets the appropriate API for the configured datasource type
   const getAPI = () => {
@@ -58,6 +76,8 @@ export const createActions = context => {
         return table
       case "viewV2":
         return viewV2
+      case "query":
+        return query
       default:
         return null
     }
@@ -65,7 +85,8 @@ export const createActions = context => {
 
   // Refreshes the datasource definition
   const refreshDefinition = async () => {
-    return await getAPI()?.actions.refreshDefinition()
+    const def = await getDatasourceDefinition({ API, datasource })
+    definition.set(def)
   }
 
   // Saves the datasource definition

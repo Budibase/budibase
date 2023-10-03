@@ -5545,12 +5545,11 @@
       "width": 600,
       "height": 400
     },
-    "info": "Grid Blocks are only compatible with internal or SQL tables",
     "settings": [
       {
-        "type": "table",
+        "type": "dataSource",
         "label": "Data",
-        "key": "table",
+        "key": "datasource",
         "required": true
       },
       {

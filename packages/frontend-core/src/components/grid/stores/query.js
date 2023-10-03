@@ -1,42 +1,26 @@
 import { get } from "svelte/store"
 
-const SuppressErrors = true
-
 export const createActions = context => {
-  const { API, datasource, columns, stickyColumn } = context
+  const { API, columns, stickyColumn } = context
 
   const saveDefinition = async newDefinition => {
-    await API.saveTable(newDefinition)
+    await API.saveQuery(newDefinition)
   }
 
-  const saveRow = async row => {
-    row.tableId = get(datasource)?.tableId
-    return await API.saveRow(row, SuppressErrors)
+  const saveRow = async () => {
+    throw "Rows cannot be updated through queries"
   }
 
-  const deleteRows = async rows => {
-    await API.deleteRows({
-      tableId: get(datasource).tableId,
-      rows,
-    })
+  const deleteRows = async () => {
+    throw "Rows cannot be deleted through queries"
+  }
+
+  const getRow = () => {
+    throw "Queries don't support fetching individual rows"
   }
 
   const isDatasourceValid = datasource => {
-    return datasource?.type === "table" && datasource?.tableId
-  }
-
-  const getRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
+    return datasource?.type === "query" && datasource?._id
   }
 
   const canUseColumn = name => {
@@ -46,7 +30,7 @@ export const createActions = context => {
   }
 
   return {
-    table: {
+    query: {
       actions: {
         saveDefinition,
         addRow: saveRow,
@@ -63,25 +47,25 @@ export const createActions = context => {
 export const initialise = context => {
   const {
     datasource,
-    fetch,
-    filter,
     sort,
-    table,
+    filter,
+    query,
     initialFilter,
     initialSortColumn,
     initialSortOrder,
+    fetch,
   } = context
 
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
   let unsubscribers = []
 
-  // Observe datasource changes and apply logic for table datasources
+  // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!table.actions.isDatasourceValid($datasource)) {
+    if (!query.actions.isDatasourceValid($datasource)) {
       return
     }
 
@@ -97,7 +81,7 @@ export const initialise = context => {
       filter.subscribe($filter => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if ($fetch?.options?.datasource?._id !== $datasource._id) {
           return
         }
         $fetch.update({
@@ -111,7 +95,7 @@ export const initialise = context => {
       sort.subscribe($sort => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if ($fetch?.options?.datasource?._id !== $datasource._id) {
           return
         }
         $fetch.update({

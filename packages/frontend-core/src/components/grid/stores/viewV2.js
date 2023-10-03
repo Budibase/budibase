@@ -3,20 +3,7 @@ import { get } from "svelte/store"
 const SuppressErrors = true
 
 export const createActions = context => {
-  const { definition, API, datasource, columns, stickyColumn } = context
-
-  const refreshDefinition = async () => {
-    const $datasource = get(datasource)
-    if (!$datasource) {
-      definition.set(null)
-      return
-    }
-    const table = await API.fetchTableDefinition($datasource.tableId)
-    const view = Object.values(table?.views || {}).find(
-      view => view.id === $datasource.id
-    )
-    definition.set(view)
-  }
+  const { API, datasource, columns, stickyColumn } = context
 
   const saveDefinition = async newDefinition => {
     await API.viewV2.update(newDefinition)
@@ -61,7 +48,6 @@ export const createActions = context => {
   return {
     viewV2: {
       actions: {
-        refreshDefinition,
         saveDefinition,
         addRow: saveRow,
         updateRow: saveRow,

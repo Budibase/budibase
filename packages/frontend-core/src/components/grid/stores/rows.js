@@ -1,7 +1,8 @@
 import { writable, derived, get } from "svelte/store"
-import { fetchData } from "../../../fetch/fetchData"
+import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
+import { Helpers } from "@budibase/bbui"
 
 export const createStores = () => {
   const rows = writable([])
@@ -413,6 +414,13 @@ export const createActions = context => {
     let newRow
     for (let i = 0; i < newRows.length; i++) {
       newRow = newRows[i]
+
+      // Ensure we have a unique _id.
+      // This means generating one for non DS+.
+      if (!newRow._id) {
+        newRow._id = Helpers.hashString(JSON.stringify(newRow))
+      }
+
       if (!rowCacheMap[newRow._id]) {
         rowCacheMap[newRow._id] = true
         rowsToAppend.push(newRow)

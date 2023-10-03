@@ -17,6 +17,7 @@ import * as Filter from "./filter"
 import * as Notifications from "./notifications"
 import * as Table from "./table"
 import * as ViewV2 from "./viewV2"
+import * as Query from "./query"
 import * as Datasource from "./datasource"
 
 const DependencyOrderedStores = [
@@ -26,6 +27,7 @@ const DependencyOrderedStores = [
   Scroll,
   Table,
   ViewV2,
+  Query,
   Datasource,
   Columns,
   Rows,

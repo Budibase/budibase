@@ -33,7 +33,7 @@
 
   let visible = false
   let isAdding = false
-  let newRow = {}
+  let newRow = { _isNewRow: true }
   let offset = 0
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
@@ -58,7 +58,9 @@
 
     // Create row
     const newRowIndex = offset ? undefined : 0
-    const savedRow = await rows.actions.addRow(newRow, newRowIndex)
+    let rowToCreate = { ...newRow }
+    delete rowToCreate._isNewRow
+    const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
     if (savedRow) {
       // Reset state
       clear()

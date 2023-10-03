@@ -24,7 +24,18 @@ const DataFetchMap = {
   jsonarray: JSONArrayFetch,
 }
 
+// Constructs a new fetch model for a certain datasource
 export const fetchData = ({ API, datasource, options }) => {
   const Fetch = DataFetchMap[datasource?.type] || TableFetch
   return new Fetch({ API, datasource, ...options })
+}
+
+// Fetches the definition of any type of datasource
+export const getDatasourceDefinition = async ({ API, datasource }) => {
+  const handler = DataFetchMap[datasource?.type]
+  if (!handler) {
+    return null
+  }
+  const instance = new handler({ API })
+  return await instance.getDefinition(datasource)
 }

@@ -37,15 +37,24 @@ export const deriveStores = context => {
     [props, hasNonAutoColumn],
     ([$props, $hasNonAutoColumn]) => {
       let config = { ...$props }
+      const type = $props.datasource?.type
 
       // Disable some features if we're editing a view
-      if ($props.datasource?.type === "viewV2") {
+      if (type === "viewV2") {
         config.canEditColumns = false
       }
 
       // Disable adding rows if we don't have any valid columns
       if (!$hasNonAutoColumn) {
         config.canAddRows = false
+      }
+
+      // Disable features for non DS+
+      if (!["table", "viewV2"].includes(type)) {
+        config.canAddRows = false
+        config.canEditRows = false
+        config.canDeleteRows = false
+        config.canExpandRows = false
       }
 
       return config
