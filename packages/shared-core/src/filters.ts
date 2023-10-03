@@ -12,22 +12,12 @@ import { deepGet } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
-type RequestedFieldType =
-  | Exclude<FieldType, FieldType.BB_REFERENCE>
-  | { type: FieldType.BB_REFERENCE; multiple: boolean }
-
-export function isFieldType(
-  r: RequestedFieldType
-): r is Exclude<FieldType, FieldType.BB_REFERENCE> {
-  return typeof r === "string" && Object.values(FieldType).includes(r)
-}
-
 /**
  * Returns the valid operator options for a certain data type
  * @param type the data type
  */
 export const getValidOperatorsForType = (
-  type: RequestedFieldType,
+  type: FieldType,
   field: string,
   datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
 ) => {
@@ -70,13 +60,8 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
-  } else if (!isFieldType(type) && type.type === FieldType.BB_REFERENCE) {
-    if (type.multiple) {
-      // Temporally disabled
-      ops = []
-    } else {
-      ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-    }
+  } else if (type === FieldType.BB_REFERENCE) {
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   }
 
   // Only allow equal/not equal for _id in SQL tables
