@@ -3,24 +3,24 @@
     Body,
     Button,
     Combobox,
-    Multiselect,
     DatePicker,
     DrawerContent,
     Icon,
     Input,
-    Layout,
-    Select,
     Label,
+    Layout,
+    Multiselect,
+    Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
-  import { getFields } from "helpers/searchFields"
-  import { FieldType } from "@budibase/types"
-  import { createEventDispatcher, onMount } from "svelte"
+  import {generate} from "shortid"
+  import {Constants, LuceneUtils} from "@budibase/frontend-core"
+  import {getFields} from "helpers/searchFields"
+  import {FieldType} from "@budibase/types"
+  import {createEventDispatcher, onMount} from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { RelationshipType } from "constants/backend"
+  import {RelationshipType} from "constants/backend"
 
   export let schemaFields
   export let filters = []
@@ -122,7 +122,7 @@
     return enrichedSchemaFields.find(field => field.name === filter.field)
   }
 
-  const santizeTypes = filter => {
+  const sanitizeTypes = filter => {
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
@@ -131,7 +131,7 @@
     filter.externalType = getSchema(filter)?.externalType
   }
 
-  const santizeOperator = filter => {
+  const sanitizeOperator = filter => {
     // Ensure a valid operator is selected
     const operators = getValidOperatorsForType(filter).map(x => x.value)
     if (!operators.includes(filter.operator)) {
@@ -146,7 +146,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const santizeValue = (filter, previousType) => {
+  const sanitizeValue = (filter, previousType) => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -171,18 +171,18 @@
 
   const onFieldChange = filter => {
     const previousType = filter.type
-    santizeTypes(filter)
-    santizeOperator(filter)
-    santizeValue(filter, previousType)
+    sanitizeTypes(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter, previousType)
   }
 
   const onOperatorChange = filter => {
-    santizeOperator(filter)
-    santizeValue(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter)
   }
 
   const onValueTypeChange = filter => {
-    santizeValue(filter)
+    sanitizeValue(filter)
   }
 
   const getFieldOptions = field => {
@@ -195,13 +195,11 @@
       return []
     }
 
-    const operators = LuceneUtils.getValidOperatorsForType(
+    return LuceneUtils.getValidOperatorsForType(
       filter.type,
       filter.field,
       datasource
     )
-
-    return operators
   }
 </script>
 
