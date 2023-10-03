@@ -3,6 +3,8 @@
   import { Select, Checkbox } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
+  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
+  import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -108,14 +110,29 @@
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn && schema.type !== "attachment"}
-        <RowSelectorTypes
-          {isTestModal}
-          {field}
+        <DrawerBindableSlot
+          fillWidth
+          title={value.title}
+          label={field}
+          panel={AutomationBindingPanel}
+          type={schema.type}
           {schema}
-          bindings={parsedBindings}
-          {value}
-          {onChange}
-        />
+          value={value[field]}
+          on:change={e => onChange(e, field)}
+          {bindings}
+          allowJS={true}
+          updateOnChange={false}
+          drawerLeft="260px"
+        >
+          <RowSelectorTypes
+            {isTestModal}
+            {field}
+            {schema}
+            bindings={parsedBindings}
+            {value}
+            {onChange}
+          />
+        </DrawerBindableSlot>
       {/if}
       {#if isUpdateRow && schema.type === "link"}
         <div class="checkbox-field">

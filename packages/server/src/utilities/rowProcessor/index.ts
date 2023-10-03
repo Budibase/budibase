@@ -11,6 +11,7 @@ import {
   processInputBBReferences,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
+import { isExternalTable } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -234,9 +235,6 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (column.type == FieldTypes.BB_REFERENCE) {
       for (let row of enriched) {
-        if (row[property] == null) {
-          continue
-        }
         row[property] = await processOutputBBReferences(
           row[property],
           column.subtype as FieldSubtype
@@ -249,6 +247,16 @@ export async function outputProcessing<T extends Row[] | Row>(
       table,
       enriched
     )) as Row[]
+  }
+  // remove null properties to match internal API
+  if (isExternalTable(table._id!)) {
+    for (let row of enriched) {
+      for (let key of Object.keys(row)) {
+        if (row[key] === null) {
+          delete row[key]
+        }
+      }
+    }
   }
   return (wasArray ? enriched : enriched[0]) as T
 }

@@ -82,7 +82,8 @@
       hasValidated = false
     })
   }
-  $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
+  $: valid =
+    getErrorCount(errors) === 0 && allRequiredAttributesSet(relationshipType)
   $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
   $: isManyToOne = relationshipType === RelationshipType.MANY_TO_ONE
 
@@ -139,7 +140,7 @@
     return Object.entries(errors).filter(entry => !!entry[1]).length
   }
 
-  function allRequiredAttributesSet() {
+  function allRequiredAttributesSet(relationshipType) {
     const base = getTable(fromId) && getTable(toId) && fromColumn && toColumn
     if (relationshipType === RelationshipType.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
@@ -149,9 +150,10 @@
   }
 
   function validate() {
-    if (!allRequiredAttributesSet() && !hasValidated) {
+    if (!allRequiredAttributesSet(relationshipType) && !hasValidated) {
       return
     }
+
     hasValidated = true
     errorChecker.setType(relationshipType)
     const fromTable = getTable(fromId),
