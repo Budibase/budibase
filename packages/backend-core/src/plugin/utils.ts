@@ -6,6 +6,7 @@ import {
   AutomationStepIdArray,
   AutomationIOType,
   AutomationCustomIOType,
+  DatasourceFeature,
 } from "@budibase/types"
 import joi from "joi"
 
@@ -67,9 +68,27 @@ function validateDatasource(schema: any) {
     version: joi.string().optional(),
     schema: joi.object({
       docs: joi.string(),
+      plus: joi.boolean().optional(),
+      isSQL: joi.boolean().optional(),
+      auth: joi
+        .object({
+          type: joi.string().required(),
+        })
+        .optional(),
+      features: joi
+        .object(
+          Object.fromEntries(
+            Object.values(DatasourceFeature).map(key => [
+              key,
+              joi.boolean().optional(),
+            ])
+          )
+        )
+        .optional(),
+      relationships: joi.boolean().optional(),
+      description: joi.string().required(),
       friendlyName: joi.string().required(),
       type: joi.string().allow(...DATASOURCE_TYPES),
-      description: joi.string().required(),
       datasource: joi.object().pattern(joi.string(), fieldValidator).required(),
       query: joi
         .object()
