@@ -14,13 +14,13 @@
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import {generate} from "shortid"
-  import {Constants, LuceneUtils} from "@budibase/frontend-core"
-  import {getFields} from "helpers/searchFields"
-  import {FieldType} from "@budibase/types"
-  import {createEventDispatcher, onMount} from "svelte"
+  import { generate } from "shortid"
+  import { Constants, LuceneUtils } from "@budibase/frontend-core"
+  import { getFields } from "helpers/searchFields"
+  import { FieldType } from "@budibase/types"
+  import { createEventDispatcher, onMount } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import {RelationshipType} from "constants/backend"
+  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
