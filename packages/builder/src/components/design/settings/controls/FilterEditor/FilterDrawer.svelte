@@ -198,7 +198,7 @@
               fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
           }
 
-    let operators = LuceneUtils.getValidOperatorsForType(
+    const operators = LuceneUtils.getValidOperatorsForType(
       type,
       filter.field,
       datasource
