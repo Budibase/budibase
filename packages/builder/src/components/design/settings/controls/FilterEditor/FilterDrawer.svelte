@@ -162,8 +162,8 @@
       filter.value = []
     } else if (
       previousType !== filter.type &&
-      previousType === FieldType.BB_REFERENCE &&
-      filter.type === FieldType.BB_REFERENCE
+      (previousType === FieldType.BB_REFERENCE ||
+        filter.type === FieldType.BB_REFERENCE)
     ) {
       filter.value = filter.type === "array" ? [] : null
     }
