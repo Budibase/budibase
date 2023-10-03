@@ -191,7 +191,6 @@
   }
 
   const getValidOperatorsForType = filter => {
-    const fieldSchema = getSchema(filter)
     if (!filter) {
       return []
     }
