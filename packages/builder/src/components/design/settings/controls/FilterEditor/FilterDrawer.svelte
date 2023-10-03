@@ -17,7 +17,9 @@
   import { generate } from "shortid"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
+  import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
+  import FilterUsers from "./FilterUsers.svelte"
 
   export let schemaFields
   export let filters = []
@@ -285,6 +287,8 @@
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
                 />
+              {:else if filter.type === FieldType.BB_REFERENCE}
+                <FilterUsers {filter} />
               {:else}
                 <DrawerBindableInput disabled />
               {/if}

@@ -60,6 +60,8 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.BB_REFERENCE) {
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   }
 
   // Only allow equal/not equal for _id in SQL tables
