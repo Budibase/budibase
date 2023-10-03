@@ -9,6 +9,7 @@
   export let constraints
   export let optionColors = {}
   let options = []
+  let changed = false
 
   let colorPopovers = []
   let anchors = []
@@ -22,7 +23,7 @@
     "hsla(320, 90%, 75%, 0.3)",
   ]
   $: {
-    if (constraints.inclusion.length) {
+    if (constraints.inclusion.length && !changed) {
       options = constraints.inclusion.map(value => ({
         name: value,
         id: Math.random(),
@@ -65,6 +66,7 @@
   }
 
   const handleNameChange = (optionName, idx, value) => {
+    changed = true
     constraints.inclusion[idx] = value
     options[idx].name = value
     optionColors[value] = optionColors[optionName]
