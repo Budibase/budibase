@@ -15,19 +15,19 @@ jobs:
       matrix:
         node-version: [18.x]
     steps:
-      # - name: Maximize build space
-      #   uses: easimon/maximize-build-space@master
-      #   with:
-      #     root-reserve-mb: 35000
-      #     swap-size-mb: 1024
-      #     remove-android: "true"
-      #     remove-dotnet: "true"
-      # - name: Fail if not a tag
-      #   run: |
-      #     if [[ $GITHUB_REF != refs/tags/* ]]; then
-      #       echo "Workflow Dispatch can only be run on tags"
-      #       exit 1
-      #     fi
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 35000
+          swap-size-mb: 1024
+          remove-android: "true"
+          remove-dotnet: "true"
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then
+            echo "Workflow Dispatch can only be run on tags"
+            exit 1
+          fi
       - name: "Checkout"
         uses: actions/checkout@v4
         with:
