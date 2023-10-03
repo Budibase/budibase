@@ -9,6 +9,7 @@ export interface Datasource extends Document {
   // the config is defined by the schema
   config?: Record<string, any>
   plus?: boolean
+  isSQL?: boolean
   entities?: {
     [key: string]: Table
   }
