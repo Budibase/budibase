@@ -146,7 +146,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const santizeValue = filter => {
+  const santizeValue = (filter, previousType) => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -160,13 +160,20 @@
       }
     } else if (filter.type === "array" && filter.valueType === "Value") {
       filter.value = []
+    } else if (
+      previousType !== filter.type &&
+      previousType === FieldType.BB_REFERENCE &&
+      filter.type === FieldType.BB_REFERENCE
+    ) {
+      filter.value = filter.type === "array" ? [] : null
     }
   }
 
   const onFieldChange = filter => {
+    const previousType = filter.type
     santizeTypes(filter)
     santizeOperator(filter)
-    santizeValue(filter)
+    santizeValue(filter, previousType)
   }
 
   const onOperatorChange = filter => {
@@ -185,18 +192,21 @@
 
   const getValidOperatorsForType = filter => {
     const fieldSchema = getSchema(filter)
-    if (!fieldSchema) {
+    if (!filter) {
       return []
     }
 
-    const type =
-      fieldSchema.type !== FieldType.BB_REFERENCE
-        ? field.type
-        : {
-            type: fieldSchema.type,
-            multiple:
-              fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
-          }
+    let type = filter.type
+    if (type === FieldType.BB_REFERENCE) {
+      const fieldSchema = getSchema(filter)
+      if (fieldSchema) {
+        type = {
+          type: fieldSchema.type,
+          multiple:
+            fieldSchema.relationshipType === RelationshipType.MANY_TO_MANY,
+        }
+      }
+    }
 
     const operators = LuceneUtils.getValidOperatorsForType(
       type,
