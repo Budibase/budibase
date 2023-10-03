@@ -308,7 +308,7 @@
                   bind:value={filter.value}
                   multiselect={getSchema(filter).relationshipType ===
                     RelationshipType.MANY_TO_MANY ||
-                    filter.operator === OperatorOptions.ContainsAny.value}
+                    filter.operator === OperatorOptions.In.value}
                   disabled={filter.noValue}
                 />
               {:else}
