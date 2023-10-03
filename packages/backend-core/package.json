@@ -26,7 +26,7 @@
     "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",
     "@techpass/passport-openidconnect": "0.3.2",
-    "aws-cloudfront-sign": "2.2.0",
+    "aws-cloudfront-sign": "3.0.2",
     "aws-sdk": "2.1030.0",
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
