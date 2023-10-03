@@ -185,6 +185,10 @@
 
   const getValidOperatorsForType = filter => {
     const fieldSchema = getSchema(filter)
+    if (!fieldSchema) {
+      return []
+    }
+
     const type =
       fieldSchema.type !== FieldType.BB_REFERENCE
         ? field.type
