@@ -22,12 +22,12 @@ jobs:
           swap-size-mb: 1024
           remove-android: "true"
           remove-dotnet: "true"
-      - name: Fail if not a tag
-        run: |
-          if [[ $GITHUB_REF != refs/tags/* ]]; then
-            echo "Workflow Dispatch can only be run on tags"
-            exit 1
-          fi
+      # - name: Fail if not a tag
+      #   run: |
+      #     if [[ $GITHUB_REF != refs/tags/* ]]; then
+      #       echo "Workflow Dispatch can only be run on tags"
+      #       exit 1
+      #     fi
       - name: "Checkout"
         uses: actions/checkout@v4
         with:
