@@ -1,5 +1,5 @@
 import env from "../environment"
-const cfsign = require("aws-cloudfront-sign")
+import cfsign from "aws-cloudfront-sign"
 
 let PRIVATE_KEY: string | undefined
 
@@ -21,7 +21,7 @@ function getPrivateKey() {
 
 const getCloudfrontSignParams = () => {
   return {
-    keypairId: env.CLOUDFRONT_PUBLIC_KEY_ID,
+    keypairId: env.CLOUDFRONT_PUBLIC_KEY_ID!,
     privateKeyString: getPrivateKey(),
     expireTime: new Date().getTime() + 1000 * 60 * 60, // 1 hour
   }
