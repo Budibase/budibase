@@ -288,7 +288,7 @@
                   bind:value={filter.value}
                 />
               {:else if filter.type === FieldType.BB_REFERENCE}
-                <FilterUsers {filter} />
+                <FilterUsers bind:value={filter.value} />
               {:else}
                 <DrawerBindableInput disabled />
               {/if}
