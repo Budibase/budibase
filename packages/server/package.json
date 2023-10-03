@@ -54,7 +54,7 @@
     "@bull-board/api": "3.7.0",
     "@bull-board/koa": "3.9.4",
     "@elastic/elasticsearch": "7.10.0",
-    "@google-cloud/firestore": "5.0.2",
+    "@google-cloud/firestore": "6.8.0",
     "@koa/router": "8.0.8",
     "@sentry/node": "6.17.7",
     "@socket.io/redis-adapter": "^8.2.1",
