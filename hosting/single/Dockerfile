@@ -103,6 +103,9 @@ COPY --from=build /app/node_modules /node_modules
 COPY --from=build /app/package.json /package.json
 COPY --from=build /app/packages/server /app
 COPY --from=build /app/packages/worker /worker
+COPY --from=build /app/packages/string-templates /string-templates
+
+RUN cd /string-templates && yarn link && cd ../app && yarn link @budibase/string-templates && cd ../worker && yarn link @budibase/string-templates
 
 
 EXPOSE 80
