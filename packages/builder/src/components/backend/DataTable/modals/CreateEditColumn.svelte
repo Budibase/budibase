@@ -381,7 +381,20 @@
 
     if (!external) {
       return [
-        ...Object.values(fieldDefinitions),
+        FIELDS.STRING,
+        FIELDS.BARCODEQR,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.ARRAY,
+        FIELDS.NUMBER,
+        FIELDS.BIGINT,
+        FIELDS.BOOLEAN,
+        FIELDS.DATETIME,
+        FIELDS.ATTACHMENT,
+        FIELDS.LINK,
+        FIELDS.FORMULA,
+        FIELDS.JSON,
+        FIELDS.BB_REFERENCE_USER,
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
