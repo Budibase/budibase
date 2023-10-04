@@ -339,8 +339,6 @@
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     } else if (editableColumn.type === FORMULA_TYPE) {
       editableColumn.formulaType = "dynamic"
-    } else if (editableColumn.type === USER_REFRENCE_TYPE) {
-      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
     }
   }
 
