@@ -188,7 +188,9 @@
       )
     }
 
-    allowedTypes = getAllowedTypes()
+    if (!savingColumn) {
+      allowedTypes = getAllowedTypes()
+    }
   }
 
   $: initialiseField(field, savingColumn)

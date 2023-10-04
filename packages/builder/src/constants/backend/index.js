@@ -133,6 +133,9 @@ export const FIELDS = {
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USERS,
     icon: "User",
+    constraints: {
+      type: "array",
+    },
   },
 }
 
