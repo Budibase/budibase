@@ -127,14 +127,12 @@ export const FIELDS = {
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USER,
     icon: "User",
-    compositeType: `${FieldType.BB_REFERENCE}_${FieldSubtype.USER}`, // Used for working with the subtype on CreateEditColumn as is it was a primary type
   },
   USERS: {
     name: "Users",
     type: FieldType.BB_REFERENCE,
     subtype: FieldSubtype.USERS,
     icon: "User",
-    compositeType: `${FieldType.BB_REFERENCE}_${FieldSubtype.USERS}`,
   },
 }
 
