@@ -30,8 +30,11 @@ RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn  yarn in
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
+COPY packages/server/pm2.config.js packages/server/pm2.config.js
 COPY packages/server/client packages/server/client
+COPY packages/server/builder packages/server/builder
 COPY packages/worker/dist packages/worker/dist
+COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 COPY packages/string-templates packages/string-templates
 
 
