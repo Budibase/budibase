@@ -3,10 +3,10 @@ import { utils } from "@budibase/shared-core"
 import { FieldSubtype } from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
 
-export async function processInputBBReferences(
+export async function processInputBBReferences<T extends FieldSubtype>(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
-): Promise<string | null> {
+): Promise<string | string[] | null> {
   const referenceIds: string[] = []
 
   if (Array.isArray(value)) {
@@ -34,6 +34,11 @@ export async function processInputBBReferences(
       if (notFoundIds?.length) {
         throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
       }
+
+      if (subtype === FieldSubtype.USERS) {
+        return referenceIds
+      }
+
       return referenceIds.join(",") || null
 
     default:
@@ -42,15 +47,16 @@ export async function processInputBBReferences(
 }
 
 export async function processOutputBBReferences(
-  value: string,
+  value: string | string[],
   subtype: FieldSubtype
 ) {
-  if (typeof value !== "string") {
+  if (value === null || value === undefined) {
     // Already processed or nothing to process
     return value || undefined
   }
 
-  const ids = value.split(",").filter(id => !!id)
+  const ids =
+    typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
     case FieldSubtype.USER:
