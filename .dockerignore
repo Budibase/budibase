@@ -2,6 +2,8 @@
 !/packages/
 !/scripts/
 /packages/*/node_modules
+packages/server/scripts/
+!packages/server/scripts/integrations/oracle
 !nx.json
 !/hosting/single/
 !/hosting/letsencrypt /
