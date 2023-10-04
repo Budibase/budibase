@@ -43,6 +43,6 @@ export enum FieldSubtype {
 export const FieldTypeSubtypes = {
   BB_REFERENCE: {
     USER: FieldSubtype.USER,
-    USESR: FieldSubtype.USERS,
+    USERS: FieldSubtype.USERS,
   },
 }

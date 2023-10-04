@@ -48,6 +48,8 @@ function generateSchema(
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
       case FieldTypes.BARCODEQR:
+        schema.text(key)
+        break
       case FieldTypes.BB_REFERENCE:
         const subtype = column.subtype as FieldSubtype
         switch (subtype) {
