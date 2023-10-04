@@ -85,7 +85,7 @@
   }
 
   let relationshipMap = {
-    [RelationshipType.MANY_TO_ONE]: {
+    [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
     },
@@ -93,7 +93,7 @@
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.MANY,
     },
-    [RelationshipType.ONE_TO_MANY]: {
+    [RelationshipType.MANY_TO_ONE]: {
       part1: PrettyRelationshipDefinitions.ONE,
       part2: PrettyRelationshipDefinitions.MANY,
     },
@@ -277,10 +277,7 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (
-        saveColumn.type === LINK_TYPE &&
-        saveColumn.relationshipType === RelationshipType.MANY_TO_MANY
-      ) {
+      if (saveColumn.type === LINK_TYPE) {
         // Fetching the new tables
         tables.fetch()
         // Fetching the new relationships
@@ -312,6 +309,11 @@
         confirmDeleteDialog.hide()
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
+
+        if (editableColumn.type === LINK_TYPE) {
+          // Updating the relationships
+          datasources.fetch()
+        }
       }
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
