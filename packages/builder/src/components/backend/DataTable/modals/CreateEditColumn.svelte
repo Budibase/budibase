@@ -51,13 +51,18 @@
   export let field
 
   let mounted = false
-  let fieldDefinitions = Object.entries(FIELDS).reduce(
-    (acc, [fieldName, field]) => {
-      acc[field.compositeType?.toUpperCase() || fieldName] = field
-      return acc
-    },
-    {}
-  )
+  const fieldDefinitions = Object.values(FIELDS).reduce((acc, field) => {
+    const fieldId = makeFieldId(field)
+
+    acc[fieldId] = { ...field, fieldId }
+    return acc
+  }, {})
+
+  function makeFieldId(field) {
+    return `${field.type}${field.subtype || ""}`.toUpperCase()
+  }
+
+  $: console.warn(fieldDefinitions)
 
   let originalName
   let linkEditDisabled
@@ -145,9 +150,8 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
-      if (editableColumn.type === FieldType.BB_REFERENCE) {
-        editableColumn.type = `${editableColumn.type}_${editableColumn.subtype}`
-      }
+      editableColumn.fieldId = makeFieldId(editableColumn)
+
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
@@ -176,6 +180,8 @@
       } else {
         editableColumn.name = "Column 01"
       }
+
+      editableColumn.fieldId = makeFieldId(editableColumn)
     }
 
     allowedTypes = getAllowedTypes()
@@ -255,13 +261,7 @@
 
     let saveColumn = cloneDeep(editableColumn)
 
-    // Handle types on composite types
-    const definition = fieldDefinitions[saveColumn.type.toUpperCase()]
-    if (definition && saveColumn.type === definition.compositeType) {
-      saveColumn.type = definition.type
-      saveColumn.subtype = definition.subtype
-      delete saveColumn.compositeType
-    }
+    delete saveColumn.fieldId
 
     if (saveColumn.type === AUTO_TYPE) {
       saveColumn = buildAutoColumn(
@@ -390,38 +390,48 @@
 
     if (!external) {
       return [
-        FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
-        FIELDS.OPTIONS,
-        FIELDS.ARRAY,
-        FIELDS.NUMBER,
-        FIELDS.BIGINT,
-        FIELDS.BOOLEAN,
-        FIELDS.DATETIME,
-        FIELDS.ATTACHMENT,
-        FIELDS.LINK,
-        FIELDS.FORMULA,
-        FIELDS.JSON,
-        FIELDS.USER,
+        fieldDefinitions.STRING,
+        fieldDefinitions.BARCODEQR,
+        fieldDefinitions.LONGFORM,
+        fieldDefinitions.OPTIONS,
+        fieldDefinitions.ARRAY,
+        fieldDefinitions.NUMBER,
+        fieldDefinitions.BIGINT,
+        fieldDefinitions.BOOLEAN,
+        fieldDefinitions.DATETIME,
+        fieldDefinitions.ATTACHMENT,
+        fieldDefinitions.LINK,
+        fieldDefinitions.FORMULA,
+        fieldDefinitions.JSON,
+        fieldDefinitions[
+          makeFieldId({
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldSubtype.USER,
+          })
+        ],
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
       let fields = [
-        FIELDS.STRING,
-        FIELDS.BARCODEQR,
-        FIELDS.LONGFORM,
-        FIELDS.OPTIONS,
-        FIELDS.DATETIME,
-        FIELDS.NUMBER,
-        FIELDS.BOOLEAN,
-        FIELDS.FORMULA,
-        FIELDS.BIGINT,
-        FIELDS.BB_REFERENCE_USER,
+        fieldDefinitions.STRING,
+        fieldDefinitions.BARCODEQR,
+        fieldDefinitions.LONGFORM,
+        fieldDefinitions.OPTIONS,
+        fieldDefinitions.DATETIME,
+        fieldDefinitions.NUMBER,
+        fieldDefinitions.BOOLEAN,
+        fieldDefinitions.FORMULA,
+        fieldDefinitions.BIGINT,
+        fieldDefinitions[
+          getFieldId({
+            type: FieldType.BB_REFERENCE,
+            subtype: FieldSubtype.USER,
+          })
+        ],
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
-        fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
+        fields = [...fields, fieldDefinitions.LINK, fieldDefinitions.ARRAY]
       }
       return fields
     }
@@ -509,11 +519,11 @@
   {/if}
   <Select
     disabled={!typeEnabled}
-    value={editableColumn.type}
+    bind:value={editableColumn.fieldId}
     on:change={handleTypeChange}
     options={allowedTypes}
     getOptionLabel={field => field.name}
-    getOptionValue={field => field.compositeType || field.type}
+    getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
       if (option.type == AUTO_TYPE) {
