@@ -22,6 +22,7 @@
     columns,
     definition,
     datasource,
+    schema,
   } = getContext("grid")
 
   const bannedDisplayColumnTypes = [
@@ -126,16 +127,16 @@
     // Generate new name
     let newName = `${column.name} copy`
     let attempts = 2
-    while ($definition.schema[newName]) {
+    while ($schema[newName]) {
       newName = `${column.name} copy ${attempts++}`
     }
 
     // Save schema with new column
-    const existingColumnDefinition = $definition.schema[column.name]
+    const existingColumnDefinition = $schema[column.name]
     await datasource.actions.saveDefinition({
       ...$definition,
       schema: {
-        ...$definition.schema,
+        ...$schema,
         [newName]: {
           ...existingColumnDefinition,
           name: newName,

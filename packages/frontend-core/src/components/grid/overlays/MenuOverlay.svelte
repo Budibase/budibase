@@ -75,7 +75,9 @@
       </MenuItem>
       <MenuItem
         icon="Copy"
-        disabled={isNewRow || !$focusedRow?._id}
+        disabled={isNewRow ||
+          !$focusedRow?._id ||
+          $focusedRow?._id?.startsWith("fake-")}
         on:click={() => copyToClipboard($focusedRow?._id)}
         on:click={menu.actions.close}
       >

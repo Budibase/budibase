@@ -12,27 +12,36 @@ export const createStores = () => {
 export const deriveStores = context => {
   const { definition, schemaOverrides, columnWhitelist } = context
 
-  const schema = derived(
-    [definition, schemaOverrides, columnWhitelist],
-    ([$definition, $schemaOverrides, $columnWhitelist]) => {
-      if (!$definition?.schema) {
+  const schema = derived(definition, $definition => {
+    let schema = $definition?.schema
+    if (!schema) {
+      return null
+    }
+
+    // Ensure schema is configured as objects.
+    // Certain datasources like queries use primitives.
+    Object.keys(schema || {}).forEach(key => {
+      if (typeof schema[key] !== "object") {
+        schema[key] = { type: schema[key] }
+      }
+    })
+
+    return schema
+  })
+
+  const enrichedSchema = derived(
+    [schema, schemaOverrides, columnWhitelist],
+    ([$schema, $schemaOverrides, $columnWhitelist]) => {
+      if (!$schema) {
         return null
       }
-      let newSchema = { ...$definition?.schema }
-
-      // Ensure schema is configured as objects.
-      // Certain datasources like queries use primitives.
-      Object.keys(newSchema).forEach(key => {
-        if (typeof newSchema[key] !== "object") {
-          newSchema[key] = { type: newSchema[key] }
-        }
-      })
+      let enrichedSchema = { ...$schema }
 
       // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
-        if (newSchema[field]) {
-          newSchema[field] = {
-            ...newSchema[field],
+        if (enrichedSchema[field]) {
+          enrichedSchema[field] = {
+            ...enrichedSchema[field],
             ...$schemaOverrides[field],
           }
         }
@@ -40,19 +49,20 @@ export const deriveStores = context => {
 
       // Apply whitelist if specified
       if ($columnWhitelist?.length) {
-        Object.keys(newSchema).forEach(key => {
+        Object.keys(enrichedSchema).forEach(key => {
           if (!$columnWhitelist.includes(key)) {
-            delete newSchema[key]
+            delete enrichedSchema[key]
           }
         })
       }
 
-      return newSchema
+      return enrichedSchema
     }
   )
 
   return {
     schema,
+    enrichedSchema,
   }
 }
 
