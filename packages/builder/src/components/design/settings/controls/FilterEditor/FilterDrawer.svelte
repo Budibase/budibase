@@ -20,7 +20,6 @@
   import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
