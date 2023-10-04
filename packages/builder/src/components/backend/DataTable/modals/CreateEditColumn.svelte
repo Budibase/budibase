@@ -659,18 +659,16 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if editableColumn.type === USER_REFRENCE_TYPE}
-    <!-- Disabled temporally -->
-    <!-- <Toggle
-      value={editableColumn.relationshipType === RelationshipType.MANY_TO_MANY}
+    <Toggle
+      value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
-        (editableColumn.relationshipType = e.detail
-          ? RelationshipType.MANY_TO_MANY
-          : RelationshipType.ONE_TO_MANY)}
+        (editableColumn.subtype = e.detail
+          ? FieldSubtype.USERS
+          : FieldSubtype.USER)}
       disabled={!isCreating}
       thin
       text="Allow multiple users"
-    /> -->
+    />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
