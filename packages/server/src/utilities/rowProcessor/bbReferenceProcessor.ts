@@ -28,18 +28,17 @@ export async function processInputBBReferences(
 
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
         throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
       }
+      return referenceIds.join(",") || null
 
-      break
     default:
       throw utils.unreachable(subtype)
   }
-
-  return referenceIds.join(",") || null
 }
 
 export async function processOutputBBReferences(
@@ -55,6 +54,7 @@ export async function processOutputBBReferences(
 
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { users } = await cache.user.getUsers(ids)
       if (!users.length) {
         return undefined
