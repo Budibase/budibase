@@ -14,7 +14,6 @@ import {
   Table,
   TableResponse,
   UserCtx,
-  Datasource,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
