@@ -43,7 +43,6 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
-  const USER_REFRENCE_TYPE = FIELDS.BB_REFERENCE_USER.compositeType
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -52,7 +51,14 @@
   export let field
 
   let mounted = false
-  let fieldDefinitions = cloneDeep(FIELDS)
+  let fieldDefinitions = Object.entries(FIELDS).reduce(
+    (acc, [fieldName, field]) => {
+      acc[field.compositeType?.toUpperCase() || fieldName] = field
+      return acc
+    },
+    {}
+  )
+
   let originalName
   let linkEditDisabled
   let primaryDisplay
@@ -334,6 +340,9 @@
       editableColumn.constraints = definition.constraints
     }
 
+    editableColumn.type = definition.type
+    editableColumn.subtype = definition.subtype
+
     // Default relationships many to many
     if (editableColumn.type === LINK_TYPE) {
       editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
@@ -394,7 +403,7 @@
         FIELDS.LINK,
         FIELDS.FORMULA,
         FIELDS.JSON,
-        FIELDS.BB_REFERENCE_USER,
+        FIELDS.USER,
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
@@ -500,7 +509,7 @@
   {/if}
   <Select
     disabled={!typeEnabled}
-    bind:value={editableColumn.type}
+    value={editableColumn.type}
     on:change={handleTypeChange}
     options={allowedTypes}
     getOptionLabel={field => field.name}
@@ -670,7 +679,7 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if editableColumn.type === USER_REFRENCE_TYPE}
+  {:else if editableColumn.type === FieldType.BB_REFERENCE && [FieldSubtype.USER, FieldSubtype.USERS].includes(editableColumn.subtype)}
     <Toggle
       value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
