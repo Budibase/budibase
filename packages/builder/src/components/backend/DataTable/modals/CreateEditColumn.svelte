@@ -33,7 +33,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldType, FieldSubtype } from "@budibase/types"
+  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
@@ -596,7 +596,7 @@
         <DatePicker bind:value={editableColumn.constraints.datetime.latest} />
       </div>
     </div>
-    {#if datasource?.source !== "ORACLE" && datasource?.source !== "SQL_SERVER" && !editableColumn.dateOnly}
+    {#if datasource?.source !== SourceName.ORACLE && datasource?.source !== SourceName.SQL_SERVER && !editableColumn.dateOnly}
       <div>
         <div class="row">
           <Label>Time zones</Label>
@@ -700,7 +700,7 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if editableColumn.type === FieldType.BB_REFERENCE && [FieldSubtype.USER, FieldSubtype.USERS].includes(editableColumn.subtype)}
+  {:else if editableColumn.type === FieldType.BB_REFERENCE && [FieldSubtype.USER, FieldSubtype.USERS].includes(editableColumn.subtype) && datasource?.source !== SourceName.GOOGLE_SHEETS}
     <Toggle
       value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
