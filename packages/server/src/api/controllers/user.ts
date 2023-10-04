@@ -1,13 +1,11 @@
-import { generateUserFlagID } from "../../db/utils"
-import { InternalTables } from "../../db/utils"
+import { generateUserFlagID, InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
 import { Ctx, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 
 export async function fetchMetadata(ctx: Ctx) {
-  const users = await sdk.users.fetchMetadata()
-  ctx.body = users
+  ctx.body = await sdk.users.fetchMetadata()
 }
 
 export async function updateSelfMetadata(ctx: UserCtx) {

@@ -91,10 +91,10 @@ export function getUniqueByProp(array: any[], prop: string) {
   })
 }
 
-export function getLinkedTableIDs(table: Table) {
+export function getLinkedTableIDs(table: Table): string[] {
   return Object.values(table.schema)
     .filter((column: FieldSchema) => column.type === FieldTypes.LINK)
-    .map(column => column.tableId)
+    .map(column => column.tableId!)
 }
 
 export async function getLinkedTable(id: string, tables: Table[]) {
