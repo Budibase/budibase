@@ -62,8 +62,6 @@
     return `${type}${subtype || ""}`.toUpperCase()
   }
 
-  $: console.warn(fieldDefinitions)
-
   let originalName
   let linkEditDisabled
   let primaryDisplay
@@ -343,6 +341,7 @@
     delete editableColumn.tableId
     delete editableColumn.relationshipType
     delete editableColumn.formulaType
+    delete editableColumn.constraints
 
     // Add in defaults and initial definition
     const definition = fieldDefinitions[type?.toUpperCase()]
@@ -398,6 +397,16 @@
       return ALLOWABLE_NUMBER_OPTIONS
     }
 
+    const userFieldDefinition =
+      fieldDefinitions[
+        makeFieldId(
+          FieldType.BB_REFERENCE,
+          editableColumn.type === FieldType.BB_REFERENCE
+            ? editableColumn.subtype
+            : FieldSubtype.USER
+        )
+      ]
+
     if (!external) {
       return [
         fieldDefinitions.STRING,
@@ -413,9 +422,7 @@
         fieldDefinitions.LINK,
         fieldDefinitions.FORMULA,
         fieldDefinitions.JSON,
-        fieldDefinitions[
-          makeFieldId(FieldType.BB_REFERENCE, FieldSubtype.USER)
-        ],
+        userFieldDefinition,
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
@@ -429,12 +436,7 @@
         fieldDefinitions.BOOLEAN,
         fieldDefinitions.FORMULA,
         fieldDefinitions.BIGINT,
-        fieldDefinitions[
-          getFieldId({
-            type: FieldType.BB_REFERENCE,
-            subtype: FieldSubtype.USER,
-          })
-        ],
+        userFieldDefinition,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
