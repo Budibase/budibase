@@ -66,7 +66,7 @@ describe("rowProcessor - outputProcessing", () => {
     )
   })
 
-  it("does not fetch bb references when fields are empty", async () => {
+  it("process output even when the field is not empty", async () => {
     const table: Table = {
       _id: generator.guid(),
       name: "TestTable",
@@ -100,7 +100,7 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack" })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
   })
 
   it("does not fetch bb references when not in the schema", async () => {

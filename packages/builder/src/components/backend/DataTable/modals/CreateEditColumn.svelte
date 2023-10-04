@@ -277,10 +277,7 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (
-        saveColumn.type === LINK_TYPE &&
-        saveColumn.relationshipType === RelationshipType.MANY_TO_MANY
-      ) {
+      if (saveColumn.type === LINK_TYPE) {
         // Fetching the new tables
         tables.fetch()
         // Fetching the new relationships
@@ -312,6 +309,11 @@
         confirmDeleteDialog.hide()
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
+
+        if (editableColumn.type === LINK_TYPE) {
+          // Updating the relationships
+          datasources.fetch()
+        }
       }
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
