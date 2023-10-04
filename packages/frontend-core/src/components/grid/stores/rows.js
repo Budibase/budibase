@@ -94,12 +94,14 @@ export const createActions = context => {
   datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
+    unsubscribe = null
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
     // Abandon if we don't have a valid datasource
     if (!datasource.actions.isDatasourceValid($datasource)) {
+      error.set("Datasource is invalid")
       return
     }
 

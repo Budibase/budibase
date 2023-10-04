@@ -141,7 +141,14 @@
       </div>
     </div>
   {/if}
-  {#if $loaded}
+  {#if $error}
+    <div class="grid-error">
+      <div class="grid-error-title">There was a problem loading your grid</div>
+      <div class="grid-error-subtitle">
+        {$error}
+      </div>
+    </div>
+  {:else if $loaded}
     <div class="grid-data-outer" use:clickOutside={ui.actions.blur}>
       <div class="grid-data-inner">
         <StickyColumn>
@@ -169,13 +176,6 @@
           <ScrollOverlay />
           <MenuOverlay />
         </div>
-      </div>
-    </div>
-  {:else if $error}
-    <div class="grid-error">
-      <div class="grid-error-title">There was a problem loading your grid</div>
-      <div class="grid-error-subtitle">
-        {$error}
       </div>
     </div>
   {/if}
