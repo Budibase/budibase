@@ -52,14 +52,14 @@
 
   let mounted = false
   const fieldDefinitions = Object.values(FIELDS).reduce((acc, field) => {
-    const fieldId = makeFieldId(field)
+    const fieldId = makeFieldId(field.type, field.subtype)
 
     acc[fieldId] = { ...field, fieldId }
     return acc
   }, {})
 
-  function makeFieldId(field) {
-    return `${field.type}${field.subtype || ""}`.toUpperCase()
+  function makeFieldId(type, subtype) {
+    return `${type}${subtype || ""}`.toUpperCase()
   }
 
   $: console.warn(fieldDefinitions)
@@ -150,7 +150,10 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
-      editableColumn.fieldId = makeFieldId(editableColumn)
+      editableColumn.fieldId = makeFieldId(
+        editableColumn.type,
+        editableColumn.subtype
+      )
 
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
@@ -181,7 +184,10 @@
         editableColumn.name = "Column 01"
       }
 
-      editableColumn.fieldId = makeFieldId(editableColumn)
+      editableColumn.fieldId = makeFieldId(
+        editableColumn.type,
+        editableColumn.subtype
+      )
     }
 
     allowedTypes = getAllowedTypes()
@@ -326,7 +332,11 @@
     }
   }
 
-  function handleTypeChange(event) {
+  function onHandleTypeChange(event) {
+    handleTypeChange(event.detail)
+  }
+
+  function handleTypeChange(type) {
     // remove any extra fields that may not be related to this type
     delete editableColumn.autocolumn
     delete editableColumn.subtype
@@ -335,7 +345,7 @@
     delete editableColumn.formulaType
 
     // Add in defaults and initial definition
-    const definition = fieldDefinitions[event.detail?.toUpperCase()]
+    const definition = fieldDefinitions[type?.toUpperCase()]
     if (definition?.constraints) {
       editableColumn.constraints = definition.constraints
     }
@@ -404,10 +414,7 @@
         fieldDefinitions.FORMULA,
         fieldDefinitions.JSON,
         fieldDefinitions[
-          makeFieldId({
-            type: FieldType.BB_REFERENCE,
-            subtype: FieldSubtype.USER,
-          })
+          makeFieldId(FieldType.BB_REFERENCE, FieldSubtype.USER)
         ],
         { name: "Auto Column", type: AUTO_TYPE },
       ]
@@ -520,7 +527,7 @@
   <Select
     disabled={!typeEnabled}
     bind:value={editableColumn.fieldId}
-    on:change={handleTypeChange}
+    on:change={onHandleTypeChange}
     options={allowedTypes}
     getOptionLabel={field => field.name}
     getOptionValue={field => field.fieldId}
@@ -693,9 +700,12 @@
     <Toggle
       value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
-        (editableColumn.subtype = e.detail
-          ? FieldSubtype.USERS
-          : FieldSubtype.USER)}
+        handleTypeChange(
+          makeFieldId(
+            FieldType.BB_REFERENCE,
+            e.detail ? FieldSubtype.USERS : FieldSubtype.USER
+          )
+        )}
       disabled={!isCreating}
       thin
       text="Allow multiple users"
