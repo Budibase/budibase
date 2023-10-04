@@ -33,7 +33,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldType } from "@budibase/types"
+  import { FieldType, FieldSubtype } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
   const AUTO_TYPE = "auto"
@@ -659,6 +659,7 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
+  {:else if editableColumn.type === USER_REFRENCE_TYPE}
     <Toggle
       value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
