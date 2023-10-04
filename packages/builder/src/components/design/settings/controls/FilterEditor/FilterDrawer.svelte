@@ -126,6 +126,7 @@
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
+    filter.subtype = fieldSchema?.subtype
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
@@ -196,7 +197,7 @@
     }
 
     return LuceneUtils.getValidOperatorsForType(
-      filter.type,
+      { type: filter.type, subtype: filter.subtype },
       filter.field,
       datasource
     )
