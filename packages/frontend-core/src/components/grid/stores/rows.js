@@ -420,7 +420,7 @@ export const createActions = context => {
       // Ensure we have a unique _id.
       // This means generating one for non DS+.
       if (!newRow._id) {
-        newRow._id = `fake-${Helpers.hashString(JSON.stringify(newRow))}`
+        newRow._id = `fake-${Math.random()}`
       }
 
       if (!rowCacheMap[newRow._id]) {
