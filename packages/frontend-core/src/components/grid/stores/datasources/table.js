@@ -1,6 +1,9 @@
 import { get } from "svelte/store"
+import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
+
+export const RowPageSize = 100
 
 export const createActions = context => {
   const { API, datasource, columns, stickyColumn } = context
@@ -45,6 +48,10 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
+  const getFeatures = () => {
+    return new TableFetch(null).determineFeatureFlags()
+  }
+
   return {
     table: {
       actions: {
@@ -55,6 +62,7 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }

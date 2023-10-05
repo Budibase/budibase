@@ -1,4 +1,7 @@
 import { get } from "svelte/store"
+import QueryFetch from "../../../../fetch/QueryFetch"
+
+export const RowPageSize = 100000
 
 export const createActions = context => {
   const { columns, stickyColumn, table, viewV2 } = context
@@ -35,6 +38,11 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
+  const getFeatures = () => {
+    // We don't support any features
+    return {}
+  }
+
   return {
     nonPlus: {
       actions: {
@@ -45,6 +53,7 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }

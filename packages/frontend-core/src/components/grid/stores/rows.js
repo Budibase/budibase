@@ -2,7 +2,6 @@ import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
-import { Helpers } from "@budibase/bbui"
 
 export const createStores = () => {
   const rows = writable([])
@@ -111,6 +110,10 @@ export const createActions = context => {
     const $filter = get(filter)
     const $sort = get(sort)
 
+    // Determine how many rows to fetch per page
+    const features = datasource.actions.getFeatures()
+    const limit = features?.supportsPagination ? RowPageSize : 100000
+
     // Create new fetch model
     const newFetch = fetchData({
       API,
@@ -119,7 +122,7 @@ export const createActions = context => {
         filter: $filter,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
-        limit: RowPageSize,
+        limit,
         paginate: true,
       },
     })

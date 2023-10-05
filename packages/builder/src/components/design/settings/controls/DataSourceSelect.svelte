@@ -10,6 +10,10 @@
     Drawer,
     DrawerContent,
     Icon,
+    Modal,
+    ModalContent,
+    CoreDropzone,
+    notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
@@ -24,6 +28,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import { API } from "api"
 
   export let value = {}
   export let otherSources
@@ -39,6 +44,7 @@
   let tmpQueryParams
   let tmpCustomData
   let customDataValid = true
+  let modal
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -184,6 +190,26 @@
     })
     drawer.hide()
   }
+
+  const promptForCSV = () => {
+    drawer.hide()
+    modal.show()
+  }
+
+  const handleCSV = async e => {
+    try {
+      const csv = await e.detail[0]?.text()
+      if (csv?.length) {
+        const js = await API.csvToJson(csv)
+        tmpCustomData = JSON.stringify(js)
+      }
+    } catch (error) {
+      console.log(error)
+      notifications.error("Failed to parse CSV")
+    }
+    modal.hide()
+    drawer.show()
+  }
 </script>
 
 <div class="container" bind:this={anchorRight}>
@@ -227,12 +253,12 @@
       <Icon hoverable name="Settings" on:click={openCustomDrawer} />
     </div>
     <Drawer title="Custom data" bind:this={drawer}>
-      <Button
-        slot="buttons"
-        cta
-        on:click={saveCustomData}
-        disabled={!customDataValid}>Save</Button
-      >
+      <div slot="buttons" style="display:contents">
+        <Button primary on:click={promptForCSV}>Load CSV</Button>
+        <Button cta on:click={saveCustomData} disabled={!customDataValid}>
+          Save
+        </Button>
+      </div>
       <div slot="description">
         Provide a JavaScript or JSON array to use as data
       </div>
@@ -348,6 +374,12 @@
     </ul>
   </div>
 </Popover>
+
+<Modal bind:this={modal}>
+  <ModalContent title="Choose a CSV">
+    <CoreDropzone compact extensions=".csv" on:change={handleCSV} />
+  </ModalContent>
+</Modal>
 
 <style>
   .container {

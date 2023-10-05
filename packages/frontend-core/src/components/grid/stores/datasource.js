@@ -146,6 +146,11 @@ export const createActions = context => {
     return getAPI()?.actions.canUseColumn(name)
   }
 
+  // Gets the default number of rows for a single page
+  const getFeatures = () => {
+    return getAPI()?.actions.getFeatures()
+  }
+
   return {
     datasource: {
       ...datasource,
@@ -158,6 +163,7 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }
