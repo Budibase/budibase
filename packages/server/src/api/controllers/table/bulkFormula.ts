@@ -6,10 +6,17 @@ import isEqual from "lodash/isEqual"
 import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
-import { FieldSchema, Table } from "@budibase/types"
+import {
+  FieldSchema,
+  FormulaFieldMetadata,
+  RelationshipFieldMetadata,
+  Table,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 
-function isStaticFormula(column: FieldSchema) {
+function isStaticFormula(
+  column: FieldSchema
+): column is FormulaFieldMetadata & { formulaType: FormulaTypes.STATIC } {
   return (
     column.type === FieldTypes.FORMULA &&
     column.formulaType === FormulaTypes.STATIC
@@ -57,7 +64,8 @@ async function checkIfFormulaNeedsCleared(
     let tableToUse: Table | undefined = table
     // if relationship, get the related table
     if (removed.type === FieldTypes.LINK) {
-      tableToUse = tables.find(table => table._id === removed.tableId)
+      const removedTableId = removed.tableId
+      tableToUse = tables.find(table => table._id === removedTableId)
     }
     if (!tableToUse) {
       continue
@@ -73,7 +81,7 @@ async function checkIfFormulaNeedsCleared(
     }
     for (let relatedTableId of table.relatedFormula) {
       const relatedColumns = Object.values(table.schema).filter(
-        column => column.tableId === relatedTableId
+        column => (column as any).tableId === relatedTableId
       )
       const relatedTable = tables.find(table => table._id === relatedTableId)
       // look to see if the column was used in a relationship formula,
@@ -83,7 +91,7 @@ async function checkIfFormulaNeedsCleared(
         for (let column of relatedColumns) {
           relatedFormulaToRemove = relatedFormulaToRemove.concat(
             getFormulaThatUseColumn(relatedTable, [
-              column.fieldName!,
+              (column as any).fieldName!,
               removed.name,
             ])
           )
@@ -94,6 +102,10 @@ async function checkIfFormulaNeedsCleared(
       }
     }
   }
+}
+
+function isLink(column: FieldSchema): column is RelationshipFieldMetadata {
+  return column.type === FieldTypes.LINK
 }
 
 /**
@@ -115,9 +127,7 @@ async function updateRelatedFormulaLinksOnTables(
   // clone the tables, so we can compare at end
   const initialTables = cloneDeep(tables)
   // first find the related column names
-  const relatedColumns = Object.values(table.schema).filter(
-    col => col.type === FieldTypes.LINK
-  )
+  const relatedColumns = Object.values(table.schema).filter(isLink)
   // we start by removing the formula field from all tables
   for (let otherTable of tables) {
     if (!otherTable.relatedFormula) {
@@ -135,6 +145,7 @@ async function updateRelatedFormulaLinksOnTables(
       if (!columns || columns.length === 0) {
         continue
       }
+
       const relatedTable = tables.find(
         related => related._id === relatedCol.tableId
       )
