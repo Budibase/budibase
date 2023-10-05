@@ -584,7 +584,7 @@ class TestConfiguration {
       tableConfig.schema[link] = {
         type: FieldType.LINK,
         fieldName: link,
-        tableId: this.table._id,
+        tableId: this.table._id!,
         name: link,
         relationshipType,
       }

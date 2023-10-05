@@ -4,6 +4,8 @@ import { context } from "@budibase/backend-core"
 import {
   Ctx,
   FieldType,
+  ManyToOneRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
   Row,
   SearchFilters,
   Table,
@@ -19,7 +21,14 @@ function isForeignKey(key: string, table: Table) {
   const relationships = Object.values(table.schema).filter(
     column => column.type === FieldType.LINK
   )
-  return relationships.some(relationship => relationship.foreignKey === key)
+  return relationships.some(
+    relationship =>
+      (
+        relationship as
+          | OneToManyRelationshipFieldMetadata
+          | ManyToOneRelationshipFieldMetadata
+      ).foreignKey === key
+  )
 }
 
 validateJs.extend(validateJs.validators.datetime, {
