@@ -66,7 +66,7 @@ interface NumberForeignKeyMetadata {
 
 export type NumberFieldMetadata = BaseFieldSchema & {
   type: FieldType.NUMBER
-  autocolumn: boolean
+  autocolumn?: boolean
 } & (NumberForeignKeyMetadata | {})
 
 export interface DateFieldMetadata extends BaseFieldSchema {
