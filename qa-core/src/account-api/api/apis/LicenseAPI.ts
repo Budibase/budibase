@@ -16,9 +16,9 @@ export default class LicenseAPI extends BaseAPI {
     this.client = client
   }
   async updateLicense(
-      accountId: string,
-      body: UpdateLicenseRequest,
-      opts: APIRequestOpts = { status: 200 }
+    accountId: string,
+    body: UpdateLicenseRequest,
+    opts: APIRequestOpts = { status: 200 }
   ): Promise<[Response, Account]> {
     return this.doRequest(() => {
       return this.client.put(`/api/accounts/${accountId}/license`, {
@@ -29,53 +29,53 @@ export default class LicenseAPI extends BaseAPI {
   }
   // TODO: Better approach for setting tenant id header
   async createOfflineLicense(
-      accountId: string,
-      tenantId: string,
-      body: CreateOfflineLicenseRequest,
-      opts: { status?: number } = {}
+    accountId: string,
+    tenantId: string,
+    body: CreateOfflineLicenseRequest,
+    opts: { status?: number } = {}
   ): Promise<Response> {
     const [response, json] = await this.client.post(
-        `/api/internal/accounts/${accountId}/license/offline`,
-        {
-          body,
-          internal: true,
-          headers: {
-            "x-budibase-tenant-id": tenantId,
-          },
-        }
+      `/api/internal/accounts/${accountId}/license/offline`,
+      {
+        body,
+        internal: true,
+        headers: {
+          "x-budibase-tenant-id": tenantId,
+        },
+      }
     )
     expect(response.status).toBe(opts.status ? opts.status : 201)
     return response
   }
   async getOfflineLicense(
-      accountId: string,
-      tenantId: string,
-      opts: { status?: number } = {}
+    accountId: string,
+    tenantId: string,
+    opts: { status?: number } = {}
   ): Promise<[Response, GetOfflineLicenseResponse]> {
     const [response, json] = await this.client.get(
-        `/api/internal/accounts/${accountId}/license/offline`,
-        {
-          internal: true,
-          headers: {
-            "x-budibase-tenant-id": tenantId,
-          },
-        }
+      `/api/internal/accounts/${accountId}/license/offline`,
+      {
+        internal: true,
+        headers: {
+          "x-budibase-tenant-id": tenantId,
+        },
+      }
     )
     expect(response.status).toBe(opts.status ? opts.status : 200)
     return [response, json]
   }
   async getLicenseKey(
-      opts: { status?: number } = {}
+    opts: { status?: number } = {}
   ): Promise<[Response, GetLicenseKeyResponse]> {
     const [response, json] = await this.client.get(`/api/license/key`)
     expect(response.status).toBe(opts.status ? opts.status : 200)
     return [response, json]
   }
   async activateLicense(
-      apiKey: string,
-      tenantId: string,
-      licenseKey: string,
-      opts: APIRequestOpts = { status: 200 }
+    apiKey: string,
+    tenantId: string,
+    licenseKey: string,
+    opts: APIRequestOpts = { status: 200 }
   ) {
     return this.doRequest(() => {
       return this.client.post(`/api/license/activate`, {
@@ -106,14 +106,14 @@ export default class LicenseAPI extends BaseAPI {
   }
 
   async refreshAccountLicense(
-      accountId: string,
-      opts: { status?: number } = {}
+    accountId: string,
+    opts: { status?: number } = {}
   ): Promise<Response> {
     const [response, json] = await this.client.post(
-        `/api/accounts/${accountId}/license/refresh`,
-        {
-          internal: true,
-        }
+      `/api/accounts/${accountId}/license/refresh`,
+      {
+        internal: true,
+      }
     )
     expect(response.status).toBe(opts.status ? opts.status : 201)
     return response
@@ -126,10 +126,10 @@ export default class LicenseAPI extends BaseAPI {
   }
 
   async licenseUsageTriggered(
-      opts: { status?: number } = {}
+    opts: { status?: number } = {}
   ): Promise<Response> {
     const [response, json] = await this.client.post(
-        `/api/license/usage/triggered`
+      `/api/license/usage/triggered`
     )
     expect(response.status).toBe(opts.status ? opts.status : 201)
     return response

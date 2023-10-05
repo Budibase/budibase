@@ -15,6 +15,6 @@ export default class AccountInternalAPI {
     this.auth = new AuthAPI(this.client)
     this.accounts = new AccountAPI(this.client)
     this.licenses = new LicenseAPI(this.client)
-    this.stripe = new StripeAPI((this.client))
+    this.stripe = new StripeAPI(this.client)
   }
 }
