@@ -72,7 +72,10 @@ export async function getLinkDocuments(args: {
 
     // filter down to just the required field name
     if (fieldName) {
-      linkRows = linkRows.filter(link => link.value.fieldName === fieldName)
+      linkRows = linkRows.filter(link => {
+        const value = link.value as LinkDocumentValue
+        return value.fieldName === fieldName
+      })
     }
     // return docs if docs requested, otherwise just the value information
     if (includeDocs) {

@@ -68,11 +68,14 @@ export async function validate({
   valid: boolean
   errors: Record<string, any>
 }> {
-  let fetchedTable: Table
-  if (!table) {
+  let fetchedTable: Table | undefined
+  if (!table && tableId) {
     fetchedTable = await sdk.tables.getTable(tableId)
-  } else {
+  } else if (table) {
     fetchedTable = table
+  }
+  if (fetchedTable === undefined) {
+    throw new Error("Unable to fetch table for validation")
   }
   const errors: Record<string, any> = {}
   for (let fieldName of Object.keys(fetchedTable.schema)) {

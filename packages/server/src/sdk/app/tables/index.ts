@@ -32,20 +32,22 @@ async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
     db = context.getAppDB()
   }
-  const internalTables = await db.allDocs(
+  const internalTableDocs = await db.allDocs<Table[]>(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  return processInternalTables(internalTables)
+  return processInternalTables(internalTableDocs)
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
   const datasources = await sdk.datasources.fetch({ enriched: true })
   const allEntities = datasources.map(datasource => datasource.entities)
-  let final = []
+  let final: Table[] = []
   for (let entities of allEntities) {
-    final = final.concat(Object.values(entities))
+    if (entities) {
+      final = final.concat(Object.values(entities))
+    }
   }
   return final
 }
@@ -61,7 +63,7 @@ async function getAllTables() {
 async function getTables(tableIds: string[]): Promise<Table[]> {
   const externalTableIds = tableIds.filter(tableId => isExternalTable(tableId)),
     internalTableIds = tableIds.filter(tableId => !isExternalTable(tableId))
-  let tables = []
+  let tables: Table[] = []
   if (externalTableIds.length) {
     const externalTables = await getAllExternalTables()
     tables = tables.concat(
@@ -72,8 +74,10 @@ async function getTables(tableIds: string[]): Promise<Table[]> {
   }
   if (internalTableIds.length) {
     const db = context.getAppDB()
-    const internalTables = await db.allDocs(getMultiIDParams(internalTableIds))
-    tables = tables.concat(processInternalTables(internalTables))
+    const internalTableDocs = await db.allDocs<Table[]>(
+      getMultiIDParams(internalTableIds)
+    )
+    tables = tables.concat(processInternalTables(internalTableDocs))
   }
   return tables
 }
@@ -101,7 +105,7 @@ async function getTable(tableId: string): Promise<Table> {
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await datasources.get(datasourceId!)
-    const table = await getExternalTable(datasourceId, tableName)
+    const table = await getExternalTable(datasourceId!, tableName!)
     return { ...table, sql: isSQL(datasource) }
   } else {
     return db.get<Table>(tableId)

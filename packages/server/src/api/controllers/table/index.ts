@@ -14,6 +14,7 @@ import {
   Table,
   TableResponse,
   UserCtx,
+  Row,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -129,8 +130,7 @@ export async function validateNewTableImport(ctx: UserCtx) {
 }
 
 export async function validateExistingTableImport(ctx: UserCtx) {
-  const { rows, tableId }: { rows: unknown; tableId: unknown } =
-    ctx.request.body
+  const { rows, tableId }: { rows: Row[]; tableId?: string } = ctx.request.body
 
   let schema = null
   if (tableId) {

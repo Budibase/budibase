@@ -26,6 +26,7 @@ import { fixRow } from "../public/rows"
 import sdk from "../../../sdk"
 import * as exporters from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
+import { Format } from "../view/exporters"
 export * as views from "./views"
 
 function pickApi(tableId: any) {
@@ -267,7 +268,7 @@ export const exportRows = async (
     async () => {
       const { fileName, content } = await sdk.rows.exportRows({
         tableId,
-        format,
+        format: format as Format,
         rowIds: rows,
         columns,
         query,

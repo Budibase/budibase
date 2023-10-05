@@ -149,7 +149,7 @@ export async function finaliseRow(
       await db.put(table)
     } catch (err: any) {
       if (err.status === 409) {
-        const updatedTable = await sdk.tables.getTable(table._id)
+        const updatedTable = await sdk.tables.getTable(table._id!)
         let response = processAutoColumn(null, updatedTable, row, {
           reprocessing: true,
         })

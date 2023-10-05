@@ -157,14 +157,14 @@ export async function destroy(ctx: UserCtx) {
   if (row.tableId !== tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
   }
-  const table = await sdk.tables.getTable(row.tableId)
+  const table = await sdk.tables.getTable(tableId)
   // update the row to include full relationships before deleting them
   row = await outputProcessing(table, row, { squash: false })
   // now remove the relationships
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
     row,
-    tableId: row.tableId,
+    tableId,
   })
   // remove any attachments that were on the row from object storage
   await cleanupAttachments(table, { row })
@@ -246,7 +246,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const linkTables = await sdk.tables.getTables(linkTableIds)
 
   // perform output processing
-  let final = []
+  let final: Promise<Row[]>[] = []
   for (let linkTable of linkTables) {
     const relatedRows = linkedRows.filter(row => row.tableId === linkTable._id)
     // include the row being enriched for performance reasons, don't need to fetch it to include
