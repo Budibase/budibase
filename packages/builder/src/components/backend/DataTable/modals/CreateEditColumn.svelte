@@ -51,12 +51,14 @@
   export let field
 
   let mounted = false
-  const fieldDefinitions = Object.values(FIELDS).reduce((acc, field) => {
-    const fieldId = makeFieldId(field.type, field.subtype)
-
-    acc[fieldId] = { ...field, fieldId }
-    return acc
-  }, {})
+  const fieldDefinitions = Object.values(FIELDS).reduce(
+    // Storing the fields by complex field id
+    (acc, field) => ({
+      ...acc,
+      [makeFieldId(field.type, field.subtype)]: field,
+    }),
+    {}
+  )
 
   function makeFieldId(type, subtype) {
     return `${type}${subtype || ""}`.toUpperCase()
@@ -81,8 +83,8 @@
   let jsonSchemaModal
   let allowedTypes = []
   let editableColumn = {
-    type: fieldDefinitions.STRING.type,
-    constraints: fieldDefinitions.STRING.constraints,
+    type: FIELDS.STRING.type,
+    constraints: FIELDS.STRING.constraints,
     // Initial value for column name in other table for linked records
     fieldName: $tables.selected.name,
   }
@@ -148,11 +150,6 @@
         $tables.selected.primaryDisplay == null ||
         $tables.selected.primaryDisplay === editableColumn.name
 
-      editableColumn.fieldId = makeFieldId(
-        editableColumn.type,
-        editableColumn.subtype
-      )
-
       // Here we are setting the relationship values based on the editableColumn
       // This part of the code is used when viewing an existing field hence the check
       // for the tableId
@@ -181,15 +178,18 @@
       } else {
         editableColumn.name = "Column 01"
       }
+    }
 
+    if (!savingColumn) {
       editableColumn.fieldId = makeFieldId(
         editableColumn.type,
         editableColumn.subtype
       )
-    }
 
-    if (!savingColumn) {
-      allowedTypes = getAllowedTypes()
+      allowedTypes = getAllowedTypes().map(t => ({
+        fieldId: makeFieldId(t.type, t.subtype),
+        ...t,
+      }))
     }
   }
 
@@ -399,50 +399,44 @@
       return ALLOWABLE_NUMBER_OPTIONS
     }
 
-    const userFieldDefinition =
-      fieldDefinitions[
-        makeFieldId(
-          FieldType.BB_REFERENCE,
-          editableColumn.type === FieldType.BB_REFERENCE
-            ? editableColumn.subtype
-            : FieldSubtype.USER
-        )
-      ]
+    const isUsers =
+      editableColumn.type === FieldType.BB_REFERENCE &&
+      editableColumn.subtype === FieldSubtype.USERS
 
     if (!external) {
       return [
-        fieldDefinitions.STRING,
-        fieldDefinitions.BARCODEQR,
-        fieldDefinitions.LONGFORM,
-        fieldDefinitions.OPTIONS,
-        fieldDefinitions.ARRAY,
-        fieldDefinitions.NUMBER,
-        fieldDefinitions.BIGINT,
-        fieldDefinitions.BOOLEAN,
-        fieldDefinitions.DATETIME,
-        fieldDefinitions.ATTACHMENT,
-        fieldDefinitions.LINK,
-        fieldDefinitions.FORMULA,
-        fieldDefinitions.JSON,
-        userFieldDefinition,
+        FIELDS.STRING,
+        FIELDS.BARCODEQR,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.ARRAY,
+        FIELDS.NUMBER,
+        FIELDS.BIGINT,
+        FIELDS.BOOLEAN,
+        FIELDS.DATETIME,
+        FIELDS.ATTACHMENT,
+        FIELDS.LINK,
+        FIELDS.FORMULA,
+        FIELDS.JSON,
+        isUsers ? FIELDS.USERS : FIELDS.USER,
         { name: "Auto Column", type: AUTO_TYPE },
       ]
     } else {
       let fields = [
-        fieldDefinitions.STRING,
-        fieldDefinitions.BARCODEQR,
-        fieldDefinitions.LONGFORM,
-        fieldDefinitions.OPTIONS,
-        fieldDefinitions.DATETIME,
-        fieldDefinitions.NUMBER,
-        fieldDefinitions.BOOLEAN,
-        fieldDefinitions.FORMULA,
-        fieldDefinitions.BIGINT,
-        userFieldDefinition,
+        FIELDS.STRING,
+        FIELDS.BARCODEQR,
+        FIELDS.LONGFORM,
+        FIELDS.OPTIONS,
+        FIELDS.DATETIME,
+        FIELDS.NUMBER,
+        FIELDS.BOOLEAN,
+        FIELDS.FORMULA,
+        FIELDS.BIGINT,
+        isUsers ? FIELDS.USERS : FIELDS.USER,
       ]
       // no-sql or a spreadsheet
       if (!external || table.sql) {
-        fields = [...fields, fieldDefinitions.LINK, fieldDefinitions.ARRAY]
+        fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
       return fields
     }
