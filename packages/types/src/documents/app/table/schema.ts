@@ -15,22 +15,33 @@ export interface UIFieldMetadata {
   icon?: string
 }
 
-interface ManyToManyRelationshipFieldMetadata {
+interface BaseRelationshipFieldMetadata extends BaseFieldSchema {
+  type: FieldType.LINK
+  main?: boolean
+  fieldName?: string
+  tableId: string
+}
+export interface ManyToManyRelationshipFieldMetadata
+  extends BaseRelationshipFieldMetadata {
   relationshipType: RelationshipType.MANY_TO_MANY
   through: string
   throughFrom: string
   throughTo: string
 }
-interface OneSidedRelationshipFieldMetadata {
-  relationshipType: RelationshipType.ONE_TO_MANY | RelationshipType.MANY_TO_ONE
+export interface OneToManyRelationshipFieldMetadata
+  extends BaseRelationshipFieldMetadata {
+  relationshipType: RelationshipType.ONE_TO_MANY
   foreignKey: string
 }
-export type RelationshipFieldMetadata = BaseFieldSchema & {
-  type: FieldType.LINK
-  main?: boolean
-  fieldName?: string
-  tableId: string
-} & (ManyToManyRelationshipFieldMetadata | OneSidedRelationshipFieldMetadata)
+export interface ManyToOneRelationshipFieldMetadata
+  extends BaseRelationshipFieldMetadata {
+  relationshipType: RelationshipType.MANY_TO_ONE
+  foreignKey: string
+}
+export type RelationshipFieldMetadata =
+  | ManyToManyRelationshipFieldMetadata
+  | OneToManyRelationshipFieldMetadata
+  | ManyToOneRelationshipFieldMetadata
 
 export interface AutoColumnFieldMetadata extends BaseFieldSchema {
   type: FieldType.AUTO
@@ -106,13 +117,13 @@ interface BaseFieldSchema extends UIFieldMetadata {
   externalType?: string
   constraints?: FieldConstraints
   autocolumn?: boolean
+  autoReason?: AutoReason
   subtype?: string
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
   type: Exclude<
     FieldType,
-    | FieldType.DATETIME
     | FieldType.DATETIME
     | FieldType.LINK
     | FieldType.AUTO

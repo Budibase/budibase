@@ -306,7 +306,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
                 presence: false,
               },
               ...this.internalConvertType(oracleColumn),
-            }
+            } as any // TODO
+
             table.schema[columnName] = fieldSchema
           }
 
