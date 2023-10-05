@@ -5,8 +5,11 @@ import {
   FieldType,
   FilterType,
   IncludeRelationship,
+  ManyToManyRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
+  RelationshipFieldMetadata,
   RelationshipsJson,
   RelationshipType,
   Row,
@@ -254,10 +257,18 @@ function fixArrayTypes(row: Row, table: Table) {
   return row
 }
 
-function isOneSide(field: FieldSchema) {
+function isOneSide(
+  field: RelationshipFieldMetadata
+): field is OneToManyRelationshipFieldMetadata {
   return (
     field.relationshipType && field.relationshipType.split("-")[0] === "one"
   )
+}
+
+function isManyToMany(
+  field: RelationshipFieldMetadata
+): field is ManyToManyRelationshipFieldMetadata {
+  return !!(field as ManyToManyRelationshipFieldMetadata).through
 }
 
 function isEditableColumn(column: FieldSchema) {
@@ -352,11 +363,11 @@ export class ExternalRequest<T extends Operation> {
         }
       }
       // many to many
-      else if (field.through) {
+      else if (isManyToMany(field)) {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].forEach((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -365,14 +376,14 @@ export class ExternalRequest<T extends Operation> {
             // leave the ID for enrichment later
             [thisKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
       // many to one
       else {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].forEach((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
@@ -381,7 +392,7 @@ export class ExternalRequest<T extends Operation> {
             // leave the ID for enrichment later
             [otherKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
     }
     // we return the relationships that may need to be created in the through table
@@ -551,20 +562,24 @@ export class ExternalRequest<T extends Operation> {
       }
       const definition: any = {
         // if no foreign key specified then use the name of the field in other table
-        from: field.foreignKey || table.primary[0],
+        from: (field as any).foreignKey || table.primary[0],
         to: field.fieldName,
         tableName: linkTableName,
         // need to specify where to put this back into
         column: fieldName,
       }
-      if (field.through) {
+      if ((field as ManyToManyRelationshipFieldMetadata).through) {
         const { tableName: throughTableName } = breakExternalTableId(
-          field.through
+          (field as ManyToManyRelationshipFieldMetadata).through
         )
         definition.through = throughTableName
         // don't support composite keys for relationships
-        definition.from = field.throughTo || table.primary[0]
-        definition.to = field.throughFrom || linkTable.primary[0]
+        definition.from =
+          (field as ManyToManyRelationshipFieldMetadata).throughTo ||
+          table.primary[0]
+        definition.to =
+          (field as ManyToManyRelationshipFieldMetadata).throughFrom ||
+          linkTable.primary[0]
         definition.fromPrimary = table.primary[0]
         definition.toPrimary = linkTable.primary[0]
       }
@@ -597,12 +612,15 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
       const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
-      const tableId = isMany ? field.through : field.tableId
+      const tableId = isMany
+        ? (field as ManyToManyRelationshipFieldMetadata).through
+        : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      const manyKey = field.throughTo || primaryKey
-      const lookupField = isMany ? primaryKey : field.foreignKey
+      const manyKey =
+        (field as ManyToManyRelationshipFieldMetadata).throughTo || primaryKey
+      const lookupField = isMany ? primaryKey : (field as any).foreignKey
       const fieldName = isMany ? manyKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
@@ -617,7 +635,10 @@ export class ExternalRequest<T extends Operation> {
       })
       // this is the response from knex if no rows found
       const rows = !response[0].read ? response : []
-      const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
+      const storeTo = isMany
+        ? (field as ManyToManyRelationshipFieldMetadata).throughFrom ||
+          linkPrimaryKey
+        : fieldName
       related[storeTo] = { rows, isMany, tableId }
     }
     return related

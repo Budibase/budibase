@@ -5,7 +5,13 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import {
+  AutoColumnFieldMetadata,
+  FieldSubtype,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,
@@ -71,7 +77,7 @@ export function processAutoColumn(
       continue
     }
     if (!schema.subtype) {
-      schema = fixAutoColumnSubType(schema)
+      schema = fixAutoColumnSubType(schema as AutoColumnFieldMetadata)
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
@@ -94,8 +100,12 @@ export function processAutoColumn(
         break
       case AutoFieldSubTypes.AUTO_ID:
         if (creating) {
-          schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
-          row[key] = schema.lastID
+          const safeSchema = schema as AutoColumnFieldMetadata
+
+          safeSchema.lastID = !safeSchema.lastID
+            ? BASE_AUTO_ID
+            : safeSchema.lastID + 1
+          row[key] = safeSchema.lastID
         }
         break
     }
