@@ -112,7 +112,7 @@ export const createActions = context => {
 
     // Determine how many rows to fetch per page
     const features = datasource.actions.getFeatures()
-    const limit = features?.supportsPagination ? RowPageSize : 100000
+    const limit = features?.supportsPagination ? RowPageSize : null
 
     // Create new fetch model
     const newFetch = fetchData({

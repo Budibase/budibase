@@ -49,7 +49,7 @@ export const createActions = context => {
   }
 
   const getFeatures = () => {
-    return new ViewV2Fetch(null).determineFeatureFlags()
+    return new ViewV2Fetch({ API }).determineFeatureFlags()
   }
 
   return {

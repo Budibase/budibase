@@ -49,7 +49,7 @@ export const createActions = context => {
   }
 
   const getFeatures = () => {
-    return new TableFetch(null).determineFeatureFlags()
+    return new TableFetch({ API }).determineFeatureFlags()
   }
 
   return {

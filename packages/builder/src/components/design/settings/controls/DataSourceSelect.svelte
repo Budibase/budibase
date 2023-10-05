@@ -1,5 +1,9 @@
 <script>
-  import { getContextProviderComponents } from "builderStore/dataBinding"
+  import {
+    getContextProviderComponents,
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -167,7 +171,7 @@
   }
 
   const openCustomDrawer = () => {
-    tmpCustomData = value.data || ""
+    tmpCustomData = runtimeToReadableBinding(bindings, value.data || "")
     drawer.show()
   }
 
@@ -186,7 +190,7 @@
   const saveCustomData = () => {
     handleSelected({
       ...value,
-      data: tmpCustomData,
+      data: readableToRuntimeBinding(bindings, tmpCustomData),
     })
     drawer.hide()
   }
@@ -204,7 +208,6 @@
         tmpCustomData = JSON.stringify(js)
       }
     } catch (error) {
-      console.log(error)
       notifications.error("Failed to parse CSV")
     }
     modal.hide()
@@ -376,7 +379,7 @@
 </Popover>
 
 <Modal bind:this={modal}>
-  <ModalContent title="Choose a CSV">
+  <ModalContent title="Load CSV" showConfirmButton={false}>
     <CoreDropzone compact extensions=".csv" on:change={handleCSV} />
   </ModalContent>
 </Modal>
