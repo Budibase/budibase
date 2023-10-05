@@ -26,7 +26,6 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0
 
       # - name: Fail if tag is not in master
       #   run: |
@@ -67,20 +66,21 @@ jobs:
           context: .
           push: true
           pull: true
-          platforms: linux/amd64,linux/arm64
+          # platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           tags: budibase/budibase-test:test
           file: ./hosting/single/Dockerfile
           cache-from: type=registry,ref=budibase/budibase-test:test
           cache-to: type=inline
-      - name: Tag and release Budibase Azure App Service docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          pull: true
-          platforms: linux/amd64
-          build-args: TARGETBUILD=aas
-          tags: budibase/budibase-test:aas
-          file: ./hosting/single/Dockerfile
-          cache-from: type=registry,ref=budibase/budibase-test:aas
-          cache-to: type=inline
+      # - name: Tag and release Budibase Azure App Service docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     context: .
+      #     push: true
+      #     pull: true
+      #     platforms: linux/amd64
+      #     build-args: TARGETBUILD=aas
+      #     tags: budibase/budibase-test:aas
+      #     file: ./hosting/single/Dockerfile
+      #     cache-from: type=registry,ref=budibase/budibase-test:aas
+      #     cache-to: type=inline
