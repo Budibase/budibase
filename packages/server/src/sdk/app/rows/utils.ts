@@ -1,10 +1,11 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import { FieldType, Row, Table, TableSchema } from "@budibase/types"
+import { Row, Table, TableSchema } from "@budibase/types"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
+import { isRelationshipColumn } from "../../../db/utils"
 
 export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
@@ -50,10 +51,10 @@ export function cleanExportRows(
 }
 
 function isForeignKey(key: string, table: Table) {
-  const relationships = Object.values(table.schema).filter(
-    column => column.type === FieldType.LINK
+  const relationships = Object.values(table.schema).filter(isRelationshipColumn)
+  return relationships.some(
+    relationship => (relationship as any).foreignKey === key
   )
-  return relationships.some(relationship => relationship.foreignKey === key)
 }
 
 export async function validate({

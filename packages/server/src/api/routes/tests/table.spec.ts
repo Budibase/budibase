@@ -354,7 +354,7 @@ describe("/tables", () => {
             type: FieldType.LINK,
             name: "TestTable",
             fieldName: "TestTable",
-            tableId: testTable._id,
+            tableId: testTable._id!,
             constraints: {
               type: "array",
             },

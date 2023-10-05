@@ -4,7 +4,7 @@ import { FieldSchema, FieldType, RelationshipType } from "@budibase/types"
 
 describe("rowProcessor utility", () => {
   describe("fixAutoColumnSubType", () => {
-    let schema: FieldSchema = {
+    const schema: FieldSchema = {
       name: "",
       type: FieldType.LINK,
       subtype: "", // missing subtype

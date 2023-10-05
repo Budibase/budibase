@@ -36,7 +36,7 @@ export interface OneToManyRelationshipFieldMetadata
 export interface ManyToOneRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
   relationshipType: RelationshipType.MANY_TO_ONE
-  foreignKey: string
+  foreignKey?: string
 }
 export type RelationshipFieldMetadata =
   | ManyToManyRelationshipFieldMetadata
@@ -52,10 +52,11 @@ export interface AutoColumnFieldMetadata extends BaseFieldSchema {
   autoReason?: AutoReason
 }
 
-interface NumberForeignKeyMetadata {
-  subtype: AutoFieldSubTypes.AUTO_ID
-  autoReason: AutoReason.FOREIGN_KEY
-  autocolumn: true
+export interface NumberFieldMetadata extends BaseFieldSchema {
+  type: FieldType.NUMBER
+  autocolumn?: boolean
+  subtype?: AutoFieldSubTypes.AUTO_ID
+  autoReason?: AutoReason.FOREIGN_KEY
   // used specifically when Budibase generates external tables, this denotes if a number field
   // is a foreign key used for a many-to-many relationship
   meta?: {
@@ -63,11 +64,6 @@ interface NumberForeignKeyMetadata {
     toKey: string
   }
 }
-
-export type NumberFieldMetadata = BaseFieldSchema & {
-  type: FieldType.NUMBER
-  autocolumn?: boolean
-} & (NumberForeignKeyMetadata | {})
 
 export interface DateFieldMetadata extends BaseFieldSchema {
   type: FieldType.DATETIME
@@ -77,6 +73,10 @@ export interface DateFieldMetadata extends BaseFieldSchema {
 
 export interface StringFieldMetadata extends BaseFieldSchema {
   type: FieldType.STRING
+}
+
+export interface LongFormFieldMetadata extends BaseFieldSchema {
+  type: FieldType.LONGFORM
   useRichText?: boolean | null
 }
 
@@ -117,7 +117,7 @@ interface BaseFieldSchema extends UIFieldMetadata {
   externalType?: string
   constraints?: FieldConstraints
   autocolumn?: boolean
-  autoReason?: AutoReason
+  autoReason?: AutoReason.FOREIGN_KEY
   subtype?: string
 }
 
@@ -130,6 +130,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.STRING
     | FieldType.FORMULA
     | FieldType.NUMBER
+    | FieldType.LONGFORM
   >
 }
 
@@ -141,6 +142,7 @@ export type FieldSchema =
   | StringFieldMetadata
   | FormulaFieldMetadata
   | NumberFieldMetadata
+  | LongFormFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
