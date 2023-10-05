@@ -207,11 +207,13 @@
         const js = await API.csvToJson(csv)
         tmpCustomData = JSON.stringify(js)
       }
+      modal.hide()
+      saveCustomData()
     } catch (error) {
       notifications.error("Failed to parse CSV")
+      modal.hide()
+      drawer.show()
     }
-    modal.hide()
-    drawer.show()
   }
 </script>
 
@@ -262,9 +264,7 @@
           Save
         </Button>
       </div>
-      <div slot="description">
-        Provide a JavaScript or JSON array to use as data
-      </div>
+      <div slot="description">Provide a JSON array to use as data</div>
       <ClientBindingPanel
         slot="body"
         bind:valid={customDataValid}
