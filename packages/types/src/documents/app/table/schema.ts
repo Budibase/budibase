@@ -1,7 +1,12 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
 import { FieldType } from "../row"
-import { AutoReason, RelationshipType } from "./constants"
+import {
+  AutoFieldSubTypes,
+  AutoReason,
+  FormulaTypes,
+  RelationshipType,
+} from "./constants"
 
 export interface UIFieldMetadata {
   order?: number
@@ -10,20 +15,25 @@ export interface UIFieldMetadata {
   icon?: string
 }
 
-export interface RelationshipFieldMetadata {
+interface ManyToManyRelationshipFieldMetadata {
+  relationshipType: RelationshipType.MANY_TO_MANY
+  through: string
+  throughFrom: string
+  throughTo: string
+}
+interface OneSidedRelationshipFieldMetadata {
+  relationshipType: RelationshipType.ONE_TO_MANY | RelationshipType.MANY_TO_ONE
+  foreignKey: string
+}
+export type RelationshipFieldMetadata = BaseFieldSchema & {
+  type: FieldType.LINK
   main?: boolean
   fieldName?: string
-  tableId?: string
-  // below is used for SQL relationships, needed to define the foreign keys
-  // or the tables used for many-to-many relationships (through)
-  relationshipType?: RelationshipType
-  through?: string
-  foreignKey?: string
-  throughFrom?: string
-  throughTo?: string
-}
+  tableId: string
+} & (ManyToManyRelationshipFieldMetadata | OneSidedRelationshipFieldMetadata)
 
-export interface AutoColumnFieldMetadata {
+export interface AutoColumnFieldMetadata extends BaseFieldSchema {
+  type: FieldType.AUTO
   autocolumn?: boolean
   subtype?: string
   lastID?: number
@@ -31,7 +41,10 @@ export interface AutoColumnFieldMetadata {
   autoReason?: AutoReason
 }
 
-export interface NumberFieldMetadata {
+interface NumberForeignKeyMetadata {
+  subtype: AutoFieldSubTypes.AUTO_ID
+  autoReason: AutoReason.FOREIGN_KEY
+  autocolumn: true
   // used specifically when Budibase generates external tables, this denotes if a number field
   // is a foreign key used for a many-to-many relationship
   meta?: {
@@ -40,18 +53,26 @@ export interface NumberFieldMetadata {
   }
 }
 
-export interface DateFieldMetadata {
+export type NumberFieldMetadata = BaseFieldSchema & {
+  type: FieldType.NUMBER
+  autocolumn: boolean
+} & (NumberForeignKeyMetadata | {})
+
+export interface DateFieldMetadata extends BaseFieldSchema {
+  type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
 }
 
-export interface StringFieldMetadata {
+export interface StringFieldMetadata extends BaseFieldSchema {
+  type: FieldType.STRING
   useRichText?: boolean | null
 }
 
-export interface FormulaFieldMetadata {
+export interface FormulaFieldMetadata extends BaseFieldSchema {
+  type: FieldType.FORMULA
   formula?: string
-  formulaType?: string
+  formulaType?: FormulaTypes
 }
 
 export interface FieldConstraints {
@@ -77,14 +98,7 @@ export interface FieldConstraints {
   }
 }
 
-export interface FieldSchema
-  extends UIFieldMetadata,
-    DateFieldMetadata,
-    RelationshipFieldMetadata,
-    AutoColumnFieldMetadata,
-    StringFieldMetadata,
-    FormulaFieldMetadata,
-    NumberFieldMetadata {
+interface BaseFieldSchema extends UIFieldMetadata {
   type: FieldType
   name: string
   sortable?: boolean
@@ -92,6 +106,14 @@ export interface FieldSchema
   externalType?: string
   constraints?: FieldConstraints
 }
+
+export type FieldSchema =
+  | DateFieldMetadata
+  | RelationshipFieldMetadata
+  | AutoColumnFieldMetadata
+  | StringFieldMetadata
+  | FormulaFieldMetadata
+  | NumberFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
