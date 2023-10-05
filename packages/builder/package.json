@@ -108,7 +108,8 @@
         "dependsOn": [
           {
             "projects": [
-              "@budibase/string-templates"
+              "@budibase/string-templates",
+              "@budibase/client"
             ],
             "target": "build"
           }

@@ -8,11 +8,5 @@
       }
     }
   },
-  "targetDefaults": {},
-  "projects": {
-    "server": {
-      "implicitDependencies": ["client"]
-    },
-    "client": {}
-  }
+  "targetDefaults": {}
 }
