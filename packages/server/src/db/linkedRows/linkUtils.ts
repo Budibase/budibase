@@ -35,19 +35,22 @@ export const IncludeDocs = {
 export async function getLinkDocuments(args: {
   tableId?: string
   rowId?: string
-  includeDocs?: any
+  fieldName?: string
+  includeDocs?: boolean
 }): Promise<LinkDocumentValue[] | LinkDocument[]> {
-  const { tableId, rowId, includeDocs } = args
+  const { tableId, rowId, fieldName, includeDocs } = args
   const db = context.getAppDB()
   let params: any
-  if (rowId != null) {
+  if (rowId) {
     params = { key: [tableId, rowId] }
   }
   // only table is known
   else {
     params = { startKey: [tableId], endKey: [tableId, {}] }
   }
-  params.include_docs = !!includeDocs
+  if (includeDocs) {
+    params.include_docs = true
+  }
   try {
     let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
@@ -67,6 +70,11 @@ export async function getLinkDocuments(args: {
       return unique
     })
 
+    // filter down to just the required field name
+    if (fieldName) {
+      linkRows = linkRows.filter(link => link.value.fieldName === fieldName)
+    }
+    // return docs if docs requested, otherwise just the value information
     if (includeDocs) {
       return linkRows.map(row => row.doc) as LinkDocument[]
     } else {

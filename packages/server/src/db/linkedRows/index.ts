@@ -146,9 +146,14 @@ export async function updateLinks(args: {
  * This is required for formula fields, this may only be utilised internally (for now).
  * @param {object} table The table from which the rows originated.
  * @param {array<object>} rows The rows which are to be enriched.
+ * @param {object} opts optional - options like passing in a base row to use for enrichment.
  * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
  */
-export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
+export async function attachFullLinkedDocs(
+  table: Table,
+  rows: Row[],
+  opts?: { fromRow?: Row }
+) {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
@@ -158,20 +163,34 @@ export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
     getLinksForRows(rows),
     sdk.tables.getTables(linkedTableIds),
   ])
+  // find the links that pertain to one of the rows that is being enriched
   const links = (response[0] as LinkDocumentValue[]).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
+  // if fromRow has been passed in, then we don't need to fetch it (optimisation)
+  let linksWithoutFromRow = links
+  if (opts?.fromRow) {
+    linksWithoutFromRow = links.filter(link => link.id !== opts?.fromRow?._id)
+  }
   const linkedTables = response[1] as Table[]
   // clear any existing links that could be dupe'd
   rows = clearRelationshipFields(table, rows)
   // now get the docs and combine into the rows
-  let linked = await getFullLinkedDocs(links)
+  let linked = []
+  if (linksWithoutFromRow.length > 0) {
+    linked = await getFullLinkedDocs(linksWithoutFromRow)
+  }
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
       if (row[link.fieldName] == null) {
         row[link.fieldName] = []
       }
-      const linkedRow = linked.find(row => row._id === link.id)
+      let linkedRow: Row
+      if (opts?.fromRow && opts?.fromRow?._id === link.id) {
+        linkedRow = opts.fromRow!
+      } else {
+        linkedRow = linked.find(row => row._id === link.id)
+      }
       if (linkedRow) {
         const linkedTableId =
           linkedRow.tableId || getRelatedTableForField(table, link.fieldName)

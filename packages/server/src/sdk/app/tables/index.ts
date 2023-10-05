@@ -104,7 +104,7 @@ async function getTable(tableId: string): Promise<Table> {
     const table = await getExternalTable(datasourceId, tableName)
     return { ...table, sql: isSQL(datasource) }
   } else {
-    return db.get(tableId)
+    return db.get<Table>(tableId)
   }
 }
 

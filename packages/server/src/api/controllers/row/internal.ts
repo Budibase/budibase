@@ -224,14 +224,15 @@ export async function bulkDestroy(ctx: UserCtx) {
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
+  const fieldName = ctx.request.query.field as string | undefined
   const db = context.getAppDB()
   const tableId = utils.getTableId(ctx)
-  const rowId = ctx.params.rowId
+  const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
   let response = await Promise.all([
     sdk.tables.getTable(tableId),
     utils.findRow(ctx, tableId, rowId),
-    linkRows.getLinkDocuments({ tableId, rowId }),
+    linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
   const table = response[0] as Table
   const row = response[1] as Row
@@ -248,8 +249,13 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   let final = []
   for (let linkTable of linkTables) {
     const relatedRows = linkedRows.filter(row => row.tableId === linkTable._id)
+    // include the row being enriched for performance reasons, don't need to fetch it to include
     final = final.concat(
-      outputProcessing(linkTable, relatedRows, { preserveLinks: true })
+      outputProcessing(linkTable, relatedRows, {
+        // have to clone to avoid JSON cycle
+        fromRow: cloneDeep(row),
+        squash: true,
+      })
     )
   }
   // finalise the promises
