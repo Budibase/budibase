@@ -92,7 +92,6 @@ export const initialise = context => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
-          console.log("skip, different ds")
           return
         }
         $fetch.update({
@@ -107,7 +106,6 @@ export const initialise = context => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
         if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
-          console.log("skip, different ds")
           return
         }
         $fetch.update({
