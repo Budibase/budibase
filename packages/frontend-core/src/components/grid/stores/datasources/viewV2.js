@@ -3,8 +3,6 @@ import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 
-export const RowPageSize = 100
-
 export const createActions = context => {
   const { API, datasource, columns, stickyColumn } = context
 

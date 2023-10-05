@@ -1,7 +1,4 @@
 import { get } from "svelte/store"
-import QueryFetch from "../../../../fetch/QueryFetch"
-
-export const RowPageSize = 100000
 
 export const createActions = context => {
   const { columns, stickyColumn, table, viewV2 } = context
