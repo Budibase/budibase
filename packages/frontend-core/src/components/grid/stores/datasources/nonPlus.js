@@ -1,26 +1,32 @@
 import { get } from "svelte/store"
 
 export const createActions = context => {
-  const { API, columns, stickyColumn } = context
+  const { columns, stickyColumn, table, viewV2 } = context
 
-  const saveDefinition = async newDefinition => {
-    await API.saveQuery(newDefinition)
+  const saveDefinition = async () => {
+    throw "This datasource does not support updating the definition"
   }
 
   const saveRow = async () => {
-    throw "Rows cannot be updated through queries"
+    throw "This datasource does not support saving rows"
   }
 
   const deleteRows = async () => {
-    throw "Rows cannot be deleted through queries"
+    throw "This datasource does not support deleting rows"
   }
 
   const getRow = () => {
-    throw "Queries don't support fetching individual rows"
+    throw "This datasource does not support fetching individual rows"
   }
 
   const isDatasourceValid = datasource => {
-    return datasource?.type === "query" && datasource?._id
+    // There are many different types and shapes of datasource, so we only
+    // check that we aren't null
+    return (
+      !table.actions.isDatasourceValid(datasource) &&
+      !viewV2.actions.isDatasourceValid(datasource) &&
+      datasource?.type != null
+    )
   }
 
   const canUseColumn = name => {
@@ -30,7 +36,7 @@ export const createActions = context => {
   }
 
   return {
-    query: {
+    nonPlus: {
       actions: {
         saveDefinition,
         addRow: saveRow,
@@ -44,18 +50,22 @@ export const createActions = context => {
   }
 }
 
+// Small util to compare datasource definitions
+const isSameDatasource = (a, b) => {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 export const initialise = context => {
   const {
     datasource,
     sort,
     filter,
-    query,
+    nonPlus,
     initialFilter,
     initialSortColumn,
     initialSortOrder,
     fetch,
   } = context
-
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
   let unsubscribers = []
@@ -65,7 +75,7 @@ export const initialise = context => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!query.actions.isDatasourceValid($datasource)) {
+    if (!nonPlus.actions.isDatasourceValid($datasource)) {
       return
     }
 
@@ -81,7 +91,8 @@ export const initialise = context => {
       filter.subscribe($filter => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?._id !== $datasource._id) {
+        if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
+          console.log("skip, different ds")
           return
         }
         $fetch.update({
@@ -95,7 +106,8 @@ export const initialise = context => {
       sort.subscribe($sort => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?._id !== $datasource._id) {
+        if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
+          console.log("skip, different ds")
           return
         }
         $fetch.update({

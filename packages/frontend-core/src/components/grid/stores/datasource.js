@@ -75,21 +75,23 @@ export const createActions = context => {
     dispatch,
     table,
     viewV2,
-    query,
+    nonPlus,
   } = context
 
   // Gets the appropriate API for the configured datasource type
   const getAPI = () => {
     const $datasource = get(datasource)
-    switch ($datasource?.type) {
+    const type = $datasource?.type
+    if (!type) {
+      return null
+    }
+    switch (type) {
       case "table":
         return table
       case "viewV2":
         return viewV2
-      case "query":
-        return query
       default:
-        return null
+        return nonPlus
     }
   }
 

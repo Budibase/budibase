@@ -15,10 +15,10 @@ import * as Config from "./config"
 import * as Sort from "./sort"
 import * as Filter from "./filter"
 import * as Notifications from "./notifications"
-import * as Table from "./table"
-import * as ViewV2 from "./viewV2"
-import * as Query from "./query"
 import * as Datasource from "./datasource"
+import * as Table from "./datasources/table"
+import * as ViewV2 from "./datasources/viewV2"
+import * as NonPlus from "./datasources/nonPlus"
 
 const DependencyOrderedStores = [
   Sort,
@@ -27,7 +27,7 @@ const DependencyOrderedStores = [
   Scroll,
   Table,
   ViewV2,
-  Query,
+  NonPlus,
   Datasource,
   Columns,
   Rows,

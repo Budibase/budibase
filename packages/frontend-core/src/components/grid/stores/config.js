@@ -55,6 +55,8 @@ export const deriveStores = context => {
         config.canEditRows = false
         config.canDeleteRows = false
         config.canExpandRows = false
+        config.canSaveSchema = false
+        config.canEditColumns = false
       }
 
       return config
