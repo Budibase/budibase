@@ -5598,6 +5598,21 @@
         ]
       },
       {
+        "type": "event",
+        "label": "On row click",
+        "key": "onRowClick",
+        "context": [
+          {
+            "label": "Clicked row",
+            "key": "row"
+          }
+        ],
+        "dependsOn": {
+          "setting": "allowEditRows",
+          "value": false
+        }
+      },
+      {
         "type": "boolean",
         "label": "Add rows",
         "key": "allowAddRows",
