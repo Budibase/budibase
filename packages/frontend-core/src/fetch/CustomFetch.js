@@ -36,9 +36,7 @@ export default class CustomFetch extends DataFetch {
     if (typeof data === "string") {
       try {
         const js = JSON.parse(data)
-        if (Array.isArray(js)) {
-          return js
-        }
+        return Array.isArray(js) ? js : [js]
       } catch (error) {
         // Ignore
       }
