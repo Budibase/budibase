@@ -1,6 +1,7 @@
 import DataFetch from "./DataFetch.js"
 
 export default class CustomFetch extends DataFetch {
+  // Gets the correct Budibase type for a JS value
   getType(value) {
     if (value == null) {
       return "string"
@@ -8,11 +9,15 @@ export default class CustomFetch extends DataFetch {
     const type = typeof value
     if (type === "object") {
       if (Array.isArray(value)) {
+        // Use our custom array type to render badges
         return "array"
       }
+      // Use JSON for objects to ensure they are stringified
       return "json"
+    } else if (!isNaN(value)) {
+      return "number"
     } else {
-      return type
+      return "string"
     }
   }
 
@@ -27,9 +32,8 @@ export default class CustomFetch extends DataFetch {
       return data
     }
 
-    // Handle string cases
+    // For strings, try JSON then fall back to attempting a CSV
     if (typeof data === "string") {
-      // Try JSON parsing
       try {
         const js = JSON.parse(data)
         if (Array.isArray(js)) {
@@ -38,8 +42,6 @@ export default class CustomFetch extends DataFetch {
       } catch (error) {
         // Ignore
       }
-
-      // Try a simple CSV
       return data.split(",").map(x => x.trim())
     }
 
@@ -54,12 +56,13 @@ export default class CustomFetch extends DataFetch {
     }
 
     // Filter out any invalid values
-    data = data.filter(x => x != null && !Array.isArray(x))
+    data = data.filter(x => x != null && x !== "" && !Array.isArray(x))
 
     // Ensure all values are packed into objects
     return data.map(x => (typeof x === "object" ? x : { value: x }))
   }
 
+  // Extracts and parses the custom data from the datasource definition
   getCustomData(datasource) {
     return this.enrichCustomData(this.parseCustomData(datasource?.data))
   }
@@ -68,6 +71,9 @@ export default class CustomFetch extends DataFetch {
     // Try and work out the schema from the array provided
     let schema = {}
     const data = this.getCustomData(datasource)
+    if (!data?.length) {
+      return { schema }
+    }
 
     // Go through every object and extract all valid keys
     for (let datum of data) {
@@ -76,14 +82,32 @@ export default class CustomFetch extends DataFetch {
           continue
         }
         if (!schema[key]) {
-          schema[key] = { type: this.getType(datum[key]) }
+          let type = this.getType(datum[key])
+          let constraints = {}
+
+          // Determine whether we should render text columns as options instead
+          if (type === "string") {
+            const uniqueValues = [...new Set(data.map(x => x[key]))]
+            const uniqueness = uniqueValues.length / data.length
+            if (uniqueness <= 0.8) {
+              type = "options"
+              constraints.inclusion = uniqueValues
+            }
+          }
+
+          // Generate options for array columns
+          if (type === "array") {
+            constraints.inclusion = [...new Set(data.map(x => x[key]).flat())]
+          }
+
+          schema[key] = {
+            type,
+            constraints,
+          }
         }
       }
     }
-
-    return {
-      schema,
-    }
+    return { schema }
   }
 
   async getData() {
