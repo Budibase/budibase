@@ -29,7 +29,7 @@ function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
     const entry = table.schema[key]
     if (entry.autocolumn && entry.subtype == "autoID") {
-      entry.lastID = rowCount
+      ;(entry as any).lastID = rowCount
     }
   })
 }
@@ -184,7 +184,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-}
+} as any
 
 export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EMPLOYEE_TABLE_ID,
@@ -332,7 +332,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-}
+} as any
 
 export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
   _id: DEFAULT_JOBS_TABLE_ID,
@@ -489,7 +489,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-}
+} as any
 
 export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EXPENSES_TABLE_ID,
@@ -599,7 +599,7 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-}
+} as any
 
 export async function buildDefaultDocs() {
   const inventoryData = await tableImport(

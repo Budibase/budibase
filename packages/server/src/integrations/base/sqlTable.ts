@@ -1,5 +1,11 @@
 import { Knex, knex } from "knex"
-import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
+import {
+  NumberFieldMetadata,
+  Operation,
+  QueryJson,
+  RenameColumn,
+  Table,
+} from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
@@ -15,7 +21,7 @@ function generateSchema(
   let primaryKey = table && table.primary ? table.primary[0] : null
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
-  let metaCols = columns.filter(col => col.meta)
+  let metaCols = columns.filter(col => (col as NumberFieldMetadata).meta)
   let isJunction = metaCols.length === columns.length
   // can't change primary once its set for now
   if (primaryKey && !oldTable && !isJunction) {
@@ -25,7 +31,9 @@ function generateSchema(
   }
 
   // check if any columns need added
-  const foreignKeys = Object.values(table.schema).map(col => col.foreignKey)
+  const foreignKeys = Object.values(table.schema).map(
+    col => (col as any).foreignKey
+  )
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
