@@ -6,13 +6,9 @@ import isEqual from "lodash/isEqual"
 import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
-import {
-  FieldSchema,
-  FormulaFieldMetadata,
-  RelationshipFieldMetadata,
-  Table,
-} from "@budibase/types"
+import { FieldSchema, FormulaFieldMetadata, Table } from "@budibase/types"
 import sdk from "../../../sdk"
+import { isRelationshipColumn } from "../../../db/utils"
 
 function isStaticFormula(
   column: FieldSchema
@@ -104,10 +100,6 @@ async function checkIfFormulaNeedsCleared(
   }
 }
 
-function isLink(column: FieldSchema): column is RelationshipFieldMetadata {
-  return column.type === FieldTypes.LINK
-}
-
 /**
  * This function adds a note to related tables that they are
  * used in a static formula - so that the link controller
@@ -127,7 +119,9 @@ async function updateRelatedFormulaLinksOnTables(
   // clone the tables, so we can compare at end
   const initialTables = cloneDeep(tables)
   // first find the related column names
-  const relatedColumns = Object.values(table.schema).filter(isLink)
+  const relatedColumns = Object.values(table.schema).filter(
+    isRelationshipColumn
+  )
   // we start by removing the formula field from all tables
   for (let otherTable of tables) {
     if (!otherTable.relatedFormula) {

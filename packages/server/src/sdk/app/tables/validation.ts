@@ -1,11 +1,9 @@
 import {
   AutoReason,
   Datasource,
-  FieldSchema,
   FieldType,
   RelationshipType,
 } from "@budibase/types"
-import { FieldTypes } from "../../../constants"
 
 function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   if (!datasource.entities) {
