@@ -34,8 +34,8 @@ export type RelationshipFieldMetadata = BaseFieldSchema & {
 
 export interface AutoColumnFieldMetadata extends BaseFieldSchema {
   type: FieldType.AUTO
-  autocolumn?: boolean
-  subtype?: string
+  autocolumn: true
+  subtype: AutoFieldSubTypes
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -105,9 +105,25 @@ interface BaseFieldSchema extends UIFieldMetadata {
   // only used by external databases, to denote the real type
   externalType?: string
   constraints?: FieldConstraints
+  autocolumn?: boolean
+  subtype?: string
+}
+
+interface OtherFieldMetadata extends BaseFieldSchema {
+  type: Exclude<
+    FieldType,
+    | FieldType.DATETIME
+    | FieldType.DATETIME
+    | FieldType.LINK
+    | FieldType.AUTO
+    | FieldType.STRING
+    | FieldType.FORMULA
+    | FieldType.NUMBER
+  >
 }
 
 export type FieldSchema =
+  | OtherFieldMetadata
   | DateFieldMetadata
   | RelationshipFieldMetadata
   | AutoColumnFieldMetadata
