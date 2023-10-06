@@ -14,7 +14,6 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 
 /**
  * Returns the valid operator options for a certain data type
- * @param type the data type
  */
 export const getValidOperatorsForType = (
   type: FieldType,
