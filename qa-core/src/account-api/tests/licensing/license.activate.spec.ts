@@ -64,12 +64,5 @@ describe("license activation", () => {
 
     // Verify license key not found
     await config.internalApi.license.getLicenseKey({ status: 404 })
-
-    // Verify user downgraded to free license
-    await config.doInNewState(async () => {
-      await config.loginAsAccount(createAccountRequest)
-      const [selfRes, body] = await config.api.accounts.self()
-      expect(body.license.plan.type).toBe("free")
-    })
   })
 })

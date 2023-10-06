@@ -68,7 +68,7 @@ export default class LicenseAPI extends BaseAPI {
     opts: { status?: number } = {}
   ): Promise<[Response, GetLicenseKeyResponse]> {
     const [response, json] = await this.client.get(`/api/license/key`)
-    expect(response.status).toBe(opts.status ? opts.status : 200)
+    expect(response.status).toBe(opts.status || 200)
     return [response, json]
   }
   async activateLicense(
