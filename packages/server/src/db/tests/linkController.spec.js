@@ -233,4 +233,19 @@ describe("test the link controller", () => {
     }
     await config.updateTable(table)
   })
+
+  it("should be able to remove a linked field from a table, even if the linked table does not exist", async () => {
+    await createLinkedRow()
+    await createLinkedRow("link2")
+    table1.schema["link"].tableId = "not_found"
+    const controller = await createLinkController(table1, null, table1)
+    await context.doInAppContext(appId, async () => {
+      let before = await controller.getTableLinkDocs()
+      await controller.removeFieldFromTable("link")
+      let after = await controller.getTableLinkDocs()
+      expect(before.length).toEqual(2)
+      // shouldn't delete the other field
+      expect(after.length).toEqual(1)
+    })
+  })
 })
