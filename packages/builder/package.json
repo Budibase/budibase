@@ -104,6 +104,9 @@
   "nx": {
     "targets": {
       "build": {
+        "outputs": [
+          "{workspaceRoot}/packages/server/builder"
+        ],
         "dependsOn": [
           {
             "projects": [
