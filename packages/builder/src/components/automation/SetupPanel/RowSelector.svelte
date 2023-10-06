@@ -110,20 +110,7 @@
   <div class="schema-fields">
     {#each schemaFields as [field, schema]}
       {#if !schema.autocolumn && schema.type !== "attachment"}
-        <DrawerBindableSlot
-          fillWidth
-          title={value.title}
-          label={field}
-          panel={AutomationBindingPanel}
-          type={schema.type}
-          {schema}
-          value={value[field]}
-          on:change={e => onChange(e, field)}
-          {bindings}
-          allowJS={true}
-          updateOnChange={false}
-          drawerLeft="260px"
-        >
+        {#if isTestModal}
           <RowSelectorTypes
             {isTestModal}
             {field}
@@ -132,7 +119,31 @@
             {value}
             {onChange}
           />
-        </DrawerBindableSlot>
+        {:else}
+          <DrawerBindableSlot
+            fillWidth
+            title={value.title}
+            label={field}
+            panel={AutomationBindingPanel}
+            type={schema.type}
+            {schema}
+            value={value[field]}
+            on:change={e => onChange(e, field)}
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            drawerLeft="260px"
+          >
+            <RowSelectorTypes
+              {isTestModal}
+              {field}
+              {schema}
+              bindings={parsedBindings}
+              {value}
+              {onChange}
+            />
+          </DrawerBindableSlot>
+        {/if}
       {/if}
       {#if isUpdateRow && schema.type === "link"}
         <div class="checkbox-field">
