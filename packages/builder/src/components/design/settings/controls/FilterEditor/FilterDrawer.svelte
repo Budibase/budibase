@@ -191,7 +191,7 @@
   }
 
   const getValidOperatorsForType = filter => {
-    if (!filter.field) {
+    if (!filter?.field) {
       return []
     }
 
