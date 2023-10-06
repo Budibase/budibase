@@ -41,9 +41,9 @@ jobs:
           cache: "yarn"
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
-      - name: Setup Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
+      # - name: Setup Docker Buildx
+      #   id: buildx
+      #   uses: docker/setup-buildx-action@v3
       - name: Generate package names file
         run: ./scripts/generatePackageNamesFile.sh
       - name: Run Yarn
