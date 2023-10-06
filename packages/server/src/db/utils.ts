@@ -6,7 +6,7 @@ import {
   RelationshipFieldMetadata,
   VirtualDocumentType,
 } from "@budibase/types"
-import { FieldTypes } from "src/constants"
+import { FieldTypes } from "../constants"
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
 
 type Optional = string | null
