@@ -24,14 +24,14 @@ interface BaseRelationshipFieldMetadata extends BaseFieldSchema {
 export interface ManyToManyRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
   relationshipType: RelationshipType.MANY_TO_MANY
-  through: string
-  throughFrom: string
-  throughTo: string
+  through?: string
+  throughFrom?: string
+  throughTo?: string
 }
 export interface OneToManyRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
   relationshipType: RelationshipType.ONE_TO_MANY
-  foreignKey: string
+  foreignKey?: string
 }
 export interface ManyToOneRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
@@ -46,7 +46,7 @@ export type RelationshipFieldMetadata =
 export interface AutoColumnFieldMetadata extends BaseFieldSchema {
   type: FieldType.AUTO
   autocolumn: true
-  subtype: AutoFieldSubTypes
+  subtype?: AutoFieldSubTypes
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -121,7 +121,7 @@ interface BaseFieldSchema extends UIFieldMetadata {
   subtype?: string
 }
 
-interface OtherFieldMetadata extends BaseFieldSchema {
+export interface OtherFieldMetadata extends BaseFieldSchema {
   type: Exclude<
     FieldType,
     | FieldType.DATETIME
