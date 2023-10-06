@@ -29,6 +29,7 @@ import {
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult } from "../search"
+import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 
 export async function search(options: SearchParams) {
@@ -47,9 +48,9 @@ export async function search(options: SearchParams) {
     disableEscaping: options.disableEscaping,
   }
 
-  let table
+  let table = await sdk.tables.getTable(tableId)
+  options = searchInputMapping(table, options)
   if (params.sort && !params.sortType) {
-    table = await sdk.tables.getTable(tableId)
     const schema = table.schema
     const sortField = schema[params.sort]
     params.sortType = sortField.type === "number" ? "number" : "string"
@@ -68,7 +69,6 @@ export async function search(options: SearchParams) {
     if (tableId === InternalTables.USER_METADATA) {
       response.rows = await getGlobalUsersFromMetadata(response.rows)
     }
-    table = table || (await sdk.tables.getTable(tableId))
 
     if (options.fields) {
       const fields = [...options.fields, ...db.CONSTANT_INTERNAL_ROW_COLS]
