@@ -117,16 +117,6 @@ EXPOSE 443
 EXPOSE 2222
 VOLUME /data
 
-# Remove cached files
-RUN rm -rf \
-  /root/.cache \
-  /root/.npm \
-  /root/.pip \
-  /usr/local/share/doc \
-  /usr/share/doc \
-  /usr/share/man \
-  /var/lib/apt/lists/* \
-  /tmp/*
 
 HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
 
