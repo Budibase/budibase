@@ -170,10 +170,16 @@
         ]
       },
       "build": {
+        "outputs": [
+          "{projectRoot}/builder",
+          "{projectRoot}/client",
+          "{projectRoot}/dist"
+        ],
         "dependsOn": [
           {
             "projects": [
-              "@budibase/client"
+              "@budibase/client",
+              "@budibase/builder"
             ],
             "target": "build"
           }
