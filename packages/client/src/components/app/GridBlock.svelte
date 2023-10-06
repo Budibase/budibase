@@ -14,12 +14,14 @@
   export let initialSortOrder = null
   export let fixedRowHeight = null
   export let columns = null
+  export let onRowClick = null
 
   const component = getContext("component")
   const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
+  $: handleRowClick = allowEditRows ? undefined : onRowClick
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -56,6 +58,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
+    on:rowclick={e => handleRowClick?.({ row: e.detail })}
   />
 </div>
 
