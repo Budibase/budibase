@@ -152,14 +152,20 @@ export const initialise = context => {
       return
     }
     const $definition = get(definition)
+    const $columns = get(columns)
+    const $stickyColumn = get(stickyColumn)
+
+    // Generate array of all columns to easily find pre-existing columns
+    let allColumns = $columns || []
+    if ($stickyColumn) {
+      allColumns.push($stickyColumn)
+    }
 
     // Find primary display
     let primaryDisplay
-    if (
-      $definition.primaryDisplay &&
-      $enrichedSchema[$definition.primaryDisplay]
-    ) {
-      primaryDisplay = $definition.primaryDisplay
+    const candidatePD = $definition.primaryDisplay || $stickyColumn?.name
+    if (candidatePD && $enrichedSchema[candidatePD]) {
+      primaryDisplay = candidatePD
     }
 
     // Get field list
@@ -173,14 +179,18 @@ export const initialise = context => {
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
       fields
-        .map(field => ({
-          name: field,
-          label: $enrichedSchema[field].displayName || field,
-          schema: $enrichedSchema[field],
-          width: $enrichedSchema[field].width || DefaultColumnWidth,
-          visible: $enrichedSchema[field].visible ?? true,
-          order: $enrichedSchema[field].order,
-        }))
+        .map(field => {
+          const fieldSchema = $enrichedSchema[field]
+          const oldColumn = allColumns?.find(x => x.name === field)
+          return {
+            name: field,
+            label: fieldSchema.displayName || field,
+            schema: fieldSchema,
+            width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
+            visible: fieldSchema.visible ?? true,
+            order: fieldSchema.order ?? oldColumn?.order,
+          }
+        })
         .sort((a, b) => {
           // Sort by order first
           const orderA = a.order
@@ -208,11 +218,13 @@ export const initialise = context => {
       stickyColumn.set(null)
       return
     }
+    const stickySchema = $enrichedSchema[primaryDisplay]
+    const oldStickyColumn = allColumns?.find(x => x.name === primaryDisplay)
     stickyColumn.set({
       name: primaryDisplay,
-      label: $enrichedSchema[primaryDisplay].displayName || primaryDisplay,
-      schema: $enrichedSchema[primaryDisplay],
-      width: $enrichedSchema[primaryDisplay].width || DefaultColumnWidth,
+      label: stickySchema.displayName || primaryDisplay,
+      schema: stickySchema,
+      width: stickySchema.width || oldStickyColumn?.width || DefaultColumnWidth,
       visible: true,
       order: 0,
       left: GutterWidth,
