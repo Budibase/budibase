@@ -7,6 +7,7 @@ env:
   CI: true
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REGISTRY_URL: registry.hub.docker.com
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 jobs:
   build:
     name: "build"
