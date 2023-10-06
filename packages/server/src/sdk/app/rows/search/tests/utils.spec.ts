@@ -37,13 +37,16 @@ describe("searchInputMapping", () => {
   })
 
   it("shouldn't change any other input", () => {
+    const email = "test@test.com"
     const params: SearchParams = {
       tableId,
       query: {
         equal: {
-          "1:user": "test@test.com",
+          "1:user": email,
         },
       },
     }
+    const output = searchInputMapping(tableWithUserCol, params)
+    expect(output.query.equal!["1:user"]).toBe(email)
   })
 })
