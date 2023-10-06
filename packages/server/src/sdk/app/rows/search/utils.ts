@@ -11,7 +11,7 @@ import { db as dbCore } from "@budibase/backend-core"
 function findColumnInQueries(
   column: string,
   options: SearchParams,
-  callback: <T>(filter: T) => T
+  callback: (filter: any) => any
 ) {
   for (let filterBlock of Object.values(options.query)) {
     if (typeof filterBlock !== "object") {
