@@ -316,6 +316,7 @@ class LinkController {
       }
       await this._db.put(linkedTable)
     } catch (error: any) {
+      // ignore missing to ensure broken relationship columns can be deleted
       if (error.statusCode !== 404) {
         throw error
       }
