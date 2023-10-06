@@ -25,7 +25,8 @@ export interface AvailablePrice {
   amountMonthly: number
   currency: string
   duration: PriceDuration
-  priceId: string
+  priceId: string,
+  type?: string
 }
 
 export enum PlanModel {
