@@ -1,6 +1,6 @@
 import { populateExternalTableSchemas } from "../validation"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Table } from "@budibase/types"
+import { AutoReason, Datasource, Table } from "@budibase/types"
 import { isEqual } from "lodash"
 
 const SCHEMA = {
@@ -109,7 +109,7 @@ describe("validation and update of external table schemas", () => {
     const response = populateExternalTableSchemas(cloneDeep(SCHEMA) as any)
     const foreignKey = getForeignKeyColumn(response)
     expect(foreignKey.autocolumn).toBe(true)
-    expect(foreignKey.autoReason).toBe("foreign_key")
+    expect(foreignKey.autoReason).toBe(AutoReason.FOREIGN_KEY)
     noOtherTableChanges(response)
   })
 
