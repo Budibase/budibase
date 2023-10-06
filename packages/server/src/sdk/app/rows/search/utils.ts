@@ -13,6 +13,9 @@ function findColumnInQueries(
   options: SearchParams,
   callback: (filter: any) => any
 ) {
+  if (!options.query) {
+    return
+  }
   for (let filterBlock of Object.values(options.query)) {
     if (typeof filterBlock !== "object") {
       continue
@@ -27,15 +30,30 @@ function findColumnInQueries(
 
 function userColumnMapping(column: string, options: SearchParams) {
   findColumnInQueries(column, options, (filterValue: any): string => {
-    if (typeof filterValue !== "string") {
+    const isArray = Array.isArray(filterValue),
+      isString = typeof filterValue === "string"
+    if (!isString && !isArray) {
       return filterValue
     }
-    const rowPrefix = DocumentType.ROW + SEPARATOR
-    // TODO: at some point in future might want to handle mapping emails to IDs
-    if (filterValue.startsWith(rowPrefix)) {
-      return dbCore.getGlobalIDFromUserMetadataID(filterValue)
+    const processString = (input: string) => {
+      const rowPrefix = DocumentType.ROW + SEPARATOR
+      if (input.startsWith(rowPrefix)) {
+        return dbCore.getGlobalIDFromUserMetadataID(input)
+      } else {
+        return input
+      }
     }
-    return filterValue
+    if (isArray) {
+      return filterValue.map(el => {
+        if (typeof el === "string") {
+          return processString(el)
+        } else {
+          return el
+        }
+      })
+    } else {
+      return processString(filterValue)
+    }
   })
 }
 
