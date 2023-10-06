@@ -948,12 +948,17 @@ export const buildFormSchema = (component, asset) => {
 
   if (component._component.endsWith("formblock")) {
     let schema = {}
-
     const datasource = getDatasourceForProvider(asset, component)
+
+    // Return if an app has no data tables
+    if (!datasource) {
+      return schema
+    }
+
     const info = getSchemaForDatasource(component, datasource)
 
     if (!component.fields) {
-      Object.values(info?.schema)
+      Object.values(info.schema)
         .filter(
           ({ autocolumn, name }) =>
             !autocolumn && !["_rev", "_id"].includes(name)

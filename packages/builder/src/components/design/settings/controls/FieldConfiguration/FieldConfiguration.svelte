@@ -36,7 +36,8 @@
     )
   }
 
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: datasource =
+    getDatasourceForProvider($currentAsset, componentInstance) || {}
   $: resourceId = datasource.resourceId || datasource.tableId
 
   $: if (!isEqual(value, cachedValue)) {
