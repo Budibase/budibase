@@ -21,9 +21,10 @@ const tableWithUserCol: Table = {
 }
 
 describe("searchInputMapping", () => {
+  const globalUserId = dbCore.generateGlobalUserID()
+  const userMedataId = dbCore.generateUserMetadataID(globalUserId)
+
   it("should be able to map ro_ to global user IDs", () => {
-    const globalUserId = dbCore.generateGlobalUserID()
-    const userMedataId = dbCore.generateUserMetadataID(globalUserId)
     const params: SearchParams = {
       tableId,
       query: {
@@ -34,6 +35,22 @@ describe("searchInputMapping", () => {
     }
     const output = searchInputMapping(tableWithUserCol, params)
     expect(output.query.equal!["1:user"]).toBe(globalUserId)
+  })
+
+  it("should handle array of user IDs", () => {
+    const params: SearchParams = {
+      tableId,
+      query: {
+        oneOf: {
+          "1:user": [userMedataId, globalUserId],
+        },
+      },
+    }
+    const output = searchInputMapping(tableWithUserCol, params)
+    expect(output.query.oneOf!["1:user"]).toStrictEqual([
+      globalUserId,
+      globalUserId,
+    ])
   })
 
   it("shouldn't change any other input", () => {
@@ -48,5 +65,13 @@ describe("searchInputMapping", () => {
     }
     const output = searchInputMapping(tableWithUserCol, params)
     expect(output.query.equal!["1:user"]).toBe(email)
+  })
+
+  it("shouldn't error if no query supplied", () => {
+    const params: any = {
+      tableId,
+    }
+    const output = searchInputMapping(tableWithUserCol, params)
+    expect(output.query).toBeUndefined()
   })
 })
