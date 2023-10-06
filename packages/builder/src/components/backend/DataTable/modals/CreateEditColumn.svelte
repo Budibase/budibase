@@ -507,6 +507,13 @@
     return newError
   }
 
+  function isUsersColumn(column) {
+    return (
+      column.type === FieldType.BB_REFERENCE &&
+      [FieldSubtype.USER, FieldSubtype.USERS].includes(column.subtype)
+    )
+  }
+
   onMount(() => {
     mounted = true
   })
@@ -694,7 +701,7 @@
     <Button primary text on:click={openJsonSchemaEditor}
       >Open schema editor</Button
     >
-  {:else if editableColumn.type === FieldType.BB_REFERENCE && [FieldSubtype.USER, FieldSubtype.USERS].includes(editableColumn.subtype) && datasource?.source !== SourceName.GOOGLE_SHEETS}
+  {:else if isUsersColumn(editableColumn) && datasource?.source !== SourceName.GOOGLE_SHEETS}
     <Toggle
       value={editableColumn.subtype === FieldSubtype.USERS}
       on:change={e =>
