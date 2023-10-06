@@ -121,7 +121,7 @@ interface BaseFieldSchema extends UIFieldMetadata {
   subtype?: string
 }
 
-export interface OtherFieldMetadata extends BaseFieldSchema {
+interface OtherFieldMetadata extends BaseFieldSchema {
   type: Exclude<
     FieldType,
     | FieldType.DATETIME

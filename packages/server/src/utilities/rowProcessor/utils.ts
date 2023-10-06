@@ -5,13 +5,13 @@ import {
   FormulaTypes,
 } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
-import { AutoColumnFieldMetadata, Row, Table } from "@budibase/types"
+import { FieldSchema, Row, Table } from "@budibase/types"
 
 /**
  * If the subtype has been lost for any reason this works out what
  * subtype the auto column should be.
  */
-export function fixAutoColumnSubType(column: AutoColumnFieldMetadata) {
+export function fixAutoColumnSubType(column: FieldSchema) {
   if (!column.autocolumn || !column.name || column.subtype) {
     return column
   }
