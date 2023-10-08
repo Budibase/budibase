@@ -949,13 +949,11 @@ export const buildFormSchema = (component, asset) => {
   if (component._component.endsWith("formblock")) {
     let schema = {}
     const datasource = getDatasourceForProvider(asset, component)
+    const info = getSchemaForDatasource(component, datasource)
 
-    // Return if an app has no data tables
-    if (!datasource) {
+    if (!info?.schema) {
       return schema
     }
-
-    const info = getSchemaForDatasource(component, datasource)
 
     if (!component.fields) {
       Object.values(info.schema)
