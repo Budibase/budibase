@@ -77,6 +77,15 @@
         constraints: FIELDS.USER.constraints,
       },
     },
+    users: {
+      label: "Users",
+      value: "users",
+      config: {
+        type: FIELDS.USERS.type,
+        subtype: FIELDS.USERS.subtype,
+        constraints: FIELDS.USERS.constraints,
+      },
+    },
   }
 
   let fileInput
