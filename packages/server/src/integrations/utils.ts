@@ -1,7 +1,12 @@
-import { SqlQuery, Table, SearchFilters, Datasource } from "@budibase/types"
+import {
+  SqlQuery,
+  Table,
+  SearchFilters,
+  Datasource,
+  FieldType,
+} from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import {
-  FieldTypes,
   BuildSchemaErrors,
   InvalidColumns,
   NoEmptyFilterStrings,
@@ -13,57 +18,57 @@ const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 
 const SQL_NUMBER_TYPE_MAP = {
-  integer: FieldTypes.NUMBER,
-  int: FieldTypes.NUMBER,
-  decimal: FieldTypes.NUMBER,
-  smallint: FieldTypes.NUMBER,
-  real: FieldTypes.NUMBER,
-  float: FieldTypes.NUMBER,
-  numeric: FieldTypes.NUMBER,
-  mediumint: FieldTypes.NUMBER,
-  dec: FieldTypes.NUMBER,
-  double: FieldTypes.NUMBER,
-  fixed: FieldTypes.NUMBER,
-  "double precision": FieldTypes.NUMBER,
-  number: FieldTypes.NUMBER,
-  binary_float: FieldTypes.NUMBER,
-  binary_double: FieldTypes.NUMBER,
-  money: FieldTypes.NUMBER,
-  smallmoney: FieldTypes.NUMBER,
+  integer: FieldType.NUMBER,
+  int: FieldType.NUMBER,
+  decimal: FieldType.NUMBER,
+  smallint: FieldType.NUMBER,
+  real: FieldType.NUMBER,
+  float: FieldType.NUMBER,
+  numeric: FieldType.NUMBER,
+  mediumint: FieldType.NUMBER,
+  dec: FieldType.NUMBER,
+  double: FieldType.NUMBER,
+  fixed: FieldType.NUMBER,
+  "double precision": FieldType.NUMBER,
+  number: FieldType.NUMBER,
+  binary_float: FieldType.NUMBER,
+  binary_double: FieldType.NUMBER,
+  money: FieldType.NUMBER,
+  smallmoney: FieldType.NUMBER,
 }
 
 const SQL_DATE_TYPE_MAP = {
-  timestamp: FieldTypes.DATETIME,
-  time: FieldTypes.DATETIME,
-  datetime: FieldTypes.DATETIME,
-  smalldatetime: FieldTypes.DATETIME,
-  date: FieldTypes.DATETIME,
+  timestamp: FieldType.DATETIME,
+  time: FieldType.DATETIME,
+  datetime: FieldType.DATETIME,
+  smalldatetime: FieldType.DATETIME,
+  date: FieldType.DATETIME,
 }
 
 const SQL_DATE_ONLY_TYPES = ["date"]
 const SQL_TIME_ONLY_TYPES = ["time"]
 
 const SQL_STRING_TYPE_MAP = {
-  varchar: FieldTypes.STRING,
-  char: FieldTypes.STRING,
-  nchar: FieldTypes.STRING,
-  nvarchar: FieldTypes.STRING,
-  ntext: FieldTypes.STRING,
-  enum: FieldTypes.STRING,
-  blob: FieldTypes.STRING,
-  long: FieldTypes.STRING,
-  text: FieldTypes.STRING,
+  varchar: FieldType.STRING,
+  char: FieldType.STRING,
+  nchar: FieldType.STRING,
+  nvarchar: FieldType.STRING,
+  ntext: FieldType.STRING,
+  enum: FieldType.STRING,
+  blob: FieldType.STRING,
+  long: FieldType.STRING,
+  text: FieldType.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
-  boolean: FieldTypes.BOOLEAN,
-  bit: FieldTypes.BOOLEAN,
-  tinyint: FieldTypes.BOOLEAN,
+  boolean: FieldType.BOOLEAN,
+  bit: FieldType.BOOLEAN,
+  tinyint: FieldType.BOOLEAN,
 }
 
 const SQL_MISC_TYPE_MAP = {
-  json: FieldTypes.JSON,
-  bigint: FieldTypes.BIGINT,
+  json: FieldType.JSON,
+  bigint: FieldType.BIGINT,
 }
 
 const SQL_TYPE_MAP = {
@@ -154,7 +159,7 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 }
 
 export function convertSqlType(type: string) {
-  let foundType = FieldTypes.STRING
+  let foundType = FieldType.STRING
   const lcType = type.toLowerCase()
   let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
@@ -169,7 +174,7 @@ export function convertSqlType(type: string) {
     }).internal
   }
   const schema: any = { type: foundType }
-  if (foundType === FieldTypes.DATETIME) {
+  if (foundType === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
   }
@@ -212,7 +217,7 @@ export function shouldCopyRelationship(
   tableIds: string[]
 ) {
   return (
-    column.type === FieldTypes.LINK &&
+    column.type === FieldType.LINK &&
     column.tableId &&
     tableIds.includes(column.tableId)
   )
@@ -230,22 +235,23 @@ export function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
-  const isFormula = column.type === FieldTypes.FORMULA
+  const isFormula = column.type === FieldType.FORMULA
   const specialTypes = [
-    FieldTypes.OPTIONS,
-    FieldTypes.LONGFORM,
-    FieldTypes.ARRAY,
-    FieldTypes.FORMULA,
+    FieldType.OPTIONS,
+    FieldType.LONGFORM,
+    FieldType.ARRAY,
+    FieldType.FORMULA,
+    FieldType.BB_REFERENCE,
   ]
   // column has been deleted, remove - formulas will never exist, always copy
   if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
-    !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
+    !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
   return (
-    specialTypes.indexOf(column.type as FieldTypes) !== -1 ||
-    (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
+    specialTypes.indexOf(column.type as FieldType) !== -1 ||
+    (fetchedIsNumber && column.type === FieldType.BOOLEAN)
   )
 }
 
