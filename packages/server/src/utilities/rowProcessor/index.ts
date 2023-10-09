@@ -219,9 +219,6 @@ export async function outputProcessing<T extends Row[] | Row>(
     ? await linkRows.attachFullLinkedDocs(table, safeRows)
     : safeRows
 
-  // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
-
   // set the attachments URLs
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
@@ -242,6 +239,10 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     }
   }
+
+  // process formulas
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(
       table,
