@@ -219,7 +219,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     ? await linkRows.attachFullLinkedDocs(table, safeRows)
     : safeRows
 
-  // set the attachments URLs
+  // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
@@ -240,7 +240,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     }
   }
 
-  // process formulas
+  // process formulas after the complex types had been processed
   enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
 
   if (opts.squash) {
