@@ -8,7 +8,7 @@ const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
-): Promise<string | null> {
+): Promise<string | string[] | null> {
   let referenceIds: string[] = []
 
   if (Array.isArray(value)) {
@@ -41,33 +41,39 @@ export async function processInputBBReferences(
 
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
         throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
       }
 
-      break
+      if (subtype === FieldSubtype.USERS) {
+        return referenceIds
+      }
+
+      return referenceIds.join(",") || null
+
     default:
       throw utils.unreachable(subtype)
   }
-
-  return referenceIds.join(",") || null
 }
 
 export async function processOutputBBReferences(
-  value: string,
+  value: string | string[],
   subtype: FieldSubtype
 ) {
-  if (typeof value !== "string") {
+  if (value === null || value === undefined) {
     // Already processed or nothing to process
     return value || undefined
   }
 
-  const ids = value.split(",").filter(id => !!id)
+  const ids =
+    typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { users } = await cache.user.getUsers(ids)
       if (!users.length) {
         return undefined

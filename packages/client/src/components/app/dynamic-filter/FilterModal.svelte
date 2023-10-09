@@ -63,7 +63,7 @@
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(
-      expression.type,
+      { type: expression.type },
       expression.field,
       datasource
     ).map(x => x.value)
@@ -125,7 +125,7 @@
           <Select
             disabled={!filter.field}
             options={LuceneUtils.getValidOperatorsForType(
-              filter.type,
+              { type: filter.type, subtype: filter.subtype },
               filter.field,
               datasource
             )}

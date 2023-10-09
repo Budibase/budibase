@@ -20,7 +20,6 @@
   import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
   import FilterUsers from "./FilterUsers.svelte"
-  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
@@ -126,6 +125,7 @@
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
+    filter.subtype = fieldSchema?.subtype
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
@@ -196,7 +196,7 @@
     }
 
     return LuceneUtils.getValidOperatorsForType(
-      filter.type,
+      { type: filter.type, subtype: filter.subtype },
       filter.field,
       datasource
     )
@@ -301,9 +301,10 @@
               {:else if filter.type === FieldType.BB_REFERENCE}
                 <FilterUsers
                   bind:value={filter.value}
-                  multiselect={getSchema(filter).relationshipType ===
-                    RelationshipType.MANY_TO_MANY ||
-                    filter.operator === OperatorOptions.In.value}
+                  multiselect={[
+                    OperatorOptions.In.value,
+                    OperatorOptions.ContainsAny.value,
+                  ].includes(filter.operator)}
                   disabled={filter.noValue}
                 />
               {:else}

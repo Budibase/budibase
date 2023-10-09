@@ -21,6 +21,7 @@ const TypeIconMap = {
   bigint: "TagBold",
   bb_reference: {
     user: "User",
+    users: "UserGroup",
   },
 }
 
