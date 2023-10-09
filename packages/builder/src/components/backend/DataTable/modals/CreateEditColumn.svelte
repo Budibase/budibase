@@ -660,7 +660,8 @@
       >Open schema editor</Button
     >
   {:else if editableColumn.type === USER_REFRENCE_TYPE}
-    <Toggle
+    <!-- Disabled temporally -->
+    <!-- <Toggle
       value={editableColumn.relationshipType === RelationshipType.MANY_TO_MANY}
       on:change={e =>
         (editableColumn.relationshipType = e.detail
@@ -669,7 +670,7 @@
       disabled={!isCreating}
       thin
       text="Allow multiple users"
-    />
+    /> -->
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
     <Select
