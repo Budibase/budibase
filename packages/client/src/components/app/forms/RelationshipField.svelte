@@ -18,6 +18,7 @@
   export let filter
   export let datasourceType = "table"
   export let primaryDisplay
+  export let valueConversion
 
   let fieldState
   let fieldApi
@@ -160,7 +161,9 @@
   const handleChange = value => {
     const changed = fieldApi.setValue(value)
     if (onChange && changed) {
-      onChange({ value })
+      onChange({
+        value: valueConversion ? valueConversion(value) : value,
+      })
     }
   }
 
@@ -176,7 +179,9 @@
   {field}
   {disabled}
   {validation}
-  defaultValue={expandedDefaultValue}
+  defaultValue={valueConversion
+    ? valueConversion(expandedDefaultValue)
+    : expandedDefaultValue}
   {type}
   bind:fieldState
   bind:fieldApi
