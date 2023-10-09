@@ -1,5 +1,6 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
+  import { FieldType } from "@budibase/types"
   import GridCell from "./GridCell.svelte"
   import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
@@ -25,11 +26,12 @@
   } = getContext("grid")
 
   const bannedDisplayColumnTypes = [
-    "link",
-    "array",
-    "attachment",
-    "boolean",
-    "json",
+    FieldType.LINK,
+    FieldType.ARRAY,
+    FieldType.ATTACHMENT,
+    FieldType.BOOLEAN,
+    FieldType.JSON,
+    FieldType.BB_REFERENCE,
   ]
 
   let anchor
