@@ -207,7 +207,7 @@
       {/if}
     </div>
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
-      <GridScrollWrapper scrollHorizontally wheelInteractive>
+      <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
           {#each $renderedColumns as column, columnIdx}
             {@const cellId = `new-${column.name}`}
