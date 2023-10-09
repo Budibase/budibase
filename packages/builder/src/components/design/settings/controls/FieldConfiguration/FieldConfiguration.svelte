@@ -37,7 +37,7 @@
   }
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: resourceId = datasource.resourceId || datasource.tableId
+  $: resourceId = datasource?.resourceId || datasource?.tableId
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
