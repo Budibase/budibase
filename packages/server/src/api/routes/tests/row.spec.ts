@@ -1566,15 +1566,13 @@ describe.each([
       () => ({
         user: {
           name: "user",
-          relationshipType: RelationshipType.ONE_TO_MANY,
           type: FieldType.BB_REFERENCE,
           subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-          relationshipType: RelationshipType.MANY_TO_MANY,
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
         },
       }),
       () => config.createUser(),
