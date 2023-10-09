@@ -4,6 +4,7 @@
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import { store } from "builderStore"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -17,11 +18,11 @@
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
 
   const userSchemaOverrides = {
-    firstName: { displayName: "First name" },
-    lastName: { displayName: "Last name" },
-    email: { displayName: "Email" },
-    roleId: { displayName: "Role" },
-    status: { displayName: "Status" },
+    firstName: { displayName: "First name", disabled: true },
+    lastName: { displayName: "Last name", disabled: true },
+    email: { displayName: "Email", disabled: true },
+    roleId: { displayName: "Role", disabled: true },
+    status: { displayName: "Status", disabled: true },
   }
 
   $: id = $tables.selected?._id
@@ -35,6 +36,7 @@
     return datasource._id === $tables.selected?.sourceId
   })
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
+  $: editable = !(isUsersTable && $store.features.disableUserMetadata)
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -58,22 +60,22 @@
   <Grid
     {API}
     datasource={gridDatasource}
-    canAddRows={!isUsersTable}
-    canDeleteRows={!isUsersTable}
-    canEditRows={!isUsersTable}
-    canEditColumns={!isUsersTable}
+    canAddRows={editable}
+    canDeleteRows={editable}
+    canEditRows={editable}
+    canEditColumns={editable}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
-      {#if isUsersTable}
+      {#if !editable}
         <GridUsersTableButton />
       {/if}
       <GridFilterButton />
     </svelte:fragment>
     <svelte:fragment slot="controls">
-      {#if !isUsersTable}
+      {#if editable}
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />

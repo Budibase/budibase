@@ -289,6 +289,7 @@ async function performAppCreate(ctx: UserCtx) {
       },
       features: {
         componentValidation: true,
+        disableUserMetadata: true,
       },
     }
 
