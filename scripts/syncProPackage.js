@@ -33,7 +33,7 @@ Object.keys(data).forEach(workspace => {
 
   let hasChanges = false
 
-  if (packageJson.dependencies["@budibase/pro"]) {
+  if (packageJson.dependencies && packageJson.dependencies["@budibase/pro"]) {
     packageJson.dependencies["@budibase/pro"] = version
     hasChanges = true
   }

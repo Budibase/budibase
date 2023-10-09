@@ -4,7 +4,7 @@
   import { NewRowID } from "../lib/constants"
 
   const {
-    enrichedRows,
+    rows,
     focusedCellId,
     visibleColumns,
     focusedRow,
@@ -16,7 +16,6 @@
     config,
     menu,
     gridFocused,
-    canAddRows,
   } = getContext("grid")
 
   const ignoredOriginSelectors = [
@@ -46,12 +45,12 @@
         e.preventDefault()
         focusFirstCell()
       } else if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        if ($canAddRows) {
+        if ($config.canAddRows) {
           e.preventDefault()
           dispatch("add-row-inline")
         }
       } else if (e.key === "Delete" || e.key === "Backspace") {
-        if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
+        if (Object.keys($selectedRows).length && $config.canDeleteRows) {
           dispatch("request-bulk-delete")
         }
       }
@@ -100,7 +99,7 @@
           }
           break
         case "Enter":
-          if ($canAddRows) {
+          if ($config.canAddRows) {
             dispatch("add-row-inline")
           }
       }
@@ -120,7 +119,7 @@
           break
         case "Delete":
         case "Backspace":
-          if (Object.keys($selectedRows).length && $config.allowDeleteRows) {
+          if (Object.keys($selectedRows).length && $config.canDeleteRows) {
             dispatch("request-bulk-delete")
           } else {
             deleteSelectedCell()
@@ -131,7 +130,7 @@
           break
         case " ":
         case "Space":
-          if ($config.allowDeleteRows) {
+          if ($config.canDeleteRows) {
             toggleSelectRow()
           }
           break
@@ -143,7 +142,7 @@
 
   // Focuses the first cell in the grid
   const focusFirstCell = () => {
-    const firstRow = $enrichedRows[0]
+    const firstRow = $rows[0]
     if (!firstRow) {
       return
     }
@@ -184,7 +183,7 @@
     if (!$focusedRow) {
       return
     }
-    const newRow = $enrichedRows[$focusedRow.__idx + delta]
+    const newRow = $rows[$focusedRow.__idx + delta]
     if (newRow) {
       const split = $focusedCellId.split("-")
       $focusedCellId = `${newRow._id}-${split[1]}`
@@ -216,13 +215,15 @@
     if ($focusedCellAPI && !$focusedCellAPI.isReadonly()) {
       const type = $focusedCellAPI.getType()
       if (type === "number" && keyCodeIsNumber(keyCode)) {
-        $focusedCellAPI.setValue(parseInt(key))
+        // Update the value locally but don't save it yet
+        $focusedCellAPI.setValue(parseInt(key), { save: false })
         $focusedCellAPI.focus()
       } else if (
         ["string", "barcodeqr", "longform"].includes(type) &&
         (keyCodeIsLetter(keyCode) || keyCodeIsNumber(keyCode))
       ) {
-        $focusedCellAPI.setValue(key)
+        // Update the value locally but don't save it yet
+        $focusedCellAPI.setValue(key, { save: false })
         $focusedCellAPI.focus()
       }
     }

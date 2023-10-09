@@ -1,22 +1,9 @@
-import { SearchFilters, SortOrder, SortType } from "@budibase/types"
+import { SearchFilters, SearchParams } from "@budibase/types"
 import { isExternalTable } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
-
-export interface SearchParams {
-  tableId: string
-  paginate?: boolean
-  query: SearchFilters
-  bookmark?: string
-  limit?: number
-  sort?: string
-  sortOrder?: SortOrder
-  sortType?: SortType
-  version?: string
-  disableEscaping?: boolean
-  fields?: string[]
-}
+export { isValidFilter, removeEmptyFilters } from "../../../integrations/utils"
 
 export interface ViewParams {
   calculation: string
@@ -44,7 +31,7 @@ export interface ExportRowsParams {
   format: Format
   rowIds?: string[]
   columns?: string[]
-  query: SearchFilters
+  query?: SearchFilters
 }
 
 export interface ExportRowsResult {

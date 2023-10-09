@@ -22,7 +22,7 @@
     "predocker": "yarn build && cp ../../yarn.lock ./dist/",
     "build:docker": "yarn predocker && docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev:builder": "npm run dev:stack:init && rimraf dist/ && nodemon",
+    "dev:builder": "npm run dev:stack:init && nodemon",
     "dev:built": "yarn run dev:stack:init && yarn run run:docker",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watch",
@@ -67,7 +67,6 @@
     "node-fetch": "2.6.7",
     "nodemailer": "6.7.2",
     "passport-google-oauth": "2.0.0",
-    "passport-jwt": "4.0.0",
     "passport-local": "1.0.0",
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
@@ -82,25 +81,33 @@
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "^4.14.191",
-    "@types/node": "14.18.20",
-    "@types/node-fetch": "2.6.1",
-    "@types/pouchdb": "6.4.0",
+    "@types/node": "18.17.0",
+    "@types/node-fetch": "2.6.4",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.12",
     "@types/uuid": "8.3.4",
-    "@typescript-eslint/parser": "5.45.0",
-    "copyfiles": "2.4.1",
-    "eslint": "6.8.0",
     "jest": "29.6.2",
     "lodash": "4.17.21",
     "nodemon": "2.0.15",
-    "pouchdb-adapter-memory": "7.2.2",
     "rimraf": "3.0.2",
     "supertest": "6.2.2",
     "timekeeper": "2.2.0",
-    "ts-node": "10.8.1",
-    "tsconfig-paths": "4.0.0",
-    "typescript": "4.7.3",
+    "typescript": "5.2.2",
     "update-dotenv": "1.1.1"
+  },
+  "nx": {
+    "targets": {
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "comment": "Required for pro usage when submodule not loaded",
+            "projects": [
+              "@budibase/backend-core"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }

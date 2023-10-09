@@ -89,7 +89,7 @@
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
-  $: privileged = sdk.users.isAdminOrBuilder(user)
+  $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
@@ -98,28 +98,25 @@
       return y._id === userId
     })
   })
-  $: globalRole = sdk.users.isAdmin(user)
-    ? "admin"
-    : sdk.users.isBuilder(user)
-    ? "developer"
-    : "appUser"
+  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
     if (!privileged) {
       availableApps = availableApps.filter(x => {
-        return Object.keys(roles || {}).find(y => {
+        let roleKeys = Object.keys(roles || {})
+        return roleKeys.concat(user?.builder?.apps).find(y => {
           return x.appId === apps.extractAppId(y)
         })
       })
     }
     return availableApps.map(app => {
-      const prodAppId = apps.getProdAppID(app.appId)
+      const prodAppId = apps.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,
         icon: app.icon,
-        role: privileged ? Constants.Roles.ADMIN : roles[prodAppId],
+        role: getRole(prodAppId, roles),
       }
     })
   }
@@ -130,6 +127,18 @@
     }
     search = search.toLowerCase()
     return groups.filter(group => group.name?.toLowerCase().includes(search))
+  }
+
+  const getRole = (prodAppId, roles) => {
+    if (privileged) {
+      return Constants.Roles.ADMIN
+    }
+
+    if (user?.builder?.apps?.includes(prodAppId)) {
+      return Constants.Roles.CREATOR
+    }
+
+    return roles[prodAppId]
   }
 
   const getNameLabel = user => {

@@ -20,6 +20,8 @@
     config,
     ui,
     columns,
+    definition,
+    datasource,
   } = getContext("grid")
 
   const bannedDisplayColumnTypes = [
@@ -56,6 +58,7 @@
     popover.hide()
     editIsOpen = false
   }
+
   const onMouseDown = e => {
     if (e.button === 0 && orderable) {
       timeout = setTimeout(() => {
@@ -116,6 +119,34 @@
     columns.actions.saveChanges()
     open = false
   }
+
+  const duplicateColumn = async () => {
+    open = false
+
+    // Generate new name
+    let newName = `${column.name} copy`
+    let attempts = 2
+    while ($definition.schema[newName]) {
+      newName = `${column.name} copy ${attempts++}`
+    }
+
+    // Save schema with new column
+    const existingColumnDefinition = $definition.schema[column.name]
+    await datasource.actions.saveDefinition({
+      ...$definition,
+      schema: {
+        ...$definition.schema,
+        [newName]: {
+          ...existingColumnDefinition,
+          name: newName,
+          schema: {
+            ...existingColumnDefinition.schema,
+          },
+        },
+      },
+    })
+  }
+
   onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
 
@@ -170,7 +201,6 @@
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  animate={false}
   customZindex={100}
 >
   {#if editIsOpen}
@@ -187,15 +217,21 @@
       <MenuItem
         icon="Edit"
         on:click={editColumn}
-        disabled={!$config.allowSchemaChanges || column.schema.disabled}
+        disabled={!$config.canEditColumns || column.schema.disabled}
       >
         Edit column
+      </MenuItem>
+      <MenuItem
+        icon="Duplicate"
+        on:click={duplicateColumn}
+        disabled={!$config.canEditColumns}
+      >
+        Duplicate column
       </MenuItem>
       <MenuItem
         icon="Label"
         on:click={makeDisplayColumn}
         disabled={idx === "sticky" ||
-          !$config.allowSchemaChanges ||
           bannedDisplayColumnTypes.includes(column.schema.type)}
       >
         Use as display column

@@ -1,5 +1,5 @@
 <script>
-  import { Icon, Heading } from "@budibase/bbui"
+  import { Icon, Body } from "@budibase/bbui"
 
   export let title
   export let icon
@@ -12,11 +12,19 @@
   export let borderLeft = false
   export let borderRight = false
   export let wide = false
+  export let extraWide = false
+  export let closeButtonIcon = "Close"
 
   $: customHeaderContent = $$slots["panel-header-content"]
 </script>
 
-<div class="panel" class:wide class:borderLeft class:borderRight>
+<div
+  class="panel"
+  class:wide
+  class:extraWide
+  class:borderLeft
+  class:borderRight
+>
   <div class="header" class:custom={customHeaderContent}>
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
@@ -25,7 +33,7 @@
       <Icon name={icon} />
     {/if}
     <div class="title">
-      <Heading size="XXS">{title || ""}</Heading>
+      <Body size="S">{title}</Body>
     </div>
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
@@ -33,7 +41,7 @@
       </div>
     {/if}
     {#if showCloseButton}
-      <Icon name="Close" hoverable on:click={onClickCloseButton} />
+      <Icon name={closeButtonIcon} hoverable on:click={onClickCloseButton} />
     {/if}
   </div>
 
@@ -70,6 +78,10 @@
     width: 310px;
     flex: 0 0 310px;
   }
+  .panel.extraWide {
+    width: 450px;
+    flex: 0 0 450px;
+  }
   .header {
     flex: 0 0 48px;
     display: flex;
@@ -78,15 +90,14 @@
     align-items: center;
     padding: 0 var(--spacing-l);
     border-bottom: var(--border-light);
-    gap: var(--spacing-l);
+    gap: var(--spacing-m);
   }
   .title {
     flex: 1 1 auto;
     width: 0;
   }
-  .title :global(h1) {
+  .title :global(p) {
     overflow: hidden;
-    font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
   }

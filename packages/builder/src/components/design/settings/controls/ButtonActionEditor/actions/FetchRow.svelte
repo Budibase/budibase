@@ -1,21 +1,29 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { tables } from "stores/backend"
+  import { tables, viewsV2 } from "stores/backend"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
   export let bindings = []
 
-  $: tableOptions = $tables.list || []
+  $: tableOptions = $tables.list.map(table => ({
+    label: table.name,
+    resourceId: table._id,
+  }))
+  $: viewOptions = $viewsV2.list.map(view => ({
+    label: view.name,
+    resourceId: view.id,
+  }))
+  $: options = [...(tableOptions || []), ...(viewOptions || [])]
 </script>
 
 <div class="root">
   <Label>Table</Label>
   <Select
     bind:value={parameters.tableId}
-    options={tableOptions}
-    getOptionLabel={table => table.name}
-    getOptionValue={table => table._id}
+    {options}
+    getOptionLabel={table => table.label}
+    getOptionValue={table => table.resourceId}
   />
 
   <Label small>Row ID</Label>

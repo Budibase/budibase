@@ -25,11 +25,11 @@ import {
 import {
   accounts,
   cache,
+  ErrorCode,
   events,
   migrations,
-  tenancy,
   platform,
-  ErrorCode,
+  tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -95,7 +95,7 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId, ssoId } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -136,6 +136,7 @@ export const adminUser = async (
         global: true,
       },
       tenantId,
+      ssoId,
     }
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
@@ -272,15 +273,15 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
         password,
         forceResetPassword: true,
         roles: invite.userInfo.apps,
-        admin: { global: false },
-        builder: { global: false },
+        admin: invite.userInfo.admin,
+        builder: invite.userInfo.builder,
         tenantId: tenancy.getTenantId(),
       }
     })
     let bulkCreateReponse = await userSdk.db.bulkCreate(users, [])
 
     // Apply temporary credentials
-    let createWithCredentials = {
+    ctx.body = {
       ...bulkCreateReponse,
       successful: bulkCreateReponse?.successful.map(user => {
         return {
@@ -290,8 +291,6 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
       }),
       created: true,
     }
-
-    ctx.body = createWithCredentials
   } else {
     ctx.throw(400, "User onboarding failed")
   }
@@ -370,6 +369,12 @@ export const updateInvite = async (ctx: any) => {
     ...invite,
   }
 
+  if (!updateBody?.builder?.apps && updated.info?.builder?.apps) {
+    updated.info.builder.apps = []
+  } else if (updateBody?.builder) {
+    updated.info.builder = updateBody.builder
+  }
+
   if (!updateBody?.apps || !Object.keys(updateBody?.apps).length) {
     updated.info.apps = []
   } else {
@@ -394,17 +399,24 @@ export const inviteAccept = async (
     // info is an extension of the user object that was stored by global
     const { email, info }: any = await checkInviteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
-      let request = {
+      let request: any = {
         firstName,
         lastName,
         password,
         email,
+        admin: { global: info?.admin?.global || false },
         roles: info.apps,
         tenantId: info.tenantId,
       }
+      let builder: { global: boolean; apps?: string[] } = {
+        global: info?.builder?.global || false,
+      }
 
+      if (info?.builder?.apps) {
+        builder.apps = info.builder.apps
+        request.builder = builder
+      }
       delete info.apps
-
       request = {
         ...request,
         ...info,

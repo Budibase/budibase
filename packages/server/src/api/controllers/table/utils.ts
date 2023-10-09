@@ -99,7 +99,7 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
   return tableToSave
 }
 
-export function importToRows(
+export async function importToRows(
   data: any[],
   table: Table,
   user: ContextUser | null = null
@@ -113,7 +113,7 @@ export function importToRows(
 
     // We use a reference to table here and update it after input processing,
     // so that we can auto increment auto IDs in imported data properly
-    const processed = inputProcessing(user, table, row, {
+    const processed = await inputProcessing(user?._id, table, row, {
       noAutoRelationships: true,
     })
     row = processed.row
@@ -158,7 +158,7 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(rows, schema)
 
-  let finalData: any = importToRows(data, table, user)
+  let finalData: any = await importToRows(data, table, user)
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
@@ -418,17 +418,15 @@ export function areSwitchableTypes(type1: any, type2: any) {
   return false
 }
 
-export function hasTypeChanged(table: any, oldTable: any) {
+export function hasTypeChanged(table: Table, oldTable: Table | undefined) {
   if (!oldTable) {
     return false
   }
-  let key: any
-  let field: any
-  for ([key, field] of Object.entries(oldTable.schema)) {
-    const oldType = field.type
+  for (let [key, field] of Object.entries(oldTable.schema)) {
     if (!table.schema[key]) {
       continue
     }
+    const oldType = field.type
     const newType = table.schema[key].type
     if (oldType !== newType && !areSwitchableTypes(oldType, newType)) {
       return true

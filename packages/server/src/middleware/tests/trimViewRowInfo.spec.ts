@@ -102,12 +102,13 @@ describe("trimViewRowInfo middleware", () => {
     address: generator.address(),
   })
 
-  it("when no columns are defined, same data is returned", async () => {
+  it("when no columns are defined, don't allow anything", async () => {
     mockGetView.mockResolvedValue({
       version: 2,
       id: viewId,
       name: generator.guid(),
       tableId: table._id!,
+      schema: {},
     })
 
     const data = getRandomData()
@@ -116,8 +117,10 @@ describe("trimViewRowInfo middleware", () => {
       ...data,
     })
 
-    expect(config.request?.body).toEqual(data)
-    expect(config.params.tableId).toEqual(table._id)
+    expect(config.request?.body).toEqual({
+      _id: data._id,
+    })
+    expect(config.params.sourceId).toEqual(table._id)
 
     expect(config.next).toBeCalledTimes(1)
     expect(config.throw).not.toBeCalled()
@@ -129,7 +132,10 @@ describe("trimViewRowInfo middleware", () => {
       id: viewId,
       name: generator.guid(),
       tableId: table._id!,
-      columns: ["name", "address"],
+      schema: {
+        name: {},
+        address: {},
+      },
     })
 
     const data = getRandomData()
@@ -143,32 +149,9 @@ describe("trimViewRowInfo middleware", () => {
       name: data.name,
       address: data.address,
     })
-    expect(config.params.tableId).toEqual(table._id)
+    expect(config.params.sourceId).toEqual(table._id)
 
     expect(config.next).toBeCalledTimes(1)
     expect(config.throw).not.toBeCalled()
-  })
-
-  it("it should throw an error if no viewid is provided on the body", async () => {
-    const data = getRandomData()
-    await config.executeMiddleware(viewId, {
-      ...data,
-    })
-
-    expect(config.throw).toBeCalledTimes(1)
-    expect(config.throw).toBeCalledWith(400, "_viewId is required")
-    expect(config.next).not.toBeCalled()
-  })
-
-  it("it should throw an error if no viewid is provided on the parameters", async () => {
-    const data = getRandomData()
-    await config.executeMiddleware(undefined as any, {
-      _viewId: viewId,
-      ...data,
-    })
-
-    expect(config.throw).toBeCalledTimes(1)
-    expect(config.throw).toBeCalledWith(400, "viewId path is required")
-    expect(config.next).not.toBeCalled()
   })
 })

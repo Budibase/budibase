@@ -16,7 +16,7 @@
     renderedRows,
     focusedCellId,
     hoveredRowId,
-    canAddRows,
+    config,
     selectedCellMap,
     focusedRow,
     scrollLeft,
@@ -64,7 +64,7 @@
   </div>
 
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically wheelInteractive>
+    <GridScrollWrapper scrollVertically attachHandlers>
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}
@@ -74,6 +74,7 @@
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
+          on:click={() => dispatch("rowclick", row)}
         >
           <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
           {#if $stickyColumn}
@@ -94,7 +95,7 @@
           {/if}
         </div>
       {/each}
-      {#if $canAddRows}
+      {#if $config.canAddRows}
         <div
           class="row new"
           on:mouseenter={$isDragging

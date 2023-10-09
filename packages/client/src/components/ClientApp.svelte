@@ -16,7 +16,6 @@
     themeStore,
     appStore,
     devToolsStore,
-    environmentStore,
     devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
@@ -206,7 +205,7 @@
                     {/if}
                   </div>
 
-                  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
+                  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
                     <FreeFooter />
                   {/if}
                 </div>

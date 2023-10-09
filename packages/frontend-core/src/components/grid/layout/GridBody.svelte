@@ -9,10 +9,10 @@
     renderedRows,
     renderedColumns,
     rowVerticalInversionIndex,
-    canAddRows,
     hoveredRowId,
     dispatch,
     isDragging,
+    config,
   } = getContext("grid")
 
   let body
@@ -35,7 +35,7 @@
 </script>
 
 <div bind:this={body} class="grid-body">
-  <GridScrollWrapper scrollHorizontally scrollVertically wheelInteractive>
+  <GridScrollWrapper scrollHorizontally scrollVertically attachHandlers>
     {#each $renderedRows as row, idx}
       <GridRow
         {row}
@@ -43,7 +43,7 @@
         invertY={idx >= $rowVerticalInversionIndex}
       />
     {/each}
-    {#if $canAddRows}
+    {#if $config.canAddRows}
       <div
         class="blank"
         class:highlighted={$hoveredRowId === BlankRowID}

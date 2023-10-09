@@ -39,6 +39,31 @@ export enum DocumentType {
   AUDIT_LOG = "al",
 }
 
+// these are the core documents that make up the data, design
+// and automation sections of an app. This excludes any internal
+// rows as we shouldn't import data.
+export const DocumentTypesToImport: DocumentType[] = [
+  DocumentType.ROLE,
+  DocumentType.DATASOURCE,
+  DocumentType.DATASOURCE_PLUS,
+  DocumentType.TABLE,
+  DocumentType.AUTOMATION,
+  DocumentType.WEBHOOK,
+  DocumentType.SCREEN,
+  DocumentType.QUERY,
+  DocumentType.METADATA,
+  DocumentType.MEM_VIEW,
+  // Deprecated but still copied
+  DocumentType.INSTANCE,
+  DocumentType.LAYOUT,
+]
+
+// these documents don't really exist, they are part of other
+// documents or enriched into existence as part of get requests
+export enum VirtualDocumentType {
+  VIEW = "view",
+}
+
 export interface Document {
   _id?: string
   _rev?: string

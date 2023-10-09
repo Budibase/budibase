@@ -27,11 +27,13 @@
     if (datasource.source === IntegrationTypes.COUCHDB) {
       return datasource.config.database
     }
-    if (
-      datasource.source === IntegrationTypes.DYNAMODB ||
-      datasource.source === IntegrationTypes.S3
-    ) {
+    if (datasource.source === IntegrationTypes.DYNAMODB) {
       return `${datasource.config.endpoint}:${datasource.config.region}`
+    }
+    if (datasource.source === IntegrationTypes.S3) {
+      return datasource.config.endpoint
+        ? `${datasource.config.endpoint}:${datasource.config.region}`
+        : `s3.${datasource.config.region}.amazonaws.com`
     }
     if (datasource.source === IntegrationTypes.ELASTICSEARCH) {
       return datasource.config.url
@@ -60,7 +62,14 @@
       </div>
     {/if}
     <div class="truncate">
-      <Body>{getSubtitle(datasource)}</Body>
+      <Body>
+        {@const subtitle = getSubtitle(datasource)}
+        {#if subtitle}
+          {subtitle}
+        {:else}
+          {Object.values(datasource.config).join(" / ")}
+        {/if}
+      </Body>
     </div>
   </div>
   <div class="right">

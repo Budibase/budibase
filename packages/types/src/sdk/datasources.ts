@@ -140,6 +140,7 @@ export interface DatasourceConfig {
 export interface Integration {
   docs: string
   plus?: boolean
+  isSQL?: boolean
   auth?: { type: string }
   features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
@@ -166,6 +167,12 @@ export interface IntegrationBase {
   delete?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
   getExternalSchema?(): Promise<string>
+  defineTypeCastingFromSchema?(schema: {
+    [key: string]: {
+      name: string
+      type: string
+    }
+  }): void
 }
 
 export interface DatasourcePlus extends IntegrationBase {

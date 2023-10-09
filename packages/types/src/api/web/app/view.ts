@@ -5,11 +5,10 @@ export interface ViewResponse {
 }
 
 export interface CreateViewRequest
-  extends Omit<ViewV2, "version" | "id" | "columns" | "schemaUI"> {
+  extends Omit<ViewV2, "version" | "id" | "schema"> {
   schema?: Record<string, UIFieldMetadata>
 }
 
-export interface UpdateViewRequest
-  extends Omit<ViewV2, "columns" | "schemaUI"> {
+export interface UpdateViewRequest extends Omit<ViewV2, "schema"> {
   schema?: Record<string, UIFieldMetadata>
 }

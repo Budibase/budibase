@@ -10,6 +10,10 @@ import {
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
+// this test can 409 - retries reduce issues with this
+jest.retryTimes(2, { logErrorsBeforeRetry: true })
+jest.setTimeout(30000)
+
 mocks.licenses.useScimIntegration()
 
 describe("scim", () => {

@@ -93,6 +93,21 @@ const SCHEMA: Integration = {
   },
 }
 
+const defaultTypeCasting = function (field: any, next: any) {
+  if (
+    field.type == "DATETIME" ||
+    field.type === "DATE" ||
+    field.type === "TIMESTAMP" ||
+    field.type === "LONGLONG"
+  ) {
+    return field.string()
+  }
+  if (field.type === "BIT" && field.length === 1) {
+    return field.buffer()?.[0]
+  }
+  return next()
+}
+
 export function bindingTypeCoerce(bindings: any[]) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
@@ -143,25 +158,18 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     ) {
       config.ssl.rejectUnauthorized = config.rejectUnauthorized
     }
+    // The MySQL library we use doesn't directly document the parameters that can be passed in the ssl
+    // object, it instead points to an older library that it says it is mostly API compatible with, that
+    // older library actually documents what parameters can be passed in the ssl object.
+    // https://github.com/sidorares/node-mysql2#api-and-configuration
+    // https://github.com/mysqljs/mysql#ssl-options
+
     // @ts-ignore
     delete config.rejectUnauthorized
     this.config = {
       ...config,
+      typeCast: defaultTypeCasting,
       multipleStatements: true,
-      typeCast: function (field: any, next: any) {
-        if (
-          field.type == "DATETIME" ||
-          field.type === "DATE" ||
-          field.type === "TIMESTAMP" ||
-          field.type === "LONGLONG"
-        ) {
-          return field.string()
-        }
-        if (field.type === "BIT" && field.length === 1) {
-          return field.buffer()?.[0]
-        }
-        return next()
-      },
     }
   }
 
@@ -194,6 +202,37 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return `concat(${parts.join(", ")})`
   }
 
+  defineTypeCastingFromSchema(schema: {
+    [key: string]: { name: string; type: string }
+  }): void {
+    if (!schema) {
+      return
+    }
+    this.config.typeCast = function (field: any, next: any) {
+      if (schema[field.name]?.name === field.name) {
+        if (["LONGLONG", "NEWDECIMAL", "DECIMAL"].includes(field.type)) {
+          if (schema[field.name]?.type === "number") {
+            const value = field.string()
+            return value ? Number(value) : null
+          } else {
+            return field.string()
+          }
+        }
+      }
+      if (
+        field.type == "DATETIME" ||
+        field.type === "DATE" ||
+        field.type === "TIMESTAMP"
+      ) {
+        return field.string()
+      }
+      if (field.type === "BIT" && field.length === 1) {
+        return field.buffer()?.[0]
+      }
+      return next()
+    }
+  }
+
   async connect() {
     this.client = await mysql.createConnection(this.config)
   }
@@ -204,7 +243,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async internalQuery(
     query: SqlQuery,
-    opts: { connect?: boolean; disableCoercion?: boolean } = {
+    opts: {
+      connect?: boolean
+      disableCoercion?: boolean
+    } = {
       connect: true,
       disableCoercion: false,
     }

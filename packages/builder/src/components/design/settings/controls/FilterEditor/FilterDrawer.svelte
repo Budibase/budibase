@@ -3,21 +3,24 @@
     Body,
     Button,
     Combobox,
-    Multiselect,
     DatePicker,
     DrawerContent,
     Icon,
     Input,
-    Layout,
-    Select,
     Label,
+    Layout,
+    Multiselect,
+    Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { Constants, LuceneUtils } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
-  import { createEventDispatcher } from "svelte"
+  import { FieldType } from "@budibase/types"
+  import { createEventDispatcher, onMount } from "svelte"
+  import FilterUsers from "./FilterUsers.svelte"
+  import { RelationshipType } from "constants/backend"
 
   export let schemaFields
   export let filters = []
@@ -29,28 +32,33 @@
 
   const dispatch = createEventDispatcher()
   const { OperatorOptions } = Constants
-  const { getValidOperatorsForType } = LuceneUtils
   const KeyedFieldRegex = /\d[0-9]*:/g
   const behaviourOptions = [
     { value: "and", label: "Match all filters" },
     { value: "or", label: "Match any filter" },
   ]
+  const onEmptyOptions = [
+    { value: "all", label: "Return all table rows" },
+    { value: "none", label: "Return no rows" },
+  ]
 
   let rawFilters
   let matchAny = false
+  let onEmptyFilter = "all"
 
   $: parseFilters(filters)
-  $: dispatch("change", enrichFilters(rawFilters, matchAny))
+  $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
   $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  // Remove field key prefixes and determine whether to use the "match all"
-  // or "match any" behaviour
+  // Remove field key prefixes and determine which behaviours to use
   const parseFilters = filters => {
     matchAny = filters?.find(filter => filter.operator === "allOr") != null
+    onEmptyFilter =
+      filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
     rawFilters = (filters || [])
-      .filter(filter => filter.operator !== "allOr")
+      .filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter)
       .map(filter => {
         const { field } = filter
         let newFilter = { ...filter }
@@ -64,9 +72,18 @@
       })
   }
 
+  onMount(() => {
+    parseFilters(filters)
+    rawFilters.forEach(filter => {
+      filter.type =
+        schemaFields.find(field => field.name === filter.field)?.type ||
+        filter.type
+    })
+  })
+
   // Add field key prefixes and a special metadata filter object to indicate
-  // whether to use the "match all" or "match any" behaviour
-  const enrichFilters = (rawFilters, matchAny) => {
+  // how to handle filter behaviour
+  const enrichFilters = (rawFilters, matchAny, onEmptyFilter) => {
     let count = 1
     return rawFilters
       .filter(filter => filter.field)
@@ -75,6 +92,7 @@
         field: `${count++}:${filter.field}`,
       }))
       .concat(matchAny ? [{ operator: "allOr" }] : [])
+      .concat([{ onEmptyFilter }])
   }
 
   const addFilter = () => {
@@ -104,7 +122,7 @@
     return enrichedSchemaFields.find(field => field.name === filter.field)
   }
 
-  const santizeTypes = filter => {
+  const sanitizeTypes = filter => {
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
@@ -113,13 +131,9 @@
     filter.externalType = getSchema(filter)?.externalType
   }
 
-  const santizeOperator = filter => {
+  const sanitizeOperator = filter => {
     // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(
-      filter.type,
-      filter.field,
-      datasource
-    ).map(x => x.value)
+    const operators = getValidOperatorsForType(filter).map(x => x.value)
     if (!operators.includes(filter.operator)) {
       filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
@@ -132,7 +146,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const santizeValue = filter => {
+  const sanitizeValue = (filter, previousType) => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -146,27 +160,46 @@
       }
     } else if (filter.type === "array" && filter.valueType === "Value") {
       filter.value = []
+    } else if (
+      previousType !== filter.type &&
+      (previousType === FieldType.BB_REFERENCE ||
+        filter.type === FieldType.BB_REFERENCE)
+    ) {
+      filter.value = filter.type === "array" ? [] : null
     }
   }
 
   const onFieldChange = filter => {
-    santizeTypes(filter)
-    santizeOperator(filter)
-    santizeValue(filter)
+    const previousType = filter.type
+    sanitizeTypes(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter, previousType)
   }
 
   const onOperatorChange = filter => {
-    santizeOperator(filter)
-    santizeValue(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter, filter.type)
   }
 
   const onValueTypeChange = filter => {
-    santizeValue(filter)
+    sanitizeValue(filter)
   }
 
   const getFieldOptions = field => {
     const schema = enrichedSchemaFields.find(x => x.name === field)
     return schema?.constraints?.inclusion || []
+  }
+
+  const getValidOperatorsForType = filter => {
+    if (!filter?.field) {
+      return []
+    }
+
+    return LuceneUtils.getValidOperatorsForType(
+      filter.type,
+      filter.field,
+      datasource
+    )
   }
 </script>
 
@@ -186,6 +219,17 @@
             on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
+          {#if datasource?.type === "table"}
+            <Select
+              label="When filter empty"
+              value={onEmptyFilter}
+              options={onEmptyOptions}
+              getOptionLabel={opt => opt.label}
+              getOptionValue={opt => opt.value}
+              on:change={e => (onEmptyFilter = e.detail)}
+              placeholder={null}
+            />
+          {/if}
         </div>
         <div>
           <div class="filter-label">
@@ -201,11 +245,7 @@
               />
               <Select
                 disabled={!filter.field}
-                options={getValidOperatorsForType(
-                  filter.type,
-                  filter.field,
-                  datasource
-                )}
+                options={getValidOperatorsForType(filter)}
                 bind:value={filter.operator}
                 on:change={() => onOperatorChange(filter)}
                 placeholder={null}
@@ -257,6 +297,14 @@
                   enableTime={!getSchema(filter)?.dateOnly}
                   timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.BB_REFERENCE}
+                <FilterUsers
+                  bind:value={filter.value}
+                  multiselect={getSchema(filter).relationshipType ===
+                    RelationshipType.MANY_TO_MANY ||
+                    filter.operator === OperatorOptions.In.value}
+                  disabled={filter.noValue}
                 />
               {:else}
                 <DrawerBindableInput disabled />

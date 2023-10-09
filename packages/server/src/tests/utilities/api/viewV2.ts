@@ -1,13 +1,8 @@
 import {
   CreateViewRequest,
-  SortOrder,
-  SortType,
   UpdateViewRequest,
-  DeleteRowRequest,
-  PatchRowRequest,
-  PatchRowResponse,
-  Row,
   ViewV2,
+  SearchViewRowRequest,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -28,7 +23,8 @@ export class ViewV2API extends TestAPI {
     if (!tableId && !this.config.table) {
       throw "Test requires table to be configured."
     }
-    tableId = this.config.table!._id!
+
+    tableId = tableId || this.config.table!._id!
     const view = {
       tableId,
       name: generator.guid(),
@@ -81,75 +77,18 @@ export class ViewV2API extends TestAPI {
 
   search = async (
     viewId: string,
-    options?: {
-      sort: {
-        column: string
-        order?: SortOrder
-        type?: SortType
-      }
-    },
-    { expectStatus } = { expectStatus: 200 }
+    params?: SearchViewRowRequest,
+    { expectStatus = 200, usePublicUser = false } = {}
   ) => {
-    const qs: [string, any][] = []
-    if (options?.sort.column) {
-      qs.push(["sort_column", options.sort.column])
-    }
-    if (options?.sort.order) {
-      qs.push(["sort_order", options.sort.order])
-    }
-    if (options?.sort.type) {
-      qs.push(["sort_type", options.sort.type])
-    }
-    let url = `/api/v2/views/${viewId}/search`
-    if (qs.length) {
-      url += "?" + qs.map(q => q.join("=")).join("&")
-    }
     return this.request
-      .get(url)
-      .set(this.config.defaultHeaders())
+      .post(`/api/v2/views/${viewId}/search`)
+      .send(params)
+      .set(
+        usePublicUser
+          ? this.config.publicHeaders()
+          : this.config.defaultHeaders()
+      )
       .expect("Content-Type", /json/)
       .expect(expectStatus)
-  }
-
-  row = {
-    create: async (
-      viewId: string,
-      row: Row,
-      { expectStatus } = { expectStatus: 200 }
-    ): Promise<Row> => {
-      const result = await this.request
-        .post(`/api/v2/views/${viewId}/rows`)
-        .send(row)
-        .set(this.config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(expectStatus)
-      return result.body as Row
-    },
-    update: async (
-      viewId: string,
-      rowId: string,
-      row: PatchRowRequest,
-      { expectStatus } = { expectStatus: 200 }
-    ): Promise<PatchRowResponse> => {
-      const result = await this.request
-        .patch(`/api/v2/views/${viewId}/rows/${rowId}`)
-        .send(row)
-        .set(this.config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(expectStatus)
-      return result.body as PatchRowResponse
-    },
-    delete: async (
-      viewId: string,
-      body: DeleteRowRequest,
-      { expectStatus } = { expectStatus: 200 }
-    ): Promise<any> => {
-      const result = await this.request
-        .delete(`/api/v2/views/${viewId}/rows`)
-        .send(body)
-        .set(this.config.defaultHeaders())
-        .expect(expectStatus)
-      return result.body
-    },
   }
 }

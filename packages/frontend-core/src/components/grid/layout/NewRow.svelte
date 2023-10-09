@@ -17,7 +17,7 @@
     dispatch,
     rows,
     focusedCellAPI,
-    tableId,
+    datasource,
     subscribe,
     renderedRows,
     renderedColumns,
@@ -28,7 +28,7 @@
     columnHorizontalInversionIndex,
     selectedRows,
     loading,
-    canAddRows,
+    config,
   } = getContext("grid")
 
   let visible = false
@@ -38,7 +38,7 @@
 
   $: firstColumn = $stickyColumn || $renderedColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
-  $: $tableId, (visible = false)
+  $: $datasource, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
   $: selectedRowCount = Object.values($selectedRows).length
   $: hasNoRows = !$rows.length
@@ -120,8 +120,8 @@
     document.addEventListener("keydown", handleKeyPress)
   }
 
-  const updateValue = (rowId, columnName, val) => {
-    newRow[columnName] = val
+  const updateValue = ({ column, value }) => {
+    newRow[column] = value
   }
 
   const addViaModal = () => {
@@ -154,7 +154,7 @@
   condition={hasNoRows && !$loading}
   type={TooltipType.Info}
 >
-  {#if !visible && !selectedRowCount && $canAddRows}
+  {#if !visible && !selectedRowCount && $config.canAddRows}
     <div
       class="new-row-fab"
       on:click={() => dispatch("add-row-inline")}
@@ -205,7 +205,7 @@
       {/if}
     </div>
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
-      <GridScrollWrapper scrollHorizontally wheelInteractive>
+      <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
           {#each $renderedColumns as column, columnIdx}
             {@const cellId = `new-${column.name}`}

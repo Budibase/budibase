@@ -1,4 +1,4 @@
-import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -60,10 +60,12 @@ const componentMap = {
   "field/longform": FormFieldSelect,
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
+  "field/s3": Input,
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,
+  "field/bb_reference": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
@@ -73,6 +75,7 @@ const componentMap = {
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
   "validation/link": ValidationEditor,
+  "validation/bb_reference": ValidationEditor,
 }
 
 export const getComponentForSetting = setting => {

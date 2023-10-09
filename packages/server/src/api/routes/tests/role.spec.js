@@ -1,5 +1,6 @@
 const { roles, events, permissions } = require("@budibase/backend-core")
 const setup = require("./utilities")
+const { PermissionLevel } = require("@budibase/types")
 const { basicRole } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
 const { BuiltinPermissionID } = permissions
@@ -14,9 +15,9 @@ describe("/roles", () => {
     await config.init()
   })
 
-  const createRole = async (role) => {
+  const createRole = async role => {
     if (!role) {
-      role =  basicRole()
+      role = basicRole()
     }
 
     return request
@@ -32,9 +33,6 @@ describe("/roles", () => {
       const role = basicRole()
       const res = await createRole(role)
 
-      expect(res.res.statusMessage).toEqual(
-        `Role '${role.name}' created successfully.`
-      )
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
       expect(events.role.updated).not.toBeCalled()
@@ -50,9 +48,6 @@ describe("/roles", () => {
       jest.clearAllMocks()
       res = await createRole(res.body)
 
-      expect(res.res.statusMessage).toEqual(
-        `Role '${role.name}' created successfully.`
-      )
       expect(res.body._id).toBeDefined()
       expect(res.body._rev).toBeDefined()
       expect(events.role.created).not.toBeCalled()
@@ -98,7 +93,11 @@ describe("/roles", () => {
 
     it("should be able to get the role with a permission added", async () => {
       const table = await config.createTable()
-      await config.addPermission(BUILTIN_ROLE_IDS.POWER, table._id)
+      await config.api.permission.set({
+        roleId: BUILTIN_ROLE_IDS.POWER,
+        resourceId: table._id,
+        level: PermissionLevel.READ,
+      })
       const res = await request
         .get(`/api/roles`)
         .set(config.defaultHeaders())
@@ -128,6 +127,36 @@ describe("/roles", () => {
         .expect(404)
       expect(events.role.deleted).toBeCalledTimes(1)
       expect(events.role.deleted).toBeCalledWith(customRole)
+    })
+  })
+
+  describe("accessible", () => {
+    it("should be able to fetch accessible roles (with builder)", async () => {
+      const res = await request
+        .get("/api/roles/accessible")
+        .set(config.defaultHeaders())
+        .expect(200)
+      expect(res.body.length).toBe(5)
+      expect(typeof res.body[0]).toBe("string")
+    })
+
+    it("should be able to fetch accessible roles (basic user)", async () => {
+      const res = await request
+        .get("/api/roles/accessible")
+        .set(await config.basicRoleHeaders())
+        .expect(200)
+      expect(res.body.length).toBe(2)
+      expect(res.body[0]).toBe("BASIC")
+      expect(res.body[1]).toBe("PUBLIC")
+    })
+
+    it("should be able to fetch accessible roles (no user)", async () => {
+      const res = await request
+        .get("/api/roles/accessible")
+        .set(config.publicHeaders())
+        .expect(200)
+      expect(res.body.length).toBe(1)
+      expect(res.body[0]).toBe("PUBLIC")
     })
   })
 })

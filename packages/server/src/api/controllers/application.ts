@@ -39,9 +39,8 @@ import {
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream } from "../../utilities"
-import { doesUserHaveLock, getLocksById } from "../../utilities/redis"
+import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
-import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
 import { groups, licensing, quotas } from "@budibase/pro"
 import {
@@ -51,7 +50,6 @@ import {
   PlanType,
   Screen,
   UserCtx,
-  ContextUser,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -168,7 +166,7 @@ export const addSampleData = async (ctx: UserCtx) => {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
   } catch (err: any) {
-    const defaultDbDocs = buildDefaultDocs()
+    const defaultDbDocs = await buildDefaultDocs()
 
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
@@ -283,12 +281,7 @@ async function performAppCreate(ctx: UserCtx) {
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-100)",
-        links: [
-          {
-            url: "/home",
-            text: "Home",
-          },
-        ],
+        links: [],
       },
       theme: "spectrum--light",
       customTheme: {
@@ -316,6 +309,11 @@ async function performAppCreate(ctx: UserCtx) {
           newApplication[key] = existing[key]
         }
       })
+
+      // Keep existing validation setting
+      if (!existing.features?.componentValidation) {
+        newApplication.features!.componentValidation = false
+      }
 
       // Migrate navigation settings and screens if required
       if (existing) {
@@ -573,6 +571,28 @@ export async function sync(ctx: UserCtx) {
   } catch (err: any) {
     ctx.throw(err.status || 400, err.message)
   }
+}
+
+export async function importToApp(ctx: UserCtx) {
+  const { appId } = ctx.params
+  const appExport = ctx.request.files?.appExport
+  const password = ctx.request.body.encryptionPassword as string
+  if (!appExport) {
+    ctx.throw(400, "Must supply app export to import")
+  }
+  if (Array.isArray(appExport)) {
+    ctx.throw(400, "Must only supply one app export")
+  }
+  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  try {
+    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  } catch (err: any) {
+    ctx.throw(
+      500,
+      `Unable to perform update, please retry - ${err?.message || err}`
+    )
+  }
+  ctx.body = { message: "app updated" }
 }
 
 export async function updateAppPackage(appPackage: any, appId: any) {

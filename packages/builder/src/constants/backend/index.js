@@ -120,6 +120,13 @@ export const FIELDS = {
       presence: false,
     },
   },
+  BB_REFERENCE_USER: {
+    name: "User",
+    type: "bb_reference",
+    subtype: "user",
+    compositeType: "bb_reference_user", // Used for working with the subtype on CreateEditColumn as is it was a primary type
+    icon: "User",
+  },
 }
 
 export const AUTO_COLUMN_SUB_TYPES = {
@@ -168,6 +175,11 @@ export const RelationshipType = {
   MANY_TO_MANY: "many-to-many",
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
+}
+
+export const PrettyRelationshipDefinitions = {
+  MANY: "Many rows",
+  ONE: "One row",
 }
 
 export const ALLOWABLE_STRING_OPTIONS = [
@@ -286,4 +298,10 @@ export const DatasourceTypes = {
   OBJECT_STORE: "Object store",
   GRAPH: "Graph",
   API: "API",
+}
+
+export const ROW_EXPORT_FORMATS = {
+  CSV: "csv",
+  JSON: "json",
+  JSON_WITH_SCHEMA: "jsonWithSchema",
 }

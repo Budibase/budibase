@@ -14,12 +14,14 @@
   export let initialSortOrder = null
   export let fixedRowHeight = null
   export let columns = null
+  export let onRowClick = null
 
   const component = getContext("component")
   const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
+  $: handleRowClick = allowEditRows ? undefined : onRowClick
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -38,11 +40,8 @@
   class:in-builder={$builderStore.inBuilder}
 >
   <Grid
-    tableId={table?.tableId}
+    datasource={table}
     {API}
-    {allowAddRows}
-    {allowEditRows}
-    {allowDeleteRows}
     {stripeRows}
     {initialFilter}
     {initialSortColumn}
@@ -50,11 +49,16 @@
     {fixedRowHeight}
     {columnWhitelist}
     {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
+    canExpandRows={false}
+    canSaveSchema={false}
     showControls={false}
-    allowExpandRows={false}
-    allowSchemaChanges={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
+    on:rowclick={e => handleRowClick?.({ row: e.detail })}
   />
 </div>
 

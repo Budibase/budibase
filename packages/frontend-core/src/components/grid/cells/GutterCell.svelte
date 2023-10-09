@@ -17,12 +17,23 @@
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
 
-  const select = () => {
+  const select = e => {
+    e.stopPropagation()
     svelteDispatch("select")
     const id = row?._id
     if (id) {
       selectedRows.actions.toggleRow(id)
     }
+  }
+
+  const bulkDelete = e => {
+    e.stopPropagation()
+    dispatch("request-bulk-delete")
+  }
+
+  const expand = e => {
+    e.stopPropagation()
+    svelteDispatch("expand")
   }
 </script>
 
@@ -40,7 +51,7 @@
       <div
         on:click={select}
         class="checkbox"
-        class:visible={$config.allowDeleteRows &&
+        class:visible={$config.canDeleteRows &&
           (disableNumber || rowSelected || rowHovered || rowFocused)}
       >
         <Checkbox value={rowSelected} {disabled} />
@@ -48,15 +59,15 @@
       {#if !disableNumber}
         <div
           class="number"
-          class:visible={!$config.allowDeleteRows ||
+          class:visible={!$config.canDeleteRows ||
             !(rowSelected || rowHovered || rowFocused)}
         >
           {row.__idx + 1}
         </div>
       {/if}
     {/if}
-    {#if rowSelected && $config.allowDeleteRows}
-      <div class="delete" on:click={() => dispatch("request-bulk-delete")}>
+    {#if rowSelected && $config.canDeleteRows}
+      <div class="delete" on:click={bulkDelete}>
         <Icon
           name="Delete"
           size="S"
@@ -64,13 +75,8 @@
         />
       </div>
     {:else}
-      <div class="expand" class:visible={$config.allowExpandRows && expandable}>
-        <Icon
-          size="S"
-          name="Maximize"
-          hoverable
-          on:click={() => svelteDispatch("expand")}
-        />
+      <div class="expand" class:visible={$config.canExpandRows && expandable}>
+        <Icon size="S" name="Maximize" hoverable on:click={expand} />
       </div>
     {/if}
   </div>
