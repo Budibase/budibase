@@ -311,9 +311,12 @@ async function performAppCreate(ctx: UserCtx) {
         }
       })
 
-      // Keep existing validation setting
+      // Keep existing feature flags
       if (!existing.features?.componentValidation) {
         newApplication.features!.componentValidation = false
+      }
+      if (!existing.features?.disableUserMetadata) {
+        newApplication.features!.disableUserMetadata = false
       }
 
       // Migrate navigation settings and screens if required
