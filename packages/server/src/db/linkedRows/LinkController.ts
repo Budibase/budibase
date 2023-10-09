@@ -308,12 +308,19 @@ class LinkController {
         }
       })
     )
-    // remove schema from other table
-    let linkedTable = await this._db.get<Table>(field.tableId)
-    if (field.fieldName) {
-      delete linkedTable.schema[field.fieldName]
+    try {
+      // remove schema from other table, if it exists
+      let linkedTable = await this._db.get<Table>(field.tableId)
+      if (field.fieldName) {
+        delete linkedTable.schema[field.fieldName]
+      }
+      await this._db.put(linkedTable)
+    } catch (error: any) {
+      // ignore missing to ensure broken relationship columns can be deleted
+      if (error.statusCode !== 404) {
+        throw error
+      }
     }
-    await this._db.put(linkedTable)
   }
 
   /**

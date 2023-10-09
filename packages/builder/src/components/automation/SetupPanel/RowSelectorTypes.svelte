@@ -1,7 +1,6 @@
 <script>
   import {
     Select,
-    Toggle,
     DatePicker,
     Multiselect,
     TextArea,
@@ -45,10 +44,14 @@
     on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "boolean"}
-  <Toggle
-    text={field}
-    value={value[field]}
+  <Select
     on:change={e => onChange(e, field)}
+    label={field}
+    value={value[field]}
+    options={[
+      { label: "True", value: "true" },
+      { label: "False", value: "false" },
+    ]}
   />
 {:else if schema.type === "array"}
   <Multiselect
