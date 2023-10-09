@@ -1,9 +1,12 @@
+import { FieldSubtype } from "@budibase/types"
 import { FieldTypes } from "../constants"
-import { ValidColumnNameRegex } from "@budibase/shared-core"
+import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
+import { db } from "@budibase/backend-core"
 
 interface SchemaColumn {
   readonly name: string
   readonly type: FieldTypes
+  readonly subtype: FieldSubtype
   readonly autocolumn?: boolean
   readonly constraints?: {
     presence: boolean
@@ -77,7 +80,13 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
   rows.forEach(row => {
     Object.entries(row).forEach(([columnName, columnData]) => {
       const columnType = schema[columnName]?.type
+      const columnSubtype = schema[columnName]?.subtype
       const isAutoColumn = schema[columnName]?.autocolumn
+
+      // If the column had an invalid value we don't want to override it
+      if (results.schemaValidation[columnName] === false) {
+        return
+      }
 
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
@@ -110,6 +119,11 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
         // If provided must be a valid date
         columnType === FieldTypes.DATETIME &&
         isNaN(new Date(columnData).getTime())
+      ) {
+        results.schemaValidation[columnName] = false
+      } else if (
+        columnType === FieldTypes.BB_REFERENCE &&
+        !isValidBBReference(columnData, columnSubtype)
       ) {
         results.schemaValidation[columnName] = false
       } else {
@@ -154,4 +168,38 @@ export function parse(rows: Rows, schema: Schema): Rows {
 
     return parsedRow
   })
+}
+
+function isValidBBReference(
+  columnData: any,
+  columnSubtype: FieldSubtype
+): boolean {
+  switch (columnSubtype) {
+    case FieldSubtype.USER:
+    case FieldSubtype.USERS:
+      if (!columnData) {
+        // Empty columns are valid by default
+        return true
+      }
+
+      if (!Array.isArray(columnData)) {
+        // It must be an array field
+        return false
+      }
+
+      if (columnSubtype === FieldSubtype.USER && columnData.length > 1) {
+        return false
+      }
+
+      for (const d of columnData) {
+        if (!db.isGlobalUserID(d._id)) {
+          return false
+        }
+      }
+
+      return true
+
+    default:
+      throw utils.unreachable(columnSubtype)
+  }
 }
