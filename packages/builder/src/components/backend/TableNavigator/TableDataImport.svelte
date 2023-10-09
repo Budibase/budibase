@@ -3,6 +3,7 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { FieldType } from "@budibase/types"
 
   export let rows = []
   export let schema = {}
@@ -86,10 +87,35 @@
   let validateHash = ""
   let errors = {}
   let selectedColumnTypes = {}
+  let rawRows = []
 
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
     return validation[column]
   })
+
+  $: {
+    rows = []
+
+    for (const row of rawRows) {
+      const castedRow = { ...row }
+      for (const fieldSchema of Object.values(schema || {})) {
+        if (fieldSchema.type === FieldType.BB_REFERENCE) {
+          try {
+            castedRow[fieldSchema.name] = JSON.parse(
+              row[fieldSchema.name].replace(/'/g, '"')
+            )
+          } catch {
+            console.warn("Not a valid json", {
+              field: fieldSchema.name,
+              data: row[fieldSchema.name],
+            })
+          }
+        }
+      }
+      rows.push(castedRow)
+    }
+  }
+
   $: {
     // binding in consumer is causing double renders here
     const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
@@ -107,7 +133,7 @@
 
     try {
       const response = await parseFile(e)
-      rows = response.rows
+      rawRows = response.rows
       schema = response.schema
       fileName = response.fileName
       selectedColumnTypes = Object.entries(response.schema).reduce(
