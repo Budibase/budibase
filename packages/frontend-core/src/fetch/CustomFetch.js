@@ -94,7 +94,7 @@ export default class CustomFetch extends DataFetch {
           }
 
           // Generate options for array columns
-          if (type === "array") {
+          else if (type === "array") {
             constraints.inclusion = [...new Set(data.map(x => x[key]).flat())]
           }
 
