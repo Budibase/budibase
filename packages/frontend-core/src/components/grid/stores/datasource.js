@@ -10,7 +10,7 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { definition, schemaOverrides, columnWhitelist } = context
+  const { definition, schemaOverrides, columnWhitelist, datasource } = context
 
   const schema = derived(definition, $definition => {
     let schema = $definition?.schema
@@ -60,9 +60,14 @@ export const deriveStores = context => {
     }
   )
 
+  const isDatasourcePlus = derived(datasource, $datasource => {
+    return ["table", "viewV2"].includes($datasource?.type)
+  })
+
   return {
     schema,
     enrichedSchema,
+    isDatasourcePlus,
   }
 }
 
