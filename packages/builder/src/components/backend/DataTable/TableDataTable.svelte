@@ -36,7 +36,6 @@
     return datasource._id === $tables.selected?.sourceId
   })
   $: relationshipsEnabled = relationshipSupport(tableDatasource)
-  $: editable = !(isUsersTable && $store.features.disableUserMetadata)
 
   const relationshipSupport = datasource => {
     const integration = $integrations[datasource?.source]
@@ -60,22 +59,22 @@
   <Grid
     {API}
     datasource={gridDatasource}
-    canAddRows={editable}
-    canDeleteRows={editable}
-    canEditRows={editable}
-    canEditColumns={editable}
+    canAddRows={!isUsersTable}
+    canDeleteRows={!isUsersTable}
+    canEditRows={!isUsersTable || !$store.features.disableUserMetadata}
+    canEditColumns={!isUsersTable || !$store.features.disableUserMetadata}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
-      {#if !editable}
+      {#if isUsersTable && $store.features.disableUserMetadata}
         <GridUsersTableButton />
       {/if}
       <GridFilterButton />
     </svelte:fragment>
     <svelte:fragment slot="controls">
-      {#if editable}
+      {#if !isUsersTable}
         <GridCreateViewButton />
       {/if}
       <GridManageAccessButton />
