@@ -20,58 +20,73 @@ const tableWithUserCol: Table = {
   },
 }
 
-describe("searchInputMapping", () => {
-  const globalUserId = dbCore.generateGlobalUserID()
-  const userMedataId = dbCore.generateUserMetadataID(globalUserId)
+const tableWithUsersCol: Table = {
+  _id: tableId,
+  name: "table",
+  schema: {
+    user: {
+      name: "user",
+      type: FieldType.BB_REFERENCE,
+      subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
+    },
+  },
+}
 
-  it("should be able to map ro_ to global user IDs", () => {
-    const params: SearchParams = {
-      tableId,
-      query: {
-        equal: {
-          "1:user": userMedataId,
+describe.each([tableWithUserCol, tableWithUsersCol])(
+  "searchInputMapping",
+  col => {
+    const globalUserId = dbCore.generateGlobalUserID()
+    const userMedataId = dbCore.generateUserMetadataID(globalUserId)
+
+    it("should be able to map ro_ to global user IDs", () => {
+      const params: SearchParams = {
+        tableId,
+        query: {
+          equal: {
+            "1:user": userMedataId,
+          },
         },
-      },
-    }
-    const output = searchInputMapping(tableWithUserCol, params)
-    expect(output.query.equal!["1:user"]).toBe(globalUserId)
-  })
+      }
+      const output = searchInputMapping(col, params)
+      expect(output.query.equal!["1:user"]).toBe(globalUserId)
+    })
 
-  it("should handle array of user IDs", () => {
-    const params: SearchParams = {
-      tableId,
-      query: {
-        oneOf: {
-          "1:user": [userMedataId, globalUserId],
+    it("should handle array of user IDs", () => {
+      const params: SearchParams = {
+        tableId,
+        query: {
+          oneOf: {
+            "1:user": [userMedataId, globalUserId],
+          },
         },
-      },
-    }
-    const output = searchInputMapping(tableWithUserCol, params)
-    expect(output.query.oneOf!["1:user"]).toStrictEqual([
-      globalUserId,
-      globalUserId,
-    ])
-  })
+      }
+      const output = searchInputMapping(col, params)
+      expect(output.query.oneOf!["1:user"]).toStrictEqual([
+        globalUserId,
+        globalUserId,
+      ])
+    })
 
-  it("shouldn't change any other input", () => {
-    const email = "test@test.com"
-    const params: SearchParams = {
-      tableId,
-      query: {
-        equal: {
-          "1:user": email,
+    it("shouldn't change any other input", () => {
+      const email = "test@test.com"
+      const params: SearchParams = {
+        tableId,
+        query: {
+          equal: {
+            "1:user": email,
+          },
         },
-      },
-    }
-    const output = searchInputMapping(tableWithUserCol, params)
-    expect(output.query.equal!["1:user"]).toBe(email)
-  })
+      }
+      const output = searchInputMapping(col, params)
+      expect(output.query.equal!["1:user"]).toBe(email)
+    })
 
-  it("shouldn't error if no query supplied", () => {
-    const params: any = {
-      tableId,
-    }
-    const output = searchInputMapping(tableWithUserCol, params)
-    expect(output.query).toBeUndefined()
-  })
-})
+    it("shouldn't error if no query supplied", () => {
+      const params: any = {
+        tableId,
+      }
+      const output = searchInputMapping(col, params)
+      expect(output.query).toBeUndefined()
+    })
+  }
+)
