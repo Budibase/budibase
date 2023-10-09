@@ -142,7 +142,7 @@
     })
   $: custom = {
     type: "custom",
-    label: "Custom",
+    label: "JSON / CSV",
   }
 
   const handleSelected = selected => {
