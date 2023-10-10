@@ -40,6 +40,13 @@ export default class CustomFetch extends DataFetch {
       } catch (error) {
         // Ignore
       }
+
+      // Try splitting by newlines first
+      if (data.includes("\n")) {
+        return data.split("\n").map(x => x.trim())
+      }
+
+      // Split by commas next
       return data.split(",").map(x => x.trim())
     }
 
@@ -57,7 +64,26 @@ export default class CustomFetch extends DataFetch {
     data = data.filter(x => x != null && x !== "" && !Array.isArray(x))
 
     // Ensure all values are packed into objects
-    return data.map(x => (typeof x === "object" ? x : { value: x }))
+    return data.map(value => {
+      if (typeof value === "object") {
+        return value
+      }
+
+      // Try parsing strings
+      if (typeof value === "string") {
+        const split = value.split(",").map(x => x.trim())
+        let obj = {}
+        for (let i = 0; i < split.length; i++) {
+          const suffix = i === 0 ? "" : ` ${i + 1}`
+          const key = `Value${suffix}`
+          obj[key] = split[i]
+        }
+        return obj
+      }
+
+      // For anything else, wrap in an object
+      return { Value: value }
+    })
   }
 
   // Extracts and parses the custom data from the datasource definition
@@ -87,7 +113,7 @@ export default class CustomFetch extends DataFetch {
           if (type === "string") {
             const uniqueValues = [...new Set(data.map(x => x[key]))]
             const uniqueness = uniqueValues.length / data.length
-            if (uniqueness <= 0.8) {
+            if (uniqueness <= 0.8 && uniqueValues.length > 1) {
               type = "options"
               constraints.inclusion = uniqueValues
             }
