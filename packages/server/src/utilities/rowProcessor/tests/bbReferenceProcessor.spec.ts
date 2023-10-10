@@ -180,9 +180,6 @@ describe("bbReferenceProcessor", () => {
           {
             _id: user._id,
             primaryDisplay: user.email,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
           },
         ])
         expect(cacheGetUsersSpy).toBeCalledTimes(1)
@@ -207,9 +204,6 @@ describe("bbReferenceProcessor", () => {
             [user1, user2].map(u => ({
               _id: u._id,
               primaryDisplay: u.email,
-              email: u.email,
-              firstName: u.firstName,
-              lastName: u.lastName,
             }))
           )
         )
