@@ -162,6 +162,8 @@ export function parse(rows: Rows, schema: Schema): Rows {
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
           : columnData
+      } else if (columnType === FieldTypes.BB_REFERENCE) {
+        parsedRow[columnName] = columnData && parseCsvExport(columnData)
       } else {
         parsedRow[columnName] = columnData
       }
