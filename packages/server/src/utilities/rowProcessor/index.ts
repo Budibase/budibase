@@ -201,9 +201,14 @@ export async function inputProcessing(
 export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
   rows: T,
-  opts: { squash?: boolean; preserveLinks?: boolean } = {
+  opts: {
+    squash?: boolean
+    preserveLinks?: boolean
+    skipBBReferences?: boolean
+  } = {
     squash: true,
     preserveLinks: false,
+    skipBBReferences: false,
   }
 ): Promise<T> {
   let safeRows: Row[]
@@ -230,7 +235,10 @@ export async function outputProcessing<T extends Row[] | Row>(
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
       }
-    } else if (column.type == FieldTypes.BB_REFERENCE) {
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldTypes.BB_REFERENCE
+    ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
