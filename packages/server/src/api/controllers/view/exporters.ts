@@ -44,6 +44,6 @@ export function isFormat(format: any): format is Format {
   return Object.values(Format).includes(format as Format)
 }
 
-export function parseCsvExport(value: string) {
-  return JSON.parse(value?.replace(/'/g, '"'))
+export function parseCsvExport<T>(value: string) {
+  return JSON.parse(value?.replace(/'/g, '"')) as T
 }

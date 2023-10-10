@@ -153,6 +153,7 @@ export function parse(rows: Rows, schema: Schema): Rows {
       }
 
       const columnType = schema[columnName].type
+      const columnSubtype = schema[columnName].subtype
 
       if (columnType === FieldTypes.NUMBER) {
         // If provided must be a valid number
@@ -163,7 +164,22 @@ export function parse(rows: Rows, schema: Schema): Rows {
           ? new Date(columnData).toISOString()
           : columnData
       } else if (columnType === FieldTypes.BB_REFERENCE) {
-        parsedRow[columnName] = columnData && parseCsvExport(columnData)
+        const parsedValues =
+          !!columnData && parseCsvExport<{ _id: string }[]>(columnData)
+        if (!parsedValues) {
+          parsedRow[columnName] = undefined
+        } else {
+          switch (columnSubtype) {
+            case FieldSubtype.USER:
+              parsedRow[columnName] = parsedValues[0]?._id
+              break
+            case FieldSubtype.USERS:
+              parsedRow[columnName] = parsedValues.map(u => u._id)
+              break
+            default:
+              utils.unreachable(columnSubtype)
+          }
+        }
       } else {
         parsedRow[columnName] = columnData
       }
