@@ -3,8 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "rootDir": "./src",
-    "composite": true,
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "composite": true
   },
   "exclude": ["node_modules", "dist"]
 }

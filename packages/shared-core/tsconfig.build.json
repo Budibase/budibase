@@ -15,7 +15,8 @@
     "skipLibCheck": true,
     "paths": {
       "@budibase/types": ["../types/src"]
-    }
+    },
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["**/*.js", "**/*.ts"],
   "exclude": [
