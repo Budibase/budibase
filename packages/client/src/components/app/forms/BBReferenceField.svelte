@@ -25,7 +25,4 @@
   datasourceType={"user"}
   primaryDisplay={"email"}
   defaultValue={updateReferences(defaultValue)}
-  onChange={value => {
-    return updateReferences(value)
-  }}
 />
