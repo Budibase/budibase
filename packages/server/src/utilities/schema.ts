@@ -200,11 +200,11 @@ function isValidBBReference(
         return false
       }
       const userArray = parseCsvExport<{ _id: string }[]>(columnData)
-      if (columnSubtype === FieldSubtype.USER && userArray.length > 1) {
+      if (!Array.isArray(columnData)) {
         return false
       }
 
-      if (!Array.isArray(columnData)) {
+      if (columnSubtype === FieldSubtype.USER && userArray.length > 1) {
         return false
       }
 
