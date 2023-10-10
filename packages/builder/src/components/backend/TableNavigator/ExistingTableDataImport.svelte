@@ -49,6 +49,15 @@
       label: "Long Form Text",
       value: FIELDS.LONGFORM.type,
     },
+
+    {
+      label: "User",
+      value: `${FIELDS.USER.type}${FIELDS.USER.subtype}`,
+    },
+    {
+      label: "Users",
+      value: `${FIELDS.USERS.type}${FIELDS.USERS.subtype}`,
+    },
   ]
 
   $: {
@@ -143,7 +152,7 @@
       <div class="field">
         <span>{name}</span>
         <Select
-          value={schema[name]?.type}
+          value={`${schema[name]?.type}${schema[name]?.subtype || ""}`}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}
