@@ -286,7 +286,7 @@ jobs:
           fi
 
       - name: Check submodule merged to base branch
-        if: ${{ base_commit != '' }}
+        if: ${{ steps.get_pro_commits.outputs.base_commit != '' }}
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
