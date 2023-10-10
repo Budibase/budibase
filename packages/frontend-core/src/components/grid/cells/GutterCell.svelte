@@ -17,12 +17,23 @@
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
 
-  const select = () => {
+  const select = e => {
+    e.stopPropagation()
     svelteDispatch("select")
     const id = row?._id
     if (id) {
       selectedRows.actions.toggleRow(id)
     }
+  }
+
+  const bulkDelete = e => {
+    e.stopPropagation()
+    dispatch("request-bulk-delete")
+  }
+
+  const expand = e => {
+    e.stopPropagation()
+    svelteDispatch("expand")
   }
 </script>
 
@@ -56,7 +67,7 @@
       {/if}
     {/if}
     {#if rowSelected && $config.canDeleteRows}
-      <div class="delete" on:click={() => dispatch("request-bulk-delete")}>
+      <div class="delete" on:click={bulkDelete}>
         <Icon
           name="Delete"
           size="S"
@@ -65,12 +76,7 @@
       </div>
     {:else}
       <div class="expand" class:visible={$config.canExpandRows && expandable}>
-        <Icon
-          size="S"
-          name="Maximize"
-          hoverable
-          on:click={() => svelteDispatch("expand")}
-        />
+        <Icon size="S" name="Maximize" hoverable on:click={expand} />
       </div>
     {/if}
   </div>
