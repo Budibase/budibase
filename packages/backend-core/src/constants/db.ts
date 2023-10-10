@@ -1,5 +1,10 @@
 import { prefixed, DocumentType } from "@budibase/types"
-export { SEPARATOR, UNICODE_MAX, DocumentType } from "@budibase/types"
+export {
+  SEPARATOR,
+  UNICODE_MAX,
+  DocumentType,
+  InternalTable,
+} from "@budibase/types"
 
 /**
  * Can be used to create a few different forms of querying a view.
@@ -28,10 +33,6 @@ export const DeprecatedViews = {
     // removed due to inaccuracy in view doc filter logic
     "by_email",
   ],
-}
-
-export enum InternalTable {
-  USER_METADATA = "ta_users",
 }
 
 export const StaticDatabases = {

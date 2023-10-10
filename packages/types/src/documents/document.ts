@@ -58,6 +58,10 @@ export const DocumentTypesToImport: DocumentType[] = [
   DocumentType.LAYOUT,
 ]
 
+export enum InternalTable {
+  USER_METADATA = "ta_users",
+}
+
 // these documents don't really exist, they are part of other
 // documents or enriched into existence as part of get requests
 export enum VirtualDocumentType {
