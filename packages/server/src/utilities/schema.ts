@@ -200,7 +200,7 @@ function isValidBBReference(
         return false
       }
       const userArray = parseCsvExport<{ _id: string }[]>(columnData)
-      if (!Array.isArray(columnData)) {
+      if (!Array.isArray(userArray)) {
         return false
       }
 
