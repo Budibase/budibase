@@ -45,6 +45,11 @@ export function generateGlobalUserID(id?: any) {
   return `${DocumentType.USER}${SEPARATOR}${id || newid()}`
 }
 
+const isGlobalUserIDRegex = new RegExp(`^${DocumentType.USER}${SEPARATOR}.+`)
+export function isGlobalUserID(id: string) {
+  return isGlobalUserIDRegex.test(id)
+}
+
 /**
  * Generates a new user ID based on the passed in global ID.
  * @param {string} globalId The ID of the global user.

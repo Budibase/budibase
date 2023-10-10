@@ -82,9 +82,6 @@ export async function processOutputBBReferences(
       return users.map(u => ({
         _id: u._id,
         primaryDisplay: u.email,
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
       }))
 
     default:
