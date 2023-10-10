@@ -96,34 +96,10 @@
   let validateHash = ""
   let errors = {}
   let selectedColumnTypes = {}
-  let rawRows = []
 
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
     return validation[column]
   })
-
-  $: {
-    rows = []
-
-    for (const row of rawRows) {
-      const castedRow = { ...row }
-      for (const fieldSchema of Object.values(schema || {})) {
-        if (fieldSchema.type === FieldType.BB_REFERENCE) {
-          try {
-            castedRow[fieldSchema.name] = JSON.parse(
-              row[fieldSchema.name].replace(/'/g, '"')
-            )
-          } catch {
-            console.warn("Not a valid json", {
-              field: fieldSchema.name,
-              data: row[fieldSchema.name],
-            })
-          }
-        }
-      }
-      rows.push(castedRow)
-    }
-  }
 
   $: {
     // binding in consumer is causing double renders here
@@ -142,7 +118,7 @@
 
     try {
       const response = await parseFile(e)
-      rawRows = response.rows
+      rows = response.rows
       schema = response.schema
       fileName = response.fileName
       selectedColumnTypes = Object.entries(response.schema).reduce(
