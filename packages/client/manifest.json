@@ -5674,11 +5674,6 @@
         "key": "validation"
       },
       {
-        "type": "filter/relationship",
-        "label": "Filtering",
-        "key": "filter"
-      },
-      {
         "type": "boolean",
         "label": "Search",
         "key": "autocomplete",
