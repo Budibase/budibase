@@ -1,6 +1,11 @@
 import { generator } from "@budibase/backend-core/tests"
 import { events, context } from "@budibase/backend-core"
-import { FieldType, Table, ViewCalculation } from "@budibase/types"
+import {
+  FieldType,
+  SaveTableRequest,
+  Table,
+  ViewCalculation,
+} from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 const { basicTable } = setup.structures
@@ -47,7 +52,7 @@ describe("/tables", () => {
     })
 
     it("creates a table via data import", async () => {
-      const table = basicTable()
+      const table: SaveTableRequest = basicTable()
       table.rows = [{ name: "test-name", description: "test-desc" }]
 
       const res = await createTable(table)
