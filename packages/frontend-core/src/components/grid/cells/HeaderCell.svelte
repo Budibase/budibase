@@ -1,8 +1,8 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { FieldType } from "@budibase/types"
-  import GridCell from "./GridCell.svelte"
+  import { canBeDisplayColumn } from "@budibase/shared-core"
   import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
+  import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
 
   export let column
@@ -24,15 +24,6 @@
     definition,
     datasource,
   } = getContext("grid")
-
-  const bannedDisplayColumnTypes = [
-    FieldType.LINK,
-    FieldType.ARRAY,
-    FieldType.ATTACHMENT,
-    FieldType.BOOLEAN,
-    FieldType.JSON,
-    FieldType.BB_REFERENCE,
-  ]
 
   let anchor
   let open = false
@@ -233,8 +224,7 @@
       <MenuItem
         icon="Label"
         on:click={makeDisplayColumn}
-        disabled={idx === "sticky" ||
-          bannedDisplayColumnTypes.includes(column.schema.type)}
+        disabled={idx === "sticky" || !canBeDisplayColumn(column.schema.type)}
       >
         Use as display column
       </MenuItem>
