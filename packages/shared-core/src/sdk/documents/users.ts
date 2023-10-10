@@ -1,4 +1,10 @@
-import { ContextUser, User } from "@budibase/types"
+import {
+  ContextUser,
+  DocumentType,
+  SEPARATOR,
+  User,
+  InternalTable,
+} from "@budibase/types"
 import { getProdAppID } from "./applications"
 
 // checks if a user is specifically a builder, given an app ID
@@ -66,4 +72,22 @@ export function hasAdminPermissions(user?: User | ContextUser): boolean {
     return false
   }
   return !!user.admin?.global
+}
+
+export function getGlobalUserID(userId?: string): string | undefined {
+  if (typeof userId !== "string") {
+    return userId
+  }
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+  if (!userId.startsWith(prefix)) {
+    return userId
+  }
+  return userId.split(prefix)[1]
+}
+
+export function containsUserID(value: string | undefined): boolean {
+  if (typeof value !== "string") {
+    return false
+  }
+  return value.includes(`${DocumentType.USER}${SEPARATOR}`)
 }
