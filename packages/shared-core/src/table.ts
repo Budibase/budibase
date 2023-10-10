@@ -1,4 +1,4 @@
-import { FieldType } from "types/dist"
+import { FieldType } from "@budibase/types"
 
 const allowDisplayColumnByType: Record<FieldType, boolean> = {
   [FieldType.STRING]: true,
