@@ -20,7 +20,13 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { ContextUser, Datasource, SourceName, Table } from "@budibase/types"
+import {
+  ContextUser,
+  Datasource,
+  Row,
+  SourceName,
+  Table,
+} from "@budibase/types"
 
 export async function clearColumns(table: any, columnNames: any) {
   const db = context.getAppDB()
@@ -144,12 +150,12 @@ export async function importToRows(
 }
 
 export async function handleDataImport(
-  user: any,
-  table: any,
-  rows: any,
+  user: ContextUser,
+  table: Table,
+  rows: Row[],
   identifierFields: Array<string> = []
 ) {
-  const schema: unknown = table.schema
+  const schema = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {
     return table

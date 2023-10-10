@@ -1578,9 +1578,6 @@ describe.each([
       () => config.createUser(),
       (row: Row) => ({
         _id: row._id,
-        email: row.email,
-        firstName: row.firstName,
-        lastName: row.lastName,
         primaryDisplay: row.email,
       }),
     ],
