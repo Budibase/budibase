@@ -270,7 +270,7 @@ jobs:
 
           if [[ $branch == "master" ]]; then
             base_commit=$(git rev-parse origin/master)
-          else if [[ $branch == "develop" ]]; then
+          elif [[ $branch == "develop" ]]; then
             base_commit=$(git rev-parse origin/develop)
           fi
 
@@ -295,7 +295,7 @@ jobs:
             const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
 
             if (submoduleCommit !== baseCommit) {
-              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}"" branch.');
+              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.');
               console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
               process.exit(1);
             } else {
