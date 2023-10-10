@@ -102,7 +102,10 @@ export const createActions = context => {
 
   // Refreshes the datasource definition
   const refreshDefinition = async () => {
-    const def = await getDatasourceDefinition({ API, datasource })
+    const def = await getDatasourceDefinition({
+      API,
+      datasource: get(datasource),
+    })
     definition.set(def)
   }
 
