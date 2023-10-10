@@ -3,6 +3,7 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { canBeDisplayColumn } from "@budibase/shared-core"
 
   export let rows = []
   export let schema = {}
@@ -97,7 +98,7 @@
   let selectedColumnTypes = {}
 
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
-    return validation[column]
+    return validation[column] && canBeDisplayColumn(schema[column].type)
   })
 
   $: {
