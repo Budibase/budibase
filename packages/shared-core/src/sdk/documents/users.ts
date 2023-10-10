@@ -84,3 +84,10 @@ export function getGlobalUserID(userId?: string): string | undefined {
   }
   return userId.split(prefix)[1]
 }
+
+export function containsUserID(value: string | undefined): boolean {
+  if (typeof value !== "string") {
+    return false
+  }
+  return value.includes(`${DocumentType.USER}${SEPARATOR}`)
+}
