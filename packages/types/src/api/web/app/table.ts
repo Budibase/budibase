@@ -24,3 +24,8 @@ export interface SaveTableRequest extends TableRequest {
 }
 
 export type SaveTableResponse = Table
+
+export interface BulkImportRequest {
+  rows: Row[]
+  identifierFields?: Array<string>
+}
