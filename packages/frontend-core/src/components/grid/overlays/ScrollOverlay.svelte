@@ -53,18 +53,27 @@
     }
   }
 
+  const getLocation = e => {
+    return {
+      y: e.touches?.[0]?.clientY ?? e.clientY,
+      x: e.touches?.[0]?.clientX ?? e.clientX,
+    }
+  }
+
   // V scrollbar drag handlers
   const startVDragging = e => {
     e.preventDefault()
-    initialMouse = e.clientY
+    initialMouse = getLocation(e).y
     initialScroll = $scrollTop
     document.addEventListener("mousemove", moveVDragging)
+    document.addEventListener("touchmove", moveVDragging)
     document.addEventListener("mouseup", stopVDragging)
+    document.addEventListener("touchend", stopVDragging)
     isDraggingV = true
     closeMenu()
   }
   const moveVDragging = domDebounce(e => {
-    const delta = e.clientY - initialMouse
+    const delta = getLocation(e).y - initialMouse
     const weight = delta / availHeight
     const newScrollTop = initialScroll + weight * $maxScrollTop
     scroll.update(state => ({
@@ -74,22 +83,26 @@
   })
   const stopVDragging = () => {
     document.removeEventListener("mousemove", moveVDragging)
+    document.removeEventListener("touchmove", moveVDragging)
     document.removeEventListener("mouseup", stopVDragging)
+    document.removeEventListener("touchend", stopVDragging)
     isDraggingV = false
   }
 
   // H scrollbar drag handlers
   const startHDragging = e => {
     e.preventDefault()
-    initialMouse = e.clientX
+    initialMouse = getLocation(e).x
     initialScroll = $scrollLeft
     document.addEventListener("mousemove", moveHDragging)
+    document.addEventListener("touchmove", moveHDragging)
     document.addEventListener("mouseup", stopHDragging)
+    document.addEventListener("touchend", stopHDragging)
     isDraggingH = true
     closeMenu()
   }
   const moveHDragging = domDebounce(e => {
-    const delta = e.clientX - initialMouse
+    const delta = getLocation(e).x - initialMouse
     const weight = delta / availWidth
     const newScrollLeft = initialScroll + weight * $maxScrollLeft
     scroll.update(state => ({
@@ -99,7 +112,9 @@
   })
   const stopHDragging = () => {
     document.removeEventListener("mousemove", moveHDragging)
+    document.removeEventListener("touchmove", moveHDragging)
     document.removeEventListener("mouseup", stopHDragging)
+    document.removeEventListener("touchend", stopHDragging)
     isDraggingH = false
   }
 </script>
@@ -109,6 +124,7 @@
     class="v-scrollbar"
     style="--size:{ScrollBarSize}px; top:{barTop}px; height:{barHeight}px;"
     on:mousedown={startVDragging}
+    on:touchstart={startVDragging}
     class:dragging={isDraggingV}
   />
 {/if}
@@ -117,6 +133,7 @@
     class="h-scrollbar"
     style="--size:{ScrollBarSize}px; left:{barLeft}px; width:{barWidth}px;"
     on:mousedown={startHDragging}
+    on:touchstart={startHDragging}
     class:dragging={isDraggingH}
   />
 {/if}

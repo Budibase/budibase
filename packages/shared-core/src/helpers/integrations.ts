@@ -14,5 +14,5 @@ export function isSQL(datasource: Datasource): boolean {
     SourceName.MYSQL,
     SourceName.ORACLE,
   ]
-  return SQL.indexOf(datasource.source) !== -1
+  return SQL.indexOf(datasource.source) !== -1 || datasource.isSQL === true
 }
