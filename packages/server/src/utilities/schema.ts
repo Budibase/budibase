@@ -196,33 +196,22 @@ function isValidBBReference(
   switch (columnSubtype) {
     case FieldSubtype.USER:
     case FieldSubtype.USERS:
-      if (!columnData) {
-        // Empty columns are valid by default
-        return true
-      }
-
       if (typeof columnData !== "string") {
         return false
       }
-
-      const castedData = parseCsvExport(columnData)
-
-      if (!Array.isArray(castedData)) {
-        // It must be an array field
+      const userArray = parseCsvExport<{ _id: string }[]>(columnData)
+      if (columnSubtype === FieldSubtype.USER && userArray.length > 1) {
         return false
       }
 
-      if (columnSubtype === FieldSubtype.USER && castedData.length > 1) {
+      if (!Array.isArray(columnData)) {
         return false
       }
 
-      for (const d of castedData) {
-        if (!db.isGlobalUserID(d._id)) {
-          return false
-        }
-      }
-
-      return true
+      const constainsWrongId = userArray.find(
+        user => !db.isGlobalUserID(user._id)
+      )
+      return !constainsWrongId
 
     default:
       throw utils.unreachable(columnSubtype)
