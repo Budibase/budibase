@@ -3,7 +3,6 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
-  import { FieldType } from "@budibase/types"
 
   export let rows = []
   export let schema = {}
