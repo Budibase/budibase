@@ -2,6 +2,7 @@ import { FieldSubtype } from "@budibase/types"
 import { FieldTypes } from "../constants"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
+import { parseCsvExport } from "../api/controllers/view/exporters"
 
 interface SchemaColumn {
   readonly name: string
@@ -182,16 +183,22 @@ function isValidBBReference(
         return true
       }
 
-      if (!Array.isArray(columnData)) {
+      if (typeof columnData !== "string") {
+        return false
+      }
+
+      const castedData = parseCsvExport(columnData)
+
+      if (!Array.isArray(castedData)) {
         // It must be an array field
         return false
       }
 
-      if (columnSubtype === FieldSubtype.USER && columnData.length > 1) {
+      if (columnSubtype === FieldSubtype.USER && castedData.length > 1) {
         return false
       }
 
-      for (const d of columnData) {
+      for (const d of castedData) {
         if (!db.isGlobalUserID(d._id)) {
           return false
         }
