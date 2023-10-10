@@ -101,6 +101,10 @@
     return validation[column] && canBeDisplayColumn(schema[column].type)
   })
 
+  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn].type)) {
+    displayColumn = null
+  }
+
   $: {
     // binding in consumer is causing double renders here
     const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
