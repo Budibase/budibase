@@ -6,7 +6,7 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
-import { events } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import {
   FetchTablesResponse,
   SaveTableRequest,
@@ -18,7 +18,7 @@ import {
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
-import { cloneDeep } from "lodash"
+import { cloneDeep, isEqual } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -99,7 +99,16 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkImport(ctx: UserCtx) {
   const tableId = ctx.params.tableId
-  await pickApi({ tableId }).bulkImport(ctx)
+  let db = context.getAppDB()
+  let tableBefore = await sdk.tables.getTable(tableId)
+  let tableAfter = await pickApi({ tableId }).bulkImport(ctx)
+
+  if (!isEqual(tableBefore, tableAfter)) {
+    await db.put(tableAfter)
+    ctx.eventEmitter &&
+      ctx.eventEmitter.emitTable(`table:save`, ctx.appId, tableAfter)
+  }
+
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
   // think about events for bulk items
