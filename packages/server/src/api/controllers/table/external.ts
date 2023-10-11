@@ -376,7 +376,6 @@ export async function destroy(ctx: UserCtx) {
 
 export async function bulkImport(ctx: UserCtx) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-
   const { rows }: { rows: unknown } = ctx.request.body
   const schema: unknown = table.schema
 
