@@ -1,5 +1,6 @@
 import { Knex, knex } from "knex"
 import {
+  FieldSubtype,
   NumberFieldMetadata,
   Operation,
   QueryJson,
@@ -10,6 +11,7 @@ import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 import { FieldTypes, RelationshipType } from "../../constants"
+import { utils } from "@budibase/shared-core"
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -49,8 +51,20 @@ function generateSchema(
       case FieldTypes.OPTIONS:
       case FieldTypes.LONGFORM:
       case FieldTypes.BARCODEQR:
-      case FieldTypes.BB_REFERENCE:
         schema.text(key)
+        break
+      case FieldTypes.BB_REFERENCE:
+        const subtype = column.subtype as FieldSubtype
+        switch (subtype) {
+          case FieldSubtype.USER:
+            schema.text(key)
+            break
+          case FieldSubtype.USERS:
+            schema.json(key)
+            break
+          default:
+            throw utils.unreachable(subtype)
+        }
         break
       case FieldTypes.NUMBER:
         // if meta is specified then this is a junction table entry

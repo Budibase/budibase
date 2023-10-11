@@ -15,8 +15,8 @@ import { handleRequest } from "../row/external"
 import { context, events } from "@budibase/backend-core"
 import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
+  BulkImportRequest,
   Datasource,
-  FieldSchema,
   ManyToManyRelationshipFieldMetadata,
   ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
@@ -385,10 +385,10 @@ export async function destroy(ctx: UserCtx) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(ctx: UserCtx<BulkImportRequest>) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-  const { rows }: { rows: unknown } = ctx.request.body
-  const schema: unknown = table.schema
+  const { rows } = ctx.request.body
+  const schema = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {
     ctx.throw(400, "Provided data import information is invalid.")
