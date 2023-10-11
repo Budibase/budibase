@@ -180,7 +180,7 @@
   <div class="hierarchy-items-container">
     <NavItem
       icon="UserGroup"
-      text="Users"
+      text="App users"
       selected={$isActive("./table/:tableId") &&
         $tables.selected?._id === TableNames.USERS}
       on:click={() => selectTable(TableNames.USERS)}

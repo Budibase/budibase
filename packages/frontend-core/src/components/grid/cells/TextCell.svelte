@@ -45,7 +45,7 @@
     on:focus={() => (active = true)}
     on:blur={() => (active = false)}
     {type}
-    value={value || ""}
+    value={value ?? ""}
     on:change={handleChange}
     spellcheck="false"
   />

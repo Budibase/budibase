@@ -64,6 +64,7 @@ const INITIAL_FRONTEND_STATE = {
   },
   features: {
     componentValidation: false,
+    disableUserMetadata: false,
   },
   errors: [],
   hasAppPackage: false,
@@ -1286,6 +1287,11 @@ export const getFrontendStore = () => {
           if (!block || !parent?._children?.length) {
             return false
           }
+
+          // Log event
+          analytics.captureEvent(Events.BLOCK_EJECTED, {
+            block: block._component,
+          })
 
           // Attach block children back into ejected definition, using the
           // _containsSlot flag to know where to insert them

@@ -1,6 +1,7 @@
-import { roles, context, events, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, events, roles } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
-import { UserCtx, Database, UserRoles, Role } from "@budibase/types"
+import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
+import { sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
 
 const UpdateRolesOptions = {
@@ -94,7 +95,6 @@ export async function save(ctx: UserCtx) {
   )
   role._rev = result.rev
   ctx.body = role
-  ctx.message = `Role '${role.name}' created successfully.`
 }
 
 export async function destroy(ctx: UserCtx) {
@@ -130,4 +130,17 @@ export async function destroy(ctx: UserCtx) {
   )
   ctx.message = `Role ${ctx.params.roleId} deleted successfully`
   ctx.status = 200
+}
+
+export async function accessible(ctx: UserCtx) {
+  let roleId = ctx.user?.roleId
+  if (!roleId) {
+    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  }
+  if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
+    const appId = context.getAppId()
+    ctx.body = await roles.getAllRoleIds(appId)
+  } else {
+    ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
+  }
 }

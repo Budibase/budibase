@@ -126,8 +126,9 @@
     transition: top 130ms ease-out, left 130ms ease-out;
   }
   .spectrum-Tooltip-label {
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
     overflow: hidden;
     font-size: 12px;
     font-weight: 600;

@@ -230,10 +230,16 @@
       // We want to validate every field (even if validation fails early) to
       // ensure that all fields are populated with errors if invalid
       let valid = true
+      let hasScrolled = false
       stepFields.forEach(field => {
         const fieldValid = get(field).fieldApi.validate()
         valid = valid && fieldValid
+        if (!valid && !hasScrolled) {
+          handleScrollToField({ field: get(field) })
+          hasScrolled = true
+        }
       })
+
       return valid
     },
     reset: () => {
@@ -409,10 +415,15 @@
   }
 
   const handleScrollToField = ({ field }) => {
-    const fieldId = get(getField(field)).fieldState.fieldId
+    if (!field.fieldState) {
+      field = get(getField(field))
+    }
+    const fieldId = field.fieldState.fieldId
+    const fieldElement = document.getElementById(fieldId)
+    fieldElement.focus({ preventScroll: true })
     const label = document.querySelector(`label[for="${fieldId}"]`)
-    document.getElementById(fieldId).focus({ preventScroll: true })
-    label.scrollIntoView({ behavior: "smooth" })
+    label.style.scrollMargin = "100px"
+    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
   }
 
   // Action context to pass to children
