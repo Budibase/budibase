@@ -10,6 +10,7 @@ import {
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
 import {
+  AutoColumnFieldMetadata,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -78,10 +79,10 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   // make sure that types don't change of a column, have to remove
   // the column if you want to change the type
   if (oldTable && oldTable.schema) {
-    for (let propKey of Object.keys(tableToSave.schema)) {
+    for (const propKey of Object.keys(tableToSave.schema)) {
       let oldColumn = oldTable.schema[propKey]
       if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
-        oldColumn.type = FieldTypes.AUTO
+        oldTable.schema[propKey].type = FieldTypes.AUTO
       }
     }
   }
