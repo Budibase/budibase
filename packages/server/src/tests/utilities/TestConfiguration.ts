@@ -54,6 +54,7 @@ import {
   FieldType,
   RelationshipType,
   CreateViewRequest,
+  RelationshipFieldMetadata,
 } from "@budibase/types"
 
 import API from "./api"
@@ -587,7 +588,7 @@ class TestConfiguration {
         tableId: this.table._id!,
         name: link,
         relationshipType,
-      }
+      } as RelationshipFieldMetadata
     }
 
     if (this.datasource && !tableConfig.sourceId) {
