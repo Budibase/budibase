@@ -7,6 +7,7 @@ import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
+  FieldType,
   LinkDocumentValue,
   RelationshipFieldMetadata,
   RelationshipType,
@@ -187,9 +188,7 @@ class LinkController {
 
         // if 1:N, ensure that this ID is not already attached to another record
         const linkedTable = await this._db.get<Table>(field.tableId)
-        const linkedSchema = linkedTable.schema[
-          field.fieldName!
-        ] as RelationshipFieldMetadata
+        const linkedSchema = linkedTable.schema[field.fieldName]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
@@ -206,7 +205,10 @@ class LinkController {
 
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
-          if (linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY) {
+          if (
+            linkedSchema?.type === FieldType.LINK &&
+            linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
+          ) {
             let links = (
               (await getLinkDocuments({
                 tableId: field.tableId,
@@ -359,7 +361,7 @@ class LinkController {
           // these are the props of the table that initiated the link
           tableId: table._id!,
           fieldName: fieldName,
-        } as any)
+        } as RelationshipFieldMetadata)
 
         // update table schema after checking relationship types
         schema[fieldName] = fields.linkerField
