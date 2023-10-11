@@ -36,8 +36,7 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
 
   // now make sure schemas are all accurate
   for (const table of tables) {
-    for (let column of Object.values(table.schema) as any[]) {
-      // TODO: any[]
+    for (let column of Object.values(table.schema)) {
       const shouldBeForeign = foreignKeys.find(
         options => options.tableId === table._id && options.key === column.name
       )
