@@ -1567,16 +1567,15 @@ describe.each([
       (): Record<string, FieldSchema> => ({
         user: {
           name: "user",
-          relationshipType: RelationshipType.ONE_TO_MANY,
           type: FieldType.BB_REFERENCE,
           subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-        } as any,
+        },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
           subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-          relationshipType: RelationshipType.MANY_TO_MANY,
-        } as any,
+          // TODO: users when all merged
+        },
       }),
       () => config.createUser(),
       (row: Row) => ({
