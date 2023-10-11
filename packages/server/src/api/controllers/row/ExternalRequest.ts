@@ -614,7 +614,7 @@ export class ExternalRequest<T extends Operation> {
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
 
-      const lookupField = isMany ? primaryKey : (field as any).foreignKey
+      const lookupField = isMany ? primaryKey : field.foreignKey
       const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
@@ -629,10 +629,7 @@ export class ExternalRequest<T extends Operation> {
       })
       // this is the response from knex if no rows found
       const rows = !response[0].read ? response : []
-      const storeTo = isMany
-        ? (field as ManyToManyRelationshipFieldMetadata).throughFrom ||
-          linkPrimaryKey
-        : fieldName
+      const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
       related[storeTo] = { rows, isMany, tableId }
     }
     return related
