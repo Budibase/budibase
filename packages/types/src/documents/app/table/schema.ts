@@ -80,7 +80,7 @@ export interface LongFormFieldMetadata extends BaseFieldSchema {
 
 export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
-  formula?: string
+  formula: string
   formulaType?: FormulaTypes
 }
 
