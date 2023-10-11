@@ -560,10 +560,7 @@ export class ExternalRequest<T extends Operation> {
       if (!table.primary || !linkTable.primary) {
         continue
       }
-      const definition: any = {
-        // if no foreign key specified then use the name of the field in other table
-        from: (field as any).foreignKey || table.primary[0],
-        to: field.fieldName,
+      const definition: RelationshipsJson = {
         tableName: linkTableName,
         // need to specify where to put this back into
         column: fieldName,
@@ -578,6 +575,10 @@ export class ExternalRequest<T extends Operation> {
         definition.to = field.throughFrom || linkTable.primary[0]
         definition.fromPrimary = table.primary[0]
         definition.toPrimary = linkTable.primary[0]
+      } else {
+        // if no foreign key specified then use the name of the field in other table
+        definition.from = (field as any).foreignKey || table.primary[0]
+        definition.to = field.fieldName
       }
       relationships.push(definition)
     }
