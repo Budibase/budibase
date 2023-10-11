@@ -36,9 +36,7 @@ function checkAutoColumns(table: Table, oldTable?: Table) {
     if (oldSchema && oldSchema.subtype) {
       table.schema[key].subtype = oldSchema.subtype
     } else {
-      table.schema[key] = fixAutoColumnSubType(
-        schema as AutoColumnFieldMetadata
-      )
+      table.schema[key] = fixAutoColumnSubType(schema)
     }
   }
   return table
@@ -84,7 +82,7 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     for (const propKey of Object.keys(tableToSave.schema)) {
       let oldColumn = oldTable.schema[propKey]
       if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
-        oldColumn.type = FieldTypes.AUTO as any // TODO
+        oldTable.schema[propKey].type = FieldTypes.AUTO
       }
     }
   }
