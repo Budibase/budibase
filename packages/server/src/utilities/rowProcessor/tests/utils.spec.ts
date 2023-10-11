@@ -4,10 +4,10 @@ import { FieldSchema, FieldType, RelationshipType } from "@budibase/types"
 
 describe("rowProcessor utility", () => {
   describe("fixAutoColumnSubType", () => {
-    let schema: FieldSchema = {
+    const schema: FieldSchema = {
       name: "",
       type: FieldType.LINK,
-      subtype: "", // missing subtype
+      subtype: undefined, // missing subtype
       icon: "ri-magic-line",
       autocolumn: true,
       constraints: { type: "array", presence: false },
@@ -22,31 +22,31 @@ describe("rowProcessor utility", () => {
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
         AutoFieldSubTypes.CREATED_BY
       )
-      schema.subtype = ""
+      schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.UPDATED_BY
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
         AutoFieldSubTypes.UPDATED_BY
       )
-      schema.subtype = ""
+      schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.CREATED_AT
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
         AutoFieldSubTypes.CREATED_AT
       )
-      schema.subtype = ""
+      schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.UPDATED_AT
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
         AutoFieldSubTypes.UPDATED_AT
       )
-      schema.subtype = ""
+      schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.AUTO_ID
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
         AutoFieldSubTypes.AUTO_ID
       )
-      schema.subtype = ""
+      schema.subtype = undefined
     })
 
     it("returns the column if subtype exists", async () => {
