@@ -1580,6 +1580,9 @@ describe.each([
       (row: Row) => ({
         _id: row._id,
         primaryDisplay: row.email,
+        email: row.email,
+        firstName: row.firstName,
+        lastName: row.lastName,
       }),
     ],
   ])("links - %s", (__, relSchema, dataGenerator, resultMapper) => {
