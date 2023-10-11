@@ -27,7 +27,11 @@
   <div class="spectrum-Toast-body" class:actionBody={!!action}>
     <div class="wrap spectrum-Toast-content">{message || ""}</div>
     {#if action}
-      <ActionButton quiet emphasized on:click={action}>
+      <ActionButton
+        quiet
+        emphasized
+        on:click={() => action(() => dispatch("dismiss"))}
+      >
         <div style="color: white; font-weight: 600;">{actionMessage}</div>
       </ActionButton>
     {/if}

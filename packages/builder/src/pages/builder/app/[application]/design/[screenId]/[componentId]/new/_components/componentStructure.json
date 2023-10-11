@@ -69,7 +69,8 @@
       "datetimefield",
       "multifieldselect",
       "s3upload",
-      "codescanner"
+      "codescanner",
+      "bbreferencefield"
     ]
   },
   {

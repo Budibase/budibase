@@ -22,6 +22,7 @@
   import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
   import { onMount, onDestroy } from "svelte"
+  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
   import CommandPalette from "components/commandPalette/CommandPalette.svelte"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
@@ -136,6 +137,7 @@
 {/if}
 
 <div class="root" class:blur={$store.showPreview}>
+  <VerificationPromptBanner />
   <div class="top-nav">
     {#if $store.initialised}
       <div class="topleftnav">

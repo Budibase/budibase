@@ -55,13 +55,6 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   return datasource
 }
 
-export function isEditableColumn(column: FieldSchema) {
-  const isAutoColumn =
-    column.autocolumn && column.autoReason !== AutoReason.FOREIGN_KEY
-  const isFormula = column.type === FieldTypes.FORMULA
-  return !(isAutoColumn || isFormula)
-}
-
 export function populateExternalTableSchemas(datasource: Datasource) {
   return checkForeignKeysAreAutoColumns(datasource)
 }

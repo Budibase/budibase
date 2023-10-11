@@ -1,4 +1,4 @@
-import { SqlQuery, Table, SearchFilters } from "@budibase/types"
+import { SqlQuery, Table, SearchFilters, Datasource } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import {
   FieldTypes,
@@ -184,7 +184,9 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   }
 }
 
-export const isSQL = helpers.isSQL
+export function isSQL(datasource: Datasource) {
+  return helpers.isSQL(datasource)
+}
 
 export function isIsoDateString(str: string) {
   const trimmedValue = str.trim()

@@ -10,3 +10,4 @@ packages/server/client
 packages/server/src/definitions/openapi.ts
 packages/builder/.routify
 packages/sdk/sdk
+packages/pro/coverage
