@@ -62,7 +62,14 @@
       </div>
     {/if}
     <div class="truncate">
-      <Body>{getSubtitle(datasource)}</Body>
+      <Body>
+        {@const subtitle = getSubtitle(datasource)}
+        {#if subtitle}
+          {subtitle}
+        {:else}
+          {Object.values(datasource.config).join(" / ")}
+        {/if}
+      </Body>
     </div>
   </div>
   <div class="right">
