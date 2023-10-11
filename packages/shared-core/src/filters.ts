@@ -6,6 +6,7 @@ import {
   SearchFilter,
   SearchQuery,
   SearchQueryFields,
+  FieldSubtype,
 } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
@@ -16,7 +17,7 @@ const HBS_REGEX = /{{([^{].*?)}}/g
  * Returns the valid operator options for a certain data type
  */
 export const getValidOperatorsForType = (
-  type: FieldType,
+  fieldType: { type: FieldType; subtype?: FieldSubtype },
   field: string,
   datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
 ) => {
@@ -43,6 +44,7 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
+  const { type, subtype } = fieldType
   if (type === FieldType.STRING) {
     ops = stringOps
   } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
@@ -59,8 +61,10 @@ export const getValidOperatorsForType = (
     ops = numOps
   } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
-  } else if (type === FieldType.BB_REFERENCE) {
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
+    ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
   }
 
   // Only allow equal/not equal for _id in SQL tables
