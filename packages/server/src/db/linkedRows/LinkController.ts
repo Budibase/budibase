@@ -7,7 +7,9 @@ import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
+  FieldType,
   LinkDocumentValue,
+  RelationshipFieldMetadata,
   RelationshipType,
   Row,
   Table,
@@ -133,7 +135,10 @@ class LinkController {
    * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.
    */
-  handleRelationshipType(linkerField: FieldSchema, linkedField: FieldSchema) {
+  handleRelationshipType(
+    linkerField: RelationshipFieldMetadata,
+    linkedField: RelationshipFieldMetadata
+  ) {
     if (
       !linkerField.relationshipType ||
       linkerField.relationshipType === RelationshipType.MANY_TO_MANY
@@ -183,7 +188,7 @@ class LinkController {
 
         // if 1:N, ensure that this ID is not already attached to another record
         const linkedTable = await this._db.get<Table>(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName!]
+        const linkedSchema = linkedTable.schema[field.fieldName]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
@@ -200,7 +205,10 @@ class LinkController {
 
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
-          if (linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY) {
+          if (
+            linkedSchema?.type === FieldType.LINK &&
+            linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
+          ) {
             let links = (
               (await getLinkDocuments({
                 tableId: field.tableId,
@@ -291,7 +299,7 @@ class LinkController {
    */
   async removeFieldFromTable(fieldName: string) {
     let oldTable = this._oldTable
-    let field = oldTable?.schema[fieldName] as FieldSchema
+    let field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
     const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
@@ -351,9 +359,9 @@ class LinkController {
           name: field.fieldName,
           type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
-          tableId: table._id,
+          tableId: table._id!,
           fieldName: fieldName,
-        })
+        } as RelationshipFieldMetadata)
 
         // update table schema after checking relationship types
         schema[fieldName] = fields.linkerField

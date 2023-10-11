@@ -6,6 +6,8 @@ import * as setup from "./utilities"
 import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
+  AutoFieldSubTypes,
+  FieldSchema,
   FieldType,
   FieldTypeSubtypes,
   MonthlyQuotaName,
@@ -171,7 +173,7 @@ describe.each([
             "Row ID": {
               name: "Row ID",
               type: FieldType.NUMBER,
-              subtype: "autoID",
+              subtype: AutoFieldSubTypes.AUTO_ID,
               icon: "ri-magic-line",
               autocolumn: true,
               constraints: {
@@ -272,27 +274,27 @@ describe.each([
 
     isInternal &&
       it("row values are coerced", async () => {
-        const str = {
+        const str: FieldSchema = {
           type: FieldType.STRING,
           name: "str",
           constraints: { type: "string", presence: false },
         }
-        const attachment = {
+        const attachment: FieldSchema = {
           type: FieldType.ATTACHMENT,
           name: "attachment",
           constraints: { type: "array", presence: false },
         }
-        const bool = {
+        const bool: FieldSchema = {
           type: FieldType.BOOLEAN,
           name: "boolean",
           constraints: { type: "boolean", presence: false },
         }
-        const number = {
+        const number: FieldSchema = {
           type: FieldType.NUMBER,
           name: "str",
           constraints: { type: "number", presence: false },
         }
-        const datetime = {
+        const datetime: FieldSchema = {
           type: FieldType.DATETIME,
           name: "datetime",
           constraints: {
@@ -301,7 +303,7 @@ describe.each([
             datetime: { earliest: "", latest: "" },
           },
         }
-        const arrayField = {
+        const arrayField: FieldSchema = {
           type: FieldType.ARRAY,
           constraints: {
             type: "array",
@@ -311,8 +313,7 @@ describe.each([
           name: "Sample Tags",
           sortable: false,
         }
-        const optsField = {
-          fieldName: "Sample Opts",
+        const optsField: FieldSchema = {
           name: "Sample Opts",
           type: FieldType.OPTIONS,
           constraints: {
@@ -1534,7 +1535,7 @@ describe.each([
   describe.each([
     [
       "relationship fields",
-      () => ({
+      (): Record<string, FieldSchema> => ({
         user: {
           name: "user",
           relationshipType: RelationshipType.ONE_TO_MANY,
@@ -1563,27 +1564,25 @@ describe.each([
     ],
     [
       "bb reference fields",
-      () => ({
+      (): Record<string, FieldSchema> => ({
         user: {
           name: "user",
-          relationshipType: RelationshipType.ONE_TO_MANY,
           type: FieldType.BB_REFERENCE,
           subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
         },
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-          relationshipType: RelationshipType.MANY_TO_MANY,
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
         },
       }),
       () => config.createUser(),
       (row: Row) => ({
         _id: row._id,
+        primaryDisplay: row.email,
         email: row.email,
         firstName: row.firstName,
         lastName: row.lastName,
-        primaryDisplay: row.email,
       }),
     ],
   ])("links - %s", (__, relSchema, dataGenerator, resultMapper) => {
