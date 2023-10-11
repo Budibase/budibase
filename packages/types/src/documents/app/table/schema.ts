@@ -1,6 +1,6 @@
 // all added by grid/table when defining the
 // column size, position and whether it can be viewed
-import { FieldType } from "../row"
+import { FieldSubtype, FieldType } from "../row"
 import {
   AutoFieldSubTypes,
   AutoReason,
@@ -15,11 +15,13 @@ export interface UIFieldMetadata {
   icon?: string
 }
 
-interface BaseRelationshipFieldMetadata extends BaseFieldSchema {
+interface BaseRelationshipFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.LINK
   main?: boolean
   fieldName?: string
   tableId: string
+  subtype?: Omit<AutoFieldSubTypes, AutoFieldSubTypes.AUTO_ID>
 }
 export interface ManyToManyRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
@@ -43,7 +45,8 @@ export type RelationshipFieldMetadata =
   | OneToManyRelationshipFieldMetadata
   | ManyToOneRelationshipFieldMetadata
 
-export interface AutoColumnFieldMetadata extends BaseFieldSchema {
+export interface AutoColumnFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
   subtype?: AutoFieldSubTypes
@@ -52,7 +55,7 @@ export interface AutoColumnFieldMetadata extends BaseFieldSchema {
   autoReason?: AutoReason
 }
 
-export interface NumberFieldMetadata extends BaseFieldSchema {
+export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.NUMBER
   autocolumn?: boolean
   subtype?: AutoFieldSubTypes.AUTO_ID
@@ -84,6 +87,12 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula?: string
   formulaType?: FormulaTypes
+}
+
+export interface BBReferenceFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.BB_REFERENCE
+  subtype: FieldSubtype.USER
 }
 
 export interface FieldConstraints {
@@ -118,7 +127,7 @@ interface BaseFieldSchema extends UIFieldMetadata {
   constraints?: FieldConstraints
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
-  subtype?: string
+  subtype?: never
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
@@ -143,6 +152,7 @@ export type FieldSchema =
   | FormulaFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
+  | BBReferenceFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
