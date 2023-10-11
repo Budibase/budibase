@@ -5,8 +5,10 @@ import {
   Table,
   DocumentType,
   SEPARATOR,
+  FieldSubtype,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
+import { utils } from "@budibase/shared-core"
 
 function findColumnInQueries(
   column: string,
@@ -66,8 +68,14 @@ export function searchInputMapping(table: Table, options: SearchParams) {
   for (let [key, column] of Object.entries(table.schema)) {
     switch (column.type) {
       case FieldType.BB_REFERENCE:
-        if (column.subtype === FieldTypeSubtypes.BB_REFERENCE.USER) {
-          userColumnMapping(key, options)
+        const subtype = column.subtype as FieldSubtype
+        switch (subtype) {
+          case FieldSubtype.USER:
+          case FieldSubtype.USERS:
+            userColumnMapping(key, options)
+            break
+          default:
+            utils.unreachable(subtype)
         }
         break
     }
