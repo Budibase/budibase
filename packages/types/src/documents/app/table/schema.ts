@@ -70,6 +70,7 @@ export interface AutoColumnFieldMetadata
 export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.NUMBER
   subtype?: AutoFieldSubTypes.AUTO_ID
+  lastID?: number
   autoReason?: AutoReason.FOREIGN_KEY
   // used specifically when Budibase generates external tables, this denotes if a number field
   // is a foreign key used for a many-to-many relationship
