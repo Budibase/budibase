@@ -11,6 +11,7 @@ import {
 import { runStaticFormulaChecks } from "./bulkFormula"
 import {
   BulkImportRequest,
+  BulkImportResponse,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -207,7 +208,7 @@ export async function destroy(ctx: any) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx<BulkImportRequest>) {
+export async function bulkImport(ctx: UserCtx<BulkImportRequest, BulkImportResponse>) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
   await handleDataImport(ctx.user, table, rows, identifierFields)

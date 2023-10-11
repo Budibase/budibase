@@ -16,6 +16,7 @@ import { context, events } from "@budibase/backend-core"
 import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
   BulkImportRequest,
+  BulkImportResponse,
   Datasource,
   FieldSchema,
   ManyToManyRelationshipFieldMetadata,
@@ -386,7 +387,7 @@ export async function destroy(ctx: UserCtx) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx<BulkImportRequest>) {
+export async function bulkImport(ctx: UserCtx<BulkImportRequest, BulkImportResponse>) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows } = ctx.request.body
   const schema = table.schema

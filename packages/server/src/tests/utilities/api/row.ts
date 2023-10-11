@@ -4,8 +4,8 @@ import {
   Row,
   ValidateResponse,
   ExportRowsRequest,
-  ImportRowsRequest,
-  ImportRowsResponse,
+  BulkImportRequest,
+  BulkImportResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -127,9 +127,9 @@ export class RowAPI extends TestAPI {
 
   bulkImport = async (
     tableId: string,
-    body: ImportRowsRequest,
+    body: BulkImportRequest,
     { expectStatus } = { expectStatus: 200 }
-  ): Promise<ImportRowsResponse> => {
+  ): Promise<BulkImportResponse> => {
     let request = this.request
       .post(`/api/tables/${tableId}/import`)
       .send(body)
