@@ -77,7 +77,7 @@ export function processAutoColumn(
       continue
     }
     if (!schema.subtype) {
-      schema = fixAutoColumnSubType(schema as AutoColumnFieldMetadata)
+      schema = fixAutoColumnSubType(schema)
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
@@ -100,12 +100,8 @@ export function processAutoColumn(
         break
       case AutoFieldSubTypes.AUTO_ID:
         if (creating) {
-          const safeSchema = schema as AutoColumnFieldMetadata
-
-          safeSchema.lastID = !safeSchema.lastID
-            ? BASE_AUTO_ID
-            : safeSchema.lastID + 1
-          row[key] = safeSchema.lastID
+          schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
+          row[key] = schema.lastID
         }
         break
     }
