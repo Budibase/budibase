@@ -1,4 +1,4 @@
-import { FieldTypes, FormulaTypes } from "../../../constants"
+import { FormulaTypes } from "../../../constants"
 import { clearColumns } from "./utils"
 import { doesContainStrings } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
@@ -6,7 +6,12 @@ import isEqual from "lodash/isEqual"
 import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
-import { FieldSchema, FormulaFieldMetadata, Table } from "@budibase/types"
+import {
+  FieldSchema,
+  FieldType,
+  FormulaFieldMetadata,
+  Table,
+} from "@budibase/types"
 import sdk from "../../../sdk"
 import { isRelationshipColumn } from "../../../db/utils"
 
@@ -14,7 +19,7 @@ function isStaticFormula(
   column: FieldSchema
 ): column is FormulaFieldMetadata & { formulaType: FormulaTypes.STATIC } {
   return (
-    column.type === FieldTypes.FORMULA &&
+    column.type === FieldType.FORMULA &&
     column.formulaType === FormulaTypes.STATIC
   )
 }
@@ -59,7 +64,7 @@ async function checkIfFormulaNeedsCleared(
   for (let removed of removedColumns) {
     let tableToUse: Table | undefined = table
     // if relationship, get the related table
-    if (removed.type === FieldTypes.LINK) {
+    if (removed.type === FieldType.LINK) {
       const removedTableId = removed.tableId
       tableToUse = tables.find(table => table._id === removedTableId)
     }
@@ -77,12 +82,13 @@ async function checkIfFormulaNeedsCleared(
     }
     for (let relatedTableId of table.relatedFormula) {
       const relatedColumns = Object.values(table.schema).filter(
-        column => (column as any).tableId === relatedTableId
+        column =>
+          column.type === FieldType.LINK && column.tableId === relatedTableId
       )
       const relatedTable = tables.find(table => table._id === relatedTableId)
       // look to see if the column was used in a relationship formula,
       // relationships won't be used for this
-      if (relatedTable && relatedColumns && removed.type !== FieldTypes.LINK) {
+      if (relatedTable && relatedColumns && removed.type !== FieldType.LINK) {
         let relatedFormulaToRemove: string[] = []
         for (let column of relatedColumns) {
           relatedFormulaToRemove = relatedFormulaToRemove.concat(
