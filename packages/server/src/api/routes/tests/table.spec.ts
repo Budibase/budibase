@@ -1,4 +1,3 @@
-import { generator } from "@budibase/backend-core/tests"
 import { events, context } from "@budibase/backend-core"
 import { FieldType, Table, ViewCalculation } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
@@ -181,6 +180,49 @@ describe("/tables", () => {
         }),
         1
       )
+    })
+
+    it("should update Auto ID field after bulk import", async () => {
+      const table = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: "autoID",
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+      })
+
+      let response = await request
+        .post(`/api/${table._id}/rows`)
+        .send({})
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      expect(response.body.autoId).toEqual(1)
+
+      await request
+        .post(`/api/tables/${table._id}/import`)
+        .send({
+          rows: [{ autoId: 2 }],
+        })
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      response = await request
+        .post(`/api/${table._id}/rows`)
+        .send({})
+        .set(config.defaultHeaders())
+        .expect(200)
+
+      expect(response.body.autoId).toEqual(3)
     })
   })
 
