@@ -5,7 +5,13 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import {
+  AutoColumnFieldMetadata,
+  FieldSubtype,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,

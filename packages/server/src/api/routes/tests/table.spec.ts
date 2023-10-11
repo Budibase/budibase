@@ -1,5 +1,10 @@
 import { events, context } from "@budibase/backend-core"
-import { FieldType, Table, ViewCalculation } from "@budibase/types"
+import {
+  FieldType,
+  RelationshipType,
+  Table,
+  ViewCalculation,
+} from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 const { basicTable } = setup.structures
@@ -381,9 +386,10 @@ describe("/tables", () => {
           },
           TestTable: {
             type: FieldType.LINK,
+            relationshipType: RelationshipType.ONE_TO_MANY,
             name: "TestTable",
             fieldName: "TestTable",
-            tableId: testTable._id,
+            tableId: testTable._id!,
             constraints: {
               type: "array",
             },
