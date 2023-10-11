@@ -57,7 +57,6 @@ export interface AutoColumnFieldMetadata
 
 export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.NUMBER
-  autocolumn?: boolean
   subtype?: AutoFieldSubTypes.AUTO_ID
   autoReason?: AutoReason.FOREIGN_KEY
   // used specifically when Budibase generates external tables, this denotes if a number field
@@ -72,10 +71,6 @@ export interface DateFieldMetadata extends BaseFieldSchema {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
-}
-
-export interface StringFieldMetadata extends BaseFieldSchema {
-  type: FieldType.STRING
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
@@ -136,7 +131,6 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.DATETIME
     | FieldType.LINK
     | FieldType.AUTO
-    | FieldType.STRING
     | FieldType.FORMULA
     | FieldType.NUMBER
     | FieldType.LONGFORM
@@ -148,7 +142,6 @@ export type FieldSchema =
   | DateFieldMetadata
   | RelationshipFieldMetadata
   | AutoColumnFieldMetadata
-  | StringFieldMetadata
   | FormulaFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
