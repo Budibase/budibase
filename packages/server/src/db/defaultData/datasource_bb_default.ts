@@ -11,8 +11,8 @@ import {
   Table,
   Row,
   RelationshipType,
-  AutoColumnFieldMetadata,
   FieldType,
+  TableSchema,
 } from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
@@ -52,7 +52,7 @@ async function tableImport(table: Table, data: Row[]) {
 }
 
 // AUTO COLUMNS
-const AUTO_COLUMNS = {
+const AUTO_COLUMNS: TableSchema = {
   "Created At": {
     name: "Created At",
     type: FieldTypes.DATETIME,
@@ -194,7 +194,7 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-} as any
+}
 
 export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EMPLOYEE_TABLE_ID,
@@ -342,7 +342,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-} as any
+}
 
 export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
   _id: DEFAULT_JOBS_TABLE_ID,
@@ -499,7 +499,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-} as any
+}
 
 export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EXPENSES_TABLE_ID,
@@ -609,7 +609,7 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
     },
     ...AUTO_COLUMNS,
   },
-} as any
+}
 
 export async function buildDefaultDocs() {
   const inventoryData = await tableImport(
