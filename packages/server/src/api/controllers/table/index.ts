@@ -9,6 +9,7 @@ import { isExternalTable, isSQL } from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
+  BulkImportResponse,
   FetchTablesResponse,
   SaveTableRequest,
   SaveTableResponse,
@@ -98,7 +99,7 @@ export async function destroy(ctx: UserCtx) {
   builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
-export async function bulkImport(ctx: UserCtx<BulkImportRequest>) {
+export async function bulkImport(ctx: UserCtx<BulkImportRequest, BulkImportResponse>) {
   const tableId = ctx.params.tableId
   let tableBefore = await sdk.tables.getTable(tableId)
   let tableAfter = await pickApi({ tableId }).bulkImport(ctx)

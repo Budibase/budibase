@@ -5,6 +5,7 @@ import {
   RelationshipType,
   Table,
   ViewCalculation,
+  AutoFieldSubTypes,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -196,7 +197,7 @@ describe("/tables", () => {
           autoId: {
             name: "id",
             type: FieldType.NUMBER,
-            subtype: "autoID",
+            subtype: AutoFieldSubTypes.AUTO_ID,
             autocolumn: true,
             constraints: {
               type: "number",
