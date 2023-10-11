@@ -139,6 +139,70 @@ write.push(
 
 /**
  * @openapi
+ * /applications/{appId}/import:
+ *   post:
+ *     operationId: appImport
+ *     summary: Import an app to an existing app 🔒
+ *     description: This endpoint is only available on a business or enterprise license.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               encryptedPassword:
+ *                 description: Password for the export if it is encrypted.
+ *                 type: string
+ *               appExport:
+ *                 description: The app export to import.
+ *                 type: string
+ *                 format: binary
+ *             required:
+ *               - appExport
+ *     responses:
+ *       204:
+ *         description: Application has been updated.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/import", controller.importToApp)
+)
+
+/**
+ * @openapi
+ * /applications/{appId}/export:
+ *   post:
+ *     operationId: appExport
+ *     summary: Export an app 🔒
+ *     description: This endpoint is only available on a business or enterprise license.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/appExport'
+ *     responses:
+ *       200:
+ *         description: A gzip tarball containing the app export, encrypted if password provided.
+ *         content:
+ *           application/gzip:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               example: Tarball containing database and object store contents...
+ */
+read.push(
+  new Endpoint("post", "/applications/:appId/export", controller.exportApp)
+)
+
+/**
+ * @openapi
  * /applications/{appId}:
  *   get:
  *     operationId: appGetById

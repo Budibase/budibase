@@ -27,7 +27,9 @@ export const createNotificationStore = () => {
       icon = "",
       autoDismiss = true,
       action = null,
+      actionMessage = null,
       wide = false,
+      dismissTimeout = NOTIFICATION_TIMEOUT,
     }
   ) => {
     if (block) {
@@ -44,14 +46,16 @@ export const createNotificationStore = () => {
           icon,
           dismissable: !autoDismiss,
           action,
+          actionMessage,
           wide,
+          dismissTimeout,
         },
       ]
     })
     if (autoDismiss) {
       const timeoutId = setTimeout(() => {
         dismissNotification(_id)
-      }, NOTIFICATION_TIMEOUT)
+      }, dismissTimeout)
       timeoutIds.add(timeoutId)
     }
   }

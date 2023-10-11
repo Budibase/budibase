@@ -14,7 +14,6 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 
 /**
  * Returns the valid operator options for a certain data type
- * @param type the data type
  */
 export const getValidOperatorsForType = (
   type: FieldType,
@@ -44,22 +43,24 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  if (type === "string") {
+  if (type === FieldType.STRING) {
     ops = stringOps
-  } else if (type === "number" || type === "bigint") {
+  } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
     ops = numOps
-  } else if (type === "options") {
+  } else if (type === FieldType.OPTIONS) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-  } else if (type === "array") {
+  } else if (type === FieldType.ARRAY) {
     ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
-  } else if (type === "boolean") {
+  } else if (type === FieldType.BOOLEAN) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
-  } else if (type === "longform") {
+  } else if (type === FieldType.LONGFORM) {
     ops = stringOps
-  } else if (type === "datetime") {
+  } else if (type === FieldType.DATETIME) {
     ops = numOps
-  } else if (type === "formula") {
+  } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.BB_REFERENCE) {
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
   }
 
   // Only allow equal/not equal for _id in SQL tables

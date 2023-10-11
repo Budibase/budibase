@@ -9,6 +9,7 @@ import BooleanCell from "../cells/BooleanCell.svelte"
 import FormulaCell from "../cells/FormulaCell.svelte"
 import JSONCell from "../cells/JSONCell.svelte"
 import AttachmentCell from "../cells/AttachmentCell.svelte"
+import BBReferenceCell from "../cells/BBReferenceCell.svelte"
 
 const TypeComponentMap = {
   text: TextCell,
@@ -23,6 +24,7 @@ const TypeComponentMap = {
   link: RelationshipCell,
   formula: FormulaCell,
   json: JSONCell,
+  bb_reference: BBReferenceCell,
 }
 export const getCellRenderer = column => {
   return TypeComponentMap[column?.schema?.type] || TextCell

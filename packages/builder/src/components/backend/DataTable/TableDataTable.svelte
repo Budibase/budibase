@@ -4,6 +4,7 @@
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import { store } from "builderStore"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -14,6 +15,7 @@
   import GridManageAccessButton from "components/backend/DataTable/buttons/grid/GridManageAccessButton.svelte"
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
+  import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -59,22 +61,22 @@
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}
+    canEditRows={!isUsersTable || !$store.features.disableUserMetadata}
+    canEditColumns={!isUsersTable || !$store.features.disableUserMetadata}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
+      {#if isUsersTable && $store.features.disableUserMetadata}
+        <GridUsersTableButton />
+      {/if}
       <GridFilterButton />
     </svelte:fragment>
-    <svelte:fragment slot="edit-column">
-      <GridEditColumnModal />
-    </svelte:fragment>
-    <svelte:fragment slot="add-column">
-      <GridAddColumnModal />
-    </svelte:fragment>
-
     <svelte:fragment slot="controls">
-      <GridCreateViewButton />
+      {#if !isUsersTable}
+        <GridCreateViewButton />
+      {/if}
       <GridManageAccessButton />
       {#if relationshipsEnabled}
         <GridRelationshipButton />
@@ -84,13 +86,18 @@
       {:else}
         <GridImportButton />
       {/if}
-
       <GridExportButton />
       {#if isUsersTable}
         <GridEditUserModal />
       {:else}
         <GridCreateEditRowModal />
       {/if}
+    </svelte:fragment>
+    <svelte:fragment slot="edit-column">
+      <GridEditColumnModal />
+    </svelte:fragment>
+    <svelte:fragment slot="add-column">
+      <GridAddColumnModal />
     </svelte:fragment>
   </Grid>
 </div>

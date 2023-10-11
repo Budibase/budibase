@@ -242,7 +242,7 @@ class RedisWrapper {
     }
   }
 
-  async bulkGet(keys: string[]) {
+  async bulkGet<T>(keys: string[]) {
     const db = this._db
     if (keys.length === 0) {
       return {}
@@ -250,7 +250,7 @@ class RedisWrapper {
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
     let response = await this.getClient().mget(prefixedKeys)
     if (Array.isArray(response)) {
-      let final: any = {}
+      let final: Record<string, T> = {}
       let count = 0
       for (let result of response) {
         if (result) {

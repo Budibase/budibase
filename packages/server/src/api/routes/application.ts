@@ -4,6 +4,7 @@ import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
+import { importToApp } from "../controllers/application"
 
 const router: Router = new Router()
 
@@ -57,6 +58,11 @@ router
     "/api/applications/:appId",
     authorized(permissions.GLOBAL_BUILDER),
     controller.destroy
+  )
+  .post(
+    "/api/applications/:appId/import",
+    authorized(permissions.BUILDER),
+    controller.importToApp
   )
 
 export default router

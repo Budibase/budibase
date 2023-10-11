@@ -14,6 +14,10 @@ import {
   SearchRowResponse,
   SearchRowRequest,
   SearchParams,
+  GetRowResponse,
+  ValidateResponse,
+  ExportRowsRequest,
+  ExportRowsResponse,
 } from "@budibase/types"
 import * as utils from "./utils"
 import { gridSocket } from "../../../websockets"
@@ -68,6 +72,11 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
   const tableId = utils.getTableId(ctx)
   const body = ctx.request.body
 
+  // user metadata doesn't exist yet - don't allow creation
+  if (utils.isUserMetadataTable(tableId) && !body._rev) {
+    ctx.throw(400, "Cannot create new user entry.")
+  }
+
   // if it has an ID already then its a patch
   if (body && body._id) {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
@@ -111,7 +120,7 @@ export async function fetch(ctx: any) {
   })
 }
 
-export async function find(ctx: any) {
+export async function find(ctx: UserCtx<void, GetRowResponse>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await quotas.addQuery(() => pickApi(tableId).find(ctx), {
     datasourceId: tableId,
@@ -214,11 +223,11 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
   })
 }
 
-export async function validate(ctx: Ctx) {
+export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   const tableId = utils.getTableId(ctx)
   // external tables are hard to validate currently
   if (isExternalTable(tableId)) {
-    ctx.body = { valid: true }
+    ctx.body = { valid: true, errors: {} }
   } else {
     ctx.body = await sdk.rows.utils.validate({
       row: ctx.request.body,
@@ -237,7 +246,9 @@ export async function fetchEnrichedRow(ctx: any) {
   )
 }
 
-export const exportRows = async (ctx: any) => {
+export const exportRows = async (
+  ctx: Ctx<ExportRowsRequest, ExportRowsResponse>
+) => {
   const tableId = utils.getTableId(ctx)
 
   const format = ctx.query.format

@@ -61,10 +61,12 @@
     key: "_css",
     type: "text",
   })
-  $: settingOptions = settings.map(setting => ({
-    label: makeLabel(setting),
-    value: setting.key,
-  }))
+  $: settingOptions = settings
+    .filter(setting => setting.supportsConditions !== false)
+    .map(setting => ({
+      label: makeLabel(setting),
+      value: setting.key,
+    }))
   $: conditions.forEach(link => {
     if (!link.id) {
       link.id = generate()
