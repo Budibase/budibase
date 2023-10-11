@@ -11,6 +11,7 @@
   export let beepOnScan = false
   export let beepFrequency = 2637
   export let customFrequency = 1046
+  export let onChange
 
   const dispatch = createEventDispatcher()
 
@@ -113,6 +114,12 @@
 
     oscillator.start()
     oscillator.stop(endTime)
+  }
+
+  const handleChange = e => {
+    if (onChange && changed) {
+      onChange({ value })
+    }
   }
 </script>
 
