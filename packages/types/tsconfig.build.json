@@ -11,7 +11,8 @@
     "sourceMap": true,
     "declaration": true,
     "skipLibCheck": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]
