@@ -18,6 +18,8 @@ import {
   AutoReason,
   Datasource,
   FieldSchema,
+  ImportRowsRequest,
+  ImportRowsResponse,
   Operation,
   QueryJson,
   RelationshipType,
@@ -374,7 +376,7 @@ export async function destroy(ctx: UserCtx) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(ctx: UserCtx<ImportRowsRequest, ImportRowsResponse>) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows }: { rows: unknown } = ctx.request.body
   const schema: unknown = table.schema

@@ -6,9 +6,11 @@ import {
   validate as validateSchema,
 } from "../../../utilities/schema"
 import { isExternalTable, isSQL } from "../../../integrations/utils"
-import { context, events } from "@budibase/backend-core"
+import { events } from "@budibase/backend-core"
 import {
   FetchTablesResponse,
+  ImportRowsRequest,
+  ImportRowsResponse,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -97,16 +99,13 @@ export async function destroy(ctx: UserCtx) {
   builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(ctx: UserCtx<ImportRowsRequest, ImportRowsResponse>) {
   const tableId = ctx.params.tableId
-  let db = context.getAppDB()
   let tableBefore = await sdk.tables.getTable(tableId)
   let tableAfter = await pickApi({ tableId }).bulkImport(ctx)
 
   if (!isEqual(tableBefore, tableAfter)) {
-    await db.put(tableAfter)
-    ctx.eventEmitter &&
-      ctx.eventEmitter.emitTable(`table:save`, ctx.appId, tableAfter)
+    await sdk.tables.saveTable(tableAfter)
   }
 
   // right now we don't trigger anything for bulk import because it

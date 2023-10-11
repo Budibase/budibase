@@ -200,29 +200,16 @@ describe("/tables", () => {
         },
       })
 
-      let response = await request
-        .post(`/api/${table._id}/rows`)
-        .send({})
-        .set(config.defaultHeaders())
-        .expect(200)
+      let row = await config.api.row.save(table._id!, {})
+      expect(row.autoId).toEqual(1)
 
-      expect(response.body.autoId).toEqual(1)
+      await config.api.row.bulkImport(table._id!, {
+        rows: [{ autoId: 2 }],
+        identifierFields: [],
+      })
 
-      await request
-        .post(`/api/tables/${table._id}/import`)
-        .send({
-          rows: [{ autoId: 2 }],
-        })
-        .set(config.defaultHeaders())
-        .expect(200)
-
-      response = await request
-        .post(`/api/${table._id}/rows`)
-        .send({})
-        .set(config.defaultHeaders())
-        .expect(200)
-
-      expect(response.body.autoId).toEqual(3)
+      row = await config.api.row.save(table._id!, {})
+      expect(row.autoId).toEqual(3)
     })
   })
 
