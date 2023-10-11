@@ -37,3 +37,12 @@ export interface ExportRowsRequest {
 }
 
 export type ExportRowsResponse = ReadStream
+
+export type ImportRowsRequest = {
+  rows: Row[]
+  identifierFields: string[]
+}
+
+export type ImportRowsResponse = {
+  message: string
+}

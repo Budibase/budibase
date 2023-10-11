@@ -4,6 +4,8 @@ import {
   Row,
   ValidateResponse,
   ExportRowsRequest,
+  ImportRowsRequest,
+  ImportRowsResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -121,6 +123,19 @@ export class RowAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(expectStatus)
     return request
+  }
+
+  bulkImport = async (
+    tableId: string,
+    body: ImportRowsRequest,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<ImportRowsResponse> => {
+    let request = this.request
+      .post(`/api/tables/${tableId}/import`)
+      .send(body)
+      .set(this.config.defaultHeaders())
+      .expect(expectStatus)
+    return (await request).body
   }
 
   search = async (
