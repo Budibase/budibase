@@ -1,6 +1,7 @@
 import { events, context } from "@budibase/backend-core"
 import {
   FieldType,
+  SaveTableRequest,
   RelationshipType,
   Table,
   ViewCalculation,
@@ -51,7 +52,7 @@ describe("/tables", () => {
     })
 
     it("creates a table via data import", async () => {
-      const table = basicTable()
+      const table: SaveTableRequest = basicTable()
       table.rows = [{ name: "test-name", description: "test-desc" }]
 
       const res = await createTable(table)

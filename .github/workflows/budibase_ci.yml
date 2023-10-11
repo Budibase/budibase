@@ -264,18 +264,23 @@ jobs:
 
           if [[ $branch == "master" ]]; then
             base_commit=$(git rev-parse origin/master)
-          else
+          elif [[ $branch == "develop" ]]; then
             base_commit=$(git rev-parse origin/develop)
           fi
 
-          echo "target_branch=$branch"
-          echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
-          echo "pro_commit=$pro_commit"
-          echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
-          echo "base_commit=$base_commit"
-          echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+          if [[ ! -z $base_commit ]]; then
+            echo "target_branch=$branch"
+            echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
+            echo "pro_commit=$pro_commit"
+            echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
+            echo "base_commit=$base_commit"
+            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing to do - branch to branch merge."
+          fi
 
-      - name: Check submodule merged to develop
+      - name: Check submodule merged to base branch
+        if: ${{ steps.get_pro_commits.outputs.base_commit != '' }}
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -284,7 +289,7 @@ jobs:
             const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
 
             if (submoduleCommit !== baseCommit) {
-              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}"" branch.');
+              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.');
               console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
               process.exit(1);
             } else {

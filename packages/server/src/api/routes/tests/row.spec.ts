@@ -1573,16 +1573,12 @@ describe.each([
         users: {
           name: "users",
           type: FieldType.BB_REFERENCE,
-          subtype: FieldTypeSubtypes.BB_REFERENCE.USER,
-          // TODO: users when all merged
+          subtype: FieldTypeSubtypes.BB_REFERENCE.USERS,
         },
       }),
       () => config.createUser(),
       (row: Row) => ({
         _id: row._id,
-        email: row.email,
-        firstName: row.firstName,
-        lastName: row.lastName,
         primaryDisplay: row.email,
       }),
     ],
