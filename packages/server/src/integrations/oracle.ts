@@ -249,7 +249,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn): { type: FieldTypes } {
+  private internalConvertType(column: OracleColumn) {
     if (this.isBooleanType(column)) {
       return { type: FieldTypes.BOOLEAN }
     }
@@ -307,6 +307,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
               },
               ...this.internalConvertType(oracleColumn),
             }
+
             table.schema[columnName] = fieldSchema
           }
 

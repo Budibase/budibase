@@ -7,7 +7,13 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row, RelationshipType } from "@budibase/types"
+import {
+  Table,
+  Row,
+  RelationshipType,
+  FieldType,
+  TableSchema,
+} from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -28,7 +34,11 @@ export const DEFAULT_BB_DATASOURCE = defaultDatasource
 function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
     const entry = table.schema[key]
-    if (entry.autocolumn && entry.subtype == "autoID") {
+    if (
+      entry.autocolumn &&
+      entry.type === FieldType.NUMBER &&
+      entry.subtype == AutoFieldSubTypes.AUTO_ID
+    ) {
       entry.lastID = rowCount
     }
   })
@@ -42,7 +52,7 @@ async function tableImport(table: Table, data: Row[]) {
 }
 
 // AUTO COLUMNS
-const AUTO_COLUMNS = {
+const AUTO_COLUMNS: TableSchema = {
   "Created At": {
     name: "Created At",
     type: FieldTypes.DATETIME,
