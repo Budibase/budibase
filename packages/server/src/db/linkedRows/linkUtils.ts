@@ -109,8 +109,8 @@ export async function getLinkedTable(id: string, tables: Table[]) {
 export function getRelatedTableForField(table: Table, fieldName: string) {
   // look to see if its on the table, straight in the schema
   const field = table.schema[fieldName]
-  if (field != null) {
-    return (field as any).tableId
+  if (field?.type === FieldTypes.LINK) {
+    return field.tableId
   }
   for (let column of Object.values(table.schema)) {
     if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
