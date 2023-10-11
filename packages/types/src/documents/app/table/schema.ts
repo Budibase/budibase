@@ -21,7 +21,7 @@ interface BaseRelationshipFieldMetadata
   main?: boolean
   fieldName: string
   tableId: string
-  subtype?: Omit<AutoFieldSubTypes, AutoFieldSubTypes.AUTO_ID>
+  subtype?: AutoFieldSubTypes.CREATED_BY | AutoFieldSubTypes.UPDATED_BY
 }
 
 // External tables use junction tables, internal tables don't require them
@@ -80,10 +80,11 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   }
 }
 
-export interface DateFieldMetadata extends BaseFieldSchema {
+export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
+  subtype?: AutoFieldSubTypes.CREATED_AT | AutoFieldSubTypes.UPDATED_AT
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
