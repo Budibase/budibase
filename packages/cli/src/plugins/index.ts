@@ -49,8 +49,8 @@ async function askAboutTopLevel(name: string) {
   }
 }
 
-async function init(opts: PluginOpts) {
-  const type = opts["init"] || (opts as PluginType)
+async function init(opts: PluginOpts | PluginType) {
+  const type = (opts as PluginOpts).init || (opts as PluginType)
   if (!type || !PLUGIN_TYPE_ARR.includes(type)) {
     console.log(
       error(

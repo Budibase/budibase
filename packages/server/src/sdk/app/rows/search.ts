@@ -31,7 +31,7 @@ export interface ExportRowsParams {
   format: Format
   rowIds?: string[]
   columns?: string[]
-  query: SearchFilters
+  query?: SearchFilters
 }
 
 export interface ExportRowsResult {

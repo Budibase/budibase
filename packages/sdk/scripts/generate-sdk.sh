@@ -19,7 +19,7 @@ docker run --rm \
   -v ${PWD}/generated:/generated \
   -v ${PWD}/config.json:/config.json \
   -u $(id -u):$(id -g) \
-  swaggerapi/swagger-codegen-cli-v3 generate \
+  swaggerapi/swagger-codegen-cli-v3:3.0.46 generate \
   -i /openapi.yml \
   -l javascript \
   -o /generated \

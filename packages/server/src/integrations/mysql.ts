@@ -158,6 +158,12 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     ) {
       config.ssl.rejectUnauthorized = config.rejectUnauthorized
     }
+    // The MySQL library we use doesn't directly document the parameters that can be passed in the ssl
+    // object, it instead points to an older library that it says it is mostly API compatible with, that
+    // older library actually documents what parameters can be passed in the ssl object.
+    // https://github.com/sidorares/node-mysql2#api-and-configuration
+    // https://github.com/mysqljs/mysql#ssl-options
+
     // @ts-ignore
     delete config.rejectUnauthorized
     this.config = {

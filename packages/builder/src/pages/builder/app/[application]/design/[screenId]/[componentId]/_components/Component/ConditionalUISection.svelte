@@ -36,10 +36,7 @@
 </script>
 
 <DetailSummary name={"Conditions"} collapsible={false}>
-  <div class="conditionCount">{conditionText}</div>
-  <div>
-    <ActionButton on:click={openDrawer}>Configure conditions</ActionButton>
-  </div>
+  <ActionButton on:click={openDrawer}>{conditionText}</ActionButton>
 </DetailSummary>
 <Drawer bind:this={drawer} title="Conditions">
   <svelte:fragment slot="description">
@@ -48,10 +45,3 @@
   <Button cta slot="buttons" on:click={() => save()}>Save</Button>
   <ConditionalUIDrawer slot="body" bind:conditions={tempValue} {bindings} />
 </Drawer>
-
-<style>
-  .conditionCount {
-    font-weight: 600;
-    margin-top: -5px;
-  }
-</style>
