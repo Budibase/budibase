@@ -13,6 +13,8 @@
   import { Helpers } from "@budibase/bbui"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
+  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import { PrettyRelationshipDefinitions } from "constants/backend"
 
   export let save
   export let datasource
@@ -22,16 +24,21 @@
   export let selectedFromTable
   export let close
 
-  const relationshipTypes = [
-    {
-      label: "One to Many",
-      value: RelationshipType.MANY_TO_ONE,
+  let relationshipMap = {
+    [RelationshipType.MANY_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.MANY,
     },
-    {
-      label: "Many to Many",
-      value: RelationshipType.MANY_TO_MANY,
+    [RelationshipType.MANY_TO_ONE]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
     },
-  ]
+  }
+  let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+  let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
+
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
 
   let originalFromColumnName = toRelationship.name,
     originalToColumnName = fromRelationship.name
@@ -49,14 +56,32 @@
   )
   let errors = {}
   let fromPrimary, fromForeign, fromColumn, toColumn
-  let fromId, toId, throughId, throughToKey, throughFromKey
+
+  let throughId, throughToKey, throughFromKey
   let isManyToMany, isManyToOne, relationshipType
   let hasValidated = false
+
+  $: fromId = null
+  $: toId = null
 
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
+    name: table.name,
+    _id: table._id,
   }))
+
+  $: {
+    // Determine the relationship type based on the selected values of both parts
+    relationshipType = Object.entries(relationshipMap).find(
+      ([_, parts]) =>
+        parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
+    )?.[0]
+
+    changed(() => {
+      hasValidated = false
+    })
+  }
   $: valid =
     getErrorCount(errors) === 0 && allRequiredAttributesSet(relationshipType)
   $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
@@ -338,33 +363,34 @@
   onConfirm={saveRelationship}
   disabled={!valid}
 >
-  <Select
-    label="Relationship type"
-    options={relationshipTypes}
-    bind:value={relationshipType}
-    bind:error={errors.relationshipType}
-    on:change={() =>
-      changed(() => {
-        hasValidated = false
-      })}
-  />
   <div class="headings">
     <Detail>Tables</Detail>
   </div>
-  {#if !selectedFromTable}
-    <Select
-      label="Select from table"
-      options={tableOptions}
-      bind:value={fromId}
-      bind:error={errors.fromTable}
-      on:change={e =>
-        changed(() => {
-          const table = plusTables.find(tbl => tbl._id === e.detail)
-          fromColumn = table?.name || ""
-          fromPrimary = table?.primary?.[0]
-        })}
-    />
-  {/if}
+
+  <RelationshipSelector
+    bind:relationshipPart1
+    bind:relationshipPart2
+    bind:relationshipTableIdPrimary={fromId}
+    bind:relationshipTableIdSecondary={toId}
+    {relationshipOpts1}
+    {relationshipOpts2}
+    {tableOptions}
+    {errors}
+    primaryDisabled={selectedFromTable}
+    primaryTableChanged={e =>
+      changed(() => {
+        const table = plusTables.find(tbl => tbl._id === e.detail)
+        fromColumn = table?.name || ""
+        fromPrimary = table?.primary?.[0]
+      })}
+    secondaryTableChanged={e =>
+      changed(() => {
+        const table = plusTables.find(tbl => tbl._id === e.detail)
+        toColumn = table.name || ""
+        fromForeign = null
+      })}
+  />
+
   {#if isManyToOne && fromId}
     <Select
       label={`Primary Key (${getTable(fromId).name})`}
@@ -374,18 +400,6 @@
       on:change={changed}
     />
   {/if}
-  <Select
-    label={"Select to table"}
-    options={tableOptions}
-    bind:value={toId}
-    bind:error={errors.toTable}
-    on:change={e =>
-      changed(() => {
-        const table = plusTables.find(tbl => tbl._id === e.detail)
-        toColumn = table.name || ""
-        fromForeign = null
-      })}
-  />
   {#if isManyToMany}
     <Select
       label={"Through"}
