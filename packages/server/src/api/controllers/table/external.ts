@@ -15,11 +15,14 @@ import { handleRequest } from "../row/external"
 import { context, events } from "@budibase/backend-core"
 import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
-  AutoReason,
   Datasource,
   FieldSchema,
+  ManyToManyRelationshipFieldMetadata,
+  ManyToOneRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
   Operation,
   QueryJson,
+  RelationshipFieldMetadata,
   RelationshipType,
   RenameColumn,
   SaveTableRequest,
@@ -74,10 +77,13 @@ function cleanupRelationships(
       schema.type === FieldTypes.LINK &&
       (!oldTable || table.schema[key] == null)
     ) {
+      const schemaTableId = schema.tableId
       const relatedTable = Object.values(tables).find(
-        table => table._id === schema.tableId
+        table => table._id === schemaTableId
       )
-      const foreignKey = schema.foreignKey
+      const foreignKey =
+        schema.relationshipType !== RelationshipType.MANY_TO_MANY &&
+        schema.foreignKey
       if (!relatedTable || !foreignKey) {
         continue
       }
@@ -116,7 +122,7 @@ function otherRelationshipType(type?: string) {
 
 function generateManyLinkSchema(
   datasource: Datasource,
-  column: FieldSchema,
+  column: ManyToManyRelationshipFieldMetadata,
   table: Table,
   relatedTable: Table
 ): Table {
@@ -151,10 +157,12 @@ function generateManyLinkSchema(
 }
 
 function generateLinkSchema(
-  column: FieldSchema,
+  column:
+    | OneToManyRelationshipFieldMetadata
+    | ManyToOneRelationshipFieldMetadata,
   table: Table,
   relatedTable: Table,
-  type: RelationshipType
+  type: RelationshipType.ONE_TO_MANY | RelationshipType.MANY_TO_ONE
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")
@@ -170,20 +178,22 @@ function generateLinkSchema(
 }
 
 function generateRelatedSchema(
-  linkColumn: FieldSchema,
+  linkColumn: RelationshipFieldMetadata,
   table: Table,
   relatedTable: Table,
   columnName: string
 ) {
   // generate column for other table
   const relatedSchema = cloneDeep(linkColumn)
+  const isMany2Many =
+    linkColumn.relationshipType === RelationshipType.MANY_TO_MANY
   // swap them from the main link
-  if (linkColumn.foreignKey) {
+  if (!isMany2Many && linkColumn.foreignKey) {
     relatedSchema.fieldName = linkColumn.foreignKey
     relatedSchema.foreignKey = linkColumn.fieldName
   }
   // is many to many
-  else {
+  else if (isMany2Many) {
     // don't need to copy through, already got it
     relatedSchema.fieldName = linkColumn.throughTo
     relatedSchema.throughTo = linkColumn.throughFrom
@@ -197,8 +207,8 @@ function generateRelatedSchema(
   table.schema[columnName] = relatedSchema
 }
 
-function isRelationshipSetup(column: FieldSchema) {
-  return column.foreignKey || column.through
+function isRelationshipSetup(column: RelationshipFieldMetadata) {
+  return (column as any).foreignKey || (column as any).through
 }
 
 export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
@@ -257,14 +267,15 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     if (schema.type !== FieldTypes.LINK || isRelationshipSetup(schema)) {
       continue
     }
+    const schemaTableId = schema.tableId
     const relatedTable = Object.values(tables).find(
-      table => table._id === schema.tableId
+      table => table._id === schemaTableId
     )
     if (!relatedTable) {
       continue
     }
     const relatedColumnName = schema.fieldName!
-    const relationType = schema.relationshipType!
+    const relationType = schema.relationshipType
     if (relationType === RelationshipType.MANY_TO_MANY) {
       const junctionTable = generateManyLinkSchema(
         datasource,
