@@ -5,7 +5,13 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import {
+  AutoColumnFieldMetadata,
+  FieldSubtype,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,
@@ -201,9 +207,14 @@ export async function inputProcessing(
 export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
   rows: T,
-  opts: { squash?: boolean; preserveLinks?: boolean } = {
+  opts: {
+    squash?: boolean
+    preserveLinks?: boolean
+    skipBBReferences?: boolean
+  } = {
     squash: true,
     preserveLinks: false,
+    skipBBReferences: false,
   }
 ): Promise<T> {
   let safeRows: Row[]
@@ -219,10 +230,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     ? await linkRows.attachFullLinkedDocs(table, safeRows)
     : safeRows
 
-  // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
-
-  // set the attachments URLs
+  // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
@@ -233,7 +241,10 @@ export async function outputProcessing<T extends Row[] | Row>(
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
       }
-    } else if (column.type == FieldTypes.BB_REFERENCE) {
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldTypes.BB_REFERENCE
+    ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
@@ -242,6 +253,10 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     }
   }
+
+  // process formulas after the complex types had been processed
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(
       table,
