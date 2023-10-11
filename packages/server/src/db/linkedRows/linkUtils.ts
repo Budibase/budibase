@@ -1,13 +1,9 @@
-import { ViewName, getQueryIndex } from "../utils"
+import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
 import { FieldTypes } from "../../constants"
 import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
-import {
-  FieldSchema,
-  LinkDocument,
-  LinkDocumentValue,
-  Table,
-} from "@budibase/types"
+import { LinkDocument, LinkDocumentValue, Table } from "@budibase/types"
+
 export { createLinkView } from "../views/staticViews"
 
 /**
@@ -104,8 +100,8 @@ export function getUniqueByProp(array: any[], prop: string) {
 
 export function getLinkedTableIDs(table: Table): string[] {
   return Object.values(table.schema)
-    .filter((column: FieldSchema) => column.type === FieldTypes.LINK)
-    .map(column => column.tableId!)
+    .filter(isRelationshipColumn)
+    .map(column => column.tableId)
 }
 
 export async function getLinkedTable(id: string, tables: Table[]) {
@@ -124,7 +120,7 @@ export async function getLinkedTable(id: string, tables: Table[]) {
 export function getRelatedTableForField(table: Table, fieldName: string) {
   // look to see if its on the table, straight in the schema
   const field = table.schema[fieldName]
-  if (field != null) {
+  if (field?.type === FieldTypes.LINK) {
     return field.tableId
   }
   for (let column of Object.values(table.schema)) {
