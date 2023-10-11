@@ -101,7 +101,7 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
-  subtype: FieldSubtype.USER
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
 }
 
 export interface FieldConstraints {
