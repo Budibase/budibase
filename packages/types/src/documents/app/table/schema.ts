@@ -19,17 +19,29 @@ interface BaseRelationshipFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.LINK
   main?: boolean
-  fieldName?: string
+  fieldName: string
   tableId: string
   subtype?: Omit<AutoFieldSubTypes, AutoFieldSubTypes.AUTO_ID>
 }
-export interface ManyToManyRelationshipFieldMetadata
-  extends BaseRelationshipFieldMetadata {
-  relationshipType: RelationshipType.MANY_TO_MANY
-  through?: string
-  throughFrom?: string
-  throughTo?: string
-}
+
+// External tables use junction tables, internal tables don't require them
+type ManyToManyJunctionTableMetadata =
+  | {
+      through: string
+      throughFrom: string
+      throughTo: string
+    }
+  | {
+      through?: never
+      throughFrom?: never
+      throughTo?: never
+    }
+
+export type ManyToManyRelationshipFieldMetadata =
+  BaseRelationshipFieldMetadata & {
+    relationshipType: RelationshipType.MANY_TO_MANY
+  } & ManyToManyJunctionTableMetadata
+
 export interface OneToManyRelationshipFieldMetadata
   extends BaseRelationshipFieldMetadata {
   relationshipType: RelationshipType.ONE_TO_MANY
