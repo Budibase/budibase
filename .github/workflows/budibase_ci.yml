@@ -26,13 +26,6 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 35000
-          swap-size-mb: 1024
-          remove-android: "true"
-          remove-dotnet: "true"
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
