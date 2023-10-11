@@ -54,14 +54,15 @@ export function processFormulas(
     rowArray = rows
   }
   for (let [column, schema] of Object.entries(table.schema)) {
-    const isStaticFormula =
+    const isStatic =
       schema.type === FieldTypes.FORMULA &&
       schema.formulaType === FormulaTypes.STATIC
+
     if (
       schema.type !== FieldTypes.FORMULA ||
       schema.formula == null ||
-      (dynamic && isStaticFormula) ||
-      (!dynamic && !isStaticFormula)
+      (dynamic && isStatic) ||
+      (!dynamic && !isStatic)
     ) {
       continue
     }
