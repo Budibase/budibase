@@ -12,6 +12,7 @@ import {
   Row,
   RelationshipType,
   AutoColumnFieldMetadata,
+  FieldType,
 } from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
@@ -32,8 +33,12 @@ export const DEFAULT_BB_DATASOURCE = defaultDatasource
 
 function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
-    const entry = table.schema[key] as AutoColumnFieldMetadata
-    if (entry.autocolumn && entry.subtype == "autoID") {
+    const entry = table.schema[key]
+    if (
+      entry.autocolumn &&
+      entry.type === FieldType.NUMBER &&
+      entry.subtype == AutoFieldSubTypes.AUTO_ID
+    ) {
       entry.lastID = rowCount
     }
   })
