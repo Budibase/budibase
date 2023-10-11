@@ -1,13 +1,15 @@
-import { cache } from "@budibase/backend-core"
+import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { FieldSubtype } from "@budibase/types"
+import { FieldSubtype, DocumentType, SEPARATOR } from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
+
+const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
 ): Promise<string | null> {
-  const referenceIds: string[] = []
+  let referenceIds: string[] = []
 
   if (Array.isArray(value)) {
     referenceIds.push(
@@ -25,6 +27,17 @@ export async function processInputBBReferences(
         .map((id: string) => id.trim())
     )
   }
+
+  // make sure all reference IDs are correct global user IDs
+  // they may be user metadata references (start with row prefix)
+  // and these need to be converted to global IDs
+  referenceIds = referenceIds.map(id => {
+    if (id?.startsWith(ROW_PREFIX)) {
+      return dbCore.getGlobalIDFromUserMetadataID(id)
+    } else {
+      return id
+    }
+  })
 
   switch (subtype) {
     case FieldSubtype.USER:

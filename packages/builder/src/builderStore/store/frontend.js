@@ -64,6 +64,7 @@ const INITIAL_FRONTEND_STATE = {
   },
   features: {
     componentValidation: false,
+    disableUserMetadata: false,
   },
   errors: [],
   hasAppPackage: false,
