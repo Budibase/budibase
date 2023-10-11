@@ -577,7 +577,7 @@ export class ExternalRequest<T extends Operation> {
         definition.toPrimary = linkTable.primary[0]
       } else {
         // if no foreign key specified then use the name of the field in other table
-        definition.from = (field as any).foreignKey || table.primary[0]
+        definition.from = field.foreignKey || table.primary[0]
         definition.to = field.fieldName
       }
       relationships.push(definition)
