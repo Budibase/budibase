@@ -50,7 +50,7 @@
     updateSanitsedFields(sanitisedValue)
     unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
     fieldList = [...sanitisedFields, ...unconfigured]
-      .map(buildSudoInstance)
+      .map(buildPseudoInstance)
       .filter(x => x != null)
   }
 
@@ -104,7 +104,7 @@
     })
   }
 
-  const buildSudoInstance = instance => {
+  const buildPseudoInstance = instance => {
     if (instance._component) {
       return instance
     }
