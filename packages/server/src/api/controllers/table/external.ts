@@ -81,7 +81,9 @@ function cleanupRelationships(
       const relatedTable = Object.values(tables).find(
         table => table._id === schemaTableId
       )
-      const foreignKey = (schema as any).foreignKey
+      const foreignKey =
+        schema.relationshipType !== RelationshipType.MANY_TO_MANY &&
+        schema.foreignKey
       if (!relatedTable || !foreignKey) {
         continue
       }
@@ -183,17 +185,19 @@ function generateRelatedSchema(
 ) {
   // generate column for other table
   const relatedSchema = cloneDeep(linkColumn)
+  const isMany2Many =
+    linkColumn.relationshipType === RelationshipType.MANY_TO_MANY
   // swap them from the main link
-  if ((linkColumn as any).foreignKey) {
-    relatedSchema.fieldName = (linkColumn as any).foreignKey
+  if (!isMany2Many && linkColumn.foreignKey) {
+    relatedSchema.fieldName = linkColumn.foreignKey
     relatedSchema.foreignKey = linkColumn.fieldName
   }
   // is many to many
-  else {
+  else if (isMany2Many) {
     // don't need to copy through, already got it
-    relatedSchema.fieldName = (linkColumn as any).throughTo
-    relatedSchema.throughTo = (linkColumn as any).throughFrom
-    relatedSchema.throughFrom = (linkColumn as any).throughTo
+    relatedSchema.fieldName = linkColumn.throughTo
+    relatedSchema.throughTo = linkColumn.throughFrom
+    relatedSchema.throughFrom = linkColumn.throughTo
   }
   relatedSchema.relationshipType = otherRelationshipType(
     linkColumn.relationshipType
@@ -203,7 +207,7 @@ function generateRelatedSchema(
   table.schema[columnName] = relatedSchema
 }
 
-function isRelationshipSetup(column: FieldSchema) {
+function isRelationshipSetup(column: RelationshipFieldMetadata) {
   return (column as any).foreignKey || (column as any).through
 }
 

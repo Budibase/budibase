@@ -568,18 +568,14 @@ export class ExternalRequest<T extends Operation> {
         // need to specify where to put this back into
         column: fieldName,
       }
-      if ((field as ManyToManyRelationshipFieldMetadata).through) {
+      if (isManyToMany(field)) {
         const { tableName: throughTableName } = breakExternalTableId(
-          (field as ManyToManyRelationshipFieldMetadata).through
+          field.through
         )
         definition.through = throughTableName
         // don't support composite keys for relationships
-        definition.from =
-          (field as ManyToManyRelationshipFieldMetadata).throughTo ||
-          table.primary[0]
-        definition.to =
-          (field as ManyToManyRelationshipFieldMetadata).throughFrom ||
-          linkTable.primary[0]
+        definition.from = field.throughTo || table.primary[0]
+        definition.to = field.throughFrom || linkTable.primary[0]
         definition.fromPrimary = table.primary[0]
         definition.toPrimary = linkTable.primary[0]
       }
@@ -603,7 +599,7 @@ export class ExternalRequest<T extends Operation> {
     const primaryKey = table.primary[0]
     // make a new request to get the row with all its relationships
     // we need this to work out if any relationships need removed
-    for (let field of Object.values(table.schema)) {
+    for (const field of Object.values(table.schema)) {
       if (
         field.type !== FieldTypes.LINK ||
         !field.fieldName ||
@@ -612,16 +608,13 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
       const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
-      const tableId = isMany
-        ? (field as ManyToManyRelationshipFieldMetadata).through
-        : field.tableId
+      const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      const manyKey =
-        (field as ManyToManyRelationshipFieldMetadata).throughTo || primaryKey
+
       const lookupField = isMany ? primaryKey : (field as any).foreignKey
-      const fieldName = isMany ? manyKey : field.fieldName
+      const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
       }
