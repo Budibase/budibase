@@ -29,3 +29,7 @@ export interface BulkImportRequest {
   rows: Row[]
   identifierFields?: Array<string>
 }
+
+export interface BulkImportResponse {
+  message: string
+}
