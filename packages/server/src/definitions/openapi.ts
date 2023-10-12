@@ -279,7 +279,8 @@ export interface components {
                 | "json"
                 | "internal"
                 | "barcodeqr"
-                | "bigint";
+                | "bigint"
+                | "bb_reference";
               /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
               constraints?: {
                 /** @enum {string} */
@@ -386,7 +387,8 @@ export interface components {
                   | "json"
                   | "internal"
                   | "barcodeqr"
-                  | "bigint";
+                  | "bigint"
+                  | "bb_reference";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */
@@ -495,7 +497,8 @@ export interface components {
                   | "json"
                   | "internal"
                   | "barcodeqr"
-                  | "bigint";
+                  | "bigint"
+                  | "bb_reference";
                 /** @description A constraint can be applied to the column which will be validated against when a row is saved. */
                 constraints?: {
                   /** @enum {string} */

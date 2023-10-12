@@ -29,7 +29,7 @@
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.6",
     "lodash": "^4.17.20",
-    "vm2": "^3.9.15"
+    "vm2": "^3.9.19"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
