@@ -11,8 +11,8 @@ import {
   UpdateViewRequest,
   ViewV2,
 } from "@budibase/types"
-import {generator} from "@budibase/backend-core/tests"
-import {generateDatasourceID} from "../../../db/utils"
+import { generator } from "@budibase/backend-core/tests"
+import { generateDatasourceID } from "../../../db/utils"
 
 function priceTable(): Table {
   return {
@@ -90,7 +90,13 @@ describe.each([
         name: generator.name(),
         tableId: table._id!,
         primaryDisplay: generator.word(),
-        query: [{ operator: SearchQueryOperators.EQUAL, field: "field", value: "value" }],
+        query: [
+          {
+            operator: SearchQueryOperators.EQUAL,
+            field: "field",
+            value: "value",
+          },
+        ],
         sort: {
           field: "fieldToSort",
           order: SortOrder.DESCENDING,
@@ -185,7 +191,13 @@ describe.each([
       const tableId = table._id!
       await config.api.viewV2.update({
         ...view,
-        query: [{ operator: SearchQueryOperators.EQUAL, field: "newField", value: "thatValue" }],
+        query: [
+          {
+            operator: SearchQueryOperators.EQUAL,
+            field: "newField",
+            value: "thatValue",
+          },
+        ],
       })
 
       expect((await config.api.table.get(tableId)).views).toEqual({
@@ -280,7 +292,13 @@ describe.each([
         {
           ...view,
           tableId: generator.guid(),
-          query: [{ operator: SearchQueryOperators.EQUAL, field: "newField", value: "thatValue" }],
+          query: [
+            {
+              operator: SearchQueryOperators.EQUAL,
+              field: "newField",
+              value: "thatValue",
+            },
+          ],
         },
         { expectStatus: 404 }
       )
