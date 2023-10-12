@@ -15,7 +15,7 @@ export const createActions = context => {
   const { filter } = context
 
   const addInlineFilter = (column, value) => {
-    const filterId = `inline-${column}`
+    const filterId = `inline-${column.name}`
     const type = column.schema.type
     let inlineFilter = {
       field: column.name,

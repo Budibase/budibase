@@ -29,13 +29,6 @@
     filter,
   } = getContext("grid")
 
-  const bannedDisplayColumnTypes = [
-    "link",
-    "array",
-    "attachment",
-    "boolean",
-    "json",
-  ]
   const searchableTypes = ["string", "options", "number", "array", "longform"]
 
   let anchor
