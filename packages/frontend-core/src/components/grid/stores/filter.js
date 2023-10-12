@@ -16,27 +16,22 @@ export const createActions = context => {
 
   const addInlineFilter = (column, value) => {
     const filterId = `inline-${column}`
+    const type = column.schema.type
     let inlineFilter = {
       field: column.name,
       id: filterId,
-      operator: "equal",
-      type: column.schema.type,
+      operator: "string",
       valueType: "value",
+      type,
       value,
     }
 
     // Add overrides specific so the certain column type
-    switch (column.schema.type) {
-      case "string":
-      case "formula":
-      case "longform":
-        inlineFilter.operator = "string"
-        break
-      case "number":
-        inlineFilter.value = parseFloat(value)
-        break
-      case "array":
-        inlineFilter.operator = "contains"
+    if (type === "number") {
+      inlineFilter.value = parseFloat(value)
+      inlineFilter.operator = "equal"
+    } else if (type === "array") {
+      inlineFilter.operator = "contains"
     }
 
     // Add this filter
