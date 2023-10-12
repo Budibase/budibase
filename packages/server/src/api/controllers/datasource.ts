@@ -79,7 +79,6 @@ async function buildSchemaHelper(datasource: Datasource) {
   let error = null
   if (errors && Object.keys(errors).length > 0) {
     const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
-    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
     if (noKey.length) {
       error = updateError(
         error,
@@ -87,12 +86,23 @@ async function buildSchemaHelper(datasource: Datasource) {
         noKey
       )
     }
+
+    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
     if (invalidCol.length) {
       const invalidCols = Object.values(InvalidColumns).join(", ")
       error = updateError(
         error,
         `Cannot use columns ${invalidCols} found in following:`,
         invalidCol
+      )
+    }
+
+    const noHeader = getErrorTables(errors, BuildSchemaErrors.NO_HEADER_ROW)
+    if (noHeader.length) {
+      error = updateError(
+        error,
+        `No header row found in the following:`,
+        noHeader
       )
     }
   }

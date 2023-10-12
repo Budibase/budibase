@@ -21,7 +21,7 @@ import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
-import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
+import { BuildSchemaErrors, GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -289,11 +289,29 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, ExternalTable> = {}
+    const errors: Record<string, string> = {}
     await utils.parallelForeach(
       sheets,
       async sheet => {
         // must fetch rows to determine schema
-        await sheet.getRows()
+        try {
+          await sheet.getRows()
+        } catch (err) {
+          // We expect this to always be an Error so if it's not, rethrow it to
+          // make sure we don't fail quietly.
+          if (!(err instanceof Error)) {
+            throw err;
+          }
+
+          if (err.message.startsWith("No values in the header row")) {
+            errors[sheet.title] = BuildSchemaErrors.NO_HEADER_ROW
+          } else {
+            // If we get an error we don't have a BuildSchemaErrors enum variant
+            // for, rethrow to avoid failing quietly.
+            throw err;
+          }
+          return
+        }
 
         const id = buildExternalTableId(datasourceId, sheet.title)
         tables[sheet.title] = this.getTableSchema(
@@ -307,7 +325,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     )
     const final = finaliseExternalTables(tables, entities)
     this.tables = final.tables
-    this.schemaErrors = final.errors
+    this.schemaErrors = { ...final.errors, ...errors }
   }
 
   async query(json: QueryJson) {

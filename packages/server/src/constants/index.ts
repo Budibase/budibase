@@ -162,6 +162,7 @@ export enum InvalidColumns {
 export enum BuildSchemaErrors {
   NO_KEY = "no_key",
   INVALID_COLUMN = "invalid_column",
+  NO_HEADER_ROW = "no_header_row",
 }
 
 export enum AutomationErrors {
