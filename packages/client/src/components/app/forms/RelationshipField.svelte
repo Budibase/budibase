@@ -4,7 +4,6 @@
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
-  import { onMount } from "svelte"
 
   const { API } = getContext("sdk")
 
