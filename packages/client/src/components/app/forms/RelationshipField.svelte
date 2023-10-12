@@ -26,7 +26,7 @@
   let tableDefinition
   let searchTerm
   let open
-  let hasFetchedDefault, fetchedDefault
+  let fetchedDefault
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -111,20 +111,26 @@
     }
   }
 
-  $: fetchRows(searchTerm, primaryDisplay, hasFetchedDefault)
+  $: fetchRows(searchTerm, primaryDisplay, defaultValue)
 
-  const fetchRows = async (searchTerm, primaryDisplay, gotDefault) => {
+  const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
       !$fetch.hasNextPage
-    const shouldFetch = !defaultValue ? !allRowsFetched : gotDefault
     // Don't request until we have the primary display or default value has been fetched
-    if (shouldFetch && primaryDisplay) {
-      await fetch.update({
-        query: { string: { [primaryDisplay]: searchTerm } },
-      })
+    if (allRowsFetched || !primaryDisplay) {
+      return
     }
+    if (defaultVal) {
+      await fetch.update({
+        query: {equal: {_id: defaultValue}}
+      })
+      fetchedDefault = $fetch.rows?.[0]
+    }
+    await fetch.update({
+      query: { string: { [primaryDisplay]: searchTerm } },
+    })
   }
 
   const flatten = values => {
@@ -178,20 +184,6 @@
       fetch.nextPage()
     }
   }
-
-  onMount(async () => {
-    // the pagination might not include the default row
-    if (defaultValue) {
-      await fetch.update({
-        query: { equal: { _id: defaultValue }}
-      })
-      const fetched = $fetch.rows?.[0]
-      if (fetched) {
-        fetchedDefault = { ...fetched }
-      }
-    }
-    hasFetchedDefault = true
-  })
 </script>
 
 <Field
