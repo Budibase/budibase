@@ -1,4 +1,3 @@
-import { generator } from "@budibase/backend-core/tests"
 import { events, context } from "@budibase/backend-core"
 import {
   FieldType,
@@ -6,6 +5,7 @@ import {
   RelationshipType,
   Table,
   ViewCalculation,
+  AutoFieldSubTypes,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -187,6 +187,36 @@ describe("/tables", () => {
         }),
         1
       )
+    })
+
+    it("should update Auto ID field after bulk import", async () => {
+      const table = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: AutoFieldSubTypes.AUTO_ID,
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+      })
+
+      let row = await config.api.row.save(table._id!, {})
+      expect(row.autoId).toEqual(1)
+
+      await config.api.row.bulkImport(table._id!, {
+        rows: [{ autoId: 2 }],
+        identifierFields: [],
+      })
+
+      row = await config.api.row.save(table._id!, {})
+      expect(row.autoId).toEqual(3)
     })
   })
 
