@@ -18,8 +18,13 @@
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
+<<<<<<< HEAD
     "build:docker": "yarn build && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
     "build:docs": "node ./scripts/docs/generate.js open",
+=======
+    "predocker": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && yarn build && cp ../../yarn.lock ./dist/",
+    "build:docker": "yarn predocker && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION",
+>>>>>>> c762d8727f69b3154eb14429b0842f3d0f62ad76
     "run:docker": "node dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
@@ -109,7 +114,7 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
-    "vm2": "3.9.19",
+    "vm2": "^3.9.19",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0"
   },
@@ -121,7 +126,7 @@
     "@trendyol/jest-testcontainers": "2.1.1",
     "@types/global-agent": "2.1.1",
     "@types/google-spreadsheet": "3.1.5",
-    "@types/jest": "29.5.3",
+    "@types/jest": "29.5.5",
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "4.14.180",

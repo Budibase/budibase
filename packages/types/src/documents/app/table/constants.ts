@@ -7,3 +7,16 @@ export enum RelationshipType {
 export enum AutoReason {
   FOREIGN_KEY = "foreign_key",
 }
+
+export enum AutoFieldSubTypes {
+  CREATED_BY = "createdBy",
+  CREATED_AT = "createdAt",
+  UPDATED_BY = "updatedBy",
+  UPDATED_AT = "updatedAt",
+  AUTO_ID = "autoID",
+}
+
+export enum FormulaTypes {
+  STATIC = "static",
+  DYNAMIC = "dynamic",
+}
