@@ -192,8 +192,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
   private client?: sqlServer.ConnectionPool
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   MASTER_TABLES = [
     "spt_fallback_db",

@@ -110,9 +110,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
 
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
-
   private readonly COLUMNS_SQL = `
     SELECT
       tabs.table_name,
