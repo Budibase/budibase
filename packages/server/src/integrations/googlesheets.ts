@@ -17,7 +17,11 @@ import {
   Schema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId, checkExternalTables, finaliseExternalTables } from "./utils"
+import {
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+} from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"

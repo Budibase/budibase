@@ -328,7 +328,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } finally {
       await this.disconnect()
     }
-    
+
     let externalTables = finaliseExternalTables(tables, entities)
     let errors = checkExternalTables(tables)
     return { tables: externalTables, errors }
