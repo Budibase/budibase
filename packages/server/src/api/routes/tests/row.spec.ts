@@ -15,7 +15,7 @@ import {
   QuotaUsageType,
   RelationshipType,
   Row,
-  SaveTableRequest,
+  SaveTableRequest, SearchQueryOperators,
   SortOrder,
   SortType,
   StaticQuotaName,
@@ -1141,7 +1141,7 @@ describe.each([
         )
 
         const createViewResponse = await config.createView({
-          query: [{ operator: "equal", field: "age", value: 40 }],
+          query: [{ operator: SearchQueryOperators.EQUAL, field: "age", value: 40 }],
           schema: viewSchema,
         })
 
