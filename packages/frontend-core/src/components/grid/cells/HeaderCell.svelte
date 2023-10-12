@@ -398,7 +398,7 @@
     outline: none;
     border: 1px solid transparent;
     background: transparent;
-    color: var(--ink);
+    color: var(--spectrum-global-color-gray-800);
     position: absolute;
     top: 0;
     left: 0;
