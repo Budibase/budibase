@@ -160,7 +160,9 @@
   const handleChange = value => {
     const changed = fieldApi.setValue(value)
     if (onChange && changed) {
-      onChange({ value })
+      onChange({
+        value,
+      })
     }
   }
 
