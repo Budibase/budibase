@@ -14,6 +14,7 @@ import {
   SortJson,
   ExternalTable,
   TableRequest,
+  Table,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
@@ -138,8 +139,6 @@ const SCHEMA: Integration = {
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private client: GoogleSpreadsheet
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   constructor(config: GoogleSheetsConfig) {
     this.config = config
@@ -280,11 +279,11 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
-  ) {
+    entities: Record<string, Table>
+  ): Promise<Record<string, Table>> {
     // not fully configured yet
     if (!this.config.auth) {
-      return
+      return {}
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
@@ -300,7 +299,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           // We expect this to always be an Error so if it's not, rethrow it to
           // make sure we don't fail quietly.
           if (!(err instanceof Error)) {
-            throw err;
+            throw err
           }
 
           if (err.message.startsWith("No values in the header row")) {
@@ -308,7 +307,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           } else {
             // If we get an error we don't have a BuildSchemaErrors enum variant
             // for, rethrow to avoid failing quietly.
-            throw err;
+            throw err
           }
           return
         }
@@ -323,9 +322,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       },
       10
     )
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = { ...final.errors, ...errors }
+    return finaliseExternalTables(tables, entities)
   }
 
   async query(json: QueryJson) {

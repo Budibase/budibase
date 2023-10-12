@@ -10,6 +10,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Table,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -145,8 +146,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private readonly config: PostgresConfig
   private index: number = 1
   private open: boolean
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   COLUMNS_SQL!: string
 
@@ -273,8 +272,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
-  ) {
+    entities: Record<string, Table>
+  ): Promise<Record<string, Table>> {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
@@ -342,9 +341,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         }
       }
 
-      const final = finaliseExternalTables(tables, entities)
-      this.tables = final.tables
-      this.schemaErrors = final.errors
+      return finaliseExternalTables(tables, entities)
     } catch (err) {
       // @ts-ignore
       throw new Error(err)

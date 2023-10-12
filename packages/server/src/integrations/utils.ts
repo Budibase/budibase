@@ -4,13 +4,10 @@ import {
   SearchFilters,
   Datasource,
   FieldType,
+  ExternalTable,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import {
-  BuildSchemaErrors,
-  InvalidColumns,
-  NoEmptyFilterStrings,
-} from "../constants"
+import { NoEmptyFilterStrings } from "../constants"
 import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -266,9 +263,9 @@ export function shouldCopySpecialColumn(
 function copyExistingPropsOver(
   tableName: string,
   table: Table,
-  entities: { [key: string]: any },
-  tableIds: [string]
-) {
+  entities: Record<string, Table>,
+  tableIds: string[]
+): Table {
   if (entities && entities[tableName]) {
     if (entities[tableName]?.primaryDisplay) {
       table.primaryDisplay = entities[tableName].primaryDisplay
@@ -295,42 +292,23 @@ function copyExistingPropsOver(
 
 /**
  * Look through the final table definitions to see if anything needs to be
- * copied over from the old and if any errors have occurred mark them so
- * that the user can be made aware.
+ * copied over from the old.
  * @param tables The list of tables that have been retrieved from the external database.
  * @param entities The old list of tables, if there was any to look for definitions in.
  */
 export function finaliseExternalTables(
-  tables: { [key: string]: any },
-  entities: { [key: string]: any }
-) {
-  const invalidColumns = Object.values(InvalidColumns)
-  let finalTables: { [key: string]: any } = {}
-  const errors: { [key: string]: string } = {}
-  // @ts-ignore
-  const tableIds: [string] = Object.values(tables).map(table => table._id)
+  tables: Record<string, Table>,
+  entities: Record<string, Table>
+): Record<string, Table> {
+  let finalTables: Record<string, Table> = {}
+  const tableIds = Object.values(tables).map(table => table._id!)
   for (let [name, table] of Object.entries(tables)) {
-    const schemaFields = Object.keys(table.schema)
-    // make sure every table has a key
-    if (table.primary == null || table.primary.length === 0) {
-      errors[name] = BuildSchemaErrors.NO_KEY
-      continue
-    } else if (
-      schemaFields.find(field =>
-        invalidColumns.includes(field as InvalidColumns)
-      )
-    ) {
-      errors[name] = BuildSchemaErrors.INVALID_COLUMN
-      continue
-    }
-    // make sure all previous props have been added back
     finalTables[name] = copyExistingPropsOver(name, table, entities, tableIds)
   }
-  // sort the tables by name
-  finalTables = Object.entries(finalTables)
+  // sort the tables by name (TODO(samwho): why?)
+  return Object.entries(finalTables)
     .sort(([a], [b]) => a.localeCompare(b))
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
-  return { tables: finalTables, errors }
 }
 
 /**

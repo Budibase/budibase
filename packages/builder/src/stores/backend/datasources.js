@@ -25,7 +25,6 @@ export function createDatasourcesStore() {
   const store = writable({
     list: [],
     selectedDatasourceId: null,
-    schemaError: null,
   })
 
   const derivedStore = derived([store, tables], ([$store, $tables]) => {
@@ -75,18 +74,13 @@ export function createDatasourcesStore() {
     store.update(state => ({
       ...state,
       selectedDatasourceId: id,
-      // Remove any possible schema error
-      schemaError: null,
     }))
   }
 
   const updateDatasource = response => {
     const { datasource, error } = response
     if (error) {
-      store.update(state => ({
-        ...state,
-        schemaError: error,
-      }))
+      store.update(state => ({ ...state }))
     }
     replaceDatasource(datasource._id, datasource)
     select(datasource._id)
@@ -171,12 +165,6 @@ export function createDatasourcesStore() {
     replaceDatasource(datasource._id, null)
   }
 
-  const removeSchemaError = () => {
-    store.update(state => {
-      return { ...state, schemaError: null }
-    })
-  }
-
   const replaceDatasource = (datasourceId, datasource) => {
     if (!datasourceId) {
       return
@@ -229,7 +217,6 @@ export function createDatasourcesStore() {
     create,
     update,
     delete: deleteDatasource,
-    removeSchemaError,
     replaceDatasource,
     getTableNames,
   }

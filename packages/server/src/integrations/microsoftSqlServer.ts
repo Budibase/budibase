@@ -11,6 +11,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Table,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -380,8 +381,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
-  ) {
+    entities: Record<string, Table>
+  ): Promise<Record<string, Table>> {
     await this.connect()
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
@@ -394,7 +395,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       .map((record: any) => record.TABLE_NAME)
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
-    const tables: Record<string, ExternalTable> = {}
+    const tables: Record<string, Table> = {}
     for (let tableName of tableNames) {
       // get the column definition (type)
       const definition = await this.runSQL(
@@ -445,9 +446,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         schema,
       }
     }
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    return finaliseExternalTables(tables, entities)
   }
 
   async queryTableNames() {
