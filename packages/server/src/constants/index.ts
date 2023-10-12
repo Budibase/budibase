@@ -159,12 +159,6 @@ export enum InvalidColumns {
   TABLE_ID = "tableId",
 }
 
-export enum BuildSchemaErrors {
-  NO_KEY = "no_key",
-  INVALID_COLUMN = "invalid_column",
-  NO_HEADER_ROW = "no_header_row",
-}
-
 export enum AutomationErrors {
   INCORRECT_TYPE = "INCORRECT_TYPE",
   MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",

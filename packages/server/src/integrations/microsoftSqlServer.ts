@@ -11,6 +11,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Schema,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -18,6 +19,7 @@ import {
   convertSqlType,
   finaliseExternalTables,
   SqlClient,
+  checkExternalTables,
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
@@ -381,7 +383,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ): Promise<Record<string, ExternalTable>> {
+  ): Promise<Schema> {
     await this.connect()
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
@@ -445,7 +447,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         schema,
       }
     }
-    return finaliseExternalTables(tables, entities)
+    let externalTables = finaliseExternalTables(tables, entities)
+    let errors = checkExternalTables(externalTables)
+    return {
+      tables: externalTables,
+      errors,
+    }
   }
 
   async queryTableNames() {

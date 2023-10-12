@@ -14,14 +14,15 @@ import {
   SortJson,
   ExternalTable,
   TableRequest,
+  Schema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId, finaliseExternalTables } from "./utils"
+import { buildExternalTableId, checkExternalTables, finaliseExternalTables } from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
-import { BuildSchemaErrors, GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
+import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -279,15 +280,16 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ): Promise<Record<string, ExternalTable>> {
+  ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
-      return {}
+      // TODO(samwho): is this the correct behaviour?
+      return { tables: {}, errors: {} }
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, ExternalTable> = {}
-    const errors: Record<string, string> = {}
+    let errors: Record<string, string> = {}
     await utils.parallelForeach(
       sheets,
       async sheet => {
@@ -302,10 +304,10 @@ class GoogleSheetsIntegration implements DatasourcePlus {
           }
 
           if (err.message.startsWith("No values in the header row")) {
-            errors[sheet.title] = BuildSchemaErrors.NO_HEADER_ROW
+            errors[sheet.title] = err.message
           } else {
-            // If we get an error we don't have a BuildSchemaErrors enum variant
-            // for, rethrow to avoid failing quietly.
+            // If we get an error we don't expect, rethrow to avoid failing
+            // quietly.
             throw err
           }
           return
@@ -321,7 +323,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       },
       10
     )
-    return finaliseExternalTables(tables, entities)
+    let externalTables = finaliseExternalTables(tables, entities)
+    errors = { ...errors, ...checkExternalTables(externalTables) }
+    return { tables: externalTables, errors }
   }
 
   async query(json: QueryJson) {

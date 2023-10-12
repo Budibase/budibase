@@ -7,7 +7,7 @@ import {
   ExternalTable,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { NoEmptyFilterStrings } from "../constants"
+import { InvalidColumns, NoEmptyFilterStrings } from "../constants"
 import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -309,6 +309,24 @@ export function finaliseExternalTables(
   return Object.entries(finalTables)
     .sort(([a], [b]) => a.localeCompare(b))
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
+}
+
+export function checkExternalTables(
+  tables: Record<string, ExternalTable>
+): Record<string, string> {
+  const invalidColumns = Object.values(InvalidColumns) as string[]
+  const errors: Record<string, string> = {}
+  for (let [name, table] of Object.entries(tables)) {
+    if (!table.primary || table.primary.length === 0) {
+      errors[name] = "Table must have a primary key."
+    }
+
+    const schemaFields = Object.keys(table.schema)
+    if (schemaFields.find(f => invalidColumns.includes(f))) {
+      errors[name] = "Table contains invalid columns."
+    }
+  }
+  return errors
 }
 
 /**

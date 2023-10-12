@@ -10,6 +10,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Schema,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -17,6 +18,7 @@ import {
   buildExternalTableId,
   convertSqlType,
   finaliseExternalTables,
+  checkExternalTables,
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
@@ -140,8 +142,6 @@ export function bindingTypeCoerce(bindings: any[]) {
 class MySQLIntegration extends Sql implements DatasourcePlus {
   private config: MySQLConfig
   private client?: mysql.Connection
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   constructor(config: MySQLConfig) {
     super(SqlClient.MY_SQL)
@@ -279,7 +279,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ): Promise<Record<string, ExternalTable>> {
+  ): Promise<Schema> {
     const tables: { [key: string]: ExternalTable } = {}
     await this.connect()
 
@@ -328,7 +328,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     } finally {
       await this.disconnect()
     }
-    return finaliseExternalTables(tables, entities)
+    
+    let externalTables = finaliseExternalTables(tables, entities)
+    let errors = checkExternalTables(tables)
+    return { tables: externalTables, errors }
   }
 
   async queryTableNames() {

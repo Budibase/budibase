@@ -5,7 +5,6 @@ import {
   getTableParams,
 } from "../../db/utils"
 import { destroy as tableDestroy } from "./table/internal"
-import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
@@ -18,6 +17,7 @@ import {
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
+  Schema,
   SourceName,
   Table,
   UpdateDatasourceResponse,
@@ -28,23 +28,6 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
-
-function getErrorTables(errors: any, errorType: string) {
-  return Object.entries(errors)
-    .filter(entry => entry[1] === errorType)
-    .map(([name]) => name)
-}
-
-function updateError(error: any, newError: any, tables: string[]) {
-  if (!error) {
-    error = ""
-  }
-  if (error.length > 0) {
-    error += "\n"
-  }
-  error += `${newError} ${tables.join(", ")}`
-  return error
-}
 
 async function getConnector(
   datasource: Datasource
@@ -73,9 +56,7 @@ async function getAndMergeDatasource(datasource: Datasource) {
   return await sdk.datasources.enrich(enrichedDatasource)
 }
 
-async function buildSchemaHelper(
-  datasource: Datasource
-): Promise<Record<string, ExternalTable>> {
+async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
   return await connector.buildSchema(
     datasource._id!,
@@ -86,20 +67,23 @@ async function buildSchemaHelper(
 async function buildFilteredSchema(
   datasource: Datasource,
   filter?: string[]
-): Promise<{ tables: Record<string, Table> }> {
-  let tables = await buildSchemaHelper(datasource)
-  let finalTables = tables
+): Promise<Schema> {
+  let schema = await buildSchemaHelper(datasource)
+  let filteredSchema: Schema = { tables: {}, errors: {} }
   if (filter) {
-    finalTables = {}
-    for (let key in tables) {
-      if (
-        filter.some((filter: any) => filter.toLowerCase() === key.toLowerCase())
-      ) {
-        finalTables[key] = tables[key]
+    for (let key in schema.tables) {
+      if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+        filteredSchema.tables[key] = schema.tables[key]
+      }
+    }
+
+    for (let key in schema.errors) {
+      if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+        filteredSchema.errors[key] = schema.errors[key]
       }
     }
   }
-  return { tables: finalTables }
+  return filteredSchema
 }
 
 export async function fetch(ctx: UserCtx) {
@@ -143,7 +127,7 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   const tablesFilter = ctx.request.body.tablesFilter
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables } = await buildFilteredSchema(datasource, tablesFilter)
+  const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
   datasource.entities = tables
 
   setDefaultDisplayColumns(datasource)
@@ -151,10 +135,11 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
     sdk.tables.populateExternalTableSchemas(datasource)
   )
   datasource._rev = dbResp.rev
-  const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
-  const res: any = { datasource: cleanedDatasource }
-  ctx.body = res
+  ctx.body = {
+    datasource: await sdk.datasources.removeSecretSingle(datasource),
+    errors,
+  }
 }
 
 /**
@@ -282,10 +267,12 @@ export async function save(
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
   }
 
+  let errors: Record<string, string> = {}
   if (fetchSchema) {
-    const { tables } = await buildFilteredSchema(datasource, tablesFilter)
-    datasource.entities = tables
+    const schema = await buildFilteredSchema(datasource, tablesFilter)
+    datasource.entities = schema.tables
     setDefaultDisplayColumns(datasource)
+    errors = schema.errors
   }
 
   if (preSaveAction[datasource.source]) {
@@ -306,10 +293,10 @@ export async function save(
     }
   }
 
-  const response: CreateDatasourceResponse = {
+  ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
+    errors,
   }
-  ctx.body = response
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 

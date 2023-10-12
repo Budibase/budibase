@@ -174,6 +174,11 @@ export interface IntegrationBase {
   }): void
 }
 
+export interface Schema {
+  tables: Record<string, ExternalTable>
+  errors: Record<string, string>
+}
+
 export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
@@ -182,6 +187,6 @@ export interface DatasourcePlus extends IntegrationBase {
   buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ): Promise<Record<string, ExternalTable>>
+  ): Promise<Schema>
   getTableNames(): Promise<string[]>
 }

@@ -10,6 +10,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Schema,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -17,6 +18,7 @@ import {
   convertSqlType,
   finaliseExternalTables,
   SqlClient,
+  checkExternalTables,
 } from "./utils"
 import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
@@ -272,7 +274,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ): Promise<Record<string, ExternalTable>> {
+  ): Promise<Schema> {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
@@ -340,7 +342,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         }
       }
 
-      return finaliseExternalTables(tables, entities)
+      let finalizedTables = finaliseExternalTables(tables, entities)
+      let errors = checkExternalTables(finalizedTables)
+      return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
