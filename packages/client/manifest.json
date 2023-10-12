@@ -3420,6 +3420,17 @@
         }
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
