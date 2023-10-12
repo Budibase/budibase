@@ -3,6 +3,7 @@
   import GridCell from "./GridCell.svelte"
   import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
+  import { debounce } from "../../../utils/utils"
 
   export let column
   export let idx
@@ -23,6 +24,8 @@
     definition,
     datasource,
     schema,
+    focusedCellId,
+    filter,
   } = getContext("grid")
 
   const bannedDisplayColumnTypes = [
@@ -32,12 +35,15 @@
     "boolean",
     "json",
   ]
+  const searchableTypes = ["string", "options", "number"]
 
   let anchor
   let open = false
   let editIsOpen = false
   let timeout
   let popover
+  let searchValue
+  let input
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
@@ -48,6 +54,9 @@
   $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
     ? "high-low"
     : "Z-A"
+  $: searchable = searchableTypes.includes(column.schema.type)
+  $: searching = searchValue != null
+  $: debouncedUpdateFilter(searchValue)
 
   const editColumn = async () => {
     editIsOpen = true
@@ -148,12 +157,46 @@
     })
   }
 
+  const startSearching = async () => {
+    $focusedCellId = null
+    searchValue = ""
+    await tick()
+    input?.focus()
+  }
+
+  const onInputKeyDown = e => {
+    if (e.key === "Enter") {
+      updateFilter()
+    } else if (e.key === "Escape") {
+      input?.blur()
+    }
+  }
+
+  const stopSearching = () => {
+    searchValue = null
+    updateFilter()
+  }
+
+  const onBlurInput = () => {
+    if (searchValue === "") {
+      searchValue = null
+    }
+    updateFilter()
+  }
+
+  const updateFilter = () => {
+    filter.actions.addInlineFilter(column, searchValue)
+  }
+  const debouncedUpdateFilter = debounce(updateFilter, 250)
+
   onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
 
 <div
   class="header-cell"
   class:open
+  class:searchable
+  class:searching
   style="flex: 0 0 {column.width}px;"
   bind:this={anchor}
   class:disabled={$isReordering || $isResizing}
@@ -168,30 +211,48 @@
     defaultHeight
     center
   >
-    <Icon
-      size="S"
-      name={getColumnIcon(column)}
-      color={`var(--spectrum-global-color-gray-600)`}
-    />
+    {#if searching}
+      <input
+        bind:this={input}
+        type="text"
+        bind:value={searchValue}
+        on:blur={onBlurInput}
+        on:click={() => focusedCellId.set(null)}
+        on:keydown={onInputKeyDown}
+      />
+    {/if}
+
+    <div class="column-icon">
+      <Icon size="S" name={getColumnIcon(column)} />
+    </div>
+    <div class="search-icon" on:click={startSearching}>
+      <Icon hoverable size="S" name="Search" />
+    </div>
+
     <div class="name">
       {column.label}
     </div>
-    {#if sortedBy}
-      <div class="sort-indicator">
-        <Icon
-          size="S"
-          name={$sort.order === "descending" ? "SortOrderDown" : "SortOrderUp"}
-          color="var(--spectrum-global-color-gray-600)"
-        />
+
+    {#if searching}
+      <div class="clear-icon" on:click={stopSearching}>
+        <Icon hoverable size="S" name="Close" />
+      </div>
+    {:else}
+      {#if sortedBy}
+        <div class="sort-indicator">
+          <Icon
+            hoverable
+            size="S"
+            name={$sort.order === "descending"
+              ? "SortOrderDown"
+              : "SortOrderUp"}
+          />
+        </div>
+      {/if}
+      <div class="more-icon" on:click={() => (open = true)}>
+        <Icon hoverable size="S" name="MoreVertical" />
       </div>
     {/if}
-    <div class="more" on:click={() => (open = true)}>
-      <Icon
-        size="S"
-        name="MoreVertical"
-        color="var(--spectrum-global-color-gray-600)"
-      />
-    </div>
   </GridCell>
 </div>
 
@@ -289,6 +350,29 @@
     background: var(--grid-background-alt);
   }
 
+  /* Icon colors */
+  .header-cell :global(.spectrum-Icon) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .header-cell :global(.spectrum-Icon.hoverable:hover) {
+    color: var(--spectrum-global-color-gray-800) !important;
+    cursor: pointer;
+  }
+
+  /* Search icon */
+  .search-icon {
+    display: none;
+  }
+  .header-cell.searchable:not(.open):hover .search-icon,
+  .header-cell.searchable.searching .search-icon {
+    display: block;
+  }
+  .header-cell.searchable:not(.open):hover .column-icon,
+  .header-cell.searchable.searching .column-icon {
+    display: none;
+  }
+
+  /* Main center content */
   .name {
     flex: 1 1 auto;
     width: 0;
@@ -296,23 +380,45 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
+  .header-cell.searching .name {
+    opacity: 0;
+    pointer-events: none;
+  }
+  input {
+    display: none;
+    font-family: var(--font-sans);
+    outline: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0 30px;
+    border-radius: 2px;
+  }
+  input:focus {
+    border: 1px solid var(--accent-color);
+  }
+  input:not(:focus) {
+    background: var(--spectrum-global-color-gray-200);
+  }
+  .header-cell.searching input {
+    display: block;
+  }
 
-  .more {
+  /* Right icons */
+  .more-icon {
     display: none;
     padding: 4px;
     margin: 0 -4px;
   }
-  .header-cell.open .more,
-  .header-cell:hover .more {
+  .header-cell.open .more-icon,
+  .header-cell:hover .more-icon {
     display: block;
   }
-  .more:hover {
-    cursor: pointer;
-  }
-  .more:hover :global(.spectrum-Icon) {
-    color: var(--spectrum-global-color-gray-800) !important;
-  }
-
   .header-cell.open .sort-indicator,
   .header-cell:hover .sort-indicator {
     display: none;

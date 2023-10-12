@@ -8,6 +8,7 @@ export const createStores = () => {
   const rows = writable([])
   const loading = writable(false)
   const loaded = writable(false)
+  const refreshing = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
@@ -53,6 +54,7 @@ export const createStores = () => {
     fetch,
     rowLookupMap,
     loaded,
+    refreshing,
     loading,
     rowChangeCache,
     inProgressChanges,
@@ -82,6 +84,7 @@ export const createActions = context => {
     notifications,
     fetch,
     isDatasourcePlus,
+    refreshing,
   } = context
   const instanceLoaded = writable(false)
 
@@ -176,6 +179,9 @@ export const createActions = context => {
         // Notify that we're loaded
         loading.set(false)
       }
+
+      // Update refreshing state
+      refreshing.set($fetch.loading)
     })
 
     fetch.set(newFetch)
