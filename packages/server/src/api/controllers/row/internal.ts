@@ -156,7 +156,10 @@ export async function destroy(ctx: UserCtx) {
   }
   const table = await sdk.tables.getTable(row.tableId)
   // update the row to include full relationships before deleting them
-  row = await outputProcessing(table, row, { squash: false })
+  row = await outputProcessing(table, row, {
+    squash: false,
+    skipBBReferences: true,
+  })
   // now remove the relationships
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
@@ -190,6 +193,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   // they need to be the full rows (including previous relationships) for automations
   const processedRows = (await outputProcessing(table, rows, {
     squash: false,
+    skipBBReferences: true,
   })) as Row[]
 
   // remove the relationships first

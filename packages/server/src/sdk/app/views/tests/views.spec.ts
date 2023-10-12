@@ -1,5 +1,11 @@
 import _ from "lodash"
-import { FieldType, Table, TableSchema, ViewV2 } from "@budibase/types"
+import {
+  FieldSchema,
+  FieldType,
+  Table,
+  TableSchema,
+  ViewV2,
+} from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import { enrichSchema, syncSchema } from ".."
 
@@ -316,7 +322,7 @@ describe("table sdk", () => {
           ...basicView,
         }
 
-        const newTableSchema = {
+        const newTableSchema: TableSchema = {
           ...basicTable.schema,
           newField1: {
             type: FieldType.STRING,
@@ -403,7 +409,7 @@ describe("table sdk", () => {
           },
         }
 
-        const newTableSchema = {
+        const newTableSchema: TableSchema = {
           ...basicTable.schema,
           newField1: {
             type: FieldType.STRING,
@@ -531,7 +537,7 @@ describe("table sdk", () => {
             id: {
               ...basicTable.schema.id,
               type: FieldType.NUMBER,
-            },
+            } as FieldSchema,
           },
           undefined
         )
