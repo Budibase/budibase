@@ -154,6 +154,15 @@ describe("bbReferenceProcessor", () => {
 
         expect(result).toEqual(null)
       })
+
+      it("should convert user medata IDs to global IDs", async () => {
+        const userId = _.sample(users)!._id!
+        const userMetadataId = backendCore.db.generateUserMetadataID(userId)
+        const result = await config.doInTenant(() =>
+          processInputBBReferences(userMetadataId, FieldSubtype.USER)
+        )
+        expect(result).toBe(userId)
+      })
     })
   })
 

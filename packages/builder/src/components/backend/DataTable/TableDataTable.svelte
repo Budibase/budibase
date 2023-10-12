@@ -4,6 +4,7 @@
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
+  import { store } from "builderStore"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -17,11 +18,11 @@
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
 
   const userSchemaOverrides = {
-    firstName: { displayName: "First name" },
-    lastName: { displayName: "Last name" },
-    email: { displayName: "Email" },
-    roleId: { displayName: "Role" },
-    status: { displayName: "Status" },
+    firstName: { displayName: "First name", disabled: true },
+    lastName: { displayName: "Last name", disabled: true },
+    email: { displayName: "Email", disabled: true },
+    roleId: { displayName: "Role", disabled: true },
+    status: { displayName: "Status", disabled: true },
   }
 
   $: id = $tables.selected?._id
@@ -60,14 +61,14 @@
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}
-    canEditRows={!isUsersTable}
-    canEditColumns={!isUsersTable}
+    canEditRows={!isUsersTable || !$store.features.disableUserMetadata}
+    canEditColumns={!isUsersTable || !$store.features.disableUserMetadata}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
-      {#if isUsersTable}
+      {#if isUsersTable && $store.features.disableUserMetadata}
         <GridUsersTableButton />
       {/if}
       <GridFilterButton />

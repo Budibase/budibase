@@ -3,6 +3,7 @@
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
+  import { canBeDisplayColumn } from "@budibase/shared-core"
 
   export let rows = []
   export let schema = {}
@@ -10,36 +11,82 @@
   export let displayColumn = null
   export let promptUpload = false
 
-  const typeOptions = [
-    {
+  const typeOptions = {
+    [FIELDS.STRING.type]: {
       label: "Text",
       value: FIELDS.STRING.type,
+      config: {
+        type: FIELDS.STRING.type,
+        constraints: FIELDS.STRING.constraints,
+      },
     },
-    {
+    [FIELDS.NUMBER.type]: {
       label: "Number",
       value: FIELDS.NUMBER.type,
+      config: {
+        type: FIELDS.NUMBER.type,
+        constraints: FIELDS.NUMBER.constraints,
+      },
     },
-    {
+    [FIELDS.DATETIME.type]: {
       label: "Date",
       value: FIELDS.DATETIME.type,
+      config: {
+        type: FIELDS.DATETIME.type,
+        constraints: FIELDS.DATETIME.constraints,
+      },
     },
-    {
+    [FIELDS.OPTIONS.type]: {
       label: "Options",
       value: FIELDS.OPTIONS.type,
+      config: {
+        type: FIELDS.OPTIONS.type,
+        constraints: FIELDS.OPTIONS.constraints,
+      },
     },
-    {
+    [FIELDS.ARRAY.type]: {
       label: "Multi-select",
       value: FIELDS.ARRAY.type,
+      config: {
+        type: FIELDS.ARRAY.type,
+        constraints: FIELDS.ARRAY.constraints,
+      },
     },
-    {
+    [FIELDS.BARCODEQR.type]: {
       label: "Barcode/QR",
       value: FIELDS.BARCODEQR.type,
+      config: {
+        type: FIELDS.BARCODEQR.type,
+        constraints: FIELDS.BARCODEQR.constraints,
+      },
     },
-    {
+    [FIELDS.LONGFORM.type]: {
       label: "Long Form Text",
       value: FIELDS.LONGFORM.type,
+      config: {
+        type: FIELDS.LONGFORM.type,
+        constraints: FIELDS.LONGFORM.constraints,
+      },
     },
-  ]
+    user: {
+      label: "User",
+      value: "user",
+      config: {
+        type: FIELDS.USER.type,
+        subtype: FIELDS.USER.subtype,
+        constraints: FIELDS.USER.constraints,
+      },
+    },
+    users: {
+      label: "Users",
+      value: "users",
+      config: {
+        type: FIELDS.USERS.type,
+        subtype: FIELDS.USERS.subtype,
+        constraints: FIELDS.USERS.constraints,
+      },
+    },
+  }
 
   let fileInput
   let error = null
@@ -48,10 +95,16 @@
   let validation = {}
   let validateHash = ""
   let errors = {}
+  let selectedColumnTypes = {}
 
   $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
-    return validation[column]
+    return validation[column] && canBeDisplayColumn(schema[column].type)
   })
+
+  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn].type)) {
+    displayColumn = null
+  }
+
   $: {
     // binding in consumer is causing double renders here
     const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
@@ -72,6 +125,13 @@
       rows = response.rows
       schema = response.schema
       fileName = response.fileName
+      selectedColumnTypes = Object.entries(response.schema).reduce(
+        (acc, [colName, fieldConfig]) => ({
+          ...acc,
+          [colName]: fieldConfig.type,
+        }),
+        {}
+      )
     } catch (e) {
       loading = false
       error = e
@@ -98,8 +158,10 @@
   }
 
   const handleChange = (name, e) => {
-    schema[name].type = e.detail
-    schema[name].constraints = FIELDS[e.detail.toUpperCase()].constraints
+    const { config } = typeOptions[e.detail]
+    schema[name].type = config.type
+    schema[name].subtype = config.subtype
+    schema[name].constraints = config.constraints
   }
 
   const openFileUpload = (promptUpload, fileInput) => {
@@ -142,9 +204,9 @@
       <div class="field">
         <span>{column.name}</span>
         <Select
-          bind:value={column.type}
+          bind:value={selectedColumnTypes[column.name]}
           on:change={e => handleChange(name, e)}
-          options={typeOptions}
+          options={Object.values(typeOptions)}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
