@@ -14,6 +14,7 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  ExternalTable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
@@ -74,9 +75,12 @@ async function getAndMergeDatasource(datasource: Datasource) {
 
 async function buildSchemaHelper(
   datasource: Datasource
-): Promise<Record<string, Table>> {
+): Promise<Record<string, ExternalTable>> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(datasource._id!, datasource.entities!)
+  return await connector.buildSchema(
+    datasource._id!,
+    datasource.entities! as Record<string, ExternalTable>
+  )
 }
 
 async function buildFilteredSchema(

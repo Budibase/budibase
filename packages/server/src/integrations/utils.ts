@@ -297,9 +297,9 @@ function copyExistingPropsOver(
  * @param entities The old list of tables, if there was any to look for definitions in.
  */
 export function finaliseExternalTables(
-  tables: Record<string, Table>,
-  entities: Record<string, Table>
-): Record<string, Table> {
+  tables: Record<string, ExternalTable>,
+  entities: Record<string, ExternalTable>
+): Record<string, ExternalTable> {
   let finalTables: Record<string, Table> = {}
   const tableIds = Object.values(tables).map(table => table._id!)
   for (let [name, table] of Object.entries(tables)) {

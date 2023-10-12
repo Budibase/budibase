@@ -9,7 +9,6 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
-  Table,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -265,8 +264,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
-  ): Promise<Record<string, Table>> {
+    entities: Record<string, ExternalTable>
+  ): Promise<Record<string, ExternalTable>> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })

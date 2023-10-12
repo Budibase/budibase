@@ -1,4 +1,4 @@
-import { Table } from "../documents"
+import { ExternalTable, Table } from "../documents"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 
@@ -181,7 +181,7 @@ export interface DatasourcePlus extends IntegrationBase {
   getStringConcat(parts: string[]): string
   buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
-  ): Promise<Record<string, Table>>
+    entities: Record<string, ExternalTable>
+  ): Promise<Record<string, ExternalTable>>
   getTableNames(): Promise<string[]>
 }

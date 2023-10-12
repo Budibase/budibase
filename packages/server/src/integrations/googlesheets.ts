@@ -14,7 +14,6 @@ import {
   SortJson,
   ExternalTable,
   TableRequest,
-  Table,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import { buildExternalTableId, finaliseExternalTables } from "./utils"
@@ -279,8 +278,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
-  ): Promise<Record<string, Table>> {
+    entities: Record<string, ExternalTable>
+  ): Promise<Record<string, ExternalTable>> {
     // not fully configured yet
     if (!this.config.auth) {
       return {}

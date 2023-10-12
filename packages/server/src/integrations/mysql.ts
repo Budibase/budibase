@@ -10,7 +10,6 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
-  Table,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -279,9 +278,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, Table>
-  ): Promise<Record<string, Table>> {
-    const tables: { [key: string]: Table } = {}
+    entities: Record<string, ExternalTable>
+  ): Promise<Record<string, ExternalTable>> {
+    const tables: { [key: string]: ExternalTable } = {}
     await this.connect()
 
     try {
