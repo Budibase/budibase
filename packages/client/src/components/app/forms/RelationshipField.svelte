@@ -123,7 +123,7 @@
     }
     if (defaultVal) {
       await fetch.update({
-        query: {equal: {_id: defaultValue}}
+        query: { equal: { _id: defaultValue } },
       })
       fetchedDefault = $fetch.rows?.[0]
     }
