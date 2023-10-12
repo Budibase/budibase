@@ -9,8 +9,8 @@ import {
   SortDirection,
   SortType,
 } from "@budibase/types"
-import {OperatorOptions, SqlNumberTypeRangeMap} from "./constants"
-import {deepGet} from "./helpers"
+import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
+import { deepGet } from "./helpers"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -239,18 +239,6 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
   return query
 }
 
-// type unknown
-export const isLuceneFilter = (search: any) => {
-  if (typeof search !== "object") {
-    return false
-  }
-  const operators = Object.values(SearchQueryOperators) as string[]
-  const anySearchKey = Object.keys(search).find(key => {
-    return operators.includes(key) && typeof search[key] === "object"
-  })
-  return !!anySearchKey
-}
-
 /**
  * Performs a client-side lucene search on an array of data
  * @param docs the data
@@ -286,18 +274,26 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
     }
 
   // Process a string match (fails if the value does not start with the string)
-  const stringMatch = match(SearchQueryOperators.STRING, (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const stringMatch = match(
+    SearchQueryOperators.STRING,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a fuzzy match (treat the same as starts with when running locally)
-  const fuzzyMatch = match(SearchQueryOperators.FUZZY, (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const fuzzyMatch = match(
+    SearchQueryOperators.FUZZY,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a range match
   const rangeMatch = match(
@@ -332,29 +328,41 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   )
 
   // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match(SearchQueryOperators.EMPTY, (docValue: string | null) => {
-    return docValue != null && docValue !== ""
-  })
+  const emptyMatch = match(
+    SearchQueryOperators.EMPTY,
+    (docValue: string | null) => {
+      return docValue != null && docValue !== ""
+    }
+  )
 
   // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match(SearchQueryOperators.NOT_EMPTY, (docValue: string | null) => {
-    return docValue == null || docValue === ""
-  })
+  const notEmptyMatch = match(
+    SearchQueryOperators.NOT_EMPTY,
+    (docValue: string | null) => {
+      return docValue == null || docValue === ""
+    }
+  )
 
   // Process an includes match (fails if the value is not included)
-  const oneOf = match(SearchQueryOperators.ONE_OF, (docValue: any, testValue: any) => {
-    if (typeof testValue === "string") {
-      testValue = testValue.split(",")
-      if (typeof docValue === "number") {
-        testValue = testValue.map((item: string) => parseFloat(item))
+  const oneOf = match(
+    SearchQueryOperators.ONE_OF,
+    (docValue: any, testValue: any) => {
+      if (typeof testValue === "string") {
+        testValue = testValue.split(",")
+        if (typeof docValue === "number") {
+          testValue = testValue.map((item: string) => parseFloat(item))
+        }
       }
+      return !testValue?.includes(docValue)
     }
-    return !testValue?.includes(docValue)
-  })
+  )
 
-  const containsAny = match(SearchQueryOperators.CONTAINS_ANY, (docValue: any, testValue: any) => {
-    return !docValue?.includes(...testValue)
-  })
+  const containsAny = match(
+    SearchQueryOperators.CONTAINS_ANY,
+    (docValue: any, testValue: any) => {
+      return !docValue?.includes(...testValue)
+    }
+  )
 
   const contains = match(
     SearchQueryOperators.CONTAINS,
@@ -446,7 +454,7 @@ export const hasFilters = (query?: SearchQuery) => {
     if (skipped.includes(key) || typeof value !== "object") {
       continue
     }
-    if (Object.keys(value).length !== 0) {
+    if (Object.keys(value || {}).length !== 0) {
       return true
     }
   }

@@ -33,7 +33,6 @@ export const buildUserEndpoints = API => ({
     if (limit) {
       opts.limit = limit
     }
-    console.log(opts)
     return await API.post({
       url: `/api/global/users/search`,
       body: opts,

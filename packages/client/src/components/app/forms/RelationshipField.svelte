@@ -4,6 +4,7 @@
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
+  import { onMount } from "svelte"
 
   const { API } = getContext("sdk")
 
@@ -25,6 +26,7 @@
   let tableDefinition
   let searchTerm
   let open
+  let hasFetchedDefault, fetchedDefault
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -75,8 +77,8 @@
     }
   }
 
-  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
-  const enrichOptions = (optionsObj, fetchResults) => {
+  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows, fetchedDefault)
+  const enrichOptions = (optionsObj, fetchResults, fetchedDefault) => {
     const result = (fetchResults || [])?.reduce((accumulator, row) => {
       if (!accumulator[row._id]) {
         accumulator[row._id] = row
@@ -84,7 +86,11 @@
       return accumulator
     }, optionsObj)
 
-    return Object.values(result)
+    const final = Object.values(result)
+    if (fetchedDefault && !final.find(row => row._id === fetchedDefault._id)) {
+      final.push(fetchedDefault)
+    }
+    return final
   }
   $: {
     // We don't want to reorder while the dropdown is open, to avoid UX jumps
@@ -105,16 +111,17 @@
     }
   }
 
-  $: fetchRows(searchTerm, primaryDisplay)
+  $: fetchRows(searchTerm, primaryDisplay, hasFetchedDefault)
 
-  const fetchRows = (searchTerm, primaryDisplay) => {
+  const fetchRows = async (searchTerm, primaryDisplay, gotDefault) => {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
       !$fetch.hasNextPage
-    // Don't request until we have the primary display
-    if (!allRowsFetched && primaryDisplay) {
-      fetch.update({
+    const shouldFetch = !defaultValue ? !allRowsFetched : gotDefault
+    // Don't request until we have the primary display or default value has been fetched
+    if (shouldFetch && primaryDisplay) {
+      await fetch.update({
         query: { string: { [primaryDisplay]: searchTerm } },
       })
     }
@@ -171,6 +178,20 @@
       fetch.nextPage()
     }
   }
+
+  onMount(async () => {
+    // the pagination might not include the default row
+    if (defaultValue) {
+      await fetch.update({
+        query: { equal: { _id: defaultValue }}
+      })
+      const fetched = $fetch.rows?.[0]
+      if (fetched) {
+        fetchedDefault = { ...fetched }
+      }
+    }
+    hasFetchedDefault = true
+  })
 </script>
 
 <Field
