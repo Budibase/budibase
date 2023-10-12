@@ -16,27 +16,39 @@ export const createActions = context => {
 
   const addInlineFilter = (column, value) => {
     const filterId = `inline-${column}`
-
-    const inlineFilter = {
+    let inlineFilter = {
       field: column.name,
       id: filterId,
       operator: "equal",
-      type: "string",
+      type: column.schema.type,
       valueType: "value",
       value,
     }
 
+    // Add overrides specific so the certain column type
+    switch (column.schema.type) {
+      case "string":
+      case "formula":
+      case "longform":
+        inlineFilter.operator = "string"
+        break
+      case "number":
+        inlineFilter.value = parseFloat(value)
+        break
+      case "array":
+        inlineFilter.operator = "contains"
+    }
+
+    // Add this filter
     filter.update($filter => {
       // Remove any existing inline filter
       if ($filter?.length) {
         $filter = $filter?.filter(x => x.id !== filterId)
       }
-
       // Add new one if a value exists
       if (value) {
         $filter = [...($filter || []), inlineFilter]
       }
-
       return $filter
     })
   }

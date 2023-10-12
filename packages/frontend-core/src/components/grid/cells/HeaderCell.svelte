@@ -35,7 +35,7 @@
     "boolean",
     "json",
   ]
-  const searchableTypes = ["string", "options", "number"]
+  const searchableTypes = ["string", "options", "number", "array", "longform"]
 
   let anchor
   let open = false
@@ -54,9 +54,17 @@
   $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
     ? "high-low"
     : "Z-A"
-  $: searchable = searchableTypes.includes(column.schema.type)
+  $: searchable = isColumnSearchable(column)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
+
+  const isColumnSearchable = col => {
+    const type = col.schema.type
+    return (
+      searchableTypes.includes(type) ||
+      (type === "formula" && col.schema.formulaType === "static")
+    )
+  }
 
   const editColumn = async () => {
     editIsOpen = true
