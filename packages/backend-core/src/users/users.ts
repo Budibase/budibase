@@ -50,11 +50,15 @@ export const isSupportedUserSearch = (query: SearchQuery) => {
       return false
     }
     const fields = Object.keys(operation || {})
+    // this filter doesn't contain options - ignore
+    if (fields.length === 0) {
+      continue
+    }
     const allowedOperation = allowed.find(
       allow =>
         allow.op === key && fields.length === 1 && fields[0] === allow.key
     )
-    if (!allowedOperation && fields.length > 0) {
+    if (!allowedOperation) {
       return false
     }
   }
