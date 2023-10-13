@@ -121,10 +121,6 @@
       await fetch.update({
         query: { equal: { _id: defaultVal } },
       })
-      const defaultRow = $fetch.rows?.[0]
-      if (defaultRow) {
-        optionsObj[defaultRow._id] = defaultRow
-      }
       hasFetchedDefaultValue = true
     }
     await fetch.update({
