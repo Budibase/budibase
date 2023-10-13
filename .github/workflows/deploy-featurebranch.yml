@@ -11,11 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: passeidireto/trigger-external-workflow-action@main
+      - uses: peter-evans/repository-dispatch@v2
         env:
           PAYLOAD_BRANCH: ${{ github.head_ref }}
           PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
         with:
           repository: budibase/budibase-deploys
+          branch: BUDI-7573/use_updated_image
           event: featurebranch-qa-deploy
-          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
