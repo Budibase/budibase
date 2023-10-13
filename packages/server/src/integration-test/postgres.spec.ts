@@ -43,6 +43,10 @@ describe("postgres integrations", () => {
     )
   })
 
+  afterAll(async () => {
+    await databaseTestProviders.postgres.stopContainer()
+  })
+
   beforeEach(async () => {
     async function createAuxTable(prefix: string) {
       return await config.createTable({
@@ -111,7 +115,7 @@ describe("postgres integrations", () => {
           fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
           relationshipType: RelationshipType.ONE_TO_MANY,
-          tableId: oneToManyRelationshipInfo.table._id,
+          tableId: oneToManyRelationshipInfo.table._id!,
           main: true,
         },
         manyToOneRelation: {
@@ -122,7 +126,7 @@ describe("postgres integrations", () => {
           fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
           relationshipType: RelationshipType.MANY_TO_ONE,
-          tableId: manyToOneRelationshipInfo.table._id,
+          tableId: manyToOneRelationshipInfo.table._id!,
           main: true,
         },
         manyToManyRelation: {
@@ -133,7 +137,7 @@ describe("postgres integrations", () => {
           fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
           relationshipType: RelationshipType.MANY_TO_MANY,
-          tableId: manyToManyRelationshipInfo.table._id,
+          tableId: manyToManyRelationshipInfo.table._id!,
           main: true,
         },
       },
@@ -250,6 +254,7 @@ describe("postgres integrations", () => {
         id: {
           name: "id",
           type: FieldType.AUTO,
+          autocolumn: true,
         },
       },
       sourceId: postgresDatasource._id,

@@ -3597,6 +3597,17 @@
         }
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
@@ -5849,11 +5860,6 @@
         "type": "validation/link",
         "label": "Validation",
         "key": "validation"
-      },
-      {
-        "type": "filter/relationship",
-        "label": "Filtering",
-        "key": "filter"
       },
       {
         "type": "boolean",
