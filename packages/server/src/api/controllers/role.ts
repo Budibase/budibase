@@ -152,11 +152,12 @@ export async function accessible(ctx: UserCtx) {
     const orderedRoles = ctx.body.reverse()
     let filteredRoles = [roleHeader]
     for (let role of orderedRoles) {
-      filteredRoles.push(role)
+      filteredRoles = [role, ...filteredRoles]
       if (role === inherits) {
         break
       }
     }
-    ctx.body = filteredRoles
+    filteredRoles.pop()
+    ctx.body = [roleHeader, ...filteredRoles]
   }
 }
