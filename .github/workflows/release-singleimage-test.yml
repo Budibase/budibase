@@ -1,7 +1,7 @@
 name: Test
 
 on:
-  push:
+  workflow_dispatch:
 
 env:
   CI: true
@@ -29,6 +29,9 @@ jobs:
           cache: "yarn"
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
       - name: Run Yarn
         run: yarn
       - name: Run Yarn Build
