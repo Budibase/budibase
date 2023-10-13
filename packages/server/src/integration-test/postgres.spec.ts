@@ -43,6 +43,10 @@ describe("postgres integrations", () => {
     )
   })
 
+  afterAll(async () => {
+    await databaseTestProviders.postgres.stopContainer()
+  })
+
   beforeEach(async () => {
     async function createAuxTable(prefix: string) {
       return await config.createTable({
