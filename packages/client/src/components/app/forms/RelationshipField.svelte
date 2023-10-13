@@ -25,7 +25,6 @@
   let tableDefinition
   let searchTerm
   let open
-  let hasFetchedDefaultValue
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -117,11 +116,10 @@
     if (allRowsFetched || !primaryDisplay) {
       return
     }
-    if (defaultVal && !hasFetchedDefaultValue) {
+    if (defaultVal && !optionsObj[defaultVal]) {
       await fetch.update({
         query: { equal: { _id: defaultVal } },
       })
-      hasFetchedDefaultValue = true
     }
     await fetch.update({
       query: { string: { [primaryDisplay]: searchTerm } },
