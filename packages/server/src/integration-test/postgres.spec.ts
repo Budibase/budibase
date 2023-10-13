@@ -1060,48 +1060,41 @@ describe("postgres integrations", () => {
   describe("POST /api/datasources/:datasourceId/schema", () => {
     let client: Client
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       client = new Client(
         (await databaseTestProviders.postgres.getDsConfig()).config!
       )
       await client.connect()
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
+      await client.query(`DROP TABLE IF EXISTS "table"`)
       await client.end()
     })
 
     it("recognises when a table has no primary key", async () => {
-      await client.query(`
-        CREATE TABLE table_without_primary_key (
-          id SERIAL
-        )
-      `)
+      await client.query(`CREATE TABLE "table" (id SERIAL)`)
 
       const response = await makeRequest(
         "post",
         `/api/datasources/${postgresDatasource._id}/schema`
       )
 
-      expect(response.body.errors).toMatchObject({
-        table_without_primary_key: "Table must have a primary key.",
+      expect(response.body.errors).toEqual({
+        table: "Table must have a primary key.",
       })
     })
 
     it("recognises when a table is using a reserved column name", async () => {
-      await client.query(`
-        CREATE TABLE table_with_reserved_column_name (
-          _id SERIAL
-        )
-      `)
+      await client.query(`CREATE TABLE "table" (_id SERIAL PRIMARY KEY) `)
 
       const response = await makeRequest(
         "post",
         `/api/datasources/${postgresDatasource._id}/schema`
       )
 
-      expect(response.body.errors).toMatchObject({
-        table_without_primary_key: "Table must have a primary key.",
+      expect(response.body.errors).toEqual({
+        table: "Table contains invalid columns.",
       })
     })
   })
