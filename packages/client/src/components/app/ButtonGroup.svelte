@@ -1,6 +1,6 @@
 <script>
-  import BlockComponent from "../../BlockComponent.svelte"
-  import Block from "../../Block.svelte"
+  import BlockComponent from "../BlockComponent.svelte"
+  import Block from "../Block.svelte"
 
   export let buttons = []
   export let direction
