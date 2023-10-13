@@ -1,8 +1,9 @@
-import { derived, get, writable } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { getDatasourceDefinition } from "../../../fetch"
+import { memo } from "../../../utils"
 
 export const createStores = () => {
-  const definition = writable(null)
+  const definition = memo(null)
 
   return {
     definition,

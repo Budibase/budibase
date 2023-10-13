@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { FieldType } from "@budibase/types"
 
 export const createStores = context => {
@@ -6,14 +6,31 @@ export const createStores = context => {
 
   // Initialise to default props
   const filter = writable(get(props).initialFilter)
+  const inlineFilters = writable([])
 
   return {
     filter,
+    inlineFilters,
+  }
+}
+
+export const deriveStores = context => {
+  const { filter, inlineFilters } = context
+
+  const allFilters = derived(
+    [filter, inlineFilters],
+    ([$filter, $inlineFilters]) => {
+      return [...($filter || []), ...$inlineFilters]
+    }
+  )
+
+  return {
+    allFilters,
   }
 }
 
 export const createActions = context => {
-  const { filter } = context
+  const { filter, inlineFilters } = context
 
   const addInlineFilter = (column, value) => {
     const filterId = `inline-${column.name}`
@@ -38,16 +55,15 @@ export const createActions = context => {
     }
 
     // Add this filter
-    filter.update($filter => {
-      // Remove any existing inline filter
-      if ($filter?.length) {
-        $filter = $filter?.filter(x => x.id !== filterId)
-      }
+    inlineFilters.update($inlineFilters => {
+      // Remove any existing inline filter for this column
+      $inlineFilters = $inlineFilters?.filter(x => x.id !== filterId)
+
       // Add new one if a value exists
       if (value) {
-        $filter = [...($filter || []), inlineFilter]
+        $inlineFilters.push(inlineFilter)
       }
-      return $filter
+      return $inlineFilters
     })
   }
 

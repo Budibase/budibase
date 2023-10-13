@@ -68,7 +68,7 @@ export const createActions = context => {
     rows,
     rowLookupMap,
     definition,
-    filter,
+    allFilters,
     loading,
     sort,
     datasource,
@@ -111,7 +111,7 @@ export const createActions = context => {
     // Tick to allow other reactive logic to update stores when datasource changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()
-    const $filter = get(filter)
+    const $allFilters = get(allFilters)
     const $sort = get(sort)
 
     // Determine how many rows to fetch per page
@@ -123,7 +123,7 @@ export const createActions = context => {
       API,
       datasource: $datasource,
       options: {
-        filter: $filter,
+        filter: $allFilters,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
         limit,
