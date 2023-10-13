@@ -4,6 +4,8 @@ import {
   Document,
   Database,
   RowValue,
+  DocumentType,
+  App,
 } from "@budibase/types"
 import backups from "../backups"
 
@@ -12,9 +14,39 @@ export type FileAttributes = {
   path: string
 }
 
+async function getNewAppMetadata(
+  tempDb: Database,
+  appDb: Database
+): Promise<App> {
+  // static doc denoting app information
+  const docId = DocumentType.APP_METADATA
+  try {
+    const [tempMetadata, appMetadata] = await Promise.all([
+      tempDb.get<App>(docId),
+      appDb.get<App>(docId),
+    ])
+    return {
+      ...appMetadata,
+      automationErrors: undefined,
+      theme: tempMetadata.theme,
+      customTheme: tempMetadata.customTheme,
+      features: tempMetadata.features,
+      icon: tempMetadata.icon,
+      navigation: tempMetadata.navigation,
+      type: tempMetadata.type,
+      version: tempMetadata.version,
+    }
+  } catch (err: any) {
+    throw new Error(
+      `Unable to retrieve app metadata for import - ${err.message}`
+    )
+  }
+}
+
 function mergeUpdateAndDeleteDocuments(
   updateDocs: Document[],
-  deleteDocs: Document[]
+  deleteDocs: Document[],
+  metadata: App
 ) {
   // compress the documents to create and to delete (if same ID, then just update the rev)
   const finalToDelete = []
@@ -26,7 +58,7 @@ function mergeUpdateAndDeleteDocuments(
       finalToDelete.push(deleteDoc)
     }
   }
-  return [...updateDocs, ...finalToDelete]
+  return [...updateDocs, ...finalToDelete, metadata]
 }
 
 async function removeImportableDocuments(db: Database) {
@@ -90,12 +122,15 @@ export async function updateWithExport(
     await backups.importApp(devId, tempDb, template, {
       importObjStoreContents: false,
     })
+    const newMetadata = await getNewAppMetadata(tempDb, appDb)
     // get the documents to copy
     const toUpdate = await getImportableDocuments(tempDb)
     // clear out the old documents
     const toDelete = await removeImportableDocuments(appDb)
     // now bulk update documents - add new ones, delete old ones and update common ones
-    await appDb.bulkDocs(mergeUpdateAndDeleteDocuments(toUpdate, toDelete))
+    await appDb.bulkDocs(
+      mergeUpdateAndDeleteDocuments(toUpdate, toDelete, newMetadata)
+    )
   } finally {
     await tempDb.destroy()
   }
