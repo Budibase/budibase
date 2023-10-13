@@ -17,5 +17,5 @@ jobs:
           PAYLOAD_PR_NUMBER: ${{ github.event.pull_request.number }}
         with:
           repository: budibase/budibase-deploys
-          event: featurebranch-qa-deploy
+          event-type: featurebranch-qa-deploy
           token: ${{ secrets.GH_ACCESS_TOKEN }}
