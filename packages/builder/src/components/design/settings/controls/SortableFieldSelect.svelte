@@ -20,9 +20,7 @@
 
   const getSortableFields = schema => {
     return Object.entries(schema || {})
-      .filter(
-        entry => !UNSORTABLE_TYPES.includes(entry[1].type) && entry[1].sortable
-      )
+      .filter(entry => !UNSORTABLE_TYPES.includes(entry[1].type))
       .map(entry => entry[0])
   }
 
