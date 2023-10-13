@@ -1,12 +1,13 @@
 import {
   Datasource,
+  FieldSubtype,
   FieldType,
-  SortDirection,
-  SortType,
   SearchFilter,
   SearchQuery,
   SearchQueryFields,
-  FieldSubtype,
+  SearchQueryOperators,
+  SortDirection,
+  SortType,
 } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
@@ -273,22 +274,30 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
     }
 
   // Process a string match (fails if the value does not start with the string)
-  const stringMatch = match("string", (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const stringMatch = match(
+    SearchQueryOperators.STRING,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a fuzzy match (treat the same as starts with when running locally)
-  const fuzzyMatch = match("fuzzy", (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const fuzzyMatch = match(
+    SearchQueryOperators.FUZZY,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a range match
   const rangeMatch = match(
-    "range",
+    SearchQueryOperators.RANGE,
     (
       docValue: string | number | null,
       testValue: { low: number; high: number }
@@ -304,7 +313,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process an equal match (fails if the value is different)
   const equalMatch = match(
-    "equal",
+    SearchQueryOperators.EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue !== testValue
     }
@@ -312,46 +321,58 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
 
   // Process a not-equal match (fails if the value is the same)
   const notEqualMatch = match(
-    "notEqual",
+    SearchQueryOperators.NOT_EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue === testValue
     }
   )
 
   // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match("empty", (docValue: string | null) => {
-    return docValue != null && docValue !== ""
-  })
+  const emptyMatch = match(
+    SearchQueryOperators.EMPTY,
+    (docValue: string | null) => {
+      return docValue != null && docValue !== ""
+    }
+  )
 
   // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match("notEmpty", (docValue: string | null) => {
-    return docValue == null || docValue === ""
-  })
+  const notEmptyMatch = match(
+    SearchQueryOperators.NOT_EMPTY,
+    (docValue: string | null) => {
+      return docValue == null || docValue === ""
+    }
+  )
 
   // Process an includes match (fails if the value is not included)
-  const oneOf = match("oneOf", (docValue: any, testValue: any) => {
-    if (typeof testValue === "string") {
-      testValue = testValue.split(",")
-      if (typeof docValue === "number") {
-        testValue = testValue.map((item: string) => parseFloat(item))
+  const oneOf = match(
+    SearchQueryOperators.ONE_OF,
+    (docValue: any, testValue: any) => {
+      if (typeof testValue === "string") {
+        testValue = testValue.split(",")
+        if (typeof docValue === "number") {
+          testValue = testValue.map((item: string) => parseFloat(item))
+        }
       }
+      return !testValue?.includes(docValue)
     }
-    return !testValue?.includes(docValue)
-  })
+  )
 
-  const containsAny = match("containsAny", (docValue: any, testValue: any) => {
-    return !docValue?.includes(...testValue)
-  })
+  const containsAny = match(
+    SearchQueryOperators.CONTAINS_ANY,
+    (docValue: any, testValue: any) => {
+      return !docValue?.includes(...testValue)
+    }
+  )
 
   const contains = match(
-    "contains",
+    SearchQueryOperators.CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return !testValue?.every((item: any) => docValue?.includes(item))
     }
   )
 
   const notContains = match(
-    "notContains",
+    SearchQueryOperators.NOT_CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return testValue?.every((item: any) => docValue?.includes(item))
     }
@@ -433,7 +454,7 @@ export const hasFilters = (query?: SearchQuery) => {
     if (skipped.includes(key) || typeof value !== "object") {
       continue
     }
-    if (Object.keys(value).length !== 0) {
+    if (Object.keys(value || {}).length !== 0) {
       return true
     }
   }
