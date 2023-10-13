@@ -5,6 +5,7 @@
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
   import { debounce } from "../../../utils/utils"
+  import { FieldType, FormulaTypes } from "@budibase/types"
 
   export let column
   export let idx
@@ -29,7 +30,14 @@
     filter,
   } = getContext("grid")
 
-  const searchableTypes = ["string", "options", "number", "array", "longform"]
+  const searchableTypes = [
+    FieldType.STRING,
+    FieldType.OPTIONS,
+    FieldType.NUMBER,
+    FieldType.BIGINT,
+    FieldType.ARRAY,
+    FieldType.LONGFORM,
+  ]
 
   let anchor
   let open = false
@@ -42,21 +50,20 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
-  $: ascendingLabel = ["number", "bigint"].includes(column.schema?.type)
-    ? "low-high"
-    : "A-Z"
-  $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
-    ? "high-low"
-    : "Z-A"
+  $: numericType = [FieldType.NUMBER, FieldType.BIGINT].includes(
+    column.schema?.type
+  )
+  $: ascendingLabel = numericType ? "low-high" : "A-Z"
+  $: descendingLabel = numericType ? "high-low" : "Z-A"
   $: searchable = isColumnSearchable(column)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
 
   const isColumnSearchable = col => {
-    const type = col.schema.type
+    const { type, formulaType } = col.schema
     return (
       searchableTypes.includes(type) ||
-      (type === "formula" && col.schema.formulaType === "static")
+      (type === FieldType.FORMULA && formulaType === FormulaTypes.STATIC)
     )
   }
 

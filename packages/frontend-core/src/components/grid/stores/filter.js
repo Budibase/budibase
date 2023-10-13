@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { FieldType } from "@budibase/types"
 
 export const createStores = context => {
   const { props } = context
@@ -27,10 +28,12 @@ export const createActions = context => {
     }
 
     // Add overrides specific so the certain column type
-    if (type === "number") {
+    if (type === FieldType.NUMBER) {
       inlineFilter.value = parseFloat(value)
       inlineFilter.operator = "equal"
-    } else if (type === "array") {
+    } else if (type === FieldType.BIGINT) {
+      inlineFilter.operator = "equal"
+    } else if (type === FieldType.ARRAY) {
       inlineFilter.operator = "contains"
     }
 
