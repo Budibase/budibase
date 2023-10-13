@@ -36,3 +36,10 @@ export async function getDsConfig(): Promise<Datasource> {
     },
   }
 }
+
+export async function stopContainer() {
+  if (container) {
+    await container.stop()
+    container = undefined
+  }
+}
