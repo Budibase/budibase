@@ -25,7 +25,6 @@
   let tableDefinition
   let searchTerm
   let open
-  let fetchedDefault
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -76,8 +75,8 @@
     }
   }
 
-  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows, fetchedDefault)
-  const enrichOptions = (optionsObj, fetchResults, fetchedDefault) => {
+  $: enrichedOptions = enrichOptions(optionsObj, $fetch.rows)
+  const enrichOptions = (optionsObj, fetchResults) => {
     const result = (fetchResults || [])?.reduce((accumulator, row) => {
       if (!accumulator[row._id]) {
         accumulator[row._id] = row
@@ -85,11 +84,7 @@
       return accumulator
     }, optionsObj)
 
-    const final = Object.values(result)
-    if (fetchedDefault && !final.find(row => row._id === fetchedDefault._id)) {
-      final.push(fetchedDefault)
-    }
-    return final
+    return Object.values(result)
   }
   $: {
     // We don't want to reorder while the dropdown is open, to avoid UX jumps
@@ -125,7 +120,10 @@
       await fetch.update({
         query: { equal: { _id: defaultValue } },
       })
-      fetchedDefault = $fetch.rows?.[0]
+      const defaultRow = $fetch.rows?.[0]
+      if (defaultRow) {
+        optionsObj[defaultRow._id] = defaultRow
+      }
     }
     await fetch.update({
       query: { string: { [primaryDisplay]: searchTerm } },
