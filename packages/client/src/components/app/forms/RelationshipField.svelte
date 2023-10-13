@@ -105,19 +105,25 @@
     }
   }
 
-  $: fetchRows(searchTerm, primaryDisplay)
+  $: fetchRows(searchTerm, primaryDisplay, defaultValue)
 
-  const fetchRows = (searchTerm, primaryDisplay) => {
+  const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
       !Object.keys($fetch.query?.string || {}).length &&
       !$fetch.hasNextPage
-    // Don't request until we have the primary display
-    if (!allRowsFetched && primaryDisplay) {
-      fetch.update({
-        query: { string: { [primaryDisplay]: searchTerm } },
+    // Don't request until we have the primary display or default value has been fetched
+    if (allRowsFetched || !primaryDisplay) {
+      return
+    }
+    if (defaultVal && !optionsObj[defaultVal]) {
+      await fetch.update({
+        query: { equal: { _id: defaultVal } },
       })
     }
+    await fetch.update({
+      query: { string: { [primaryDisplay]: searchTerm } },
+    })
   }
 
   const flatten = values => {
