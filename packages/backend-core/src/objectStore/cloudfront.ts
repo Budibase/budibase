@@ -1,5 +1,5 @@
 import env from "../environment"
-import cfsign from "aws-cloudfront-sign"
+import * as cfsign from "aws-cloudfront-sign"
 
 let PRIVATE_KEY: string | undefined
 
