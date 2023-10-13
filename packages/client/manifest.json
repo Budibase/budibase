@@ -258,7 +258,6 @@
     "description": "Contains your app screens",
     "static": true
   },
-
   "buttongroup": {
     "name": "Button group",
     "icon": "Button",
@@ -272,17 +271,14 @@
             "type": "buttonConfiguration",
             "key": "buttons",
             "nested": true,
-            "defaultValue" : [{
-              "component" : "button",
-              "props" : {
+            "defaultValue": [
+              {
                 "type": "cta"
+              },
+              {
+                "type": "primary"
               }
-            },{
-              "component" : "button",
-              "props" : {
-                "type" : "primary"
-              }
-            }]
+            ]
           }
         ]
       },
@@ -310,7 +306,7 @@
                 "barTitle": "Row layout"
               }
             ],
-            "defaultValue": "column"
+            "defaultValue": "row"
           },
           {
             "type": "select",
@@ -440,7 +436,6 @@
       }
     ]
   },
-
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
@@ -2592,7 +2587,6 @@
         "key": "disabled",
         "defaultValue": false
       },
-
       {
         "type": "text",
         "label": "Initial form step",

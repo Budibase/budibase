@@ -1,37 +1,40 @@
 <script>
-  import EditFieldPopover from "../FieldConfiguration/EditFieldPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  // import { cloneDeep } from "lodash/fp"
+  import { runtimeToReadableBinding } from "builderStore/dataBinding"
+  import { isJSBinding } from "@budibase/string-templates"
 
   export let item
   export let componentBindings
   export let bindings
   export let anchor
+  export let removeButton
+  export let canRemove
 
-  const dispatch = createEventDispatcher()
-  // const onToggle = item => {
-  //   return e => {
-  //     item.active = e.detail
-  //     dispatch("change", { ...cloneDeep(item), active: e.detail })
-  //   }
-  // }
+  $: readableText = isJSBinding(item.text)
+    ? "(JavaScript function)"
+    : runtimeToReadableBinding([...bindings, componentBindings], item.text)
 </script>
 
 <div class="list-item-body">
   <div class="list-item-left">
-    <EditFieldPopover
+    <EditComponentPopover
       {anchor}
-      field={item}
+      componentInstance={item}
       {componentBindings}
       {bindings}
       on:change
     />
-    <div class="field-label">{item.text}</div>
+    <div class="field-label">{readableText || "Button"}</div>
   </div>
   <div class="list-item-right">
-    <Icon size="S" name="Close" hoverable on:click={() => {console.log("REMOVE ME")}}
-  />
+    <Icon
+      disabled={!canRemove}
+      size="S"
+      name="Close"
+      hoverable
+      on:click={() => removeButton(item._id)}
+    />
   </div>
 </div>
 
