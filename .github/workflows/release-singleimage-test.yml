@@ -2,7 +2,8 @@ name: Test
 
 on:
   push:
-    - BUDI-7573/use_existing_image_cache
+    branches:
+      - BUDI-7573/use_existing_image_cache
   workflow_dispatch:
 
 env:
