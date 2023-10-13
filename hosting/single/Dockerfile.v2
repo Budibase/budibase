@@ -10,7 +10,6 @@ COPY package.json .
 COPY yarn.lock .
 COPY lerna.json .
 COPY .yarnrc .
-COPY packageNames.txt .
 
 COPY packages/server/package.json packages/server/package.json
 COPY packages/worker/package.json packages/worker/package.json

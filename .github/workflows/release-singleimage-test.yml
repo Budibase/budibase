@@ -29,8 +29,6 @@ jobs:
           cache: "yarn"
       - name: Setup QEMU
         uses: docker/setup-qemu-action@v3
-      - name: Generate package names file
-        run: ./scripts/generatePackageNamesFile.sh
       - name: Run Yarn
         run: yarn
       - name: Run Yarn Build
