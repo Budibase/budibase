@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/stale@v8
         with:
+          operations-per-run: 1
           # stale rules for PRs
           days-before-pr-stale: 7
           stale-issue-label: stale
@@ -19,6 +20,7 @@ jobs:
 
       - uses: actions/stale@v8
         with:
+          operations-per-run: 3
           # stale rules for high priority bugs
           days-before-stale: 30
           only-issue-labels: bug,High priority
@@ -26,6 +28,7 @@ jobs:
 
       - uses: actions/stale@v8
         with:
+          operations-per-run: 3
           # stale rules for medium priority bugs
           days-before-stale: 90
           only-issue-labels: bug,Medium priority
@@ -33,6 +36,7 @@ jobs:
 
       - uses: actions/stale@v8
         with:
+          operations-per-run: 3
           # stale rules for all bugs
           days-before-stale: 180
           stale-issue-label: stale
