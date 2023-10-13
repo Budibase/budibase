@@ -28,6 +28,7 @@
     schema,
     focusedCellId,
     filter,
+    inlineFilters,
   } = getContext("grid")
 
   const searchableTypes = [
@@ -56,8 +57,13 @@
   $: ascendingLabel = numericType ? "low-high" : "A-Z"
   $: descendingLabel = numericType ? "high-low" : "Z-A"
   $: searchable = isColumnSearchable(column)
+  $: resetSearchValue(column.name)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
+
+  const resetSearchValue = name => {
+    searchValue = $inlineFilters?.find(x => x.id === `inline-${name}`)?.value
+  }
 
   const isColumnSearchable = col => {
     const { type, formulaType } = col.schema
