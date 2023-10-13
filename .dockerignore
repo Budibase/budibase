@@ -12,4 +12,3 @@ packages/server/scripts/
 !yarn.lock
 !lerna.json
 !.yarnrc
-!packageNames.txt
