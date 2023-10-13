@@ -18,6 +18,7 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { databaseTestProviders } from "../integrations/tests/utils"
+import { Client } from "pg"
 
 const config = setup.getConfig()!
 
@@ -1053,6 +1054,55 @@ describe("postgres integrations", () => {
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
       expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
+    })
+  })
+
+  describe("POST /api/datasources/:datasourceId/schema", () => {
+    let client: Client
+
+    beforeAll(async () => {
+      client = new Client(
+        (await databaseTestProviders.postgres.getDsConfig()).config!
+      )
+      await client.connect()
+    })
+
+    afterAll(async () => {
+      await client.end()
+    })
+
+    it("recognises when a table has no primary key", async () => {
+      await client.query(`
+        CREATE TABLE table_without_primary_key (
+          id SERIAL
+        )
+      `)
+
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${postgresDatasource._id}/schema`
+      )
+
+      expect(response.body.errors).toMatchObject({
+        table_without_primary_key: "Table must have a primary key.",
+      })
+    })
+
+    it("recognises when a table is using a reserved column name", async () => {
+      await client.query(`
+        CREATE TABLE table_with_reserved_column_name (
+          _id SERIAL
+        )
+      `)
+
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${postgresDatasource._id}/schema`
+      )
+
+      expect(response.body.errors).toMatchObject({
+        table_without_primary_key: "Table must have a primary key.",
+      })
     })
   })
 })

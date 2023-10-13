@@ -69,18 +69,20 @@ async function buildFilteredSchema(
   filter?: string[]
 ): Promise<Schema> {
   let schema = await buildSchemaHelper(datasource)
-  let filteredSchema: Schema = { tables: {}, errors: {} }
-  if (filter) {
-    for (let key in schema.tables) {
-      if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-        filteredSchema.tables[key] = schema.tables[key]
-      }
-    }
+  if (!filter) {
+    return schema
+  }
 
-    for (let key in schema.errors) {
-      if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-        filteredSchema.errors[key] = schema.errors[key]
-      }
+  let filteredSchema: Schema = { tables: {}, errors: {} }
+  for (let key in schema.tables) {
+    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+      filteredSchema.tables[key] = schema.tables[key]
+    }
+  }
+
+  for (let key in schema.errors) {
+    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+      filteredSchema.errors[key] = schema.errors[key]
     }
   }
   return filteredSchema
