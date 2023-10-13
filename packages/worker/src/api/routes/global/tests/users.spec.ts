@@ -544,6 +544,36 @@ describe("/api/global/users", () => {
     })
   })
 
+  describe("POST /api/global/users/search", () => {
+    it("should be able to search by email", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { string: { email: user.email } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
+
+    it("should be able to search by _id", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { equal: { _id: user._id } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should throw an error when unimplemented options used", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: { equal: { firstName: user.firstName } },
+        },
+        501
+      )
+    })
+  })
+
   describe("DELETE /api/global/users/:userId", () => {
     it("should be able to destroy a basic user", async () => {
       const user = await config.createUser()

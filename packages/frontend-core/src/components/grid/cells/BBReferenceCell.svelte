@@ -27,7 +27,7 @@
     const email = Object.values(searchParams.query.string)[0]
 
     const results = await API.searchUsers({
-      email,
+      query: { string: { email } },
     })
 
     // Mapping to the expected data within RelationshipCell

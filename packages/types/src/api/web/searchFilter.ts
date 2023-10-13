@@ -10,43 +10,57 @@ export type SearchFilter = {
   externalType?: string
 }
 
+export enum SearchQueryOperators {
+  STRING = "string",
+  FUZZY = "fuzzy",
+  RANGE = "range",
+  EQUAL = "equal",
+  NOT_EQUAL = "notEqual",
+  EMPTY = "empty",
+  NOT_EMPTY = "notEmpty",
+  ONE_OF = "oneOf",
+  CONTAINS = "contains",
+  NOT_CONTAINS = "notContains",
+  CONTAINS_ANY = "containsAny",
+}
+
 export type SearchQuery = {
   allOr?: boolean
   onEmptyFilter?: EmptyFilterOption
-  string?: {
+  [SearchQueryOperators.STRING]?: {
     [key: string]: string
   }
-  fuzzy?: {
+  [SearchQueryOperators.FUZZY]?: {
     [key: string]: string
   }
-  range?: {
+  [SearchQueryOperators.RANGE]?: {
     [key: string]: {
       high: number | string
       low: number | string
     }
   }
-  equal?: {
+  [SearchQueryOperators.EQUAL]?: {
     [key: string]: any
   }
-  notEqual?: {
+  [SearchQueryOperators.NOT_EQUAL]?: {
     [key: string]: any
   }
-  empty?: {
+  [SearchQueryOperators.EMPTY]?: {
     [key: string]: any
   }
-  notEmpty?: {
+  [SearchQueryOperators.NOT_EMPTY]?: {
     [key: string]: any
   }
-  oneOf?: {
+  [SearchQueryOperators.ONE_OF]?: {
     [key: string]: any[]
   }
-  contains?: {
+  [SearchQueryOperators.CONTAINS]?: {
     [key: string]: any[]
   }
-  notContains?: {
+  [SearchQueryOperators.NOT_CONTAINS]?: {
     [key: string]: any[]
   }
-  containsAny?: {
+  [SearchQueryOperators.CONTAINS_ANY]?: {
     [key: string]: any[]
   }
 }
