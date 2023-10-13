@@ -287,7 +287,6 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
-      // TODO(samwho): is this the correct behaviour?
       return { tables: {}, errors: {} }
     }
     await this.connect()

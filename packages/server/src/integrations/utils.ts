@@ -305,7 +305,7 @@ export function finaliseExternalTables(
   for (let [name, table] of Object.entries(tables)) {
     finalTables[name] = copyExistingPropsOver(name, table, entities, tableIds)
   }
-  // sort the tables by name (TODO(samwho): why?)
+  // sort the tables by name, this is for the UI to display them in alphabetical order
   return Object.entries(finalTables)
     .sort(([a], [b]) => a.localeCompare(b))
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
