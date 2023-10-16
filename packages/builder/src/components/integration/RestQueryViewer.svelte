@@ -196,8 +196,34 @@
     }
   }
 
+  const validateQuery = async () => {
+    const forbiddenBindings = /{{\s?user\s?}}/g
+    const bindingError = new Error("'user' is a protected binding and cannot be used");
+
+    if (forbiddenBindings.test(url)) {
+      throw bindingError;
+    }
+
+    if (forbiddenBindings.test(query?.fields?.requestBody ?? "")) {
+      throw bindingError;
+    }
+
+    Object.values(requestBindings).forEach((bindingValue) => {
+      if (forbiddenBindings.test(bindingValue)) {
+        throw bindingError;
+      }
+    })
+
+    Object.values(query?.fields?.headers).forEach((headerValue) => {
+      if (forbiddenBindings.test(headerValue)) {
+        throw bindingError;
+      }
+    })
+  }
+
   async function runQuery() {
     try {
+      await validateQuery();
       response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
