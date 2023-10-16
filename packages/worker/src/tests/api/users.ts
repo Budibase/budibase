@@ -4,6 +4,7 @@ import {
   InviteUsersRequest,
   User,
   CreateAdminUserRequest,
+  SearchQuery,
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
@@ -129,6 +130,15 @@ export class UserAPI extends TestAPI {
     return this.request
       .delete(`/api/global/users/${userId}`)
       .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(status ? status : 200)
+  }
+
+  searchUsers = ({ query }: { query?: SearchQuery }, status = 200) => {
+    return this.request
+      .post("/api/global/users/search")
+      .set(this.config.defaultHeaders())
+      .send({ query })
       .expect("Content-Type", /json/)
       .expect(status ? status : 200)
   }
