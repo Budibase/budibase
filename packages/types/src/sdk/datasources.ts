@@ -140,6 +140,7 @@ export interface DatasourceConfig {
 export interface Integration {
   docs: string
   plus?: boolean
+  isSQL?: boolean
   auth?: { type: string }
   features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
