@@ -136,6 +136,7 @@ export function createDatasourcesStore() {
       config,
       name: `${integration.friendlyName}${nameModifier}`,
       plus: integration.plus && integration.name !== IntegrationTypes.REST,
+      isSQL: integration.isSQL,
     }
 
     if (await checkDatasourceValidity(integration, datasource)) {
