@@ -1,5 +1,5 @@
 <script>
-  import { isEmpty } from "lodash/fp"
+  import { helpers } from "@budibase/shared-core"
   import { Input, DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
@@ -73,35 +73,31 @@
     // Parse dependant settings
     if (setting.dependsOn) {
       let dependantSetting = setting.dependsOn
-      let dependantValue = null
+      let dependantValues = null
       let invert = !!setting.dependsOn.invert
       if (typeof setting.dependsOn === "object") {
         dependantSetting = setting.dependsOn.setting
-        dependantValue = setting.dependsOn.value
+        dependantValues = setting.dependsOn.value
       }
       if (!dependantSetting) {
         return false
       }
 
-      // If no specific value is depended upon, check if a value exists at all
-      // for the dependent setting
-      if (dependantValue == null) {
-        const currentValue = instance[dependantSetting]
-        if (currentValue === false) {
-          return false
-        }
-        if (currentValue === true) {
-          return true
-        }
-        return !isEmpty(currentValue)
+      // Ensure values is an array
+      if (!Array.isArray(dependantValues)) {
+        dependantValues = [dependantValues]
       }
 
-      // Otherwise check the value matches
-      if (invert) {
-        return instance[dependantSetting] !== dependantValue
-      } else {
-        return instance[dependantSetting] === dependantValue
-      }
+      // If inverting, we want to ensure that we don't have any matches.
+      // If not inverting, we want to ensure that we do have any matches.
+      const currentVal = helpers.deepGet(instance, dependantSetting)
+      const anyMatches = dependantValues.some(dependantVal => {
+        if (dependantVal == null) {
+          return currentVal == null || currentVal === false || currentVal === ""
+        }
+        return dependantVal === currentVal
+      })
+      return anyMatches !== invert
     }
 
     return typeof setting.visible == "boolean" ? setting.visible : true

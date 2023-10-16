@@ -5617,29 +5617,37 @@
             "label": "Clicked row",
             "key": "row"
           }
-        ],
-        "dependsOn": {
-          "setting": "allowEditRows",
-          "value": false
-        }
+        ]
       },
       {
         "type": "boolean",
         "label": "Add rows",
         "key": "allowAddRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",
         "label": "Edit rows",
         "key": "allowEditRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",
         "label": "Delete rows",
         "key": "allowDeleteRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",
