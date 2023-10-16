@@ -2077,7 +2077,7 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/backend-core@2.8.22-alpha.5":
+"@budibase/backend-core@2.11.30":
   version "0.0.0"
   dependencies:
     "@budibase/nano" "10.1.2"
@@ -2114,14 +2114,14 @@
     tar-fs "2.1.1"
     uuid "8.3.2"
 
-"@budibase/bbui@2.8.22-alpha.5":
-  version "2.8.22-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-2.8.22-alpha.5.tgz#41c152462e42345d16ebbaf369d52c74e82b49c6"
-  integrity sha512-yDgtMhfNf0F2dgV+lsEBwG9UHuC8aRuC38Z0ZdPP8yyTn4emiQOiDJhahyh5shQPHDfM7P9lBUi5ge5Z9Vvolw==
+"@budibase/bbui@2.11.30":
+  version "2.11.30"
+  resolved "https://registry.yarnpkg.com/@budibase/bbui/-/bbui-2.11.30.tgz#0cdca958d595f3dbfd4404cd37fd360f6301829d"
+  integrity sha512-n01Gdg52Dsu0X1knEbOaBA0VUCI5voSOTviDQdRNdVYTxsmNjvN1m5tNYcrfYN1ztfUBpEHCot0gKxVpIoRxtQ==
   dependencies:
     "@adobe/spectrum-css-workflow-icons" "1.2.1"
-    "@budibase/shared-core" "2.8.22-alpha.5"
-    "@budibase/string-templates" "2.8.22-alpha.5"
+    "@budibase/shared-core" "2.11.30"
+    "@budibase/string-templates" "2.11.30"
     "@spectrum-css/accordion" "3.0.24"
     "@spectrum-css/actionbutton" "1.0.1"
     "@spectrum-css/actiongroup" "1.0.1"
@@ -2164,19 +2164,20 @@
     "@spectrum-css/typography" "3.0.1"
     "@spectrum-css/underlay" "2.0.9"
     "@spectrum-css/vars" "3.0.1"
-    dayjs "^1.10.4"
+    dayjs "^1.10.8"
     easymde "^2.16.1"
+    svelte-dnd-action "^0.9.8"
     svelte-flatpickr "3.2.3"
     svelte-portal "^1.0.0"
 
-"@budibase/frontend-core@2.8.22-alpha.5":
-  version "2.8.22-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-2.8.22-alpha.5.tgz#55eac47b26b60103f2f768786873565a560e7b07"
-  integrity sha512-l/kGRLq/uCNzosEuod5fCDPpPu/v8K8gicxYcYsvFbQtUM643TYd4q8dfXsdnT84z7joNi4dWcvG8pNuK5wD6w==
+"@budibase/frontend-core@2.11.30":
+  version "2.11.30"
+  resolved "https://registry.yarnpkg.com/@budibase/frontend-core/-/frontend-core-2.11.30.tgz#e47ca5a43b4ac39185b70220da8783593d5478e3"
+  integrity sha512-2t4J1Bh9wbq/MBHaG9G/V2RysJUdxqZZ53EAkgNYCUwP7D/WTLnCo63oT5MIhQLjDJUOiXrOWJW1RstcVUIAPg==
   dependencies:
-    "@budibase/bbui" "2.8.22-alpha.5"
-    "@budibase/shared-core" "2.8.22-alpha.5"
-    dayjs "^1.11.7"
+    "@budibase/bbui" "2.11.30"
+    "@budibase/shared-core" "2.11.30"
+    dayjs "^1.10.8"
     lodash "^4.17.21"
     socket.io-client "^4.6.1"
     svelte "^3.46.2"
@@ -2228,31 +2229,31 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@budibase/pro@2.8.22-alpha.5":
-  version "2.8.22-alpha.5"
-  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.8.22-alpha.5.tgz#30fa2696ea9aba8a88a6ed5f463425355682a1c9"
-  integrity sha512-IxcBhq8Kjo/YpvBmuoIG/2rfcuiIFiIYSJdVd02anGJyZMJCtDZDnN9gTJ5BvleAUwyWL5EuO7H1L4lbeF53nw==
+"@budibase/pro@2.11.30":
+  version "2.11.30"
+  resolved "https://registry.yarnpkg.com/@budibase/pro/-/pro-2.11.30.tgz#935cad26ae296fad8a0f5763319ec90a16bb2cfb"
+  integrity sha512-kot4GATnmStjmGFesW0zqtRpRNvYWYoeJY4Mjr/yL69ZuAgHCTA2d8+8biA4omLnmH+Pb61MzpeNdvp2zBSJoQ==
   dependencies:
-    "@budibase/backend-core" "2.8.22-alpha.5"
-    "@budibase/shared-core" "2.8.22-alpha.5"
-    "@budibase/string-templates" "2.8.22-alpha.5"
-    "@budibase/types" "2.8.22-alpha.5"
+    "@budibase/backend-core" "2.11.30"
+    "@budibase/shared-core" "2.11.30"
+    "@budibase/string-templates" "2.11.30"
+    "@budibase/types" "2.11.30"
     "@koa/router" "8.0.8"
     bull "4.10.1"
     joi "17.6.0"
     jsonwebtoken "8.5.1"
     lru-cache "^7.14.1"
     memorystream "^0.3.1"
-    node-fetch "^2.6.1"
+    node-fetch "2.6.7"
     scim-patch "^0.7.0"
     scim2-parse-filter "^0.2.8"
 
-"@budibase/shared-core@2.8.22-alpha.5":
+"@budibase/shared-core@2.11.30":
   version "0.0.0"
   dependencies:
     "@budibase/types" "0.0.0"
 
-"@budibase/string-templates@2.8.22-alpha.5":
+"@budibase/string-templates@2.11.30":
   version "0.0.0"
   dependencies:
     "@budibase/handlebars-helpers" "^0.11.9"
@@ -2261,7 +2262,7 @@
     lodash "^4.17.20"
     vm2 "^3.9.19"
 
-"@budibase/types@2.8.22-alpha.5":
+"@budibase/types@2.11.30":
   version "0.0.0"
   dependencies:
     scim-patch "^0.7.0"
@@ -5968,13 +5969,13 @@
     expect "^29.0.0"
     pretty-format "^29.0.0"
 
-"@types/jest@28.1.1":
-  version "28.1.1"
-  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-28.1.1.tgz#8c9ba63702a11f8c386ee211280e8b68cb093cd1"
-  integrity sha512-C2p7yqleUKtCkVjlOur9BWVA4HgUQmEj/HWCt5WzZ5mLXrWnyIfl0wGuArc+kBXsy0ZZfLp+7dywB4HtSVYGVA==
+"@types/jest@29.5.0":
+  version "29.5.0"
+  resolved "https://registry.yarnpkg.com/@types/jest/-/jest-29.5.0.tgz#337b90bbcfe42158f39c2fb5619ad044bbb518ac"
+  integrity sha512-3Emr5VOl/aoBwnWcH/EFQvlSAmjV+XtV9GGu5mwdYew5vhQh0IUZx/60x0TzHDu09Bi7HMx10t/namdJw5QIcg==
   dependencies:
-    jest-matcher-utils "^27.0.0"
-    pretty-format "^27.0.0"
+    expect "^29.0.0"
+    pretty-format "^29.0.0"
 
 "@types/jest@29.5.3":
   version "29.5.3"
@@ -9814,7 +9815,7 @@ dateformat@^4.6.3:
   resolved "https://registry.yarnpkg.com/dateformat/-/dateformat-4.6.3.tgz#556fa6497e5217fedb78821424f8a1c22fa3f4b5"
   integrity sha512-2P0p0pFGzHS5EMnhdxQi7aJN+iMheud0UhG4dlE1DLAlvL8JHjJJTX/CSm4JXwV0Ka5nGk3zC5mcb5bUQUxxMA==
 
-dayjs@^1.10.4, dayjs@^1.10.8, dayjs@^1.11.7:
+dayjs@^1.10.8:
   version "1.11.10"
   resolved "https://registry.yarnpkg.com/dayjs/-/dayjs-1.11.10.tgz#68acea85317a6e164457d6d6947564029a6a16a0"
   integrity sha512-vjAczensTgRcqDERK0SR2XMwsF/tSvnvlv6VcF2GIhg6Sx4yOIt/irsr1RDJsKiIyBzJDpCoXiWWq28MqH2cnQ==
@@ -10388,11 +10389,6 @@ diff-sequences@^26.6.2:
   version "26.6.2"
   resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-26.6.2.tgz#48ba99157de1923412eed41db6b6d4aa9ca7c0b1"
   integrity sha512-Mv/TDa3nZ9sbc5soK+OoA74BsS3mL37yixCvUAQkiuA4Wz6YtwP/K47n2rv2ovzHZvoiQeA5FTQOschKkEwB0Q==
-
-diff-sequences@^27.5.1:
-  version "27.5.1"
-  resolved "https://registry.yarnpkg.com/diff-sequences/-/diff-sequences-27.5.1.tgz#eaecc0d327fd68c8d9672a1e64ab8dccb2ef5327"
-  integrity sha512-k1gCAXAsNgLwEL+Y8Wvl+M6oEFj5bgazfZULpS5CneoPPXRaCCW7dm+q21Ky2VEE5X+VeRDBVg1Pcvvsr4TtNQ==
 
 diff-sequences@^29.6.3:
   version "29.6.3"
@@ -14769,16 +14765,6 @@ jest-diff@^26.6.2:
     jest-get-type "^26.3.0"
     pretty-format "^26.6.2"
 
-jest-diff@^27.5.1:
-  version "27.5.1"
-  resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-27.5.1.tgz#a07f5011ac9e6643cf8a95a462b7b1ecf6680def"
-  integrity sha512-m0NvkX55LDt9T4mctTEgnZk3fmEg3NRYutvMPWM/0iPnkFj2wIeF45O1718cMSOFO1vINkqmxqD8vE37uTEbqw==
-  dependencies:
-    chalk "^4.0.0"
-    diff-sequences "^27.5.1"
-    jest-get-type "^27.5.1"
-    pretty-format "^27.5.1"
-
 jest-docblock@^26.0.0:
   version "26.0.0"
   resolved "https://registry.yarnpkg.com/jest-docblock/-/jest-docblock-26.0.0.tgz#3e2fa20899fc928cb13bd0ff68bd3711a36889b5"
@@ -14878,11 +14864,6 @@ jest-get-type@^26.3.0:
   resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-26.3.0.tgz#e97dc3c3f53c2b406ca7afaed4493b1d099199e0"
   integrity sha512-TpfaviN1R2pQWkIihlfEanwOXK0zcxrKEE4MlU6Tn7keoXdN6/3gK/xl0yEh8DOunn5pOVGKf8hB4R9gVh04ig==
 
-jest-get-type@^27.5.1:
-  version "27.5.1"
-  resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-27.5.1.tgz#3cd613c507b0f7ace013df407a1c1cd578bcb4f1"
-  integrity sha512-2KY95ksYSaK7DMBWQn6dQz3kqAf3BB64y2udeG+hv4KfSOb9qwcYQstTJc1KCbsix+wLZWZYN8t7nwX3GOBLRw==
-
 jest-get-type@^29.6.3:
   version "29.6.3"
   resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-29.6.3.tgz#36f499fdcea197c1045a127319c0481723908fd1"
@@ -14977,16 +14958,6 @@ jest-matcher-utils@^26.6.2:
     jest-diff "^26.6.2"
     jest-get-type "^26.3.0"
     pretty-format "^26.6.2"
-
-jest-matcher-utils@^27.0.0:
-  version "27.5.1"
-  resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-27.5.1.tgz#9c0cdbda8245bc22d2331729d1091308b40cf8ab"
-  integrity sha512-z2uTx/T6LBaCoNWNFWwChLBKYxTMcGBRjAt+2SbP929/Fflb9aa5LGma654Rz8z9HLxsrUaYzxE9T/EFIL/PAw==
-  dependencies:
-    chalk "^4.0.0"
-    jest-diff "^27.5.1"
-    jest-get-type "^27.5.1"
-    pretty-format "^27.5.1"
 
 jest-matcher-utils@^29.7.0:
   version "29.7.0"
@@ -20326,7 +20297,7 @@ pretty-format@^26.6.2:
     ansi-styles "^4.0.0"
     react-is "^17.0.1"
 
-pretty-format@^27.0.0, pretty-format@^27.0.2, pretty-format@^27.5.1:
+pretty-format@^27.0.2, pretty-format@^27.5.1:
   version "27.5.1"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-27.5.1.tgz#2181879fdea51a7a5851fb39d920faa63f01d88e"
   integrity sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ==
