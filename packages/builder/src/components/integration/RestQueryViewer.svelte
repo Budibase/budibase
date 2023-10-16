@@ -206,7 +206,7 @@
       throw bindingError
     }
 
-    if (forbiddenBindings.test(query?.fields?.requestBody ?? "")) {
+    if (forbiddenBindings.test(query.fields.requestBody ?? "")) {
       throw bindingError
     }
 
@@ -216,7 +216,7 @@
       }
     })
 
-    Object.values(query?.fields?.headers).forEach(headerValue => {
+    Object.values(query.fields.headers).forEach(headerValue => {
       if (forbiddenBindings.test(headerValue)) {
         throw bindingError
       }
