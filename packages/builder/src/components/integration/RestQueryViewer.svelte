@@ -198,32 +198,34 @@
 
   const validateQuery = async () => {
     const forbiddenBindings = /{{\s?user\s?}}/g
-    const bindingError = new Error("'user' is a protected binding and cannot be used");
+    const bindingError = new Error(
+      "'user' is a protected binding and cannot be used"
+    )
 
     if (forbiddenBindings.test(url)) {
-      throw bindingError;
+      throw bindingError
     }
 
     if (forbiddenBindings.test(query?.fields?.requestBody ?? "")) {
-      throw bindingError;
+      throw bindingError
     }
 
-    Object.values(requestBindings).forEach((bindingValue) => {
+    Object.values(requestBindings).forEach(bindingValue => {
       if (forbiddenBindings.test(bindingValue)) {
-        throw bindingError;
+        throw bindingError
       }
     })
 
-    Object.values(query?.fields?.headers).forEach((headerValue) => {
+    Object.values(query?.fields?.headers).forEach(headerValue => {
       if (forbiddenBindings.test(headerValue)) {
-        throw bindingError;
+        throw bindingError
       }
     })
   }
 
   async function runQuery() {
     try {
-      await validateQuery();
+      await validateQuery()
       response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
