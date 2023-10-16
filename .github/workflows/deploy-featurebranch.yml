@@ -3,7 +3,6 @@ name: deploy-featurebranch
 on:
   pull_request:
     branches:
-      - develop
       - master
 
 jobs:
