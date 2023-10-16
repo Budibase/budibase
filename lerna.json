@@ -1,9 +1,7 @@
 {
   "version": "2.11.36",
   "npmClient": "yarn",
-  "packages": [
-    "packages/*"
-  ],
+  "packages": ["packages/*", "apps/account-portal/packages/*"],
   "useNx": true,
   "command": {
     "publish": {
