@@ -110,19 +110,13 @@ jobs:
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
 
-  deploy-to-legacy-preprod-env:
-    needs: [release-images]
-    uses: ./.github/workflows/deploy-preprod.yml
-    secrets: inherit
 
-  # Trigger deploy to new EKS preprod environment
-  trigger-deploy-to-preprod-env:
+  trigger-deploy-to-qa-env:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Get the latest budibase release version
+      - name: Get the current budibase release version
         id: version
         run: |
           release_version=$(cat lerna.json | jq -r '.version')
@@ -133,5 +127,5 @@ jobs:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
-          event: budicloud-preprod-deploy
+          event: budicloud-qa-deploy
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

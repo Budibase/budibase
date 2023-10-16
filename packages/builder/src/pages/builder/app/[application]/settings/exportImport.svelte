@@ -13,7 +13,7 @@
   import ExportAppModal from "components/start/ExportAppModal.svelte"
   import ImportAppModal from "components/start/ImportAppModal.svelte"
 
-  $: filteredApps = $apps.filter(app => app.devId == $store.appId)
+  $: filteredApps = $apps.filter(app => app.devId === $store.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 

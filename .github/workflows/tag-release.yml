@@ -4,17 +4,6 @@ concurrency:
   cancel-in-progress: false
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - ".aws/**"
-      - ".github/**"
-      - "charts/**"
-      - "packages/**"
-      - "scripts/**"
-      - "package.json"
-      - "yarn.lock"
   workflow_dispatch:
     inputs:
       versioning:
