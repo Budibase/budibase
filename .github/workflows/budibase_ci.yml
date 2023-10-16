@@ -10,7 +10,6 @@ on:
   push:
     branches:
       - master
-      - develop
   pull_request:
   workflow_dispatch:
 
@@ -262,11 +261,7 @@ jobs:
           branch="${{ github.base_ref || github.ref_name  }}"
           echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
-          if [[ $branch == "master" ]]; then
-            base_commit=$(git rev-parse origin/master)
-          elif [[ $branch == "develop" ]]; then
-            base_commit=$(git rev-parse origin/develop)
-          fi
+          base_commit=$(git rev-parse origin/master)
 
           if [[ ! -z $base_commit ]]; then
             echo "target_branch=$branch"
