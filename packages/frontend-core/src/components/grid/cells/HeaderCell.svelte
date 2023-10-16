@@ -51,15 +51,32 @@
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
-  $: numericType = [FieldType.NUMBER, FieldType.BIGINT].includes(
-    column.schema?.type
-  )
-  $: ascendingLabel = numericType ? "low-high" : "A-Z"
-  $: descendingLabel = numericType ? "high-low" : "Z-A"
+  $: sortingLabels = getSortingLabels(column.schema?.type)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
   $: searching = searchValue != null
   $: debouncedUpdateFilter(searchValue)
+
+  const getSortingLabels = type => {
+    switch (type) {
+      case FieldType.NUMBER:
+      case FieldType.BIGINT:
+        return {
+          ascending: "low-high",
+          descending: "high-low",
+        }
+      case FieldType.DATETIME:
+        return {
+          ascending: "old-new",
+          descending: "new-old",
+        }
+      default:
+        return {
+          ascending: "A-Z",
+          descending: "Z-A",
+        }
+    }
+  }
 
   const resetSearchValue = name => {
     searchValue = $inlineFilters?.find(x => x.id === `inline-${name}`)?.value
@@ -318,14 +335,14 @@
         on:click={sortAscending}
         disabled={column.name === $sort.column && $sort.order === "ascending"}
       >
-        Sort {ascendingLabel}
+        Sort {sortingLabels.ascending}
       </MenuItem>
       <MenuItem
         icon="SortOrderDown"
         on:click={sortDescending}
         disabled={column.name === $sort.column && $sort.order === "descending"}
       >
-        Sort {descendingLabel}
+        Sort {sortingLabels.descending}
       </MenuItem>
       <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
         Move left
