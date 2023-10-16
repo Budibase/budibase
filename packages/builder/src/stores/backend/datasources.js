@@ -11,13 +11,9 @@ import { TableNames } from "constants"
 
 class TableImportError extends Error {
   constructor(errors) {
-    super(`Error importing tables: ${Object.keys(errors).join(", ")}`)
+    super()
     this.name = "TableImportError"
     this.errors = errors
-  }
-
-  get title() {
-    return `Error fetching tables`
   }
 
   get description() {

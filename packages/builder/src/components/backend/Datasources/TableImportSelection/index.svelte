@@ -57,7 +57,7 @@
       {#if $store.error}
         <InlineAlert
           type="error"
-          header={$store.error.title}
+          header="Error fetching {tableType}"
           message={$store.error.description}
         />
       {/if}
