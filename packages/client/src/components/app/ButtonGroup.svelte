@@ -20,11 +20,11 @@
       wrap: true,
     }}
   >
-    {#each buttons as { text, type, quiet, disabled, onClick, size }, idx}
+    {#each buttons as { text, type, quiet, disabled, onClick, size }}
       <BlockComponent
         type="button"
         props={{
-          text: text || `Button ${idx + 1}`,
+          text: text || "Button",
           onClick,
           type,
           quiet,

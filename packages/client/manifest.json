@@ -273,10 +273,12 @@
             "nested": true,
             "defaultValue": [
               {
-                "type": "cta"
+                "type": "cta",
+                "text": "Button 1"
               },
               {
-                "type": "primary"
+                "type": "primary",
+                "text": "Button 2"
               }
             ]
           }

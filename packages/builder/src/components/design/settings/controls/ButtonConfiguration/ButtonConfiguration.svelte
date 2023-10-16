@@ -1,69 +1,45 @@
 <script>
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
-  import {
-    getBindableProperties,
-    getComponentBindableProperties,
-  } from "builderStore/dataBinding"
-  import { createEventDispatcher, onMount } from "svelte"
-  import { selectedScreen, store } from "builderStore"
-  import { isEqual, cloneDeep } from "lodash"
+  import { createEventDispatcher } from "svelte"
+  import { store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
 
-  export let componentInstance
+  export let componentBindings
+  export let bindings
   export let value
 
   const dispatch = createEventDispatcher()
 
-  let mounted
-  let cachedValue
-  let componentBindings = []
   let focusItem
 
-  const updateState = value => {
-    return (value || []).map((button, idx) => {
-      if (!button._component) {
-        return buildPseudoInstance({ ...button, name: `Button ${idx + 1}` })
-      }
-      return button
+  $: buttonList = sanitizeValue(value) || []
+  $: buttonCount = buttonList.length
+  $: itemProps = {
+    componentBindings: componentBindings || [],
+    bindings,
+    removeButton,
+    canRemove: buttonCount > 1,
+  }
+
+  const sanitizeValue = val => {
+    return val?.map(button => {
+      return button._component ? button : buildPseudoInstance(button)
     })
   }
-
-  const buildItemProps = buttonList => {
-    return {
-      componentBindings,
-      bindings,
-      removeButton,
-      canRemove: buttonList?.length > 1,
-    }
-  }
-
-  $: if (!isEqual(value, cachedValue) && mounted) {
-    cachedValue = value ? cloneDeep(value) : []
-  }
-  $: buttonList = updateState(cachedValue)
-  $: buttonCount = buttonList?.length
-  $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
-  $: componentBindings = getComponentBindableProperties(
-    $selectedScreen,
-    componentInstance._id
-  )
-  $: itemProps = buildItemProps(buttonList)
 
   const processItemUpdate = e => {
     const updatedField = e.detail
-    const parentButtonsUpdated = buttonList ? cloneDeep(buttonList) : []
-
-    let parentFieldIdx = parentButtonsUpdated.findIndex(pSetting => {
+    const newButtonList = [...buttonList]
+    const fieldIdx = newButtonList.findIndex(pSetting => {
       return pSetting._id === updatedField?._id
     })
-
-    if (parentFieldIdx == -1) {
-      parentButtonsUpdated.push(updatedField)
+    if (fieldIdx === -1) {
+      newButtonList.push(updatedField)
     } else {
-      parentButtonsUpdated[parentFieldIdx] = updatedField
+      newButtonList[fieldIdx] = updatedField
     }
-    dispatch("change", parentButtonsUpdated)
+    dispatch("change", newButtonList)
   }
 
   const listUpdated = e => {
@@ -71,22 +47,20 @@
   }
 
   const buildPseudoInstance = cfg => {
-    const pseudoComponentInstance = store.actions.components.createInstance(
+    return store.actions.components.createInstance(
       `@budibase/standard-components/button`,
       {
         _instanceName: Helpers.uuid(),
-        text: cfg.name,
+        text: cfg.text,
         type: cfg.type || "primary",
       },
       {}
     )
-
-    return pseudoComponentInstance
   }
 
   const addButton = () => {
     const newButton = buildPseudoInstance({
-      name: `Button ${buttonList.length + 1}`,
+      text: `Button ${buttonCount + 1}`,
     })
     dispatch("change", [...buttonList, newButton])
     focusItem = newButton._id
@@ -98,14 +72,10 @@
       buttonList.filter(button => button._id !== id)
     )
   }
-
-  onMount(() => {
-    mounted = true
-  })
 </script>
 
 <div class="button-configuration">
-  {#if buttonList?.length}
+  {#if buttonCount}
     <DraggableList
       on:change={listUpdated}
       on:itemChange={processItemUpdate}
