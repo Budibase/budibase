@@ -1,6 +1,7 @@
 import { get } from "svelte/store"
 import DataFetch from "./DataFetch.js"
 import { TableNames } from "../constants"
+import { LuceneUtils } from "../utils"
 
 export default class UserFetch extends DataFetch {
   constructor(opts) {
@@ -27,16 +28,25 @@ export default class UserFetch extends DataFetch {
   }
 
   async getData() {
+    const { limit, paginate } = this.options
     const { cursor, query } = get(this.store)
+    let finalQuery
+    // convert old format to new one - we now allow use of the lucene format
+    const { appId, paginated, ...rest } = query
+    if (!LuceneUtils.hasFilters(query) && rest.email) {
+      finalQuery = { string: { email: rest.email } }
+    } else {
+      finalQuery = rest
+    }
     try {
-      // "query" normally contains a lucene query, but users uses a non-standard
-      // search endpoint so we use query uniquely here
-      const res = await this.API.searchUsers({
-        page: cursor,
-        email: query.email,
-        appId: query.appId,
-        paginated: query.paginated,
-      })
+      const opts = {
+        bookmark: cursor,
+        query: finalQuery,
+        appId: appId,
+        paginate: paginated || paginate,
+        limit,
+      }
+      const res = await this.API.searchUsers(opts)
       return {
         rows: res?.data || [],
         hasNextPage: res?.hasNextPage || false,
