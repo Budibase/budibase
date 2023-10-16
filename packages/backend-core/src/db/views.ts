@@ -190,6 +190,10 @@ export const createPlatformUserView = async () => {
     if (doc.tenantId) {
       emit(doc._id.toLowerCase(), doc._id)
     }
+
+    if (doc.ssoId) {
+      emit(doc.ssoId, doc._id)
+    }
   }`
   await createPlatformView(viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
 }

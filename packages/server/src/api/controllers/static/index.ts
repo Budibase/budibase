@@ -107,6 +107,11 @@ export const serveApp = async function (ctx: any) {
   //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
   const branding = await pro.branding.getBrandingConfig(config)
+  // incase running direct from TS
+  let appHbsPath = join(__dirname, "app.hbs")
+  if (!fs.existsSync(appHbsPath)) {
+    appHbsPath = join(__dirname, "templates", "app.hbs")
+  }
 
   let db
   try {
@@ -138,7 +143,7 @@ export const serveApp = async function (ctx: any) {
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
       })
-      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
+      const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -166,7 +171,7 @@ export const serveApp = async function (ctx: any) {
             : "",
       })
 
-      const appHbs = loadHandlebarsFile(`${__dirname}/app.hbs`)
+      const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
         head,
         body: html,
@@ -193,8 +198,13 @@ export const serveBuilderPreview = async function (ctx: any) {
 }
 
 export const serveClientLibrary = async function (ctx: any) {
+  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  // incase running from TS directly
+  if (env.isDev() && !fs.existsSync(rootPath)) {
+    rootPath = join(require.resolve("@budibase/client"), "..")
+  }
   return send(ctx, "budibase-client.js", {
-    root: join(NODE_MODULES_PATH, "@budibase", "client", "dist"),
+    root: rootPath,
   })
 }
 

@@ -82,12 +82,22 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
+
   /**
-   * Gets a list o tables.
+   * Gets a list of tables.
    */
   getTables: async () => {
     return await API.get({
       url: "/api/tables",
+    })
+  },
+
+  /**
+   * Get a single table based on table ID.
+   */
+  getTable: async tableId => {
+    return await API.get({
+      url: `/api/tables/${tableId}`,
     })
   },
 

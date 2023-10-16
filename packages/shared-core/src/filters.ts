@@ -6,6 +6,7 @@ import {
   SearchFilter,
   SearchQuery,
   SearchQueryFields,
+  FieldSubtype,
 } from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
@@ -14,10 +15,9 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 
 /**
  * Returns the valid operator options for a certain data type
- * @param type the data type
  */
 export const getValidOperatorsForType = (
-  type: FieldType,
+  fieldType: { type: FieldType; subtype?: FieldSubtype },
   field: string,
   datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
 ) => {
@@ -44,22 +44,27 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  if (type === "string") {
+  const { type, subtype } = fieldType
+  if (type === FieldType.STRING) {
     ops = stringOps
-  } else if (type === "number" || type === "bigint") {
+  } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
     ops = numOps
-  } else if (type === "options") {
+  } else if (type === FieldType.OPTIONS) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-  } else if (type === "array") {
+  } else if (type === FieldType.ARRAY) {
     ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
-  } else if (type === "boolean") {
+  } else if (type === FieldType.BOOLEAN) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
-  } else if (type === "longform") {
+  } else if (type === FieldType.LONGFORM) {
     ops = stringOps
-  } else if (type === "datetime") {
+  } else if (type === FieldType.DATETIME) {
     ops = numOps
-  } else if (type === "formula") {
+  } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
+    ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
   }
 
   // Only allow equal/not equal for _id in SQL tables
