@@ -234,6 +234,7 @@
         on:blur={onBlurInput}
         on:click={() => focusedCellId.set(null)}
         on:keydown={onInputKeyDown}
+        data-grid-ignore
       />
     {/if}
 
