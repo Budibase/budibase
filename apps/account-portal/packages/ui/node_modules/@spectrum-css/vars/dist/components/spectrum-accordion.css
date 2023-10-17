@@ -1,0 +1,25 @@
+.spectrum {
+  --spectrum-accordion-border-color: var(--spectrum-global-color-gray-300);
+  --spectrum-accordion-icon-color: var(--spectrum-global-color-gray-600);
+  --spectrum-accordion-text-color: var(--spectrum-global-color-gray-700);
+  --spectrum-accordion-icon-color-hover: var(--spectrum-global-color-gray-800);
+  --spectrum-accordion-text-color-hover: var(--spectrum-global-color-gray-900);
+  --spectrum-accordion-background-color-hover: var(--spectrum-global-color-gray-200);
+  --spectrum-accordion-icon-color-down: var(--spectrum-global-color-gray-800);
+  --spectrum-accordion-text-color-down: var(--spectrum-global-color-gray-900);
+  --spectrum-accordion-item-border-left-size-key-focus: var(--spectrum-alias-border-size-thick);
+  --spectrum-accordion-item-border-left-color-key-focus: var(--spectrum-alias-border-color-focus);
+  --spectrum-accordion-icon-color-key-focus: var(--spectrum-global-color-gray-800);
+  --spectrum-accordion-text-color-key-focus: var(--spectrum-global-color-gray-900);
+  --spectrum-accordion-icon-color-disabled: var(--spectrum-global-color-gray-400);
+  --spectrum-accordion-text-color-disabled: var(--spectrum-global-color-gray-500);
+  --spectrum-accordion-item-height: 40px;
+  --spectrum-accordion-item-padding-x: var(--spectrum-global-dimension-size-225);
+  --spectrum-accordion-item-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-accordion-icon-gap: var(--spectrum-global-dimension-size-100);
+  --spectrum-accordion-icon-width: var(--spectrum-global-dimension-size-75);
+  --spectrum-accordion-icon-height: var(--spectrum-global-dimension-size-125);
+  --spectrum-accordion-item-title-text-size: var(--spectrum-global-dimension-font-size-50);
+  --spectrum-accordion-item-title-tracking: var(--spectrum-global-font-letter-spacing-medium);
+  --spectrum-accordion-item-content-padding: var(--spectrum-global-dimension-size-200);
+}

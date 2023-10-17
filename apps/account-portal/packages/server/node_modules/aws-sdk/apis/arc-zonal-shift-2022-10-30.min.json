@@ -1,0 +1,284 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2022-10-30",
+    "endpointPrefix": "arc-zonal-shift",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "AWS ARC - Zonal Shift",
+    "serviceId": "ARC Zonal Shift",
+    "signatureVersion": "v4",
+    "signingName": "arc-zonal-shift",
+    "uid": "arc-zonal-shift-2022-10-30"
+  },
+  "operations": {
+    "CancelZonalShift": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/zonalshifts/{zonalShiftId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "zonalShiftId"
+        ],
+        "members": {
+          "zonalShiftId": {
+            "location": "uri",
+            "locationName": "zonalShiftId"
+          }
+        }
+      },
+      "output": {
+        "shape": "S3"
+      }
+    },
+    "GetManagedResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/managedresources/{resourceIdentifier}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceIdentifier"
+        ],
+        "members": {
+          "resourceIdentifier": {
+            "location": "uri",
+            "locationName": "resourceIdentifier"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "appliedWeights",
+          "zonalShifts"
+        ],
+        "members": {
+          "appliedWeights": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "float"
+            }
+          },
+          "arn": {},
+          "name": {},
+          "zonalShifts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "appliedStatus",
+                "awayFrom",
+                "comment",
+                "expiryTime",
+                "resourceIdentifier",
+                "startTime",
+                "zonalShiftId"
+              ],
+              "members": {
+                "appliedStatus": {},
+                "awayFrom": {},
+                "comment": {},
+                "expiryTime": {
+                  "type": "timestamp"
+                },
+                "resourceIdentifier": {},
+                "startTime": {
+                  "type": "timestamp"
+                },
+                "zonalShiftId": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListManagedResources": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/managedresources",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "items"
+        ],
+        "members": {
+          "items": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "availabilityZones"
+              ],
+              "members": {
+                "arn": {},
+                "availabilityZones": {
+                  "type": "list",
+                  "member": {}
+                },
+                "name": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListZonalShifts": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/zonalshifts",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          },
+          "status": {
+            "location": "querystring",
+            "locationName": "status"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "items": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "awayFrom",
+                "comment",
+                "expiryTime",
+                "resourceIdentifier",
+                "startTime",
+                "status",
+                "zonalShiftId"
+              ],
+              "members": {
+                "awayFrom": {},
+                "comment": {},
+                "expiryTime": {
+                  "type": "timestamp"
+                },
+                "resourceIdentifier": {},
+                "startTime": {
+                  "type": "timestamp"
+                },
+                "status": {},
+                "zonalShiftId": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "StartZonalShift": {
+      "http": {
+        "requestUri": "/zonalshifts",
+        "responseCode": 201
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "awayFrom",
+          "comment",
+          "expiresIn",
+          "resourceIdentifier"
+        ],
+        "members": {
+          "awayFrom": {},
+          "comment": {},
+          "expiresIn": {},
+          "resourceIdentifier": {}
+        }
+      },
+      "output": {
+        "shape": "S3"
+      }
+    },
+    "UpdateZonalShift": {
+      "http": {
+        "method": "PATCH",
+        "requestUri": "/zonalshifts/{zonalShiftId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "zonalShiftId"
+        ],
+        "members": {
+          "comment": {},
+          "expiresIn": {},
+          "zonalShiftId": {
+            "location": "uri",
+            "locationName": "zonalShiftId"
+          }
+        }
+      },
+      "output": {
+        "shape": "S3"
+      }
+    }
+  },
+  "shapes": {
+    "S3": {
+      "type": "structure",
+      "required": [
+        "awayFrom",
+        "comment",
+        "expiryTime",
+        "resourceIdentifier",
+        "startTime",
+        "status",
+        "zonalShiftId"
+      ],
+      "members": {
+        "awayFrom": {},
+        "comment": {},
+        "expiryTime": {
+          "type": "timestamp"
+        },
+        "resourceIdentifier": {},
+        "startTime": {
+          "type": "timestamp"
+        },
+        "status": {},
+        "zonalShiftId": {}
+      }
+    }
+  }
+}

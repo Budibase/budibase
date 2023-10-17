@@ -1,0 +1,20 @@
+.spectrum {
+  --spectrum-divider-s-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-divider-s-border-radius: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-s-height: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-s-vertical-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-divider-s-vertical-border-radius: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-s-vertical-width: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-m-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-divider-m-border-radius: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-m-height: var(--spectrum-global-dimension-size-25);
+  --spectrum-divider-m-vertical-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-divider-m-vertical-border-radius: var(--spectrum-global-dimension-size-10);
+  --spectrum-divider-m-vertical-width: var(--spectrum-global-dimension-size-25);
+  --spectrum-divider-l-background-color: var(--spectrum-global-color-gray-800);
+  --spectrum-divider-l-border-radius: var(--spectrum-global-dimension-size-25);
+  --spectrum-divider-l-height: var(--spectrum-global-dimension-size-50);
+  --spectrum-divider-l-vertical-background-color: var(--spectrum-global-color-gray-800);
+  --spectrum-divider-l-vertical-border-radius: var(--spectrum-global-dimension-size-25);
+  --spectrum-divider-l-vertical-width: var(--spectrum-global-dimension-size-50);
+}
