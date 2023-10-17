@@ -1,9 +1,14 @@
-packages/server/node_modules
-packages/builder
-packages/frontend-core
-packages/backend-core
-packages/worker/node_modules
-packages/cli
-packages/client
-packages/bbui
-packages/string-templates
+*
+!/packages/
+!/scripts/
+/packages/*/node_modules
+packages/server/scripts/
+!packages/server/scripts/integrations/oracle
+!nx.json
+!/hosting/single/
+!/hosting/letsencrypt /
+
+!package.json
+!yarn.lock
+!lerna.json
+!.yarnrc
