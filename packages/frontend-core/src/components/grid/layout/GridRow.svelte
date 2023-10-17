@@ -10,7 +10,7 @@
     focusedCellId,
     reorder,
     selectedRows,
-    renderedColumns,
+    visibleColumns,
     hoveredRowId,
     selectedCellMap,
     focusedRow,
@@ -34,7 +34,7 @@
   on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
   on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
 >
-  {#each $renderedColumns as column, columnIdx (column.name)}
+  {#each $visibleColumns as column, columnIdx}
     {@const cellId = `${row._id}-${column.name}`}
     <DataCell
       {cellId}
