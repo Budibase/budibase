@@ -4,7 +4,9 @@ export enum PlanType {
   PRO = "pro",
   /** @deprecated */
   TEAM = "team",
+  /** @deprecated */
   PREMIUM = "premium",
+  PREMIUM_PLUS = "premium_plus",
   BUSINESS = "business",
   ENTERPRISE = "enterprise",
 }
@@ -25,7 +27,7 @@ export interface AvailablePrice {
   amountMonthly: number
   currency: string
   duration: PriceDuration
-  priceId: string,
+  priceId: string
   type?: string
 }
 
