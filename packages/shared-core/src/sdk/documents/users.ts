@@ -1,4 +1,10 @@
-import { ContextUser, User } from "@budibase/types"
+import {
+  ContextUser,
+  DocumentType,
+  SEPARATOR,
+  User,
+  InternalTable,
+} from "@budibase/types"
 import { getProdAppID } from "./applications"
 import * as _ from "lodash/fp"
 
@@ -91,4 +97,22 @@ export function isCreator(user?: User | ContextUser): boolean {
     hasAppBuilderPermissions(user) ||
     hasAppCreatorPermissions(user)
   )
+}
+
+export function getGlobalUserID(userId?: string): string | undefined {
+  if (typeof userId !== "string") {
+    return userId
+  }
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+  if (!userId.startsWith(prefix)) {
+    return userId
+  }
+  return userId.split(prefix)[1]
+}
+
+export function containsUserID(value: string | undefined): boolean {
+  if (typeof value !== "string") {
+    return false
+  }
+  return value.includes(`${DocumentType.USER}${SEPARATOR}`)
 }

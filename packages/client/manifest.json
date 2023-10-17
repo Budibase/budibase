@@ -2539,7 +2539,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2629,7 +2630,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2685,7 +2687,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2736,7 +2739,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2841,7 +2845,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -2960,7 +2965,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3143,7 +3149,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3200,7 +3207,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3301,7 +3309,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3355,7 +3364,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -3408,6 +3418,17 @@
           "setting": "beepFrequency",
           "value": "custom"
         }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "validation/string",
@@ -3622,7 +3643,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3689,7 +3711,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -5587,6 +5610,21 @@
         ]
       },
       {
+        "type": "event",
+        "label": "On row click",
+        "key": "onRowClick",
+        "context": [
+          {
+            "label": "Clicked row",
+            "key": "row"
+          }
+        ],
+        "dependsOn": {
+          "setting": "allowEditRows",
+          "value": false
+        }
+      },
+      {
         "type": "boolean",
         "label": "Add rows",
         "key": "allowAddRows",
@@ -5608,6 +5646,69 @@
         "type": "boolean",
         "label": "High contrast",
         "key": "stripeRows",
+        "defaultValue": false
+      }
+    ]
+  },
+  "bbreferencefield": {
+    "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
+    "name": "User Field",
+    "icon": "User",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/bb_reference",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "boolean",
+        "label": "Search",
+        "key": "autocomplete",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
         "defaultValue": false
       }
     ]

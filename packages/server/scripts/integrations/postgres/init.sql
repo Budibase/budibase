@@ -9,6 +9,7 @@ CREATE TABLE Persons (
     Address varchar(255),
     City varchar(255) DEFAULT 'Belfast',
     Age INTEGER DEFAULT 20 NOT NULL,
+    Year INTEGER,
     Type person_job
 );
 CREATE TABLE Tasks (
@@ -49,9 +50,10 @@ CREATE TABLE CompositeTable (
   Name varchar(255),
   PRIMARY KEY (KeyPartOne, KeyPartTwo)
 );
-INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', 'qa');
-INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer');
-INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age) VALUES ('Foo', 'Bar', 'Foo Street', 'Bartown', 'support', 0);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Year) VALUES ('Mike', 'Hughes', '123 Fake Street', 'Belfast', 'qa', 1999);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Year) VALUES ('John', 'Smith', '64 Updown Road', 'Dublin', 'programmer', 1996);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type, Age, Year) VALUES ('Foo', 'Bar', 'Foo Street', 'Bartown', 'support', 0, 1993);
+INSERT INTO Persons (FirstName, LastName, Address, City, Type) VALUES ('Jonny', 'Muffin', 'Muffin Street', 'Cork', 'support');
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (1, 2, 'assembling', TRUE);
 INSERT INTO Tasks (ExecutorID, QaID, TaskName, Completed) VALUES (2, 1, 'processing', FALSE);
 INSERT INTO Products (ProductName) VALUES ('Computers');

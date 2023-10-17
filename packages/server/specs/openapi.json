@@ -613,6 +613,23 @@
           "data"
         ]
       },
+      "appExport": {
+        "type": "object",
+        "properties": {
+          "encryptPassword": {
+            "description": "An optional password used to encrypt the export.",
+            "type": "string"
+          },
+          "excludeRows": {
+            "description": "Set whether the internal table rows should be excluded from the export.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "encryptPassword",
+          "excludeRows"
+        ]
+      },
       "row": {
         "description": "The row to be created/updated, based on the table schema.",
         "type": "object",
@@ -842,7 +859,8 @@
                         "json",
                         "internal",
                         "barcodeqr",
-                        "bigint"
+                        "bigint",
+                        "bb_reference"
                       ],
                       "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                     },
@@ -1047,7 +1065,8 @@
                             "json",
                             "internal",
                             "barcodeqr",
-                            "bigint"
+                            "bigint",
+                            "bb_reference"
                           ],
                           "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                         },
@@ -1263,7 +1282,8 @@
                               "json",
                               "internal",
                               "barcodeqr",
-                              "bigint"
+                              "bigint",
+                              "bb_reference"
                             ],
                             "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                           },
@@ -1550,8 +1570,7 @@
           }
         },
         "required": [
-          "email",
-          "roles"
+          "email"
         ]
       },
       "userOutput": {
@@ -1622,7 +1641,6 @@
             },
             "required": [
               "email",
-              "roles",
               "_id"
             ]
           }
@@ -1701,7 +1719,6 @@
               },
               "required": [
                 "email",
-                "roles",
                 "_id"
               ]
             }
@@ -2156,6 +2173,87 @@
                   "deployment": {
                     "$ref": "#/components/examples/deploymentOutput"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/applications/{appId}/import": {
+      "post": {
+        "operationId": "appImport",
+        "summary": "Import an app to an existing app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "encryptedPassword": {
+                    "description": "Password for the export if it is encrypted.",
+                    "type": "string"
+                  },
+                  "appExport": {
+                    "description": "The app export to import.",
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "appExport"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Application has been updated."
+          }
+        }
+      }
+    },
+    "/applications/{appId}/export": {
+      "post": {
+        "operationId": "appExport",
+        "summary": "Export an app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/appExport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A gzip tarball containing the app export, encrypted if password provided.",
+            "content": {
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "Tarball containing database and object store contents..."
                 }
               }
             }

@@ -45,8 +45,21 @@
   let enrichedSearchColumns
   let schemaLoaded = false
 
-  // Accommodate old config to ensure delete button does not reappear
-  $: deleteLabel = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+  $: deleteLabel = setDeleteLabel(sidePanelDeleteLabel, sidePanelShowDelete)
+
+  const setDeleteLabel = sidePanelDeleteLabel => {
+    // Accommodate old config to ensure delete button does not reappear
+    let labelText = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+
+    // Empty text is considered hidden.
+    if (labelText?.trim() === "") {
+      return ""
+    }
+
+    // Default to "Delete" if the value is unset
+    return labelText || "Delete"
+  }
+
   $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
@@ -249,7 +262,7 @@
             props={{
               dataSource,
               saveButtonLabel: sidePanelSaveLabel || "Save", //always show
-              deleteButtonLabel: deleteLabel, //respect config
+              deleteButtonLabel: deleteLabel,
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,

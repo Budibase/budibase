@@ -55,6 +55,7 @@ export interface User extends Document {
   userGroups?: string[]
   onboardedAt?: string
   scimInfo?: { isSync: true } & Record<string, any>
+  ssoId?: string
 }
 
 export enum UserStatus {
