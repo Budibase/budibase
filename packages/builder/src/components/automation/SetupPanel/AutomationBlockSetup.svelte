@@ -23,6 +23,7 @@
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
+  import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
@@ -82,33 +83,6 @@
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
       : []
 
-  /**
-   * TODO - Remove after November 2023
-   * *******************************
-   * Code added to provide backwards compatibility between Values 1,2,3,4,5
-   * and the new JSON body.
-   */
-  let deprecatedSchemaProperties
-  $: {
-    if (block?.stepId === "integromat" || block?.stepId === "zapier") {
-      deprecatedSchemaProperties = schemaProperties.filter(
-        prop => !prop[0].startsWith("value")
-      )
-      if (!deprecatedSchemaProperties.map(entry => entry[0]).includes("body")) {
-        deprecatedSchemaProperties.push([
-          "body",
-          {
-            title: "Payload",
-            type: "json",
-          },
-        ])
-      }
-    } else {
-      deprecatedSchemaProperties = schemaProperties
-    }
-  }
-  /****************************************************/
-
   const getInputData = (testData, blockInputs) => {
     // Test data is not cloned for reactivity
     let newInputData = testData || cloneDeep(blockInputs)
@@ -117,30 +91,6 @@
     if (block.event === "app:trigger" && !newInputData?.fields) {
       newInputData = cloneDeep(blockInputs)
     }
-
-    /**
-     * TODO - Remove after November 2023
-     * *******************************
-     * Code added to provide backwards compatibility between Values 1,2,3,4,5
-     * and the new JSON body.
-     */
-    if (
-      (block?.stepId === "integromat" || block?.stepId === "zapier") &&
-      !newInputData?.body?.value
-    ) {
-      let deprecatedValues = {
-        ...newInputData,
-      }
-      delete deprecatedValues.url
-      delete deprecatedValues.body
-      newInputData = {
-        url: newInputData.url,
-        body: {
-          value: JSON.stringify(deprecatedValues),
-        },
-      }
-    }
-    /**********************************/
 
     inputData = newInputData
     setDefaultEnumValues()
@@ -337,7 +287,7 @@
 </script>
 
 <div class="fields">
-  {#each deprecatedSchemaProperties as [key, value]}
+  {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
       <div class="block-field">
         {#if key !== "fields" && value.type !== "boolean"}
@@ -362,18 +312,6 @@
             mode="json"
             value={inputData[key]?.value}
             on:change={e => {
-              /**
-               * TODO - Remove after November 2023
-               * *******************************
-               * Code added to provide backwards compatibility between Values 1,2,3,4,5
-               * and the new JSON body.
-               */
-              delete inputData.value1
-              delete inputData.value2
-              delete inputData.value3
-              delete inputData.value4
-              delete inputData.value5
-              /***********************/
               onChange(e, key)
             }}
           />
@@ -386,10 +324,23 @@
             />
           </div>
         {:else if value.type === "date"}
-          <DatePicker
+          <DrawerBindableSlot
+            fillWidth
+            title={value.title}
+            panel={AutomationBindingPanel}
+            type={"date"}
             value={inputData[key]}
             on:change={e => onChange(e, key)}
-          />
+            {bindings}
+            allowJS={true}
+            updateOnChange={false}
+            drawerLeft="260px"
+          >
+            <DatePicker
+              value={inputData[key]}
+              on:change={e => onChange(e, key)}
+            />
+          </DrawerBindableSlot>
         {:else if value.customType === "column"}
           <Select
             on:change={e => onChange(e, key)}
@@ -469,7 +420,6 @@
           />
         {:else if value.customType === "row"}
           <RowSelector
-            {block}
             value={inputData[key]}
             meta={inputData["meta"] || {}}
             on:change={e => {

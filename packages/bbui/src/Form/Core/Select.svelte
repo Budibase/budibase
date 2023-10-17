@@ -25,6 +25,8 @@
   export let tag = null
   export let customPopoverOffsetBelow
   export let customPopoverMaxHeight
+  export let searchTerm = null
+  export let loading
 
   const dispatch = createEventDispatcher()
 
@@ -65,6 +67,8 @@
 <Picker
   on:click
   bind:open
+  bind:searchTerm
+  on:loadMore
   {quiet}
   {id}
   {error}
@@ -92,4 +96,5 @@
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption}
+  {loading}
 />

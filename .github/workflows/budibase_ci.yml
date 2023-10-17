@@ -10,7 +10,6 @@ on:
   push:
     branches:
       - master
-      - develop
   pull_request:
   workflow_dispatch:
 
@@ -20,18 +19,12 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' && github.base_ref != 'master'}}
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Maximize build space
-        uses: easimon/maximize-build-space@master
-        with:
-          root-reserve-mb: 35000
-          swap-size-mb: 1024
-          remove-android: 'true'
-          remove-dotnet: 'true'
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
@@ -121,7 +114,7 @@ jobs:
           name: codecov-umbrella
           verbose: true
 
-  test-services:
+  test-worker:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo and submodules
@@ -143,12 +136,48 @@ jobs:
           node-version: 18.x
           cache: "yarn"
       - run: yarn --frozen-lockfile
-      - name: Test worker and server
+      - name: Test worker
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/worker --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+            yarn test --scope=@budibase/worker --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test --scope=@budibase/worker --scope=@budibase/server
+            yarn test --scope=@budibase/worker
+          fi
+
+      - uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
+          name: codecov-umbrella
+          verbose: true
+
+  test-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+      - name: Checkout repo only
+        uses: actions/checkout@v3
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: "yarn"
+      - run: yarn --frozen-lockfile
+      - name: Test server
+        run: |
+          if ${{ env.USE_NX_AFFECTED }}; then
+            yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
+          else
+            yarn test --scope=@budibase/server
           fi
 
       - uses: codecov/codecov-action@v3
@@ -232,20 +261,21 @@ jobs:
           branch="${{ github.base_ref || github.ref_name  }}"
           echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
 
-          if [[ $branch == "master" ]]; then
-            base_commit=$(git rev-parse origin/master)
+          base_commit=$(git rev-parse origin/master)
+
+          if [[ ! -z $base_commit ]]; then
+            echo "target_branch=$branch"
+            echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
+            echo "pro_commit=$pro_commit"
+            echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
+            echo "base_commit=$base_commit"
+            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
           else
-            base_commit=$(git rev-parse origin/develop)
+            echo "Nothing to do - branch to branch merge."
           fi
 
-          echo "target_branch=$branch"
-          echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
-          echo "pro_commit=$pro_commit"
-          echo "pro_commit=$pro_commit" >> "$GITHUB_OUTPUT"
-          echo "base_commit=$base_commit"
-          echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
-
-      - name: Check submodule merged to develop
+      - name: Check submodule merged to base branch
+        if: ${{ steps.get_pro_commits.outputs.base_commit != '' }}
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -254,7 +284,7 @@ jobs:
             const baseCommit = '${{ steps.get_pro_commits.outputs.base_commit }}';
 
             if (submoduleCommit !== baseCommit) {
-              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}"" branch.');
+              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.');
               console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
               process.exit(1);
             } else {

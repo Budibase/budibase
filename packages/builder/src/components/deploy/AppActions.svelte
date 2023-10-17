@@ -224,10 +224,10 @@
               <span
                 class="app-link"
                 on:click={() => {
+                  appActionPopover.hide()
                   if (isPublished) {
                     viewApp()
                   } else {
-                    appActionPopover.hide()
                     updateAppModal.show()
                   }
                 }}

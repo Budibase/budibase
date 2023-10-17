@@ -59,7 +59,11 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableClone = cloneDeep(dbTable)
 
   // this returns the table and row incase they have been updated
-  let { table, row } = inputProcessing(ctx.user, tableClone, combinedRow)
+  let { table, row } = await inputProcessing(
+    ctx.user?._id,
+    tableClone,
+    combinedRow
+  )
   const validateResult = await sdk.rows.utils.validate({
     row,
     table,
@@ -106,7 +110,7 @@ export async function save(ctx: UserCtx) {
   // need to copy the table so it can be differenced on way out
   const tableClone = cloneDeep(dbTable)
 
-  let { table, row } = inputProcessing(ctx.user, tableClone, inputs)
+  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
 
   const validateResult = await sdk.rows.utils.validate({
     row,
@@ -152,7 +156,10 @@ export async function destroy(ctx: UserCtx) {
   }
   const table = await sdk.tables.getTable(row.tableId)
   // update the row to include full relationships before deleting them
-  row = await outputProcessing(table, row, { squash: false })
+  row = await outputProcessing(table, row, {
+    squash: false,
+    skipBBReferences: true,
+  })
   // now remove the relationships
   await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_DELETE,
@@ -186,6 +193,7 @@ export async function bulkDestroy(ctx: UserCtx) {
   // they need to be the full rows (including previous relationships) for automations
   const processedRows = (await outputProcessing(table, rows, {
     squash: false,
+    skipBBReferences: true,
   })) as Row[]
 
   // remove the relationships first

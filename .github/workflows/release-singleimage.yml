@@ -18,7 +18,7 @@ jobs:
       - name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 35000
+          root-reserve-mb: 30000
           swap-size-mb: 1024
           remove-android: 'true'
           remove-dotnet: 'true'
@@ -33,14 +33,6 @@ jobs:
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-          fetch-depth: 0
-
-      - name: Fail if tag is not in master
-        run: |
-          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
-            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
-            exit 1
-          fi
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
@@ -53,10 +45,6 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Run Yarn
         run: yarn
-      - name: Update versions
-        run: ./scripts/updateVersions.sh
-      - name: Runt Yarn Lint
-        run: yarn lint
       - name: Update versions
         run: ./scripts/updateVersions.sh
       - name: Run Yarn Build

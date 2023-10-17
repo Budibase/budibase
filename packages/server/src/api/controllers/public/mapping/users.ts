@@ -15,10 +15,15 @@ function user(body: any): User {
   }
 }
 
-function mapUser(ctx: any): { data: User } {
-  return {
+function mapUser(ctx: any) {
+  const body: { data: User; message?: string } = {
     data: user(ctx.body),
   }
+  if (ctx.extra?.message) {
+    body.message = ctx.extra.message
+    delete ctx.extra
+  }
+  return body
 }
 
 function mapUsers(ctx: any): { data: User[] } {

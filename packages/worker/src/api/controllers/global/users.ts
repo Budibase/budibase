@@ -95,7 +95,7 @@ const parseBooleanParam = (param: any) => {
 export const adminUser = async (
   ctx: Ctx<CreateAdminUserRequest, CreateAdminUserResponse>
 ) => {
-  const { email, password, tenantId } = ctx.request.body
+  const { email, password, tenantId, ssoId } = ctx.request.body
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
@@ -136,6 +136,7 @@ export const adminUser = async (
         global: true,
       },
       tenantId,
+      ssoId,
     }
     try {
       // always bust checklist beforehand, if an error occurs but can proceed, don't get
@@ -196,7 +197,12 @@ export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
 export const search = async (ctx: Ctx<SearchUsersRequest>) => {
   const body = ctx.request.body
 
-  if (body.paginated === false) {
+  // TODO: for now only one supported search key, string.email
+  if (body?.query && !userSdk.core.isSupportedUserSearch(body.query)) {
+    ctx.throw(501, "Can only search by string.email or equal._id")
+  }
+
+  if (body.paginate === false) {
     await getAppUsers(ctx)
   } else {
     const paginated = await userSdk.core.paginatedUsers(body)

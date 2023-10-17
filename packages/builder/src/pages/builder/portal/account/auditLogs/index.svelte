@@ -86,8 +86,16 @@
   $: userPage = $userPageInfo.page
   $: logsPage = $logsPageInfo.page
 
+  let usersObj = {}
+  $: usersObj = {
+    ...usersObj,
+    ...$users.data?.reduce((accumulator, user) => {
+      accumulator[user._id] = user
+      return accumulator
+    }, {}),
+  }
   $: sortedUsers = sort(
-    enrich($users.data || [], selectedUsers, "_id"),
+    enrich(Object.values(usersObj), selectedUsers, "_id"),
     "email"
   )
   $: sortedEvents = sort(
@@ -115,7 +123,10 @@
     prevUserSearch = search
     try {
       userPageInfo.loading()
-      await users.search({ userPage, email: search })
+      await users.search({
+        bookmark: userPage,
+        query: { string: { email: search } },
+      })
       userPageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
@@ -256,8 +267,7 @@
   <div class="controls">
     <div class="select">
       <Multiselect
-        bind:fetchTerm={userSearchTerm}
-        useFetch
+        bind:searchTerm={userSearchTerm}
         placeholder="All users"
         label="Users"
         autocomplete

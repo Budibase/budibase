@@ -10,24 +10,28 @@ export const buildUserEndpoints = API => ({
 
   /**
    * Gets a list of users in the current tenant.
-   * @param {string} page The page to retrieve
-   * @param {string} search The starts with string to search username/email by.
+   * @param {string} bookmark The page to retrieve
+   * @param {object} query search filters for lookup by user (all operators not supported).
    * @param {string} appId Facilitate app/role based user searching
-   * @param {boolean} paginated Allow the disabling of pagination
+   * @param {boolean} paginate Allow the disabling of pagination
+   * @param {number} limit How many users to retrieve in a single search
    */
-  searchUsers: async ({ paginated, page, email, appId } = {}) => {
+  searchUsers: async ({ paginate, bookmark, query, appId, limit } = {}) => {
     const opts = {}
-    if (page) {
-      opts.page = page
+    if (bookmark) {
+      opts.bookmark = bookmark
     }
-    if (email) {
-      opts.email = email
+    if (query) {
+      opts.query = query
     }
     if (appId) {
       opts.appId = appId
     }
-    if (typeof paginated === "boolean") {
-      opts.paginated = paginated
+    if (typeof paginate === "boolean") {
+      opts.paginate = paginate
+    }
+    if (limit) {
+      opts.limit = limit
     }
     return await API.post({
       url: `/api/global/users/search`,
