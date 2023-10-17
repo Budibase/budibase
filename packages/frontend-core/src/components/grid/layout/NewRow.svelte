@@ -20,7 +20,7 @@
     datasource,
     subscribe,
     renderedRows,
-    renderedColumns,
+    visibleColumns,
     rowHeight,
     hasNextPage,
     maxScrollTop,
@@ -38,7 +38,7 @@
   let newRow = { _isNewRow: true }
   let offset = 0
 
-  $: firstColumn = $stickyColumn || $renderedColumns[0]
+  $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $datasource, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
@@ -211,29 +211,27 @@
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $renderedColumns as column, columnIdx}
+          {#each $visibleColumns as column, columnIdx}
             {@const cellId = `new-${column.name}`}
-            {#key cellId}
-              <DataCell
-                {cellId}
-                {column}
-                {updateValue}
-                rowFocused
-                row={newRow}
-                focused={$focusedCellId === cellId}
-                width={column.width}
-                topRow={offset === 0}
-                invertX={columnIdx >= $columnHorizontalInversionIndex}
-                {invertY}
-              >
-                {#if column?.schema?.autocolumn}
-                  <div class="readonly-overlay">Can't edit auto column</div>
-                {/if}
-                {#if isAdding}
-                  <div in:fade={{ duration: 130 }} class="loading-overlay" />
-                {/if}
-              </DataCell>
-            {/key}
+            <DataCell
+              {cellId}
+              {column}
+              {updateValue}
+              rowFocused
+              row={newRow}
+              focused={$focusedCellId === cellId}
+              width={column.width}
+              topRow={offset === 0}
+              invertX={columnIdx >= $columnHorizontalInversionIndex}
+              {invertY}
+            >
+              {#if column?.schema?.autocolumn}
+                <div class="readonly-overlay">Can't edit auto column</div>
+              {/if}
+              {#if isAdding}
+                <div in:fade={{ duration: 130 }} class="loading-overlay" />
+              {/if}
+            </DataCell>
           {/each}
         </div>
       </GridScrollWrapper>

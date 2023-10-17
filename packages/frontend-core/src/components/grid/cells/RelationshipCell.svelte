@@ -444,6 +444,13 @@
     text-decoration: underline;
   }
 
+  .remove {
+    display: none;
+  }
+  .remove.visible {
+    display: block;
+  }
+
   .add {
     background: var(--spectrum-global-color-gray-200);
     padding: 4px;
