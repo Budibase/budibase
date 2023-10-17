@@ -8,5 +8,9 @@
       }
     }
   },
-  "targetDefaults": {}
+  "targetDefaults": {
+    "build": {
+      "inputs": ["{workspaceRoot}/scripts/build.js"]
+    }
+  }
 }
