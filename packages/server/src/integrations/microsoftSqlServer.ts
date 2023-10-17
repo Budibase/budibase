@@ -11,6 +11,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
+  Schema,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -18,6 +19,7 @@ import {
   convertSqlType,
   finaliseExternalTables,
   SqlClient,
+  checkExternalTables,
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
@@ -190,8 +192,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   private readonly config: MSSQLConfig
   private index: number = 0
   private client?: sqlServer.ConnectionPool
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   MASTER_TABLES = [
     "spt_fallback_db",
@@ -381,7 +381,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ) {
+  ): Promise<Schema> {
     await this.connect()
     let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
@@ -445,9 +445,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         schema,
       }
     }
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    let externalTables = finaliseExternalTables(tables, entities)
+    let errors = checkExternalTables(externalTables)
+    return {
+      tables: externalTables,
+      errors,
+    }
   }
 
   async queryTableNames() {

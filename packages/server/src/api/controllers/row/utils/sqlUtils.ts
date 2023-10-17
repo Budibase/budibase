@@ -1,4 +1,12 @@
-import { FieldType, RelationshipsJson, Row, Table } from "@budibase/types"
+import {
+  FieldType,
+  ManyToManyRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
+  RelationshipFieldMetadata,
+  RelationshipsJson,
+  Row,
+  Table,
+} from "@budibase/types"
 import { processFormulas } from "../../../../utilities/rowProcessor"
 import {
   breakExternalTableId,
@@ -8,6 +16,12 @@ import { basicProcessing } from "./basic"
 import { generateJunctionTableID } from "../../../../db/utils"
 
 type TableMap = Record<string, Table>
+
+export function isManyToMany(
+  field: RelationshipFieldMetadata
+): field is ManyToManyRelationshipFieldMetadata {
+  return !!(field as ManyToManyRelationshipFieldMetadata).through
+}
 
 export function squashRelationshipColumns(
   table: Table,
@@ -88,7 +102,7 @@ export function updateRelationshipColumns(
     columns[relationship.column] = linked
   }
   for (let [column, related] of Object.entries(columns)) {
-    let rowId: string = row._id!
+    let rowId = row._id
     if (opts?.internal) {
       const { _id } = basicProcessing({
         row,
@@ -137,15 +151,16 @@ export function buildExternalRelationships(
     if (!table.primary || !linkTable.primary) {
       continue
     }
-    const definition: any = {
+    const foreignKey = (field as OneToManyRelationshipFieldMetadata).foreignKey
+    const definition: RelationshipsJson = {
       // if no foreign key specified then use the name of the field in other table
-      from: field.foreignKey || table.primary[0],
+      from: foreignKey || table.primary[0],
       to: field.fieldName,
       tableName: linkTableName,
       // need to specify where to put this back into
       column: fieldName,
     }
-    if (field.through) {
+    if (isManyToMany(field) && field.through) {
       const { tableName: throughTableName } = breakExternalTableId(
         field.through
       )
@@ -168,6 +183,9 @@ export function buildInternalRelationships(table: Table): RelationshipsJson[] {
   )
   const tableId = table._id!
   for (let link of links) {
+    if (link.type !== FieldType.LINK) {
+      continue
+    }
     const linkTableId = link.tableId!
     const junctionTableId = generateJunctionTableID(tableId, linkTableId)
     const isFirstTable = tableId > linkTableId

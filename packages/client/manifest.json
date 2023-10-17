@@ -3420,6 +3420,17 @@
         }
       },
       {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
@@ -5599,6 +5610,21 @@
         ]
       },
       {
+        "type": "event",
+        "label": "On row click",
+        "key": "onRowClick",
+        "context": [
+          {
+            "label": "Clicked row",
+            "key": "row"
+          }
+        ],
+        "dependsOn": {
+          "setting": "allowEditRows",
+          "value": false
+        }
+      },
+      {
         "type": "boolean",
         "label": "Add rows",
         "key": "allowAddRows",
@@ -5672,11 +5698,6 @@
         "type": "validation/link",
         "label": "Validation",
         "key": "validation"
-      },
-      {
-        "type": "filter/relationship",
-        "label": "Filtering",
-        "key": "filter"
       },
       {
         "type": "boolean",

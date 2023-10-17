@@ -128,6 +128,7 @@
     <div class="manual-input">
       <Input
         bind:value
+        updateOnChange={false}
         on:change={() => {
           dispatch("change", value)
         }}

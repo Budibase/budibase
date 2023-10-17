@@ -1,4 +1,4 @@
-import { Table } from "../documents"
+import { ExternalTable, Table } from "../documents"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 
@@ -175,14 +175,19 @@ export interface IntegrationBase {
   }): void
 }
 
-export interface DatasourcePlus extends IntegrationBase {
-  tables: Record<string, Table>
-  schemaErrors: Record<string, string>
+export interface Schema {
+  tables: Record<string, ExternalTable>
+  errors: Record<string, string>
+}
 
+export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
-  buildSchema(datasourceId: string, entities: Record<string, Table>): any
+  buildSchema(
+    datasourceId: string,
+    entities: Record<string, ExternalTable>
+  ): Promise<Schema>
   getTableNames(): Promise<string[]>
 }

@@ -16,7 +16,6 @@ export interface Table extends Document {
   constrained?: string[]
   sql?: boolean
   indexes?: { [key: string]: any }
-  rows?: { [key: string]: any }
   created?: boolean
   rowHeight?: number
 }
