@@ -5,7 +5,6 @@ import {
   getTableParams,
 } from "../../db/utils"
 import { destroy as tableDestroy } from "./table/internal"
-import { BuildSchemaErrors, InvalidColumns } from "../../constants"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
@@ -14,10 +13,13 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  ExternalTable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
+  Schema,
   SourceName,
+  Table,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
@@ -26,23 +28,6 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
-
-function getErrorTables(errors: any, errorType: string) {
-  return Object.entries(errors)
-    .filter(entry => entry[1] === errorType)
-    .map(([name]) => name)
-}
-
-function updateError(error: any, newError: any, tables: string[]) {
-  if (!error) {
-    error = ""
-  }
-  if (error.length > 0) {
-    error += "\n"
-  }
-  error += `${newError} ${tables.join(", ")}`
-  return error
-}
 
 async function getConnector(
   datasource: Datasource
@@ -71,48 +56,36 @@ async function getAndMergeDatasource(datasource: Datasource) {
   return await sdk.datasources.enrich(enrichedDatasource)
 }
 
-async function buildSchemaHelper(datasource: Datasource) {
+async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
-  await connector.buildSchema(datasource._id!, datasource.entities!)
-
-  const errors = connector.schemaErrors
-  let error = null
-  if (errors && Object.keys(errors).length > 0) {
-    const noKey = getErrorTables(errors, BuildSchemaErrors.NO_KEY)
-    const invalidCol = getErrorTables(errors, BuildSchemaErrors.INVALID_COLUMN)
-    if (noKey.length) {
-      error = updateError(
-        error,
-        "No primary key constraint found for the following:",
-        noKey
-      )
-    }
-    if (invalidCol.length) {
-      const invalidCols = Object.values(InvalidColumns).join(", ")
-      error = updateError(
-        error,
-        `Cannot use columns ${invalidCols} found in following:`,
-        invalidCol
-      )
-    }
-  }
-  return { tables: connector.tables, error }
+  return await connector.buildSchema(
+    datasource._id!,
+    datasource.entities! as Record<string, ExternalTable>
+  )
 }
 
-async function buildFilteredSchema(datasource: Datasource, filter?: string[]) {
-  let { tables, error } = await buildSchemaHelper(datasource)
-  let finalTables = tables
-  if (filter) {
-    finalTables = {}
-    for (let key in tables) {
-      if (
-        filter.some((filter: any) => filter.toLowerCase() === key.toLowerCase())
-      ) {
-        finalTables[key] = tables[key]
-      }
+async function buildFilteredSchema(
+  datasource: Datasource,
+  filter?: string[]
+): Promise<Schema> {
+  let schema = await buildSchemaHelper(datasource)
+  if (!filter) {
+    return schema
+  }
+
+  let filteredSchema: Schema = { tables: {}, errors: {} }
+  for (let key in schema.tables) {
+    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+      filteredSchema.tables[key] = schema.tables[key]
     }
   }
-  return { tables: finalTables, error }
+
+  for (let key in schema.errors) {
+    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
+      filteredSchema.errors[key] = schema.errors[key]
+    }
+  }
+  return filteredSchema
 }
 
 export async function fetch(ctx: UserCtx) {
@@ -156,7 +129,7 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   const tablesFilter = ctx.request.body.tablesFilter
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables, error } = await buildFilteredSchema(datasource, tablesFilter)
+  const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
   datasource.entities = tables
 
   setDefaultDisplayColumns(datasource)
@@ -164,13 +137,11 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
     sdk.tables.populateExternalTableSchemas(datasource)
   )
   datasource._rev = dbResp.rev
-  const cleanedDatasource = await sdk.datasources.removeSecretSingle(datasource)
 
-  const res: any = { datasource: cleanedDatasource }
-  if (error) {
-    res.error = error
+  ctx.body = {
+    datasource: await sdk.datasources.removeSecretSingle(datasource),
+    errors,
   }
-  ctx.body = res
 }
 
 /**
@@ -298,15 +269,12 @@ export async function save(
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
   }
 
-  let schemaError = null
+  let errors: Record<string, string> = {}
   if (fetchSchema) {
-    const { tables, error } = await buildFilteredSchema(
-      datasource,
-      tablesFilter
-    )
-    schemaError = error
-    datasource.entities = tables
+    const schema = await buildFilteredSchema(datasource, tablesFilter)
+    datasource.entities = schema.tables
     setDefaultDisplayColumns(datasource)
+    errors = schema.errors
   }
 
   if (preSaveAction[datasource.source]) {
@@ -327,13 +295,10 @@ export async function save(
     }
   }
 
-  const response: CreateDatasourceResponse = {
+  ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
+    errors,
   }
-  if (schemaError) {
-    response.error = schemaError
-  }
-  ctx.body = response
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
 }
 
