@@ -14,6 +14,8 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
+  SearchQuery,
+  SearchQueryOperators,
   SearchUsersRequest,
   User,
   ContextUser,
@@ -285,7 +287,7 @@ export async function getUserCount() {
 export async function getCreatorCount() {
   let creators = 0
   async function iterate(startPage?: string) {
-    const page = await paginatedUsers({ page: startPage })
+    const page = await paginatedUsers({ bookmark: startPage })
     creators += page.data.filter(isCreator).length
     if (page.hasNextPage) {
       await iterate(page.nextPage)
