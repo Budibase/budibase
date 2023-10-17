@@ -16,7 +16,6 @@
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
-    "svelte": "3.49.0",
     "typescript": "5.2.2",
     "@babel/core": "^7.22.5",
     "@babel/eslint-parser": "^7.22.5",
