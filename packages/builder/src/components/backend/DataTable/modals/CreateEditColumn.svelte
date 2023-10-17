@@ -36,7 +36,7 @@
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
 
-  const AUTO_TYPE = "auto"
+  const AUTO_TYPE = FIELDS.AUTO.type
   const FORMULA_TYPE = FIELDS.FORMULA.type
   const LINK_TYPE = FIELDS.LINK.type
   const STRING_TYPE = FIELDS.STRING.type
@@ -60,8 +60,13 @@
     {}
   )
 
-  function makeFieldId(type, subtype) {
-    return `${type}${subtype || ""}`.toUpperCase()
+  function makeFieldId(type, subtype, autocolumn) {
+    // don't make field IDs for auto types
+    if (type === AUTO_TYPE || autocolumn) {
+      return type.toUpperCase()
+    } else {
+      return `${type}${subtype || ""}`.toUpperCase()
+    }
   }
 
   let originalName
@@ -183,7 +188,8 @@
     if (!savingColumn) {
       editableColumn.fieldId = makeFieldId(
         editableColumn.type,
-        editableColumn.subtype
+        editableColumn.subtype,
+        editableColumn.autocolumn
       )
 
       allowedTypes = getAllowedTypes().map(t => ({
@@ -419,7 +425,7 @@
         FIELDS.FORMULA,
         FIELDS.JSON,
         isUsers ? FIELDS.USERS : FIELDS.USER,
-        { name: "Auto Column", type: AUTO_TYPE },
+        FIELDS.AUTO,
       ]
     } else {
       let fields = [
@@ -538,7 +544,7 @@
     getOptionValue={field => field.fieldId}
     getOptionIcon={field => field.icon}
     isOptionEnabled={option => {
-      if (option.type == AUTO_TYPE) {
+      if (option.type === AUTO_TYPE) {
         return availableAutoColumnKeys?.length > 0
       }
       return true

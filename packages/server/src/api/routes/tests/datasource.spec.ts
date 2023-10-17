@@ -37,7 +37,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.datasource.name).toEqual("Test")
-      expect(res.body.errors).toBeUndefined()
+      expect(res.body.errors).toEqual({})
       expect(events.datasource.created).toBeCalledTimes(1)
     })
   })
