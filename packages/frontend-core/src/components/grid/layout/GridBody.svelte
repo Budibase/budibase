@@ -35,7 +35,7 @@
 </script>
 
 <div bind:this={body} class="grid-body">
-  <GridScrollWrapper scrollHorizontally scrollVertically wheelInteractive>
+  <GridScrollWrapper scrollHorizontally scrollVertically attachHandlers>
     {#each $renderedRows as row, idx}
       <GridRow
         {row}

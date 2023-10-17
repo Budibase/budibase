@@ -14,9 +14,14 @@ import {
   SortJson,
   ExternalTable,
   TableRequest,
+  Schema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId, finaliseExternalTables } from "./utils"
+import {
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+} from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
@@ -138,8 +143,6 @@ const SCHEMA: Integration = {
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private client: GoogleSpreadsheet
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   constructor(config: GoogleSheetsConfig) {
     this.config = config
@@ -281,19 +284,37 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ) {
+  ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
-      return
+      return { tables: {}, errors: {} }
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, ExternalTable> = {}
+    let errors: Record<string, string> = {}
     await utils.parallelForeach(
       sheets,
       async sheet => {
         // must fetch rows to determine schema
-        await sheet.getRows()
+        try {
+          await sheet.getRows()
+        } catch (err) {
+          // We expect this to always be an Error so if it's not, rethrow it to
+          // make sure we don't fail quietly.
+          if (!(err instanceof Error)) {
+            throw err
+          }
+
+          if (err.message.startsWith("No values in the header row")) {
+            errors[sheet.title] = err.message
+          } else {
+            // If we get an error we don't expect, rethrow to avoid failing
+            // quietly.
+            throw err
+          }
+          return
+        }
 
         const id = buildExternalTableId(datasourceId, sheet.title)
         tables[sheet.title] = this.getTableSchema(
@@ -305,9 +326,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       },
       10
     )
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    let externalTables = finaliseExternalTables(tables, entities)
+    errors = { ...errors, ...checkExternalTables(externalTables) }
+    return { tables: externalTables, errors }
   }
 
   async query(json: QueryJson) {

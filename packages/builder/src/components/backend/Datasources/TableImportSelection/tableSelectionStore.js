@@ -1,6 +1,6 @@
 import { derived, writable, get } from "svelte/store"
 import { keepOpen, notifications } from "@budibase/bbui"
-import { datasources, ImportTableError, tables } from "stores/backend"
+import { datasources, tables } from "stores/backend"
 
 export const createTableSelectionStore = (integration, datasource) => {
   const tableNamesStore = writable([])
@@ -30,12 +30,7 @@ export const createTableSelectionStore = (integration, datasource) => {
       notifications.success(`Tables fetched successfully.`)
       await onComplete()
     } catch (err) {
-      if (err instanceof ImportTableError) {
-        errorStore.set(err)
-      } else {
-        notifications.error("Error fetching tables.")
-      }
-
+      errorStore.set(err)
       return keepOpen
     }
   }
