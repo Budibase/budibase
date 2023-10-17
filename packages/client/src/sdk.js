@@ -13,6 +13,7 @@ import {
   sidePanelStore,
   dndIsDragging,
   confirmationStore,
+  roleStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -39,6 +40,7 @@ export default {
   dndIsDragging,
   currentRole,
   confirmationStore,
+  roleStore,
   styleable,
   linkable,
   getAction,

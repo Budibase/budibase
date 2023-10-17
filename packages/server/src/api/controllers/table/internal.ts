@@ -10,6 +10,8 @@ import {
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
 import {
+  BulkImportRequest,
+  BulkImportResponse,
   RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
@@ -78,10 +80,10 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   // make sure that types don't change of a column, have to remove
   // the column if you want to change the type
   if (oldTable && oldTable.schema) {
-    for (let propKey of Object.keys(tableToSave.schema)) {
+    for (const propKey of Object.keys(tableToSave.schema)) {
       let oldColumn = oldTable.schema[propKey]
       if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
-        oldColumn.type = FieldTypes.AUTO
+        oldTable.schema[propKey].type = FieldTypes.AUTO
       }
     }
   }
@@ -206,7 +208,9 @@ export async function destroy(ctx: any) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: any) {
+export async function bulkImport(
+  ctx: UserCtx<BulkImportRequest, BulkImportResponse>
+) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
   await handleDataImport(ctx.user, table, rows, identifierFields)

@@ -3,16 +3,19 @@
   import { API } from "api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"
+  import { createEventDispatcher } from "svelte"
 
   export let schema
   export let linkedRows = []
 
+  const dispatch = createEventDispatcher()
+
   let rows = []
-  let linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
+  let linkedIds = []
+
+  $: linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
     row => row?._id || row
   )
-
-  $: linkedRows = linkedIds
   $: label = capitalise(schema.name)
   $: linkedTableId = schema.tableId
   $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
@@ -44,7 +47,10 @@
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
-    on:change={e => (linkedIds = e.detail ? [e.detail] : [])}
+    on:change={e => {
+      linkedIds = e.detail ? [e.detail] : []
+      dispatch("change", linkedIds)
+    }}
     {label}
     sort
   />
@@ -56,5 +62,6 @@
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
     sort
+    on:change={() => dispatch("change", linkedIds)}
   />
 {/if}

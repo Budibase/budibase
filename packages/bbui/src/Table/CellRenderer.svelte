@@ -25,6 +25,7 @@
     longform: StringRenderer,
     array: ArrayRenderer,
     internal: InternalRenderer,
+    bb_reference: RelationshipRenderer,
   }
   $: type = getType(schema)
   $: customRenderer = customRenderers?.find(x => x.column === schema?.name)

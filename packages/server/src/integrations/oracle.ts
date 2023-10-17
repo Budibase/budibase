@@ -9,9 +9,11 @@ import {
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
+  Schema,
 } from "@budibase/types"
 import {
   buildExternalTableId,
+  checkExternalTables,
   convertSqlType,
   finaliseExternalTables,
   getSqlQuery,
@@ -107,9 +109,6 @@ const OracleContraintTypes = {
 class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
-
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   private readonly COLUMNS_SQL = `
     SELECT
@@ -249,7 +248,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn): { type: FieldTypes } {
+  private internalConvertType(column: OracleColumn) {
     if (this.isBooleanType(column)) {
       return { type: FieldTypes.BOOLEAN }
     }
@@ -265,7 +264,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ) {
+  ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
@@ -307,6 +306,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
               },
               ...this.internalConvertType(oracleColumn),
             }
+
             table.schema[columnName] = fieldSchema
           }
 
@@ -325,9 +325,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         })
     })
 
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    let externalTables = finaliseExternalTables(tables, entities)
+    let errors = checkExternalTables(externalTables)
+    return { tables: externalTables, errors }
   }
 
   async getTableNames() {
