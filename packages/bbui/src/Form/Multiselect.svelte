@@ -16,8 +16,7 @@
   export let sort = false
   export let autoWidth = false
   export let autocomplete = false
-  export let fetchTerm = null
-  export let useFetch = false
+  export let searchTerm = null
   export let customPopoverHeight
 
   const dispatch = createEventDispatcher()
@@ -41,8 +40,7 @@
     {autoWidth}
     {autocomplete}
     {customPopoverHeight}
-    bind:fetchTerm
-    {useFetch}
+    bind:searchTerm
     on:change={onChange}
     on:click
   />

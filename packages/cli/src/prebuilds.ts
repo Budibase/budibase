@@ -12,6 +12,10 @@ if (!process.argv[0].includes("node")) {
   checkForBinaries()
 }
 
+function localPrebuildPath() {
+  return join(process.execPath, "..", PREBUILDS)
+}
+
 function checkForBinaries() {
   const readDir = join(__filename, "..", "..", "..", "cli", PREBUILDS, ARCH)
   if (fs.existsSync(PREBUILD_DIR) || !fs.existsSync(readDir)) {
@@ -19,17 +23,21 @@ function checkForBinaries() {
   }
   const natives = fs.readdirSync(readDir)
   if (fs.existsSync(readDir)) {
-    const writePath = join(process.execPath, PREBUILDS, ARCH)
+    const writePath = join(localPrebuildPath(), ARCH)
     fs.mkdirSync(writePath, { recursive: true })
     for (let native of natives) {
       const filename = `${native.split(".fake")[0]}.node`
       fs.cpSync(join(readDir, native), join(writePath, filename))
     }
-    console.log("copied something")
   }
 }
 
 function cleanup(evt?: number) {
+  // cleanup prebuilds first
+  const path = localPrebuildPath()
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, { recursive: true })
+  }
   if (evt && !isNaN(evt)) {
     return
   }
@@ -40,10 +48,6 @@ function cleanup(evt?: number) {
       )
     )
     console.error(error(evt))
-  }
-  const path = join(process.execPath, PREBUILDS)
-  if (fs.existsSync(path)) {
-    fs.rmSync(path, { recursive: true })
   }
 }
 

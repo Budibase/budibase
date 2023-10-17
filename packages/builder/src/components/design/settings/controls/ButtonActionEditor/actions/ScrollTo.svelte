@@ -1,6 +1,5 @@
 <script>
   import { currentAsset, store } from "builderStore"
-  import { onMount } from "svelte"
   import { Label, Combobox, Select } from "@budibase/bbui"
   import {
     getActionProviderComponents,
@@ -9,12 +8,6 @@
   import { findComponent } from "builderStore/componentUtils"
 
   export let parameters
-
-  onMount(() => {
-    if (!parameters.type) {
-      parameters.type = "top"
-    }
-  })
 
   $: formComponent = findComponent($currentAsset.props, parameters.componentId)
   $: formSchema = buildFormSchema(formComponent)

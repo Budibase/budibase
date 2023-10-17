@@ -9,7 +9,7 @@ import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { Query } from "@budibase/types"
+import { ConfigType, Query, UserCtx } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -28,11 +28,11 @@ function enrichQueries(input: any) {
   return wasArray ? queries : queries[0]
 }
 
-export async function fetch(ctx: any) {
+export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.queries.fetch()
 }
 
-const _import = async (ctx: any) => {
+const _import = async (ctx: UserCtx) => {
   const body = ctx.request.body
   const data = body.data
 
@@ -73,7 +73,7 @@ const _import = async (ctx: any) => {
 }
 export { _import as import }
 
-export async function save(ctx: any) {
+export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
   const query = ctx.request.body
 
@@ -100,19 +100,19 @@ export async function save(ctx: any) {
   ctx.message = `Query ${query.name} saved successfully.`
 }
 
-export async function find(ctx: any) {
+export async function find(ctx: UserCtx) {
   const queryId = ctx.params.queryId
   ctx.body = await sdk.queries.find(queryId)
 }
 
 //Required to discern between OIDC OAuth config entries
-function getOAuthConfigCookieId(ctx: any) {
-  if (ctx.user.providerType === constants.Config.OIDC) {
+function getOAuthConfigCookieId(ctx: UserCtx) {
+  if (ctx.user.providerType === ConfigType.OIDC) {
     return utils.getCookie(ctx, constants.Cookie.OIDC_CONFIG)
   }
 }
 
-function getAuthConfig(ctx: any) {
+function getAuthConfig(ctx: UserCtx) {
   const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
@@ -120,7 +120,7 @@ function getAuthConfig(ctx: any) {
   return authConfigCtx
 }
 
-export async function preview(ctx: any) {
+export async function preview(ctx: UserCtx) {
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     ctx.request.body.datasourceId
   )
@@ -128,6 +128,19 @@ export async function preview(ctx: any) {
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
   const { fields, parameters, queryVerb, transformer, queryId, schema } = query
+
+  let existingSchema = schema
+  if (queryId && !existingSchema) {
+    try {
+      const db = context.getAppDB()
+      const existing = (await db.get(queryId)) as Query
+      existingSchema = existing.schema
+    } catch (err: any) {
+      if (err.status !== 404) {
+        ctx.throw(500, "Unable to retrieve existing query")
+      }
+    }
+  }
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
@@ -180,6 +193,14 @@ export async function preview(ctx: any) {
         schemaFields[key] = fieldType
       }
     }
+    // if existing schema, update to include any previous schema keys
+    if (existingSchema) {
+      for (let key of Object.keys(schemaFields)) {
+        if (existingSchema[key]?.type) {
+          schemaFields[key] = existingSchema[key].type
+        }
+      }
+    }
     // remove configuration before sending event
     delete datasource.config
     await events.query.previewed(datasource, query)
@@ -189,13 +210,13 @@ export async function preview(ctx: any) {
       info,
       extra,
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
 async function execute(
-  ctx: any,
+  ctx: UserCtx,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
@@ -255,17 +276,17 @@ async function execute(
     } else {
       ctx.body = { data: rows, pagination, ...extra, ...info }
     }
-  } catch (err) {
+  } catch (err: any) {
     ctx.throw(400, err)
   }
 }
 
-export async function executeV1(ctx: any) {
+export async function executeV1(ctx: UserCtx) {
   return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
 export async function executeV2(
-  ctx: any,
+  ctx: UserCtx,
   { isAutomation }: { isAutomation?: boolean } = {}
 ) {
   return execute(ctx, { rowsOnly: false, isAutomation })
@@ -292,7 +313,7 @@ const removeDynamicVariables = async (queryId: any) => {
   }
 }
 
-export async function destroy(ctx: any) {
+export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const queryId = ctx.params.queryId
   await removeDynamicVariables(queryId)

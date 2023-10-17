@@ -10,6 +10,32 @@ import { search as stringSearch } from "./utils"
 import { UserCtx, User } from "@budibase/types"
 import { Next } from "koa"
 import { sdk } from "@budibase/pro"
+import { isEqual, cloneDeep } from "lodash"
+
+function rolesRemoved(base: User, ctx: UserCtx) {
+  return (
+    !isEqual(base.builder, ctx.request.body.builder) ||
+    !isEqual(base.admin, ctx.request.body.admin) ||
+    !isEqual(base.roles, ctx.request.body.roles)
+  )
+}
+
+const NO_ROLES_MSG =
+  "Roles/admin/builder can only be set on business/enterprise licenses - input ignored."
+
+async function createUpdateResponse(ctx: UserCtx, user?: User) {
+  const base = cloneDeep(ctx.request.body)
+  ctx = await sdk.publicApi.users.roleCheck(ctx, user)
+  // check the ctx before any updates to it
+  const removed = rolesRemoved(base, ctx)
+  ctx = publicApiUserFix(ctx)
+  const response = await saveGlobalUser(ctx)
+  ctx.body = await getUser(ctx, response._id)
+  if (removed) {
+    ctx.extra = { message: NO_ROLES_MSG }
+  }
+  return ctx
+}
 
 function isLoggedInUser(ctx: UserCtx, user: User) {
   const loggedInId = ctx.user?._id
@@ -35,9 +61,7 @@ export async function search(ctx: UserCtx, next: Next) {
 }
 
 export async function create(ctx: UserCtx, next: Next) {
-  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx))
-  const response = await saveGlobalUser(ctx)
-  ctx.body = await getUser(ctx, response._id)
+  await createUpdateResponse(ctx)
   await next()
 }
 
@@ -52,9 +76,7 @@ export async function update(ctx: UserCtx, next: Next) {
     ...ctx.request.body,
     _rev: user._rev,
   }
-  ctx = publicApiUserFix(await sdk.publicApi.users.roleCheck(ctx, user))
-  const response = await saveGlobalUser(ctx)
-  ctx.body = await getUser(ctx, response._id)
+  await createUpdateResponse(ctx, user)
   await next()
 }
 

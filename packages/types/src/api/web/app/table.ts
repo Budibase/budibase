@@ -1,4 +1,5 @@
 import {
+  Row,
   Table,
   TableRequest,
   TableSchema,
@@ -18,6 +19,17 @@ export interface TableResponse extends Table {
 
 export type FetchTablesResponse = TableResponse[]
 
-export interface SaveTableRequest extends TableRequest {}
+export interface SaveTableRequest extends TableRequest {
+  rows?: Row[]
+}
 
 export type SaveTableResponse = Table
+
+export interface BulkImportRequest {
+  rows: Row[]
+  identifierFields?: Array<string>
+}
+
+export interface BulkImportResponse {
+  message: string
+}

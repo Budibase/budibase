@@ -34,6 +34,7 @@
   export let bindings = []
   export let bindingDrawerLeft
   export let allowHelpers = true
+  export let customButtonText = null
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -158,9 +159,13 @@
 {/if}
 {#if !readOnly && !noAddButton}
   <div>
-    <ActionButton icon="Add" secondary thin outline on:click={addEntry}
-      >Add{name ? ` ${lowercase(name)}` : ""}</ActionButton
-    >
+    <ActionButton icon="Add" secondary thin outline on:click={addEntry}>
+      {#if customButtonText}
+        {customButtonText}
+      {:else}
+        {`Add${name ? ` ${lowercase(name)}` : ""}`}
+      {/if}
+    </ActionButton>
   </div>
 {/if}
 

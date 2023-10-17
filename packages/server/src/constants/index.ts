@@ -1,6 +1,11 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
 import { FieldType as FieldTypes } from "@budibase/types"
-export { FieldType as FieldTypes, RelationshipType } from "@budibase/types"
+export {
+  FieldType as FieldTypes,
+  RelationshipType,
+  AutoFieldSubTypes,
+  FormulaTypes,
+} from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
@@ -38,11 +43,6 @@ export const CanSwitchTypes = [
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
-
-export enum FormulaTypes {
-  STATIC = "static",
-  DYNAMIC = "dynamic",
-}
 
 export enum AuthTypes {
   APP = "app",
@@ -132,14 +132,6 @@ export const USERS_TABLE_SCHEMA = {
   primaryDisplay: "email",
 }
 
-export enum AutoFieldSubTypes {
-  CREATED_BY = "createdBy",
-  CREATED_AT = "createdAt",
-  UPDATED_BY = "updatedBy",
-  UPDATED_AT = "updatedAt",
-  AUTO_ID = "autoID",
-}
-
 export enum AutoFieldDefaultNames {
   CREATED_BY = "Created By",
   CREATED_AT = "Created At",
@@ -165,11 +157,6 @@ export enum InvalidColumns {
   ID = "_id",
   REV = "_rev",
   TABLE_ID = "tableId",
-}
-
-export enum BuildSchemaErrors {
-  NO_KEY = "no_key",
-  INVALID_COLUMN = "invalid_column",
 }
 
 export enum AutomationErrors {

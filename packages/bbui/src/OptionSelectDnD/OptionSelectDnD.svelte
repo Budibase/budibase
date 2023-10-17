@@ -21,14 +21,6 @@
     "hsla(240, 90%, 75%, 0.3)",
     "hsla(320, 90%, 75%, 0.3)",
   ]
-  $: {
-    if (constraints.inclusion.length) {
-      options = constraints.inclusion.map(value => ({
-        name: value,
-        id: Math.random(),
-      }))
-    }
-  }
   const removeInput = idx => {
     delete optionColors[options[idx].name]
     constraints.inclusion = constraints.inclusion.filter((e, i) => i !== idx)
@@ -80,6 +72,11 @@
     // Initialize anchor arrays on mount, assuming 'options' is already populated
     colorPopovers = constraints.inclusion.map(() => undefined)
     anchors = constraints.inclusion.map(() => undefined)
+
+    options = constraints.inclusion.map(value => ({
+      name: value,
+      id: Math.random(),
+    }))
   })
 </script>
 

@@ -134,4 +134,15 @@ export default new Resource()
     deploymentOutput: object({
       data: deploymentOutputSchema,
     }),
+    appExport: object({
+      encryptPassword: {
+        description: "An optional password used to encrypt the export.",
+        type: "string",
+      },
+      excludeRows: {
+        description:
+          "Set whether the internal table rows should be excluded from the export.",
+        type: "boolean",
+      },
+    }),
   })

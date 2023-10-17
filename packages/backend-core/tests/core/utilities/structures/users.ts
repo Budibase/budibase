@@ -10,14 +10,13 @@ import { authDetails } from "./sso"
 import { uuid } from "./common"
 import { generator } from "./generator"
 import { tenant } from "."
-import { generateGlobalUserID } from "../../../../src/docIds"
 
 export const newEmail = () => {
   return `${uuid()}@test.com`
 }
 
 export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
-  const userId = userProps?._id || generateGlobalUserID()
+  const userId = userProps?._id
   return {
     _id: userId,
     userId,
@@ -53,7 +52,7 @@ export const adminOnlyUser = (userProps?: any): AdminOnlyUser => {
   }
 }
 
-export const builderUser = (userProps?: any): BuilderUser => {
+export const builderUser = (userProps?: Partial<User>): BuilderUser => {
   return {
     ...user(userProps),
     builder: {

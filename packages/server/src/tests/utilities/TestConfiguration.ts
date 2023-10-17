@@ -53,8 +53,8 @@ import {
   View,
   FieldType,
   RelationshipType,
-  ViewV2,
   CreateViewRequest,
+  RelationshipFieldMetadata,
 } from "@budibase/types"
 
 import API from "./api"
@@ -426,6 +426,15 @@ class TestConfiguration {
     return headers
   }
 
+  async basicRoleHeaders() {
+    return await this.roleHeaders({
+      email: this.defaultUserValues.email,
+      builder: false,
+      prodApp: true,
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+  }
+
   async roleHeaders({
     email = this.defaultUserValues.email,
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -576,10 +585,10 @@ class TestConfiguration {
       tableConfig.schema[link] = {
         type: FieldType.LINK,
         fieldName: link,
-        tableId: this.table._id,
+        tableId: this.table._id!,
         name: link,
         relationshipType,
-      }
+      } as RelationshipFieldMetadata
     }
 
     if (this.datasource && !tableConfig.sourceId) {

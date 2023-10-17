@@ -1,6 +1,5 @@
 import {
   ConnectionInfo,
-  Datasource,
   DatasourceFeature,
   DatasourceFieldType,
   DatasourcePlus,
@@ -15,15 +14,19 @@ import {
   SortJson,
   ExternalTable,
   TableRequest,
+  Schema,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
-import { buildExternalTableId, finaliseExternalTables } from "./utils"
+import {
+  buildExternalTableId,
+  checkExternalTables,
+  finaliseExternalTables,
+} from "./utils"
 import { GoogleSpreadsheet, GoogleSpreadsheetRow } from "google-spreadsheet"
 import fetch from "node-fetch"
 import { cache, configs, context, HTTPError } from "@budibase/backend-core"
 import { dataFilters, utils } from "@budibase/shared-core"
 import { GOOGLE_SHEETS_PRIMARY_KEY } from "../constants"
-import sdk from "../sdk"
 
 interface GoogleSheetsConfig {
   spreadsheetId: string
@@ -56,6 +59,7 @@ const ALLOWED_TYPES = [
   FieldType.OPTIONS,
   FieldType.BOOLEAN,
   FieldType.BARCODEQR,
+  FieldType.BB_REFERENCE,
 ]
 
 const SCHEMA: Integration = {
@@ -139,8 +143,6 @@ const SCHEMA: Integration = {
 class GoogleSheetsIntegration implements DatasourcePlus {
   private readonly config: GoogleSheetsConfig
   private client: GoogleSpreadsheet
-  public tables: Record<string, ExternalTable> = {}
-  public schemaErrors: Record<string, string> = {}
 
   constructor(config: GoogleSheetsConfig) {
     this.config = config
@@ -213,7 +215,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       await setupCreationAuth(this.config)
 
       // Initialise oAuth client
-      let googleConfig = await configs.getGoogleDatasourceConfig()
+      const googleConfig = await configs.getGoogleDatasourceConfig()
       if (!googleConfig) {
         throw new HTTPError("Google config not found", 400)
       }
@@ -282,19 +284,37 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   async buildSchema(
     datasourceId: string,
     entities: Record<string, ExternalTable>
-  ) {
+  ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
-      return
+      return { tables: {}, errors: {} }
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
     const tables: Record<string, ExternalTable> = {}
+    let errors: Record<string, string> = {}
     await utils.parallelForeach(
       sheets,
       async sheet => {
         // must fetch rows to determine schema
-        await sheet.getRows()
+        try {
+          await sheet.getRows()
+        } catch (err) {
+          // We expect this to always be an Error so if it's not, rethrow it to
+          // make sure we don't fail quietly.
+          if (!(err instanceof Error)) {
+            throw err
+          }
+
+          if (err.message.startsWith("No values in the header row")) {
+            errors[sheet.title] = err.message
+          } else {
+            // If we get an error we don't expect, rethrow to avoid failing
+            // quietly.
+            throw err
+          }
+          return
+        }
 
         const id = buildExternalTableId(datasourceId, sheet.title)
         tables[sheet.title] = this.getTableSchema(
@@ -306,9 +326,9 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       },
       10
     )
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    let externalTables = finaliseExternalTables(tables, entities)
+    errors = { ...errors, ...checkExternalTables(externalTables) }
+    return { tables: externalTables, errors }
   }
 
   async query(json: QueryJson) {
@@ -323,14 +343,14 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       case Operation.UPDATE:
         return this.update({
           // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
           row: json.body,
         })
       case Operation.DELETE:
         return this.delete({
           // exclude the header row and zero index
-          rowIndex: json.extra?.idFilter?.equal?.rowNumber - 2,
+          rowIndex: json.extra?.idFilter?.equal?.rowNumber,
           sheet,
         })
       case Operation.CREATE_TABLE:
@@ -541,17 +561,30 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
   }
 
+  private async getRowByIndex(sheetTitle: string, rowIndex: number) {
+    const sheet = this.client.sheetsByTitle[sheetTitle]
+    const rows = await sheet.getRows()
+    // We substract 2, as the SDK is skipping the header automatically and Google Spreadsheets is base 1
+    const row = rows[rowIndex - 2]
+    return { sheet, row }
+  }
+
   async update(query: { sheet: string; rowIndex: number; row: any }) {
     try {
       await this.connect()
-      const sheet = this.client.sheetsByTitle[query.sheet]
-      const rows = await sheet.getRows()
-      const row = rows[query.rowIndex]
+      const { sheet, row } = await this.getRowByIndex(
+        query.sheet,
+        query.rowIndex
+      )
       if (row) {
         const updateValues =
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
         for (let key in updateValues) {
           row[key] = updateValues[key]
+
+          if (row[key] === null) {
+            row[key] = ""
+          }
         }
         await row.save()
         return [
@@ -568,9 +601,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async delete(query: { sheet: string; rowIndex: number }) {
     await this.connect()
-    const sheet = this.client.sheetsByTitle[query.sheet]
-    const rows = await sheet.getRows()
-    const row = rows[query.rowIndex]
+    const { row } = await this.getRowByIndex(query.sheet, query.rowIndex)
     if (row) {
       await row.delete()
       return [

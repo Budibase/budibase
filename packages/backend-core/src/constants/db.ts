@@ -1,5 +1,10 @@
 import { prefixed, DocumentType } from "@budibase/types"
-export { SEPARATOR, UNICODE_MAX, DocumentType } from "@budibase/types"
+export {
+  SEPARATOR,
+  UNICODE_MAX,
+  DocumentType,
+  InternalTable,
+} from "@budibase/types"
 
 /**
  * Can be used to create a few different forms of querying a view.
@@ -18,7 +23,7 @@ export enum ViewName {
   ROUTING = "screen_routes",
   AUTOMATION_LOGS = "automation_logs",
   ACCOUNT_BY_EMAIL = "account_by_email",
-  PLATFORM_USERS_LOWERCASE = "platform_users_lowercase",
+  PLATFORM_USERS_LOWERCASE = "platform_users_lowercase_2",
   USER_BY_GROUP = "user_by_group",
   APP_BACKUP_BY_TRIGGER = "by_trigger",
 }
@@ -28,10 +33,6 @@ export const DeprecatedViews = {
     // removed due to inaccuracy in view doc filter logic
     "by_email",
   ],
-}
-
-export enum InternalTable {
-  USER_METADATA = "ta_users",
 }
 
 export const StaticDatabases = {
