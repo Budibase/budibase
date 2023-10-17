@@ -1,4 +1,4 @@
-import Sentry from "@sentry/node"
+import * as Sentry from "@sentry/node"
 
 if (process.env.DD_APM_ENABLED) {
   require("./ddApm")

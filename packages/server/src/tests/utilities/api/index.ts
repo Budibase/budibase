@@ -6,6 +6,7 @@ import { ViewV2API } from "./viewV2"
 import { DatasourceAPI } from "./datasource"
 import { LegacyViewAPI } from "./legacyView"
 import { ScreenAPI } from "./screen"
+import { ApplicationAPI } from "./application"
 
 export default class API {
   table: TableAPI
@@ -15,6 +16,7 @@ export default class API {
   permission: PermissionAPI
   datasource: DatasourceAPI
   screen: ScreenAPI
+  application: ApplicationAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -24,5 +26,6 @@ export default class API {
     this.permission = new PermissionAPI(config)
     this.datasource = new DatasourceAPI(config)
     this.screen = new ScreenAPI(config)
+    this.application = new ApplicationAPI(config)
   }
 }

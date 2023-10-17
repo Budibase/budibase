@@ -1,5 +1,21 @@
 import { FieldType, FieldSubtype } from "@budibase/types"
 
+export const AUTO_COLUMN_SUB_TYPES = {
+  AUTO_ID: "autoID",
+  CREATED_BY: "createdBy",
+  CREATED_AT: "createdAt",
+  UPDATED_BY: "updatedBy",
+  UPDATED_AT: "updatedAt",
+}
+
+export const AUTO_COLUMN_DISPLAY_NAMES = {
+  AUTO_ID: "Auto ID",
+  CREATED_BY: "Created By",
+  CREATED_AT: "Created At",
+  UPDATED_BY: "Updated By",
+  UPDATED_AT: "Updated At",
+}
+
 export const FIELDS = {
   STRING: {
     name: "Text",
@@ -107,6 +123,12 @@ export const FIELDS = {
       presence: false,
     },
   },
+  AUTO: {
+    name: "Auto Column",
+    type: FieldType.AUTO,
+    icon: "MagicWand",
+    constraints: {},
+  },
   FORMULA: {
     name: "Formula",
     type: FieldType.FORMULA,
@@ -137,22 +159,6 @@ export const FIELDS = {
       type: "array",
     },
   },
-}
-
-export const AUTO_COLUMN_SUB_TYPES = {
-  AUTO_ID: "autoID",
-  CREATED_BY: "createdBy",
-  CREATED_AT: "createdAt",
-  UPDATED_BY: "updatedBy",
-  UPDATED_AT: "updatedAt",
-}
-
-export const AUTO_COLUMN_DISPLAY_NAMES = {
-  AUTO_ID: "Auto ID",
-  CREATED_BY: "Created By",
-  CREATED_AT: "Created At",
-  UPDATED_BY: "Updated By",
-  UPDATED_AT: "Updated At",
 }
 
 export const FILE_TYPES = {
