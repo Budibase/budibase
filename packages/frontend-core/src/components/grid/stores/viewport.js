@@ -1,7 +1,8 @@
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import {
   MaxCellRenderHeight,
   MaxCellRenderWidthOverflow,
+  MinColumnWidth,
   ScrollBarSize,
 } from "../lib/constants"
 
@@ -42,6 +43,47 @@ export const deriveStores = context => {
       )
     },
     []
+  )
+
+  // Derive visible columns
+  const scrollLeftRounded = derived(scrollLeft, $scrollLeft => {
+    const interval = MinColumnWidth
+    return Math.round($scrollLeft / interval) * interval
+  })
+  const columnRenderMap = derived(
+    [visibleColumns, scrollLeftRounded, width],
+    ([$visibleColumns, $scrollLeft, $width]) => {
+      if (!$visibleColumns.length) {
+        return {}
+      }
+      let startColIdx = 0
+      let rightEdge = $visibleColumns[0].width
+      while (
+        rightEdge < $scrollLeft &&
+        startColIdx < $visibleColumns.length - 1
+      ) {
+        startColIdx++
+        rightEdge += $visibleColumns[startColIdx].width
+      }
+      let endColIdx = startColIdx + 1
+      let leftEdge = rightEdge
+      while (
+        leftEdge < $width + $scrollLeft &&
+        endColIdx < $visibleColumns.length
+      ) {
+        leftEdge += $visibleColumns[endColIdx].width
+        endColIdx++
+      }
+
+      // Only update the store if different
+      let next = {}
+      $visibleColumns
+        .slice(Math.max(0, startColIdx), endColIdx)
+        .forEach(col => {
+          next[col.name] = true
+        })
+      return next
+    }
   )
 
   // Determine the row index at which we should start vertically inverting cell
@@ -87,6 +129,7 @@ export const deriveStores = context => {
     scrolledRowCount,
     visualRowCapacity,
     renderedRows,
+    columnRenderMap,
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
   }
