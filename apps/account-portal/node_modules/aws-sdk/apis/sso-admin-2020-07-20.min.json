@@ -1,0 +1,866 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2020-07-20",
+    "endpointPrefix": "sso",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "SSO Admin",
+    "serviceFullName": "AWS Single Sign-On Admin",
+    "serviceId": "SSO Admin",
+    "signatureVersion": "v4",
+    "signingName": "sso",
+    "targetPrefix": "SWBExternalService",
+    "uid": "sso-admin-2020-07-20"
+  },
+  "operations": {
+    "AttachManagedPolicyToPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn",
+          "ManagedPolicyArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "ManagedPolicyArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateAccountAssignment": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "TargetId",
+          "TargetType",
+          "PermissionSetArn",
+          "PrincipalType",
+          "PrincipalId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "TargetId": {},
+          "TargetType": {},
+          "PermissionSetArn": {},
+          "PrincipalType": {},
+          "PrincipalId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentCreationStatus": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "CreateInstanceAccessControlAttributeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "InstanceAccessControlAttributeConfiguration"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "InstanceAccessControlAttributeConfiguration": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreatePermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "InstanceArn"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "InstanceArn": {},
+          "SessionDuration": {},
+          "RelayState": {},
+          "Tags": {
+            "shape": "Sv"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSet": {
+            "shape": "S10"
+          }
+        }
+      }
+    },
+    "DeleteAccountAssignment": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "TargetId",
+          "TargetType",
+          "PermissionSetArn",
+          "PrincipalType",
+          "PrincipalId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "TargetId": {},
+          "TargetType": {},
+          "PermissionSetArn": {},
+          "PrincipalType": {},
+          "PrincipalId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentDeletionStatus": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DeleteInlinePolicyFromPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteInstanceAccessControlAttributeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeletePermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeAccountAssignmentCreationStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "AccountAssignmentCreationRequestId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "AccountAssignmentCreationRequestId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentCreationStatus": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DescribeAccountAssignmentDeletionStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "AccountAssignmentDeletionRequestId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "AccountAssignmentDeletionRequestId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentDeletionStatus": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DescribeInstanceAccessControlAttributeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Status": {},
+          "StatusReason": {},
+          "InstanceAccessControlAttributeConfiguration": {
+            "shape": "Si"
+          }
+        }
+      }
+    },
+    "DescribePermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSet": {
+            "shape": "S10"
+          }
+        }
+      }
+    },
+    "DescribePermissionSetProvisioningStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "ProvisionPermissionSetRequestId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "ProvisionPermissionSetRequestId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSetProvisioningStatus": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "DetachManagedPolicyFromPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn",
+          "ManagedPolicyArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "ManagedPolicyArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetInlinePolicyForPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "InlinePolicy": {
+            "shape": "S1r"
+          }
+        }
+      }
+    },
+    "ListAccountAssignmentCreationStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filter": {
+            "shape": "S1v"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentsCreationStatus": {
+            "shape": "S1x"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListAccountAssignmentDeletionStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filter": {
+            "shape": "S1v"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignmentsDeletionStatus": {
+            "shape": "S1x"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListAccountAssignments": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "AccountId",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "AccountId": {},
+          "PermissionSetArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAssignments": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "AccountId": {},
+                "PermissionSetArn": {},
+                "PrincipalType": {},
+                "PrincipalId": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListAccountsForProvisionedPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "ProvisioningStatus": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountIds": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListInstances": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Instances": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "InstanceArn": {},
+                "IdentityStoreId": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListManagedPoliciesInPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AttachedManagedPolicies": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Name": {},
+                "Arn": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListPermissionSetProvisioningStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "Filter": {
+            "shape": "S1v"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSetsProvisioningStatus": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Status": {},
+                "RequestId": {},
+                "CreatedDate": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListPermissionSets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSets": {
+            "shape": "S2p"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListPermissionSetsProvisionedToAccount": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "AccountId"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "AccountId": {},
+          "ProvisioningStatus": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "PermissionSets": {
+            "shape": "S2p"
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "ResourceArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "ResourceArn": {},
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "Sv"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ProvisionPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn",
+          "TargetType"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "TargetId": {},
+          "TargetType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PermissionSetProvisioningStatus": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "PutInlinePolicyToPermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn",
+          "InlinePolicy"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "InlinePolicy": {
+            "shape": "S1r"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "Sv"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateInstanceAccessControlAttributeConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "InstanceAccessControlAttributeConfiguration"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "InstanceAccessControlAttributeConfiguration": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdatePermissionSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InstanceArn",
+          "PermissionSetArn"
+        ],
+        "members": {
+          "InstanceArn": {},
+          "PermissionSetArn": {},
+          "Description": {},
+          "SessionDuration": {},
+          "RelayState": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "Sc": {
+      "type": "structure",
+      "members": {
+        "Status": {},
+        "RequestId": {},
+        "FailureReason": {},
+        "TargetId": {},
+        "TargetType": {},
+        "PermissionSetArn": {},
+        "PrincipalType": {},
+        "PrincipalId": {},
+        "CreatedDate": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Si": {
+      "type": "structure",
+      "required": [
+        "AccessControlAttributes"
+      ],
+      "members": {
+        "AccessControlAttributes": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "required": [
+              "Key",
+              "Value"
+            ],
+            "members": {
+              "Key": {},
+              "Value": {
+                "type": "structure",
+                "required": [
+                  "Source"
+                ],
+                "members": {
+                  "Source": {
+                    "type": "list",
+                    "member": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Sv": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S10": {
+      "type": "structure",
+      "members": {
+        "Name": {},
+        "PermissionSetArn": {},
+        "Description": {},
+        "CreatedDate": {
+          "type": "timestamp"
+        },
+        "SessionDuration": {},
+        "RelayState": {}
+      }
+    },
+    "S1l": {
+      "type": "structure",
+      "members": {
+        "Status": {},
+        "RequestId": {},
+        "AccountId": {},
+        "PermissionSetArn": {},
+        "FailureReason": {},
+        "CreatedDate": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S1r": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S1v": {
+      "type": "structure",
+      "members": {
+        "Status": {}
+      }
+    },
+    "S1x": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Status": {},
+          "RequestId": {},
+          "CreatedDate": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "S2p": {
+      "type": "list",
+      "member": {}
+    }
+  }
+}

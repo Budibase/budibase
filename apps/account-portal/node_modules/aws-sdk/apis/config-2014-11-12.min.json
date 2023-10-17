@@ -1,0 +1,3122 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2014-11-12",
+    "endpointPrefix": "config",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "Config Service",
+    "serviceFullName": "AWS Config",
+    "serviceId": "Config Service",
+    "signatureVersion": "v4",
+    "targetPrefix": "StarlingDoveService",
+    "uid": "config-2014-11-12"
+  },
+  "operations": {
+    "BatchGetAggregateResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName",
+          "ResourceIdentifiers"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "ResourceIdentifiers": {
+            "type": "list",
+            "member": {
+              "shape": "S4"
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BaseConfigurationItems": {
+            "shape": "Sb"
+          },
+          "UnprocessedResourceIdentifiers": {
+            "type": "list",
+            "member": {
+              "shape": "S4"
+            }
+          }
+        }
+      }
+    },
+    "BatchGetResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceKeys"
+        ],
+        "members": {
+          "resourceKeys": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "baseConfigurationItems": {
+            "shape": "Sb"
+          },
+          "unprocessedResourceKeys": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "DeleteAggregationAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AuthorizedAccountId",
+          "AuthorizedAwsRegion"
+        ],
+        "members": {
+          "AuthorizedAccountId": {},
+          "AuthorizedAwsRegion": {}
+        }
+      }
+    },
+    "DeleteConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {}
+        }
+      }
+    },
+    "DeleteConfigurationAggregator": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {}
+        }
+      }
+    },
+    "DeleteConfigurationRecorder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationRecorderName"
+        ],
+        "members": {
+          "ConfigurationRecorderName": {}
+        }
+      }
+    },
+    "DeleteConformancePack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName"
+        ],
+        "members": {
+          "ConformancePackName": {}
+        }
+      }
+    },
+    "DeleteDeliveryChannel": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeliveryChannelName"
+        ],
+        "members": {
+          "DeliveryChannelName": {}
+        }
+      }
+    },
+    "DeleteEvaluationResults": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteOrganizationConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConfigRuleName"
+        ],
+        "members": {
+          "OrganizationConfigRuleName": {}
+        }
+      }
+    },
+    "DeleteOrganizationConformancePack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConformancePackName"
+        ],
+        "members": {
+          "OrganizationConformancePackName": {}
+        }
+      }
+    },
+    "DeletePendingAggregationRequest": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RequesterAccountId",
+          "RequesterAwsRegion"
+        ],
+        "members": {
+          "RequesterAccountId": {},
+          "RequesterAwsRegion": {}
+        }
+      }
+    },
+    "DeleteRemediationConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteRemediationExceptions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "ResourceKeys"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceKeys": {
+            "shape": "S1f"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FailedBatches": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FailureMessage": {},
+                "FailedItems": {
+                  "shape": "S1f"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DeleteResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceType",
+          "ResourceId"
+        ],
+        "members": {
+          "ResourceType": {},
+          "ResourceId": {}
+        }
+      }
+    },
+    "DeleteRetentionConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RetentionConfigurationName"
+        ],
+        "members": {
+          "RetentionConfigurationName": {}
+        }
+      }
+    },
+    "DeleteStoredQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryName"
+        ],
+        "members": {
+          "QueryName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeliverConfigSnapshot": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "deliveryChannelName"
+        ],
+        "members": {
+          "deliveryChannelName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "configSnapshotId": {}
+        }
+      }
+    },
+    "DescribeAggregateComplianceByConfigRules": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "ConfigRuleName": {},
+              "ComplianceType": {},
+              "AccountId": {},
+              "AwsRegion": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregateComplianceByConfigRules": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConfigRuleName": {},
+                "Compliance": {
+                  "shape": "S23"
+                },
+                "AccountId": {},
+                "AwsRegion": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeAggregateComplianceByConformancePacks": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "ConformancePackName": {},
+              "ComplianceType": {},
+              "AccountId": {},
+              "AwsRegion": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregateComplianceByConformancePacks": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConformancePackName": {},
+                "Compliance": {
+                  "type": "structure",
+                  "members": {
+                    "ComplianceType": {},
+                    "CompliantRuleCount": {
+                      "type": "integer"
+                    },
+                    "NonCompliantRuleCount": {
+                      "type": "integer"
+                    },
+                    "TotalRuleCount": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "AccountId": {},
+                "AwsRegion": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeAggregationAuthorizations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregationAuthorizations": {
+            "type": "list",
+            "member": {
+              "shape": "S2i"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeComplianceByConfigRule": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigRuleNames": {
+            "shape": "S2l"
+          },
+          "ComplianceTypes": {
+            "shape": "S2m"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComplianceByConfigRules": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConfigRuleName": {},
+                "Compliance": {
+                  "shape": "S23"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeComplianceByResource": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ResourceType": {},
+          "ResourceId": {},
+          "ComplianceTypes": {
+            "shape": "S2m"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComplianceByResources": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ResourceType": {},
+                "ResourceId": {},
+                "Compliance": {
+                  "shape": "S23"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigRuleEvaluationStatus": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigRuleNames": {
+            "shape": "S2l"
+          },
+          "NextToken": {},
+          "Limit": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigRulesEvaluationStatus": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConfigRuleName": {},
+                "ConfigRuleArn": {},
+                "ConfigRuleId": {},
+                "LastSuccessfulInvocationTime": {
+                  "type": "timestamp"
+                },
+                "LastFailedInvocationTime": {
+                  "type": "timestamp"
+                },
+                "LastSuccessfulEvaluationTime": {
+                  "type": "timestamp"
+                },
+                "LastFailedEvaluationTime": {
+                  "type": "timestamp"
+                },
+                "FirstActivatedTime": {
+                  "type": "timestamp"
+                },
+                "LastDeactivatedTime": {
+                  "type": "timestamp"
+                },
+                "LastErrorCode": {},
+                "LastErrorMessage": {},
+                "FirstEvaluationStarted": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigRules": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigRuleNames": {
+            "shape": "S2l"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigRules": {
+            "type": "list",
+            "member": {
+              "shape": "S33"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigurationAggregatorSourcesStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "UpdateStatus": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {},
+          "Limit": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregatedSourceStatusList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "SourceId": {},
+                "SourceType": {},
+                "AwsRegion": {},
+                "LastUpdateStatus": {},
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                },
+                "LastErrorCode": {},
+                "LastErrorMessage": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigurationAggregators": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigurationAggregatorNames": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {},
+          "Limit": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationAggregators": {
+            "type": "list",
+            "member": {
+              "shape": "S3r"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigurationRecorderStatus": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigurationRecorderNames": {
+            "shape": "S3z"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationRecordersStatus": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "name": {},
+                "lastStartTime": {
+                  "type": "timestamp"
+                },
+                "lastStopTime": {
+                  "type": "timestamp"
+                },
+                "recording": {
+                  "type": "boolean"
+                },
+                "lastStatus": {},
+                "lastErrorCode": {},
+                "lastErrorMessage": {},
+                "lastStatusChangeTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeConfigurationRecorders": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigurationRecorderNames": {
+            "shape": "S3z"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationRecorders": {
+            "type": "list",
+            "member": {
+              "shape": "S47"
+            }
+          }
+        }
+      }
+    },
+    "DescribeConformancePackCompliance": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName"
+        ],
+        "members": {
+          "ConformancePackName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "ConfigRuleNames": {
+                "shape": "S4e"
+              },
+              "ComplianceType": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName",
+          "ConformancePackRuleComplianceList"
+        ],
+        "members": {
+          "ConformancePackName": {},
+          "ConformancePackRuleComplianceList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConfigRuleName": {},
+                "ComplianceType": {},
+                "Controls": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConformancePackStatus": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConformancePackNames": {
+            "shape": "S4l"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConformancePackStatusDetails": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "ConformancePackName",
+                "ConformancePackId",
+                "ConformancePackArn",
+                "ConformancePackState",
+                "StackArn",
+                "LastUpdateRequestedTime"
+              ],
+              "members": {
+                "ConformancePackName": {},
+                "ConformancePackId": {},
+                "ConformancePackArn": {},
+                "ConformancePackState": {},
+                "StackArn": {},
+                "ConformancePackStatusReason": {},
+                "LastUpdateRequestedTime": {
+                  "type": "timestamp"
+                },
+                "LastUpdateCompletedTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConformancePacks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConformancePackNames": {
+            "shape": "S4l"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConformancePackDetails": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "ConformancePackName",
+                "ConformancePackArn",
+                "ConformancePackId"
+              ],
+              "members": {
+                "ConformancePackName": {},
+                "ConformancePackArn": {},
+                "ConformancePackId": {},
+                "DeliveryS3Bucket": {},
+                "DeliveryS3KeyPrefix": {},
+                "ConformancePackInputParameters": {
+                  "shape": "S51"
+                },
+                "LastUpdateRequestedTime": {
+                  "type": "timestamp"
+                },
+                "CreatedBy": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeDeliveryChannelStatus": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeliveryChannelNames": {
+            "shape": "S56"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DeliveryChannelsStatus": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "name": {},
+                "configSnapshotDeliveryInfo": {
+                  "shape": "S5a"
+                },
+                "configHistoryDeliveryInfo": {
+                  "shape": "S5a"
+                },
+                "configStreamDeliveryInfo": {
+                  "type": "structure",
+                  "members": {
+                    "lastStatus": {},
+                    "lastErrorCode": {},
+                    "lastErrorMessage": {},
+                    "lastStatusChangeTime": {
+                      "type": "timestamp"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeDeliveryChannels": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeliveryChannelNames": {
+            "shape": "S56"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DeliveryChannels": {
+            "type": "list",
+            "member": {
+              "shape": "S5g"
+            }
+          }
+        }
+      }
+    },
+    "DescribeOrganizationConfigRuleStatuses": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRuleNames": {
+            "shape": "S5j"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRuleStatuses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OrganizationConfigRuleName",
+                "OrganizationRuleStatus"
+              ],
+              "members": {
+                "OrganizationConfigRuleName": {},
+                "OrganizationRuleStatus": {},
+                "ErrorCode": {},
+                "ErrorMessage": {},
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeOrganizationConfigRules": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRuleNames": {
+            "shape": "S5j"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRules": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OrganizationConfigRuleName",
+                "OrganizationConfigRuleArn"
+              ],
+              "members": {
+                "OrganizationConfigRuleName": {},
+                "OrganizationConfigRuleArn": {},
+                "OrganizationManagedRuleMetadata": {
+                  "shape": "S5t"
+                },
+                "OrganizationCustomRuleMetadata": {
+                  "shape": "S5y"
+                },
+                "ExcludedAccounts": {
+                  "shape": "S61"
+                },
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeOrganizationConformancePackStatuses": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePackNames": {
+            "shape": "S63"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePackStatuses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OrganizationConformancePackName",
+                "Status"
+              ],
+              "members": {
+                "OrganizationConformancePackName": {},
+                "Status": {},
+                "ErrorCode": {},
+                "ErrorMessage": {},
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeOrganizationConformancePacks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePackNames": {
+            "shape": "S63"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePacks": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OrganizationConformancePackName",
+                "OrganizationConformancePackArn",
+                "LastUpdateTime"
+              ],
+              "members": {
+                "OrganizationConformancePackName": {},
+                "OrganizationConformancePackArn": {},
+                "DeliveryS3Bucket": {},
+                "DeliveryS3KeyPrefix": {},
+                "ConformancePackInputParameters": {
+                  "shape": "S51"
+                },
+                "ExcludedAccounts": {
+                  "shape": "S61"
+                },
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribePendingAggregationRequests": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PendingAggregationRequests": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "RequesterAccountId": {},
+                "RequesterAwsRegion": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeRemediationConfigurations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleNames"
+        ],
+        "members": {
+          "ConfigRuleNames": {
+            "shape": "S2l"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RemediationConfigurations": {
+            "shape": "S6j"
+          }
+        }
+      }
+    },
+    "DescribeRemediationExceptions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceKeys": {
+            "shape": "S1f"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RemediationExceptions": {
+            "shape": "S6z"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeRemediationExecutionStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceKeys": {
+            "shape": "Sq"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RemediationExecutionStatuses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ResourceKey": {
+                  "shape": "Sr"
+                },
+                "State": {},
+                "StepDetails": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Name": {},
+                      "State": {},
+                      "ErrorMessage": {},
+                      "StartTime": {
+                        "type": "timestamp"
+                      },
+                      "StopTime": {
+                        "type": "timestamp"
+                      }
+                    }
+                  }
+                },
+                "InvocationTime": {
+                  "type": "timestamp"
+                },
+                "LastUpdatedTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeRetentionConfigurations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "RetentionConfigurationNames": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RetentionConfigurations": {
+            "type": "list",
+            "member": {
+              "shape": "S7d"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetAggregateComplianceDetailsByConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName",
+          "ConfigRuleName",
+          "AccountId",
+          "AwsRegion"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "ConfigRuleName": {},
+          "AccountId": {},
+          "AwsRegion": {},
+          "ComplianceType": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregateEvaluationResults": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "EvaluationResultIdentifier": {
+                  "shape": "S7j"
+                },
+                "ComplianceType": {},
+                "ResultRecordedTime": {
+                  "type": "timestamp"
+                },
+                "ConfigRuleInvokedTime": {
+                  "type": "timestamp"
+                },
+                "Annotation": {},
+                "AccountId": {},
+                "AwsRegion": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetAggregateConfigRuleComplianceSummary": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "AccountId": {},
+              "AwsRegion": {}
+            }
+          },
+          "GroupByKey": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GroupByKey": {},
+          "AggregateComplianceCounts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "GroupName": {},
+                "ComplianceSummary": {
+                  "shape": "S7r"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetAggregateConformancePackComplianceSummary": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "AccountId": {},
+              "AwsRegion": {}
+            }
+          },
+          "GroupByKey": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregateConformancePackComplianceSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ComplianceSummary": {
+                  "type": "structure",
+                  "members": {
+                    "CompliantConformancePackCount": {
+                      "type": "integer"
+                    },
+                    "NonCompliantConformancePackCount": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "GroupName": {}
+              }
+            }
+          },
+          "GroupByKey": {},
+          "NextToken": {}
+        }
+      }
+    },
+    "GetAggregateDiscoveredResourceCounts": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "ResourceType": {},
+              "AccountId": {},
+              "Region": {}
+            }
+          },
+          "GroupByKey": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "TotalDiscoveredResources"
+        ],
+        "members": {
+          "TotalDiscoveredResources": {
+            "type": "long"
+          },
+          "GroupByKey": {},
+          "GroupedResourceCounts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "GroupName",
+                "ResourceCount"
+              ],
+              "members": {
+                "GroupName": {},
+                "ResourceCount": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetAggregateResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName",
+          "ResourceIdentifier"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "ResourceIdentifier": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationItem": {
+            "shape": "S88"
+          }
+        }
+      }
+    },
+    "GetComplianceDetailsByConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ComplianceTypes": {
+            "shape": "S2m"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "EvaluationResults": {
+            "shape": "S8k"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetComplianceDetailsByResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceType",
+          "ResourceId"
+        ],
+        "members": {
+          "ResourceType": {},
+          "ResourceId": {},
+          "ComplianceTypes": {
+            "shape": "S2m"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "EvaluationResults": {
+            "shape": "S8k"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetComplianceSummaryByConfigRule": {
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComplianceSummary": {
+            "shape": "S7r"
+          }
+        }
+      }
+    },
+    "GetComplianceSummaryByResourceType": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ResourceTypes": {
+            "shape": "S8q"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComplianceSummariesByResourceType": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ResourceType": {},
+                "ComplianceSummary": {
+                  "shape": "S7r"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetConformancePackComplianceDetails": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName"
+        ],
+        "members": {
+          "ConformancePackName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "ConfigRuleNames": {
+                "shape": "S4e"
+              },
+              "ComplianceType": {},
+              "ResourceType": {},
+              "ResourceIds": {
+                "type": "list",
+                "member": {}
+              }
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName"
+        ],
+        "members": {
+          "ConformancePackName": {},
+          "ConformancePackRuleEvaluationResults": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "ComplianceType",
+                "EvaluationResultIdentifier",
+                "ConfigRuleInvokedTime",
+                "ResultRecordedTime"
+              ],
+              "members": {
+                "ComplianceType": {},
+                "EvaluationResultIdentifier": {
+                  "shape": "S7j"
+                },
+                "ConfigRuleInvokedTime": {
+                  "type": "timestamp"
+                },
+                "ResultRecordedTime": {
+                  "type": "timestamp"
+                },
+                "Annotation": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetConformancePackComplianceSummary": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConformancePackNames"
+        ],
+        "members": {
+          "ConformancePackNames": {
+            "type": "list",
+            "member": {}
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConformancePackComplianceSummaryList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "ConformancePackName",
+                "ConformancePackComplianceStatus"
+              ],
+              "members": {
+                "ConformancePackName": {},
+                "ConformancePackComplianceStatus": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetDiscoveredResourceCounts": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "resourceTypes": {
+            "shape": "S8q"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "totalDiscoveredResources": {
+            "type": "long"
+          },
+          "resourceCounts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "resourceType": {},
+                "count": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "GetOrganizationConfigRuleDetailedStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConfigRuleName"
+        ],
+        "members": {
+          "OrganizationConfigRuleName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "AccountId": {},
+              "MemberAccountRuleStatus": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRuleDetailedStatus": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AccountId",
+                "ConfigRuleName",
+                "MemberAccountRuleStatus"
+              ],
+              "members": {
+                "AccountId": {},
+                "ConfigRuleName": {},
+                "MemberAccountRuleStatus": {},
+                "ErrorCode": {},
+                "ErrorMessage": {},
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetOrganizationConformancePackDetailedStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConformancePackName"
+        ],
+        "members": {
+          "OrganizationConformancePackName": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "AccountId": {},
+              "Status": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePackDetailedStatuses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AccountId",
+                "ConformancePackName",
+                "Status"
+              ],
+              "members": {
+                "AccountId": {},
+                "ConformancePackName": {},
+                "Status": {},
+                "ErrorCode": {},
+                "ErrorMessage": {},
+                "LastUpdateTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "GetResourceConfigHistory": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceType",
+          "resourceId"
+        ],
+        "members": {
+          "resourceType": {},
+          "resourceId": {},
+          "laterTime": {
+            "type": "timestamp"
+          },
+          "earlierTime": {
+            "type": "timestamp"
+          },
+          "chronologicalOrder": {},
+          "limit": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "configurationItems": {
+            "type": "list",
+            "member": {
+              "shape": "S88"
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "GetStoredQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "QueryName"
+        ],
+        "members": {
+          "QueryName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StoredQuery": {
+            "shape": "S9v"
+          }
+        }
+      }
+    },
+    "ListAggregateDiscoveredResources": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName",
+          "ResourceType"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "ResourceType": {},
+          "Filters": {
+            "type": "structure",
+            "members": {
+              "AccountId": {},
+              "ResourceId": {},
+              "ResourceName": {},
+              "Region": {}
+            }
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResourceIdentifiers": {
+            "type": "list",
+            "member": {
+              "shape": "S4"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListDiscoveredResources": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceType"
+        ],
+        "members": {
+          "resourceType": {},
+          "resourceIds": {
+            "type": "list",
+            "member": {}
+          },
+          "resourceName": {},
+          "limit": {
+            "type": "integer"
+          },
+          "includeDeletedResources": {
+            "type": "boolean"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "resourceIdentifiers": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "resourceType": {},
+                "resourceId": {},
+                "resourceName": {},
+                "resourceDeletionTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListStoredQueries": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StoredQueryMetadata": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "QueryId",
+                "QueryArn",
+                "QueryName"
+              ],
+              "members": {
+                "QueryId": {},
+                "QueryArn": {},
+                "QueryName": {},
+                "Description": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "Sah"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "PutAggregationAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AuthorizedAccountId",
+          "AuthorizedAwsRegion"
+        ],
+        "members": {
+          "AuthorizedAccountId": {},
+          "AuthorizedAwsRegion": {},
+          "Tags": {
+            "shape": "Sam"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AggregationAuthorization": {
+            "shape": "S2i"
+          }
+        }
+      }
+    },
+    "PutConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRule"
+        ],
+        "members": {
+          "ConfigRule": {
+            "shape": "S33"
+          },
+          "Tags": {
+            "shape": "Sam"
+          }
+        }
+      }
+    },
+    "PutConfigurationAggregator": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "ConfigurationAggregatorName": {},
+          "AccountAggregationSources": {
+            "shape": "S3t"
+          },
+          "OrganizationAggregationSource": {
+            "shape": "S3x"
+          },
+          "Tags": {
+            "shape": "Sam"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationAggregator": {
+            "shape": "S3r"
+          }
+        }
+      }
+    },
+    "PutConfigurationRecorder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationRecorder"
+        ],
+        "members": {
+          "ConfigurationRecorder": {
+            "shape": "S47"
+          }
+        }
+      }
+    },
+    "PutConformancePack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConformancePackName"
+        ],
+        "members": {
+          "ConformancePackName": {},
+          "TemplateS3Uri": {},
+          "TemplateBody": {},
+          "DeliveryS3Bucket": {},
+          "DeliveryS3KeyPrefix": {},
+          "ConformancePackInputParameters": {
+            "shape": "S51"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConformancePackArn": {}
+        }
+      }
+    },
+    "PutDeliveryChannel": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeliveryChannel"
+        ],
+        "members": {
+          "DeliveryChannel": {
+            "shape": "S5g"
+          }
+        }
+      }
+    },
+    "PutEvaluations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResultToken"
+        ],
+        "members": {
+          "Evaluations": {
+            "shape": "Say"
+          },
+          "ResultToken": {},
+          "TestMode": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FailedEvaluations": {
+            "shape": "Say"
+          }
+        }
+      }
+    },
+    "PutExternalEvaluation": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "ExternalEvaluation"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ExternalEvaluation": {
+            "type": "structure",
+            "required": [
+              "ComplianceResourceType",
+              "ComplianceResourceId",
+              "ComplianceType",
+              "OrderingTimestamp"
+            ],
+            "members": {
+              "ComplianceResourceType": {},
+              "ComplianceResourceId": {},
+              "ComplianceType": {},
+              "Annotation": {},
+              "OrderingTimestamp": {
+                "type": "timestamp"
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "PutOrganizationConfigRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConfigRuleName"
+        ],
+        "members": {
+          "OrganizationConfigRuleName": {},
+          "OrganizationManagedRuleMetadata": {
+            "shape": "S5t"
+          },
+          "OrganizationCustomRuleMetadata": {
+            "shape": "S5y"
+          },
+          "ExcludedAccounts": {
+            "shape": "S61"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConfigRuleArn": {}
+        }
+      }
+    },
+    "PutOrganizationConformancePack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationConformancePackName"
+        ],
+        "members": {
+          "OrganizationConformancePackName": {},
+          "TemplateS3Uri": {},
+          "TemplateBody": {},
+          "DeliveryS3Bucket": {},
+          "DeliveryS3KeyPrefix": {},
+          "ConformancePackInputParameters": {
+            "shape": "S51"
+          },
+          "ExcludedAccounts": {
+            "shape": "S61"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationConformancePackArn": {}
+        }
+      }
+    },
+    "PutRemediationConfigurations": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RemediationConfigurations"
+        ],
+        "members": {
+          "RemediationConfigurations": {
+            "shape": "S6j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FailedBatches": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FailureMessage": {},
+                "FailedItems": {
+                  "shape": "S6j"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "PutRemediationExceptions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "ResourceKeys"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceKeys": {
+            "shape": "S1f"
+          },
+          "Message": {},
+          "ExpirationTime": {
+            "type": "timestamp"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FailedBatches": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FailureMessage": {},
+                "FailedItems": {
+                  "shape": "S6z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "PutResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceType",
+          "SchemaVersionId",
+          "ResourceId",
+          "Configuration"
+        ],
+        "members": {
+          "ResourceType": {},
+          "SchemaVersionId": {},
+          "ResourceId": {},
+          "ResourceName": {},
+          "Configuration": {},
+          "Tags": {
+            "shape": "S8a"
+          }
+        }
+      }
+    },
+    "PutRetentionConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RetentionPeriodInDays"
+        ],
+        "members": {
+          "RetentionPeriodInDays": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RetentionConfiguration": {
+            "shape": "S7d"
+          }
+        }
+      }
+    },
+    "PutStoredQuery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StoredQuery"
+        ],
+        "members": {
+          "StoredQuery": {
+            "shape": "S9v"
+          },
+          "Tags": {
+            "shape": "Sam"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "QueryArn": {}
+        }
+      }
+    },
+    "SelectAggregateResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Expression",
+          "ConfigurationAggregatorName"
+        ],
+        "members": {
+          "Expression": {},
+          "ConfigurationAggregatorName": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Results": {
+            "shape": "Sbq"
+          },
+          "QueryInfo": {
+            "shape": "Sbr"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "SelectResourceConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Expression"
+        ],
+        "members": {
+          "Expression": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Results": {
+            "shape": "Sbq"
+          },
+          "QueryInfo": {
+            "shape": "Sbr"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "StartConfigRulesEvaluation": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigRuleNames": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "StartConfigurationRecorder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationRecorderName"
+        ],
+        "members": {
+          "ConfigurationRecorderName": {}
+        }
+      }
+    },
+    "StartRemediationExecution": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "ResourceKeys"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceKeys": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "FailureMessage": {},
+          "FailedItems": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "StopConfigurationRecorder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationRecorderName"
+        ],
+        "members": {
+          "ConfigurationRecorderName": {}
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "Sah"
+          }
+        }
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "structure",
+      "required": [
+        "SourceAccountId",
+        "SourceRegion",
+        "ResourceId",
+        "ResourceType"
+      ],
+      "members": {
+        "SourceAccountId": {},
+        "SourceRegion": {},
+        "ResourceId": {},
+        "ResourceType": {},
+        "ResourceName": {}
+      }
+    },
+    "Sb": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "version": {},
+          "accountId": {},
+          "configurationItemCaptureTime": {
+            "type": "timestamp"
+          },
+          "configurationItemStatus": {},
+          "configurationStateId": {},
+          "arn": {},
+          "resourceType": {},
+          "resourceId": {},
+          "resourceName": {},
+          "awsRegion": {},
+          "availabilityZone": {},
+          "resourceCreationTime": {
+            "type": "timestamp"
+          },
+          "configuration": {},
+          "supplementaryConfiguration": {
+            "shape": "Sl"
+          }
+        }
+      }
+    },
+    "Sl": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "Sq": {
+      "type": "list",
+      "member": {
+        "shape": "Sr"
+      }
+    },
+    "Sr": {
+      "type": "structure",
+      "required": [
+        "resourceType",
+        "resourceId"
+      ],
+      "members": {
+        "resourceType": {},
+        "resourceId": {}
+      }
+    },
+    "S1f": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "ResourceType": {},
+          "ResourceId": {}
+        }
+      }
+    },
+    "S23": {
+      "type": "structure",
+      "members": {
+        "ComplianceType": {},
+        "ComplianceContributorCount": {
+          "shape": "S24"
+        }
+      }
+    },
+    "S24": {
+      "type": "structure",
+      "members": {
+        "CappedCount": {
+          "type": "integer"
+        },
+        "CapExceeded": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S2i": {
+      "type": "structure",
+      "members": {
+        "AggregationAuthorizationArn": {},
+        "AuthorizedAccountId": {},
+        "AuthorizedAwsRegion": {},
+        "CreationTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S2l": {
+      "type": "list",
+      "member": {}
+    },
+    "S2m": {
+      "type": "list",
+      "member": {}
+    },
+    "S33": {
+      "type": "structure",
+      "required": [
+        "Source"
+      ],
+      "members": {
+        "ConfigRuleName": {},
+        "ConfigRuleArn": {},
+        "ConfigRuleId": {},
+        "Description": {},
+        "Scope": {
+          "type": "structure",
+          "members": {
+            "ComplianceResourceTypes": {
+              "type": "list",
+              "member": {}
+            },
+            "TagKey": {},
+            "TagValue": {},
+            "ComplianceResourceId": {}
+          }
+        },
+        "Source": {
+          "type": "structure",
+          "required": [
+            "Owner",
+            "SourceIdentifier"
+          ],
+          "members": {
+            "Owner": {},
+            "SourceIdentifier": {},
+            "SourceDetails": {
+              "type": "list",
+              "member": {
+                "type": "structure",
+                "members": {
+                  "EventSource": {},
+                  "MessageType": {},
+                  "MaximumExecutionFrequency": {}
+                }
+              }
+            }
+          }
+        },
+        "InputParameters": {},
+        "MaximumExecutionFrequency": {},
+        "ConfigRuleState": {},
+        "CreatedBy": {}
+      }
+    },
+    "S3r": {
+      "type": "structure",
+      "members": {
+        "ConfigurationAggregatorName": {},
+        "ConfigurationAggregatorArn": {},
+        "AccountAggregationSources": {
+          "shape": "S3t"
+        },
+        "OrganizationAggregationSource": {
+          "shape": "S3x"
+        },
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        },
+        "CreatedBy": {}
+      }
+    },
+    "S3t": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "AccountIds"
+        ],
+        "members": {
+          "AccountIds": {
+            "type": "list",
+            "member": {}
+          },
+          "AllAwsRegions": {
+            "type": "boolean"
+          },
+          "AwsRegions": {
+            "shape": "S3w"
+          }
+        }
+      }
+    },
+    "S3w": {
+      "type": "list",
+      "member": {}
+    },
+    "S3x": {
+      "type": "structure",
+      "required": [
+        "RoleArn"
+      ],
+      "members": {
+        "RoleArn": {},
+        "AwsRegions": {
+          "shape": "S3w"
+        },
+        "AllAwsRegions": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S3z": {
+      "type": "list",
+      "member": {}
+    },
+    "S47": {
+      "type": "structure",
+      "members": {
+        "name": {},
+        "roleARN": {},
+        "recordingGroup": {
+          "type": "structure",
+          "members": {
+            "allSupported": {
+              "type": "boolean"
+            },
+            "includeGlobalResourceTypes": {
+              "type": "boolean"
+            },
+            "resourceTypes": {
+              "type": "list",
+              "member": {}
+            }
+          }
+        }
+      }
+    },
+    "S4e": {
+      "type": "list",
+      "member": {}
+    },
+    "S4l": {
+      "type": "list",
+      "member": {}
+    },
+    "S51": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "ParameterName",
+          "ParameterValue"
+        ],
+        "members": {
+          "ParameterName": {},
+          "ParameterValue": {}
+        }
+      }
+    },
+    "S56": {
+      "type": "list",
+      "member": {}
+    },
+    "S5a": {
+      "type": "structure",
+      "members": {
+        "lastStatus": {},
+        "lastErrorCode": {},
+        "lastErrorMessage": {},
+        "lastAttemptTime": {
+          "type": "timestamp"
+        },
+        "lastSuccessfulTime": {
+          "type": "timestamp"
+        },
+        "nextDeliveryTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S5g": {
+      "type": "structure",
+      "members": {
+        "name": {},
+        "s3BucketName": {},
+        "s3KeyPrefix": {},
+        "s3KmsKeyArn": {},
+        "snsTopicARN": {},
+        "configSnapshotDeliveryProperties": {
+          "type": "structure",
+          "members": {
+            "deliveryFrequency": {}
+          }
+        }
+      }
+    },
+    "S5j": {
+      "type": "list",
+      "member": {}
+    },
+    "S5t": {
+      "type": "structure",
+      "required": [
+        "RuleIdentifier"
+      ],
+      "members": {
+        "Description": {},
+        "RuleIdentifier": {},
+        "InputParameters": {},
+        "MaximumExecutionFrequency": {},
+        "ResourceTypesScope": {
+          "shape": "S5w"
+        },
+        "ResourceIdScope": {},
+        "TagKeyScope": {},
+        "TagValueScope": {}
+      }
+    },
+    "S5w": {
+      "type": "list",
+      "member": {}
+    },
+    "S5y": {
+      "type": "structure",
+      "required": [
+        "LambdaFunctionArn",
+        "OrganizationConfigRuleTriggerTypes"
+      ],
+      "members": {
+        "Description": {},
+        "LambdaFunctionArn": {},
+        "OrganizationConfigRuleTriggerTypes": {
+          "type": "list",
+          "member": {}
+        },
+        "InputParameters": {},
+        "MaximumExecutionFrequency": {},
+        "ResourceTypesScope": {
+          "shape": "S5w"
+        },
+        "ResourceIdScope": {},
+        "TagKeyScope": {},
+        "TagValueScope": {}
+      }
+    },
+    "S61": {
+      "type": "list",
+      "member": {}
+    },
+    "S63": {
+      "type": "list",
+      "member": {}
+    },
+    "S6j": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "TargetType",
+          "TargetId"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "TargetType": {},
+          "TargetId": {},
+          "TargetVersion": {},
+          "Parameters": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "structure",
+              "members": {
+                "ResourceValue": {
+                  "type": "structure",
+                  "required": [
+                    "Value"
+                  ],
+                  "members": {
+                    "Value": {}
+                  }
+                },
+                "StaticValue": {
+                  "type": "structure",
+                  "required": [
+                    "Values"
+                  ],
+                  "members": {
+                    "Values": {
+                      "type": "list",
+                      "member": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "ResourceType": {},
+          "Automatic": {
+            "type": "boolean"
+          },
+          "ExecutionControls": {
+            "type": "structure",
+            "members": {
+              "SsmControls": {
+                "type": "structure",
+                "members": {
+                  "ConcurrentExecutionRatePercentage": {
+                    "type": "integer"
+                  },
+                  "ErrorPercentage": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          "MaximumAutomaticAttempts": {
+            "type": "integer"
+          },
+          "RetryAttemptSeconds": {
+            "type": "long"
+          },
+          "Arn": {},
+          "CreatedByService": {}
+        }
+      }
+    },
+    "S6z": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "ConfigRuleName",
+          "ResourceType",
+          "ResourceId"
+        ],
+        "members": {
+          "ConfigRuleName": {},
+          "ResourceType": {},
+          "ResourceId": {},
+          "Message": {},
+          "ExpirationTime": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "S7d": {
+      "type": "structure",
+      "required": [
+        "Name",
+        "RetentionPeriodInDays"
+      ],
+      "members": {
+        "Name": {},
+        "RetentionPeriodInDays": {
+          "type": "integer"
+        }
+      }
+    },
+    "S7j": {
+      "type": "structure",
+      "members": {
+        "EvaluationResultQualifier": {
+          "type": "structure",
+          "members": {
+            "ConfigRuleName": {},
+            "ResourceType": {},
+            "ResourceId": {}
+          }
+        },
+        "OrderingTimestamp": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S7r": {
+      "type": "structure",
+      "members": {
+        "CompliantResourceCount": {
+          "shape": "S24"
+        },
+        "NonCompliantResourceCount": {
+          "shape": "S24"
+        },
+        "ComplianceSummaryTimestamp": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S88": {
+      "type": "structure",
+      "members": {
+        "version": {},
+        "accountId": {},
+        "configurationItemCaptureTime": {
+          "type": "timestamp"
+        },
+        "configurationItemStatus": {},
+        "configurationStateId": {},
+        "configurationItemMD5Hash": {},
+        "arn": {},
+        "resourceType": {},
+        "resourceId": {},
+        "resourceName": {},
+        "awsRegion": {},
+        "availabilityZone": {},
+        "resourceCreationTime": {
+          "type": "timestamp"
+        },
+        "tags": {
+          "shape": "S8a"
+        },
+        "relatedEvents": {
+          "type": "list",
+          "member": {}
+        },
+        "relationships": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "resourceType": {},
+              "resourceId": {},
+              "resourceName": {},
+              "relationshipName": {}
+            }
+          }
+        },
+        "configuration": {},
+        "supplementaryConfiguration": {
+          "shape": "Sl"
+        }
+      }
+    },
+    "S8a": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S8k": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "EvaluationResultIdentifier": {
+            "shape": "S7j"
+          },
+          "ComplianceType": {},
+          "ResultRecordedTime": {
+            "type": "timestamp"
+          },
+          "ConfigRuleInvokedTime": {
+            "type": "timestamp"
+          },
+          "Annotation": {},
+          "ResultToken": {}
+        }
+      }
+    },
+    "S8q": {
+      "type": "list",
+      "member": {}
+    },
+    "S9v": {
+      "type": "structure",
+      "required": [
+        "QueryName"
+      ],
+      "members": {
+        "QueryId": {},
+        "QueryArn": {},
+        "QueryName": {},
+        "Description": {},
+        "Expression": {}
+      }
+    },
+    "Sah": {
+      "type": "list",
+      "member": {
+        "shape": "Sai"
+      }
+    },
+    "Sai": {
+      "type": "structure",
+      "members": {
+        "Key": {},
+        "Value": {}
+      }
+    },
+    "Sam": {
+      "type": "list",
+      "member": {
+        "shape": "Sai"
+      }
+    },
+    "Say": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "ComplianceResourceType",
+          "ComplianceResourceId",
+          "ComplianceType",
+          "OrderingTimestamp"
+        ],
+        "members": {
+          "ComplianceResourceType": {},
+          "ComplianceResourceId": {},
+          "ComplianceType": {},
+          "Annotation": {},
+          "OrderingTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "Sbq": {
+      "type": "list",
+      "member": {}
+    },
+    "Sbr": {
+      "type": "structure",
+      "members": {
+        "SelectFields": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "Name": {}
+            }
+          }
+        }
+      }
+    }
+  }
+}

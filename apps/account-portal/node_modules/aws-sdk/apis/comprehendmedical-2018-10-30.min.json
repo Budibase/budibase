@@ -1,0 +1,820 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-10-30",
+    "endpointPrefix": "comprehendmedical",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "ComprehendMedical",
+    "serviceFullName": "AWS Comprehend Medical",
+    "serviceId": "ComprehendMedical",
+    "signatureVersion": "v4",
+    "signingName": "comprehendmedical",
+    "targetPrefix": "ComprehendMedical_20181030",
+    "uid": "comprehendmedical-2018-10-30"
+  },
+  "operations": {
+    "DescribeEntitiesDetectionV2Job": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobProperties": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "DescribeICD10CMInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobProperties": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "DescribePHIDetectionJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobProperties": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "DescribeRxNormInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobProperties": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "DetectEntities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Text"
+        ],
+        "members": {
+          "Text": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Entities",
+          "ModelVersion"
+        ],
+        "members": {
+          "Entities": {
+            "shape": "Sr"
+          },
+          "UnmappedAttributes": {
+            "shape": "S14"
+          },
+          "PaginationToken": {},
+          "ModelVersion": {}
+        }
+      },
+      "deprecated": true,
+      "deprecatedMessage": "This operation is deprecated, use DetectEntitiesV2 instead."
+    },
+    "DetectEntitiesV2": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Text"
+        ],
+        "members": {
+          "Text": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Entities",
+          "ModelVersion"
+        ],
+        "members": {
+          "Entities": {
+            "shape": "Sr"
+          },
+          "UnmappedAttributes": {
+            "shape": "S14"
+          },
+          "PaginationToken": {},
+          "ModelVersion": {}
+        }
+      }
+    },
+    "DetectPHI": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Text"
+        ],
+        "members": {
+          "Text": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Entities",
+          "ModelVersion"
+        ],
+        "members": {
+          "Entities": {
+            "shape": "Sr"
+          },
+          "PaginationToken": {},
+          "ModelVersion": {}
+        }
+      }
+    },
+    "InferICD10CM": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Text"
+        ],
+        "members": {
+          "Text": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Entities"
+        ],
+        "members": {
+          "Entities": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Id": {
+                  "type": "integer"
+                },
+                "Text": {},
+                "Category": {},
+                "Type": {},
+                "Score": {
+                  "type": "float"
+                },
+                "BeginOffset": {
+                  "type": "integer"
+                },
+                "EndOffset": {
+                  "type": "integer"
+                },
+                "Attributes": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Type": {},
+                      "Score": {
+                        "type": "float"
+                      },
+                      "RelationshipScore": {
+                        "type": "float"
+                      },
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "BeginOffset": {
+                        "type": "integer"
+                      },
+                      "EndOffset": {
+                        "type": "integer"
+                      },
+                      "Text": {},
+                      "Traits": {
+                        "shape": "S1k"
+                      },
+                      "Category": {},
+                      "RelationshipType": {}
+                    }
+                  }
+                },
+                "Traits": {
+                  "shape": "S1k"
+                },
+                "ICD10CMConcepts": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Description": {},
+                      "Code": {},
+                      "Score": {
+                        "type": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "PaginationToken": {},
+          "ModelVersion": {}
+        }
+      }
+    },
+    "InferRxNorm": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Text"
+        ],
+        "members": {
+          "Text": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Entities"
+        ],
+        "members": {
+          "Entities": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Id": {
+                  "type": "integer"
+                },
+                "Text": {},
+                "Category": {},
+                "Type": {},
+                "Score": {
+                  "type": "float"
+                },
+                "BeginOffset": {
+                  "type": "integer"
+                },
+                "EndOffset": {
+                  "type": "integer"
+                },
+                "Attributes": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Type": {},
+                      "Score": {
+                        "type": "float"
+                      },
+                      "RelationshipScore": {
+                        "type": "float"
+                      },
+                      "Id": {
+                        "type": "integer"
+                      },
+                      "BeginOffset": {
+                        "type": "integer"
+                      },
+                      "EndOffset": {
+                        "type": "integer"
+                      },
+                      "Text": {},
+                      "Traits": {
+                        "shape": "S1z"
+                      }
+                    }
+                  }
+                },
+                "Traits": {
+                  "shape": "S1z"
+                },
+                "RxNormConcepts": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Description": {},
+                      "Code": {},
+                      "Score": {
+                        "type": "float"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "PaginationToken": {},
+          "ModelVersion": {}
+        }
+      }
+    },
+    "ListEntitiesDetectionV2Jobs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filter": {
+            "shape": "S25"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobPropertiesList": {
+            "shape": "S28"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListICD10CMInferenceJobs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filter": {
+            "shape": "S25"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobPropertiesList": {
+            "shape": "S28"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListPHIDetectionJobs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filter": {
+            "shape": "S25"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobPropertiesList": {
+            "shape": "S28"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListRxNormInferenceJobs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filter": {
+            "shape": "S25"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ComprehendMedicalAsyncJobPropertiesList": {
+            "shape": "S28"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "StartEntitiesDetectionV2Job": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InputDataConfig",
+          "OutputDataConfig",
+          "DataAccessRoleArn",
+          "LanguageCode"
+        ],
+        "members": {
+          "InputDataConfig": {
+            "shape": "S9"
+          },
+          "OutputDataConfig": {
+            "shape": "Sc"
+          },
+          "DataAccessRoleArn": {},
+          "JobName": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "KMSKey": {},
+          "LanguageCode": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StartICD10CMInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InputDataConfig",
+          "OutputDataConfig",
+          "DataAccessRoleArn",
+          "LanguageCode"
+        ],
+        "members": {
+          "InputDataConfig": {
+            "shape": "S9"
+          },
+          "OutputDataConfig": {
+            "shape": "Sc"
+          },
+          "DataAccessRoleArn": {},
+          "JobName": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "KMSKey": {},
+          "LanguageCode": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StartPHIDetectionJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InputDataConfig",
+          "OutputDataConfig",
+          "DataAccessRoleArn",
+          "LanguageCode"
+        ],
+        "members": {
+          "InputDataConfig": {
+            "shape": "S9"
+          },
+          "OutputDataConfig": {
+            "shape": "Sc"
+          },
+          "DataAccessRoleArn": {},
+          "JobName": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "KMSKey": {},
+          "LanguageCode": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StartRxNormInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "InputDataConfig",
+          "OutputDataConfig",
+          "DataAccessRoleArn",
+          "LanguageCode"
+        ],
+        "members": {
+          "InputDataConfig": {
+            "shape": "S9"
+          },
+          "OutputDataConfig": {
+            "shape": "Sc"
+          },
+          "DataAccessRoleArn": {},
+          "JobName": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "KMSKey": {},
+          "LanguageCode": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StopEntitiesDetectionV2Job": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StopICD10CMInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StopPHIDetectionJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    },
+    "StopRxNormInferenceJob": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "JobId"
+        ],
+        "members": {
+          "JobId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "JobId": {}
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "structure",
+      "members": {
+        "JobId": {},
+        "JobName": {},
+        "JobStatus": {},
+        "Message": {},
+        "SubmitTime": {
+          "type": "timestamp"
+        },
+        "EndTime": {
+          "type": "timestamp"
+        },
+        "ExpirationTime": {
+          "type": "timestamp"
+        },
+        "InputDataConfig": {
+          "shape": "S9"
+        },
+        "OutputDataConfig": {
+          "shape": "Sc"
+        },
+        "LanguageCode": {},
+        "DataAccessRoleArn": {},
+        "ManifestFilePath": {},
+        "KMSKey": {},
+        "ModelVersion": {}
+      }
+    },
+    "S9": {
+      "type": "structure",
+      "required": [
+        "S3Bucket"
+      ],
+      "members": {
+        "S3Bucket": {},
+        "S3Key": {}
+      }
+    },
+    "Sc": {
+      "type": "structure",
+      "required": [
+        "S3Bucket"
+      ],
+      "members": {
+        "S3Bucket": {},
+        "S3Key": {}
+      }
+    },
+    "Sr": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Id": {
+            "type": "integer"
+          },
+          "BeginOffset": {
+            "type": "integer"
+          },
+          "EndOffset": {
+            "type": "integer"
+          },
+          "Score": {
+            "type": "float"
+          },
+          "Text": {},
+          "Category": {},
+          "Type": {},
+          "Traits": {
+            "shape": "Sy"
+          },
+          "Attributes": {
+            "type": "list",
+            "member": {
+              "shape": "S12"
+            }
+          }
+        }
+      }
+    },
+    "Sy": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Score": {
+            "type": "float"
+          }
+        }
+      }
+    },
+    "S12": {
+      "type": "structure",
+      "members": {
+        "Type": {},
+        "Score": {
+          "type": "float"
+        },
+        "RelationshipScore": {
+          "type": "float"
+        },
+        "RelationshipType": {},
+        "Id": {
+          "type": "integer"
+        },
+        "BeginOffset": {
+          "type": "integer"
+        },
+        "EndOffset": {
+          "type": "integer"
+        },
+        "Text": {},
+        "Category": {},
+        "Traits": {
+          "shape": "Sy"
+        }
+      }
+    },
+    "S14": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Type": {},
+          "Attribute": {
+            "shape": "S12"
+          }
+        }
+      }
+    },
+    "S1k": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Score": {
+            "type": "float"
+          }
+        }
+      }
+    },
+    "S1z": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Score": {
+            "type": "float"
+          }
+        }
+      }
+    },
+    "S25": {
+      "type": "structure",
+      "members": {
+        "JobName": {},
+        "JobStatus": {},
+        "SubmitTimeBefore": {
+          "type": "timestamp"
+        },
+        "SubmitTimeAfter": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S28": {
+      "type": "list",
+      "member": {
+        "shape": "S4"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+.spectrum {
+  --spectrum-dropzone-border-color: var(--spectrum-global-color-gray-300);
+  --spectrum-dropzone-background-color: var(--spectrum-global-color-gray-100);
+  --spectrum-dropzone-icon-color: var(--spectrum-global-color-gray-500);
+  --spectrum-dropzone-border-color-selected-hover: var(--spectrum-global-color-blue-400);
+  --spectrum-dropzone-background-color-selected-hover: var(--spectrum-alias-highlight-selected);
+  --spectrum-dropzone-icon-color-selected-hover: var(--spectrum-global-color-blue-500);
+  --spectrum-dropzone-padding: var(--spectrum-global-dimension-size-900);
+  --spectrum-dropzone-border-width: var(--spectrum-alias-border-size-thick);
+  --spectrum-dropzone-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-dropzone-content-text-size: var(--spectrum-alias-font-size-default);
+  --spectrum-dropzone-icon-margin-y: var(--spectrum-global-dimension-size-175);
+}

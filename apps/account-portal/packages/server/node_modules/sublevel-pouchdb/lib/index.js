@@ -1,0 +1,388 @@
+'use strict';
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var ltgt = _interopDefault(require('ltgt'));
+var events = _interopDefault(require('events'));
+var Codec = _interopDefault(require('level-codec'));
+var ReadableStreamCore = _interopDefault(require('readable-stream'));
+var inherits = _interopDefault(require('inherits'));
+
+function isFunction(f) {
+  return 'function' === typeof f;
+}
+
+function getPrefix(db) {
+  if (isFunction(db.prefix)) {
+    return db.prefix();
+  }
+  return db;
+}
+
+function clone(_obj) {
+  var obj = {};
+  for (var k in _obj) {
+    obj[k] = _obj[k];
+  }
+  return obj;
+}
+
+function nut(db, precodec, codec) {
+  function encodePrefix(prefix, key, opts1, opts2) {
+    return precodec.encode([ prefix, codec.encodeKey(key, opts1, opts2 ) ]);
+  }
+
+  function addEncodings(op, prefix) {
+    if (prefix && prefix.options) {
+      op.keyEncoding =
+        op.keyEncoding || prefix.options.keyEncoding;
+      op.valueEncoding =
+        op.valueEncoding || prefix.options.valueEncoding;
+    }
+    return op;
+  }
+
+  db.open(function () { /* no-op */});
+
+  return {
+    apply: function (ops, opts, cb) {
+      opts = opts || {};
+
+      var batch = [];
+      var i = -1;
+      var len = ops.length;
+
+      while (++i < len) {
+        var op = ops[i];
+        addEncodings(op, op.prefix);
+        op.prefix = getPrefix(op.prefix);
+        batch.push({
+          key: encodePrefix(op.prefix, op.key, opts, op),
+          value: op.type !== 'del' && codec.encodeValue(op.value, opts, op),
+          type: op.type
+        });
+      }
+      db.db.batch(batch, opts, cb);
+    },
+    get: function (key, prefix, opts, cb) {
+      opts.asBuffer = codec.valueAsBuffer(opts);
+      return db.db.get(
+        encodePrefix(prefix, key, opts),
+        opts,
+        function (err, value) {
+          if (err) {
+            cb(err);
+          } else {
+            cb(null, codec.decodeValue(value, opts));
+          }
+        }
+      );
+    },
+    createDecoder: function (opts) {
+      return function (key, value) {
+        return {
+          key: codec.decodeKey(precodec.decode(key)[1], opts),
+          value: codec.decodeValue(value, opts)
+        };
+      };
+    },
+    isClosed: function isClosed() {
+      return db.isClosed();
+    },
+    close: function close(cb) {
+      return db.close(cb);
+    },
+    iterator: function (_opts) {
+      var opts = clone(_opts || {});
+      var prefix = _opts.prefix || [];
+
+      function encodeKey(key) {
+        return encodePrefix(prefix, key, opts, {});
+      }
+
+      ltgt.toLtgt(_opts, opts, encodeKey, precodec.lowerBound, precodec.upperBound);
+
+      // if these legacy values are in the options, remove them
+
+      opts.prefix = null;
+
+      //************************************************
+      //hard coded defaults, for now...
+      //TODO: pull defaults and encoding out of levelup.
+      opts.keyAsBuffer = opts.valueAsBuffer = false;
+      //************************************************
+
+
+      //this is vital, otherwise limit: undefined will
+      //create an empty stream.
+      /* istanbul ignore next */
+      if ('number' !== typeof opts.limit) {
+        opts.limit = -1;
+      }
+
+      opts.keyAsBuffer = precodec.buffer;
+      opts.valueAsBuffer = codec.valueAsBuffer(opts);
+
+      function wrapIterator(iterator) {
+        return {
+          next: function (cb) {
+            return iterator.next(cb);
+          },
+          end: function (cb) {
+            iterator.end(cb);
+          }
+        };
+      }
+
+      return wrapIterator(db.db.iterator(opts));
+    }
+  };
+}
+
+function NotFoundError() {
+  Error.call(this);
+}
+
+inherits(NotFoundError, Error);
+
+NotFoundError.prototype.name = 'NotFoundError';
+
+var EventEmitter = events.EventEmitter;
+var version = "6.5.4";
+
+var NOT_FOUND_ERROR = new NotFoundError();
+
+var sublevel = function (nut, prefix, createStream, options) {
+  var emitter = new EventEmitter();
+  emitter.sublevels = {};
+  emitter.options = options;
+
+  emitter.version = version;
+
+  emitter.methods = {};
+  prefix = prefix || [];
+
+  function mergeOpts(opts) {
+    var o = {};
+    var k;
+    if (options) {
+      for (k in options) {
+        if (typeof options[k] !== 'undefined') {
+          o[k] = options[k];
+        }
+      }
+    }
+    if (opts) {
+      for (k in opts) {
+        if (typeof opts[k] !== 'undefined') {
+          o[k] = opts[k];
+        }
+      }
+    }
+    return o;
+  }
+
+  emitter.put = function (key, value, opts, cb) {
+    if ('function' === typeof opts) {
+      cb = opts;
+      opts = {};
+    }
+
+    nut.apply([{
+      key: key, value: value,
+      prefix: prefix.slice(), type: 'put'
+    }], mergeOpts(opts), function (err) {
+      /* istanbul ignore next */
+      if (err) {
+        return cb(err);
+      }
+      emitter.emit('put', key, value);
+      cb(null);
+    });
+  };
+
+  emitter.prefix = function () {
+    return prefix.slice();
+  };
+
+  emitter.batch = function (ops, opts, cb) {
+    if ('function' === typeof opts) {
+      cb = opts;
+      opts = {};
+    }
+
+    ops = ops.map(function (op) {
+      return {
+        key: op.key,
+        value: op.value,
+        prefix: op.prefix || prefix,
+        keyEncoding: op.keyEncoding,    // *
+        valueEncoding: op.valueEncoding,  // * (TODO: encodings on sublevel)
+        type: op.type
+      };
+    });
+
+    nut.apply(ops, mergeOpts(opts), function (err) {
+      /* istanbul ignore next */
+      if (err) {
+        return cb(err);
+      }
+      emitter.emit('batch', ops);
+      cb(null);
+    });
+  };
+
+  emitter.get = function (key, opts, cb) {
+    /* istanbul ignore else */
+    if ('function' === typeof opts) {
+      cb = opts;
+      opts = {};
+    }
+    nut.get(key, prefix, mergeOpts(opts), function (err, value) {
+      if (err) {
+        cb(NOT_FOUND_ERROR);
+      } else {
+        cb(null, value);
+      }
+    });
+  };
+
+  emitter.sublevel = function (name, opts) {
+    return emitter.sublevels[name] =
+      emitter.sublevels[name] || sublevel(nut, prefix.concat(name), createStream, mergeOpts(opts));
+  };
+
+  emitter.readStream = emitter.createReadStream = function (opts) {
+    opts = mergeOpts(opts);
+    opts.prefix = prefix;
+    var stream;
+    var it = nut.iterator(opts);
+
+    stream = createStream(opts, nut.createDecoder(opts));
+    stream.setIterator(it);
+
+    return stream;
+  };
+
+  emitter.close = function (cb) {
+    nut.close(cb);
+  };
+
+  emitter.isOpen = nut.isOpen;
+  emitter.isClosed = nut.isClosed;
+
+  return emitter;
+};
+
+/* Copyright (c) 2012-2014 LevelUP contributors
+ * See list at <https://github.com/rvagg/node-levelup#contributing>
+ * MIT License <https://github.com/rvagg/node-levelup/blob/master/LICENSE.md>
+ */
+
+var Readable = ReadableStreamCore.Readable;
+
+function ReadStream(options, makeData) {
+  if (!(this instanceof ReadStream)) {
+    return new ReadStream(options, makeData);
+  }
+
+  Readable.call(this, { objectMode: true, highWaterMark: options.highWaterMark });
+
+  // purely to keep `db` around until we're done so it's not GCed if the user doesn't keep a ref
+
+  this._waiting = false;
+  this._options = options;
+  this._makeData = makeData;
+}
+
+inherits(ReadStream, Readable);
+
+ReadStream.prototype.setIterator = function (it) {
+  this._iterator = it;
+  /* istanbul ignore if */
+  if (this._destroyed) {
+    return it.end(function () {});
+  }
+  /* istanbul ignore if */
+  if (this._waiting) {
+    this._waiting = false;
+    return this._read();
+  }
+  return this;
+};
+
+ReadStream.prototype._read = function read() {
+  var self = this;
+  /* istanbul ignore if */
+  if (self._destroyed) {
+    return;
+  }
+  /* istanbul ignore if */
+  if (!self._iterator) {
+    return this._waiting = true;
+  }
+
+  self._iterator.next(function (err, key, value) {
+    if (err || (key === undefined && value === undefined)) {
+      if (!err && !self._destroyed) {
+        self.push(null);
+      }
+      return self._cleanup(err);
+    }
+
+
+    value = self._makeData(key, value);
+    if (!self._destroyed) {
+      self.push(value);
+    }
+  });
+};
+
+ReadStream.prototype._cleanup = function (err) {
+  if (this._destroyed) {
+    return;
+  }
+
+  this._destroyed = true;
+
+  var self = this;
+  /* istanbul ignore if */
+  if (err && err.message !== 'iterator has ended') {
+    self.emit('error', err);
+  }
+
+  /* istanbul ignore else */
+  if (self._iterator) {
+    self._iterator.end(function () {
+      self._iterator = null;
+      self.emit('close');
+    });
+  } else {
+    self.emit('close');
+  }
+};
+
+ReadStream.prototype.destroy = function () {
+  this._cleanup();
+};
+
+var precodec = {
+  encode: function (decodedKey) {
+    return '\xff' + decodedKey[0] + '\xff' + decodedKey[1];
+  },
+  decode: function (encodedKeyAsBuffer) {
+    var str = encodedKeyAsBuffer.toString();
+    var idx = str.indexOf('\xff', 1);
+    return [str.substring(1, idx), str.substring(idx + 1)];
+  },
+  lowerBound: '\x00',
+  upperBound: '\xff'
+};
+
+var codec = new Codec();
+
+function sublevelPouch(db) {
+  return sublevel(nut(db, precodec, codec), [], ReadStream, db.options);
+}
+
+module.exports = sublevelPouch;

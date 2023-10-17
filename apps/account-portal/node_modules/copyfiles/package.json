@@ -1,0 +1,33 @@
+{
+  "name": "copyfiles",
+  "version": "2.4.1",
+  "description": "copy some files",
+  "main": "index.js",
+  "bin": {
+    "copyfiles": "./copyfiles",
+    "copyup": "./copyfiles"
+  },
+  "scripts": {
+    "test": "tape test/test.*.js | tspec"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "glob": "^7.0.5",
+    "minimatch": "^3.0.3",
+    "mkdirp": "^1.0.4",
+    "noms": "0.0.0",
+    "through2": "^2.0.1",
+    "untildify": "^4.0.0",
+    "yargs": "^16.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/calvinmetcalf/copyfiles.git"
+  },
+  "devDependencies": {
+    "rimraf": "^2.2.6",
+    "tape": "^4.6.0",
+    "tap-spec": "^5.0.0"
+  }
+}

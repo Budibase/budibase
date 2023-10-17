@@ -1,0 +1,1031 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-09-06",
+    "endpointPrefix": "iotthingsgraph",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "AWS IoT Things Graph",
+    "serviceId": "IoTThingsGraph",
+    "signatureVersion": "v4",
+    "signingName": "iotthingsgraph",
+    "targetPrefix": "IotThingsGraphFrontEndService",
+    "uid": "iotthingsgraph-2018-09-06"
+  },
+  "operations": {
+    "AssociateEntityToThing": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "thingName",
+          "entityId"
+        ],
+        "members": {
+          "thingName": {},
+          "entityId": {},
+          "namespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateFlowTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "definition"
+        ],
+        "members": {
+          "definition": {
+            "shape": "S7"
+          },
+          "compatibleNamespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sb"
+          }
+        }
+      }
+    },
+    "CreateSystemInstance": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "definition",
+          "target"
+        ],
+        "members": {
+          "tags": {
+            "shape": "Sf"
+          },
+          "definition": {
+            "shape": "S7"
+          },
+          "target": {},
+          "greengrassGroupName": {},
+          "s3BucketName": {},
+          "metricsConfiguration": {
+            "shape": "Sm"
+          },
+          "flowActionsRoleArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "CreateSystemTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "definition"
+        ],
+        "members": {
+          "definition": {
+            "shape": "S7"
+          },
+          "compatibleNamespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sw"
+          }
+        }
+      }
+    },
+    "DeleteFlowTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteNamespace": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "namespaceArn": {},
+          "namespaceName": {}
+        }
+      }
+    },
+    "DeleteSystemInstance": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteSystemTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeploySystemInstance": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "summary"
+        ],
+        "members": {
+          "summary": {
+            "shape": "Sq"
+          },
+          "greengrassDeploymentId": {}
+        }
+      }
+    },
+    "DeprecateFlowTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeprecateSystemTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeNamespace": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "namespaceName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "namespaceArn": {},
+          "namespaceName": {},
+          "trackingNamespaceName": {},
+          "trackingNamespaceVersion": {
+            "type": "long"
+          },
+          "namespaceVersion": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "DissociateEntityFromThing": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "thingName",
+          "entityType"
+        ],
+        "members": {
+          "thingName": {},
+          "entityType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetEntities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ids"
+        ],
+        "members": {
+          "ids": {
+            "type": "list",
+            "member": {}
+          },
+          "namespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "descriptions": {
+            "shape": "S1l"
+          }
+        }
+      }
+    },
+    "GetFlowTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {},
+          "revisionNumber": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "description": {
+            "type": "structure",
+            "members": {
+              "summary": {
+                "shape": "Sb"
+              },
+              "definition": {
+                "shape": "S7"
+              },
+              "validatedNamespaceVersion": {
+                "type": "long"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetFlowTemplateRevisions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "shape": "S1u"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "GetNamespaceDeletionStatus": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "namespaceArn": {},
+          "namespaceName": {},
+          "status": {},
+          "errorCode": {},
+          "errorMessage": {}
+        }
+      }
+    },
+    "GetSystemInstance": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "description": {
+            "type": "structure",
+            "members": {
+              "summary": {
+                "shape": "Sq"
+              },
+              "definition": {
+                "shape": "S7"
+              },
+              "s3BucketName": {},
+              "metricsConfiguration": {
+                "shape": "Sm"
+              },
+              "validatedNamespaceVersion": {
+                "type": "long"
+              },
+              "validatedDependencyRevisions": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "id": {},
+                    "revisionNumber": {
+                      "type": "long"
+                    }
+                  }
+                }
+              },
+              "flowActionsRoleArn": {}
+            }
+          }
+        }
+      }
+    },
+    "GetSystemTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {},
+          "revisionNumber": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "description": {
+            "type": "structure",
+            "members": {
+              "summary": {
+                "shape": "Sw"
+              },
+              "definition": {
+                "shape": "S7"
+              },
+              "validatedNamespaceVersion": {
+                "type": "long"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetSystemTemplateRevisions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id"
+        ],
+        "members": {
+          "id": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "shape": "S2a"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "GetUploadStatus": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "uploadId"
+        ],
+        "members": {
+          "uploadId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "uploadId",
+          "uploadStatus",
+          "createdDate"
+        ],
+        "members": {
+          "uploadId": {},
+          "uploadStatus": {},
+          "namespaceArn": {},
+          "namespaceName": {},
+          "namespaceVersion": {
+            "type": "long"
+          },
+          "failureReason": {
+            "type": "list",
+            "member": {}
+          },
+          "createdDate": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "ListFlowExecutionMessages": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "flowExecutionId"
+        ],
+        "members": {
+          "flowExecutionId": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "messages": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "messageId": {},
+                "eventType": {},
+                "timestamp": {
+                  "type": "timestamp"
+                },
+                "payload": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn"
+        ],
+        "members": {
+          "maxResults": {
+            "type": "integer"
+          },
+          "resourceArn": {},
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "tags": {
+            "shape": "Sf"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchEntities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "entityTypes"
+        ],
+        "members": {
+          "entityTypes": {
+            "type": "list",
+            "member": {}
+          },
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "name": {},
+                "value": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          },
+          "namespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "descriptions": {
+            "shape": "S1l"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchFlowExecutions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "systemInstanceId"
+        ],
+        "members": {
+          "systemInstanceId": {},
+          "flowExecutionId": {},
+          "startTime": {
+            "type": "timestamp"
+          },
+          "endTime": {
+            "type": "timestamp"
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "flowExecutionId": {},
+                "status": {},
+                "systemInstanceId": {},
+                "flowTemplateId": {},
+                "createdAt": {
+                  "type": "timestamp"
+                },
+                "updatedAt": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchFlowTemplates": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "name",
+                "value"
+              ],
+              "members": {
+                "name": {},
+                "value": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "shape": "S1u"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchSystemInstances": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "name": {},
+                "value": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "type": "list",
+            "member": {
+              "shape": "Sq"
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchSystemTemplates": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "name",
+                "value"
+              ],
+              "members": {
+                "name": {},
+                "value": {
+                  "type": "list",
+                  "member": {}
+                }
+              }
+            }
+          },
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summaries": {
+            "shape": "S2a"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "SearchThings": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "entityId"
+        ],
+        "members": {
+          "entityId": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          },
+          "namespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "things": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "thingArn": {},
+                "thingName": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tags"
+        ],
+        "members": {
+          "resourceArn": {},
+          "tags": {
+            "shape": "Sf"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UndeploySystemInstance": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "id": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tagKeys"
+        ],
+        "members": {
+          "resourceArn": {},
+          "tagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateFlowTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "definition"
+        ],
+        "members": {
+          "id": {},
+          "definition": {
+            "shape": "S7"
+          },
+          "compatibleNamespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sb"
+          }
+        }
+      }
+    },
+    "UpdateSystemTemplate": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "id",
+          "definition"
+        ],
+        "members": {
+          "id": {},
+          "definition": {
+            "shape": "S7"
+          },
+          "compatibleNamespaceVersion": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "summary": {
+            "shape": "Sw"
+          }
+        }
+      }
+    },
+    "UploadEntityDefinitions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "document": {
+            "shape": "S7"
+          },
+          "syncWithPublicNamespace": {
+            "type": "boolean"
+          },
+          "deprecateExistingEntities": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "uploadId"
+        ],
+        "members": {
+          "uploadId": {}
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S7": {
+      "type": "structure",
+      "required": [
+        "language",
+        "text"
+      ],
+      "members": {
+        "language": {},
+        "text": {}
+      }
+    },
+    "Sb": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "arn": {},
+        "revisionNumber": {
+          "type": "long"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sf": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "key",
+          "value"
+        ],
+        "members": {
+          "key": {},
+          "value": {}
+        }
+      }
+    },
+    "Sm": {
+      "type": "structure",
+      "members": {
+        "cloudMetricEnabled": {
+          "type": "boolean"
+        },
+        "metricRuleRoleArn": {}
+      }
+    },
+    "Sq": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "arn": {},
+        "status": {},
+        "target": {},
+        "greengrassGroupName": {},
+        "createdAt": {
+          "type": "timestamp"
+        },
+        "updatedAt": {
+          "type": "timestamp"
+        },
+        "greengrassGroupId": {},
+        "greengrassGroupVersionId": {}
+      }
+    },
+    "Sw": {
+      "type": "structure",
+      "members": {
+        "id": {},
+        "arn": {},
+        "revisionNumber": {
+          "type": "long"
+        },
+        "createdAt": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S1l": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "id": {},
+          "arn": {},
+          "type": {},
+          "createdAt": {
+            "type": "timestamp"
+          },
+          "definition": {
+            "shape": "S7"
+          }
+        }
+      }
+    },
+    "S1u": {
+      "type": "list",
+      "member": {
+        "shape": "Sb"
+      }
+    },
+    "S2a": {
+      "type": "list",
+      "member": {
+        "shape": "Sw"
+      }
+    }
+  }
+}

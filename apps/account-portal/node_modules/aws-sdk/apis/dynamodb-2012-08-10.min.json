@@ -1,0 +1,2882 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2012-08-10",
+    "endpointPrefix": "dynamodb",
+    "jsonVersion": "1.0",
+    "protocol": "json",
+    "serviceAbbreviation": "DynamoDB",
+    "serviceFullName": "Amazon DynamoDB",
+    "serviceId": "DynamoDB",
+    "signatureVersion": "v4",
+    "targetPrefix": "DynamoDB_20120810",
+    "uid": "dynamodb-2012-08-10"
+  },
+  "operations": {
+    "BatchExecuteStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Statements"
+        ],
+        "members": {
+          "Statements": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Statement"
+              ],
+              "members": {
+                "Statement": {},
+                "Parameters": {
+                  "shape": "S5"
+                },
+                "ConsistentRead": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Responses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Error": {
+                  "type": "structure",
+                  "members": {
+                    "Code": {},
+                    "Message": {}
+                  }
+                },
+                "TableName": {},
+                "Item": {
+                  "shape": "Sq"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "BatchGetItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RequestItems"
+        ],
+        "members": {
+          "RequestItems": {
+            "shape": "Ss"
+          },
+          "ReturnConsumedCapacity": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Responses": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "shape": "S13"
+            }
+          },
+          "UnprocessedKeys": {
+            "shape": "Ss"
+          },
+          "ConsumedCapacity": {
+            "shape": "S14"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "BatchWriteItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RequestItems"
+        ],
+        "members": {
+          "RequestItems": {
+            "shape": "S1b"
+          },
+          "ReturnConsumedCapacity": {},
+          "ReturnItemCollectionMetrics": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UnprocessedItems": {
+            "shape": "S1b"
+          },
+          "ItemCollectionMetrics": {
+            "shape": "S1j"
+          },
+          "ConsumedCapacity": {
+            "shape": "S14"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "CreateBackup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "BackupName"
+        ],
+        "members": {
+          "TableName": {},
+          "BackupName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BackupDetails": {
+            "shape": "S1s"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "CreateGlobalTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GlobalTableName",
+          "ReplicationGroup"
+        ],
+        "members": {
+          "GlobalTableName": {},
+          "ReplicationGroup": {
+            "shape": "S20"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTableDescription": {
+            "shape": "S24"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "CreateTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AttributeDefinitions",
+          "TableName",
+          "KeySchema"
+        ],
+        "members": {
+          "AttributeDefinitions": {
+            "shape": "S2i"
+          },
+          "TableName": {},
+          "KeySchema": {
+            "shape": "S2m"
+          },
+          "LocalSecondaryIndexes": {
+            "shape": "S2p"
+          },
+          "GlobalSecondaryIndexes": {
+            "shape": "S2v"
+          },
+          "BillingMode": {},
+          "ProvisionedThroughput": {
+            "shape": "S2x"
+          },
+          "StreamSpecification": {
+            "shape": "S2z"
+          },
+          "SSESpecification": {
+            "shape": "S32"
+          },
+          "Tags": {
+            "shape": "S35"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableDescription": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DeleteBackup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BackupArn"
+        ],
+        "members": {
+          "BackupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BackupDescription": {
+            "shape": "S3y"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DeleteItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "Key"
+        ],
+        "members": {
+          "TableName": {},
+          "Key": {
+            "shape": "Sv"
+          },
+          "Expected": {
+            "shape": "S4b"
+          },
+          "ConditionalOperator": {},
+          "ReturnValues": {},
+          "ReturnConsumedCapacity": {},
+          "ReturnItemCollectionMetrics": {},
+          "ConditionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          },
+          "ExpressionAttributeValues": {
+            "shape": "S4j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "Sq"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          },
+          "ItemCollectionMetrics": {
+            "shape": "S1l"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DeleteTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableDescription": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeBackup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "BackupArn"
+        ],
+        "members": {
+          "BackupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BackupDescription": {
+            "shape": "S3y"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeContinuousBackups": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ContinuousBackupsDescription": {
+            "shape": "S4s"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeContributorInsights": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {},
+          "IndexName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableName": {},
+          "IndexName": {},
+          "ContributorInsightsRuleList": {
+            "type": "list",
+            "member": {}
+          },
+          "ContributorInsightsStatus": {},
+          "LastUpdateDateTime": {
+            "type": "timestamp"
+          },
+          "FailureException": {
+            "type": "structure",
+            "members": {
+              "ExceptionName": {},
+              "ExceptionDescription": {}
+            }
+          }
+        }
+      }
+    },
+    "DescribeEndpoints": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Endpoints"
+        ],
+        "members": {
+          "Endpoints": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Address",
+                "CachePeriodInMinutes"
+              ],
+              "members": {
+                "Address": {},
+                "CachePeriodInMinutes": {
+                  "type": "long"
+                }
+              }
+            }
+          }
+        }
+      },
+      "endpointoperation": true
+    },
+    "DescribeExport": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ExportArn"
+        ],
+        "members": {
+          "ExportArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ExportDescription": {
+            "shape": "S5c"
+          }
+        }
+      }
+    },
+    "DescribeGlobalTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GlobalTableName"
+        ],
+        "members": {
+          "GlobalTableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTableDescription": {
+            "shape": "S24"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeGlobalTableSettings": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GlobalTableName"
+        ],
+        "members": {
+          "GlobalTableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTableName": {},
+          "ReplicaSettings": {
+            "shape": "S5w"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeKinesisStreamingDestination": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableName": {},
+          "KinesisDataStreamDestinations": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "StreamArn": {},
+                "DestinationStatus": {},
+                "DestinationStatusDescription": {}
+              }
+            }
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeLimits": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountMaxReadCapacityUnits": {
+            "type": "long"
+          },
+          "AccountMaxWriteCapacityUnits": {
+            "type": "long"
+          },
+          "TableMaxReadCapacityUnits": {
+            "type": "long"
+          },
+          "TableMaxWriteCapacityUnits": {
+            "type": "long"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Table": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DescribeTableReplicaAutoScaling": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableAutoScalingDescription": {
+            "shape": "S6i"
+          }
+        }
+      }
+    },
+    "DescribeTimeToLive": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TimeToLiveDescription": {
+            "shape": "S47"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "DisableKinesisStreamingDestination": {
+      "input": {
+        "shape": "S6p"
+      },
+      "output": {
+        "shape": "S6q"
+      },
+      "endpointdiscovery": {}
+    },
+    "EnableKinesisStreamingDestination": {
+      "input": {
+        "shape": "S6p"
+      },
+      "output": {
+        "shape": "S6q"
+      },
+      "endpointdiscovery": {}
+    },
+    "ExecuteStatement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Statement"
+        ],
+        "members": {
+          "Statement": {},
+          "Parameters": {
+            "shape": "S5"
+          },
+          "ConsistentRead": {
+            "type": "boolean"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "shape": "S13"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ExecuteTransaction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TransactStatements"
+        ],
+        "members": {
+          "TransactStatements": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Statement"
+              ],
+              "members": {
+                "Statement": {},
+                "Parameters": {
+                  "shape": "S5"
+                }
+              }
+            }
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Responses": {
+            "shape": "S6z"
+          }
+        }
+      }
+    },
+    "ExportTableToPointInTime": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableArn",
+          "S3Bucket"
+        ],
+        "members": {
+          "TableArn": {},
+          "ExportTime": {
+            "type": "timestamp"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          },
+          "S3Bucket": {},
+          "S3BucketOwner": {},
+          "S3Prefix": {},
+          "S3SseAlgorithm": {},
+          "S3SseKmsKeyId": {},
+          "ExportFormat": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ExportDescription": {
+            "shape": "S5c"
+          }
+        }
+      }
+    },
+    "GetItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "Key"
+        ],
+        "members": {
+          "TableName": {},
+          "Key": {
+            "shape": "Sv"
+          },
+          "AttributesToGet": {
+            "shape": "Sw"
+          },
+          "ConsistentRead": {
+            "type": "boolean"
+          },
+          "ReturnConsumedCapacity": {},
+          "ProjectionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Item": {
+            "shape": "Sq"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "ListBackups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "TableName": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "TimeRangeLowerBound": {
+            "type": "timestamp"
+          },
+          "TimeRangeUpperBound": {
+            "type": "timestamp"
+          },
+          "ExclusiveStartBackupArn": {},
+          "BackupType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BackupSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "TableName": {},
+                "TableId": {},
+                "TableArn": {},
+                "BackupArn": {},
+                "BackupName": {},
+                "BackupCreationDateTime": {
+                  "type": "timestamp"
+                },
+                "BackupExpiryDateTime": {
+                  "type": "timestamp"
+                },
+                "BackupStatus": {},
+                "BackupType": {},
+                "BackupSizeBytes": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "LastEvaluatedBackupArn": {}
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "ListContributorInsights": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "TableName": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ContributorInsightsSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "TableName": {},
+                "IndexName": {},
+                "ContributorInsightsStatus": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListExports": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "TableArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ExportSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ExportArn": {},
+                "ExportStatus": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListGlobalTables": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ExclusiveStartGlobalTableName": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "RegionName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTables": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "GlobalTableName": {},
+                "ReplicationGroup": {
+                  "shape": "S20"
+                }
+              }
+            }
+          },
+          "LastEvaluatedGlobalTableName": {}
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "ListTables": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ExclusiveStartTableName": {},
+          "Limit": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableNames": {
+            "type": "list",
+            "member": {}
+          },
+          "LastEvaluatedTableName": {}
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "ListTagsOfResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S35"
+          },
+          "NextToken": {}
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "PutItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "Item"
+        ],
+        "members": {
+          "TableName": {},
+          "Item": {
+            "shape": "S1f"
+          },
+          "Expected": {
+            "shape": "S4b"
+          },
+          "ReturnValues": {},
+          "ReturnConsumedCapacity": {},
+          "ReturnItemCollectionMetrics": {},
+          "ConditionalOperator": {},
+          "ConditionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          },
+          "ExpressionAttributeValues": {
+            "shape": "S4j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "Sq"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          },
+          "ItemCollectionMetrics": {
+            "shape": "S1l"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "Query": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {},
+          "IndexName": {},
+          "Select": {},
+          "AttributesToGet": {
+            "shape": "Sw"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "ConsistentRead": {
+            "type": "boolean"
+          },
+          "KeyConditions": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "shape": "S86"
+            }
+          },
+          "QueryFilter": {
+            "shape": "S87"
+          },
+          "ConditionalOperator": {},
+          "ScanIndexForward": {
+            "type": "boolean"
+          },
+          "ExclusiveStartKey": {
+            "shape": "Sv"
+          },
+          "ReturnConsumedCapacity": {},
+          "ProjectionExpression": {},
+          "FilterExpression": {},
+          "KeyConditionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          },
+          "ExpressionAttributeValues": {
+            "shape": "S4j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "shape": "S13"
+          },
+          "Count": {
+            "type": "integer"
+          },
+          "ScannedCount": {
+            "type": "integer"
+          },
+          "LastEvaluatedKey": {
+            "shape": "Sv"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "RestoreTableFromBackup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetTableName",
+          "BackupArn"
+        ],
+        "members": {
+          "TargetTableName": {},
+          "BackupArn": {},
+          "BillingModeOverride": {},
+          "GlobalSecondaryIndexOverride": {
+            "shape": "S2v"
+          },
+          "LocalSecondaryIndexOverride": {
+            "shape": "S2p"
+          },
+          "ProvisionedThroughputOverride": {
+            "shape": "S2x"
+          },
+          "SSESpecificationOverride": {
+            "shape": "S32"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableDescription": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "RestoreTableToPointInTime": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetTableName"
+        ],
+        "members": {
+          "SourceTableArn": {},
+          "SourceTableName": {},
+          "TargetTableName": {},
+          "UseLatestRestorableTime": {
+            "type": "boolean"
+          },
+          "RestoreDateTime": {
+            "type": "timestamp"
+          },
+          "BillingModeOverride": {},
+          "GlobalSecondaryIndexOverride": {
+            "shape": "S2v"
+          },
+          "LocalSecondaryIndexOverride": {
+            "shape": "S2p"
+          },
+          "ProvisionedThroughputOverride": {
+            "shape": "S2x"
+          },
+          "SSESpecificationOverride": {
+            "shape": "S32"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableDescription": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "Scan": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "TableName": {},
+          "IndexName": {},
+          "AttributesToGet": {
+            "shape": "Sw"
+          },
+          "Limit": {
+            "type": "integer"
+          },
+          "Select": {},
+          "ScanFilter": {
+            "shape": "S87"
+          },
+          "ConditionalOperator": {},
+          "ExclusiveStartKey": {
+            "shape": "Sv"
+          },
+          "ReturnConsumedCapacity": {},
+          "TotalSegments": {
+            "type": "integer"
+          },
+          "Segment": {
+            "type": "integer"
+          },
+          "ProjectionExpression": {},
+          "FilterExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          },
+          "ExpressionAttributeValues": {
+            "shape": "S4j"
+          },
+          "ConsistentRead": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Items": {
+            "shape": "S13"
+          },
+          "Count": {
+            "type": "integer"
+          },
+          "ScannedCount": {
+            "type": "integer"
+          },
+          "LastEvaluatedKey": {
+            "shape": "Sv"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "S35"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "TransactGetItems": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TransactItems"
+        ],
+        "members": {
+          "TransactItems": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Get"
+              ],
+              "members": {
+                "Get": {
+                  "type": "structure",
+                  "required": [
+                    "Key",
+                    "TableName"
+                  ],
+                  "members": {
+                    "Key": {
+                      "shape": "Sv"
+                    },
+                    "TableName": {},
+                    "ProjectionExpression": {},
+                    "ExpressionAttributeNames": {
+                      "shape": "Sy"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "ReturnConsumedCapacity": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConsumedCapacity": {
+            "shape": "S14"
+          },
+          "Responses": {
+            "shape": "S6z"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "TransactWriteItems": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TransactItems"
+        ],
+        "members": {
+          "TransactItems": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ConditionCheck": {
+                  "type": "structure",
+                  "required": [
+                    "Key",
+                    "TableName",
+                    "ConditionExpression"
+                  ],
+                  "members": {
+                    "Key": {
+                      "shape": "Sv"
+                    },
+                    "TableName": {},
+                    "ConditionExpression": {},
+                    "ExpressionAttributeNames": {
+                      "shape": "Sy"
+                    },
+                    "ExpressionAttributeValues": {
+                      "shape": "S4j"
+                    },
+                    "ReturnValuesOnConditionCheckFailure": {}
+                  }
+                },
+                "Put": {
+                  "type": "structure",
+                  "required": [
+                    "Item",
+                    "TableName"
+                  ],
+                  "members": {
+                    "Item": {
+                      "shape": "S1f"
+                    },
+                    "TableName": {},
+                    "ConditionExpression": {},
+                    "ExpressionAttributeNames": {
+                      "shape": "Sy"
+                    },
+                    "ExpressionAttributeValues": {
+                      "shape": "S4j"
+                    },
+                    "ReturnValuesOnConditionCheckFailure": {}
+                  }
+                },
+                "Delete": {
+                  "type": "structure",
+                  "required": [
+                    "Key",
+                    "TableName"
+                  ],
+                  "members": {
+                    "Key": {
+                      "shape": "Sv"
+                    },
+                    "TableName": {},
+                    "ConditionExpression": {},
+                    "ExpressionAttributeNames": {
+                      "shape": "Sy"
+                    },
+                    "ExpressionAttributeValues": {
+                      "shape": "S4j"
+                    },
+                    "ReturnValuesOnConditionCheckFailure": {}
+                  }
+                },
+                "Update": {
+                  "type": "structure",
+                  "required": [
+                    "Key",
+                    "UpdateExpression",
+                    "TableName"
+                  ],
+                  "members": {
+                    "Key": {
+                      "shape": "Sv"
+                    },
+                    "UpdateExpression": {},
+                    "TableName": {},
+                    "ConditionExpression": {},
+                    "ExpressionAttributeNames": {
+                      "shape": "Sy"
+                    },
+                    "ExpressionAttributeValues": {
+                      "shape": "S4j"
+                    },
+                    "ReturnValuesOnConditionCheckFailure": {}
+                  }
+                }
+              }
+            }
+          },
+          "ReturnConsumedCapacity": {},
+          "ReturnItemCollectionMetrics": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConsumedCapacity": {
+            "shape": "S14"
+          },
+          "ItemCollectionMetrics": {
+            "shape": "S1j"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateContinuousBackups": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "PointInTimeRecoverySpecification"
+        ],
+        "members": {
+          "TableName": {},
+          "PointInTimeRecoverySpecification": {
+            "type": "structure",
+            "required": [
+              "PointInTimeRecoveryEnabled"
+            ],
+            "members": {
+              "PointInTimeRecoveryEnabled": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ContinuousBackupsDescription": {
+            "shape": "S4s"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateContributorInsights": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "ContributorInsightsAction"
+        ],
+        "members": {
+          "TableName": {},
+          "IndexName": {},
+          "ContributorInsightsAction": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableName": {},
+          "IndexName": {},
+          "ContributorInsightsStatus": {}
+        }
+      }
+    },
+    "UpdateGlobalTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GlobalTableName",
+          "ReplicaUpdates"
+        ],
+        "members": {
+          "GlobalTableName": {},
+          "ReplicaUpdates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Create": {
+                  "type": "structure",
+                  "required": [
+                    "RegionName"
+                  ],
+                  "members": {
+                    "RegionName": {}
+                  }
+                },
+                "Delete": {
+                  "type": "structure",
+                  "required": [
+                    "RegionName"
+                  ],
+                  "members": {
+                    "RegionName": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTableDescription": {
+            "shape": "S24"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateGlobalTableSettings": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GlobalTableName"
+        ],
+        "members": {
+          "GlobalTableName": {},
+          "GlobalTableBillingMode": {},
+          "GlobalTableProvisionedWriteCapacityUnits": {
+            "type": "long"
+          },
+          "GlobalTableProvisionedWriteCapacityAutoScalingSettingsUpdate": {
+            "shape": "S9e"
+          },
+          "GlobalTableGlobalSecondaryIndexSettingsUpdate": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "IndexName"
+              ],
+              "members": {
+                "IndexName": {},
+                "ProvisionedWriteCapacityUnits": {
+                  "type": "long"
+                },
+                "ProvisionedWriteCapacityAutoScalingSettingsUpdate": {
+                  "shape": "S9e"
+                }
+              }
+            }
+          },
+          "ReplicaSettingsUpdate": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "RegionName"
+              ],
+              "members": {
+                "RegionName": {},
+                "ReplicaProvisionedReadCapacityUnits": {
+                  "type": "long"
+                },
+                "ReplicaProvisionedReadCapacityAutoScalingSettingsUpdate": {
+                  "shape": "S9e"
+                },
+                "ReplicaGlobalSecondaryIndexSettingsUpdate": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "required": [
+                      "IndexName"
+                    ],
+                    "members": {
+                      "IndexName": {},
+                      "ProvisionedReadCapacityUnits": {
+                        "type": "long"
+                      },
+                      "ProvisionedReadCapacityAutoScalingSettingsUpdate": {
+                        "shape": "S9e"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GlobalTableName": {},
+          "ReplicaSettings": {
+            "shape": "S5w"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateItem": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "Key"
+        ],
+        "members": {
+          "TableName": {},
+          "Key": {
+            "shape": "Sv"
+          },
+          "AttributeUpdates": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "structure",
+              "members": {
+                "Value": {
+                  "shape": "S6"
+                },
+                "Action": {}
+              }
+            }
+          },
+          "Expected": {
+            "shape": "S4b"
+          },
+          "ConditionalOperator": {},
+          "ReturnValues": {},
+          "ReturnConsumedCapacity": {},
+          "ReturnItemCollectionMetrics": {},
+          "UpdateExpression": {},
+          "ConditionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          },
+          "ExpressionAttributeValues": {
+            "shape": "S4j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "Sq"
+          },
+          "ConsumedCapacity": {
+            "shape": "S15"
+          },
+          "ItemCollectionMetrics": {
+            "shape": "S1l"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "AttributeDefinitions": {
+            "shape": "S2i"
+          },
+          "TableName": {},
+          "BillingMode": {},
+          "ProvisionedThroughput": {
+            "shape": "S2x"
+          },
+          "GlobalSecondaryIndexUpdates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Update": {
+                  "type": "structure",
+                  "required": [
+                    "IndexName",
+                    "ProvisionedThroughput"
+                  ],
+                  "members": {
+                    "IndexName": {},
+                    "ProvisionedThroughput": {
+                      "shape": "S2x"
+                    }
+                  }
+                },
+                "Create": {
+                  "type": "structure",
+                  "required": [
+                    "IndexName",
+                    "KeySchema",
+                    "Projection"
+                  ],
+                  "members": {
+                    "IndexName": {},
+                    "KeySchema": {
+                      "shape": "S2m"
+                    },
+                    "Projection": {
+                      "shape": "S2r"
+                    },
+                    "ProvisionedThroughput": {
+                      "shape": "S2x"
+                    }
+                  }
+                },
+                "Delete": {
+                  "type": "structure",
+                  "required": [
+                    "IndexName"
+                  ],
+                  "members": {
+                    "IndexName": {}
+                  }
+                }
+              }
+            }
+          },
+          "StreamSpecification": {
+            "shape": "S2z"
+          },
+          "SSESpecification": {
+            "shape": "S32"
+          },
+          "ReplicaUpdates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Create": {
+                  "type": "structure",
+                  "required": [
+                    "RegionName"
+                  ],
+                  "members": {
+                    "RegionName": {},
+                    "KMSMasterKeyId": {},
+                    "ProvisionedThroughputOverride": {
+                      "shape": "S2b"
+                    },
+                    "GlobalSecondaryIndexes": {
+                      "shape": "Sa3"
+                    }
+                  }
+                },
+                "Update": {
+                  "type": "structure",
+                  "required": [
+                    "RegionName"
+                  ],
+                  "members": {
+                    "RegionName": {},
+                    "KMSMasterKeyId": {},
+                    "ProvisionedThroughputOverride": {
+                      "shape": "S2b"
+                    },
+                    "GlobalSecondaryIndexes": {
+                      "shape": "Sa3"
+                    }
+                  }
+                },
+                "Delete": {
+                  "type": "structure",
+                  "required": [
+                    "RegionName"
+                  ],
+                  "members": {
+                    "RegionName": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableDescription": {
+            "shape": "S3a"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    },
+    "UpdateTableReplicaAutoScaling": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName"
+        ],
+        "members": {
+          "GlobalSecondaryIndexUpdates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "IndexName": {},
+                "ProvisionedWriteCapacityAutoScalingUpdate": {
+                  "shape": "S9e"
+                }
+              }
+            }
+          },
+          "TableName": {},
+          "ProvisionedWriteCapacityAutoScalingUpdate": {
+            "shape": "S9e"
+          },
+          "ReplicaUpdates": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "RegionName"
+              ],
+              "members": {
+                "RegionName": {},
+                "ReplicaGlobalSecondaryIndexUpdates": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "IndexName": {},
+                      "ProvisionedReadCapacityAutoScalingUpdate": {
+                        "shape": "S9e"
+                      }
+                    }
+                  }
+                },
+                "ReplicaProvisionedReadCapacityAutoScalingUpdate": {
+                  "shape": "S9e"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TableAutoScalingDescription": {
+            "shape": "S6i"
+          }
+        }
+      }
+    },
+    "UpdateTimeToLive": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TableName",
+          "TimeToLiveSpecification"
+        ],
+        "members": {
+          "TableName": {},
+          "TimeToLiveSpecification": {
+            "shape": "Sah"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "TimeToLiveSpecification": {
+            "shape": "Sah"
+          }
+        }
+      },
+      "endpointdiscovery": {}
+    }
+  },
+  "shapes": {
+    "S5": {
+      "type": "list",
+      "member": {
+        "shape": "S6"
+      }
+    },
+    "S6": {
+      "type": "structure",
+      "members": {
+        "S": {},
+        "N": {},
+        "B": {
+          "type": "blob"
+        },
+        "SS": {
+          "type": "list",
+          "member": {}
+        },
+        "NS": {
+          "type": "list",
+          "member": {}
+        },
+        "BS": {
+          "type": "list",
+          "member": {
+            "type": "blob"
+          }
+        },
+        "M": {
+          "type": "map",
+          "key": {},
+          "value": {
+            "shape": "S6"
+          }
+        },
+        "L": {
+          "type": "list",
+          "member": {
+            "shape": "S6"
+          }
+        },
+        "NULL": {
+          "type": "boolean"
+        },
+        "BOOL": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Sq": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S6"
+      }
+    },
+    "Ss": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "structure",
+        "required": [
+          "Keys"
+        ],
+        "members": {
+          "Keys": {
+            "type": "list",
+            "member": {
+              "shape": "Sv"
+            }
+          },
+          "AttributesToGet": {
+            "shape": "Sw"
+          },
+          "ConsistentRead": {
+            "type": "boolean"
+          },
+          "ProjectionExpression": {},
+          "ExpressionAttributeNames": {
+            "shape": "Sy"
+          }
+        }
+      }
+    },
+    "Sv": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S6"
+      }
+    },
+    "Sw": {
+      "type": "list",
+      "member": {}
+    },
+    "Sy": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S13": {
+      "type": "list",
+      "member": {
+        "shape": "Sq"
+      }
+    },
+    "S14": {
+      "type": "list",
+      "member": {
+        "shape": "S15"
+      }
+    },
+    "S15": {
+      "type": "structure",
+      "members": {
+        "TableName": {},
+        "CapacityUnits": {
+          "type": "double"
+        },
+        "ReadCapacityUnits": {
+          "type": "double"
+        },
+        "WriteCapacityUnits": {
+          "type": "double"
+        },
+        "Table": {
+          "shape": "S17"
+        },
+        "LocalSecondaryIndexes": {
+          "shape": "S18"
+        },
+        "GlobalSecondaryIndexes": {
+          "shape": "S18"
+        }
+      }
+    },
+    "S17": {
+      "type": "structure",
+      "members": {
+        "ReadCapacityUnits": {
+          "type": "double"
+        },
+        "WriteCapacityUnits": {
+          "type": "double"
+        },
+        "CapacityUnits": {
+          "type": "double"
+        }
+      }
+    },
+    "S18": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S17"
+      }
+    },
+    "S1b": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "list",
+        "member": {
+          "type": "structure",
+          "members": {
+            "PutRequest": {
+              "type": "structure",
+              "required": [
+                "Item"
+              ],
+              "members": {
+                "Item": {
+                  "shape": "S1f"
+                }
+              }
+            },
+            "DeleteRequest": {
+              "type": "structure",
+              "required": [
+                "Key"
+              ],
+              "members": {
+                "Key": {
+                  "shape": "Sv"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S1f": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S6"
+      }
+    },
+    "S1j": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "list",
+        "member": {
+          "shape": "S1l"
+        }
+      }
+    },
+    "S1l": {
+      "type": "structure",
+      "members": {
+        "ItemCollectionKey": {
+          "type": "map",
+          "key": {},
+          "value": {
+            "shape": "S6"
+          }
+        },
+        "SizeEstimateRangeGB": {
+          "type": "list",
+          "member": {
+            "type": "double"
+          }
+        }
+      }
+    },
+    "S1s": {
+      "type": "structure",
+      "required": [
+        "BackupArn",
+        "BackupName",
+        "BackupStatus",
+        "BackupType",
+        "BackupCreationDateTime"
+      ],
+      "members": {
+        "BackupArn": {},
+        "BackupName": {},
+        "BackupSizeBytes": {
+          "type": "long"
+        },
+        "BackupStatus": {},
+        "BackupType": {},
+        "BackupCreationDateTime": {
+          "type": "timestamp"
+        },
+        "BackupExpiryDateTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S20": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "RegionName": {}
+        }
+      }
+    },
+    "S24": {
+      "type": "structure",
+      "members": {
+        "ReplicationGroup": {
+          "shape": "S25"
+        },
+        "GlobalTableArn": {},
+        "CreationDateTime": {
+          "type": "timestamp"
+        },
+        "GlobalTableStatus": {},
+        "GlobalTableName": {}
+      }
+    },
+    "S25": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "RegionName": {},
+          "ReplicaStatus": {},
+          "ReplicaStatusDescription": {},
+          "ReplicaStatusPercentProgress": {},
+          "KMSMasterKeyId": {},
+          "ProvisionedThroughputOverride": {
+            "shape": "S2b"
+          },
+          "GlobalSecondaryIndexes": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "IndexName": {},
+                "ProvisionedThroughputOverride": {
+                  "shape": "S2b"
+                }
+              }
+            }
+          },
+          "ReplicaInaccessibleDateTime": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "S2b": {
+      "type": "structure",
+      "members": {
+        "ReadCapacityUnits": {
+          "type": "long"
+        }
+      }
+    },
+    "S2i": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "AttributeName",
+          "AttributeType"
+        ],
+        "members": {
+          "AttributeName": {},
+          "AttributeType": {}
+        }
+      }
+    },
+    "S2m": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "AttributeName",
+          "KeyType"
+        ],
+        "members": {
+          "AttributeName": {},
+          "KeyType": {}
+        }
+      }
+    },
+    "S2p": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "IndexName",
+          "KeySchema",
+          "Projection"
+        ],
+        "members": {
+          "IndexName": {},
+          "KeySchema": {
+            "shape": "S2m"
+          },
+          "Projection": {
+            "shape": "S2r"
+          }
+        }
+      }
+    },
+    "S2r": {
+      "type": "structure",
+      "members": {
+        "ProjectionType": {},
+        "NonKeyAttributes": {
+          "type": "list",
+          "member": {}
+        }
+      }
+    },
+    "S2v": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "IndexName",
+          "KeySchema",
+          "Projection"
+        ],
+        "members": {
+          "IndexName": {},
+          "KeySchema": {
+            "shape": "S2m"
+          },
+          "Projection": {
+            "shape": "S2r"
+          },
+          "ProvisionedThroughput": {
+            "shape": "S2x"
+          }
+        }
+      }
+    },
+    "S2x": {
+      "type": "structure",
+      "required": [
+        "ReadCapacityUnits",
+        "WriteCapacityUnits"
+      ],
+      "members": {
+        "ReadCapacityUnits": {
+          "type": "long"
+        },
+        "WriteCapacityUnits": {
+          "type": "long"
+        }
+      }
+    },
+    "S2z": {
+      "type": "structure",
+      "required": [
+        "StreamEnabled"
+      ],
+      "members": {
+        "StreamEnabled": {
+          "type": "boolean"
+        },
+        "StreamViewType": {}
+      }
+    },
+    "S32": {
+      "type": "structure",
+      "members": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "SSEType": {},
+        "KMSMasterKeyId": {}
+      }
+    },
+    "S35": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S3a": {
+      "type": "structure",
+      "members": {
+        "AttributeDefinitions": {
+          "shape": "S2i"
+        },
+        "TableName": {},
+        "KeySchema": {
+          "shape": "S2m"
+        },
+        "TableStatus": {},
+        "CreationDateTime": {
+          "type": "timestamp"
+        },
+        "ProvisionedThroughput": {
+          "shape": "S3c"
+        },
+        "TableSizeBytes": {
+          "type": "long"
+        },
+        "ItemCount": {
+          "type": "long"
+        },
+        "TableArn": {},
+        "TableId": {},
+        "BillingModeSummary": {
+          "shape": "S3g"
+        },
+        "LocalSecondaryIndexes": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "IndexName": {},
+              "KeySchema": {
+                "shape": "S2m"
+              },
+              "Projection": {
+                "shape": "S2r"
+              },
+              "IndexSizeBytes": {
+                "type": "long"
+              },
+              "ItemCount": {
+                "type": "long"
+              },
+              "IndexArn": {}
+            }
+          }
+        },
+        "GlobalSecondaryIndexes": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "IndexName": {},
+              "KeySchema": {
+                "shape": "S2m"
+              },
+              "Projection": {
+                "shape": "S2r"
+              },
+              "IndexStatus": {},
+              "Backfilling": {
+                "type": "boolean"
+              },
+              "ProvisionedThroughput": {
+                "shape": "S3c"
+              },
+              "IndexSizeBytes": {
+                "type": "long"
+              },
+              "ItemCount": {
+                "type": "long"
+              },
+              "IndexArn": {}
+            }
+          }
+        },
+        "StreamSpecification": {
+          "shape": "S2z"
+        },
+        "LatestStreamLabel": {},
+        "LatestStreamArn": {},
+        "GlobalTableVersion": {},
+        "Replicas": {
+          "shape": "S25"
+        },
+        "RestoreSummary": {
+          "type": "structure",
+          "required": [
+            "RestoreDateTime",
+            "RestoreInProgress"
+          ],
+          "members": {
+            "SourceBackupArn": {},
+            "SourceTableArn": {},
+            "RestoreDateTime": {
+              "type": "timestamp"
+            },
+            "RestoreInProgress": {
+              "type": "boolean"
+            }
+          }
+        },
+        "SSEDescription": {
+          "shape": "S3r"
+        },
+        "ArchivalSummary": {
+          "type": "structure",
+          "members": {
+            "ArchivalDateTime": {
+              "type": "timestamp"
+            },
+            "ArchivalReason": {},
+            "ArchivalBackupArn": {}
+          }
+        }
+      }
+    },
+    "S3c": {
+      "type": "structure",
+      "members": {
+        "LastIncreaseDateTime": {
+          "type": "timestamp"
+        },
+        "LastDecreaseDateTime": {
+          "type": "timestamp"
+        },
+        "NumberOfDecreasesToday": {
+          "type": "long"
+        },
+        "ReadCapacityUnits": {
+          "type": "long"
+        },
+        "WriteCapacityUnits": {
+          "type": "long"
+        }
+      }
+    },
+    "S3g": {
+      "type": "structure",
+      "members": {
+        "BillingMode": {},
+        "LastUpdateToPayPerRequestDateTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S3r": {
+      "type": "structure",
+      "members": {
+        "Status": {},
+        "SSEType": {},
+        "KMSMasterKeyArn": {},
+        "InaccessibleEncryptionDateTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S3y": {
+      "type": "structure",
+      "members": {
+        "BackupDetails": {
+          "shape": "S1s"
+        },
+        "SourceTableDetails": {
+          "type": "structure",
+          "required": [
+            "TableName",
+            "TableId",
+            "KeySchema",
+            "TableCreationDateTime",
+            "ProvisionedThroughput"
+          ],
+          "members": {
+            "TableName": {},
+            "TableId": {},
+            "TableArn": {},
+            "TableSizeBytes": {
+              "type": "long"
+            },
+            "KeySchema": {
+              "shape": "S2m"
+            },
+            "TableCreationDateTime": {
+              "type": "timestamp"
+            },
+            "ProvisionedThroughput": {
+              "shape": "S2x"
+            },
+            "ItemCount": {
+              "type": "long"
+            },
+            "BillingMode": {}
+          }
+        },
+        "SourceTableFeatureDetails": {
+          "type": "structure",
+          "members": {
+            "LocalSecondaryIndexes": {
+              "type": "list",
+              "member": {
+                "type": "structure",
+                "members": {
+                  "IndexName": {},
+                  "KeySchema": {
+                    "shape": "S2m"
+                  },
+                  "Projection": {
+                    "shape": "S2r"
+                  }
+                }
+              }
+            },
+            "GlobalSecondaryIndexes": {
+              "type": "list",
+              "member": {
+                "type": "structure",
+                "members": {
+                  "IndexName": {},
+                  "KeySchema": {
+                    "shape": "S2m"
+                  },
+                  "Projection": {
+                    "shape": "S2r"
+                  },
+                  "ProvisionedThroughput": {
+                    "shape": "S2x"
+                  }
+                }
+              }
+            },
+            "StreamDescription": {
+              "shape": "S2z"
+            },
+            "TimeToLiveDescription": {
+              "shape": "S47"
+            },
+            "SSEDescription": {
+              "shape": "S3r"
+            }
+          }
+        }
+      }
+    },
+    "S47": {
+      "type": "structure",
+      "members": {
+        "TimeToLiveStatus": {},
+        "AttributeName": {}
+      }
+    },
+    "S4b": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "structure",
+        "members": {
+          "Value": {
+            "shape": "S6"
+          },
+          "Exists": {
+            "type": "boolean"
+          },
+          "ComparisonOperator": {},
+          "AttributeValueList": {
+            "shape": "S4f"
+          }
+        }
+      }
+    },
+    "S4f": {
+      "type": "list",
+      "member": {
+        "shape": "S6"
+      }
+    },
+    "S4j": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S6"
+      }
+    },
+    "S4s": {
+      "type": "structure",
+      "required": [
+        "ContinuousBackupsStatus"
+      ],
+      "members": {
+        "ContinuousBackupsStatus": {},
+        "PointInTimeRecoveryDescription": {
+          "type": "structure",
+          "members": {
+            "PointInTimeRecoveryStatus": {},
+            "EarliestRestorableDateTime": {
+              "type": "timestamp"
+            },
+            "LatestRestorableDateTime": {
+              "type": "timestamp"
+            }
+          }
+        }
+      }
+    },
+    "S5c": {
+      "type": "structure",
+      "members": {
+        "ExportArn": {},
+        "ExportStatus": {},
+        "StartTime": {
+          "type": "timestamp"
+        },
+        "EndTime": {
+          "type": "timestamp"
+        },
+        "ExportManifest": {},
+        "TableArn": {},
+        "TableId": {},
+        "ExportTime": {
+          "type": "timestamp"
+        },
+        "ClientToken": {},
+        "S3Bucket": {},
+        "S3BucketOwner": {},
+        "S3Prefix": {},
+        "S3SseAlgorithm": {},
+        "S3SseKmsKeyId": {},
+        "FailureCode": {},
+        "FailureMessage": {},
+        "ExportFormat": {},
+        "BilledSizeBytes": {
+          "type": "long"
+        },
+        "ItemCount": {
+          "type": "long"
+        }
+      }
+    },
+    "S5w": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "RegionName"
+        ],
+        "members": {
+          "RegionName": {},
+          "ReplicaStatus": {},
+          "ReplicaBillingModeSummary": {
+            "shape": "S3g"
+          },
+          "ReplicaProvisionedReadCapacityUnits": {
+            "type": "long"
+          },
+          "ReplicaProvisionedReadCapacityAutoScalingSettings": {
+            "shape": "S5y"
+          },
+          "ReplicaProvisionedWriteCapacityUnits": {
+            "type": "long"
+          },
+          "ReplicaProvisionedWriteCapacityAutoScalingSettings": {
+            "shape": "S5y"
+          },
+          "ReplicaGlobalSecondaryIndexSettings": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "IndexName"
+              ],
+              "members": {
+                "IndexName": {},
+                "IndexStatus": {},
+                "ProvisionedReadCapacityUnits": {
+                  "type": "long"
+                },
+                "ProvisionedReadCapacityAutoScalingSettings": {
+                  "shape": "S5y"
+                },
+                "ProvisionedWriteCapacityUnits": {
+                  "type": "long"
+                },
+                "ProvisionedWriteCapacityAutoScalingSettings": {
+                  "shape": "S5y"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S5y": {
+      "type": "structure",
+      "members": {
+        "MinimumUnits": {
+          "type": "long"
+        },
+        "MaximumUnits": {
+          "type": "long"
+        },
+        "AutoScalingDisabled": {
+          "type": "boolean"
+        },
+        "AutoScalingRoleArn": {},
+        "ScalingPolicies": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "PolicyName": {},
+              "TargetTrackingScalingPolicyConfiguration": {
+                "type": "structure",
+                "required": [
+                  "TargetValue"
+                ],
+                "members": {
+                  "DisableScaleIn": {
+                    "type": "boolean"
+                  },
+                  "ScaleInCooldown": {
+                    "type": "integer"
+                  },
+                  "ScaleOutCooldown": {
+                    "type": "integer"
+                  },
+                  "TargetValue": {
+                    "type": "double"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S6i": {
+      "type": "structure",
+      "members": {
+        "TableName": {},
+        "TableStatus": {},
+        "Replicas": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "RegionName": {},
+              "GlobalSecondaryIndexes": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "IndexName": {},
+                    "IndexStatus": {},
+                    "ProvisionedReadCapacityAutoScalingSettings": {
+                      "shape": "S5y"
+                    },
+                    "ProvisionedWriteCapacityAutoScalingSettings": {
+                      "shape": "S5y"
+                    }
+                  }
+                }
+              },
+              "ReplicaProvisionedReadCapacityAutoScalingSettings": {
+                "shape": "S5y"
+              },
+              "ReplicaProvisionedWriteCapacityAutoScalingSettings": {
+                "shape": "S5y"
+              },
+              "ReplicaStatus": {}
+            }
+          }
+        }
+      }
+    },
+    "S6p": {
+      "type": "structure",
+      "required": [
+        "TableName",
+        "StreamArn"
+      ],
+      "members": {
+        "TableName": {},
+        "StreamArn": {}
+      }
+    },
+    "S6q": {
+      "type": "structure",
+      "members": {
+        "TableName": {},
+        "StreamArn": {},
+        "DestinationStatus": {}
+      }
+    },
+    "S6z": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Item": {
+            "shape": "Sq"
+          }
+        }
+      }
+    },
+    "S86": {
+      "type": "structure",
+      "required": [
+        "ComparisonOperator"
+      ],
+      "members": {
+        "AttributeValueList": {
+          "shape": "S4f"
+        },
+        "ComparisonOperator": {}
+      }
+    },
+    "S87": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "shape": "S86"
+      }
+    },
+    "S9e": {
+      "type": "structure",
+      "members": {
+        "MinimumUnits": {
+          "type": "long"
+        },
+        "MaximumUnits": {
+          "type": "long"
+        },
+        "AutoScalingDisabled": {
+          "type": "boolean"
+        },
+        "AutoScalingRoleArn": {},
+        "ScalingPolicyUpdate": {
+          "type": "structure",
+          "required": [
+            "TargetTrackingScalingPolicyConfiguration"
+          ],
+          "members": {
+            "PolicyName": {},
+            "TargetTrackingScalingPolicyConfiguration": {
+              "type": "structure",
+              "required": [
+                "TargetValue"
+              ],
+              "members": {
+                "DisableScaleIn": {
+                  "type": "boolean"
+                },
+                "ScaleInCooldown": {
+                  "type": "integer"
+                },
+                "ScaleOutCooldown": {
+                  "type": "integer"
+                },
+                "TargetValue": {
+                  "type": "double"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Sa3": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "IndexName"
+        ],
+        "members": {
+          "IndexName": {},
+          "ProvisionedThroughputOverride": {
+            "shape": "S2b"
+          }
+        }
+      }
+    },
+    "Sah": {
+      "type": "structure",
+      "required": [
+        "Enabled",
+        "AttributeName"
+      ],
+      "members": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "AttributeName": {}
+      }
+    }
+  }
+}

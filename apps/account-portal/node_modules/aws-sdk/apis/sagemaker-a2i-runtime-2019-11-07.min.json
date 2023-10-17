@@ -1,0 +1,214 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2019-11-07",
+    "endpointPrefix": "a2i-runtime.sagemaker",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "Amazon Augmented AI Runtime",
+    "serviceId": "SageMaker A2I Runtime",
+    "signatureVersion": "v4",
+    "signingName": "sagemaker",
+    "uid": "sagemaker-a2i-runtime-2019-11-07"
+  },
+  "operations": {
+    "DeleteHumanLoop": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/human-loops/{HumanLoopName}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "HumanLoopName"
+        ],
+        "members": {
+          "HumanLoopName": {
+            "location": "uri",
+            "locationName": "HumanLoopName"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeHumanLoop": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/human-loops/{HumanLoopName}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "HumanLoopName"
+        ],
+        "members": {
+          "HumanLoopName": {
+            "location": "uri",
+            "locationName": "HumanLoopName"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "CreationTime",
+          "HumanLoopStatus",
+          "HumanLoopName",
+          "HumanLoopArn",
+          "FlowDefinitionArn"
+        ],
+        "members": {
+          "CreationTime": {
+            "type": "timestamp"
+          },
+          "FailureReason": {},
+          "FailureCode": {},
+          "HumanLoopStatus": {},
+          "HumanLoopName": {},
+          "HumanLoopArn": {},
+          "FlowDefinitionArn": {},
+          "HumanLoopOutput": {
+            "type": "structure",
+            "required": [
+              "OutputS3Uri"
+            ],
+            "members": {
+              "OutputS3Uri": {}
+            }
+          }
+        }
+      }
+    },
+    "ListHumanLoops": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/human-loops"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "FlowDefinitionArn"
+        ],
+        "members": {
+          "CreationTimeAfter": {
+            "location": "querystring",
+            "locationName": "CreationTimeAfter",
+            "type": "timestamp"
+          },
+          "CreationTimeBefore": {
+            "location": "querystring",
+            "locationName": "CreationTimeBefore",
+            "type": "timestamp"
+          },
+          "FlowDefinitionArn": {
+            "location": "querystring",
+            "locationName": "FlowDefinitionArn"
+          },
+          "SortOrder": {
+            "location": "querystring",
+            "locationName": "SortOrder"
+          },
+          "NextToken": {
+            "location": "querystring",
+            "locationName": "NextToken"
+          },
+          "MaxResults": {
+            "location": "querystring",
+            "locationName": "MaxResults",
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "HumanLoopSummaries"
+        ],
+        "members": {
+          "HumanLoopSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "HumanLoopName": {},
+                "HumanLoopStatus": {},
+                "CreationTime": {
+                  "type": "timestamp"
+                },
+                "FailureReason": {},
+                "FlowDefinitionArn": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "StartHumanLoop": {
+      "http": {
+        "requestUri": "/human-loops"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "HumanLoopName",
+          "FlowDefinitionArn",
+          "HumanLoopInput"
+        ],
+        "members": {
+          "HumanLoopName": {},
+          "FlowDefinitionArn": {},
+          "HumanLoopInput": {
+            "type": "structure",
+            "required": [
+              "InputContent"
+            ],
+            "members": {
+              "InputContent": {}
+            }
+          },
+          "DataAttributes": {
+            "type": "structure",
+            "required": [
+              "ContentClassifiers"
+            ],
+            "members": {
+              "ContentClassifiers": {
+                "type": "list",
+                "member": {}
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "HumanLoopArn": {}
+        }
+      }
+    },
+    "StopHumanLoop": {
+      "http": {
+        "requestUri": "/human-loops/stop"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "HumanLoopName"
+        ],
+        "members": {
+          "HumanLoopName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {}
+}

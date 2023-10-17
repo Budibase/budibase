@@ -1,0 +1,1390 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2015-12-01",
+    "endpointPrefix": "elasticloadbalancing",
+    "protocol": "query",
+    "serviceAbbreviation": "Elastic Load Balancing v2",
+    "serviceFullName": "Elastic Load Balancing",
+    "serviceId": "Elastic Load Balancing v2",
+    "signatureVersion": "v4",
+    "uid": "elasticloadbalancingv2-2015-12-01",
+    "xmlNamespace": "http://elasticloadbalancing.amazonaws.com/doc/2015-12-01/"
+  },
+  "operations": {
+    "AddListenerCertificates": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn",
+          "Certificates"
+        ],
+        "members": {
+          "ListenerArn": {},
+          "Certificates": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "AddListenerCertificatesResult",
+        "type": "structure",
+        "members": {
+          "Certificates": {
+            "shape": "S3"
+          }
+        }
+      }
+    },
+    "AddTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArns",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArns": {
+            "shape": "S9"
+          },
+          "Tags": {
+            "shape": "Sb"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "AddTagsResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateListener": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn",
+          "DefaultActions"
+        ],
+        "members": {
+          "LoadBalancerArn": {},
+          "Protocol": {},
+          "Port": {
+            "type": "integer"
+          },
+          "SslPolicy": {},
+          "Certificates": {
+            "shape": "S3"
+          },
+          "DefaultActions": {
+            "shape": "Sl"
+          },
+          "AlpnPolicy": {
+            "shape": "S1y"
+          },
+          "Tags": {
+            "shape": "Sb"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "CreateListenerResult",
+        "type": "structure",
+        "members": {
+          "Listeners": {
+            "shape": "S21"
+          }
+        }
+      }
+    },
+    "CreateLoadBalancer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Subnets": {
+            "shape": "S25"
+          },
+          "SubnetMappings": {
+            "shape": "S27"
+          },
+          "SecurityGroups": {
+            "shape": "S2c"
+          },
+          "Scheme": {},
+          "Tags": {
+            "shape": "Sb"
+          },
+          "Type": {},
+          "IpAddressType": {},
+          "CustomerOwnedIpv4Pool": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "CreateLoadBalancerResult",
+        "type": "structure",
+        "members": {
+          "LoadBalancers": {
+            "shape": "S2j"
+          }
+        }
+      }
+    },
+    "CreateRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn",
+          "Conditions",
+          "Priority",
+          "Actions"
+        ],
+        "members": {
+          "ListenerArn": {},
+          "Conditions": {
+            "shape": "S30"
+          },
+          "Priority": {
+            "type": "integer"
+          },
+          "Actions": {
+            "shape": "Sl"
+          },
+          "Tags": {
+            "shape": "Sb"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "CreateRuleResult",
+        "type": "structure",
+        "members": {
+          "Rules": {
+            "shape": "S3g"
+          }
+        }
+      }
+    },
+    "CreateTargetGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Protocol": {},
+          "ProtocolVersion": {},
+          "Port": {
+            "type": "integer"
+          },
+          "VpcId": {},
+          "HealthCheckProtocol": {},
+          "HealthCheckPort": {},
+          "HealthCheckEnabled": {
+            "type": "boolean"
+          },
+          "HealthCheckPath": {},
+          "HealthCheckIntervalSeconds": {
+            "type": "integer"
+          },
+          "HealthCheckTimeoutSeconds": {
+            "type": "integer"
+          },
+          "HealthyThresholdCount": {
+            "type": "integer"
+          },
+          "UnhealthyThresholdCount": {
+            "type": "integer"
+          },
+          "Matcher": {
+            "shape": "S3u"
+          },
+          "TargetType": {},
+          "Tags": {
+            "shape": "Sb"
+          },
+          "IpAddressType": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "CreateTargetGroupResult",
+        "type": "structure",
+        "members": {
+          "TargetGroups": {
+            "shape": "S40"
+          }
+        }
+      }
+    },
+    "DeleteListener": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn"
+        ],
+        "members": {
+          "ListenerArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DeleteListenerResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteLoadBalancer": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn"
+        ],
+        "members": {
+          "LoadBalancerArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DeleteLoadBalancerResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RuleArn"
+        ],
+        "members": {
+          "RuleArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DeleteRuleResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteTargetGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn"
+        ],
+        "members": {
+          "TargetGroupArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DeleteTargetGroupResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeregisterTargets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn",
+          "Targets"
+        ],
+        "members": {
+          "TargetGroupArn": {},
+          "Targets": {
+            "shape": "S4c"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DeregisterTargetsResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeAccountLimits": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeAccountLimitsResult",
+        "type": "structure",
+        "members": {
+          "Limits": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Name": {},
+                "Max": {}
+              }
+            }
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeListenerCertificates": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn"
+        ],
+        "members": {
+          "ListenerArn": {},
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeListenerCertificatesResult",
+        "type": "structure",
+        "members": {
+          "Certificates": {
+            "shape": "S3"
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeListeners": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "LoadBalancerArn": {},
+          "ListenerArns": {
+            "type": "list",
+            "member": {}
+          },
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeListenersResult",
+        "type": "structure",
+        "members": {
+          "Listeners": {
+            "shape": "S21"
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeLoadBalancerAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn"
+        ],
+        "members": {
+          "LoadBalancerArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeLoadBalancerAttributesResult",
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "S4v"
+          }
+        }
+      }
+    },
+    "DescribeLoadBalancers": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "LoadBalancerArns": {
+            "shape": "S42"
+          },
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeLoadBalancersResult",
+        "type": "structure",
+        "members": {
+          "LoadBalancers": {
+            "shape": "S2j"
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeRules": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ListenerArn": {},
+          "RuleArns": {
+            "type": "list",
+            "member": {}
+          },
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeRulesResult",
+        "type": "structure",
+        "members": {
+          "Rules": {
+            "shape": "S3g"
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeSSLPolicies": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          },
+          "LoadBalancerType": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeSSLPoliciesResult",
+        "type": "structure",
+        "members": {
+          "SslPolicies": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "SslProtocols": {
+                  "type": "list",
+                  "member": {}
+                },
+                "Ciphers": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "Name": {},
+                      "Priority": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                },
+                "Name": {},
+                "SupportedLoadBalancerTypes": {
+                  "shape": "S33"
+                }
+              }
+            }
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArns"
+        ],
+        "members": {
+          "ResourceArns": {
+            "shape": "S9"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeTagsResult",
+        "type": "structure",
+        "members": {
+          "TagDescriptions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ResourceArn": {},
+                "Tags": {
+                  "shape": "Sb"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeTargetGroupAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn"
+        ],
+        "members": {
+          "TargetGroupArn": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeTargetGroupAttributesResult",
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "S5m"
+          }
+        }
+      }
+    },
+    "DescribeTargetGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "LoadBalancerArn": {},
+          "TargetGroupArns": {
+            "type": "list",
+            "member": {}
+          },
+          "Names": {
+            "type": "list",
+            "member": {}
+          },
+          "Marker": {},
+          "PageSize": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeTargetGroupsResult",
+        "type": "structure",
+        "members": {
+          "TargetGroups": {
+            "shape": "S40"
+          },
+          "NextMarker": {}
+        }
+      }
+    },
+    "DescribeTargetHealth": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn"
+        ],
+        "members": {
+          "TargetGroupArn": {},
+          "Targets": {
+            "shape": "S4c"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "DescribeTargetHealthResult",
+        "type": "structure",
+        "members": {
+          "TargetHealthDescriptions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Target": {
+                  "shape": "S4d"
+                },
+                "HealthCheckPort": {},
+                "TargetHealth": {
+                  "type": "structure",
+                  "members": {
+                    "State": {},
+                    "Reason": {},
+                    "Description": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ModifyListener": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn"
+        ],
+        "members": {
+          "ListenerArn": {},
+          "Port": {
+            "type": "integer"
+          },
+          "Protocol": {},
+          "SslPolicy": {},
+          "Certificates": {
+            "shape": "S3"
+          },
+          "DefaultActions": {
+            "shape": "Sl"
+          },
+          "AlpnPolicy": {
+            "shape": "S1y"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "ModifyListenerResult",
+        "type": "structure",
+        "members": {
+          "Listeners": {
+            "shape": "S21"
+          }
+        }
+      }
+    },
+    "ModifyLoadBalancerAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn",
+          "Attributes"
+        ],
+        "members": {
+          "LoadBalancerArn": {},
+          "Attributes": {
+            "shape": "S4v"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "ModifyLoadBalancerAttributesResult",
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "S4v"
+          }
+        }
+      }
+    },
+    "ModifyRule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RuleArn"
+        ],
+        "members": {
+          "RuleArn": {},
+          "Conditions": {
+            "shape": "S30"
+          },
+          "Actions": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "ModifyRuleResult",
+        "type": "structure",
+        "members": {
+          "Rules": {
+            "shape": "S3g"
+          }
+        }
+      }
+    },
+    "ModifyTargetGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn"
+        ],
+        "members": {
+          "TargetGroupArn": {},
+          "HealthCheckProtocol": {},
+          "HealthCheckPort": {},
+          "HealthCheckPath": {},
+          "HealthCheckEnabled": {
+            "type": "boolean"
+          },
+          "HealthCheckIntervalSeconds": {
+            "type": "integer"
+          },
+          "HealthCheckTimeoutSeconds": {
+            "type": "integer"
+          },
+          "HealthyThresholdCount": {
+            "type": "integer"
+          },
+          "UnhealthyThresholdCount": {
+            "type": "integer"
+          },
+          "Matcher": {
+            "shape": "S3u"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "ModifyTargetGroupResult",
+        "type": "structure",
+        "members": {
+          "TargetGroups": {
+            "shape": "S40"
+          }
+        }
+      }
+    },
+    "ModifyTargetGroupAttributes": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn",
+          "Attributes"
+        ],
+        "members": {
+          "TargetGroupArn": {},
+          "Attributes": {
+            "shape": "S5m"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "ModifyTargetGroupAttributesResult",
+        "type": "structure",
+        "members": {
+          "Attributes": {
+            "shape": "S5m"
+          }
+        }
+      }
+    },
+    "RegisterTargets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "TargetGroupArn",
+          "Targets"
+        ],
+        "members": {
+          "TargetGroupArn": {},
+          "Targets": {
+            "shape": "S4c"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "RegisterTargetsResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "RemoveListenerCertificates": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ListenerArn",
+          "Certificates"
+        ],
+        "members": {
+          "ListenerArn": {},
+          "Certificates": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "RemoveListenerCertificatesResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "RemoveTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArns",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArns": {
+            "shape": "S9"
+          },
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "RemoveTagsResult",
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "SetIpAddressType": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn",
+          "IpAddressType"
+        ],
+        "members": {
+          "LoadBalancerArn": {},
+          "IpAddressType": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "SetIpAddressTypeResult",
+        "type": "structure",
+        "members": {
+          "IpAddressType": {}
+        }
+      }
+    },
+    "SetRulePriorities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RulePriorities"
+        ],
+        "members": {
+          "RulePriorities": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "RuleArn": {},
+                "Priority": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "SetRulePrioritiesResult",
+        "type": "structure",
+        "members": {
+          "Rules": {
+            "shape": "S3g"
+          }
+        }
+      }
+    },
+    "SetSecurityGroups": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn",
+          "SecurityGroups"
+        ],
+        "members": {
+          "LoadBalancerArn": {},
+          "SecurityGroups": {
+            "shape": "S2c"
+          }
+        }
+      },
+      "output": {
+        "resultWrapper": "SetSecurityGroupsResult",
+        "type": "structure",
+        "members": {
+          "SecurityGroupIds": {
+            "shape": "S2c"
+          }
+        }
+      }
+    },
+    "SetSubnets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "LoadBalancerArn"
+        ],
+        "members": {
+          "LoadBalancerArn": {},
+          "Subnets": {
+            "shape": "S25"
+          },
+          "SubnetMappings": {
+            "shape": "S27"
+          },
+          "IpAddressType": {}
+        }
+      },
+      "output": {
+        "resultWrapper": "SetSubnetsResult",
+        "type": "structure",
+        "members": {
+          "AvailabilityZones": {
+            "shape": "S2s"
+          },
+          "IpAddressType": {}
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S3": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "CertificateArn": {},
+          "IsDefault": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "S9": {
+      "type": "list",
+      "member": {}
+    },
+    "Sb": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "Sl": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Type"
+        ],
+        "members": {
+          "Type": {},
+          "TargetGroupArn": {},
+          "AuthenticateOidcConfig": {
+            "type": "structure",
+            "required": [
+              "Issuer",
+              "AuthorizationEndpoint",
+              "TokenEndpoint",
+              "UserInfoEndpoint",
+              "ClientId"
+            ],
+            "members": {
+              "Issuer": {},
+              "AuthorizationEndpoint": {},
+              "TokenEndpoint": {},
+              "UserInfoEndpoint": {},
+              "ClientId": {},
+              "ClientSecret": {},
+              "SessionCookieName": {},
+              "Scope": {},
+              "SessionTimeout": {
+                "type": "long"
+              },
+              "AuthenticationRequestExtraParams": {
+                "type": "map",
+                "key": {},
+                "value": {}
+              },
+              "OnUnauthenticatedRequest": {},
+              "UseExistingClientSecret": {
+                "type": "boolean"
+              }
+            }
+          },
+          "AuthenticateCognitoConfig": {
+            "type": "structure",
+            "required": [
+              "UserPoolArn",
+              "UserPoolClientId",
+              "UserPoolDomain"
+            ],
+            "members": {
+              "UserPoolArn": {},
+              "UserPoolClientId": {},
+              "UserPoolDomain": {},
+              "SessionCookieName": {},
+              "Scope": {},
+              "SessionTimeout": {
+                "type": "long"
+              },
+              "AuthenticationRequestExtraParams": {
+                "type": "map",
+                "key": {},
+                "value": {}
+              },
+              "OnUnauthenticatedRequest": {}
+            }
+          },
+          "Order": {
+            "type": "integer"
+          },
+          "RedirectConfig": {
+            "type": "structure",
+            "required": [
+              "StatusCode"
+            ],
+            "members": {
+              "Protocol": {},
+              "Port": {},
+              "Host": {},
+              "Path": {},
+              "Query": {},
+              "StatusCode": {}
+            }
+          },
+          "FixedResponseConfig": {
+            "type": "structure",
+            "required": [
+              "StatusCode"
+            ],
+            "members": {
+              "MessageBody": {},
+              "StatusCode": {},
+              "ContentType": {}
+            }
+          },
+          "ForwardConfig": {
+            "type": "structure",
+            "members": {
+              "TargetGroups": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "TargetGroupArn": {},
+                    "Weight": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "TargetGroupStickinessConfig": {
+                "type": "structure",
+                "members": {
+                  "Enabled": {
+                    "type": "boolean"
+                  },
+                  "DurationSeconds": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "S1y": {
+      "type": "list",
+      "member": {}
+    },
+    "S21": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "ListenerArn": {},
+          "LoadBalancerArn": {},
+          "Port": {
+            "type": "integer"
+          },
+          "Protocol": {},
+          "Certificates": {
+            "shape": "S3"
+          },
+          "SslPolicy": {},
+          "DefaultActions": {
+            "shape": "Sl"
+          },
+          "AlpnPolicy": {
+            "shape": "S1y"
+          }
+        }
+      }
+    },
+    "S25": {
+      "type": "list",
+      "member": {}
+    },
+    "S27": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "SubnetId": {},
+          "AllocationId": {},
+          "PrivateIPv4Address": {},
+          "IPv6Address": {}
+        }
+      }
+    },
+    "S2c": {
+      "type": "list",
+      "member": {}
+    },
+    "S2j": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "LoadBalancerArn": {},
+          "DNSName": {},
+          "CanonicalHostedZoneId": {},
+          "CreatedTime": {
+            "type": "timestamp"
+          },
+          "LoadBalancerName": {},
+          "Scheme": {},
+          "VpcId": {},
+          "State": {
+            "type": "structure",
+            "members": {
+              "Code": {},
+              "Reason": {}
+            }
+          },
+          "Type": {},
+          "AvailabilityZones": {
+            "shape": "S2s"
+          },
+          "SecurityGroups": {
+            "shape": "S2c"
+          },
+          "IpAddressType": {},
+          "CustomerOwnedIpv4Pool": {}
+        }
+      }
+    },
+    "S2s": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "ZoneName": {},
+          "SubnetId": {},
+          "OutpostId": {},
+          "LoadBalancerAddresses": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "IpAddress": {},
+                "AllocationId": {},
+                "PrivateIPv4Address": {},
+                "IPv6Address": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "S30": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Field": {},
+          "Values": {
+            "shape": "S33"
+          },
+          "HostHeaderConfig": {
+            "type": "structure",
+            "members": {
+              "Values": {
+                "shape": "S33"
+              }
+            }
+          },
+          "PathPatternConfig": {
+            "type": "structure",
+            "members": {
+              "Values": {
+                "shape": "S33"
+              }
+            }
+          },
+          "HttpHeaderConfig": {
+            "type": "structure",
+            "members": {
+              "HttpHeaderName": {},
+              "Values": {
+                "shape": "S33"
+              }
+            }
+          },
+          "QueryStringConfig": {
+            "type": "structure",
+            "members": {
+              "Values": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "Key": {},
+                    "Value": {}
+                  }
+                }
+              }
+            }
+          },
+          "HttpRequestMethodConfig": {
+            "type": "structure",
+            "members": {
+              "Values": {
+                "shape": "S33"
+              }
+            }
+          },
+          "SourceIpConfig": {
+            "type": "structure",
+            "members": {
+              "Values": {
+                "shape": "S33"
+              }
+            }
+          }
+        }
+      }
+    },
+    "S33": {
+      "type": "list",
+      "member": {}
+    },
+    "S3g": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "RuleArn": {},
+          "Priority": {},
+          "Conditions": {
+            "shape": "S30"
+          },
+          "Actions": {
+            "shape": "Sl"
+          },
+          "IsDefault": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "S3u": {
+      "type": "structure",
+      "members": {
+        "HttpCode": {},
+        "GrpcCode": {}
+      }
+    },
+    "S40": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "TargetGroupArn": {},
+          "TargetGroupName": {},
+          "Protocol": {},
+          "Port": {
+            "type": "integer"
+          },
+          "VpcId": {},
+          "HealthCheckProtocol": {},
+          "HealthCheckPort": {},
+          "HealthCheckEnabled": {
+            "type": "boolean"
+          },
+          "HealthCheckIntervalSeconds": {
+            "type": "integer"
+          },
+          "HealthCheckTimeoutSeconds": {
+            "type": "integer"
+          },
+          "HealthyThresholdCount": {
+            "type": "integer"
+          },
+          "UnhealthyThresholdCount": {
+            "type": "integer"
+          },
+          "HealthCheckPath": {},
+          "Matcher": {
+            "shape": "S3u"
+          },
+          "LoadBalancerArns": {
+            "shape": "S42"
+          },
+          "TargetType": {},
+          "ProtocolVersion": {},
+          "IpAddressType": {}
+        }
+      }
+    },
+    "S42": {
+      "type": "list",
+      "member": {}
+    },
+    "S4c": {
+      "type": "list",
+      "member": {
+        "shape": "S4d"
+      }
+    },
+    "S4d": {
+      "type": "structure",
+      "required": [
+        "Id"
+      ],
+      "members": {
+        "Id": {},
+        "Port": {
+          "type": "integer"
+        },
+        "AvailabilityZone": {}
+      }
+    },
+    "S4v": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S5m": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    }
+  }
+}

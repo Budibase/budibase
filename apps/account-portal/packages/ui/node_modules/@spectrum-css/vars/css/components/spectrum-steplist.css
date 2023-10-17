@@ -1,0 +1,14 @@
+:root {
+  --spectrum-steplist-complete-marker-color: var(--spectrum-global-color-gray-600);
+  --spectrum-steplist-complete-segment-color: var(--spectrum-global-color-gray-500);
+  --spectrum-steplist-complete-label-text-color: var(--spectrum-global-color-gray-700);
+  --spectrum-steplist-complete-marker-color-hover: var(--spectrum-global-color-gray-700);
+  --spectrum-steplist-complete-marker-color-key-focus: var(--spectrum-alias-focus-color);
+  --spectrum-steplist-current-marker-color: var(--spectrum-global-color-gray-800);
+  --spectrum-steplist-current-label-text-color: var(--spectrum-global-color-gray-800);
+  --spectrum-steplist-current-marker-color-key-focus: var(--spectrum-alias-focus-color);
+  --spectrum-steplist-incomplete-marker-color: var(--spectrum-global-color-gray-300);
+  --spectrum-steplist-incomplete-segment-color: var(--spectrum-global-color-gray-300);
+  --spectrum-steplist-incomplete-label-text-color: var(--spectrum-global-color-gray-600);
+  --spectrum-steplist-incomplete-marker-color-hover: var(--spectrum-global-color-gray-700);
+}

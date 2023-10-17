@@ -1,0 +1,266 @@
+{
+  "rules": {
+    "*/*": {
+      "endpoint": "{service}.{region}.amazonaws.com"
+    },
+    "cn-*/*": {
+      "endpoint": "{service}.{region}.amazonaws.com.cn"
+    },
+    "us-iso-*/*": "usIso",
+    "us-isob-*/*": "usIsob",
+    "*/budgets": "globalSSL",
+    "*/cloudfront": "globalSSL",
+    "*/sts": "globalSSL",
+    "*/importexport": {
+      "endpoint": "{service}.amazonaws.com",
+      "signatureVersion": "v2",
+      "globalEndpoint": true
+    },
+
+    "*/route53": "globalSSL",
+    "cn-*/route53": {
+      "endpoint": "{service}.amazonaws.com.cn",
+      "globalEndpoint": true,
+      "signingRegion": "cn-northwest-1"
+    },
+    "us-gov-*/route53": "globalGovCloud",
+    "us-iso-*/route53": {
+      "endpoint": "{service}.c2s.ic.gov",
+      "globalEndpoint": true,
+      "signingRegion": "us-iso-east-1"
+    },
+    "us-isob-*/route53": {
+      "endpoint": "{service}.sc2s.sgov.gov",
+      "globalEndpoint": true,
+      "signingRegion": "us-isob-east-1"
+    },
+
+    "*/waf": "globalSSL",
+
+    "*/iam": "globalSSL",
+    "cn-*/iam": {
+      "endpoint": "{service}.cn-north-1.amazonaws.com.cn",
+      "globalEndpoint": true,
+      "signingRegion": "cn-north-1"
+    },
+    "us-iso-*/iam": {
+      "endpoint": "{service}.us-iso-east-1.c2s.ic.gov",
+      "globalEndpoint": true,
+      "signingRegion": "us-iso-east-1"
+    },
+
+    "us-gov-*/iam": "globalGovCloud",
+
+    "*/ce": {
+      "endpoint": "{service}.us-east-1.amazonaws.com",
+      "globalEndpoint": true,
+      "signingRegion": "us-east-1"
+    },
+    "cn-*/ce": {
+      "endpoint": "{service}.cn-northwest-1.amazonaws.com.cn",
+      "globalEndpoint": true,
+      "signingRegion": "cn-northwest-1"
+    },
+
+    "us-gov-*/sts": {
+      "endpoint": "{service}.{region}.amazonaws.com"
+    },
+    "us-gov-west-1/s3": "s3signature",
+    "us-west-1/s3": "s3signature",
+    "us-west-2/s3": "s3signature",
+    "eu-west-1/s3": "s3signature",
+    "ap-southeast-1/s3": "s3signature",
+    "ap-southeast-2/s3": "s3signature",
+    "ap-northeast-1/s3": "s3signature",
+    "sa-east-1/s3": "s3signature",
+    "us-east-1/s3": {
+      "endpoint": "{service}.amazonaws.com",
+      "signatureVersion": "s3"
+    },
+    "us-east-1/sdb": {
+      "endpoint": "{service}.amazonaws.com",
+      "signatureVersion": "v2"
+    },
+    "*/sdb": {
+      "endpoint": "{service}.{region}.amazonaws.com",
+      "signatureVersion": "v2"
+    },
+    "*/resource-explorer-2": "dualstackByDefault",
+    "*/kendra-ranking": "dualstackByDefault",
+    "*/internetmonitor": "dualstackByDefault",
+    "*/codecatalyst": "globalDualstackByDefault"
+  },
+
+  "fipsRules": {
+    "*/*": "fipsStandard",
+    "us-gov-*/*": "fipsStandard",
+    "us-iso-*/*": {
+      "endpoint": "{service}-fips.{region}.c2s.ic.gov"
+    },
+    "us-iso-*/dms": "usIso",
+    "us-isob-*/*": {
+      "endpoint": "{service}-fips.{region}.sc2s.sgov.gov"
+    },
+    "us-isob-*/dms": "usIsob",
+    "cn-*/*": {
+      "endpoint": "{service}-fips.{region}.amazonaws.com.cn"
+    },
+    "*/api.ecr": "fips.api.ecr",
+    "*/api.sagemaker": "fips.api.sagemaker",
+    "*/batch": "fipsDotPrefix",
+    "*/eks": "fipsDotPrefix",
+    "*/models.lex": "fips.models.lex",
+    "*/runtime.lex": "fips.runtime.lex",
+    "*/runtime.sagemaker": {
+      "endpoint": "runtime-fips.sagemaker.{region}.amazonaws.com"
+    },
+    "*/iam": "fipsWithoutRegion",
+    "*/route53": "fipsWithoutRegion",
+    "*/transcribe": "fipsDotPrefix",
+    "*/waf": "fipsWithoutRegion",
+
+    "us-gov-*/transcribe": "fipsDotPrefix",
+    "us-gov-*/api.ecr": "fips.api.ecr",
+    "us-gov-*/api.sagemaker": "fips.api.sagemaker",
+    "us-gov-*/models.lex": "fips.models.lex",
+    "us-gov-*/runtime.lex": "fips.runtime.lex",
+    "us-gov-*/acm-pca": "fipsWithServiceOnly",
+    "us-gov-*/batch": "fipsWithServiceOnly",
+    "us-gov-*/cloudformation": "fipsWithServiceOnly",
+    "us-gov-*/config": "fipsWithServiceOnly",
+    "us-gov-*/eks": "fipsWithServiceOnly",
+    "us-gov-*/elasticmapreduce": "fipsWithServiceOnly",
+    "us-gov-*/identitystore": "fipsWithServiceOnly",
+    "us-gov-*/dynamodb": "fipsWithServiceOnly",
+    "us-gov-*/elasticloadbalancing": "fipsWithServiceOnly",
+    "us-gov-*/guardduty": "fipsWithServiceOnly",
+    "us-gov-*/monitoring": "fipsWithServiceOnly",
+    "us-gov-*/resource-groups": "fipsWithServiceOnly",
+    "us-gov-*/runtime.sagemaker": "fipsWithServiceOnly",
+    "us-gov-*/servicecatalog-appregistry": "fipsWithServiceOnly",
+    "us-gov-*/servicequotas": "fipsWithServiceOnly",
+    "us-gov-*/ssm": "fipsWithServiceOnly",
+    "us-gov-*/sts": "fipsWithServiceOnly",
+    "us-gov-*/support": "fipsWithServiceOnly",
+    "us-gov-west-1/states": "fipsWithServiceOnly",
+    "us-iso-east-1/elasticfilesystem": {
+      "endpoint": "elasticfilesystem-fips.{region}.c2s.ic.gov"
+    },
+    "us-gov-west-1/organizations": "fipsWithServiceOnly",
+    "us-gov-west-1/route53": {
+      "endpoint": "route53.us-gov.amazonaws.com"
+    },
+    "*/resource-explorer-2": "fipsDualstackByDefault",
+    "*/kendra-ranking": "dualstackByDefault",
+    "*/internetmonitor": "dualstackByDefault",
+    "*/codecatalyst": "fipsGlobalDualstackByDefault"
+  },
+
+  "dualstackRules": {
+    "*/*": {
+      "endpoint": "{service}.{region}.api.aws"
+    },
+    "cn-*/*": {
+      "endpoint": "{service}.{region}.api.amazonwebservices.com.cn"
+    },
+
+    "*/s3": "dualstackLegacy",
+    "cn-*/s3": "dualstackLegacyCn",
+    "*/s3-control": "dualstackLegacy",
+    "cn-*/s3-control": "dualstackLegacyCn",
+
+    "ap-south-1/ec2": "dualstackLegacyEc2",
+    "eu-west-1/ec2": "dualstackLegacyEc2",
+    "sa-east-1/ec2": "dualstackLegacyEc2",
+    "us-east-1/ec2": "dualstackLegacyEc2",
+    "us-east-2/ec2": "dualstackLegacyEc2",
+    "us-west-2/ec2": "dualstackLegacyEc2"
+  },
+
+  "dualstackFipsRules": {
+    "*/*": {
+      "endpoint": "{service}-fips.{region}.api.aws"
+    },
+    "cn-*/*": {
+      "endpoint": "{service}-fips.{region}.api.amazonwebservices.com.cn"
+    },
+    "*/s3": "dualstackFipsLegacy",
+    "cn-*/s3": "dualstackFipsLegacyCn",
+    "*/s3-control": "dualstackFipsLegacy",
+    "cn-*/s3-control": "dualstackFipsLegacyCn"
+  },
+
+  "patterns": {
+    "globalSSL": {
+      "endpoint": "https://{service}.amazonaws.com",
+      "globalEndpoint": true,
+      "signingRegion": "us-east-1"
+    },
+    "globalGovCloud": {
+      "endpoint": "{service}.us-gov.amazonaws.com",
+      "globalEndpoint": true,
+      "signingRegion": "us-gov-west-1"
+    },
+    "s3signature": {
+      "endpoint": "{service}.{region}.amazonaws.com",
+      "signatureVersion": "s3"
+    },
+    "usIso": {
+      "endpoint": "{service}.{region}.c2s.ic.gov"
+    },
+    "usIsob": {
+      "endpoint": "{service}.{region}.sc2s.sgov.gov"
+    },
+    "fipsStandard": {
+      "endpoint": "{service}-fips.{region}.amazonaws.com"
+    },
+    "fipsDotPrefix": {
+      "endpoint": "fips.{service}.{region}.amazonaws.com"
+    },
+    "fipsWithoutRegion": {
+      "endpoint": "{service}-fips.amazonaws.com"
+    },
+    "fips.api.ecr": {
+      "endpoint": "ecr-fips.{region}.amazonaws.com"
+    },
+    "fips.api.sagemaker": {
+      "endpoint": "api-fips.sagemaker.{region}.amazonaws.com"
+    },
+    "fips.models.lex": {
+      "endpoint": "models-fips.lex.{region}.amazonaws.com"
+    },
+    "fips.runtime.lex": {
+      "endpoint": "runtime-fips.lex.{region}.amazonaws.com"
+    },
+    "fipsWithServiceOnly": {
+      "endpoint": "{service}.{region}.amazonaws.com"
+    },
+    "dualstackLegacy": {
+      "endpoint": "{service}.dualstack.{region}.amazonaws.com"
+    },
+    "dualstackLegacyCn": {
+      "endpoint": "{service}.dualstack.{region}.amazonaws.com.cn"
+    },
+    "dualstackFipsLegacy": {
+      "endpoint": "{service}-fips.dualstack.{region}.amazonaws.com"
+    },
+    "dualstackFipsLegacyCn": {
+      "endpoint": "{service}-fips.dualstack.{region}.amazonaws.com.cn"
+    },
+    "dualstackLegacyEc2": {
+      "endpoint": "api.ec2.{region}.aws"
+    },
+    "dualstackByDefault": {
+      "endpoint": "{service}.{region}.api.aws"
+    },
+    "fipsDualstackByDefault": {
+      "endpoint": "{service}-fips.{region}.api.aws"
+    },
+    "globalDualstackByDefault": {
+      "endpoint": "{service}.global.api.aws"
+    },
+    "fipsGlobalDualstackByDefault": {
+      "endpoint": "{service}-fips.global.api.aws"
+    }
+  }
+}

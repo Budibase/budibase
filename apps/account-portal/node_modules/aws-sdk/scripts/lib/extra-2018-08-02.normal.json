@@ -1,0 +1,179 @@
+{
+    "version": "2.0",
+    "metadata": {
+        "apiVersion": "2018-03-30",
+        "endpointPrefix": "foo",
+        "protocol": "rest-json",
+        "serviceId": "Foo",
+        "uid": "foo-2018-03-30"
+    },
+    "operations": {
+        "FancyOperation": {
+            "name" :"FancyOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "input": {
+                "shape": "FancyStructure"
+            }
+        },
+        "BarOperation": {
+            "name": "BarOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "input": {
+                "shape": "String"
+            },
+            "output": {
+                "shape": "String"
+            }
+        },
+        "EventStreamOnInputOperation": {
+            "name": "EventStreamOnInputOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "input": {
+                "shape": "String"
+            }
+        },
+        "EventStreamOnInputPayloadOperation": {
+            "name": "EventStreamOnInputPayloadOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "input": {
+                "shape": "String"
+            }
+        },
+        "EventStreamOnOutputOperation": {
+            "name": "EventStreamOnOutputOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "output": {
+                "shape": "String"
+            }
+        },
+        "EventStreamOnOutputPayloadOperation": {
+            "name": "EventStreamOnOutputPayloadOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "output": {
+                "shape": "String"
+            }
+        },
+        "BazOperation": {
+            "name": "BazOperation",
+            "http": {
+                "method": "GET",
+                "requestUri": "/"
+            },
+            "input": {
+                "shape": "String"
+            }
+        }
+    },
+    "shapes": {
+        "FancyStructure": {
+            "type": "structure",
+            "required": [],
+            "members": {
+                "Map": {
+                    "shape": "MapOfList"
+                }
+            }
+        },
+        "ListOfString": {
+            "type": "list",
+            "member": {
+                "shape": "String"
+            }
+        },
+        "ListOfList": {
+            "type": "list",
+            "member": {
+                "shape": "ListOfString"
+            }
+        },
+        "MapOfString": {
+            "type": "map",
+            "key": {
+                "shape": "String"
+            },
+            "value": {
+                "shape": "String"
+            }
+        },
+        "MapOfList": {
+            "type": "map",
+            "key": {
+                "shape": "String"
+            },
+            "value": {
+                "shape": "ListOfString"
+            }
+        },
+        "String": {
+            "type": "string"
+        },
+        "BarOperationInput": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            }
+        },
+        "BarOperationOutput": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            }
+        },
+        "BazOperationInput": {
+            "type": "structure",
+            "members": {
+                "BazString": {
+                    "shape": "BazStringShape",
+                    "timestampFormat": "iso8601"
+                }
+            }
+        },
+        "EventStreamPayload": {
+            "type": "structure",
+            "members": {
+                "Payload": {
+                    "shape": "EventStreamStructure"
+                },
+                "payload": "Payload"
+            }
+        },
+        "EventStreamStructure": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            },
+            "eventstream": true
+        },
+        "BazStringShape": {
+            "type": "timestamp",
+            "timestampFormat": "rfc822"
+        },
+        "StringShape": {
+            "type": "string"
+        }
+    }
+}

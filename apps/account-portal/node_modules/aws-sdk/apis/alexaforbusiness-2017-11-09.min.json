@@ -1,0 +1,2689 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-11-09",
+    "endpointPrefix": "a4b",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "Alexa For Business",
+    "serviceId": "Alexa For Business",
+    "signatureVersion": "v4",
+    "targetPrefix": "AlexaForBusiness",
+    "uid": "alexaforbusiness-2017-11-09"
+  },
+  "operations": {
+    "ApproveSkill": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateContactWithAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ContactArn",
+          "AddressBookArn"
+        ],
+        "members": {
+          "ContactArn": {},
+          "AddressBookArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateDeviceWithNetworkProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeviceArn",
+          "NetworkProfileArn"
+        ],
+        "members": {
+          "DeviceArn": {},
+          "NetworkProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateDeviceWithRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeviceArn": {},
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateSkillGroupWithRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {},
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateSkillWithSkillGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillGroupArn": {},
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "AssociateSkillWithUsers": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AddressBookArn": {}
+        }
+      }
+    },
+    "CreateBusinessReportSchedule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Format",
+          "ContentRange"
+        ],
+        "members": {
+          "ScheduleName": {},
+          "S3BucketName": {},
+          "S3KeyPrefix": {},
+          "Format": {},
+          "ContentRange": {
+            "shape": "Sv"
+          },
+          "Recurrence": {
+            "shape": "Sx"
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ScheduleArn": {}
+        }
+      }
+    },
+    "CreateConferenceProvider": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConferenceProviderName",
+          "ConferenceProviderType",
+          "MeetingSetting"
+        ],
+        "members": {
+          "ConferenceProviderName": {},
+          "ConferenceProviderType": {},
+          "IPDialIn": {
+            "shape": "S13"
+          },
+          "PSTNDialIn": {
+            "shape": "S16"
+          },
+          "MeetingSetting": {
+            "shape": "S1b"
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConferenceProviderArn": {}
+        }
+      }
+    },
+    "CreateContact": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FirstName"
+        ],
+        "members": {
+          "DisplayName": {},
+          "FirstName": {},
+          "LastName": {},
+          "PhoneNumber": {
+            "shape": "S1g"
+          },
+          "PhoneNumbers": {
+            "shape": "S1h"
+          },
+          "SipAddresses": {
+            "shape": "S1k"
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ContactArn": {}
+        }
+      }
+    },
+    "CreateGatewayGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "ClientRequestToken"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GatewayGroupArn": {}
+        }
+      }
+    },
+    "CreateNetworkProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NetworkProfileName",
+          "Ssid",
+          "SecurityType",
+          "ClientRequestToken"
+        ],
+        "members": {
+          "NetworkProfileName": {},
+          "Description": {},
+          "Ssid": {},
+          "SecurityType": {},
+          "EapMethod": {},
+          "CurrentPassword": {
+            "shape": "S1z"
+          },
+          "NextPassword": {
+            "shape": "S20"
+          },
+          "CertificateAuthorityArn": {},
+          "TrustAnchors": {
+            "shape": "S21"
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NetworkProfileArn": {}
+        }
+      }
+    },
+    "CreateProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ProfileName",
+          "Timezone",
+          "Address",
+          "DistanceUnit",
+          "TemperatureUnit",
+          "WakeWord"
+        ],
+        "members": {
+          "ProfileName": {},
+          "Timezone": {},
+          "Address": {},
+          "DistanceUnit": {},
+          "TemperatureUnit": {},
+          "WakeWord": {},
+          "Locale": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "SetupModeDisabled": {
+            "type": "boolean"
+          },
+          "MaxVolumeLimit": {
+            "type": "integer"
+          },
+          "PSTNEnabled": {
+            "type": "boolean"
+          },
+          "DataRetentionOptIn": {
+            "type": "boolean"
+          },
+          "MeetingRoomConfiguration": {
+            "type": "structure",
+            "members": {
+              "RoomUtilizationMetricsEnabled": {
+                "type": "boolean"
+              },
+              "EndOfMeetingReminder": {
+                "type": "structure",
+                "required": [
+                  "ReminderAtMinutes",
+                  "ReminderType",
+                  "Enabled"
+                ],
+                "members": {
+                  "ReminderAtMinutes": {
+                    "shape": "S2g"
+                  },
+                  "ReminderType": {},
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "InstantBooking": {
+                "type": "structure",
+                "required": [
+                  "DurationInMinutes",
+                  "Enabled"
+                ],
+                "members": {
+                  "DurationInMinutes": {
+                    "type": "integer"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "RequireCheckIn": {
+                "type": "structure",
+                "required": [
+                  "ReleaseAfterMinutes",
+                  "Enabled"
+                ],
+                "members": {
+                  "ReleaseAfterMinutes": {
+                    "type": "integer"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ProfileArn": {}
+        }
+      }
+    },
+    "CreateRoom": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RoomName"
+        ],
+        "members": {
+          "RoomName": {},
+          "Description": {},
+          "ProfileArn": {},
+          "ProviderCalendarId": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RoomArn": {}
+        }
+      }
+    },
+    "CreateSkillGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillGroupName"
+        ],
+        "members": {
+          "SkillGroupName": {},
+          "Description": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {}
+        }
+      }
+    },
+    "CreateUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserId"
+        ],
+        "members": {
+          "UserId": {},
+          "FirstName": {},
+          "LastName": {},
+          "Email": {},
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          },
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UserArn": {}
+        }
+      }
+    },
+    "DeleteAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AddressBookArn"
+        ],
+        "members": {
+          "AddressBookArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteBusinessReportSchedule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ScheduleArn"
+        ],
+        "members": {
+          "ScheduleArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteConferenceProvider": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConferenceProviderArn"
+        ],
+        "members": {
+          "ConferenceProviderArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteContact": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ContactArn"
+        ],
+        "members": {
+          "ContactArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteDevice": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeviceArn"
+        ],
+        "members": {
+          "DeviceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteDeviceUsageData": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeviceArn",
+          "DeviceUsageType"
+        ],
+        "members": {
+          "DeviceArn": {},
+          "DeviceUsageType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteGatewayGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GatewayGroupArn"
+        ],
+        "members": {
+          "GatewayGroupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteNetworkProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NetworkProfileArn"
+        ],
+        "members": {
+          "NetworkProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteProfile": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteRoomSkillParameter": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId",
+          "ParameterKey"
+        ],
+        "members": {
+          "RoomArn": {},
+          "SkillId": {},
+          "ParameterKey": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteSkillAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillId": {},
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteSkillGroup": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "EnrollmentId"
+        ],
+        "members": {
+          "UserArn": {},
+          "EnrollmentId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateContactFromAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ContactArn",
+          "AddressBookArn"
+        ],
+        "members": {
+          "ContactArn": {},
+          "AddressBookArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateDeviceFromRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeviceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateSkillFromSkillGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillGroupArn": {},
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateSkillFromUsers": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateSkillGroupFromRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {},
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ForgetSmartHomeAppliances": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RoomArn"
+        ],
+        "members": {
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AddressBookArn"
+        ],
+        "members": {
+          "AddressBookArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AddressBook": {
+            "type": "structure",
+            "members": {
+              "AddressBookArn": {},
+              "Name": {},
+              "Description": {}
+            }
+          }
+        }
+      }
+    },
+    "GetConferencePreference": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Preference": {
+            "shape": "S4d"
+          }
+        }
+      }
+    },
+    "GetConferenceProvider": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConferenceProviderArn"
+        ],
+        "members": {
+          "ConferenceProviderArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConferenceProvider": {
+            "shape": "S4g"
+          }
+        }
+      }
+    },
+    "GetContact": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ContactArn"
+        ],
+        "members": {
+          "ContactArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Contact": {
+            "type": "structure",
+            "members": {
+              "ContactArn": {},
+              "DisplayName": {},
+              "FirstName": {},
+              "LastName": {},
+              "PhoneNumber": {
+                "shape": "S1g"
+              },
+              "PhoneNumbers": {
+                "shape": "S1h"
+              },
+              "SipAddresses": {
+                "shape": "S1k"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetDevice": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeviceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Device": {
+            "type": "structure",
+            "members": {
+              "DeviceArn": {},
+              "DeviceSerialNumber": {},
+              "DeviceType": {},
+              "DeviceName": {},
+              "SoftwareVersion": {},
+              "MacAddress": {},
+              "RoomArn": {},
+              "DeviceStatus": {},
+              "DeviceStatusInfo": {
+                "shape": "S4t"
+              },
+              "NetworkProfileInfo": {
+                "type": "structure",
+                "members": {
+                  "NetworkProfileArn": {},
+                  "CertificateArn": {},
+                  "CertificateExpirationTime": {
+                    "type": "timestamp"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetGateway": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GatewayArn"
+        ],
+        "members": {
+          "GatewayArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Gateway": {
+            "type": "structure",
+            "members": {
+              "Arn": {},
+              "Name": {},
+              "Description": {},
+              "GatewayGroupArn": {},
+              "SoftwareVersion": {}
+            }
+          }
+        }
+      }
+    },
+    "GetGatewayGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GatewayGroupArn"
+        ],
+        "members": {
+          "GatewayGroupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GatewayGroup": {
+            "type": "structure",
+            "members": {
+              "Arn": {},
+              "Name": {},
+              "Description": {}
+            }
+          }
+        }
+      }
+    },
+    "GetInvitationConfiguration": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OrganizationName": {},
+          "ContactEmail": {},
+          "PrivateSkillIds": {
+            "shape": "S5e"
+          }
+        }
+      }
+    },
+    "GetNetworkProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NetworkProfileArn"
+        ],
+        "members": {
+          "NetworkProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NetworkProfile": {
+            "type": "structure",
+            "members": {
+              "NetworkProfileArn": {},
+              "NetworkProfileName": {},
+              "Description": {},
+              "Ssid": {},
+              "SecurityType": {},
+              "EapMethod": {},
+              "CurrentPassword": {
+                "shape": "S1z"
+              },
+              "NextPassword": {
+                "shape": "S20"
+              },
+              "CertificateAuthorityArn": {},
+              "TrustAnchors": {
+                "shape": "S21"
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetProfile": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Profile": {
+            "type": "structure",
+            "members": {
+              "ProfileArn": {},
+              "ProfileName": {},
+              "IsDefault": {
+                "type": "boolean"
+              },
+              "Address": {},
+              "Timezone": {},
+              "DistanceUnit": {},
+              "TemperatureUnit": {},
+              "WakeWord": {},
+              "Locale": {},
+              "SetupModeDisabled": {
+                "type": "boolean"
+              },
+              "MaxVolumeLimit": {
+                "type": "integer"
+              },
+              "PSTNEnabled": {
+                "type": "boolean"
+              },
+              "DataRetentionOptIn": {
+                "type": "boolean"
+              },
+              "AddressBookArn": {},
+              "MeetingRoomConfiguration": {
+                "type": "structure",
+                "members": {
+                  "RoomUtilizationMetricsEnabled": {
+                    "type": "boolean"
+                  },
+                  "EndOfMeetingReminder": {
+                    "type": "structure",
+                    "members": {
+                      "ReminderAtMinutes": {
+                        "shape": "S2g"
+                      },
+                      "ReminderType": {},
+                      "Enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "InstantBooking": {
+                    "type": "structure",
+                    "members": {
+                      "DurationInMinutes": {
+                        "type": "integer"
+                      },
+                      "Enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "RequireCheckIn": {
+                    "type": "structure",
+                    "members": {
+                      "ReleaseAfterMinutes": {
+                        "type": "integer"
+                      },
+                      "Enabled": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "GetRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Room": {
+            "type": "structure",
+            "members": {
+              "RoomArn": {},
+              "RoomName": {},
+              "Description": {},
+              "ProviderCalendarId": {},
+              "ProfileArn": {}
+            }
+          }
+        }
+      }
+    },
+    "GetRoomSkillParameter": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId",
+          "ParameterKey"
+        ],
+        "members": {
+          "RoomArn": {},
+          "SkillId": {},
+          "ParameterKey": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RoomSkillParameter": {
+            "shape": "S5u"
+          }
+        }
+      }
+    },
+    "GetSkillGroup": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SkillGroup": {
+            "type": "structure",
+            "members": {
+              "SkillGroupArn": {},
+              "SkillGroupName": {},
+              "Description": {}
+            }
+          }
+        }
+      }
+    },
+    "ListBusinessReportSchedules": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BusinessReportSchedules": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ScheduleArn": {},
+                "ScheduleName": {},
+                "S3BucketName": {},
+                "S3KeyPrefix": {},
+                "Format": {},
+                "ContentRange": {
+                  "shape": "Sv"
+                },
+                "Recurrence": {
+                  "shape": "Sx"
+                },
+                "LastBusinessReport": {
+                  "type": "structure",
+                  "members": {
+                    "Status": {},
+                    "FailureCode": {},
+                    "S3Location": {
+                      "type": "structure",
+                      "members": {
+                        "Path": {},
+                        "BucketName": {}
+                      }
+                    },
+                    "DeliveryTime": {
+                      "type": "timestamp"
+                    },
+                    "DownloadUrl": {}
+                  }
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListConferenceProviders": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConferenceProviders": {
+            "type": "list",
+            "member": {
+              "shape": "S4g"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListDeviceEvents": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DeviceArn"
+        ],
+        "members": {
+          "DeviceArn": {},
+          "EventType": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DeviceEvents": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Type": {},
+                "Value": {},
+                "Timestamp": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListGatewayGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "GatewayGroups": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Arn": {},
+                "Name": {},
+                "Description": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListGateways": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "GatewayGroupArn": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Gateways": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Arn": {},
+                "Name": {},
+                "Description": {},
+                "GatewayGroupArn": {},
+                "SoftwareVersion": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListSkills": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {},
+          "EnablementType": {},
+          "SkillType": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SkillSummaries": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "SkillId": {},
+                "SkillName": {},
+                "SupportsLinking": {
+                  "type": "boolean"
+                },
+                "EnablementType": {},
+                "SkillType": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListSkillsStoreCategories": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "CategoryList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "CategoryId": {
+                  "type": "long"
+                },
+                "CategoryName": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListSkillsStoreSkillsByCategory": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "CategoryId"
+        ],
+        "members": {
+          "CategoryId": {
+            "type": "long"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SkillsStoreSkills": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "SkillId": {},
+                "SkillName": {},
+                "ShortDescription": {},
+                "IconUrl": {},
+                "SampleUtterances": {
+                  "type": "list",
+                  "member": {}
+                },
+                "SkillDetails": {
+                  "type": "structure",
+                  "members": {
+                    "ProductDescription": {},
+                    "InvocationPhrase": {},
+                    "ReleaseDate": {},
+                    "EndUserLicenseAgreement": {},
+                    "GenericKeywords": {
+                      "type": "list",
+                      "member": {}
+                    },
+                    "BulletPoints": {
+                      "type": "list",
+                      "member": {}
+                    },
+                    "NewInThisVersionBulletPoints": {
+                      "type": "list",
+                      "member": {}
+                    },
+                    "SkillTypes": {
+                      "type": "list",
+                      "member": {}
+                    },
+                    "Reviews": {
+                      "type": "map",
+                      "key": {},
+                      "value": {}
+                    },
+                    "DeveloperInfo": {
+                      "type": "structure",
+                      "members": {
+                        "DeveloperName": {},
+                        "PrivacyPolicy": {},
+                        "Email": {},
+                        "Url": {}
+                      }
+                    }
+                  }
+                },
+                "SupportsLinking": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListSmartHomeAppliances": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RoomArn"
+        ],
+        "members": {
+          "RoomArn": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SmartHomeAppliances": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "FriendlyName": {},
+                "Description": {},
+                "ManufacturerName": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTags": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn"
+        ],
+        "members": {
+          "Arn": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "Sl"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "PutConferencePreference": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConferencePreference"
+        ],
+        "members": {
+          "ConferencePreference": {
+            "shape": "S4d"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "PutInvitationConfiguration": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OrganizationName"
+        ],
+        "members": {
+          "OrganizationName": {},
+          "ContactEmail": {},
+          "PrivateSkillIds": {
+            "shape": "S5e"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "PutRoomSkillParameter": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId",
+          "RoomSkillParameter"
+        ],
+        "members": {
+          "RoomArn": {},
+          "SkillId": {},
+          "RoomSkillParameter": {
+            "shape": "S5u"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "PutSkillAuthorization": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AuthorizationResult",
+          "SkillId"
+        ],
+        "members": {
+          "AuthorizationResult": {
+            "type": "map",
+            "key": {},
+            "value": {},
+            "sensitive": true
+          },
+          "SkillId": {},
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "RegisterAVSDevice": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ClientId",
+          "UserCode",
+          "ProductId",
+          "AmazonId"
+        ],
+        "members": {
+          "ClientId": {},
+          "UserCode": {},
+          "ProductId": {},
+          "DeviceSerialNumber": {},
+          "AmazonId": {},
+          "RoomArn": {},
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DeviceArn": {}
+        }
+      }
+    },
+    "RejectSkill": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SkillId"
+        ],
+        "members": {
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ResolveRoom": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserId",
+          "SkillId"
+        ],
+        "members": {
+          "UserId": {},
+          "SkillId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "RoomArn": {},
+          "RoomName": {},
+          "RoomSkillParameters": {
+            "type": "list",
+            "member": {
+              "shape": "S5u"
+            }
+          }
+        }
+      }
+    },
+    "RevokeInvitation": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "UserArn": {},
+          "EnrollmentId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "SearchAddressBooks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AddressBooks": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "AddressBookArn": {},
+                "Name": {},
+                "Description": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchContacts": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Contacts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ContactArn": {},
+                "DisplayName": {},
+                "FirstName": {},
+                "LastName": {},
+                "PhoneNumber": {
+                  "shape": "S1g"
+                },
+                "PhoneNumbers": {
+                  "shape": "S1h"
+                },
+                "SipAddresses": {
+                  "shape": "S1k"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchDevices": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Devices": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "DeviceArn": {},
+                "DeviceSerialNumber": {},
+                "DeviceType": {},
+                "DeviceName": {},
+                "SoftwareVersion": {},
+                "MacAddress": {},
+                "DeviceStatus": {},
+                "NetworkProfileArn": {},
+                "NetworkProfileName": {},
+                "RoomArn": {},
+                "RoomName": {},
+                "DeviceStatusInfo": {
+                  "shape": "S4t"
+                },
+                "CreatedTime": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchNetworkProfiles": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NetworkProfiles": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "NetworkProfileArn": {},
+                "NetworkProfileName": {},
+                "Description": {},
+                "Ssid": {},
+                "SecurityType": {},
+                "EapMethod": {},
+                "CertificateAuthorityArn": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchProfiles": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Profiles": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "ProfileArn": {},
+                "ProfileName": {},
+                "IsDefault": {
+                  "type": "boolean"
+                },
+                "Address": {},
+                "Timezone": {},
+                "DistanceUnit": {},
+                "TemperatureUnit": {},
+                "WakeWord": {},
+                "Locale": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchRooms": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Rooms": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "RoomArn": {},
+                "RoomName": {},
+                "Description": {},
+                "ProviderCalendarId": {},
+                "ProfileArn": {},
+                "ProfileName": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchSkillGroups": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SkillGroups": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "SkillGroupArn": {},
+                "SkillGroupName": {},
+                "Description": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SearchUsers": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "Filters": {
+            "shape": "S92"
+          },
+          "SortCriteria": {
+            "shape": "S97"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Users": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "UserArn": {},
+                "FirstName": {},
+                "LastName": {},
+                "Email": {},
+                "EnrollmentStatus": {},
+                "EnrollmentId": {}
+              }
+            }
+          },
+          "NextToken": {},
+          "TotalCount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "SendAnnouncement": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RoomFilters",
+          "Content",
+          "ClientRequestToken"
+        ],
+        "members": {
+          "RoomFilters": {
+            "shape": "S92"
+          },
+          "Content": {
+            "type": "structure",
+            "members": {
+              "TextList": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "Locale",
+                    "Value"
+                  ],
+                  "members": {
+                    "Locale": {},
+                    "Value": {}
+                  }
+                }
+              },
+              "SsmlList": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "Locale",
+                    "Value"
+                  ],
+                  "members": {
+                    "Locale": {},
+                    "Value": {}
+                  }
+                }
+              },
+              "AudioList": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "required": [
+                    "Locale",
+                    "Location"
+                  ],
+                  "members": {
+                    "Locale": {},
+                    "Location": {}
+                  }
+                }
+              }
+            }
+          },
+          "TimeToLiveInSeconds": {
+            "type": "integer"
+          },
+          "ClientRequestToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AnnouncementArn": {}
+        }
+      }
+    },
+    "SendInvitation": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "UserArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "StartDeviceSync": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Features"
+        ],
+        "members": {
+          "RoomArn": {},
+          "DeviceArn": {},
+          "Features": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "StartSmartHomeApplianceDiscovery": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "RoomArn"
+        ],
+        "members": {
+          "RoomArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn",
+          "Tags"
+        ],
+        "members": {
+          "Arn": {},
+          "Tags": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Arn",
+          "TagKeys"
+        ],
+        "members": {
+          "Arn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateAddressBook": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AddressBookArn"
+        ],
+        "members": {
+          "AddressBookArn": {},
+          "Name": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateBusinessReportSchedule": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ScheduleArn"
+        ],
+        "members": {
+          "ScheduleArn": {},
+          "S3BucketName": {},
+          "S3KeyPrefix": {},
+          "Format": {},
+          "ScheduleName": {},
+          "Recurrence": {
+            "shape": "Sx"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateConferenceProvider": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConferenceProviderArn",
+          "ConferenceProviderType",
+          "MeetingSetting"
+        ],
+        "members": {
+          "ConferenceProviderArn": {},
+          "ConferenceProviderType": {},
+          "IPDialIn": {
+            "shape": "S13"
+          },
+          "PSTNDialIn": {
+            "shape": "S16"
+          },
+          "MeetingSetting": {
+            "shape": "S1b"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateContact": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ContactArn"
+        ],
+        "members": {
+          "ContactArn": {},
+          "DisplayName": {},
+          "FirstName": {},
+          "LastName": {},
+          "PhoneNumber": {
+            "shape": "S1g"
+          },
+          "PhoneNumbers": {
+            "shape": "S1h"
+          },
+          "SipAddresses": {
+            "shape": "S1k"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateDevice": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DeviceArn": {},
+          "DeviceName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateGateway": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GatewayArn"
+        ],
+        "members": {
+          "GatewayArn": {},
+          "Name": {},
+          "Description": {},
+          "SoftwareVersion": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateGatewayGroup": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "GatewayGroupArn"
+        ],
+        "members": {
+          "GatewayGroupArn": {},
+          "Name": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateNetworkProfile": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "NetworkProfileArn"
+        ],
+        "members": {
+          "NetworkProfileArn": {},
+          "NetworkProfileName": {},
+          "Description": {},
+          "CurrentPassword": {
+            "shape": "S1z"
+          },
+          "NextPassword": {
+            "shape": "S20"
+          },
+          "CertificateAuthorityArn": {},
+          "TrustAnchors": {
+            "shape": "S21"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateProfile": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ProfileArn": {},
+          "ProfileName": {},
+          "IsDefault": {
+            "type": "boolean"
+          },
+          "Timezone": {},
+          "Address": {},
+          "DistanceUnit": {},
+          "TemperatureUnit": {},
+          "WakeWord": {},
+          "Locale": {},
+          "SetupModeDisabled": {
+            "type": "boolean"
+          },
+          "MaxVolumeLimit": {
+            "type": "integer"
+          },
+          "PSTNEnabled": {
+            "type": "boolean"
+          },
+          "DataRetentionOptIn": {
+            "type": "boolean"
+          },
+          "MeetingRoomConfiguration": {
+            "type": "structure",
+            "members": {
+              "RoomUtilizationMetricsEnabled": {
+                "type": "boolean"
+              },
+              "EndOfMeetingReminder": {
+                "type": "structure",
+                "members": {
+                  "ReminderAtMinutes": {
+                    "shape": "S2g"
+                  },
+                  "ReminderType": {},
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "InstantBooking": {
+                "type": "structure",
+                "members": {
+                  "DurationInMinutes": {
+                    "type": "integer"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "RequireCheckIn": {
+                "type": "structure",
+                "members": {
+                  "ReleaseAfterMinutes": {
+                    "type": "integer"
+                  },
+                  "Enabled": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateRoom": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "RoomArn": {},
+          "RoomName": {},
+          "Description": {},
+          "ProviderCalendarId": {},
+          "ProfileArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateSkillGroup": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SkillGroupArn": {},
+          "SkillGroupName": {},
+          "Description": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "Sl": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "Sv": {
+      "type": "structure",
+      "required": [
+        "Interval"
+      ],
+      "members": {
+        "Interval": {}
+      }
+    },
+    "Sx": {
+      "type": "structure",
+      "members": {
+        "StartDate": {}
+      }
+    },
+    "S13": {
+      "type": "structure",
+      "required": [
+        "Endpoint",
+        "CommsProtocol"
+      ],
+      "members": {
+        "Endpoint": {},
+        "CommsProtocol": {}
+      }
+    },
+    "S16": {
+      "type": "structure",
+      "required": [
+        "CountryCode",
+        "PhoneNumber",
+        "OneClickIdDelay",
+        "OneClickPinDelay"
+      ],
+      "members": {
+        "CountryCode": {},
+        "PhoneNumber": {},
+        "OneClickIdDelay": {},
+        "OneClickPinDelay": {}
+      }
+    },
+    "S1b": {
+      "type": "structure",
+      "required": [
+        "RequirePin"
+      ],
+      "members": {
+        "RequirePin": {}
+      }
+    },
+    "S1g": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S1h": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Number",
+          "Type"
+        ],
+        "members": {
+          "Number": {
+            "shape": "S1g"
+          },
+          "Type": {
+            "type": "string",
+            "sensitive": true
+          }
+        }
+      }
+    },
+    "S1k": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Uri",
+          "Type"
+        ],
+        "members": {
+          "Uri": {
+            "type": "string",
+            "sensitive": true
+          },
+          "Type": {
+            "type": "string",
+            "sensitive": true
+          }
+        }
+      }
+    },
+    "S1z": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S20": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S21": {
+      "type": "list",
+      "member": {}
+    },
+    "S2g": {
+      "type": "list",
+      "member": {
+        "type": "integer"
+      }
+    },
+    "S4d": {
+      "type": "structure",
+      "members": {
+        "DefaultConferenceProviderArn": {}
+      }
+    },
+    "S4g": {
+      "type": "structure",
+      "members": {
+        "Arn": {},
+        "Name": {},
+        "Type": {},
+        "IPDialIn": {
+          "shape": "S13"
+        },
+        "PSTNDialIn": {
+          "shape": "S16"
+        },
+        "MeetingSetting": {
+          "shape": "S1b"
+        }
+      }
+    },
+    "S4t": {
+      "type": "structure",
+      "members": {
+        "DeviceStatusDetails": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "Feature": {},
+              "Code": {}
+            }
+          }
+        },
+        "ConnectionStatus": {},
+        "ConnectionStatusUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S5e": {
+      "type": "list",
+      "member": {}
+    },
+    "S5u": {
+      "type": "structure",
+      "required": [
+        "ParameterKey",
+        "ParameterValue"
+      ],
+      "members": {
+        "ParameterKey": {},
+        "ParameterValue": {}
+      }
+    },
+    "S92": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Values"
+        ],
+        "members": {
+          "Key": {},
+          "Values": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      }
+    },
+    "S97": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    }
+  }
+}

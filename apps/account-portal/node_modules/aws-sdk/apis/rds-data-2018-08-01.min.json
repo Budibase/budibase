@@ -1,0 +1,426 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-08-01",
+    "endpointPrefix": "rds-data",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "AWS RDS DataService",
+    "serviceId": "RDS Data",
+    "signatureVersion": "v4",
+    "signingName": "rds-data",
+    "uid": "rds-data-2018-08-01"
+  },
+  "operations": {
+    "BatchExecuteStatement": {
+      "http": {
+        "requestUri": "/BatchExecute",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "secretArn",
+          "sql"
+        ],
+        "members": {
+          "database": {},
+          "parameterSets": {
+            "type": "list",
+            "member": {
+              "shape": "S4"
+            }
+          },
+          "resourceArn": {},
+          "schema": {},
+          "secretArn": {},
+          "sql": {},
+          "transactionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "updateResults": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "generatedFields": {
+                  "shape": "Sq"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "BeginTransaction": {
+      "http": {
+        "requestUri": "/BeginTransaction",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "secretArn"
+        ],
+        "members": {
+          "database": {},
+          "resourceArn": {},
+          "schema": {},
+          "secretArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "transactionId": {}
+        }
+      }
+    },
+    "CommitTransaction": {
+      "http": {
+        "requestUri": "/CommitTransaction",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "secretArn",
+          "transactionId"
+        ],
+        "members": {
+          "resourceArn": {},
+          "secretArn": {},
+          "transactionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "transactionStatus": {}
+        }
+      }
+    },
+    "ExecuteSql": {
+      "http": {
+        "requestUri": "/ExecuteSql",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "awsSecretStoreArn",
+          "dbClusterOrInstanceArn",
+          "sqlStatements"
+        ],
+        "members": {
+          "awsSecretStoreArn": {},
+          "database": {},
+          "dbClusterOrInstanceArn": {},
+          "schema": {},
+          "sqlStatements": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "sqlStatementResults": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "numberOfRecordsUpdated": {
+                  "type": "long"
+                },
+                "resultFrame": {
+                  "type": "structure",
+                  "members": {
+                    "records": {
+                      "type": "list",
+                      "member": {
+                        "type": "structure",
+                        "members": {
+                          "values": {
+                            "type": "list",
+                            "member": {
+                              "shape": "S15"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "resultSetMetadata": {
+                      "type": "structure",
+                      "members": {
+                        "columnCount": {
+                          "type": "long"
+                        },
+                        "columnMetadata": {
+                          "shape": "S1c"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "deprecated": true,
+      "deprecatedMessage": "The ExecuteSql API is deprecated, please use the ExecuteStatement API."
+    },
+    "ExecuteStatement": {
+      "http": {
+        "requestUri": "/Execute",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "secretArn",
+          "sql"
+        ],
+        "members": {
+          "continueAfterTimeout": {
+            "type": "boolean"
+          },
+          "database": {},
+          "includeResultMetadata": {
+            "type": "boolean"
+          },
+          "parameters": {
+            "shape": "S4"
+          },
+          "resourceArn": {},
+          "resultSetOptions": {
+            "type": "structure",
+            "members": {
+              "decimalReturnType": {}
+            }
+          },
+          "schema": {},
+          "secretArn": {},
+          "sql": {},
+          "transactionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "columnMetadata": {
+            "shape": "S1c"
+          },
+          "generatedFields": {
+            "shape": "Sq"
+          },
+          "numberOfRecordsUpdated": {
+            "type": "long"
+          },
+          "records": {
+            "type": "list",
+            "member": {
+              "shape": "Sq"
+            }
+          }
+        }
+      }
+    },
+    "RollbackTransaction": {
+      "http": {
+        "requestUri": "/RollbackTransaction",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "secretArn",
+          "transactionId"
+        ],
+        "members": {
+          "resourceArn": {},
+          "secretArn": {},
+          "transactionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "transactionStatus": {}
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "name": {},
+          "typeHint": {},
+          "value": {
+            "shape": "S8"
+          }
+        }
+      }
+    },
+    "S8": {
+      "type": "structure",
+      "members": {
+        "arrayValue": {
+          "shape": "S9"
+        },
+        "blobValue": {
+          "type": "blob"
+        },
+        "booleanValue": {
+          "type": "boolean"
+        },
+        "doubleValue": {
+          "type": "double"
+        },
+        "isNull": {
+          "type": "boolean"
+        },
+        "longValue": {
+          "type": "long"
+        },
+        "stringValue": {}
+      },
+      "union": true
+    },
+    "S9": {
+      "type": "structure",
+      "members": {
+        "arrayValues": {
+          "type": "list",
+          "member": {
+            "shape": "S9"
+          }
+        },
+        "booleanValues": {
+          "type": "list",
+          "member": {
+            "type": "boolean"
+          }
+        },
+        "doubleValues": {
+          "type": "list",
+          "member": {
+            "type": "double"
+          }
+        },
+        "longValues": {
+          "type": "list",
+          "member": {
+            "type": "long"
+          }
+        },
+        "stringValues": {
+          "type": "list",
+          "member": {}
+        }
+      },
+      "union": true
+    },
+    "Sq": {
+      "type": "list",
+      "member": {
+        "shape": "S8"
+      }
+    },
+    "S15": {
+      "type": "structure",
+      "members": {
+        "arrayValues": {
+          "shape": "S16"
+        },
+        "bigIntValue": {
+          "type": "long"
+        },
+        "bitValue": {
+          "type": "boolean"
+        },
+        "blobValue": {
+          "type": "blob"
+        },
+        "doubleValue": {
+          "type": "double"
+        },
+        "intValue": {
+          "type": "integer"
+        },
+        "isNull": {
+          "type": "boolean"
+        },
+        "realValue": {
+          "type": "float"
+        },
+        "stringValue": {},
+        "structValue": {
+          "type": "structure",
+          "members": {
+            "attributes": {
+              "shape": "S16"
+            }
+          }
+        }
+      },
+      "union": true
+    },
+    "S16": {
+      "type": "list",
+      "member": {
+        "shape": "S15"
+      }
+    },
+    "S1c": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "arrayBaseColumnType": {
+            "type": "integer"
+          },
+          "isAutoIncrement": {
+            "type": "boolean"
+          },
+          "isCaseSensitive": {
+            "type": "boolean"
+          },
+          "isCurrency": {
+            "type": "boolean"
+          },
+          "isSigned": {
+            "type": "boolean"
+          },
+          "label": {},
+          "name": {},
+          "nullable": {
+            "type": "integer"
+          },
+          "precision": {
+            "type": "integer"
+          },
+          "scale": {
+            "type": "integer"
+          },
+          "schemaName": {},
+          "tableName": {},
+          "type": {
+            "type": "integer"
+          },
+          "typeName": {}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,5 @@
+:root {
+  --spectrum-searchwithin-padding-left: 36px;
+  --spectrum-searchwithin-padding-right: 28px;
+  --spectrum-searchwithin-icon-width: var(--spectrum-global-dimension-static-size-200);
+}

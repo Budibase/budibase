@@ -1,0 +1,1685 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2016-12-01",
+    "endpointPrefix": "appstream2",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "Amazon AppStream",
+    "serviceId": "AppStream",
+    "signatureVersion": "v4",
+    "signingName": "appstream",
+    "targetPrefix": "PhotonAdminProxyService",
+    "uid": "appstream-2016-12-01"
+  },
+  "operations": {
+    "AssociateFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetName",
+          "StackName"
+        ],
+        "members": {
+          "FleetName": {},
+          "StackName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "BatchAssociateUserStack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserStackAssociations"
+        ],
+        "members": {
+          "UserStackAssociations": {
+            "shape": "S5"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "errors": {
+            "shape": "Sb"
+          }
+        }
+      }
+    },
+    "BatchDisassociateUserStack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserStackAssociations"
+        ],
+        "members": {
+          "UserStackAssociations": {
+            "shape": "S5"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "errors": {
+            "shape": "Sb"
+          }
+        }
+      }
+    },
+    "CopyImage": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SourceImageName",
+          "DestinationImageName",
+          "DestinationRegion"
+        ],
+        "members": {
+          "SourceImageName": {},
+          "DestinationImageName": {},
+          "DestinationRegion": {},
+          "DestinationImageDescription": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DestinationImageName": {}
+        }
+      }
+    },
+    "CreateDirectoryConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DirectoryName",
+          "OrganizationalUnitDistinguishedNames"
+        ],
+        "members": {
+          "DirectoryName": {},
+          "OrganizationalUnitDistinguishedNames": {
+            "shape": "Sn"
+          },
+          "ServiceAccountCredentials": {
+            "shape": "Sp"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DirectoryConfig": {
+            "shape": "St"
+          }
+        }
+      }
+    },
+    "CreateFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "InstanceType",
+          "ComputeCapacity"
+        ],
+        "members": {
+          "Name": {},
+          "ImageName": {},
+          "ImageArn": {},
+          "InstanceType": {},
+          "FleetType": {},
+          "ComputeCapacity": {
+            "shape": "Sy"
+          },
+          "VpcConfig": {
+            "shape": "S10"
+          },
+          "MaxUserDurationInSeconds": {
+            "type": "integer"
+          },
+          "DisconnectTimeoutInSeconds": {
+            "type": "integer"
+          },
+          "Description": {},
+          "DisplayName": {},
+          "EnableDefaultInternetAccess": {
+            "type": "boolean"
+          },
+          "DomainJoinInfo": {
+            "shape": "S15"
+          },
+          "Tags": {
+            "shape": "S16"
+          },
+          "IdleDisconnectTimeoutInSeconds": {
+            "type": "integer"
+          },
+          "IamRoleArn": {},
+          "StreamView": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Fleet": {
+            "shape": "S1b"
+          }
+        }
+      }
+    },
+    "CreateImageBuilder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "InstanceType"
+        ],
+        "members": {
+          "Name": {},
+          "ImageName": {},
+          "ImageArn": {},
+          "InstanceType": {},
+          "Description": {},
+          "DisplayName": {},
+          "VpcConfig": {
+            "shape": "S10"
+          },
+          "IamRoleArn": {},
+          "EnableDefaultInternetAccess": {
+            "type": "boolean"
+          },
+          "DomainJoinInfo": {
+            "shape": "S15"
+          },
+          "AppstreamAgentVersion": {},
+          "Tags": {
+            "shape": "S16"
+          },
+          "AccessEndpoints": {
+            "shape": "S1j"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ImageBuilder": {
+            "shape": "S1n"
+          }
+        }
+      }
+    },
+    "CreateImageBuilderStreamingURL": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Validity": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StreamingURL": {},
+          "Expires": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "CreateStack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "Description": {},
+          "DisplayName": {},
+          "StorageConnectors": {
+            "shape": "S1z"
+          },
+          "RedirectURL": {},
+          "FeedbackURL": {},
+          "UserSettings": {
+            "shape": "S27"
+          },
+          "ApplicationSettings": {
+            "shape": "S2b"
+          },
+          "Tags": {
+            "shape": "S16"
+          },
+          "AccessEndpoints": {
+            "shape": "S1j"
+          },
+          "EmbedHostDomains": {
+            "shape": "S2d"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Stack": {
+            "shape": "S2g"
+          }
+        }
+      }
+    },
+    "CreateStreamingURL": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StackName",
+          "FleetName",
+          "UserId"
+        ],
+        "members": {
+          "StackName": {},
+          "FleetName": {},
+          "UserId": {},
+          "ApplicationId": {},
+          "Validity": {
+            "type": "long"
+          },
+          "SessionContext": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StreamingURL": {},
+          "Expires": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "CreateUpdatedImage": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "existingImageName",
+          "newImageName"
+        ],
+        "members": {
+          "existingImageName": {},
+          "newImageName": {},
+          "newImageDescription": {},
+          "newImageDisplayName": {},
+          "newImageTags": {
+            "shape": "S16"
+          },
+          "dryRun": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "image": {
+            "shape": "S2q"
+          },
+          "canUpdateImage": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "CreateUsageReportSubscription": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "S3BucketName": {},
+          "Schedule": {}
+        }
+      }
+    },
+    "CreateUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserName",
+          "AuthenticationType"
+        ],
+        "members": {
+          "UserName": {
+            "shape": "S7"
+          },
+          "MessageAction": {},
+          "FirstName": {
+            "shape": "S34"
+          },
+          "LastName": {
+            "shape": "S34"
+          },
+          "AuthenticationType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteDirectoryConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DirectoryName"
+        ],
+        "members": {
+          "DirectoryName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteImage": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Image": {
+            "shape": "S2q"
+          }
+        }
+      }
+    },
+    "DeleteImageBuilder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ImageBuilder": {
+            "shape": "S1n"
+          }
+        }
+      }
+    },
+    "DeleteImagePermissions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "SharedAccountId"
+        ],
+        "members": {
+          "Name": {},
+          "SharedAccountId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteStack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteUsageReportSubscription": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserName",
+          "AuthenticationType"
+        ],
+        "members": {
+          "UserName": {
+            "shape": "S7"
+          },
+          "AuthenticationType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeDirectoryConfigs": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DirectoryNames": {
+            "type": "list",
+            "member": {}
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DirectoryConfigs": {
+            "type": "list",
+            "member": {
+              "shape": "St"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeFleets": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Fleets": {
+            "type": "list",
+            "member": {
+              "shape": "S1b"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeImageBuilders": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ImageBuilders": {
+            "type": "list",
+            "member": {
+              "shape": "S1n"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeImagePermissions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "SharedAwsAccountIds": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "SharedImagePermissionsList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "sharedAccountId",
+                "imagePermissions"
+              ],
+              "members": {
+                "sharedAccountId": {},
+                "imagePermissions": {
+                  "shape": "S2y"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeImages": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "Arns": {
+            "type": "list",
+            "member": {}
+          },
+          "Type": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Images": {
+            "type": "list",
+            "member": {
+              "shape": "S2q"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeSessions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StackName",
+          "FleetName"
+        ],
+        "members": {
+          "StackName": {},
+          "FleetName": {},
+          "UserId": {},
+          "NextToken": {},
+          "Limit": {
+            "type": "integer"
+          },
+          "AuthenticationType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Sessions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Id",
+                "UserId",
+                "StackName",
+                "FleetName",
+                "State"
+              ],
+              "members": {
+                "Id": {},
+                "UserId": {},
+                "StackName": {},
+                "FleetName": {},
+                "State": {},
+                "ConnectionState": {},
+                "StartTime": {
+                  "type": "timestamp"
+                },
+                "MaxExpirationTime": {
+                  "type": "timestamp"
+                },
+                "AuthenticationType": {},
+                "NetworkAccessConfiguration": {
+                  "shape": "S1s"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeStacks": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Stacks": {
+            "type": "list",
+            "member": {
+              "shape": "S2g"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeUsageReportSubscriptions": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UsageReportSubscriptions": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "S3BucketName": {},
+                "Schedule": {},
+                "LastGeneratedReportDate": {
+                  "type": "timestamp"
+                },
+                "SubscriptionErrors": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "members": {
+                      "ErrorCode": {},
+                      "ErrorMessage": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeUserStackAssociations": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "StackName": {},
+          "UserName": {
+            "shape": "S7"
+          },
+          "AuthenticationType": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "UserStackAssociations": {
+            "shape": "S5"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeUsers": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AuthenticationType"
+        ],
+        "members": {
+          "AuthenticationType": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Users": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "AuthenticationType"
+              ],
+              "members": {
+                "Arn": {},
+                "UserName": {
+                  "shape": "S7"
+                },
+                "Enabled": {
+                  "type": "boolean"
+                },
+                "Status": {},
+                "FirstName": {
+                  "shape": "S34"
+                },
+                "LastName": {
+                  "shape": "S34"
+                },
+                "CreatedTime": {
+                  "type": "timestamp"
+                },
+                "AuthenticationType": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DisableUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserName",
+          "AuthenticationType"
+        ],
+        "members": {
+          "UserName": {
+            "shape": "S7"
+          },
+          "AuthenticationType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DisassociateFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetName",
+          "StackName"
+        ],
+        "members": {
+          "FleetName": {},
+          "StackName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "EnableUser": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "UserName",
+          "AuthenticationType"
+        ],
+        "members": {
+          "UserName": {
+            "shape": "S7"
+          },
+          "AuthenticationType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ExpireSession": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "SessionId"
+        ],
+        "members": {
+          "SessionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "ListAssociatedFleets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "StackName"
+        ],
+        "members": {
+          "StackName": {},
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListAssociatedStacks": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "FleetName"
+        ],
+        "members": {
+          "FleetName": {},
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Names": {
+            "shape": "S3s"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S16"
+          }
+        }
+      }
+    },
+    "StartFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "StartImageBuilder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {},
+          "AppstreamAgentVersion": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ImageBuilder": {
+            "shape": "S1n"
+          }
+        }
+      }
+    },
+    "StopFleet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "StopImageBuilder": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "Name": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ImageBuilder": {
+            "shape": "S1n"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "S16"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateDirectoryConfig": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DirectoryName"
+        ],
+        "members": {
+          "DirectoryName": {},
+          "OrganizationalUnitDistinguishedNames": {
+            "shape": "Sn"
+          },
+          "ServiceAccountCredentials": {
+            "shape": "Sp"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DirectoryConfig": {
+            "shape": "St"
+          }
+        }
+      }
+    },
+    "UpdateFleet": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ImageName": {},
+          "ImageArn": {},
+          "Name": {},
+          "InstanceType": {},
+          "ComputeCapacity": {
+            "shape": "Sy"
+          },
+          "VpcConfig": {
+            "shape": "S10"
+          },
+          "MaxUserDurationInSeconds": {
+            "type": "integer"
+          },
+          "DisconnectTimeoutInSeconds": {
+            "type": "integer"
+          },
+          "DeleteVpcConfig": {
+            "deprecated": true,
+            "type": "boolean"
+          },
+          "Description": {},
+          "DisplayName": {},
+          "EnableDefaultInternetAccess": {
+            "type": "boolean"
+          },
+          "DomainJoinInfo": {
+            "shape": "S15"
+          },
+          "IdleDisconnectTimeoutInSeconds": {
+            "type": "integer"
+          },
+          "AttributesToDelete": {
+            "type": "list",
+            "member": {}
+          },
+          "IamRoleArn": {},
+          "StreamView": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Fleet": {
+            "shape": "S1b"
+          }
+        }
+      }
+    },
+    "UpdateImagePermissions": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "SharedAccountId",
+          "ImagePermissions"
+        ],
+        "members": {
+          "Name": {},
+          "SharedAccountId": {},
+          "ImagePermissions": {
+            "shape": "S2y"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateStack": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name"
+        ],
+        "members": {
+          "DisplayName": {},
+          "Description": {},
+          "Name": {},
+          "StorageConnectors": {
+            "shape": "S1z"
+          },
+          "DeleteStorageConnectors": {
+            "deprecated": true,
+            "type": "boolean"
+          },
+          "RedirectURL": {},
+          "FeedbackURL": {},
+          "AttributesToDelete": {
+            "type": "list",
+            "member": {}
+          },
+          "UserSettings": {
+            "shape": "S27"
+          },
+          "ApplicationSettings": {
+            "shape": "S2b"
+          },
+          "AccessEndpoints": {
+            "shape": "S1j"
+          },
+          "EmbedHostDomains": {
+            "shape": "S2d"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Stack": {
+            "shape": "S2g"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S5": {
+      "type": "list",
+      "member": {
+        "shape": "S6"
+      }
+    },
+    "S6": {
+      "type": "structure",
+      "required": [
+        "StackName",
+        "UserName",
+        "AuthenticationType"
+      ],
+      "members": {
+        "StackName": {},
+        "UserName": {
+          "shape": "S7"
+        },
+        "AuthenticationType": {},
+        "SendEmailNotification": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S7": {
+      "type": "string",
+      "sensitive": true
+    },
+    "Sb": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "UserStackAssociation": {
+            "shape": "S6"
+          },
+          "ErrorCode": {},
+          "ErrorMessage": {}
+        }
+      }
+    },
+    "Sn": {
+      "type": "list",
+      "member": {}
+    },
+    "Sp": {
+      "type": "structure",
+      "required": [
+        "AccountName",
+        "AccountPassword"
+      ],
+      "members": {
+        "AccountName": {
+          "type": "string",
+          "sensitive": true
+        },
+        "AccountPassword": {
+          "type": "string",
+          "sensitive": true
+        }
+      }
+    },
+    "St": {
+      "type": "structure",
+      "required": [
+        "DirectoryName"
+      ],
+      "members": {
+        "DirectoryName": {},
+        "OrganizationalUnitDistinguishedNames": {
+          "shape": "Sn"
+        },
+        "ServiceAccountCredentials": {
+          "shape": "Sp"
+        },
+        "CreatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sy": {
+      "type": "structure",
+      "required": [
+        "DesiredInstances"
+      ],
+      "members": {
+        "DesiredInstances": {
+          "type": "integer"
+        }
+      }
+    },
+    "S10": {
+      "type": "structure",
+      "members": {
+        "SubnetIds": {
+          "type": "list",
+          "member": {}
+        },
+        "SecurityGroupIds": {
+          "type": "list",
+          "member": {}
+        }
+      }
+    },
+    "S15": {
+      "type": "structure",
+      "members": {
+        "DirectoryName": {},
+        "OrganizationalUnitDistinguishedName": {}
+      }
+    },
+    "S16": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "S1b": {
+      "type": "structure",
+      "required": [
+        "Arn",
+        "Name",
+        "InstanceType",
+        "ComputeCapacityStatus",
+        "State"
+      ],
+      "members": {
+        "Arn": {},
+        "Name": {},
+        "DisplayName": {},
+        "Description": {},
+        "ImageName": {},
+        "ImageArn": {},
+        "InstanceType": {},
+        "FleetType": {},
+        "ComputeCapacityStatus": {
+          "type": "structure",
+          "required": [
+            "Desired"
+          ],
+          "members": {
+            "Desired": {
+              "type": "integer"
+            },
+            "Running": {
+              "type": "integer"
+            },
+            "InUse": {
+              "type": "integer"
+            },
+            "Available": {
+              "type": "integer"
+            }
+          }
+        },
+        "MaxUserDurationInSeconds": {
+          "type": "integer"
+        },
+        "DisconnectTimeoutInSeconds": {
+          "type": "integer"
+        },
+        "State": {},
+        "VpcConfig": {
+          "shape": "S10"
+        },
+        "CreatedTime": {
+          "type": "timestamp"
+        },
+        "FleetErrors": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "ErrorCode": {},
+              "ErrorMessage": {}
+            }
+          }
+        },
+        "EnableDefaultInternetAccess": {
+          "type": "boolean"
+        },
+        "DomainJoinInfo": {
+          "shape": "S15"
+        },
+        "IdleDisconnectTimeoutInSeconds": {
+          "type": "integer"
+        },
+        "IamRoleArn": {},
+        "StreamView": {}
+      }
+    },
+    "S1j": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "EndpointType"
+        ],
+        "members": {
+          "EndpointType": {},
+          "VpceId": {}
+        }
+      }
+    },
+    "S1n": {
+      "type": "structure",
+      "required": [
+        "Name"
+      ],
+      "members": {
+        "Name": {},
+        "Arn": {},
+        "ImageArn": {},
+        "Description": {},
+        "DisplayName": {},
+        "VpcConfig": {
+          "shape": "S10"
+        },
+        "InstanceType": {},
+        "Platform": {},
+        "IamRoleArn": {},
+        "State": {},
+        "StateChangeReason": {
+          "type": "structure",
+          "members": {
+            "Code": {},
+            "Message": {}
+          }
+        },
+        "CreatedTime": {
+          "type": "timestamp"
+        },
+        "EnableDefaultInternetAccess": {
+          "type": "boolean"
+        },
+        "DomainJoinInfo": {
+          "shape": "S15"
+        },
+        "NetworkAccessConfiguration": {
+          "shape": "S1s"
+        },
+        "ImageBuilderErrors": {
+          "shape": "S1t"
+        },
+        "AppstreamAgentVersion": {},
+        "AccessEndpoints": {
+          "shape": "S1j"
+        }
+      }
+    },
+    "S1s": {
+      "type": "structure",
+      "members": {
+        "EniPrivateIpAddress": {},
+        "EniId": {}
+      }
+    },
+    "S1t": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "ErrorCode": {},
+          "ErrorMessage": {},
+          "ErrorTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "S1z": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "ConnectorType"
+        ],
+        "members": {
+          "ConnectorType": {},
+          "ResourceIdentifier": {},
+          "Domains": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      }
+    },
+    "S27": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Action",
+          "Permission"
+        ],
+        "members": {
+          "Action": {},
+          "Permission": {}
+        }
+      }
+    },
+    "S2b": {
+      "type": "structure",
+      "required": [
+        "Enabled"
+      ],
+      "members": {
+        "Enabled": {
+          "type": "boolean"
+        },
+        "SettingsGroup": {}
+      }
+    },
+    "S2d": {
+      "type": "list",
+      "member": {}
+    },
+    "S2g": {
+      "type": "structure",
+      "required": [
+        "Name"
+      ],
+      "members": {
+        "Arn": {},
+        "Name": {},
+        "Description": {},
+        "DisplayName": {},
+        "CreatedTime": {
+          "type": "timestamp"
+        },
+        "StorageConnectors": {
+          "shape": "S1z"
+        },
+        "RedirectURL": {},
+        "FeedbackURL": {},
+        "StackErrors": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "ErrorCode": {},
+              "ErrorMessage": {}
+            }
+          }
+        },
+        "UserSettings": {
+          "shape": "S27"
+        },
+        "ApplicationSettings": {
+          "type": "structure",
+          "members": {
+            "Enabled": {
+              "type": "boolean"
+            },
+            "SettingsGroup": {},
+            "S3BucketName": {}
+          }
+        },
+        "AccessEndpoints": {
+          "shape": "S1j"
+        },
+        "EmbedHostDomains": {
+          "shape": "S2d"
+        }
+      }
+    },
+    "S2q": {
+      "type": "structure",
+      "required": [
+        "Name"
+      ],
+      "members": {
+        "Name": {},
+        "Arn": {},
+        "BaseImageArn": {},
+        "DisplayName": {},
+        "State": {},
+        "Visibility": {},
+        "ImageBuilderSupported": {
+          "type": "boolean"
+        },
+        "ImageBuilderName": {},
+        "Platform": {},
+        "Description": {},
+        "StateChangeReason": {
+          "type": "structure",
+          "members": {
+            "Code": {},
+            "Message": {}
+          }
+        },
+        "Applications": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "members": {
+              "Name": {},
+              "DisplayName": {},
+              "IconURL": {},
+              "LaunchPath": {},
+              "LaunchParameters": {},
+              "Enabled": {
+                "type": "boolean"
+              },
+              "Metadata": {
+                "type": "map",
+                "key": {},
+                "value": {}
+              }
+            }
+          }
+        },
+        "CreatedTime": {
+          "type": "timestamp"
+        },
+        "PublicBaseImageReleasedDate": {
+          "type": "timestamp"
+        },
+        "AppstreamAgentVersion": {},
+        "ImagePermissions": {
+          "shape": "S2y"
+        },
+        "ImageErrors": {
+          "shape": "S1t"
+        }
+      }
+    },
+    "S2y": {
+      "type": "structure",
+      "members": {
+        "allowFleet": {
+          "type": "boolean"
+        },
+        "allowImageBuilder": {
+          "type": "boolean"
+        }
+      }
+    },
+    "S34": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S3s": {
+      "type": "list",
+      "member": {}
+    }
+  }
+}
