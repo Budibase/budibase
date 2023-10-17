@@ -2,7 +2,7 @@ import { Datasource } from "../../../documents"
 
 export interface CreateDatasourceResponse {
   datasource: Datasource
-  error?: any
+  errors: Record<string, string>
 }
 
 export interface UpdateDatasourceResponse {

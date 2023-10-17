@@ -138,6 +138,8 @@ To develop the Budibase platform you'll need [Docker](https://www.docker.com/) a
 
 `yarn setup` will check that all necessary components are installed and setup the repo for usage.
 
+If you have access to the `@budibase/pro` submodule then please follow the Pro section of this guide before running the above command.
+
 ##### Manual method
 
 The following commands can be executed to manually get Budibase up and running (assuming Docker/Docker Compose has been installed).
@@ -145,6 +147,8 @@ The following commands can be executed to manually get Budibase up and running (
 `yarn` to install project dependencies
 
 `yarn build` will build all budibase packages.
+
+If you have access to the `@budibase/pro` submodule then please follow the Pro section of this guide before running the above commands.
 
 #### 4. Running
 

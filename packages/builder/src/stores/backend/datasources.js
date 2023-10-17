@@ -9,15 +9,19 @@ import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
 import { TableNames } from "constants"
 
-export class ImportTableError extends Error {
-  constructor(message) {
-    super(message)
-    const [title, description] = message.split(" - ")
+class TableImportError extends Error {
+  constructor(errors) {
+    super()
+    this.name = "TableImportError"
+    this.errors = errors
+  }
 
-    this.name = "TableSelectionError"
-    // Capitalize the first character of both the title and description
-    this.title = title[0].toUpperCase() + title.substr(1)
-    this.description = description[0].toUpperCase() + description.substr(1)
+  get description() {
+    let message = ""
+    for (const key in this.errors) {
+      message += `${key}: ${this.errors[key]}\n`
+    }
+    return message
   }
 }
 
@@ -25,7 +29,6 @@ export function createDatasourcesStore() {
   const store = writable({
     list: [],
     selectedDatasourceId: null,
-    schemaError: null,
   })
 
   const derivedStore = derived([store, tables], ([$store, $tables]) => {
@@ -75,18 +78,13 @@ export function createDatasourcesStore() {
     store.update(state => ({
       ...state,
       selectedDatasourceId: id,
-      // Remove any possible schema error
-      schemaError: null,
     }))
   }
 
   const updateDatasource = response => {
-    const { datasource, error } = response
-    if (error) {
-      store.update(state => ({
-        ...state,
-        schemaError: error,
-      }))
+    const { datasource, errors } = response
+    if (errors && Object.keys(errors).length > 0) {
+      throw new TableImportError(errors)
     }
     replaceDatasource(datasource._id, datasource)
     select(datasource._id)
@@ -94,20 +92,11 @@ export function createDatasourcesStore() {
   }
 
   const updateSchema = async (datasource, tablesFilter) => {
-    try {
-      const response = await API.buildDatasourceSchema({
-        datasourceId: datasource?._id,
-        tablesFilter,
-      })
-      updateDatasource(response)
-    } catch (e) {
-      // buildDatasourceSchema call returns user presentable errors with two parts divided with a " - ".
-      if (e.message.split(" - ").length === 2) {
-        throw new ImportTableError(e.message)
-      } else {
-        throw e
-      }
-    }
+    const response = await API.buildDatasourceSchema({
+      datasourceId: datasource?._id,
+      tablesFilter,
+    })
+    updateDatasource(response)
   }
 
   const sourceCount = source => {
@@ -172,12 +161,6 @@ export function createDatasourcesStore() {
     replaceDatasource(datasource._id, null)
   }
 
-  const removeSchemaError = () => {
-    store.update(state => {
-      return { ...state, schemaError: null }
-    })
-  }
-
   const replaceDatasource = (datasourceId, datasource) => {
     if (!datasourceId) {
       return
@@ -230,7 +213,6 @@ export function createDatasourcesStore() {
     create,
     update,
     delete: deleteDatasource,
-    removeSchemaError,
     replaceDatasource,
     getTableNames,
   }
