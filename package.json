@@ -88,7 +88,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "apps/account-portal/packages/*"
+      "packages/account-portal/packages/*"
     ]
   },
   "resolutions": {
