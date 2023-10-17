@@ -1,0 +1,24 @@
+:root {
+  --spectrum-quickactions-shadow-color: var(--spectrum-alias-dropshadow-color);
+  --spectrum-quickactions-overlay-color: var(--spectrum-alias-background-color-quickactions-overlay);
+  --spectrum-quickactions-background-color: var(--spectrum-alias-background-color-quickactions);
+  --spectrum-quickactions-button-gap-y: var(--spectrum-global-dimension-size-100);
+  --spectrum-quickactions-button-gap-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-quickactions-shadow-blur: var(--spectrum-alias-dropshadow-blur);
+  --spectrum-quickactions-shadow-offset-y: var(--spectrum-alias-dropshadow-offset-y);
+  --spectrum-quickactions-elevation: 2dp;
+  --spectrum-quickactions-padding-x: var(--spectrum-global-dimension-size-50);
+  --spectrum-quickactions-padding-y: var(--spectrum-global-dimension-size-50);
+  --spectrum-quickactions-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-quickactions-height: var(--spectrum-global-dimension-size-500);
+  --spectrum-quickactions-text-button-gap-y: var(--spectrum-global-dimension-size-50);
+  --spectrum-quickactions-text-button-gap-x: var(--spectrum-global-dimension-size-50);
+  --spectrum-quickactions-entry-animation-delay: 0ms;
+  --spectrum-quickactions-entry-animation-duration: var(--spectrum-global-animation-duration-100);
+  --spectrum-quickactions-entry-animation-ease: var(--spectrum-global-animation-ease-out);
+  --spectrum-quickactions-entry-animation-properties: opacity;
+  --spectrum-quickactions-exit-animation-delay: 0ms;
+  --spectrum-quickactions-exit-animation-duration: var(--spectrum-global-animation-duration-100);
+  --spectrum-quickactions-exit-animation-ease: var(--spectrum-global-animation-ease-out);
+  --spectrum-quickactions-exit-animation-properties: opacity;
+}

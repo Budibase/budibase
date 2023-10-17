@@ -1,0 +1,127 @@
+{
+    "version": "2.0",
+    "metadata": {
+        "apiVersion": "2018-03-30",
+        "endpointPrefix": "foo",
+        "protocol": "rest-json",
+        "serviceId": "Foo",
+        "uid": "foo-2018-03-30"
+    },
+    "operations": {
+        "BarOperation": {
+            "name": "BarOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "input": {
+                "shape": "BarOperationInput"
+            },
+            "output": {
+                "shape": "BarOperationOutput"
+            }
+        },
+        "EventStreamOnInputOperation": {
+            "name": "EventStreamOnInputOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "input": {
+                "shape": "EventStreamStructure"
+            }
+        },
+        "EventStreamOnInputPayloadOperation": {
+            "name": "EventStreamOnInputPayloadOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "input": {
+                "shape": "EventStreamPayload"
+            }
+        },
+        "EventStreamOnOutputOperation": {
+            "name": "EventStreamOnOutputOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "output": {
+                "shape": "EventStreamStructure"
+            }
+        },
+        "EventStreamOnOutputPayloadOperation": {
+            "name": "EventStreamOnOutputPayloadOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "output": {
+                "shape": "EventStreamPayload"
+            }
+        },
+        "BazOperation": {
+            "name": "BazOperation",
+            "http": {
+                "method": "GET",
+                "requireUri": "/"
+            },
+            "input": {
+                "shape": "BazOperationInput"
+            }
+        }
+    },
+    "shapes": {
+        "BarOperationInput": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            }
+        },
+        "BarOperationOutput": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            }
+        },
+        "BazOperationInput": {
+            "type": "structure",
+            "members": {
+                "BazString": {
+                    "shape": "BazStringShape",
+                    "timestampFormat": "iso8601"
+                }
+            }
+        },
+        "EventStreamPayload": {
+            "type": "structure",
+            "members": {
+                "Payload": {
+                    "shape": "EventStreamStructure"
+                },
+                "payload": "Payload"
+            }
+        },
+        "EventStreamStructure": {
+            "type": "structure",
+            "members": {
+                "String": {
+                    "shape": "StringShape"
+                }
+            },
+            "eventstream": true
+        },
+        "BazStringShape": {
+            "type": "timestamp",
+            "timestampFormat": "rfc822"
+        },
+        "StringShape": {
+            "type": "string"
+        }
+    }
+}
