@@ -1,6 +1,6 @@
 <script>
-  import { automationStore } from "builderStore"
-  import { Icon, Body, Detail, StatusLight } from "@budibase/bbui"
+  import { automationStore, selectedAutomation } from "builderStore"
+  import { Icon, Body, StatusLight, AbsTooltip } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
 
@@ -10,6 +10,13 @@
   export let testResult
   export let isTrigger
   export let idx
+
+  $: console.log($selectedAutomation)
+  let validRegex = /^[A-Za-z0-9_\s]+$/
+  let typing = false
+  let automationName = block?.name || ""
+
+  $: automationNameError = getAutomationNameError(automationName)
 
   const dispatch = createEventDispatcher()
 
@@ -21,6 +28,7 @@
     }
   }
   $: isTrigger = isTrigger || block.type === "TRIGGER"
+
   $: status = updateStatus(testResult, isTrigger)
 
   async function onSelect(block) {
@@ -43,10 +51,26 @@
       return { negative: true, message: "Error" }
     }
   }
+
+  const getAutomationNameError = name => {
+    let invalidRoleName = !validRegex.test(name)
+    if (invalidRoleName) {
+      return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+    }
+    return null
+  }
+
+  const startTyping = async () => {
+    typing = true
+  }
 </script>
 
-<div class="blockSection">
-  <div on:click={() => dispatch("toggle")} class="splitHeader">
+<div
+  class:typing={typing && !automationNameError}
+  class:typing-error={automationNameError}
+  class="blockSection"
+>
+  <div class="splitHeader">
     <div class="center-items">
       {#if externalActions[block.stepId]}
         <img
@@ -69,12 +93,29 @@
       <div class="iconAlign">
         {#if isTrigger}
           <Body size="XS"><b>Trigger</b></Body>
-          <Body size="XS">When this happens:</Body>
         {:else}
           <Body size="XS"><b>Step {idx}</b></Body>
-          <Body size="XS">Do this:</Body>
         {/if}
-        <Detail size="S">{block?.name?.toUpperCase() || ""}</Detail>
+        <input
+          placeholder="Enter some text"
+          name="name"
+          on:input={e => {
+            automationNameError = getAutomationNameError(e.target.value)
+            automationName = e.target.value
+            if (!automationNameError) {
+              automationNameError = false // Reset the error when input is valid
+            }
+          }}
+          value={automationName}
+          on:click={startTyping}
+          on:blur={() => {
+            typing = false
+            if (automationNameError) {
+              automationName = block?.name
+              automationNameError = null
+            }
+          }}
+        />
       </div>
     </div>
     <div class="blockTitle">
@@ -89,18 +130,46 @@
         </div>
       {/if}
       <div
-        style="margin-left: 10px; margin-bottom: var(--spacing-xs);"
+        class="context-actions"
+        class:hide-context-actions={typing}
         on:click={() => {
           onSelect(block)
         }}
       >
-        <Icon hoverable name={open ? "ChevronUp" : "ChevronDown"} />
+        {#if !showTestStatus}
+          <AbsTooltip type="info" text="Add looping">
+            <Icon hoverable name="RotateCW" />
+          </AbsTooltip>
+          <AbsTooltip type="negative" text="Delete step">
+            <Icon hoverable name="DeleteOutline" />
+          </AbsTooltip>
+        {/if}
+        <Icon
+          on:click={() => dispatch("toggle")}
+          hoverable
+          name={open ? "ChevronUp" : "ChevronDown"}
+        />
       </div>
+      {#if automationNameError}
+        <div class="error-container">
+          <AbsTooltip type="negative" text={automationNameError}>
+            <div class="error-icon">
+              <Icon size="S" name="Alert" />
+            </div>
+          </AbsTooltip>
+        </div>
+      {/if}
     </div>
   </div>
 </div>
 
 <style>
+  .context-actions {
+    display: flex;
+    gap: var(--spacing-l);
+    margin-left: 10px;
+    margin-bottom: var(--spacing-xs);
+  }
   .center-items {
     display: flex;
     align-items: center;
@@ -122,5 +191,48 @@
   .blockTitle {
     display: flex;
     align-items: center;
+  }
+
+  .hide-context-actions {
+    display: none;
+  }
+  input {
+    font-family: var(--font-sans);
+    color: var(--ink);
+    background-color: transparent;
+    border: none;
+    font-size: var(--spectrum-alias-font-size-default);
+    width: 260px;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  input:focus {
+    outline: none;
+  }
+
+  /* Hide arrows for number fields */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .typing {
+    border: 0.5px solid var(--spectrum-global-color-static-blue-500);
+  }
+
+  .typing-error {
+    border: 0.5px solid var(--spectrum-global-color-static-red-500);
+  }
+
+  .error-icon :global(.spectrum-Icon) {
+    fill: var(--spectrum-global-color-red-400);
+  }
+
+  .error-container {
+    padding-top: var(--spacing-xl);
   }
 </style>
