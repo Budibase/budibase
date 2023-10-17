@@ -197,7 +197,7 @@
   }
 
   const validateQuery = async () => {
-    const forbiddenBindings = /{{\s?user\s?}}/g
+    const forbiddenBindings = /{{\s?user(\.(\w|\$)*\s?|\s?)}}/g
     const bindingError = new Error(
       "'user' is a protected binding and cannot be used"
     )
