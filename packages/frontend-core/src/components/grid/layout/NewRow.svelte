@@ -31,6 +31,7 @@
     refreshing,
     config,
     filter,
+    columnRenderMap,
   } = getContext("grid")
 
   let visible = false
@@ -224,6 +225,7 @@
               topRow={offset === 0}
               invertX={columnIdx >= $columnHorizontalInversionIndex}
               {invertY}
+              hidden={!$columnRenderMap[column.name]}
             >
               {#if column?.schema?.autocolumn}
                 <div class="readonly-overlay">Can't edit auto column</div>

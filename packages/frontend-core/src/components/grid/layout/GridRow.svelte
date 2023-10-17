@@ -19,6 +19,7 @@
     isDragging,
     dispatch,
     rows,
+    columnRenderMap,
   } = getContext("grid")
 
   $: rowSelected = !!$selectedRows[row._id]
@@ -51,6 +52,7 @@
       selectedUser={$selectedCellMap[cellId]}
       width={column.width}
       contentLines={$contentLines}
+      hidden={!$columnRenderMap[column.name]}
     />
   {/each}
 </div>
