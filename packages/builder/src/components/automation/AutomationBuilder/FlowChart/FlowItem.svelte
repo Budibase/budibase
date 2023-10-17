@@ -104,13 +104,19 @@
   }
 </script>
 
-<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
+<div
+  class={`block ${block.type} hoverable`}
+  class:selected
+  on:keydown={() => {}}
+  on:click={() => {}}
+>
   {#if loopBlock}
     <div class="blockSection">
       <div
         on:click={() => {
           showLooping = !showLooping
         }}
+        on:keydown={() => {}}
         class="splitHeader"
       >
         <div class="center-items">
@@ -129,7 +135,11 @@
         </div>
 
         <div class="blockTitle">
-          <div style="margin-left: 10px;" on:click={() => {}}>
+          <div
+            style="margin-left: 10px;"
+            on:keydown={() => {}}
+            on:click={() => {}}
+          >
             <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
           </div>
         </div>
