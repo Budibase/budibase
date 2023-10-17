@@ -31,7 +31,10 @@
     prevSearch = search
     try {
       pageInfo.loading()
-      await users.search({ page, email: search })
+      await users.search({
+        bookmark: page,
+        query: { string: { email: search } },
+      })
       pageInfo.fetched($users.hasNextPage, $users.nextPage)
     } catch (error) {
       notifications.error("Error getting user list")
