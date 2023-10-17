@@ -1,0 +1,962 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2020-03-01",
+    "endpointPrefix": "honeycode",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceAbbreviation": "Honeycode",
+    "serviceFullName": "Amazon Honeycode",
+    "serviceId": "Honeycode",
+    "signatureVersion": "v4",
+    "signingName": "honeycode",
+    "uid": "honeycode-2020-03-01"
+  },
+  "operations": {
+    "BatchCreateTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/batchcreate"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "rowsToCreate"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "rowsToCreate": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "batchItemId",
+                "cellsToCreate"
+              ],
+              "members": {
+                "batchItemId": {},
+                "cellsToCreate": {
+                  "shape": "S6"
+                }
+              }
+            }
+          },
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workbookCursor",
+          "createdRows"
+        ],
+        "members": {
+          "workbookCursor": {
+            "type": "long"
+          },
+          "createdRows": {
+            "type": "map",
+            "key": {},
+            "value": {}
+          },
+          "failedBatchItems": {
+            "shape": "Sf"
+          }
+        }
+      }
+    },
+    "BatchDeleteTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/batchdelete"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "rowIds"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "rowIds": {
+            "shape": "Sj"
+          },
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workbookCursor"
+        ],
+        "members": {
+          "workbookCursor": {
+            "type": "long"
+          },
+          "failedBatchItems": {
+            "shape": "Sf"
+          }
+        }
+      }
+    },
+    "BatchUpdateTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/batchupdate"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "rowsToUpdate"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "rowsToUpdate": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "rowId",
+                "cellsToUpdate"
+              ],
+              "members": {
+                "rowId": {},
+                "cellsToUpdate": {
+                  "shape": "S6"
+                }
+              }
+            }
+          },
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workbookCursor"
+        ],
+        "members": {
+          "workbookCursor": {
+            "type": "long"
+          },
+          "failedBatchItems": {
+            "shape": "Sf"
+          }
+        }
+      }
+    },
+    "BatchUpsertTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/batchupsert"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "rowsToUpsert"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "rowsToUpsert": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "batchItemId",
+                "filter",
+                "cellsToUpdate"
+              ],
+              "members": {
+                "batchItemId": {},
+                "filter": {
+                  "shape": "Ss"
+                },
+                "cellsToUpdate": {
+                  "shape": "S6"
+                }
+              }
+            }
+          },
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "rows",
+          "workbookCursor"
+        ],
+        "members": {
+          "rows": {
+            "type": "map",
+            "key": {},
+            "value": {
+              "type": "structure",
+              "required": [
+                "rowIds",
+                "upsertAction"
+              ],
+              "members": {
+                "rowIds": {
+                  "shape": "Sj"
+                },
+                "upsertAction": {}
+              }
+            }
+          },
+          "workbookCursor": {
+            "type": "long"
+          },
+          "failedBatchItems": {
+            "shape": "Sf"
+          }
+        }
+      }
+    },
+    "DescribeTableDataImportJob": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/import/{jobId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "jobId"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "jobId": {
+            "location": "uri",
+            "locationName": "jobId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "jobStatus",
+          "message",
+          "jobMetadata"
+        ],
+        "members": {
+          "jobStatus": {},
+          "message": {},
+          "jobMetadata": {
+            "type": "structure",
+            "required": [
+              "submitter",
+              "submitTime",
+              "importOptions",
+              "dataSource"
+            ],
+            "members": {
+              "submitter": {
+                "type": "structure",
+                "members": {
+                  "email": {
+                    "type": "string",
+                    "sensitive": true
+                  },
+                  "userArn": {}
+                }
+              },
+              "submitTime": {
+                "type": "timestamp"
+              },
+              "importOptions": {
+                "shape": "S18"
+              },
+              "dataSource": {
+                "shape": "S1i"
+              }
+            }
+          },
+          "errorCode": {}
+        }
+      }
+    },
+    "GetScreenData": {
+      "http": {
+        "requestUri": "/screendata"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "appId",
+          "screenId"
+        ],
+        "members": {
+          "workbookId": {},
+          "appId": {},
+          "screenId": {},
+          "variables": {
+            "shape": "S1n"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "results",
+          "workbookCursor"
+        ],
+        "members": {
+          "results": {
+            "type": "map",
+            "key": {
+              "shape": "S1v"
+            },
+            "value": {
+              "type": "structure",
+              "required": [
+                "headers",
+                "rows"
+              ],
+              "members": {
+                "headers": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "required": [
+                      "name",
+                      "format"
+                    ],
+                    "members": {
+                      "name": {
+                        "shape": "S1v"
+                      },
+                      "format": {}
+                    }
+                  }
+                },
+                "rows": {
+                  "type": "list",
+                  "member": {
+                    "type": "structure",
+                    "required": [
+                      "dataItems"
+                    ],
+                    "members": {
+                      "rowId": {},
+                      "dataItems": {
+                        "type": "list",
+                        "member": {
+                          "type": "structure",
+                          "members": {
+                            "overrideFormat": {},
+                            "rawValue": {},
+                            "formattedValue": {}
+                          },
+                          "sensitive": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "workbookCursor": {
+            "type": "long"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "InvokeScreenAutomation": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/apps/{appId}/screens/{screenId}/automations/{automationId}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "appId",
+          "screenId",
+          "screenAutomationId"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "appId": {
+            "location": "uri",
+            "locationName": "appId"
+          },
+          "screenId": {
+            "location": "uri",
+            "locationName": "screenId"
+          },
+          "screenAutomationId": {
+            "location": "uri",
+            "locationName": "automationId"
+          },
+          "variables": {
+            "shape": "S1n"
+          },
+          "rowId": {},
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workbookCursor"
+        ],
+        "members": {
+          "workbookCursor": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "ListTableColumns": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/columns"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "tableColumns"
+        ],
+        "members": {
+          "tableColumns": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "tableColumnId": {},
+                "tableColumnName": {},
+                "format": {}
+              }
+            }
+          },
+          "nextToken": {},
+          "workbookCursor": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "ListTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/list"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "rowIds": {
+            "shape": "Sj"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "columnIds",
+          "rows",
+          "workbookCursor"
+        ],
+        "members": {
+          "columnIds": {
+            "shape": "S2e"
+          },
+          "rows": {
+            "shape": "S2f"
+          },
+          "rowIdsNotFound": {
+            "shape": "Sj"
+          },
+          "nextToken": {},
+          "workbookCursor": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "ListTables": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workbooks/{workbookId}/tables"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "tables"
+        ],
+        "members": {
+          "tables": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "tableId": {},
+                "tableName": {}
+              }
+            }
+          },
+          "nextToken": {},
+          "workbookCursor": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "tags": {
+            "shape": "S2s"
+          }
+        }
+      }
+    },
+    "QueryTableRows": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/rows/query"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "tableId",
+          "filterFormula"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "tableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "filterFormula": {
+            "shape": "Ss"
+          },
+          "maxResults": {
+            "type": "integer"
+          },
+          "nextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "columnIds",
+          "rows",
+          "workbookCursor"
+        ],
+        "members": {
+          "columnIds": {
+            "shape": "S2e"
+          },
+          "rows": {
+            "shape": "S2f"
+          },
+          "nextToken": {},
+          "workbookCursor": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "StartTableDataImportJob": {
+      "http": {
+        "requestUri": "/workbooks/{workbookId}/tables/{tableId}/import"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workbookId",
+          "dataSource",
+          "dataFormat",
+          "destinationTableId",
+          "importOptions",
+          "clientRequestToken"
+        ],
+        "members": {
+          "workbookId": {
+            "location": "uri",
+            "locationName": "workbookId"
+          },
+          "dataSource": {
+            "shape": "S1i"
+          },
+          "dataFormat": {},
+          "destinationTableId": {
+            "location": "uri",
+            "locationName": "tableId"
+          },
+          "importOptions": {
+            "shape": "S18"
+          },
+          "clientRequestToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "jobId",
+          "jobStatus"
+        ],
+        "members": {
+          "jobId": {},
+          "jobStatus": {}
+        }
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tags"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tags": {
+            "shape": "S2s"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{resourceArn}"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tagKeys"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S6": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "structure",
+        "members": {
+          "fact": {
+            "shape": "S8"
+          },
+          "facts": {
+            "type": "list",
+            "member": {
+              "shape": "S8"
+            }
+          }
+        }
+      }
+    },
+    "S8": {
+      "type": "string",
+      "sensitive": true
+    },
+    "Sf": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "id",
+          "errorMessage"
+        ],
+        "members": {
+          "id": {},
+          "errorMessage": {}
+        }
+      }
+    },
+    "Sj": {
+      "type": "list",
+      "member": {}
+    },
+    "Ss": {
+      "type": "structure",
+      "required": [
+        "formula"
+      ],
+      "members": {
+        "formula": {
+          "shape": "St"
+        },
+        "contextRowId": {}
+      }
+    },
+    "St": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S18": {
+      "type": "structure",
+      "members": {
+        "destinationOptions": {
+          "type": "structure",
+          "members": {
+            "columnMap": {
+              "type": "map",
+              "key": {},
+              "value": {
+                "type": "structure",
+                "members": {
+                  "columnIndex": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delimitedTextOptions": {
+          "type": "structure",
+          "required": [
+            "delimiter"
+          ],
+          "members": {
+            "delimiter": {},
+            "hasHeaderRow": {
+              "type": "boolean"
+            },
+            "ignoreEmptyRows": {
+              "type": "boolean"
+            },
+            "dataCharacterEncoding": {}
+          }
+        }
+      }
+    },
+    "S1i": {
+      "type": "structure",
+      "required": [
+        "dataSourceConfig"
+      ],
+      "members": {
+        "dataSourceConfig": {
+          "type": "structure",
+          "members": {
+            "dataSourceUrl": {
+              "type": "string",
+              "sensitive": true
+            }
+          }
+        }
+      }
+    },
+    "S1n": {
+      "type": "map",
+      "key": {
+        "type": "string",
+        "sensitive": true
+      },
+      "value": {
+        "type": "structure",
+        "required": [
+          "rawValue"
+        ],
+        "members": {
+          "rawValue": {}
+        },
+        "sensitive": true
+      },
+      "sensitive": true
+    },
+    "S1v": {
+      "type": "string",
+      "sensitive": true
+    },
+    "S2e": {
+      "type": "list",
+      "member": {}
+    },
+    "S2f": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "rowId",
+          "cells"
+        ],
+        "members": {
+          "rowId": {},
+          "cells": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "formula": {
+                  "shape": "St"
+                },
+                "format": {},
+                "rawValue": {},
+                "formattedValue": {},
+                "formattedValues": {
+                  "type": "list",
+                  "member": {}
+                }
+              },
+              "sensitive": true
+            }
+          }
+        }
+      }
+    },
+    "S2s": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    }
+  }
+}

@@ -1,0 +1,330 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2019-12-01",
+    "endpointPrefix": "codestar-connections",
+    "jsonVersion": "1.0",
+    "protocol": "json",
+    "serviceFullName": "AWS CodeStar connections",
+    "serviceId": "CodeStar connections",
+    "signatureVersion": "v4",
+    "signingName": "codestar-connections",
+    "targetPrefix": "com.amazonaws.codestar.connections.CodeStar_connections_20191201",
+    "uid": "codestar-connections-2019-12-01"
+  },
+  "operations": {
+    "CreateConnection": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConnectionName"
+        ],
+        "members": {
+          "ProviderType": {},
+          "ConnectionName": {},
+          "Tags": {
+            "shape": "S4"
+          },
+          "HostArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ConnectionArn"
+        ],
+        "members": {
+          "ConnectionArn": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "CreateHost": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "Name",
+          "ProviderType",
+          "ProviderEndpoint"
+        ],
+        "members": {
+          "Name": {},
+          "ProviderType": {},
+          "ProviderEndpoint": {},
+          "VpcConfiguration": {
+            "shape": "Se"
+          },
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "HostArn": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "DeleteConnection": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConnectionArn"
+        ],
+        "members": {
+          "ConnectionArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteHost": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "HostArn"
+        ],
+        "members": {
+          "HostArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "GetConnection": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConnectionArn"
+        ],
+        "members": {
+          "ConnectionArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Connection": {
+            "shape": "Ss"
+          }
+        }
+      }
+    },
+    "GetHost": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "HostArn"
+        ],
+        "members": {
+          "HostArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Name": {},
+          "Status": {},
+          "ProviderType": {},
+          "ProviderEndpoint": {},
+          "VpcConfiguration": {
+            "shape": "Se"
+          }
+        }
+      }
+    },
+    "ListConnections": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ProviderTypeFilter": {},
+          "HostArnFilter": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Connections": {
+            "type": "list",
+            "member": {
+              "shape": "Ss"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListHosts": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Hosts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Name": {},
+                "HostArn": {},
+                "ProviderType": {},
+                "ProviderEndpoint": {},
+                "VpcConfiguration": {
+                  "shape": "Se"
+                },
+                "Status": {},
+                "StatusMessage": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateHost": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "HostArn"
+        ],
+        "members": {
+          "HostArn": {},
+          "ProviderEndpoint": {},
+          "VpcConfiguration": {
+            "shape": "Se"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "Se": {
+      "type": "structure",
+      "required": [
+        "VpcId",
+        "SubnetIds",
+        "SecurityGroupIds"
+      ],
+      "members": {
+        "VpcId": {},
+        "SubnetIds": {
+          "type": "list",
+          "member": {}
+        },
+        "SecurityGroupIds": {
+          "type": "list",
+          "member": {}
+        },
+        "TlsCertificate": {}
+      }
+    },
+    "Ss": {
+      "type": "structure",
+      "members": {
+        "ConnectionName": {},
+        "ConnectionArn": {},
+        "ProviderType": {},
+        "OwnerAccountId": {},
+        "ConnectionStatus": {},
+        "HostArn": {}
+      }
+    }
+  }
+}

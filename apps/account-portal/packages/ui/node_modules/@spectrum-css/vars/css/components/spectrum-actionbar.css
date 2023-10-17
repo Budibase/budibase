@@ -1,0 +1,19 @@
+:root {
+  --spectrum-actionbar-shadow-color: var(--spectrum-alias-dropshadow-color);
+  --spectrum-actionbar-background-color: var(--spectrum-global-color-gray-50);
+  --spectrum-actionbar-border-color: var(--spectrum-alias-border-color-dark);
+  --spectrum-actionbar-shadow-blur: var(--spectrum-alias-dropshadow-blur);
+  --spectrum-actionbar-shadow-offset-y: var(--spectrum-alias-dropshadow-offset-y);
+  --spectrum-actionbar-elevation: 2dp;
+  --spectrum-actionbar-border-size: var(--spectrum-alias-border-size-thin);
+  --spectrum-actionbar-border-radius: var(--spectrum-alias-border-radius-regular);
+  --spectrum-actionbar-height: var(--spectrum-global-dimension-size-600);
+  --spectrum-actionbar-padding-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-actionbar-padding-y: var(--spectrum-global-dimension-size-100);
+  --spectrum-actionbar-min-width: var(--spectrum-global-dimension-static-size-3500);
+  --spectrum-actionbar-max-width: var(--spectrum-global-dimension-static-size-3500);
+  --spectrum-actionbar-width: var(--spectrum-global-dimension-static-percent-100);
+  --spectrum-actionbar-checkbox-gap: var(--spectrum-global-dimension-size-500);
+  --spectrum-actionbar-offset-x: var(--spectrum-global-dimension-size-100);
+  --spectrum-actionbar-offset-y: var(--spectrum-global-dimension-size-100);
+}

@@ -1,0 +1,473 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2018-11-01",
+    "endpointPrefix": "ingest.timestream",
+    "jsonVersion": "1.0",
+    "protocol": "json",
+    "serviceAbbreviation": "Timestream Write",
+    "serviceFullName": "Amazon Timestream Write",
+    "serviceId": "Timestream Write",
+    "signatureVersion": "v4",
+    "signingName": "timestream",
+    "targetPrefix": "Timestream_20181101",
+    "uid": "timestream-write-2018-11-01"
+  },
+  "operations": {
+    "CreateDatabase": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "KmsKeyId": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Database": {
+            "shape": "S9"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "CreateTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "TableName"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "TableName": {},
+          "RetentionProperties": {
+            "shape": "Se"
+          },
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Table": {
+            "shape": "Si"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "DeleteDatabase": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName"
+        ],
+        "members": {
+          "DatabaseName": {}
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "DeleteTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "TableName"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "TableName": {}
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "DescribeDatabase": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName"
+        ],
+        "members": {
+          "DatabaseName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Database": {
+            "shape": "S9"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "DescribeEndpoints": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Endpoints"
+        ],
+        "members": {
+          "Endpoints": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Address",
+                "CachePeriodInMinutes"
+              ],
+              "members": {
+                "Address": {},
+                "CachePeriodInMinutes": {
+                  "type": "long"
+                }
+              }
+            }
+          }
+        }
+      },
+      "endpointoperation": true
+    },
+    "DescribeTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "TableName"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "TableName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Table": {
+            "shape": "Si"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "ListDatabases": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Databases": {
+            "type": "list",
+            "member": {
+              "shape": "S9"
+            }
+          },
+          "NextToken": {}
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "ListTables": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "DatabaseName": {},
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tables": {
+            "type": "list",
+            "member": {
+              "shape": "Si"
+            }
+          },
+          "NextToken": {}
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN"
+        ],
+        "members": {
+          "ResourceARN": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "Tags"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "Tags": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "UpdateDatabase": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "KmsKeyId"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "KmsKeyId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Database": {
+            "shape": "S9"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "UpdateTable": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "TableName",
+          "RetentionProperties"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "TableName": {},
+          "RetentionProperties": {
+            "shape": "Se"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Table": {
+            "shape": "Si"
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    },
+    "WriteRecords": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DatabaseName",
+          "TableName",
+          "Records"
+        ],
+        "members": {
+          "DatabaseName": {},
+          "TableName": {},
+          "CommonAttributes": {
+            "shape": "S1e"
+          },
+          "Records": {
+            "type": "list",
+            "member": {
+              "shape": "S1e"
+            }
+          }
+        }
+      },
+      "endpointdiscovery": {
+        "required": true
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "Key",
+          "Value"
+        ],
+        "members": {
+          "Key": {},
+          "Value": {}
+        }
+      }
+    },
+    "S9": {
+      "type": "structure",
+      "members": {
+        "Arn": {},
+        "DatabaseName": {},
+        "TableCount": {
+          "type": "long"
+        },
+        "KmsKeyId": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Se": {
+      "type": "structure",
+      "required": [
+        "MemoryStoreRetentionPeriodInHours",
+        "MagneticStoreRetentionPeriodInDays"
+      ],
+      "members": {
+        "MemoryStoreRetentionPeriodInHours": {
+          "type": "long"
+        },
+        "MagneticStoreRetentionPeriodInDays": {
+          "type": "long"
+        }
+      }
+    },
+    "Si": {
+      "type": "structure",
+      "members": {
+        "Arn": {},
+        "TableName": {},
+        "DatabaseName": {},
+        "TableStatus": {},
+        "RetentionProperties": {
+          "shape": "Se"
+        },
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S1e": {
+      "type": "structure",
+      "members": {
+        "Dimensions": {
+          "type": "list",
+          "member": {
+            "type": "structure",
+            "required": [
+              "Name",
+              "Value"
+            ],
+            "members": {
+              "Name": {},
+              "Value": {},
+              "DimensionValueType": {}
+            }
+          }
+        },
+        "MeasureName": {},
+        "MeasureValue": {},
+        "MeasureValueType": {},
+        "Time": {},
+        "TimeUnit": {},
+        "Version": {
+          "type": "long"
+        }
+      }
+    }
+  }
+}

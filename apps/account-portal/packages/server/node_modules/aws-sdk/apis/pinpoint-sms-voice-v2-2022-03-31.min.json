@@ -1,0 +1,1681 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2022-03-31",
+    "endpointPrefix": "sms-voice",
+    "jsonVersion": "1.0",
+    "protocol": "json",
+    "serviceFullName": "Amazon Pinpoint SMS Voice V2",
+    "serviceId": "Pinpoint SMS Voice V2",
+    "signatureVersion": "v4",
+    "signingName": "sms-voice",
+    "targetPrefix": "PinpointSMSVoiceV2",
+    "uid": "pinpoint-sms-voice-v2-2022-03-31"
+  },
+  "operations": {
+    "AssociateOriginationIdentity": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PoolId",
+          "OriginationIdentity",
+          "IsoCountryCode"
+        ],
+        "members": {
+          "PoolId": {},
+          "OriginationIdentity": {},
+          "IsoCountryCode": {},
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "OriginationIdentityArn": {},
+          "OriginationIdentity": {},
+          "IsoCountryCode": {}
+        }
+      }
+    },
+    "CreateConfigurationSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "Tags": {
+            "shape": "Sa"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "Tags": {
+            "shape": "Sa"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "CreateEventDestination": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName",
+          "EventDestinationName",
+          "MatchingEventTypes"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "EventDestinationName": {},
+          "MatchingEventTypes": {
+            "shape": "Sj"
+          },
+          "CloudWatchLogsDestination": {
+            "shape": "Sl"
+          },
+          "KinesisFirehoseDestination": {
+            "shape": "So"
+          },
+          "SnsDestination": {
+            "shape": "Sq"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "EventDestination": {
+            "shape": "St"
+          }
+        }
+      }
+    },
+    "CreateOptOutList": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OptOutListName"
+        ],
+        "members": {
+          "OptOutListName": {},
+          "Tags": {
+            "shape": "Sa"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutListArn": {},
+          "OptOutListName": {},
+          "Tags": {
+            "shape": "Sa"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "CreatePool": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OriginationIdentity",
+          "IsoCountryCode",
+          "MessageType"
+        ],
+        "members": {
+          "OriginationIdentity": {},
+          "IsoCountryCode": {},
+          "MessageType": {},
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "Tags": {
+            "shape": "Sa"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "Status": {},
+          "MessageType": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "SharedRoutesEnabled": {
+            "type": "boolean"
+          },
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "Tags": {
+            "shape": "Sa"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "DeleteConfigurationSet": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName"
+        ],
+        "members": {
+          "ConfigurationSetName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "EventDestinations": {
+            "shape": "S16"
+          },
+          "DefaultMessageType": {},
+          "DefaultSenderId": {},
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "DeleteDefaultMessageType": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName"
+        ],
+        "members": {
+          "ConfigurationSetName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "MessageType": {}
+        }
+      }
+    },
+    "DeleteDefaultSenderId": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName"
+        ],
+        "members": {
+          "ConfigurationSetName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "SenderId": {}
+        }
+      }
+    },
+    "DeleteEventDestination": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName",
+          "EventDestinationName"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "EventDestinationName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "EventDestination": {
+            "shape": "St"
+          }
+        }
+      }
+    },
+    "DeleteKeyword": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OriginationIdentity",
+          "Keyword"
+        ],
+        "members": {
+          "OriginationIdentity": {},
+          "Keyword": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OriginationIdentityArn": {},
+          "OriginationIdentity": {},
+          "Keyword": {},
+          "KeywordMessage": {},
+          "KeywordAction": {}
+        }
+      }
+    },
+    "DeleteOptOutList": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OptOutListName"
+        ],
+        "members": {
+          "OptOutListName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutListArn": {},
+          "OptOutListName": {},
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "DeleteOptedOutNumber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OptOutListName",
+          "OptedOutNumber"
+        ],
+        "members": {
+          "OptOutListName": {},
+          "OptedOutNumber": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutListArn": {},
+          "OptOutListName": {},
+          "OptedOutNumber": {},
+          "OptedOutTimestamp": {
+            "type": "timestamp"
+          },
+          "EndUserOptedOut": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "DeletePool": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PoolId"
+        ],
+        "members": {
+          "PoolId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "Status": {},
+          "MessageType": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "SharedRoutesEnabled": {
+            "type": "boolean"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "DeleteTextMessageSpendLimitOverride": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "DeleteVoiceMessageSpendLimitOverride": {
+      "input": {
+        "type": "structure",
+        "members": {}
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "DescribeAccountAttributes": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountAttributes": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Value"
+              ],
+              "members": {
+                "Name": {},
+                "Value": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeAccountLimits": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "AccountLimits": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Used",
+                "Max"
+              ],
+              "members": {
+                "Name": {},
+                "Used": {
+                  "type": "long"
+                },
+                "Max": {
+                  "type": "long"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeConfigurationSets": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetNames": {
+            "type": "list",
+            "member": {}
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSets": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "ConfigurationSetArn",
+                "ConfigurationSetName",
+                "EventDestinations",
+                "CreatedTimestamp"
+              ],
+              "members": {
+                "ConfigurationSetArn": {},
+                "ConfigurationSetName": {},
+                "EventDestinations": {
+                  "shape": "S16"
+                },
+                "DefaultMessageType": {},
+                "DefaultSenderId": {},
+                "CreatedTimestamp": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeKeywords": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OriginationIdentity"
+        ],
+        "members": {
+          "OriginationIdentity": {},
+          "Keywords": {
+            "type": "list",
+            "member": {}
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OriginationIdentityArn": {},
+          "OriginationIdentity": {},
+          "Keywords": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Keyword",
+                "KeywordMessage",
+                "KeywordAction"
+              ],
+              "members": {
+                "Keyword": {},
+                "KeywordMessage": {},
+                "KeywordAction": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeOptOutLists": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "OptOutListNames": {
+            "type": "list",
+            "member": {}
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutLists": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OptOutListArn",
+                "OptOutListName",
+                "CreatedTimestamp"
+              ],
+              "members": {
+                "OptOutListArn": {},
+                "OptOutListName": {},
+                "CreatedTimestamp": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeOptedOutNumbers": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OptOutListName"
+        ],
+        "members": {
+          "OptOutListName": {},
+          "OptedOutNumbers": {
+            "type": "list",
+            "member": {}
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutListArn": {},
+          "OptOutListName": {},
+          "OptedOutNumbers": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OptedOutNumber",
+                "OptedOutTimestamp",
+                "EndUserOptedOut"
+              ],
+              "members": {
+                "OptedOutNumber": {},
+                "OptedOutTimestamp": {
+                  "type": "timestamp"
+                },
+                "EndUserOptedOut": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribePhoneNumbers": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "PhoneNumberIds": {
+            "type": "list",
+            "member": {}
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PhoneNumbers": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "PhoneNumberArn",
+                "PhoneNumber",
+                "Status",
+                "IsoCountryCode",
+                "MessageType",
+                "NumberCapabilities",
+                "NumberType",
+                "MonthlyLeasingPrice",
+                "TwoWayEnabled",
+                "SelfManagedOptOutsEnabled",
+                "OptOutListName",
+                "DeletionProtectionEnabled",
+                "CreatedTimestamp"
+              ],
+              "members": {
+                "PhoneNumberArn": {},
+                "PhoneNumberId": {},
+                "PhoneNumber": {},
+                "Status": {},
+                "IsoCountryCode": {},
+                "MessageType": {},
+                "NumberCapabilities": {
+                  "shape": "S3f"
+                },
+                "NumberType": {},
+                "MonthlyLeasingPrice": {},
+                "TwoWayEnabled": {
+                  "type": "boolean"
+                },
+                "TwoWayChannelArn": {},
+                "SelfManagedOptOutsEnabled": {
+                  "type": "boolean"
+                },
+                "OptOutListName": {},
+                "DeletionProtectionEnabled": {
+                  "type": "boolean"
+                },
+                "PoolId": {},
+                "CreatedTimestamp": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribePools": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "PoolIds": {
+            "type": "list",
+            "member": {}
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Pools": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "PoolArn",
+                "PoolId",
+                "Status",
+                "MessageType",
+                "TwoWayEnabled",
+                "SelfManagedOptOutsEnabled",
+                "OptOutListName",
+                "SharedRoutesEnabled",
+                "DeletionProtectionEnabled",
+                "CreatedTimestamp"
+              ],
+              "members": {
+                "PoolArn": {},
+                "PoolId": {},
+                "Status": {},
+                "MessageType": {},
+                "TwoWayEnabled": {
+                  "type": "boolean"
+                },
+                "TwoWayChannelArn": {},
+                "SelfManagedOptOutsEnabled": {
+                  "type": "boolean"
+                },
+                "OptOutListName": {},
+                "SharedRoutesEnabled": {
+                  "type": "boolean"
+                },
+                "DeletionProtectionEnabled": {
+                  "type": "boolean"
+                },
+                "CreatedTimestamp": {
+                  "type": "timestamp"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeSenderIds": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "SenderIds": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "SenderId",
+                "IsoCountryCode"
+              ],
+              "members": {
+                "SenderId": {},
+                "IsoCountryCode": {}
+              }
+            }
+          },
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SenderIds": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "SenderIdArn",
+                "SenderId",
+                "IsoCountryCode",
+                "MessageTypes",
+                "MonthlyLeasingPrice"
+              ],
+              "members": {
+                "SenderIdArn": {},
+                "SenderId": {},
+                "IsoCountryCode": {},
+                "MessageTypes": {
+                  "type": "list",
+                  "member": {}
+                },
+                "MonthlyLeasingPrice": {}
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeSpendLimits": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "SpendLimits": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "EnforcedLimit",
+                "MaxLimit",
+                "Overridden"
+              ],
+              "members": {
+                "Name": {},
+                "EnforcedLimit": {
+                  "type": "long"
+                },
+                "MaxLimit": {
+                  "type": "long"
+                },
+                "Overridden": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DisassociateOriginationIdentity": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PoolId",
+          "OriginationIdentity",
+          "IsoCountryCode"
+        ],
+        "members": {
+          "PoolId": {},
+          "OriginationIdentity": {},
+          "IsoCountryCode": {},
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "OriginationIdentityArn": {},
+          "OriginationIdentity": {},
+          "IsoCountryCode": {}
+        }
+      }
+    },
+    "ListPoolOriginationIdentities": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PoolId"
+        ],
+        "members": {
+          "PoolId": {},
+          "Filters": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Name",
+                "Values"
+              ],
+              "members": {
+                "Name": {},
+                "Values": {
+                  "shape": "S2f"
+                }
+              }
+            }
+          },
+          "NextToken": {},
+          "MaxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "OriginationIdentities": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "OriginationIdentityArn",
+                "OriginationIdentity",
+                "IsoCountryCode",
+                "NumberCapabilities"
+              ],
+              "members": {
+                "OriginationIdentityArn": {},
+                "OriginationIdentity": {},
+                "IsoCountryCode": {},
+                "NumberCapabilities": {
+                  "shape": "S3f"
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn"
+        ],
+        "members": {
+          "ResourceArn": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "shape": "Sa"
+          }
+        }
+      }
+    },
+    "PutKeyword": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OriginationIdentity",
+          "Keyword",
+          "KeywordMessage"
+        ],
+        "members": {
+          "OriginationIdentity": {},
+          "Keyword": {},
+          "KeywordMessage": {},
+          "KeywordAction": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OriginationIdentityArn": {},
+          "OriginationIdentity": {},
+          "Keyword": {},
+          "KeywordMessage": {},
+          "KeywordAction": {}
+        }
+      }
+    },
+    "PutOptedOutNumber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "OptOutListName",
+          "OptedOutNumber"
+        ],
+        "members": {
+          "OptOutListName": {},
+          "OptedOutNumber": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "OptOutListArn": {},
+          "OptOutListName": {},
+          "OptedOutNumber": {},
+          "OptedOutTimestamp": {
+            "type": "timestamp"
+          },
+          "EndUserOptedOut": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "ReleasePhoneNumber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PhoneNumberId"
+        ],
+        "members": {
+          "PhoneNumberId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PhoneNumberArn": {},
+          "PhoneNumberId": {},
+          "PhoneNumber": {},
+          "Status": {},
+          "IsoCountryCode": {},
+          "MessageType": {},
+          "NumberCapabilities": {
+            "shape": "S3f"
+          },
+          "NumberType": {},
+          "MonthlyLeasingPrice": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "RequestPhoneNumber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "IsoCountryCode",
+          "MessageType",
+          "NumberCapabilities",
+          "NumberType"
+        ],
+        "members": {
+          "IsoCountryCode": {},
+          "MessageType": {},
+          "NumberCapabilities": {
+            "shape": "S3f"
+          },
+          "NumberType": {},
+          "OptOutListName": {},
+          "PoolId": {},
+          "RegistrationId": {},
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "Tags": {
+            "shape": "Sa"
+          },
+          "ClientToken": {
+            "idempotencyToken": true
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PhoneNumberArn": {},
+          "PhoneNumberId": {},
+          "PhoneNumber": {},
+          "Status": {},
+          "IsoCountryCode": {},
+          "MessageType": {},
+          "NumberCapabilities": {
+            "shape": "S3f"
+          },
+          "NumberType": {},
+          "MonthlyLeasingPrice": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "PoolId": {},
+          "Tags": {
+            "shape": "Sa"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "SendTextMessage": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DestinationPhoneNumber"
+        ],
+        "members": {
+          "DestinationPhoneNumber": {},
+          "OriginationIdentity": {},
+          "MessageBody": {},
+          "MessageType": {},
+          "Keyword": {},
+          "ConfigurationSetName": {},
+          "MaxPrice": {},
+          "TimeToLive": {
+            "type": "integer"
+          },
+          "Context": {
+            "shape": "S4x"
+          },
+          "DestinationCountryParameters": {
+            "type": "map",
+            "key": {},
+            "value": {}
+          },
+          "DryRun": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MessageId": {}
+        }
+      }
+    },
+    "SendVoiceMessage": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "DestinationPhoneNumber",
+          "OriginationIdentity"
+        ],
+        "members": {
+          "DestinationPhoneNumber": {},
+          "OriginationIdentity": {},
+          "MessageBody": {},
+          "MessageBodyTextType": {},
+          "VoiceId": {},
+          "ConfigurationSetName": {},
+          "MaxPricePerMinute": {},
+          "TimeToLive": {
+            "type": "integer"
+          },
+          "Context": {
+            "shape": "S4x"
+          },
+          "DryRun": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MessageId": {}
+        }
+      }
+    },
+    "SetDefaultMessageType": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName",
+          "MessageType"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "MessageType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "MessageType": {}
+        }
+      }
+    },
+    "SetDefaultSenderId": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName",
+          "SenderId"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "SenderId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "SenderId": {}
+        }
+      }
+    },
+    "SetTextMessageSpendLimitOverride": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "MonthlyLimit"
+        ],
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "SetVoiceMessageSpendLimitOverride": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "MonthlyLimit"
+        ],
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "MonthlyLimit": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "Tags"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "Tags": {
+            "type": "list",
+            "member": {
+              "shape": "Sb"
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceArn",
+          "TagKeys"
+        ],
+        "members": {
+          "ResourceArn": {},
+          "TagKeys": {
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateEventDestination": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "ConfigurationSetName",
+          "EventDestinationName"
+        ],
+        "members": {
+          "ConfigurationSetName": {},
+          "EventDestinationName": {},
+          "Enabled": {
+            "type": "boolean"
+          },
+          "MatchingEventTypes": {
+            "shape": "Sj"
+          },
+          "CloudWatchLogsDestination": {
+            "shape": "Sl"
+          },
+          "KinesisFirehoseDestination": {
+            "shape": "So"
+          },
+          "SnsDestination": {
+            "shape": "Sq"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ConfigurationSetArn": {},
+          "ConfigurationSetName": {},
+          "EventDestination": {
+            "shape": "St"
+          }
+        }
+      }
+    },
+    "UpdatePhoneNumber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PhoneNumberId"
+        ],
+        "members": {
+          "PhoneNumberId": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PhoneNumberArn": {},
+          "PhoneNumberId": {},
+          "PhoneNumber": {},
+          "Status": {},
+          "IsoCountryCode": {},
+          "MessageType": {},
+          "NumberCapabilities": {
+            "shape": "S3f"
+          },
+          "NumberType": {},
+          "MonthlyLeasingPrice": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    },
+    "UpdatePool": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "PoolId"
+        ],
+        "members": {
+          "PoolId": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "SharedRoutesEnabled": {
+            "type": "boolean"
+          },
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "PoolArn": {},
+          "PoolId": {},
+          "Status": {},
+          "MessageType": {},
+          "TwoWayEnabled": {
+            "type": "boolean"
+          },
+          "TwoWayChannelArn": {},
+          "SelfManagedOptOutsEnabled": {
+            "type": "boolean"
+          },
+          "OptOutListName": {},
+          "SharedRoutesEnabled": {
+            "type": "boolean"
+          },
+          "DeletionProtectionEnabled": {
+            "type": "boolean"
+          },
+          "CreatedTimestamp": {
+            "type": "timestamp"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "Sa": {
+      "type": "list",
+      "member": {
+        "shape": "Sb"
+      }
+    },
+    "Sb": {
+      "type": "structure",
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "members": {
+        "Key": {},
+        "Value": {}
+      }
+    },
+    "Sj": {
+      "type": "list",
+      "member": {}
+    },
+    "Sl": {
+      "type": "structure",
+      "required": [
+        "IamRoleArn",
+        "LogGroupArn"
+      ],
+      "members": {
+        "IamRoleArn": {},
+        "LogGroupArn": {}
+      }
+    },
+    "So": {
+      "type": "structure",
+      "required": [
+        "IamRoleArn",
+        "DeliveryStreamArn"
+      ],
+      "members": {
+        "IamRoleArn": {},
+        "DeliveryStreamArn": {}
+      }
+    },
+    "Sq": {
+      "type": "structure",
+      "required": [
+        "TopicArn"
+      ],
+      "members": {
+        "TopicArn": {}
+      }
+    },
+    "St": {
+      "type": "structure",
+      "required": [
+        "EventDestinationName",
+        "Enabled",
+        "MatchingEventTypes"
+      ],
+      "members": {
+        "EventDestinationName": {},
+        "Enabled": {
+          "type": "boolean"
+        },
+        "MatchingEventTypes": {
+          "shape": "Sj"
+        },
+        "CloudWatchLogsDestination": {
+          "shape": "Sl"
+        },
+        "KinesisFirehoseDestination": {
+          "shape": "So"
+        },
+        "SnsDestination": {
+          "shape": "Sq"
+        }
+      }
+    },
+    "S16": {
+      "type": "list",
+      "member": {
+        "shape": "St"
+      }
+    },
+    "S2f": {
+      "type": "list",
+      "member": {}
+    },
+    "S3f": {
+      "type": "list",
+      "member": {}
+    },
+    "S4x": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    }
+  }
+}

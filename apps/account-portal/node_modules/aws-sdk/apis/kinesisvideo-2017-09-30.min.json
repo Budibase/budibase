@@ -1,0 +1,551 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-09-30",
+    "endpointPrefix": "kinesisvideo",
+    "protocol": "rest-json",
+    "serviceAbbreviation": "Kinesis Video",
+    "serviceFullName": "Amazon Kinesis Video Streams",
+    "serviceId": "Kinesis Video",
+    "signatureVersion": "v4",
+    "uid": "kinesisvideo-2017-09-30"
+  },
+  "operations": {
+    "CreateSignalingChannel": {
+      "http": {
+        "requestUri": "/createSignalingChannel"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ChannelName"
+        ],
+        "members": {
+          "ChannelName": {},
+          "ChannelType": {},
+          "SingleMasterConfiguration": {
+            "shape": "S4"
+          },
+          "Tags": {
+            "type": "list",
+            "member": {
+              "shape": "S7"
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ChannelARN": {}
+        }
+      }
+    },
+    "CreateStream": {
+      "http": {
+        "requestUri": "/createStream"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "StreamName"
+        ],
+        "members": {
+          "DeviceName": {},
+          "StreamName": {},
+          "MediaType": {},
+          "KmsKeyId": {},
+          "DataRetentionInHours": {
+            "type": "integer"
+          },
+          "Tags": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StreamARN": {}
+        }
+      }
+    },
+    "DeleteSignalingChannel": {
+      "http": {
+        "requestUri": "/deleteSignalingChannel"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ChannelARN"
+        ],
+        "members": {
+          "ChannelARN": {},
+          "CurrentVersion": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteStream": {
+      "http": {
+        "requestUri": "/deleteStream"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "StreamARN"
+        ],
+        "members": {
+          "StreamARN": {},
+          "CurrentVersion": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeSignalingChannel": {
+      "http": {
+        "requestUri": "/describeSignalingChannel"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "ChannelName": {},
+          "ChannelARN": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ChannelInfo": {
+            "shape": "Sr"
+          }
+        }
+      }
+    },
+    "DescribeStream": {
+      "http": {
+        "requestUri": "/describeStream"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "StreamName": {},
+          "StreamARN": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StreamInfo": {
+            "shape": "Sw"
+          }
+        }
+      }
+    },
+    "GetDataEndpoint": {
+      "http": {
+        "requestUri": "/getDataEndpoint"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "APIName"
+        ],
+        "members": {
+          "StreamName": {},
+          "StreamARN": {},
+          "APIName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "DataEndpoint": {}
+        }
+      }
+    },
+    "GetSignalingChannelEndpoint": {
+      "http": {
+        "requestUri": "/getSignalingChannelEndpoint"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ChannelARN"
+        ],
+        "members": {
+          "ChannelARN": {},
+          "SingleMasterChannelEndpointConfiguration": {
+            "type": "structure",
+            "members": {
+              "Protocols": {
+                "type": "list",
+                "member": {}
+              },
+              "Role": {}
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ResourceEndpointList": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "Protocol": {},
+                "ResourceEndpoint": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListSignalingChannels": {
+      "http": {
+        "requestUri": "/listSignalingChannels"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "ChannelNameCondition": {
+            "type": "structure",
+            "members": {
+              "ComparisonOperator": {},
+              "ComparisonValue": {}
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "ChannelInfoList": {
+            "type": "list",
+            "member": {
+              "shape": "Sr"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListStreams": {
+      "http": {
+        "requestUri": "/listStreams"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {},
+          "StreamNameCondition": {
+            "type": "structure",
+            "members": {
+              "ComparisonOperator": {},
+              "ComparisonValue": {}
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "StreamInfoList": {
+            "type": "list",
+            "member": {
+              "shape": "Sw"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "requestUri": "/ListTagsForResource"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN"
+        ],
+        "members": {
+          "NextToken": {},
+          "ResourceARN": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "Tags": {
+            "shape": "Si"
+          }
+        }
+      }
+    },
+    "ListTagsForStream": {
+      "http": {
+        "requestUri": "/listTagsForStream"
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "StreamARN": {},
+          "StreamName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "NextToken": {},
+          "Tags": {
+            "shape": "Si"
+          }
+        }
+      }
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/TagResource"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "Tags"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "Tags": {
+            "type": "list",
+            "member": {
+              "shape": "S7"
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "TagStream": {
+      "http": {
+        "requestUri": "/tagStream"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "Tags"
+        ],
+        "members": {
+          "StreamARN": {},
+          "StreamName": {},
+          "Tags": {
+            "shape": "Si"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "requestUri": "/UntagResource"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ResourceARN",
+          "TagKeyList"
+        ],
+        "members": {
+          "ResourceARN": {},
+          "TagKeyList": {
+            "shape": "S1v"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagStream": {
+      "http": {
+        "requestUri": "/untagStream"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "TagKeyList"
+        ],
+        "members": {
+          "StreamARN": {},
+          "StreamName": {},
+          "TagKeyList": {
+            "shape": "S1v"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateDataRetention": {
+      "http": {
+        "requestUri": "/updateDataRetention"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "CurrentVersion",
+          "Operation",
+          "DataRetentionChangeInHours"
+        ],
+        "members": {
+          "StreamName": {},
+          "StreamARN": {},
+          "CurrentVersion": {},
+          "Operation": {},
+          "DataRetentionChangeInHours": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateSignalingChannel": {
+      "http": {
+        "requestUri": "/updateSignalingChannel"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "ChannelARN",
+          "CurrentVersion"
+        ],
+        "members": {
+          "ChannelARN": {},
+          "CurrentVersion": {},
+          "SingleMasterConfiguration": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateStream": {
+      "http": {
+        "requestUri": "/updateStream"
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "CurrentVersion"
+        ],
+        "members": {
+          "StreamName": {},
+          "StreamARN": {},
+          "CurrentVersion": {},
+          "DeviceName": {},
+          "MediaType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "structure",
+      "members": {
+        "MessageTtlSeconds": {
+          "type": "integer"
+        }
+      }
+    },
+    "S7": {
+      "type": "structure",
+      "required": [
+        "Key",
+        "Value"
+      ],
+      "members": {
+        "Key": {},
+        "Value": {}
+      }
+    },
+    "Si": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "Sr": {
+      "type": "structure",
+      "members": {
+        "ChannelName": {},
+        "ChannelARN": {},
+        "ChannelType": {},
+        "ChannelStatus": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "SingleMasterConfiguration": {
+          "shape": "S4"
+        },
+        "Version": {}
+      }
+    },
+    "Sw": {
+      "type": "structure",
+      "members": {
+        "DeviceName": {},
+        "StreamName": {},
+        "StreamARN": {},
+        "MediaType": {},
+        "KmsKeyId": {},
+        "Version": {},
+        "Status": {},
+        "CreationTime": {
+          "type": "timestamp"
+        },
+        "DataRetentionInHours": {
+          "type": "integer"
+        }
+      }
+    },
+    "S1v": {
+      "type": "list",
+      "member": {}
+    }
+  }
+}

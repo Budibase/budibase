@@ -1,0 +1,222 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2017-12-19",
+    "endpointPrefix": "macie",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceFullName": "Amazon Macie",
+    "serviceId": "Macie",
+    "signatureVersion": "v4",
+    "targetPrefix": "MacieService",
+    "uid": "macie-2017-12-19"
+  },
+  "operations": {
+    "AssociateMemberAccount": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "memberAccountId"
+        ],
+        "members": {
+          "memberAccountId": {}
+        }
+      }
+    },
+    "AssociateS3Resources": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "s3Resources"
+        ],
+        "members": {
+          "memberAccountId": {},
+          "s3Resources": {
+            "shape": "S4"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "failedS3Resources": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "DisassociateMemberAccount": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "memberAccountId"
+        ],
+        "members": {
+          "memberAccountId": {}
+        }
+      }
+    },
+    "DisassociateS3Resources": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "associatedS3Resources"
+        ],
+        "members": {
+          "memberAccountId": {},
+          "associatedS3Resources": {
+            "type": "list",
+            "member": {
+              "shape": "Se"
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "failedS3Resources": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "ListMemberAccounts": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "memberAccounts": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "members": {
+                "accountId": {}
+              }
+            }
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "ListS3Resources": {
+      "input": {
+        "type": "structure",
+        "members": {
+          "memberAccountId": {},
+          "nextToken": {},
+          "maxResults": {
+            "type": "integer"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "s3Resources": {
+            "shape": "S4"
+          },
+          "nextToken": {}
+        }
+      }
+    },
+    "UpdateS3Resources": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "s3ResourcesUpdate"
+        ],
+        "members": {
+          "memberAccountId": {},
+          "s3ResourcesUpdate": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "bucketName",
+                "classificationTypeUpdate"
+              ],
+              "members": {
+                "bucketName": {},
+                "prefix": {},
+                "classificationTypeUpdate": {
+                  "type": "structure",
+                  "members": {
+                    "oneTime": {},
+                    "continuous": {}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "failedS3Resources": {
+            "shape": "Sc"
+          }
+        }
+      }
+    }
+  },
+  "shapes": {
+    "S4": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "required": [
+          "bucketName",
+          "classificationType"
+        ],
+        "members": {
+          "bucketName": {},
+          "prefix": {},
+          "classificationType": {
+            "type": "structure",
+            "required": [
+              "oneTime",
+              "continuous"
+            ],
+            "members": {
+              "oneTime": {},
+              "continuous": {}
+            }
+          }
+        }
+      }
+    },
+    "Sc": {
+      "type": "list",
+      "member": {
+        "type": "structure",
+        "members": {
+          "failedItem": {
+            "shape": "Se"
+          },
+          "errorCode": {},
+          "errorMessage": {}
+        }
+      }
+    },
+    "Se": {
+      "type": "structure",
+      "required": [
+        "bucketName"
+      ],
+      "members": {
+        "bucketName": {},
+        "prefix": {}
+      }
+    }
+  }
+}

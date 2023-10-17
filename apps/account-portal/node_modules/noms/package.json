@@ -1,0 +1,19 @@
+{
+  "name": "noms",
+  "version": "0.0.0",
+  "description": "easily make yummy noms for other streams",
+  "main": "index.js",
+  "dependencies": {
+    "inherits": "^2.0.1",
+    "readable-stream": "~1.0.31"
+  },
+  "repository": "https://github.com/calvinmetcalf/noms",
+  "devDependencies": {
+    "tape": "^2.14.0"
+  },
+  "scripts": {
+    "test": "node test.js"
+  },
+  "author": "Calvin Metcalf",
+  "license": "ISC"
+}

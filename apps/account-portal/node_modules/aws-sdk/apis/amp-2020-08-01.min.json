@@ -1,0 +1,743 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2020-08-01",
+    "endpointPrefix": "aps",
+    "jsonVersion": "1.1",
+    "protocol": "rest-json",
+    "serviceFullName": "Amazon Prometheus Service",
+    "serviceId": "amp",
+    "signatureVersion": "v4",
+    "signingName": "aps",
+    "uid": "amp-2020-08-01"
+  },
+  "operations": {
+    "CreateAlertManagerDefinition": {
+      "http": {
+        "requestUri": "/workspaces/{workspaceId}/alertmanager/definition",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "data",
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "data": {
+            "type": "blob"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "status"
+        ],
+        "members": {
+          "status": {
+            "shape": "S6"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "CreateRuleGroupsNamespace": {
+      "http": {
+        "requestUri": "/workspaces/{workspaceId}/rulegroupsnamespaces",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "data",
+          "name",
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "data": {
+            "type": "blob"
+          },
+          "name": {},
+          "tags": {
+            "shape": "Sc"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "arn",
+          "name",
+          "status"
+        ],
+        "members": {
+          "arn": {},
+          "name": {},
+          "status": {
+            "shape": "Sh"
+          },
+          "tags": {
+            "shape": "Sc"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "CreateWorkspace": {
+      "http": {
+        "requestUri": "/workspaces",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "alias": {},
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "tags": {
+            "shape": "Sc"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "arn",
+          "status",
+          "workspaceId"
+        ],
+        "members": {
+          "arn": {},
+          "status": {
+            "shape": "Sn"
+          },
+          "tags": {
+            "shape": "Sc"
+          },
+          "workspaceId": {}
+        }
+      },
+      "idempotent": true
+    },
+    "DeleteAlertManagerDefinition": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/workspaces/{workspaceId}/alertmanager/definition",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true,
+            "location": "querystring",
+            "locationName": "clientToken"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DeleteRuleGroupsNamespace": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/workspaces/{workspaceId}/rulegroupsnamespaces/{name}",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "name",
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true,
+            "location": "querystring",
+            "locationName": "clientToken"
+          },
+          "name": {
+            "location": "uri",
+            "locationName": "name"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DeleteWorkspace": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/workspaces/{workspaceId}",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true,
+            "location": "querystring",
+            "locationName": "clientToken"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "DescribeAlertManagerDefinition": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workspaces/{workspaceId}/alertmanager/definition",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "alertManagerDefinition"
+        ],
+        "members": {
+          "alertManagerDefinition": {
+            "type": "structure",
+            "required": [
+              "createdAt",
+              "data",
+              "modifiedAt",
+              "status"
+            ],
+            "members": {
+              "createdAt": {
+                "type": "timestamp"
+              },
+              "data": {
+                "type": "blob"
+              },
+              "modifiedAt": {
+                "type": "timestamp"
+              },
+              "status": {
+                "shape": "S6"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeRuleGroupsNamespace": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workspaces/{workspaceId}/rulegroupsnamespaces/{name}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "name",
+          "workspaceId"
+        ],
+        "members": {
+          "name": {
+            "location": "uri",
+            "locationName": "name"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ruleGroupsNamespace"
+        ],
+        "members": {
+          "ruleGroupsNamespace": {
+            "type": "structure",
+            "required": [
+              "arn",
+              "createdAt",
+              "data",
+              "modifiedAt",
+              "name",
+              "status"
+            ],
+            "members": {
+              "arn": {},
+              "createdAt": {
+                "type": "timestamp"
+              },
+              "data": {
+                "type": "blob"
+              },
+              "modifiedAt": {
+                "type": "timestamp"
+              },
+              "name": {},
+              "status": {
+                "shape": "Sh"
+              },
+              "tags": {
+                "shape": "Sc"
+              }
+            }
+          }
+        }
+      }
+    },
+    "DescribeWorkspace": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workspaces/{workspaceId}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workspace"
+        ],
+        "members": {
+          "workspace": {
+            "type": "structure",
+            "required": [
+              "arn",
+              "createdAt",
+              "status",
+              "workspaceId"
+            ],
+            "members": {
+              "alias": {},
+              "arn": {},
+              "createdAt": {
+                "type": "timestamp"
+              },
+              "prometheusEndpoint": {},
+              "status": {
+                "shape": "Sn"
+              },
+              "tags": {
+                "shape": "Sc"
+              },
+              "workspaceId": {}
+            }
+          }
+        }
+      }
+    },
+    "ListRuleGroupsNamespaces": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workspaces/{workspaceId}/rulegroupsnamespaces",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "name": {
+            "location": "querystring",
+            "locationName": "name"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ruleGroupsNamespaces"
+        ],
+        "members": {
+          "nextToken": {},
+          "ruleGroupsNamespaces": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "arn",
+                "createdAt",
+                "modifiedAt",
+                "name",
+                "status"
+              ],
+              "members": {
+                "arn": {},
+                "createdAt": {
+                  "type": "timestamp"
+                },
+                "modifiedAt": {
+                  "type": "timestamp"
+                },
+                "name": {},
+                "status": {
+                  "shape": "Sh"
+                },
+                "tags": {
+                  "shape": "Sc"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "ListTagsForResource": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "tags": {
+            "shape": "Sc"
+          }
+        }
+      }
+    },
+    "ListWorkspaces": {
+      "http": {
+        "method": "GET",
+        "requestUri": "/workspaces",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "members": {
+          "alias": {
+            "location": "querystring",
+            "locationName": "alias"
+          },
+          "maxResults": {
+            "location": "querystring",
+            "locationName": "maxResults",
+            "type": "integer"
+          },
+          "nextToken": {
+            "location": "querystring",
+            "locationName": "nextToken"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "workspaces"
+        ],
+        "members": {
+          "nextToken": {},
+          "workspaces": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "arn",
+                "createdAt",
+                "status",
+                "workspaceId"
+              ],
+              "members": {
+                "alias": {},
+                "arn": {},
+                "createdAt": {
+                  "type": "timestamp"
+                },
+                "status": {
+                  "shape": "Sn"
+                },
+                "tags": {
+                  "shape": "Sc"
+                },
+                "workspaceId": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "PutAlertManagerDefinition": {
+      "http": {
+        "method": "PUT",
+        "requestUri": "/workspaces/{workspaceId}/alertmanager/definition",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "data",
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "data": {
+            "type": "blob"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "status"
+        ],
+        "members": {
+          "status": {
+            "shape": "S6"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "PutRuleGroupsNamespace": {
+      "http": {
+        "method": "PUT",
+        "requestUri": "/workspaces/{workspaceId}/rulegroupsnamespaces/{name}",
+        "responseCode": 202
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "data",
+          "name",
+          "workspaceId"
+        ],
+        "members": {
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "data": {
+            "type": "blob"
+          },
+          "name": {
+            "location": "uri",
+            "locationName": "name"
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "arn",
+          "name",
+          "status"
+        ],
+        "members": {
+          "arn": {},
+          "name": {},
+          "status": {
+            "shape": "Sh"
+          },
+          "tags": {
+            "shape": "Sc"
+          }
+        }
+      },
+      "idempotent": true
+    },
+    "TagResource": {
+      "http": {
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tags"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tags": {
+            "shape": "Sc"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UntagResource": {
+      "http": {
+        "method": "DELETE",
+        "requestUri": "/tags/{resourceArn}",
+        "responseCode": 200
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "resourceArn",
+          "tagKeys"
+        ],
+        "members": {
+          "resourceArn": {
+            "location": "uri",
+            "locationName": "resourceArn"
+          },
+          "tagKeys": {
+            "location": "querystring",
+            "locationName": "tagKeys",
+            "type": "list",
+            "member": {}
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      },
+      "idempotent": true
+    },
+    "UpdateWorkspaceAlias": {
+      "http": {
+        "requestUri": "/workspaces/{workspaceId}/alias",
+        "responseCode": 204
+      },
+      "input": {
+        "type": "structure",
+        "required": [
+          "workspaceId"
+        ],
+        "members": {
+          "alias": {},
+          "clientToken": {
+            "idempotencyToken": true
+          },
+          "workspaceId": {
+            "location": "uri",
+            "locationName": "workspaceId"
+          }
+        }
+      },
+      "idempotent": true
+    }
+  },
+  "shapes": {
+    "S6": {
+      "type": "structure",
+      "required": [
+        "statusCode"
+      ],
+      "members": {
+        "statusCode": {},
+        "statusReason": {}
+      }
+    },
+    "Sc": {
+      "type": "map",
+      "key": {},
+      "value": {}
+    },
+    "Sh": {
+      "type": "structure",
+      "required": [
+        "statusCode"
+      ],
+      "members": {
+        "statusCode": {},
+        "statusReason": {}
+      }
+    },
+    "Sn": {
+      "type": "structure",
+      "required": [
+        "statusCode"
+      ],
+      "members": {
+        "statusCode": {}
+      }
+    }
+  }
+}

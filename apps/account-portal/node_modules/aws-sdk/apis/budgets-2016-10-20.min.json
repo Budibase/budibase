@@ -1,0 +1,971 @@
+{
+  "version": "2.0",
+  "metadata": {
+    "apiVersion": "2016-10-20",
+    "endpointPrefix": "budgets",
+    "jsonVersion": "1.1",
+    "protocol": "json",
+    "serviceAbbreviation": "AWSBudgets",
+    "serviceFullName": "AWS Budgets",
+    "serviceId": "Budgets",
+    "signatureVersion": "v4",
+    "targetPrefix": "AWSBudgetServiceGateway",
+    "uid": "budgets-2016-10-20"
+  },
+  "operations": {
+    "CreateBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "Budget"
+        ],
+        "members": {
+          "AccountId": {},
+          "Budget": {
+            "shape": "S3"
+          },
+          "NotificationsWithSubscribers": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Notification",
+                "Subscribers"
+              ],
+              "members": {
+                "Notification": {
+                  "shape": "Sl"
+                },
+                "Subscribers": {
+                  "shape": "Sr"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateBudgetAction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "NotificationType",
+          "ActionType",
+          "ActionThreshold",
+          "Definition",
+          "ExecutionRoleArn",
+          "ApprovalModel",
+          "Subscribers"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "NotificationType": {},
+          "ActionType": {},
+          "ActionThreshold": {
+            "shape": "Sy"
+          },
+          "Definition": {
+            "shape": "Sz"
+          },
+          "ExecutionRoleArn": {},
+          "ApprovalModel": {},
+          "Subscribers": {
+            "shape": "Sr"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {}
+        }
+      }
+    },
+    "CreateNotification": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification",
+          "Subscribers"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          },
+          "Subscribers": {
+            "shape": "Sr"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "CreateSubscriber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification",
+          "Subscriber"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          },
+          "Subscriber": {
+            "shape": "Ss"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteBudgetAction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Action"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Action": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "DeleteNotification": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DeleteSubscriber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification",
+          "Subscriber"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          },
+          "Subscriber": {
+            "shape": "Ss"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "DescribeBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Budget": {
+            "shape": "S3"
+          }
+        }
+      }
+    },
+    "DescribeBudgetAction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Action"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Action": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "DescribeBudgetActionHistories": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {},
+          "TimePeriod": {
+            "shape": "Sf"
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "ActionHistories"
+        ],
+        "members": {
+          "ActionHistories": {
+            "type": "list",
+            "member": {
+              "type": "structure",
+              "required": [
+                "Timestamp",
+                "Status",
+                "EventType",
+                "ActionHistoryDetails"
+              ],
+              "members": {
+                "Timestamp": {
+                  "type": "timestamp"
+                },
+                "Status": {},
+                "EventType": {},
+                "ActionHistoryDetails": {
+                  "type": "structure",
+                  "required": [
+                    "Message",
+                    "Action"
+                  ],
+                  "members": {
+                    "Message": {},
+                    "Action": {
+                      "shape": "S1t"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeBudgetActionsForAccount": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId"
+        ],
+        "members": {
+          "AccountId": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Actions"
+        ],
+        "members": {
+          "Actions": {
+            "shape": "S2c"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeBudgetActionsForBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "Actions"
+        ],
+        "members": {
+          "Actions": {
+            "shape": "S2c"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeBudgetPerformanceHistory": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "TimePeriod": {
+            "shape": "Sf"
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "BudgetPerformanceHistory": {
+            "type": "structure",
+            "members": {
+              "BudgetName": {},
+              "BudgetType": {},
+              "CostFilters": {
+                "shape": "Sa"
+              },
+              "CostTypes": {
+                "shape": "Sc"
+              },
+              "TimeUnit": {},
+              "BudgetedAndActualAmountsList": {
+                "type": "list",
+                "member": {
+                  "type": "structure",
+                  "members": {
+                    "BudgetedAmount": {
+                      "shape": "S5"
+                    },
+                    "ActualAmount": {
+                      "shape": "S5"
+                    },
+                    "TimePeriod": {
+                      "shape": "Sf"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeBudgets": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId"
+        ],
+        "members": {
+          "AccountId": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Budgets": {
+            "type": "list",
+            "member": {
+              "shape": "S3"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeNotificationsForBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Notifications": {
+            "type": "list",
+            "member": {
+              "shape": "Sl"
+            }
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "DescribeSubscribersForNotification": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          },
+          "MaxResults": {
+            "type": "integer"
+          },
+          "NextToken": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {
+          "Subscribers": {
+            "shape": "Sr"
+          },
+          "NextToken": {}
+        }
+      }
+    },
+    "ExecuteBudgetAction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId",
+          "ExecutionType"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {},
+          "ExecutionType": {}
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId",
+          "ExecutionType"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {},
+          "ExecutionType": {}
+        }
+      }
+    },
+    "UpdateBudget": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "NewBudget"
+        ],
+        "members": {
+          "AccountId": {},
+          "NewBudget": {
+            "shape": "S3"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateBudgetAction": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "ActionId"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "ActionId": {},
+          "NotificationType": {},
+          "ActionThreshold": {
+            "shape": "Sy"
+          },
+          "Definition": {
+            "shape": "Sz"
+          },
+          "ExecutionRoleArn": {},
+          "ApprovalModel": {},
+          "Subscribers": {
+            "shape": "Sr"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "OldAction",
+          "NewAction"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "OldAction": {
+            "shape": "S1t"
+          },
+          "NewAction": {
+            "shape": "S1t"
+          }
+        }
+      }
+    },
+    "UpdateNotification": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "OldNotification",
+          "NewNotification"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "OldNotification": {
+            "shape": "Sl"
+          },
+          "NewNotification": {
+            "shape": "Sl"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    },
+    "UpdateSubscriber": {
+      "input": {
+        "type": "structure",
+        "required": [
+          "AccountId",
+          "BudgetName",
+          "Notification",
+          "OldSubscriber",
+          "NewSubscriber"
+        ],
+        "members": {
+          "AccountId": {},
+          "BudgetName": {},
+          "Notification": {
+            "shape": "Sl"
+          },
+          "OldSubscriber": {
+            "shape": "Ss"
+          },
+          "NewSubscriber": {
+            "shape": "Ss"
+          }
+        }
+      },
+      "output": {
+        "type": "structure",
+        "members": {}
+      }
+    }
+  },
+  "shapes": {
+    "S3": {
+      "type": "structure",
+      "required": [
+        "BudgetName",
+        "TimeUnit",
+        "BudgetType"
+      ],
+      "members": {
+        "BudgetName": {},
+        "BudgetLimit": {
+          "shape": "S5"
+        },
+        "PlannedBudgetLimits": {
+          "type": "map",
+          "key": {},
+          "value": {
+            "shape": "S5"
+          }
+        },
+        "CostFilters": {
+          "shape": "Sa"
+        },
+        "CostTypes": {
+          "shape": "Sc"
+        },
+        "TimeUnit": {},
+        "TimePeriod": {
+          "shape": "Sf"
+        },
+        "CalculatedSpend": {
+          "type": "structure",
+          "required": [
+            "ActualSpend"
+          ],
+          "members": {
+            "ActualSpend": {
+              "shape": "S5"
+            },
+            "ForecastedSpend": {
+              "shape": "S5"
+            }
+          }
+        },
+        "BudgetType": {},
+        "LastUpdatedTime": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "S5": {
+      "type": "structure",
+      "required": [
+        "Amount",
+        "Unit"
+      ],
+      "members": {
+        "Amount": {},
+        "Unit": {}
+      }
+    },
+    "Sa": {
+      "type": "map",
+      "key": {},
+      "value": {
+        "type": "list",
+        "member": {}
+      }
+    },
+    "Sc": {
+      "type": "structure",
+      "members": {
+        "IncludeTax": {
+          "type": "boolean"
+        },
+        "IncludeSubscription": {
+          "type": "boolean"
+        },
+        "UseBlended": {
+          "type": "boolean"
+        },
+        "IncludeRefund": {
+          "type": "boolean"
+        },
+        "IncludeCredit": {
+          "type": "boolean"
+        },
+        "IncludeUpfront": {
+          "type": "boolean"
+        },
+        "IncludeRecurring": {
+          "type": "boolean"
+        },
+        "IncludeOtherSubscription": {
+          "type": "boolean"
+        },
+        "IncludeSupport": {
+          "type": "boolean"
+        },
+        "IncludeDiscount": {
+          "type": "boolean"
+        },
+        "UseAmortized": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Sf": {
+      "type": "structure",
+      "members": {
+        "Start": {
+          "type": "timestamp"
+        },
+        "End": {
+          "type": "timestamp"
+        }
+      }
+    },
+    "Sl": {
+      "type": "structure",
+      "required": [
+        "NotificationType",
+        "ComparisonOperator",
+        "Threshold"
+      ],
+      "members": {
+        "NotificationType": {},
+        "ComparisonOperator": {},
+        "Threshold": {
+          "type": "double"
+        },
+        "ThresholdType": {},
+        "NotificationState": {}
+      }
+    },
+    "Sr": {
+      "type": "list",
+      "member": {
+        "shape": "Ss"
+      }
+    },
+    "Ss": {
+      "type": "structure",
+      "required": [
+        "SubscriptionType",
+        "Address"
+      ],
+      "members": {
+        "SubscriptionType": {},
+        "Address": {
+          "type": "string",
+          "sensitive": true
+        }
+      }
+    },
+    "Sy": {
+      "type": "structure",
+      "required": [
+        "ActionThresholdValue",
+        "ActionThresholdType"
+      ],
+      "members": {
+        "ActionThresholdValue": {
+          "type": "double"
+        },
+        "ActionThresholdType": {}
+      }
+    },
+    "Sz": {
+      "type": "structure",
+      "members": {
+        "IamActionDefinition": {
+          "type": "structure",
+          "required": [
+            "PolicyArn"
+          ],
+          "members": {
+            "PolicyArn": {},
+            "Roles": {
+              "type": "list",
+              "member": {}
+            },
+            "Groups": {
+              "type": "list",
+              "member": {}
+            },
+            "Users": {
+              "type": "list",
+              "member": {}
+            }
+          }
+        },
+        "ScpActionDefinition": {
+          "type": "structure",
+          "required": [
+            "PolicyId",
+            "TargetIds"
+          ],
+          "members": {
+            "PolicyId": {},
+            "TargetIds": {
+              "type": "list",
+              "member": {}
+            }
+          }
+        },
+        "SsmActionDefinition": {
+          "type": "structure",
+          "required": [
+            "ActionSubType",
+            "Region",
+            "InstanceIds"
+          ],
+          "members": {
+            "ActionSubType": {},
+            "Region": {},
+            "InstanceIds": {
+              "type": "list",
+              "member": {}
+            }
+          }
+        }
+      }
+    },
+    "S1t": {
+      "type": "structure",
+      "required": [
+        "ActionId",
+        "BudgetName",
+        "NotificationType",
+        "ActionType",
+        "ActionThreshold",
+        "Definition",
+        "ExecutionRoleArn",
+        "ApprovalModel",
+        "Status",
+        "Subscribers"
+      ],
+      "members": {
+        "ActionId": {},
+        "BudgetName": {},
+        "NotificationType": {},
+        "ActionType": {},
+        "ActionThreshold": {
+          "shape": "Sy"
+        },
+        "Definition": {
+          "shape": "Sz"
+        },
+        "ExecutionRoleArn": {},
+        "ApprovalModel": {},
+        "Status": {},
+        "Subscribers": {
+          "shape": "Sr"
+        }
+      }
+    },
+    "S2c": {
+      "type": "list",
+      "member": {
+        "shape": "S1t"
+      }
+    }
+  }
+}

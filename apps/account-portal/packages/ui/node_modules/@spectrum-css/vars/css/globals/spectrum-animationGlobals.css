@@ -1,0 +1,19 @@
+:root {
+  --spectrum-global-animation-duration-0: 0ms;
+  --spectrum-global-animation-duration-100: 130ms;
+  --spectrum-global-animation-duration-200: 160ms;
+  --spectrum-global-animation-duration-300: 190ms;
+  --spectrum-global-animation-duration-400: 220ms;
+  --spectrum-global-animation-duration-500: 250ms;
+  --spectrum-global-animation-duration-600: 300ms;
+  --spectrum-global-animation-duration-700: 350ms;
+  --spectrum-global-animation-duration-800: 400ms;
+  --spectrum-global-animation-duration-900: 450ms;
+  --spectrum-global-animation-duration-1000: 500ms;
+  --spectrum-global-animation-duration-2000: 1000ms;
+  --spectrum-global-animation-duration-4000: 2000ms;
+  --spectrum-global-animation-ease-in-out: cubic-bezier(.45, 0, .40, 1);
+  --spectrum-global-animation-ease-in: cubic-bezier(.50, 0, 1, 1);
+  --spectrum-global-animation-ease-out: cubic-bezier(0, 0, 0.40, 1);
+  --spectrum-global-animation-linear: cubic-bezier(0, 0, 1, 1);
+}

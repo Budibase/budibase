@@ -1,0 +1,46 @@
+{
+    "name": "nodemailer",
+    "version": "6.9.6",
+    "description": "Easy as cake e-mail sending from your Node.js applications",
+    "main": "lib/nodemailer.js",
+    "scripts": {
+        "test": "grunt --trace-warnings"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/nodemailer/nodemailer.git"
+    },
+    "keywords": [
+        "Nodemailer"
+    ],
+    "author": "Andris Reinman",
+    "license": "MIT-0",
+    "bugs": {
+        "url": "https://github.com/nodemailer/nodemailer/issues"
+    },
+    "homepage": "https://nodemailer.com/",
+    "devDependencies": {
+        "@aws-sdk/client-ses": "3.427.0",
+        "aws-sdk": "2.1472.0",
+        "bunyan": "1.8.15",
+        "chai": "4.3.10",
+        "eslint-config-nodemailer": "1.2.0",
+        "eslint-config-prettier": "9.0.0",
+        "grunt": "1.6.1",
+        "grunt-cli": "1.4.3",
+        "grunt-eslint": "24.3.0",
+        "grunt-mocha-test": "0.13.3",
+        "libbase64": "1.2.1",
+        "libmime": "5.2.1",
+        "libqp": "2.0.1",
+        "mocha": "10.2.0",
+        "nodemailer-ntlm-auth": "1.0.4",
+        "proxy": "1.0.2",
+        "proxy-test-server": "1.0.0",
+        "sinon": "16.1.0",
+        "smtp-server": "3.13.0"
+    },
+    "engines": {
+        "node": ">=6.0.0"
+    }
+}

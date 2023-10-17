@@ -1,0 +1,8 @@
+.spectrum {
+  --spectrum-asset-folder-background-color: var(--spectrum-global-color-gray-300);
+  --spectrum-asset-file-background-color: var(--spectrum-global-color-gray-50);
+  --spectrum-asset-icon-outline-color: var(--spectrum-global-color-gray-500);
+  --spectrum-asset-icon-max-width: var(--spectrum-global-dimension-static-size-1000);
+  --spectrum-asset-icon-min-width: var(--spectrum-global-dimension-size-600);
+  --spectrum-asset-icon-margin: var(--spectrum-global-dimension-size-250);
+}
