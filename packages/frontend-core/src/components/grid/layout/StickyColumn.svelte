@@ -64,7 +64,7 @@
   </div>
 
   <div class="content" on:mouseleave={() => ($hoveredRowId = null)}>
-    <GridScrollWrapper scrollVertically wheelInteractive>
+    <GridScrollWrapper scrollVertically attachHandlers>
       {#each $renderedRows as row, idx}
         {@const rowSelected = !!$selectedRows[row._id]}
         {@const rowHovered = $hoveredRowId === row._id}

@@ -54,6 +54,7 @@
       label="App export"
       on:change={e => {
         file = e.detail?.[0]
+        encrypted = file?.name?.endsWith(".enc.tar.gz")
       }}
     />
     <Toggle text="Encrypted" bind:value={encrypted} />

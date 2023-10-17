@@ -18,6 +18,7 @@ import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { databaseTestProviders } from "../integrations/tests/utils"
+import { Client } from "pg"
 
 const config = setup.getConfig()!
 
@@ -41,6 +42,10 @@ describe("postgres integrations", () => {
     postgresDatasource = await config.api.datasource.create(
       await databaseTestProviders.postgres.getDsConfig()
     )
+  })
+
+  afterAll(async () => {
+    await databaseTestProviders.postgres.stopContainer()
   })
 
   beforeEach(async () => {
@@ -111,7 +116,7 @@ describe("postgres integrations", () => {
           fieldName: oneToManyRelationshipInfo.fieldName,
           name: "oneToManyRelation",
           relationshipType: RelationshipType.ONE_TO_MANY,
-          tableId: oneToManyRelationshipInfo.table._id,
+          tableId: oneToManyRelationshipInfo.table._id!,
           main: true,
         },
         manyToOneRelation: {
@@ -122,7 +127,7 @@ describe("postgres integrations", () => {
           fieldName: manyToOneRelationshipInfo.fieldName,
           name: "manyToOneRelation",
           relationshipType: RelationshipType.MANY_TO_ONE,
-          tableId: manyToOneRelationshipInfo.table._id,
+          tableId: manyToOneRelationshipInfo.table._id!,
           main: true,
         },
         manyToManyRelation: {
@@ -133,7 +138,7 @@ describe("postgres integrations", () => {
           fieldName: manyToManyRelationshipInfo.fieldName,
           name: "manyToManyRelation",
           relationshipType: RelationshipType.MANY_TO_MANY,
-          tableId: manyToManyRelationshipInfo.table._id,
+          tableId: manyToManyRelationshipInfo.table._id!,
           main: true,
         },
       },
@@ -250,6 +255,7 @@ describe("postgres integrations", () => {
         id: {
           name: "id",
           type: FieldType.AUTO,
+          autocolumn: true,
         },
       },
       sourceId: postgresDatasource._id,
@@ -1048,6 +1054,48 @@ describe("postgres integrations", () => {
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
       expect(response.body.tableNames.indexOf(primaryName)).not.toBe(-1)
+    })
+  })
+
+  describe("POST /api/datasources/:datasourceId/schema", () => {
+    let client: Client
+
+    beforeEach(async () => {
+      client = new Client(
+        (await databaseTestProviders.postgres.getDsConfig()).config!
+      )
+      await client.connect()
+    })
+
+    afterEach(async () => {
+      await client.query(`DROP TABLE IF EXISTS "table"`)
+      await client.end()
+    })
+
+    it("recognises when a table has no primary key", async () => {
+      await client.query(`CREATE TABLE "table" (id SERIAL)`)
+
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${postgresDatasource._id}/schema`
+      )
+
+      expect(response.body.errors).toEqual({
+        table: "Table must have a primary key.",
+      })
+    })
+
+    it("recognises when a table is using a reserved column name", async () => {
+      await client.query(`CREATE TABLE "table" (_id SERIAL PRIMARY KEY) `)
+
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${postgresDatasource._id}/schema`
+      )
+
+      expect(response.body.errors).toEqual({
+        table: "Table contains invalid columns.",
+      })
     })
   })
 })
