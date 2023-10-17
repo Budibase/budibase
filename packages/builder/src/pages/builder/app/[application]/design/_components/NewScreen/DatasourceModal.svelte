@@ -7,7 +7,7 @@
   import rowListScreen from "builderStore/store/screenTemplates/rowListScreen"
   import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
-  export let mode;
+  export let mode
   export let onCancel
   export let onConfirm
   export let initialScreens = []
@@ -25,7 +25,10 @@
         screen => screen.resourceId !== resourceId
       )
     } else {
-      selectedScreens = [...selectedScreens, rowListScreen([datasource], mode)[0]]
+      selectedScreens = [
+        ...selectedScreens,
+        rowListScreen([datasource], mode)[0],
+      ]
     }
   }
 

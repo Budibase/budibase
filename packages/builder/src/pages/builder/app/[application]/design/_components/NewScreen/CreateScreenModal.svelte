@@ -12,7 +12,7 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
 
-  let mode;
+  let mode
   let pendingScreen
 
   // Modal refs
@@ -101,8 +101,8 @@
   }
 
   // Handler for NewScreenModal
-  export const show = (newMode) => {
-    mode = newMode;
+  export const show = newMode => {
+    mode = newMode
     selectedTemplates = null
     blankScreenUrl = null
     screenMode = mode
@@ -125,7 +125,7 @@
 
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ templates }) => {
-    console.log(templates);
+    console.log(templates)
     selectedTemplates = templates
     screenAccessRoleModal.show()
   }
