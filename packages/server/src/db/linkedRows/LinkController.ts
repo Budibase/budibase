@@ -1,6 +1,5 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
-import Sentry from "@sentry/node"
 import { FieldTypes } from "../../constants"
 import { context } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
@@ -434,8 +433,7 @@ class LinkController {
           await this._db.put(linkedTable)
         }
       } catch (err) {
-        /* istanbul ignore next */
-        Sentry.captureException(err)
+        // Ignored error
       }
     }
     // need to get the full link docs to delete them
