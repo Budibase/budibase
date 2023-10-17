@@ -782,6 +782,7 @@ components:
                       - internal
                       - barcodeqr
                       - bigint
+                      - bb_reference
                     description: Defines the type of the column, most explain themselves, a link
                       column is a relationship.
                   constraints:
@@ -946,6 +947,7 @@ components:
                           - internal
                           - barcodeqr
                           - bigint
+                          - bb_reference
                         description: Defines the type of the column, most explain themselves, a link
                           column is a relationship.
                       constraints:
@@ -1117,6 +1119,7 @@ components:
                             - internal
                             - barcodeqr
                             - bigint
+                            - bb_reference
                           description: Defines the type of the column, most explain themselves, a link
                             column is a relationship.
                         constraints:

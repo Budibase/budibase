@@ -2,7 +2,7 @@ version: "3.8"
 services:
   db:
     container_name: postgres
-    image: postgres
+    image: postgres:15
     restart: unless-stopped
     environment:
       POSTGRES_USER: root
@@ -25,4 +25,4 @@ services:
       - "5050:80"
 
 volumes:
- pg_data:
+  pg_data:

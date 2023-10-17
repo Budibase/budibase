@@ -12,14 +12,14 @@ RUN chmod +x /cleanup.sh
 WORKDIR /app
 ADD packages/server .
 COPY yarn.lock .
-RUN yarn install --production=true
+RUN yarn install --production=true --network-timeout 100000
 RUN /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
 COPY yarn.lock .
-RUN yarn install --production=true
+RUN yarn install --production=true --network-timeout 100000
 RUN /cleanup.sh
 
 FROM budibase/couchdb

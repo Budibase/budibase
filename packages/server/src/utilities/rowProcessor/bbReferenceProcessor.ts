@@ -1,13 +1,15 @@
-import { cache } from "@budibase/backend-core"
+import { cache, db as dbCore } from "@budibase/backend-core"
 import { utils } from "@budibase/shared-core"
-import { FieldSubtype } from "@budibase/types"
+import { FieldSubtype, DocumentType, SEPARATOR } from "@budibase/types"
 import { InvalidBBRefError } from "./errors"
+
+const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
   subtype: FieldSubtype
-): Promise<string | null> {
-  const referenceIds: string[] = []
+): Promise<string | string[] | null> {
+  let referenceIds: string[] = []
 
   if (Array.isArray(value)) {
     referenceIds.push(
@@ -26,35 +28,52 @@ export async function processInputBBReferences(
     )
   }
 
+  // make sure all reference IDs are correct global user IDs
+  // they may be user metadata references (start with row prefix)
+  // and these need to be converted to global IDs
+  referenceIds = referenceIds.map(id => {
+    if (id?.startsWith(ROW_PREFIX)) {
+      return dbCore.getGlobalIDFromUserMetadataID(id)
+    } else {
+      return id
+    }
+  })
+
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { notFoundIds } = await cache.user.getUsers(referenceIds)
 
       if (notFoundIds?.length) {
         throw new InvalidBBRefError(notFoundIds[0], FieldSubtype.USER)
       }
 
-      break
+      if (subtype === FieldSubtype.USERS) {
+        return referenceIds
+      }
+
+      return referenceIds.join(",") || null
+
     default:
       throw utils.unreachable(subtype)
   }
-
-  return referenceIds.join(",") || null
 }
 
 export async function processOutputBBReferences(
-  value: string,
+  value: string | string[],
   subtype: FieldSubtype
 ) {
-  if (typeof value !== "string") {
+  if (value === null || value === undefined) {
     // Already processed or nothing to process
     return value || undefined
   }
 
-  const ids = value.split(",").filter(id => !!id)
+  const ids =
+    typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
     case FieldSubtype.USER:
+    case FieldSubtype.USERS:
       const { users } = await cache.user.getUsers(ids)
       if (!users.length) {
         return undefined
