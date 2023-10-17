@@ -75,7 +75,7 @@
     "@swc/jest": "0.2.27",
     "@trendyol/jest-testcontainers": "2.1.1",
     "@types/jest": "29.5.5",
-    "@types/jsonwebtoken": "8.5.1",
+    "@types/jsonwebtoken": "9.0.3",
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "^4.14.191",
