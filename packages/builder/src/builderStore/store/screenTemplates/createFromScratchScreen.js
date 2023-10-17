@@ -2,13 +2,11 @@ import { Screen } from "./utils/Screen"
 
 export default {
   name: `Create from scratch`,
+  id: `createFromScratch`,
   create: () => createScreen(),
+  table: `Create from scratch`,
 }
 
 const createScreen = () => {
-  return new Screen()
-    .mainType("div")
-    .component("@budibase/standard-components/container")
-    .instanceName("New Screen")
-    .json()
+  return new Screen().instanceName("New Screen").json()
 }

@@ -6,6 +6,7 @@
   export let value = null
   export let label = undefined
   export let disabled = false
+  export let readonly = false
   export let labelPosition = "above"
   export let error = null
   export let placeholder = "Choose an option or type"
@@ -33,8 +34,12 @@
     {value}
     {options}
     {placeholder}
+    {readonly}
     {getOptionLabel}
     {getOptionValue}
     on:change={onChange}
+    on:pick
+    on:type
+    on:blur
   />
 </Field>

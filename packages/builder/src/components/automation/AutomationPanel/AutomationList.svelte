@@ -1,29 +1,37 @@
 <script>
   import { onMount } from "svelte"
-  import { goto } from "@roxi/routify"
-  import { automationStore } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    userSelectedResourceMap,
+  } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
+  import { notifications } from "@budibase/bbui"
 
-  $: selectedAutomationId = $automationStore.selectedAutomation?.automation?._id
+  $: selectedAutomationId = $selectedAutomation?._id
 
-  onMount(() => {
-    automationStore.actions.fetch()
+  onMount(async () => {
+    try {
+      await automationStore.actions.fetch()
+    } catch (error) {
+      notifications.error("Error getting automations list")
+    }
   })
-  function selectAutomation(automation) {
-    automationStore.actions.select(automation)
-    $goto(`./${automation._id}`)
+
+  function selectAutomation(id) {
+    automationStore.actions.select(id)
   }
 </script>
 
 <div class="automations-list">
-  {#each $automationStore.automations as automation, idx}
+  {#each $automationStore.automations.sort(aut => aut.name) as automation}
     <NavItem
-      border={idx > 0}
       icon="ShareAndroid"
       text={automation.name}
       selected={automation._id === selectedAutomationId}
-      on:click={() => selectAutomation(automation)}
+      on:click={() => selectAutomation(automation._id)}
+      selectedBy={$userSelectedResourceMap[automation._id]}
     >
       <EditAutomationPopover {automation} />
     </NavItem>

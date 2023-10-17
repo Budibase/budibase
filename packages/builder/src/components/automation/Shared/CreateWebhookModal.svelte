@@ -1,33 +1,40 @@
 <script>
-  import { Icon } from "@budibase/bbui"
-  import { automationStore } from "builderStore"
-  import { database } from "stores/backend"
+  import { Icon, notifications } from "@budibase/bbui"
+  import { automationStore, selectedAutomation } from "builderStore"
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"
 
   const POLL_RATE_MS = 2500
+
   let interval
   let finished = false
   let schemaURL
   let propCount = 0
 
-  $: instanceId = $database._id
-  $: automation = $automationStore.selectedAutomation?.automation
+  $: automation = $selectedAutomation
 
   onMount(async () => {
-    // save the automation initially
-    await automationStore.actions.save({
-      instanceId,
-      automation,
-    })
+    if (!automation?.definition?.trigger?.inputs.schemaUrl) {
+      // save the automation initially
+      try {
+        await automationStore.actions.save(automation)
+      } catch (error) {
+        notifications.error("Error saving automation")
+      }
+    }
     interval = setInterval(async () => {
-      await automationStore.actions.fetch()
-      const outputs = automation?.definition?.trigger.schema.outputs?.properties
-      // always one prop for the "body"
-      if (Object.keys(outputs).length > 1) {
-        propCount = Object.keys(outputs).length - 1
-        finished = true
+      try {
+        await automationStore.actions.fetch()
+        const outputs =
+          automation?.definition?.trigger.schema.outputs?.properties
+        // always one prop for the "body"
+        if (Object.keys(outputs).length > 1) {
+          propCount = Object.keys(outputs).length - 1
+          finished = true
+        }
+      } catch (error) {
+        notifications.error("Error getting automations list")
       }
     }, POLL_RATE_MS)
     schemaURL = automation?.definition?.trigger?.inputs.schemaUrl
@@ -63,7 +70,7 @@
   <a
     slot="footer"
     target="_blank"
-    href="https://docs.budibase.com/automate/steps/triggers"
+    href="https://docs.budibase.com/docs/trigger"
   >
     <Icon name="InfoOutline" />
     <span>Learn about webhooks</span>
@@ -88,7 +95,7 @@
     text-align: justify;
   }
   .finished-text {
-    font-weight: 500;
+    font-weight: 600;
     text-align: center;
     color: var(--blue);
   }

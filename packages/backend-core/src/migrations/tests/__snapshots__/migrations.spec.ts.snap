@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`migrations should match snapshot 1`] = `
+{
+  "_id": "migrations",
+  "_rev": "1-2f64479842a0513aa8b97f356b0b9127",
+  "createdAt": "2020-01-01T00:00:00.000Z",
+  "test": 1577836800000,
+  "updatedAt": "2020-01-01T00:00:00.000Z",
+}
+`;

@@ -1,3 +1,4 @@
+import { ActionStepID } from "constants/backend/automations"
 import { TableNames } from "../constants"
 import {
   AUTO_COLUMN_DISPLAY_NAMES,
@@ -52,4 +53,10 @@ export function buildAutoColumn(tableName, name, subtype) {
     base.fieldName = `${tableName}-${name}`
   }
   return base
+}
+
+export function checkForCollectStep(automation) {
+  return automation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
 }

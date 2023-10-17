@@ -1,5 +1,4 @@
-import { get } from "svelte/store"
-import { builderStore } from "../store"
+import { builderStore } from "stores"
 
 /**
  * Helper to build a CSS string from a style object.
@@ -15,25 +14,6 @@ const buildStyleString = (styleObject, customStyles) => {
 }
 
 /**
- * Applies styles to enrich the builder preview.
- * Applies styles to highlight the selected component, and allows pointer
- * events for any selectable components (overriding the blanket ban on pointer
- * events in the iframe HTML).
- */
-const addBuilderPreviewStyles = (node, styleString, componentId) => {
-  if (componentId === get(builderStore).selectedComponentId) {
-    const style = window.getComputedStyle(node)
-    const property = style?.display === "table-row" ? "outline" : "border"
-    return (
-      styleString +
-      `;${property}: 2px solid #4285f4 !important; border-radius: 4px !important;`
-    )
-  } else {
-    return styleString
-  }
-}
-
-/**
  * Svelte action to apply correct component styles.
  * This also applies handlers for selecting components from the builder preview.
  */
@@ -41,21 +21,37 @@ export const styleable = (node, styles = {}) => {
   let applyNormalStyles
   let applyHoverStyles
   let selectComponent
+  let editComponent
 
   // Creates event listeners and applies initial styles
   const setupStyles = (newStyles = {}) => {
+    node.classList.add(`${newStyles.id}-dom`)
+
+    let baseStyles = {}
+    if (newStyles.empty) {
+      baseStyles.padding = "var(--spacing-l)"
+      baseStyles.overflow = "hidden"
+      if (newStyles.selected) {
+        baseStyles.border = "2px solid transparent"
+      } else {
+        baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"
+      }
+    }
+
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
-    const normalStyles = newStyles.normal || {}
+    const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
       ...(newStyles.hover || {}),
     }
 
+    // Allow dragging if required
+    node.setAttribute("draggable", !!newStyles.draggable)
+
     // Applies a style string to a DOM node
     const applyStyles = styleString => {
-      node.style = addBuilderPreviewStyles(node, styleString, componentId)
-      node.dataset.componentId = componentId
+      node.style = styleString
     }
 
     // Applies the "normal" style definition
@@ -77,13 +73,25 @@ export const styleable = (node, styles = {}) => {
       return false
     }
 
+    // Handler to start editing a component (if applicable) when double
+    // clicking in the builder preview
+    editComponent = event => {
+      if (newStyles.interactive && newStyles.editable) {
+        builderStore.actions.setEditMode(true)
+      }
+      event.preventDefault()
+      event.stopPropagation()
+      return false
+    }
+
     // Add listeners to toggle hover styles
     node.addEventListener("mouseover", applyHoverStyles)
     node.addEventListener("mouseout", applyNormalStyles)
 
     // Add builder preview click listener
-    if (get(builderStore).inBuilder) {
+    if (newStyles.interactive) {
       node.addEventListener("click", selectComponent, false)
+      node.addEventListener("dblclick", editComponent, false)
     }
 
     // Apply initial normal styles
@@ -94,11 +102,8 @@ export const styleable = (node, styles = {}) => {
   const removeListeners = () => {
     node.removeEventListener("mouseover", applyHoverStyles)
     node.removeEventListener("mouseout", applyNormalStyles)
-
-    // Remove builder preview click listener
-    if (get(builderStore).inBuilder) {
-      node.removeEventListener("click", selectComponent)
-    }
+    node.removeEventListener("click", selectComponent)
+    node.removeEventListener("dblclick", editComponent)
   }
 
   // Apply initial styles

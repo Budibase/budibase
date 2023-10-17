@@ -1,41 +1,70 @@
 <script>
-  import { store, automationStore } from "builderStore"
-  import { roles } from "stores/backend"
-  import { Button, Icon, ActionGroup, Tabs, Tab } from "@budibase/bbui"
-  import DeployModal from "components/deploy/DeployModal.svelte"
-  import RevertModal from "components/deploy/RevertModal.svelte"
-  import { get } from "builderStore/api"
-  import { isActive, goto, layout } from "@roxi/routify"
-  import Logo from "/assets/bb-logo.svg"
+  import {
+    store,
+    automationStore,
+    userStore,
+    deploymentStore,
+  } from "builderStore"
+  import { roles, flags } from "stores/backend"
+  import { auth, apps } from "stores/portal"
+  import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
+  import {
+    Icon,
+    Tabs,
+    Tab,
+    Heading,
+    Modal,
+    notifications,
+    TooltipPosition,
+  } from "@budibase/bbui"
+  import AppActions from "components/deploy/AppActions.svelte"
+  import { API } from "api"
+  import { isActive, goto, layout, redirect } from "@roxi/routify"
   import { capitalise } from "helpers"
+  import { onMount, onDestroy } from "svelte"
+  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+  import CommandPalette from "components/commandPalette/CommandPalette.svelte"
+  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+  import TourPopover from "components/portal/onboarding/TourPopover.svelte"
+  import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
+  import { UserAvatars } from "@budibase/frontend-core"
+  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+  import PreviewOverlay from "./_components/PreviewOverlay.svelte"
 
-  // Get Package and set store
   export let application
 
   let promise = getPackage()
+  let hasSynced = false
+  let commandPaletteModal
+  let loaded = false
+
+  $: loaded && initTour()
   $: selected = capitalise(
     $layout.children.find(layout => $isActive(layout.path))?.title ?? "data"
   )
 
   async function getPackage() {
-    const res = await get(`/api/applications/${application}/appPackage`)
-    const pkg = await res.json()
-
-    if (res.ok) {
+    try {
+      store.actions.reset()
+      const pkg = await API.fetchAppPackage(application)
       await store.actions.initialise(pkg)
       await automationStore.actions.fetch()
       await roles.fetch()
+      await flags.fetch()
+      await apps.load()
+      await deploymentStore.actions.load()
+      loaded = true
       return pkg
-    } else {
-      throw new Error(pkg)
+    } catch (error) {
+      notifications.error(`Error initialising app: ${error?.message}`)
+      $redirect("../../")
     }
   }
-
-  // handles navigation between frontend, backend, automation.
-  // this remembers your last place on each of the sections
+  // Handles navigation between frontend, backend, automation.
+  // This remembers your last place on each of the sections
   // e.g. if one of your screens is selected on front end, then
   // you browse to backend, when you click frontend, you will be
-  // brought back to the same screen
+  // brought back to the same screen.
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (!activeTopNav) return
@@ -46,95 +75,194 @@
       return state
     })
   }
+
+  // Event handler for the command palette
+  const handleKeyDown = e => {
+    if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      commandPaletteModal.toggle()
+    }
+  }
+
+  const initTour = async () => {
+    // Check if onboarding is enabled.
+    if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
+      if (!$auth.user?.onboardedAt) {
+        await store.update(state => ({
+          ...state,
+          onboarding: true,
+          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+        }))
+      } else {
+        // Feature tour date
+        const release_date = new Date("2023-03-01T00:00:00.000Z")
+        const onboarded = new Date($auth.user?.onboardedAt)
+        if (onboarded < release_date) {
+          await store.update(state => ({
+            ...state,
+            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
+          }))
+        }
+      }
+    }
+  }
+
+  onMount(async () => {
+    if (!hasSynced && application) {
+      try {
+        await API.syncApp(application)
+        // check if user has beta access
+        // const betaResponse = await API.checkBetaAccess($auth?.user?.email)
+        // betaAccess = betaResponse.access
+      } catch (error) {
+        notifications.error("Failed to sync with production database")
+      }
+      hasSynced = true
+    }
+  })
+
+  onDestroy(() => {
+    // Run async on a slight delay to let other cleanup logic run without
+    // being confused by the store wiping
+    setTimeout(() => {
+      store.actions.reset()
+    }, 10)
+  })
 </script>
 
-{#await promise}
-  <!-- This should probably be some kind of loading state? -->
-  <div class="loading" />
-{:then _}
-  <div class="root">
-    <div class="top-nav">
-      <div class="topleftnav">
-        <button class="home-logo">
-          <img
-            src={Logo}
-            alt="budibase icon"
-            on:click={() => $goto(`../../portal/`)}
-          />
-        </button>
+<TourPopover />
 
-        <div class="tabs">
-          <Tabs {selected}>
-            {#each $layout.children as { path, title }}
+{#if $store.builderSidePanel}
+  <BuilderSidePanel />
+{/if}
+
+<div class="root" class:blur={$store.showPreview}>
+  <VerificationPromptBanner />
+  <div class="top-nav">
+    {#if $store.initialised}
+      <div class="topleftnav">
+        <span class="back-to-apps">
+          <Icon
+            size="S"
+            hoverable
+            name="BackAndroid"
+            on:click={() => $goto("../../portal/apps")}
+          />
+        </span>
+        <Tabs {selected} size="M">
+          {#each $layout.children as { path, title }}
+            <TourWrap tourStepKey={`builder-${title}-section`}>
               <Tab
                 quiet
                 selected={$isActive(path)}
                 on:click={topItemNavigate(path)}
                 title={capitalise(title)}
+                id={`builder-${title}-tab`}
               />
-            {/each}
-          </Tabs>
-        </div>
-
-        <!-- This gets all indexable subroutes and sticks them in the top nav. -->
-        <ActionGroup />
+            </TourWrap>
+          {/each}
+        </Tabs>
+      </div>
+      <div class="topcenternav">
+        <Heading size="XS">{$store.name}</Heading>
       </div>
       <div class="toprightnav">
-        <RevertModal />
-        <Icon
-          name="Play"
-          hoverable
-          on:click={() => {
-            window.open(`/${application}`)
-          }}
-        />
-        <DeployModal />
+        <span>
+          <UserAvatars
+            users={$userStore}
+            order="rtl"
+            tooltipPosition={TooltipPosition.Bottom}
+          />
+        </span>
+        <AppActions {application} {loaded} />
       </div>
-    </div>
-    <div class="beta">
-      <Button
-        secondary
-        href="https://github.com/Budibase/budibase/discussions/categories/ideas"
-      >
-        Request feature
-      </Button>
-    </div>
-    <slot />
+    {/if}
   </div>
-{:catch error}
-  <p>Something went wrong: {error.message}</p>
-{/await}
+  {#await promise}
+    <!-- This should probably be some kind of loading state? -->
+    <div class="loading" />
+  {:then _}
+    <div class="body">
+      <slot />
+    </div>
+  {:catch error}
+    <p>Something went wrong: {error.message}</p>
+  {/await}
+</div>
+
+{#if $store.showPreview}
+  <PreviewOverlay />
+{/if}
+
+<svelte:window on:keydown={handleKeyDown} />
+<Modal bind:this={commandPaletteModal}>
+  <CommandPalette />
+</Modal>
 
 <style>
+  .back-to-apps {
+    display: contents;
+  }
+  .back-to-apps :global(.icon) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
   .loading {
     min-height: 100%;
     height: 100%;
     width: 100%;
     background: var(--background);
   }
-
   .root {
     min-height: 100%;
     height: 100%;
     width: 100%;
     display: flex;
     flex-direction: column;
+    transition: filter 260ms ease-out;
   }
-
-  a {
-    text-transform: none;
-    color: var(--grey-5);
+  .root.blur {
+    filter: blur(8px);
   }
 
   .top-nav {
-    flex: 0 0 auto;
+    flex: 0 0 60px;
     background: var(--background);
-    padding: 0 var(--spacing-xl);
-    display: flex;
+    padding-left: var(--spacing-xl);
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    flex-direction: row;
     box-sizing: border-box;
-    justify-content: space-between;
-    align-items: center;
+    align-items: stretch;
     border-bottom: var(--border-light);
+    z-index: 2;
+  }
+
+  .topcenternav {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+
+  .topcenternav :global(.spectrum-Heading) {
+    flex: 1 1 auto;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0px var(--spacing-m);
+  }
+
+  .topleftnav {
+    display: flex;
+    position: relative;
+    margin-bottom: -2px;
+    overflow: hidden;
+  }
+
+  .topleftnav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: 600;
   }
 
   .toprightnav {
@@ -142,72 +270,16 @@
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--spacing-xl);
   }
 
-  .topleftnav {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
+  .toprightnav :global(.avatars) {
+    margin-right: var(--spacing-l);
   }
 
-  .tabs {
-    display: flex;
-    position: relative;
-    margin-bottom: -1px;
-  }
-
-  .topnavitemright a {
-    cursor: pointer;
-    color: var(--grey-7);
-    margin: 0 12px 0 0;
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    height: 24px;
-    width: 24px;
-  }
-
-  .topnavitemright a:hover {
-    color: var(--ink);
-    font-weight: 500;
-  }
-
-  .home-logo {
-    border-style: none;
-    background-color: rgba(0, 0, 0, 0);
-    cursor: pointer;
-    outline: none;
-    padding: 0 10px 0 0;
-    align-items: center;
-    height: 32px;
-  }
-
-  .home-logo:active {
-    outline: none;
-  }
-
-  .home-logo img {
-    height: 32px;
-  }
-
-  i {
-    font-size: 18px;
-    color: var(--grey-7);
-  }
-  i:hover {
-    color: var(--ink);
-  }
-
-  .beta {
-    position: absolute;
-    bottom: var(--spacing-m);
-    left: var(--spacing-m);
+  .body {
+    flex: 1 1 auto;
     z-index: 1;
-  }
-  .beta :global(button) {
-    background-color: var(--background);
+    display: flex;
+    flex-direction: column;
   }
 </style>

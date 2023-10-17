@@ -12,6 +12,7 @@
     "",
     requiredValidator
   )
+  // eslint-disable-next-line no-unused-vars
   const [repeatPassword, _, repeatTouched] = createValidationStore(
     "",
     requiredValidator

@@ -1,0 +1,161 @@
+{
+  "actions": [
+    {
+      "name": "Save Row",
+      "type": "data",
+      "component": "SaveRow",
+      "context": [
+        {
+          "label": "Saved row",
+          "value": "row"
+        }
+      ]
+    },
+    {
+      "name": "Duplicate Row",
+      "type": "data",
+      "component": "DuplicateRow",
+      "context": [
+        {
+          "label": "Duplicated row",
+          "value": "row"
+        }
+      ]
+    },
+    {
+      "name": "Delete Row",
+      "displayName": "Delete Rows",
+      "type": "data",
+      "component": "DeleteRow"
+    },
+    {
+      "name": "Fetch Row",
+      "type": "data",
+      "component": "FetchRow",
+      "context": [
+        {
+          "label": "Fetched row",
+          "value": "row"
+        }
+      ]
+    },
+    {
+      "name": "Navigate To",
+      "type": "application",
+      "component": "NavigateTo"
+    },
+    {
+      "name": "Execute Query",
+      "type": "data",
+      "component": "ExecuteQuery",
+      "context": [
+        {
+          "label": "Query result",
+          "value": "result"
+        }
+      ]
+    },
+    {
+      "name": "Trigger Automation",
+      "type": "application",
+      "component": "TriggerAutomation",
+      "context": [
+        {
+          "label": "Automation Result",
+          "value": "result"
+        }
+      ]
+    },
+    {
+      "name": "Update Field Value",
+      "type": "form",
+      "component": "UpdateFieldValue"
+    },
+    {
+      "name": "Scroll To Field",
+      "type": "form",
+      "component": "ScrollTo"
+    },
+    {
+      "name": "Validate Form",
+      "type": "form",
+      "component": "ValidateForm"
+    },
+    {
+      "name": "Change Form Step",
+      "type": "form",
+      "component": "ChangeFormStep"
+    },
+    {
+      "name": "Clear Form",
+      "type": "form",
+      "component": "ClearForm"
+    },
+    {
+      "name": "Log Out",
+      "type": "application",
+      "component": "LogOut"
+    },
+    {
+      "name": "Close Screen Modal",
+      "type": "application",
+      "component": "CloseScreenModal"
+    },
+    {
+      "name": "Refresh Data Provider",
+      "type": "data",
+      "component": "RefreshDataProvider"
+    },
+    {
+      "name": "Update State",
+      "type": "data",
+      "component": "UpdateState",
+      "dependsOnFeature": "state"
+    },
+    {
+      "name": "Upload File to S3",
+      "type": "data",
+      "component": "S3Upload",
+      "context": [
+        {
+          "label": "File URL",
+          "value": "publicUrl"
+        }
+      ]
+    },
+    {
+      "name": "Export Data",
+      "type": "data",
+      "component": "ExportData"
+    },
+    {
+      "name": "Continue if / Stop if",
+      "type": "logic",
+      "component": "ContinueIf",
+      "dependsOnFeature": "continueIfAction"
+    },
+    {
+      "name": "Show Notification",
+      "type": "application",
+      "component": "ShowNotification",
+      "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Prompt User",
+      "type": "application",
+      "component": "PromptUser"
+    },
+    {
+      "name": "Open Side Panel",
+      "type": "application",
+      "component": "OpenSidePanel",
+      "dependsOnFeature": "sidePanel"
+    },
+    {
+      "name": "Close Side Panel",
+      "type": "application",
+      "component": "CloseSidePanel",
+      "dependsOnFeature": "sidePanel"
+    }
+  ]
+}

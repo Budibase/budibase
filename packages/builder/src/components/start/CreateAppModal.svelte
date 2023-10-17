@@ -2,152 +2,269 @@
   import { writable, get as svelteGet } from "svelte/store"
   import {
     notifications,
+    keepOpen,
     Input,
     ModalContent,
     Dropzone,
-    Body,
-    Checkbox,
   } from "@budibase/bbui"
-  import { store, automationStore, hostingStore } from "builderStore"
-  import { string, mixed, object } from "yup"
-  import api, { get, post } from "builderStore/api"
-  import analytics from "analytics"
+  import { store, automationStore } from "builderStore"
+  import { API } from "api"
+  import { apps, admin, auth } from "stores/portal"
   import { onMount } from "svelte"
-  import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
+  import { createValidationStore } from "helpers/validation/yup"
+  import * as appValidation from "helpers/validation/yup/app"
+  import TemplateCard from "components/common/TemplateCard.svelte"
+  import { lowercase } from "helpers"
 
   export let template
 
-  const values = writable({ name: null })
-  const errors = writable({})
-  const touched = writable({})
-  const validator = {
-    name: string().required("Your application must have a name"),
-    file: template ? mixed().required("Please choose a file to import") : null,
+  let creating = false
+  let defaultAppName
+
+  const values = writable({ name: "", url: null })
+  const validation = createValidationStore()
+  const encryptionValidation = createValidationStore()
+
+  $: {
+    const { url } = $values
+
+    validation.check({
+      ...$values,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
+    encryptionValidation.check({ ...$values })
   }
 
-  let submitting = false
-  let valid = false
-  $: checkValidity($values, validator)
+  $: encryptedFile = $values.file?.name?.endsWith(".enc.tar.gz")
 
   onMount(async () => {
-    await hostingStore.actions.fetchDeployedApps()
-    const existingAppNames = svelteGet(hostingStore).deployedAppNames
-    validator.name = string()
-      .required("Your application must have a name")
-      .test(
-        "non-existing-app-name",
-        "Another app with the same name already exists",
-        value => {
-          return !existingAppNames.some(
-            appName => appName.toLowerCase() === value.toLowerCase()
-          )
-        }
-      )
+    const lastChar = $auth.user?.firstName
+      ? $auth.user?.firstName[$auth.user?.firstName.length - 1]
+      : null
+
+    defaultAppName =
+      lastChar && lastChar.toLowerCase() == "s"
+        ? `${$auth.user?.firstName} app`
+        : `${$auth.user.firstName}s app`
+
+    $values.name = resolveAppName(
+      template,
+      !$auth.user?.firstName ? "My app" : defaultAppName
+    )
+    nameToUrl($values.name)
+    await setupValidation()
   })
 
-  const checkValidity = async (values, validator) => {
-    const obj = object().shape(validator)
-    Object.keys(validator).forEach(key => ($errors[key] = null))
-    try {
-      await obj.validate(values, { abortEarly: false })
-    } catch (validationErrors) {
-      validationErrors.inner.forEach(error => {
-        $errors[error.path] = capitalise(error.message)
-      })
+  const appPrefix = "/app"
+
+  $: appUrl = `${window.location.origin}${
+    $values.url
+      ? `${appPrefix}${$values.url}`
+      : `${appPrefix}${resolveAppUrl(template, $values.name)}`
+  }`
+
+  const resolveAppUrl = (template, name) => {
+    let parsedName
+    const resolvedName = resolveAppName(template, name)
+    parsedName = resolvedName ? resolvedName.toLowerCase() : ""
+    const parsedUrl = parsedName ? parsedName.replace(/\s+/g, "-") : ""
+    return encodeURI(parsedUrl)
+  }
+
+  const resolveAppName = (template, name) => {
+    if (template && !template.fromFile) {
+      return template.name
     }
-    valid = await obj.isValid(values)
+    return name ? name.trim() : null
+  }
+
+  const tidyUrl = url => {
+    if (url && !url.startsWith("/")) {
+      url = `/${url}`
+    }
+    $values.url = url === "" ? null : url
+  }
+
+  const nameToUrl = appName => {
+    let resolvedUrl = resolveAppUrl(template, appName)
+    tidyUrl(resolvedUrl)
+  }
+
+  const setupValidation = async () => {
+    const applications = svelteGet(apps)
+    appValidation.name(validation, { apps: applications })
+    appValidation.url(validation, { apps: applications })
+    appValidation.file(validation, { template })
+
+    encryptionValidation.addValidatorType("encryptionPassword", "text", true)
+
+    // init validation
+    const { url } = $values
+    validation.check({
+      ...$values,
+      url: url?.[0] === "/" ? url.substring(1, url.length) : url,
+    })
   }
 
   async function createNewApp() {
-    submitting = true
-
-    // Check a template exists if we are important
-    if (template && !$values.file) {
-      $errors.file = "Please choose a file to import"
-      valid = false
-      submitting = false
-      return false
-    }
+    creating = true
 
     try {
       // Create form data to create app
       let data = new FormData()
-      data.append("name", $values.name)
+      data.append("name", $values.name.trim())
+      if ($values.url) {
+        data.append("url", $values.url.trim())
+      }
       data.append("useTemplate", template != null)
       if (template) {
         data.append("templateName", template.name)
         data.append("templateKey", template.key)
         data.append("templateFile", $values.file)
+        if ($values.encryptionPassword?.trim()) {
+          data.append("encryptionPassword", $values.encryptionPassword.trim())
+        }
       }
 
       // Create App
-      const appResp = await post("/api/applications", data, {})
-      const appJson = await appResp.json()
-      if (!appResp.ok) {
-        throw new Error(appJson.message)
-      }
-
-      analytics.captureEvent("App Created", {
-        name: $values.name,
-        appId: appJson._id,
-        template,
-      })
+      const createdApp = await API.createApp(data)
 
       // Select Correct Application/DB in prep for creating user
-      const applicationPkg = await get(
-        `/api/applications/${appJson.instance._id}/appPackage`
-      )
-      const pkg = await applicationPkg.json()
-      if (applicationPkg.ok) {
-        await store.actions.initialise(pkg)
-        await automationStore.actions.fetch()
-      } else {
-        throw new Error(pkg)
-      }
+      const pkg = await API.fetchAppPackage(createdApp.instance._id)
+      await store.actions.initialise(pkg)
+      await automationStore.actions.fetch()
+      // Update checklist - in case first app
+      await admin.init()
 
       // Create user
-      const user = {
-        roleId: $values.roleId,
-      }
-      const userResp = await api.post(`/api/users/metadata/self`, user)
-      await userResp.json()
-      $goto(`/builder/app/${appJson.instance._id}`)
+      await auth.setInitInfo({})
+
+      $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
-      console.error(error)
-      notifications.error(error)
-      submitting = false
+      creating = false
+      throw error
     }
+  }
+
+  const Step = { CONFIG: "config", SET_PASSWORD: "set_password" }
+  let currentStep = Step.CONFIG
+  $: stepConfig = {
+    [Step.CONFIG]: {
+      title: "Create your app",
+      confirmText: template?.fromFile ? "Import app" : "Create app",
+      onConfirm: async () => {
+        if (encryptedFile) {
+          currentStep = Step.SET_PASSWORD
+          return keepOpen
+        } else {
+          try {
+            await createNewApp()
+          } catch (error) {
+            notifications.error("Error creating app")
+          }
+        }
+      },
+      isValid: $validation.valid,
+    },
+    [Step.SET_PASSWORD]: {
+      title: "Provide the export password",
+      confirmText: "Import app",
+      onConfirm: async () => {
+        try {
+          await createNewApp()
+        } catch (e) {
+          let message = "Error creating app"
+          if (e.message) {
+            message += `: ${lowercase(e.message)}`
+          }
+          notifications.error(message)
+          return keepOpen
+        }
+      },
+      isValid: $encryptionValidation.valid,
+    },
   }
 </script>
 
 <ModalContent
-  title={template ? "Import app" : "Create new app"}
-  confirmText={template ? "Import app" : "Create app"}
-  onConfirm={createNewApp}
-  disabled={!valid}
+  title={stepConfig[currentStep].title}
+  confirmText={stepConfig[currentStep].confirmText}
+  onConfirm={stepConfig[currentStep].onConfirm}
+  disabled={!stepConfig[currentStep].isValid}
 >
-  {#if template}
-    <Dropzone
-      error={$touched.file && $errors.file}
-      gallery={false}
-      label="File to import"
-      value={[$values.file]}
-      on:change={e => {
-        $values.file = e.detail?.[0]
-        $touched.file = true
-      }}
+  {#if currentStep === Step.CONFIG}
+    {#if template && !template?.fromFile}
+      <TemplateCard
+        name={template.name}
+        imageSrc={template.image}
+        backgroundColour={template.background}
+        overlayEnabled={false}
+        icon={template.icon}
+      />
+    {/if}
+    {#if template?.fromFile}
+      <Dropzone
+        error={$validation.touched.file && $validation.errors.file}
+        gallery={false}
+        label="File to import"
+        value={[$values.file]}
+        on:change={e => {
+          $values.file = e.detail?.[0]
+          $validation.touched.file = true
+        }}
+      />
+    {/if}
+    <Input
+      autofocus={true}
+      bind:value={$values.name}
+      disabled={creating}
+      error={$validation.touched.name && $validation.errors.name}
+      on:blur={() => ($validation.touched.name = true)}
+      on:change={nameToUrl($values.name)}
+      label="Name"
+      placeholder={defaultAppName}
+    />
+    <span>
+      <Input
+        bind:value={$values.url}
+        disabled={creating}
+        error={$validation.touched.url && $validation.errors.url}
+        on:blur={() => ($validation.touched.url = true)}
+        on:change={tidyUrl($values.url)}
+        label="URL"
+        placeholder={$values.url
+          ? $values.url
+          : `/${resolveAppUrl(template, $values.name)}`}
+      />
+      {#if $values.url && $values.url !== "" && !$validation.errors.url}
+        <div class="app-server" title={appUrl}>
+          {appUrl}
+        </div>
+      {/if}
+    </span>
+  {/if}
+  {#if currentStep === Step.SET_PASSWORD}
+    <Input
+      autofocus={true}
+      label="Imported file password"
+      type="password"
+      bind:value={$values.encryptionPassword}
+      disabled={creating}
+      on:blur={() => ($encryptionValidation.touched.encryptionPassword = true)}
+      error={$encryptionValidation.touched.encryptionPassword &&
+        $encryptionValidation.errors.encryptionPassword}
     />
   {/if}
-  <Body size="S">
-    Give your new app a name, and choose which groups have access (paid plans
-    only).
-  </Body>
-  <Input
-    bind:value={$values.name}
-    error={$touched.name && $errors.name}
-    on:blur={() => ($touched.name = true)}
-    label="Name"
-  />
-  <Checkbox label="Group access" disabled value={true} text="All users" />
 </ModalContent>
+
+<style>
+  .app-server {
+    color: var(--spectrum-global-color-gray-600);
+    margin-top: 10px;
+    width: 320px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>

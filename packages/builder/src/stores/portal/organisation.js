@@ -1,11 +1,29 @@
 import { writable, get } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
+import { auth } from "stores/portal"
+import _ from "lodash"
 
 const DEFAULT_CONFIG = {
-  platformUrl: "http://localhost:1000",
-  logoUrl: "https://i.imgur.com/ZKyklgF.png",
+  platformUrl: "",
+  logoUrl: undefined,
+  faviconUrl: undefined,
+  emailBrandingEnabled: true,
+  testimonialsEnabled: true,
+  platformTitle: "Budibase",
+  loginHeading: undefined,
+  loginButton: undefined,
+  metaDescription: undefined,
+  metaImageUrl: undefined,
+  metaTitle: undefined,
   docsUrl: undefined,
   company: "Budibase",
+  oidc: undefined,
+  google: undefined,
+  googleDatasourceConfigured: undefined,
+  oidcCallbackUrl: "",
+  googleCallbackUrl: "",
+  isSSOEnforced: false,
+  loaded: false,
 }
 
 export function createOrganisationStore() {
@@ -13,28 +31,28 @@ export function createOrganisationStore() {
   const { subscribe, set } = store
 
   async function init() {
-    const res = await api.get(`/api/admin/configs/settings`)
-    const json = await res.json()
-
-    if (json.status === 400) {
-      set(DEFAULT_CONFIG)
-    } else {
-      set({ ...DEFAULT_CONFIG, ...json.config, _rev: json._rev })
-    }
+    const tenantId = get(auth).tenantId
+    const settingsConfigDoc = await API.getTenantConfig(tenantId)
+    set({ ...DEFAULT_CONFIG, ...settingsConfigDoc.config, loaded: true })
   }
 
   async function save(config) {
-    const res = await api.post("/api/admin/configs", {
+    // Delete non-persisted fields
+    const storeConfig = _.cloneDeep(get(store))
+    delete storeConfig.oidc
+    delete storeConfig.google
+    delete storeConfig.googleDatasourceConfigured
+    delete storeConfig.oidcCallbackUrl
+    delete storeConfig.googleCallbackUrl
+
+    // delete internal store field
+    delete storeConfig.loaded
+
+    await API.saveConfig({
       type: "settings",
-      config: { ...get(store), ...config },
-      _rev: get(store)._rev,
+      config: { ...storeConfig, ...config },
     })
-    const json = await res.json()
-    if (json.status) {
-      return json
-    }
     await init()
-    return { status: 200 }
   }
 
   return {

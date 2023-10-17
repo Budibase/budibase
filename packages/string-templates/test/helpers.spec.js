@@ -1,4 +1,6 @@
 const { processString, processObject, isValid } = require("../src/index.cjs")
+const tableJson = require("./examples/table.json")
+const dayjs = require("dayjs")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -6,6 +8,19 @@ describe("test the custom helpers we have applied", () => {
       obj: { a: 1 },
     })
     expect(output).toBe('object is {"a":1}')
+  })
+})
+
+describe("test that it can run without helpers", () => {
+  it("should be able to run without helpers", async () => {
+    const output = await processString(
+      "{{ avg 1 1 1 }}",
+      {},
+      { noHelpers: true }
+    )
+    const valid = await processString("{{ avg 1 1 1 }}", {})
+    expect(valid).toBe("1")
+    expect(output).toBe("")
   })
 })
 
@@ -32,14 +47,6 @@ describe("test the math helpers", () => {
       c: 3,
     })
     expect(parseInt(output)).toBe(2)
-  })
-
-  it("should be able to times", async () => {
-    const output = await processString("{{times a b}}", {
-      a: 5,
-      b: 5,
-    })
-    expect(parseInt(output)).toBe(25)
   })
 })
 
@@ -161,7 +168,7 @@ describe("test the date helpers", () => {
   it("should allow use of the date helper", async () => {
     const date = new Date(1611577535000)
     const output = await processString("{{ date time 'YYYY-MM-DD' }}", {
-      time: date.toISOString(),
+      time: date.toUTCString(),
     })
     expect(output).toBe("2021-01-25")
   })
@@ -170,6 +177,30 @@ describe("test the date helpers", () => {
     const date = new Date()
     const output = await processString("{{ date now 'DD' }}", {})
     expect(parseInt(output)).toBe(date.getDate())
+  })
+
+  it("should test the timezone capabilities", async () => {
+    const date = new Date(1611577535000)
+    const output = await processString(
+      "{{ date time 'HH-mm-ss Z' 'America/New_York' }}",
+      {
+        time: date.toUTCString(),
+      }
+    )
+    const formatted = new dayjs(date)
+      .tz("America/New_York")
+      .format("HH-mm-ss Z")
+    expect(output).toBe(formatted)
+  })
+
+  it("should guess the users timezone when not specified", async () => {
+    const date = new Date()
+    const output = await processString("{{ date time 'Z' }}", {
+      time: date.toUTCString(),
+    })
+    const timezone = dayjs.tz.guess()
+    const offset = new dayjs(date).tz(timezone).format("Z")
+    expect(output).toBe(offset)
   })
 })
 
@@ -233,6 +264,14 @@ describe("test the string helpers", () => {
     )
     expect(output).toBe("Hi!")
   })
+
+  it("should allow use of the ellipsis helper", async () => {
+    const output = await processString(
+      "{{ ellipsis \"adfasdfasdfasf\" 7 }}",
+      {},
+    )
+    expect(output).toBe("adfasdf…")
+  })
 })
 
 describe("test the comparison helpers", () => {
@@ -246,6 +285,7 @@ describe("test the comparison helpers", () => {
     )
     expect(output).toBe("Success")
   }
+
   it("should allow use of the lt helper", async () => {
     await compare("lt", 10, 15)
   })
@@ -276,13 +316,24 @@ describe("test the comparison helpers", () => {
 describe("Test the object/array helper", () => {
   it("should allow plucking from an array of objects", async () => {
     const context = {
-      items: [
-        { price: 20 },
-        { price: 30 },
-      ]
+      items: [{ price: 20 }, { price: 30 }],
     }
-    const output = await processString("{{ literal ( sum ( pluck items 'price' ) ) }}", context)
+    const output = await processString(
+      "{{ literal ( sum ( pluck items 'price' ) ) }}",
+      context
+    )
     expect(output).toBe(50)
+  })
+
+  it("should allow use of the length helper", async () => {
+    const array = [1, 2, 3]
+    const output = await processString("{{ length array }}", { array })
+    expect(output).toBe("3")
+  })
+
+  it("should allow use of the length helper inline", async () => {
+    const output = await processString(`{{ length '[1, 2, 3]' }}`, {})
+    expect(output).toBe("3")
   })
 })
 
@@ -306,6 +357,13 @@ describe("Test the literal helper", () => {
       a: { b: "i-have-dashes" },
     })
     expect(output.b).toBe("i-have-dashes")
+  })
+})
+
+describe("Test that JSONpase helper", () => {
+  it("should state that the JSONparse helper is valid", async () => {
+    const output = isValid(`{{ JSONparse input }}`)
+    expect(output).toBe(true)
   })
 })
 
@@ -355,6 +413,15 @@ describe("Cover a few complex use cases", () => {
     expect(validity).toBe(true)
   })
 
+  it("should test a case of attempting to get a UTC ISO back out after processing", async () => {
+    const date = new Date()
+    const input = `{{ date (subtract (date dateThing "x") 300000) "" }}`
+    const output = await processString(input, {
+      dateThing: date.toISOString(),
+    })
+    expect(output).toEqual(new Date(date.getTime() - 300000).toISOString())
+  })
+
   it("test a very complex duration output", async () => {
     const currentTime = new Date(1612432082000).toISOString(),
       eventTime = new Date(1612432071000).toISOString()
@@ -387,5 +454,29 @@ describe("Cover a few complex use cases", () => {
     )
     const output = await processObject(input, context)
     expect(output.text).toBe("12-01")
+  })
+
+  it("should only invalidate a single string in an object", async () => {
+    const input = {
+      dataProvider: "{{ literal [c670254c9e74e40518ee5becff53aa5be] }}",
+      theme: "spectrum--lightest",
+      showAutoColumns: false,
+      quiet: true,
+      size: "spectrum--medium",
+      rowCount: 8,
+    }
+    const output = await processObject(input, tableJson)
+    expect(output.dataProvider).not.toBe("Invalid binding")
+  })
+
+  it("should be able to handle external ids", async () => {
+    const input = {
+      dataProvider: "{{ literal [_id] }}",
+    }
+    const context = {
+      _id: "%5B%221%22%2C%221%22%5D",
+    }
+    const output = await processObject(input, context)
+    expect(output.dataProvider).toBe("%5B%221%22%2C%221%22%5D")
   })
 })

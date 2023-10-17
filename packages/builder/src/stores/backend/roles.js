@@ -1,30 +1,47 @@
 import { writable } from "svelte/store"
-import api from "builderStore/api"
+import { API } from "api"
+import { RoleUtils } from "@budibase/frontend-core"
 
 export function createRolesStore() {
   const { subscribe, update, set } = writable([])
 
-  return {
-    subscribe,
+  function setRoles(roles) {
+    set(
+      roles.sort((a, b) => {
+        const priorityA = RoleUtils.getRolePriority(a._id)
+        const priorityB = RoleUtils.getRolePriority(b._id)
+        return priorityA > priorityB ? -1 : 1
+      })
+    )
+  }
+
+  const actions = {
     fetch: async () => {
-      set(await getRoles())
+      const roles = await API.getRoles()
+      setRoles(roles)
+    },
+    fetchByAppId: async appId => {
+      const { roles } = await API.getRolesForApp(appId)
+      setRoles(roles)
     },
     delete: async role => {
-      const response = await api.delete(`/api/roles/${role._id}/${role._rev}`)
+      await API.deleteRole({
+        roleId: role?._id,
+        roleRev: role?._rev,
+      })
       update(state => state.filter(existing => existing._id !== role._id))
-      return response
     },
     save: async role => {
-      const response = await api.post("/api/roles", role)
-      set(await getRoles())
-      return response
+      const savedRole = await API.saveRole(role)
+      await actions.fetch()
+      return savedRole
     },
   }
-}
 
-async function getRoles() {
-  const response = await api.get("/api/roles")
-  return await response.json()
+  return {
+    subscribe,
+    ...actions,
+  }
 }
 
 export const roles = createRolesStore()

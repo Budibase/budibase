@@ -1,0 +1,248 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.apps.deploymentAnnotations }}
+{{- toYaml .Values.services.apps.deploymentAnnotations | indent 4 -}}
+{{ end }}
+  creationTimestamp: null
+  labels:
+    io.kompose.service: app-service
+{{ if .Values.services.apps.deploymentLabels }}
+{{- toYaml .Values.services.apps.deploymentLabels | indent 4 -}}
+{{ end }}
+  name: app-service
+spec:
+  replicas: {{ .Values.services.apps.replicaCount }}
+  selector:
+    matchLabels:
+      io.kompose.service: app-service
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert
+        kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.apps.templateAnnotations }}
+{{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
+{{ end }}
+      creationTimestamp: null
+      labels:
+        io.kompose.service: app-service
+{{ if .Values.services.apps.templateLabels }}
+{{- toYaml .Values.services.apps.templateLabels | indent 8 -}}
+{{ end }}
+    spec:
+      containers:
+      - env:
+        - name: BUDIBASE_ENVIRONMENT
+          value: {{ .Values.globals.budibaseEnv }}
+        - name: DEPLOYMENT_ENVIRONMENT
+          value: "kubernetes"
+        - name: COUCH_DB_URL
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
+        {{ if .Values.services.couchdb.enabled }}
+        - name: COUCH_DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminUsername
+        - name: COUCH_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "couchdb.fullname" . }}
+              key: adminPassword
+        {{ end }}
+        - name: ENABLE_ANALYTICS
+          value: {{ .Values.globals.enableAnalytics | quote }}
+        - name: API_ENCRYPTION_KEY
+          value: {{ .Values.globals.apiEncryptionKey | quote }}
+        - name: HTTP_LOGGING
+          value: {{ .Values.services.apps.httpLogging | quote }}
+        - name: INTERNAL_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: internalApiKey
+        - name: INTERNAL_API_KEY_FALLBACK
+          value: {{ .Values.globals.internalApiKeyFallback | quote }}
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: jwtSecret
+        - name: JWT_SECRET_FALLBACK
+          value: {{ .Values.globals.jwtSecretFallback | quote }}
+        {{ if .Values.services.objectStore.region }}
+        - name: AWS_REGION
+          value: {{ .Values.services.objectStore.region }}
+        {{ end }}
+        - name: MINIO_ENABLED
+          value: {{ .Values.services.objectStore.minio | quote }}
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreAccess
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ template "budibase.fullname" . }}
+              key: objectStoreSecret
+        - name: CLOUDFRONT_CDN
+          value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
+        - name: CLOUDFRONT_PUBLIC_KEY_ID
+          value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
+        - name: CLOUDFRONT_PRIVATE_KEY_64
+          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
+        - name: MINIO_URL
+          value: {{ .Values.services.objectStore.url }}
+        - name: PLUGIN_BUCKET_NAME
+          value: {{ .Values.services.objectStore.pluginBucketName | quote }}
+        - name: APPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.appsBucketName | quote }}
+        - name: GLOBAL_BUCKET_NAME
+          value: {{ .Values.services.objectStore.globalBucketName | quote }}
+        - name: BACKUPS_BUCKET_NAME
+          value: {{ .Values.services.objectStore.backupsBucketName | quote }}
+        - name: PORT
+          value: {{ .Values.services.apps.port | quote }}
+        {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
+        - name: API_REQ_LIMIT_PER_SEC
+          value: {{ .Values.globals.apps.publicApiRateLimitPerSecond | quote }}
+        {{ end }}
+        - name: MULTI_TENANCY
+          value: {{ .Values.globals.multiTenancy | quote }}
+        - name: OFFLINE_MODE
+          value: {{ .Values.globals.offlineMode | quote }}
+        - name: LOG_LEVEL
+          value: {{ .Values.services.apps.logLevel | quote }}
+        - name: REDIS_PASSWORD
+          value: {{ .Values.services.redis.password }}
+        - name: REDIS_URL
+          {{ if .Values.services.redis.url }}
+          value: {{ .Values.services.redis.url }}
+          {{ else }}
+          value: redis-service:{{ .Values.services.redis.port }}
+          {{ end }}
+        - name: SELF_HOSTED
+          value: {{ .Values.globals.selfHosted | quote }}
+        - name: SENTRY_DSN
+          value: {{ .Values.globals.sentryDSN | quote }}
+        - name: POSTHOG_TOKEN
+          value: {{ .Values.globals.posthogToken | quote }}
+        - name: WORKER_URL
+          value: http://worker-service:{{ .Values.services.worker.port }}
+        - name: PLATFORM_URL
+          value: {{ .Values.globals.platformUrl | quote }}
+        - name: ACCOUNT_PORTAL_URL
+          value: {{ .Values.globals.accountPortalUrl | quote }}
+        - name: ACCOUNT_PORTAL_API_KEY
+          value: {{ .Values.globals.accountPortalApiKey | quote }}
+        - name: COOKIE_DOMAIN
+          value: {{ .Values.globals.cookieDomain | quote }}
+        - name: HTTP_MIGRATIONS
+          value: {{ .Values.globals.httpMigrations | quote }}
+        - name: GOOGLE_CLIENT_ID
+          value: {{ .Values.globals.google.clientId | quote }}
+        - name: GOOGLE_CLIENT_SECRET
+          value: {{ .Values.globals.google.secret | quote }}
+        - name: AUTOMATION_MAX_ITERATIONS
+          value: {{ .Values.globals.automationMaxIterations | quote }}
+        - name: TENANT_FEATURE_FLAGS
+          value: {{ .Values.globals.tenantFeatureFlags | quote }}
+        - name: ENCRYPTION_KEY
+          value: {{ .Values.globals.bbEncryptionKey | quote }}
+        {{ if .Values.globals.bbAdminUserEmail }}
+        - name: BB_ADMIN_USER_EMAIL
+          value: {{ .Values.globals.bbAdminUserEmail | quote }}
+        {{ end }}
+        {{ if .Values.globals.bbAdminUserPassword }}
+        - name: BB_ADMIN_USER_PASSWORD
+          value: {{ .Values.globals.bbAdminUserPassword | quote }}
+        {{ end }}
+        {{ if .Values.globals.pluginsDir }}
+        - name: PLUGINS_DIR
+          value: {{ .Values.globals.pluginsDir | quote }}
+        {{ end }}
+        {{ if .Values.services.apps.nodeDebug }}
+        - name: NODE_DEBUG
+          value: {{ .Values.services.apps.nodeDebug | quote }}
+        {{ end }}
+        {{ if .Values.globals.datadogApmEnabled }}
+        - name: DD_LOGS_INJECTION
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_ENABLED
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_DD_URL
+          value: https://trace.agent.datadoghq.eu
+        {{ end }}
+        {{ if .Values.globals.globalAgentHttpProxy }}
+        - name: GLOBAL_AGENT_HTTP_PROXY
+          value: {{ .Values.globals.globalAgentHttpProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentHttpsProxy }}
+        - name: GLOBAL_AGENT_HTTPS_PROXY
+          value: {{ .Values.globals.globalAgentHttpsProxy | quote }}
+        {{ end }}
+        {{ if .Values.globals.globalAgentNoProxy }}
+        - name: GLOBAL_AGENT_NO_PROXY
+          value: {{ .Values.globals.globalAgentNoProxy | quote }}
+        {{ end }}
+        {{ if .Values.services.tlsRejectUnauthorized }}
+        - name: NODE_TLS_REJECT_UNAUTHORIZED
+          value: {{ .Values.services.tlsRejectUnauthorized }}
+        {{ end }}
+
+        image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+        imagePullPolicy: Always
+        {{- if .Values.services.apps.startupProbe }}
+        {{- with .Values.services.apps.startupProbe }}
+        startupProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.apps.livenessProbe }}
+        {{- with .Values.services.apps.livenessProbe }}
+        livenessProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.apps.readinessProbe }}
+        {{- with .Values.services.apps.readinessProbe }}
+        readinessProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        name: bbapps
+        ports:
+        - containerPort: {{ .Values.services.apps.port }}
+        {{ with .Values.services.apps.resources }}
+        resources:
+        {{- toYaml . | nindent 10 }}
+        {{ end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}    
+      {{ if .Values.imagePullSecrets }}
+      imagePullSecrets:
+      {{- toYaml .Values.imagePullSecrets | nindent 6 }}
+      {{ end }}
+      restartPolicy: Always
+      serviceAccountName: ""
+status: {}

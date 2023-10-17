@@ -1,6 +1,7 @@
 const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
 const setup = require("./utilities")
 const { basicLayout } = setup.structures
+const { events } = require("@budibase/backend-core")
 
 describe("/layouts", () => {
   let request = setup.getRequest()
@@ -9,9 +10,10 @@ describe("/layouts", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     layout = await config.createLayout()
+    jest.clearAllMocks()
   })
 
   describe("save", () => {
@@ -23,6 +25,7 @@ describe("/layouts", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body._rev).toBeDefined()
+      expect(events.layout.created).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -42,6 +45,7 @@ describe("/layouts", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toBeDefined()
+      expect(events.layout.deleted).toBeCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

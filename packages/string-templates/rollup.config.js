@@ -4,20 +4,9 @@ import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
+import injectProcessEnv from "rollup-plugin-inject-process-env"
 
 const production = !process.env.ROLLUP_WATCH
-
-const plugins = [
-  resolve({
-    preferBuiltins: true,
-    browser: true,
-  }),
-  commonjs(),
-  globals(),
-  builtins(),
-  json(),
-  production && terser(),
-]
 
 export default [
   {
@@ -27,18 +16,19 @@ export default [
       format: "esm",
       file: "./dist/bundle.mjs",
     },
-    plugins,
+    plugins: [
+      resolve({
+        preferBuiltins: true,
+        browser: true,
+      }),
+      commonjs(),
+      globals(),
+      builtins(),
+      json(),
+      injectProcessEnv({
+        NO_JS: process.env.NO_JS,
+      }),
+      production && terser(),
+    ],
   },
-  // This is the valid configuration for a CommonJS bundle, but since we have
-  // no use for this, it's better to leave it out.
-  // {
-  //   input: "src/index.cjs",
-  //   output: {
-  //     sourcemap: !production,
-  //     format: "cjs",
-  //     file: "./dist/bundle.cjs",
-  //     exports: "named",
-  //   },
-  //   plugins,
-  // },
 ]

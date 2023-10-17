@@ -3,7 +3,6 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = false
-  export let error = null
   export let id = null
   export let text = null
   export let disabled = false
@@ -24,7 +23,9 @@
     class="spectrum-Switch-input"
   />
   <span class="spectrum-Switch-switch" />
-  <label class="spectrum-Switch-label" for={id}>{text}</label>
+  {#if text}
+    <label class="spectrum-Switch-label" for={id}>{text}</label>
+  {/if}
 </div>
 
 <style>

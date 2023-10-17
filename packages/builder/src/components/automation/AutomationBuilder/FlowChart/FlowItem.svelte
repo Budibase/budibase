@@ -1,97 +1,274 @@
 <script>
-  import { automationStore } from "builderStore"
-  import AutomationBlockTagline from "./AutomationBlockTagline.svelte"
-  import { Icon } from "@budibase/bbui"
+  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    Icon,
+    Divider,
+    Layout,
+    Detail,
+    Modal,
+    Button,
+    ActionButton,
+    notifications,
+    Label,
+  } from "@budibase/bbui"
+  import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
+  import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
+  import ActionModal from "./ActionModal.svelte"
+  import FlowItemHeader from "./FlowItemHeader.svelte"
+  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import {
+    ActionStepID,
+    TriggerStepID,
+    Features,
+  } from "constants/backend/automations"
+  import { permissions } from "stores/backend"
 
-  export let onSelect
   export let block
+  export let testDataModal
+  export let idx
+
   let selected
+  let webhookModal
+  let actionModal
+  let open = true
+  let showLooping = false
+  let role
 
-  $: selected = $automationStore.selectedBlock?.id === block.id
-  $: steps =
-    $automationStore.selectedAutomation?.automation?.definition?.steps ?? []
+  $: collectBlockExists = $selectedAutomation.definition.steps.some(
+    step => step.stepId === ActionStepID.COLLECT
+  )
+  $: automationId = $selectedAutomation?._id
+  $: isTrigger = block.type === "TRIGGER"
+  $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
-  $: allowDeleteTrigger = !steps.length
+  $: lastStep = !isTrigger && blockIdx + 1 === steps.length
+  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
+  $: loopBlock = $selectedAutomation?.definition.steps.find(
+    x => x.blockToLoop === block.id
+  )
+  $: isAppAction = block?.stepId === TriggerStepID.APP
+  $: isAppAction && setPermissions(role)
+  $: isAppAction && getPermissions(automationId)
 
-  function deleteStep() {
-    console.log("Running")
-    automationStore.actions.deleteAutomationBlock(block)
+  async function setPermissions(role) {
+    if (!role || !automationId) {
+      return
+    }
+    await permissions.save({
+      level: "execute",
+      role,
+      resource: automationId,
+    })
+  }
+
+  async function getPermissions(automationId) {
+    if (!automationId) {
+      return
+    }
+    const perms = await permissions.forResource(automationId)
+    if (!perms["execute"]) {
+      role = "BASIC"
+    } else {
+      role = perms["execute"].role
+    }
+  }
+
+  async function removeLooping() {
+    try {
+      await automationStore.actions.deleteAutomationBlock(loopBlock)
+    } catch (error) {
+      notifications.error("Error saving automation")
+    }
+  }
+
+  async function deleteStep() {
+    try {
+      if (loopBlock) {
+        await automationStore.actions.deleteAutomationBlock(loopBlock)
+      }
+      await automationStore.actions.deleteAutomationBlock(block)
+    } catch (error) {
+      notifications.error("Error saving automation")
+    }
+  }
+
+  async function addLooping() {
+    const loopDefinition = $automationStore.blockDefinitions.ACTION.LOOP
+    const loopBlock = automationStore.actions.constructBlock(
+      "ACTION",
+      "LOOP",
+      loopDefinition
+    )
+    loopBlock.blockToLoop = block.id
+    await automationStore.actions.addBlockToAutomation(loopBlock, blockIdx)
   }
 </script>
 
-<div
-  class={`block ${block.type} hoverable`}
-  class:selected
-  on:click={() => onSelect(block)}
->
-  <header>
-    {#if block.type === "TRIGGER"}
-      <Icon name="Light" />
-      <span>When this happens...</span>
-    {:else if block.type === "ACTION"}
-      <Icon name="FlashOn" />
-      <span>Do this...</span>
-    {:else if block.type === "LOGIC"}
-      <Icon name="Branch2" />
-      <span>Only continue if...</span>
-    {/if}
-    <div class="label">
-      {#if block.type === "TRIGGER"}Trigger{:else}Step {blockIdx + 1}{/if}
+<div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
+  {#if loopBlock}
+    <div class="blockSection">
+      <div
+        on:click={() => {
+          showLooping = !showLooping
+        }}
+        class="splitHeader"
+      >
+        <div class="center-items">
+          <svg
+            width="28px"
+            height="28px"
+            class="spectrum-Icon"
+            style="color:var(--spectrum-global-color-gray-700);"
+            focusable="false"
+          >
+            <use xlink:href="#spectrum-icon-18-Reuse" />
+          </svg>
+          <div class="iconAlign">
+            <Detail size="S">Looping</Detail>
+          </div>
+        </div>
+
+        <div class="blockTitle">
+          <div style="margin-left: 10px;" on:click={() => {}}>
+            <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
+          </div>
+        </div>
+      </div>
     </div>
-    {#if block.type !== "TRIGGER" || allowDeleteTrigger}
-      <div on:click|stopPropagation={deleteStep}><Icon name="Close" /></div>
+
+    <Divider noMargin />
+    {#if !showLooping}
+      <div class="blockSection">
+        <div class="block-options">
+          <ActionButton on:click={() => removeLooping()} icon="DeleteOutline" />
+        </div>
+        <Layout noPadding gap="S">
+          <AutomationBlockSetup
+            schemaProperties={Object.entries(
+              $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
+                .properties
+            )}
+            {webhookModal}
+            block={loopBlock}
+          />
+        </Layout>
+      </div>
+      <Divider noMargin />
     {/if}
-  </header>
-  <hr />
-  <p>
-    <AutomationBlockTagline {block} />
-  </p>
+  {/if}
+
+  <FlowItemHeader
+    {open}
+    {block}
+    {testDataModal}
+    {idx}
+    on:toggle={() => (open = !open)}
+  />
+  {#if open}
+    <Divider noMargin />
+    <div class="blockSection">
+      <Layout noPadding gap="S">
+        {#if !isTrigger}
+          <div>
+            <div class="block-options">
+              {#if !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
+                <ActionButton on:click={() => addLooping()} icon="Reuse">
+                  Add Looping
+                </ActionButton>
+              {/if}
+              <ActionButton
+                on:click={() => deleteStep()}
+                icon="DeleteOutline"
+              />
+            </div>
+          </div>
+        {/if}
+
+        {#if isAppAction}
+          <Label>Role</Label>
+          <RoleSelect bind:value={role} />
+        {/if}
+        <AutomationBlockSetup
+          schemaProperties={Object.entries(block.schema.inputs.properties)}
+          {block}
+          {webhookModal}
+        />
+        {#if lastStep}
+          <Button on:click={() => testDataModal.show()} cta>
+            Finish and test automation
+          </Button>
+        {/if}
+      </Layout>
+    </div>
+  {/if}
 </div>
+{#if !collectBlockExists || !lastStep}
+  <div class="separator" />
+  <Icon
+    on:click={() => actionModal.show()}
+    hoverable
+    name="AddCircle"
+    size="S"
+  />
+  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
+    <div class="separator" />
+  {/if}
+{/if}
+
+<Modal bind:this={actionModal} width="30%">
+  <ActionModal {lastStep} {blockIdx} />
+</Modal>
+
+<Modal bind:this={webhookModal} width="30%">
+  <CreateWebhookModal />
+</Modal>
 
 <style>
-  .block {
-    width: 360px;
-    padding: 20px;
-    border-radius: var(--border-radius-m);
-    transition: 0.3s all ease;
-    box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.08);
-    font-size: 16px;
-    background-color: var(--spectrum-global-color-gray-50);
-    color: var(--grey-9);
+  .delete-padding {
+    padding-left: 30px;
   }
-  .block.selected,
-  .block:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 30px 0 rgba(57, 60, 68, 0.15);
+  .block-options {
+    justify-content: flex-end;
+    align-items: center;
+    display: flex;
+    gap: var(--spacing-m);
+  }
+  .center-items {
+    display: flex;
+    align-items: center;
+  }
+  .splitHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .iconAlign {
+    padding: 0 0 0 var(--spacing-m);
+    display: inline-block;
+  }
+  .block {
+    width: 480px;
+    font-size: 16px;
+    background-color: var(--background);
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: 4px 4px 4px 4px;
   }
 
-  header {
-    font-size: 16px;
-    font-weight: 500;
+  .blockSection {
+    padding: var(--spacing-xl);
+  }
+
+  .separator {
+    width: 1px;
+    height: 25px;
+    border-left: 1px dashed var(--grey-4);
+    color: var(--grey-4);
+    /* center horizontally */
+    align-self: center;
+  }
+
+  .blockTitle {
     display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
     align-items: center;
-    gap: var(--spacing-xs);
-  }
-  header span {
-    flex: 1 1 auto;
-  }
-  header .label {
-    font-size: 14px;
-    padding: var(--spacing-s);
-    border-radius: var(--border-radius-m);
-    background-color: var(--grey-2);
-    color: var(--grey-8);
-  }
-  header i {
-    font-size: 20px;
-  }
-  header i.delete {
-    opacity: 0.5;
-  }
-  header i.delete:hover {
-    cursor: pointer;
-    opacity: 1;
   }
 </style>

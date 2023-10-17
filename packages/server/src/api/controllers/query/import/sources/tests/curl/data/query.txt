@@ -1,0 +1,1 @@
+curl 'http://example.com/paths/abc?q1=v1&q1=v2' 

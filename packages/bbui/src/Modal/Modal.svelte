@@ -1,16 +1,20 @@
 <script>
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext, tick } from "svelte"
+  import { createEventDispatcher, setContext, tick, onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
 
   export let fixed = false
   export let inline = false
+  export let disableCancel = false
+  export let autoFocus = true
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
+  let modal
+
   $: dispatch(visible ? "show" : "hide")
 
   export function show() {
@@ -27,50 +31,97 @@
     visible = false
   }
 
+  export function toggle() {
+    if (visible) {
+      hide()
+    } else {
+      show()
+    }
+  }
+
+  export function cancel() {
+    if (!visible || disableCancel) {
+      return
+    }
+    dispatch("cancel")
+    hide()
+  }
+
   function handleKey(e) {
     if (visible && e.key === "Escape") {
-      hide()
+      cancel()
     }
   }
 
-  async function focusFirstInput(node) {
+  async function focusModal(node) {
+    if (!autoFocus) {
+      return
+    }
+    await tick()
+
+    // Try to focus first input
     const inputs = node.querySelectorAll("input")
     if (inputs?.length) {
-      await tick()
       inputs[0].focus()
+    }
+
+    // Otherwise try to focus confirmation button
+    else if (modal) {
+      const confirm = modal.querySelector(".confirm-wrap .spectrum-Button")
+      if (confirm) {
+        confirm.focus()
+      }
     }
   }
 
-  setContext(Context.Modal, { show, hide })
+  setContext(Context.Modal, { show, hide, toggle, cancel })
+
+  onMount(() => {
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("keydown", handleKey)
+    }
+  })
 </script>
 
-<svelte:window on:keydown={handleKey} />
-
-<!-- These svelte if statements need to be defined like this. -->
-<!-- The modal transitions do not work if nested inside more than one "if" -->
-{#if visible && inline}
-  <div use:focusFirstInput class="spectrum-Modal inline is-open">
-    <slot />
-  </div>
-{:else if visible}
+{#if inline}
+  {#if visible}
+    <div use:focusModal bind:this={modal} class="spectrum-Modal inline is-open">
+      <slot />
+    </div>
+  {/if}
+{:else}
+  <!--
+    We cannot conditionally render the portal as this leads to a missing
+    insertion point when using nested modals. Therefore we just conditionally
+    render the content of the portal.
+    It still breaks the modal animation, but its better than soft bricking the
+    screen.
+  -->
   <Portal target=".modal-container">
-    <div
-      class="spectrum-Underlay is-open"
-      transition:fade|local={{ duration: 200 }}
-      on:mousedown|self={hide}
-    >
-      <div class="modal-wrapper" on:mousedown|self={hide}>
-        <div class="modal-inner-wrapper" on:mousedown|self={hide}>
-          <div
-            use:focusFirstInput
-            class="spectrum-Modal is-open"
-            transition:fly|local={{ y: 30, duration: 200 }}
-          >
-            <slot />
+    {#if visible}
+      <div class="spectrum-Underlay is-open" on:mousedown|self={cancel}>
+        <div
+          class="background"
+          in:fade={{ duration: 200 }}
+          out:fade|local={{ duration: 200 }}
+        />
+        <div class="modal-wrapper" on:mousedown|self={cancel}>
+          <div class="modal-inner-wrapper" on:mousedown|self={cancel}>
+            <slot name="outside" />
+            <div
+              use:focusModal
+              bind:this={modal}
+              class="spectrum-Modal is-open"
+              in:fly={{ y: 30, duration: 200 }}
+              out:fly|local={{ y: 30, duration: 200 }}
+            >
+              <slot />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    {/if}
   </Portal>
 {/if}
 
@@ -83,6 +134,17 @@
     z-index: 999;
     overflow: auto;
     overflow-x: hidden;
+    background: transparent;
+  }
+  .background {
+    background: var(--modal-background, rgba(0, 0, 0, 0.75));
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    opacity: 0.65;
+    pointer-events: none;
   }
 
   .modal-wrapper {
@@ -102,10 +164,10 @@
     justify-content: center;
     align-items: flex-start;
     width: 0;
+    position: relative;
   }
 
   .spectrum-Modal {
-    background: var(--background);
     overflow: visible;
     max-height: none;
     margin: 40px 0;
@@ -113,6 +175,7 @@
     --spectrum-dialog-confirm-border-radius: var(
       --spectrum-global-dimension-size-100
     );
+    max-width: 100%;
   }
   :global(.spectrum--lightest .spectrum-Modal.inline) {
     border: var(--border-light);

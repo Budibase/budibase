@@ -1,0 +1,43 @@
+name: Tag release
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      versioning:
+        type: choice
+        description: "Versioning type: patch, minor, major"
+        default: patch
+        options:
+          - patch
+          - minor
+          - major
+        required: true
+
+jobs:
+  tag-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fail if branch is not master
+        if: github.ref != 'refs/heads/master'
+        run: |
+          echo "Ref is not master, you must run this job from master."
+          exit 1
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - run: cd scripts && yarn
+      - name: Tag release
+        run: |
+          cd scripts
+          # setup the username and email.
+          git config --global user.name "Budibase Staging Release Bot"
+          git config --global user.email "<>"
+          BUMP_TYPE_INPUT=${{ github.event.inputs.versioning }}
+          BUMP_TYPE=${BUMP_TYPE_INPUT:-"patch"}
+          ./versionCommit.sh $BUMP_TYPE

@@ -1,0 +1,4 @@
+# .husky/post-checkout
+# ...
+
+git config submodule.recurse true

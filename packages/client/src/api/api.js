@@ -1,92 +1,80 @@
-/**
- * API cache for cached request responses.
- */
-import { notificationStore } from "../store"
-let cache = {}
+import { createAPIClient } from "@budibase/frontend-core"
+import { authStore } from "../stores/auth.js"
+import { notificationStore, devToolsEnabled, devToolsStore } from "../stores/"
+import { get } from "svelte/store"
 
-/**
- * Handler for API errors.
- */
-const handleError = error => {
-  return { error }
-}
+export const API = createAPIClient({
+  // Enable caching of cacheable endpoints to speed things up,
+  enableCaching: true,
 
-/**
- * Performs an API call to the server.
- * App ID header is always correctly set.
- */
-const makeApiCall = async ({ method, url, body, json = true }) => {
-  try {
-    const requestBody = json ? JSON.stringify(body) : body
-    const inBuilder = window["##BUDIBASE_IN_BUILDER##"]
-    const headers = {
-      Accept: "application/json",
-      "x-budibase-app-id": window["##BUDIBASE_APP_ID##"],
-      ...(json && { "Content-Type": "application/json" }),
-      ...(!inBuilder && { "x-budibase-type": "client" }),
+  // Attach client specific headers
+  attachHeaders: headers => {
+    // Attach app ID header
+    headers["x-budibase-app-id"] = window["##BUDIBASE_APP_ID##"]
+
+    // Attach client header if not inside the builder preview
+    if (!window["##BUDIBASE_IN_BUILDER##"]) {
+      headers["x-budibase-type"] = "client"
     }
-    const response = await fetch(url, {
-      method,
-      headers,
-      body: requestBody,
-      credentials: "same-origin",
-    })
-    switch (response.status) {
-      case 200:
-        return response.json()
-      case 401:
-        notificationStore.danger("Invalid credentials")
-        return handleError(`Invalid credentials`)
-      case 404:
-        notificationStore.danger("Not found")
-        return handleError(`${url}: Not Found`)
-      case 400:
-        return handleError(`${url}: Bad Request`)
-      case 403:
-        notificationStore.danger("Forbidden")
-        return handleError(`${url}: Forbidden`)
-      default:
-        if (response.status >= 200 && response.status < 400) {
-          return response.json()
+
+    // Add csrf token if authenticated
+    const auth = get(authStore)
+    if (auth?.csrfToken) {
+      headers["x-csrf-token"] = auth.csrfToken
+    }
+
+    // Add role header
+    const $devToolsStore = get(devToolsStore)
+    const $devToolsEnabled = get(devToolsEnabled)
+    if ($devToolsEnabled && $devToolsStore.role) {
+      headers["x-budibase-role"] = $devToolsStore.role
+    }
+  },
+
+  // Show an error notification for all API failures.
+  // We could also log these to sentry.
+  // Or we could check error.status and redirect to login on a 403 etc.
+  onError: error => {
+    const { status, method, url, message, handled, suppressErrors } =
+      error || {}
+    const ignoreErrorUrls = [
+      "bbtel",
+      "/api/global/self",
+      "/api/tables/ta_users",
+    ]
+
+    // Log any errors that we haven't manually handled
+    if (!handled) {
+      console.error("Unhandled error from API client", error)
+      return
+    }
+
+    // Notify all errors
+    if (message && !suppressErrors) {
+      // Don't notify if the URL contains the word analytics as it may be
+      // blocked by browser extensions
+      let ignore = false
+      for (let ignoreUrl of ignoreErrorUrls) {
+        if (url?.includes(ignoreUrl)) {
+          ignore = true
+          break
         }
-        return handleError(`${url} - ${response.statusText}`)
+      }
+      if (!ignore) {
+        const validationErrors = error?.json?.validationErrors
+        if (validationErrors) {
+          for (let field in validationErrors) {
+            notificationStore.actions.error(
+              `${field} ${validationErrors[field]}`
+            )
+          }
+        } else {
+          notificationStore.actions.error(message)
+        }
+      }
     }
-  } catch (error) {
-    return handleError(error)
-  }
-}
 
-/**
- * Performs an API call to the server and caches the response.
- * Future invocation for this URL will return the cached result instead of
- * hitting the server again.
- */
-const makeCachedApiCall = async params => {
-  const identifier = params.url
-  if (!identifier) {
-    return null
-  }
-  if (!cache[identifier]) {
-    cache[identifier] = makeApiCall(params)
-    cache[identifier] = await cache[identifier]
-  }
-  return await cache[identifier]
-}
-
-/**
- * Constructs an API call function for a particular HTTP method.
- */
-const requestApiCall = method => async params => {
-  const { url, cache = false } = params
-  const fixedUrl = `/${url}`.replace("//", "/")
-  const enrichedParams = { ...params, method, url: fixedUrl }
-  return await (cache ? makeCachedApiCall : makeApiCall)(enrichedParams)
-}
-
-export default {
-  post: requestApiCall("POST"),
-  get: requestApiCall("GET"),
-  patch: requestApiCall("PATCH"),
-  del: requestApiCall("DELETE"),
-  error: handleError,
-}
+    // Log all errors to console
+    console.warn(`[Client] HTTP ${status} on ${method}:${url}\n\t${message}`)
+  },
+})

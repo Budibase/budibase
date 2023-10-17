@@ -1,0 +1,16 @@
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx-cloud",
+      "options": {
+        "cacheableOperations": ["build", "test", "check:types"],
+        "accessToken": "MmM4OGYxNzItMDBlYy00ZmE3LTk4MTYtNmJhYWMyZjBjZTUyfHJlYWQ="
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "inputs": ["{workspaceRoot}/scripts/build.js"]
+    }
+  }
+}

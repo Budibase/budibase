@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": true,
+    "baseUrl": "."
+  },
+  "include": ["src/**/*", "__mocks__/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

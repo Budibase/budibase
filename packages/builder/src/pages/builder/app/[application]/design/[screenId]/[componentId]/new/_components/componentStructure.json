@@ -1,0 +1,89 @@
+[
+  {
+    "name": "Blocks",
+    "icon": "Article",
+    "children": [
+      "gridblock",
+      "tableblock",
+      "cardsblock",
+      "repeaterblock",
+      "formblock",
+      "chartblock",
+      "rowexplorer"
+    ]
+  },
+  {
+    "name": "Layout",
+    "icon": "ClassicGridView",
+    "children": ["container", "section", "grid", "sidepanel"]
+  },
+  {
+    "name": "Data",
+    "icon": "Data",
+    "children": [
+      "dataprovider",
+      "repeater",
+      "table",
+      "spreadsheet",
+      "dynamicfilter",
+      "daterangepicker"
+    ]
+  },
+  {
+    "name": "Basic",
+    "icon": "TextParagraph",
+    "children": [
+      "heading",
+      "text",
+      "button",
+      "tag",
+      "spectrumcard",
+      "cardstat",
+      "divider",
+      "image",
+      "link",
+      "icon",
+      "embed",
+      "markdownviewer",
+      "backgroundimage",
+      "embeddedmap"
+    ]
+  },
+  {
+    "name": "Form",
+    "icon": "Form",
+    "children": [
+      "form",
+      "formstep",
+      "fieldgroup",
+      "stringfield",
+      "numberfield",
+      "bigintfield",
+      "passwordfield",
+      "optionsfield",
+      "booleanfield",
+      "longformfield",
+      "attachmentfield",
+      "jsonfield",
+      "relationshipfield",
+      "datetimefield",
+      "multifieldselect",
+      "s3upload",
+      "codescanner",
+      "bbreferencefield"
+    ]
+  },
+  {
+    "name": "Chart",
+    "icon": "GraphBarVertical",
+    "children": [
+      "bar",
+      "line",
+      "area",
+      "candlestick",
+      "pie",
+      "donut",
+      "histogram"
+    ]
+  }
+]

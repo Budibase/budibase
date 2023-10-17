@@ -1,8 +1,12 @@
 <script>
-  import { goto } from "@roxi/routify"
-  import { FrontendTypes } from "constants"
+  import { redirect } from "@roxi/routify"
+  import { store as frontendStore } from "builderStore"
 
-  $goto(`./${FrontendTypes.SCREEN}`)
+  $: {
+    if ($frontendStore.screens.length > 0) {
+      $redirect(`./${$frontendStore.screens[0]._id}`)
+    } else {
+      $redirect("./new")
+    }
+  }
 </script>
-
-<!-- routify:options index=1 -->

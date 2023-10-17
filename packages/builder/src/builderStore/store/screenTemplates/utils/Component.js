@@ -1,4 +1,4 @@
-import { uuid } from "builderStore/uuid"
+import { Helpers } from "@budibase/bbui"
 import { BaseStructure } from "./BaseStructure"
 
 export class Component extends BaseStructure {
@@ -6,7 +6,7 @@ export class Component extends BaseStructure {
     super(false)
     this._children = []
     this._json = {
-      _id: uuid(),
+      _id: Helpers.uuid(),
       _component: name,
       _styles: {
         normal: {},
@@ -14,7 +14,6 @@ export class Component extends BaseStructure {
         active: {},
         selected: {},
       },
-      _transition: "",
       _instanceName: "",
       _children: [],
     }
@@ -37,11 +36,6 @@ export class Component extends BaseStructure {
 
   instanceName(name) {
     this._json._instanceName = name
-    return this
-  }
-
-  transition(transition) {
-    this._json._transition = transition
     return this
   }
 

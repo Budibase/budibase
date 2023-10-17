@@ -1,0 +1,111 @@
+<html lang="en">
+<head>
+  <title>Budibase Builder Preview</title>
+	<link href="/builder/fonts/source-sans-pro/400.css" rel="stylesheet" />
+	<link href="/builder/fonts/source-sans-pro/600.css" rel="stylesheet" />
+	<link href="/builder/fonts/source-sans-pro/700.css" rel="stylesheet" />
+	<link href="/builder/fonts/remixicon.css" rel="stylesheet" />
+  <style>
+    html, body {
+      padding: 0;
+      margin: 0;
+    }
+    html {
+      height: 100%;
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+    body {
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    *,
+    *:before,
+    *:after {
+      box-sizing: border-box;
+    }
+  </style>
+  <script src='{{ clientLibPath }}'></script>
+  <script>
+    function receiveMessage(event) {
+      if (!event.data) {
+        return
+      }
+
+      // Parse received message
+      // If parsing fails, just ignore and wait for the next message
+      let parsed
+      try {
+        parsed = JSON.parse(event.data)
+      } catch (error) {
+        console.error("Client received invalid JSON")
+        // Ignore
+      }
+      if (!parsed || !parsed.isBudibaseEvent) {
+        return
+      }
+
+      // If this is a custom event, try and handle it
+      if (parsed.runtimeEvent) {
+        const { name, payload } = parsed
+        if (window.handleBuilderRuntimeEvent) {
+          window.handleBuilderRuntimeEvent(name, payload)
+        }
+        return
+      }
+
+      // Otherwise this is a full reload message
+      // Extract data from message
+      const {
+        selectedComponentId,
+        layout,
+        screen,
+        appId,
+        theme,
+        customTheme,
+        previewDevice,
+        navigation,
+        hiddenComponentIds,
+        usedPlugins,
+        location
+      } = parsed
+
+      // Set some flags so the app knows we're in the builder
+      window["##BUDIBASE_IN_BUILDER##"] = true
+      window["##BUDIBASE_APP_ID##"] = appId
+      window["##BUDIBASE_PREVIEW_LAYOUT##"] = layout
+      window["##BUDIBASE_PREVIEW_SCREEN##"] = screen
+      window["##BUDIBASE_SELECTED_COMPONENT_ID##"] = selectedComponentId
+      window["##BUDIBASE_PREVIEW_ID##"] = Math.random()
+      window["##BUDIBASE_PREVIEW_THEME##"] = theme
+      window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"] = customTheme
+      window["##BUDIBASE_PREVIEW_DEVICE##"] = previewDevice
+      window["##BUDIBASE_PREVIEW_NAVIGATION##"] = navigation
+      window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
+      window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
+      window["##BUDIBASE_LOCATION##"] = location
+
+      // Initialise app
+      try {
+        if (window.loadBudibase) {
+          window.loadBudibase()
+          document.documentElement.classList.add("loaded")
+        } else {
+          throw "The client library couldn't be loaded"
+        }
+      } catch (error) {
+        window.parent.postMessage({ type: "error", error })
+      }
+    }
+
+    window.addEventListener("message", receiveMessage)
+    window.parent.postMessage({ type: "ready" })
+  </script>
+</head>
+<body></body>
+</html>

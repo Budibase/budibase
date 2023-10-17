@@ -5,17 +5,17 @@ version: "3"
 services:
   minio-service:
     container_name: budi-minio-dev
-    restart: always
+    restart: on-failure
     image: minio/minio
     volumes:
       - minio_data:/data
     ports:
       - "${MINIO_PORT}:9000"
+      - "9001:9001"
     environment:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_BROWSER: "off"
-    command: server /data
+    command: server /data --console-address ":9001"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
@@ -23,41 +23,38 @@ services:
       retries: 3
 
   proxy-service:
-    container_name: budi-envoy-dev
-    restart: always
-    image: envoyproxy/envoy:v1.16-latest
+    container_name: budi-nginx-dev
+    restart: on-failure
+    image: budibase/proxy:latest
     volumes:
-      - ./.generated-envoy.dev.yaml:/etc/envoy/envoy.yaml
+      - ./nginx.dev.conf:/etc/nginx/templates/nginx.conf.template
+      - ./proxy/error.html:/usr/share/nginx/html/error.html
     ports:
       - "${MAIN_PORT}:10000"
     depends_on:
       - minio-service
       - couchdb-service
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - PROXY_ADDRESS=host.docker.internal
 
   couchdb-service:
-    container_name: budi-couchdb-dev
-    restart: always
-    image: ibmcom/couchdb3
+    # platform: linux/amd64
+    container_name: budi-couchdb3-dev
+    restart: on-failure
+    image: budibase/couchdb
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
     ports:
       - "${COUCH_DB_PORT}:5984"
     volumes:
-      - couchdb3_data:/opt/couchdb/data
-  
-  couch-init:
-    container_name: budi-couchdb-init-dev
-    image: curlimages/curl
-    environment:
-      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
-    depends_on:
-      - couchdb-service
-    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+      - couchdb_data:/data
 
   redis-service:
     container_name: budi-redis-dev
-    restart: always
+    restart: on-failure
     image: redis
     command: redis-server --requirepass ${REDIS_PASSWORD}
     ports:
@@ -66,7 +63,7 @@ services:
       - redis_data:/data
 
 volumes:
-  couchdb3_data:
+  couchdb_data:
     driver: local
   minio_data:
     driver: local

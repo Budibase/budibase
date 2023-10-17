@@ -1,15 +1,18 @@
 #!/bin/bash
 
 tag=$1
-tag=${tag:-latest}
 
-pushd ../../build
-docker-compose build --force app-service
-docker-compose build --force worker-service
+if [[ ! "$tag" ]]; then
+	echo "No tag present. You must pass a tag to this script"
+	exit 1
+fi
 
-docker tag build_app-service budibase/budibase-apps:$tag
-docker tag build_worker-service budibase/budibase-worker:$tag
+echo "Tagging images with tag: $tag"
 
-docker push budibase/budibase-apps
-docker push budibase/budibase-worker
-popd
+docker tag proxy-service budibase/proxy:$tag
+docker tag app-service budibase/apps:$tag
+docker tag worker-service budibase/worker:$tag
+
+docker push --all-tags budibase/apps 
+docker push --all-tags budibase/worker
+docker push --all-tags budibase/proxy

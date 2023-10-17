@@ -1,0 +1,93 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`/datasources fetch returns all the datasources from the server 1`] = `
+[
+  {
+    "config": {},
+    "entities": [
+      {
+        "_id": "ta_users",
+        "_rev": "1-2375e1bc58aeec664dc1b1f04ad43e44",
+        "createdAt": "2020-01-01T00:00:00.000Z",
+        "name": "Users",
+        "primaryDisplay": "email",
+        "schema": {
+          "email": {
+            "constraints": {
+              "email": true,
+              "length": {
+                "maximum": "",
+              },
+              "presence": true,
+              "type": "string",
+            },
+            "fieldName": "email",
+            "name": "email",
+            "type": "string",
+          },
+          "firstName": {
+            "constraints": {
+              "presence": false,
+              "type": "string",
+            },
+            "fieldName": "firstName",
+            "name": "firstName",
+            "type": "string",
+          },
+          "lastName": {
+            "constraints": {
+              "presence": false,
+              "type": "string",
+            },
+            "fieldName": "lastName",
+            "name": "lastName",
+            "type": "string",
+          },
+          "roleId": {
+            "constraints": {
+              "inclusion": [
+                "ADMIN",
+                "POWER",
+                "BASIC",
+                "PUBLIC",
+              ],
+              "presence": false,
+              "type": "string",
+            },
+            "fieldName": "roleId",
+            "name": "roleId",
+            "type": "options",
+          },
+          "status": {
+            "constraints": {
+              "inclusion": [
+                "active",
+                "inactive",
+              ],
+              "presence": false,
+              "type": "string",
+            },
+            "fieldName": "status",
+            "name": "status",
+            "type": "options",
+          },
+        },
+        "type": "table",
+        "updatedAt": "2020-01-01T00:00:00.000Z",
+        "views": {},
+      },
+    ],
+    "name": "Budibase DB",
+    "source": "BUDIBASE",
+    "type": "budibase",
+  },
+  {
+    "config": {},
+    "createdAt": "2020-01-01T00:00:00.000Z",
+    "name": "Test",
+    "source": "POSTGRES",
+    "type": "datasource",
+    "updatedAt": "2020-01-01T00:00:00.000Z",
+  },
+]
+`;

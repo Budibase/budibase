@@ -1,3 +1,5 @@
+// TODO: Convert to yup based validators
+
 export function emailValidator(value) {
   return (
     (value &&

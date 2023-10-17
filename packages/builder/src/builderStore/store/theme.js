@@ -1,12 +1,12 @@
-import { localStorageStore } from "./localStorage"
+import { Constants, createLocalStorageStore } from "@budibase/frontend-core"
 
 export const getThemeStore = () => {
   const themeElement = document.documentElement
+
   const initialValue = {
     theme: "darkest",
-    options: ["lightest", "light", "dark", "darkest"],
   }
-  const store = localStorageStore("bb-theme", initialValue)
+  const store = createLocalStorageStore("bb-theme", initialValue)
 
   // Update theme class when store changes
   store.subscribe(state => {
@@ -16,12 +16,19 @@ export const getThemeStore = () => {
       return
     }
 
-    state.options.forEach(option => {
+    // Update global class names to use the new theme and remove others
+    Constants.Themes.forEach(option => {
       themeElement.classList.toggle(
-        `spectrum--${option}`,
-        option === state.theme
+        `spectrum--${option.class}`,
+        option.class === state.theme
       )
     })
+
+    // Add base theme if required
+    const selectedTheme = Constants.Themes.find(x => x.class === state.theme)
+    if (selectedTheme?.base) {
+      themeElement.classList.add(`spectrum--${selectedTheme.base}`)
+    }
   })
 
   return store

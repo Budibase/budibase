@@ -1,14 +1,15 @@
 <script>
   import { redirect } from "@roxi/routify"
   import { auth } from "stores/portal"
+  import { sdk } from "@budibase/shared-core"
+
+  auth.checkQueryString()
 
   $: {
-    if (!$auth.user) {
-      $redirect("./auth/login")
-    } else if ($auth.user.builder?.global) {
-      $redirect("./portal")
-    } else {
-      $redirect("./apps")
+    if (sdk.users.hasBuilderPermissions($auth.user)) {
+      $redirect(`./portal`)
+    } else if ($auth.user) {
+      $redirect(`./apps`)
     }
   }
 </script>

@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "types": ["node", "jest"],
+    "outDir": "dist/src",
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@budibase/types": ["../types/src"],
+      "@budibase/backend-core": ["../backend-core/src"],
+      "@budibase/backend-core/*": ["../backend-core/*"],
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/pro": ["../pro/src"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tests",
+    "src/api/routes/tests/utilities",
+    "src/api/routes/public/tests/utils.ts",
+    "src/automations/tests/utilities",
+    "**/*.spec.ts",
+    "**/*.spec.js"
+  ]
+}

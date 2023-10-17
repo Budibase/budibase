@@ -1,127 +1,216 @@
-import { writable, get } from "svelte/store"
-import { views } from "./"
+import { get, writable, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
-import api from "builderStore/api"
+import { API } from "api"
+import { SWITCHABLE_TYPES, FIELDS } from "constants/backend"
 
 export function createTablesStore() {
-  const store = writable({})
-  const { subscribe, update, set } = store
+  const store = writable({
+    list: [],
+    selectedTableId: null,
+  })
+  const derivedStore = derived(store, $store => ({
+    ...$store,
+    selected: $store.list?.find(table => table._id === $store.selectedTableId),
+  }))
 
-  async function fetch() {
-    const tablesResponse = await api.get(`/api/tables`)
-    const tables = await tablesResponse.json()
-    update(state => ({ ...state, list: tables }))
+  const fetch = async () => {
+    const tables = await API.getTables()
+    store.update(state => ({
+      ...state,
+      list: tables,
+    }))
   }
 
-  async function select(table) {
-    if (!table) {
-      update(state => ({
-        ...state,
-        selected: {},
-      }))
-    } else {
-      update(state => ({
-        ...state,
-        selected: table,
-        draft: cloneDeep(table),
-      }))
-      views.select({ name: `all_${table._id}` })
-    }
+  const singleFetch = async tableId => {
+    const table = await API.getTable(tableId)
+    store.update(state => {
+      const list = []
+      // update the list, keep order accurate
+      for (let tbl of state.list) {
+        if (table._id === tbl._id) {
+          list.push(table)
+        } else {
+          list.push(tbl)
+        }
+      }
+      state.list = list
+      return state
+    })
   }
 
-  async function save(table) {
+  const select = tableId => {
+    store.update(state => ({
+      ...state,
+      selectedTableId: tableId,
+    }))
+  }
+
+  const save = async table => {
     const updatedTable = cloneDeep(table)
     const oldTable = get(store).list.filter(t => t._id === table._id)[0]
 
     const fieldNames = []
-    // update any renamed schema keys to reflect their names
+    // Update any renamed schema keys to reflect their names
     for (let key of Object.keys(updatedTable.schema)) {
-      // if field name has been seen before remove it
+      // If field name has been seen before remove it
       if (fieldNames.indexOf(key.toLowerCase()) !== -1) {
         delete updatedTable.schema[key]
         continue
       }
       const field = updatedTable.schema[key]
       const oldField = oldTable?.schema[key]
-      // if the type has changed then revert back to the old field
-      if (oldField != null && oldField?.type !== field.type) {
+      // If the type has changed then revert back to the old field
+      if (
+        oldField != null &&
+        oldField?.type !== field.type &&
+        SWITCHABLE_TYPES.indexOf(oldField?.type) === -1
+      ) {
         updatedTable.schema[key] = oldField
       }
-      // field has been renamed
+      // Field has been renamed
       if (field.name && field.name !== key) {
         updatedTable.schema[field.name] = field
         updatedTable._rename = { old: key, updated: field.name }
         delete updatedTable.schema[key]
       }
-      // finally record this field has been used
+      // Finally record this field has been used
       fieldNames.push(key.toLowerCase())
     }
 
-    const response = await api.post(`/api/tables`, updatedTable)
-    const savedTable = await response.json()
-    await fetch()
-    await select(savedTable)
+    const savedTable = await API.saveTable(updatedTable)
+    replaceTable(savedTable._id, savedTable)
+    select(savedTable._id)
+    // make sure tables up to date (related)
+    let tableIdsToFetch = []
+    for (let column of Object.values(updatedTable?.schema || {})) {
+      if (column.type === FIELDS.LINK.type) {
+        tableIdsToFetch.push(column.tableId)
+      }
+    }
+    tableIdsToFetch = [...new Set(tableIdsToFetch)]
+    // too many tables to fetch, just get all
+    if (tableIdsToFetch.length > 3) {
+      await fetch()
+    } else {
+      await Promise.all(tableIdsToFetch.map(id => singleFetch(id)))
+    }
     return savedTable
   }
 
+  const deleteTable = async table => {
+    if (!table?._id) {
+      return
+    }
+    await API.deleteTable({
+      tableId: table._id,
+      tableRev: table._rev || "rev",
+    })
+    replaceTable(table._id, null)
+  }
+
+  const saveField = async ({
+    originalName,
+    field,
+    primaryDisplay = false,
+    indexes,
+  }) => {
+    let draft = cloneDeep(get(derivedStore).selected)
+
+    // delete the original if renaming
+    // need to handle if the column had no name, empty string
+    if (originalName != null && originalName !== field.name) {
+      delete draft.schema[originalName]
+      draft._rename = {
+        old: originalName,
+        updated: field.name,
+      }
+    }
+
+    // Optionally set display column
+    if (primaryDisplay) {
+      draft.primaryDisplay = field.name
+    } else if (draft.primaryDisplay === originalName) {
+      const fields = Object.keys(draft.schema)
+      // pick another display column randomly if unselecting
+      draft.primaryDisplay = fields.filter(
+        name => name !== originalName || name !== field
+      )[0]
+    }
+    if (indexes) {
+      draft.indexes = indexes
+    }
+    draft.schema = {
+      ...draft.schema,
+      [field.name]: cloneDeep(field),
+    }
+
+    await save(draft)
+  }
+
+  const deleteField = async field => {
+    let draft = cloneDeep(get(derivedStore).selected)
+    delete draft.schema[field.name]
+    await save(draft)
+  }
+
+  // Handles external updates of tables
+  const replaceTable = (tableId, table) => {
+    if (!tableId) {
+      return
+    }
+
+    // Handle deletion
+    if (!table) {
+      store.update(state => ({
+        ...state,
+        list: state.list.filter(x => x._id !== tableId),
+      }))
+      return
+    }
+
+    // Add new table
+    const index = get(store).list.findIndex(x => x._id === table._id)
+    if (index === -1) {
+      store.update(state => ({
+        ...state,
+        list: [...state.list, table],
+      }))
+    }
+
+    // Update existing table
+    else if (table) {
+      // This function has to merge state as there discrepancies with the table
+      // API endpoints. The table list endpoint and get table endpoint use the
+      // "type" property to mean different things.
+      store.update(state => {
+        state.list[index] = {
+          ...table,
+          type: state.list[index].type,
+        }
+        return state
+      })
+    }
+  }
+
+  const removeDatasourceTables = datasourceId => {
+    store.update(state => ({
+      ...state,
+      list: state.list.filter(table => table.sourceId !== datasourceId),
+    }))
+  }
+
   return {
-    subscribe,
+    ...store,
+    subscribe: derivedStore.subscribe,
     fetch,
+    init: fetch,
     select,
     save,
-    init: async () => {
-      const response = await api.get("/api/tables")
-      const json = await response.json()
-      set({
-        list: json,
-        selected: {},
-        draft: {},
-      })
-    },
-    delete: async table => {
-      await api.delete(`/api/tables/${table._id}/${table._rev}`)
-      update(state => ({
-        ...state,
-        list: state.list.filter(existing => existing._id !== table._id),
-        selected: {},
-      }))
-    },
-    saveField: ({ originalName, field, primaryDisplay = false, indexes }) => {
-      update(state => {
-        // delete the original if renaming
-        // need to handle if the column had no name, empty string
-        if (originalName || originalName === "") {
-          delete state.draft.schema[originalName]
-          state.draft._rename = {
-            old: originalName,
-            updated: field.name,
-          }
-        }
-
-        // Optionally set display column
-        if (primaryDisplay) {
-          state.draft.primaryDisplay = field.name
-        }
-
-        if (indexes) {
-          state.draft.indexes = indexes
-        }
-
-        state.draft.schema = {
-          ...state.draft.schema,
-          [field.name]: cloneDeep(field),
-        }
-        save(state.draft)
-        return state
-      })
-    },
-    deleteField: field => {
-      update(state => {
-        delete state.draft.schema[field.name]
-        save(state.draft)
-        return state
-      })
-    },
+    delete: deleteTable,
+    saveField,
+    deleteField,
+    replaceTable,
+    removeDatasourceTables,
   }
 }
 

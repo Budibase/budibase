@@ -1,0 +1,21 @@
+.spectrum--midnight {
+    --hue: 220;
+    --sat: 10%;
+    --spectrum-global-color-gray-50: hsl(var(--hue), var(--sat), 12%);
+    --spectrum-global-color-gray-75: hsl(var(--hue), var(--sat), 15%);
+    --spectrum-global-color-gray-100: hsl(var(--hue), var(--sat), 17%);
+    --spectrum-global-color-gray-200: hsl(var(--hue), var(--sat), 20%);
+    --spectrum-global-color-gray-300: hsl(var(--hue), var(--sat), 24%);
+    --spectrum-global-color-gray-400: hsl(var(--hue), var(--sat), 32%);
+    --spectrum-global-color-gray-500: hsl(var(--hue), var(--sat), 40%);
+    --spectrum-global-color-gray-600: hsl(var(--hue), var(--sat), 60%);
+    --spectrum-global-color-gray-700: hsl(var(--hue), var(--sat), 70%);
+    --spectrum-global-color-gray-800: hsl(var(--hue), var(--sat), 85%);
+    --spectrum-global-color-gray-900: hsl(var(--hue), var(--sat), 95%);
+
+    /* Custom additions */
+    --modal-background: var(--spectrum-global-color-gray-50);
+    --drop-shadow: rgba(0, 0, 0, 0.25) !important;
+    --spectrum-global-color-blue-100: rgba(35, 40, 50) !important;
+}
+

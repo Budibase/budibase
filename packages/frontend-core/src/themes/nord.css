@@ -1,0 +1,53 @@
+.spectrum--nord {
+  --spectrum-global-color-red-400: #bf616a;
+  --spectrum-global-color-red-500: #c26971;
+  --spectrum-global-color-red-600: #c57179;
+  --spectrum-global-color-red-700: #c97980;
+  --spectrum-global-color-static-red-400: #bf616a;
+  --spectrum-global-color-static-red-500: #c26971;
+  --spectrum-global-color-static-red-600: #c57179;
+  --spectrum-global-color-static-red-700: #c97980;
+
+  --spectrum-global-color-green-400: #719453;
+  --spectrum-global-color-green-500: #789d58;
+  --spectrum-global-color-green-600: #7fa55e;
+  --spectrum-global-color-green-700: #86aa67;
+  --spectrum-global-color-static-green-400: #719453;
+  --spectrum-global-color-static-green-500: #789d58;
+  --spectrum-global-color-static-green-600: #7fa55e;
+  --spectrum-global-color-static-green-700: #86aa67;
+
+  --spectrum-global-color-blue-400: #5680b4;
+  --spectrum-global-color-blue-500: #5e86b8;
+  --spectrum-global-color-blue-600: #668dbb;
+  --spectrum-global-color-blue-700: #6f93bf;
+  --spectrum-global-color-static-blue-200: #7799c4;
+  --spectrum-global-color-static-blue-300: #6f93bf;
+  --spectrum-global-color-static-blue-400: #668dbb;
+  --spectrum-global-color-static-blue-500: #5e86b8;
+  --spectrum-global-color-static-blue-600: #5680b4;
+  --spectrum-global-color-static-blue-700: #4e79af;
+  --spectrum-global-color-static-blue-800: #4a73a6;
+  --spectrum-global-color-static-blue: var(--spectrum-global-color-blue-600);
+
+  --spectrum-global-color-gray-50: #2e3440;
+  --spectrum-global-color-gray-75: #353b4a;
+  --spectrum-global-color-gray-100: #3b4252;
+  --spectrum-global-color-gray-200: #424a5c;
+  --spectrum-global-color-gray-300: #4c566a;
+  --spectrum-global-color-gray-400: #5a657d;
+  --spectrum-global-color-gray-500: #677590;
+  --spectrum-global-color-gray-600: #79869f;
+  --spectrum-global-color-gray-700: #a9b1c1;
+  --spectrum-global-color-gray-800: #bac1cd;
+  --spectrum-global-color-gray-900: #eceff4;
+
+  --spectrum-alias-highlight-hover: rgba(169, 177, 193, 0.1);
+  --spectrum-alias-highlight-active: rgba(169, 177, 193, 0.1);
+  --spectrum-alias-background-color-hover-overlay: rgba(169, 177, 193, 0.1);
+
+  /* Custom additions */
+  --modal-background: var(--spectrum-global-color-gray-50);
+  --drop-shadow: rgba(0, 0, 0, 0.15) !important;
+  --spectrum-global-color-blue-100: rgb(56, 65, 84) !important;
+}

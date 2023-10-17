@@ -1,4 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
-  $goto("./general")
+  import { redirect } from "@roxi/routify"
+  $redirect("./auth")
 </script>

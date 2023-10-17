@@ -6,4 +6,6 @@ export {
   capitalise,
   get_name,
   get_capitalised_name,
+  lowercase,
+  isBuilderInputFocused,
 } from "./helpers"

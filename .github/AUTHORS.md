@@ -7,3 +7,5 @@ Contributors
 * Martin McKeaveney - [@shogunpurple](https://github.com/shogunpurple)
 * Andrew Kingston - [@aptkingston](https://github.com/aptkingston)
 * Michael Drury - [@mike12345567](https://github.com/mike12345567)
+* Peter Clement - [@PClmnt](https://github.com/PClmnt)
+* Rory Powell - [@Rory-Powell](https://github.com/Rory-Powell)

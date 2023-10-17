@@ -1,165 +1,159 @@
 <script>
-  import { isActive, redirect, goto } from "@roxi/routify"
-  import {
-    Icon,
-    Avatar,
-    Search,
-    Layout,
-    SideNavigation as Navigation,
-    SideNavigationItem as Item,
-    ActionMenu,
-    MenuItem,
-    Modal,
-  } from "@budibase/bbui"
-  import ConfigChecklist from "components/common/ConfigChecklist.svelte"
-  import { organisation, auth } from "stores/portal"
-  import BuilderSettingsModal from "components/start/BuilderSettingsModal.svelte"
+  import { isActive, redirect, goto, url } from "@roxi/routify"
+  import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
+  import { organisation, auth, menu, apps } from "stores/portal"
   import { onMount } from "svelte"
+  import UpgradeButton from "./_components/UpgradeButton.svelte"
+  import MobileMenu from "./_components/MobileMenu.svelte"
+  import Logo from "./_components/Logo.svelte"
+  import UserDropdown from "./_components/UserDropdown.svelte"
+  import HelpMenu from "components/common/HelpMenu.svelte"
+  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
-  let oldSettingsModal
   let loaded = false
+  let mobileMenuVisible = false
+  let activeTab = "Apps"
 
-  const menu = [
-    { title: "Apps", href: "/builder/portal/apps" },
-    { title: "Drafts", href: "/builder/portal/drafts" },
-    { title: "Users", href: "/builder/portal/manage/users", heading: "Manage" },
-    { title: "Groups", href: "/builder/portal/manage/groups" },
-    { title: "Auth", href: "/builder/portal/manage/auth" },
-    { title: "Email", href: "/builder/portal/manage/email" },
-    {
-      title: "General",
-      href: "/builder/portal/settings/general",
-      heading: "Settings",
-    },
-    { title: "Theming", href: "/builder/portal/theming" },
-    { title: "Account", href: "/builder/portal/account" },
-  ]
+  $: $url(), updateActiveTab($menu)
+  $: isOnboarding = !$apps.length && sdk.users.isGlobalBuilder($auth.user)
+
+  const updateActiveTab = menu => {
+    for (let entry of menu) {
+      if ($isActive(entry.href)) {
+        if (activeTab !== entry.title) {
+          activeTab = entry.title
+        }
+        break
+      }
+    }
+  }
+
+  const showMobileMenu = () => (mobileMenuVisible = true)
+  const hideMobileMenu = () => (mobileMenuVisible = false)
 
   onMount(async () => {
     // Prevent non-builders from accessing the portal
-    if (!$auth.user?.builder?.global) {
-      $redirect("../")
-    } else {
-      await organisation.init()
-      loaded = true
+    if ($auth.user) {
+      if (!sdk.users.hasBuilderPermissions($auth.user)) {
+        $redirect("../")
+      } else {
+        try {
+          // We need to load apps to know if we need to show onboarding fullscreen
+          await Promise.all([apps.load(), organisation.init()])
+        } catch (error) {
+          notifications.error("Error getting org config")
+        }
+        loaded = true
+      }
     }
   })
 </script>
 
-{#if loaded}
-  <div class="container">
-    <div class="nav">
-      <Layout paddingX="L" paddingY="L">
+{#if $auth.user && loaded}
+  {#if isOnboarding}
+    <slot />
+  {:else}
+    <HelpMenu />
+    <div class="container">
+      <VerificationPromptBanner />
+      <div class="nav">
         <div class="branding">
-          <div class="name" on:click={() => $goto("./apps")}>
-            <img
-              src={$organisation?.logoUrl || "https://i.imgur.com/ZKyklgF.png"}
-              alt="Logotype"
-            />
-            <span>{$organisation?.company || "Budibase"}</span>
-          </div>
-          <div class="onboarding">
-            <ConfigChecklist />
-          </div>
+          <Logo />
         </div>
-        <div class="menu">
-          <Navigation>
-            {#each menu as { title, href, heading }}
-              <Item selected={$isActive(href)} {href} {heading}>{title}</Item>
+        <div class="desktop">
+          <Tabs selected={activeTab}>
+            {#each $menu as { title, href }}
+              <Tab {title} on:click={() => $goto(href)} />
             {/each}
-          </Navigation>
+          </Tabs>
         </div>
-      </Layout>
-    </div>
-    <div class="main">
-      <div class="toolbar">
-        <Search placeholder="Global search" />
-        <ActionMenu align="right">
-          <div slot="control" class="avatar">
-            <Avatar size="M" name="John Doe" />
-            <Icon size="XL" name="ChevronDown" />
-          </div>
-          <MenuItem icon="Settings" on:click={oldSettingsModal.show}>
-            Old settings
-          </MenuItem>
-          <MenuItem icon="UserDeveloper" on:click={() => $goto("../apps")}>
-            Close developer mode
-          </MenuItem>
-          <MenuItem icon="LogOut" on:click={auth.logout}>Log out</MenuItem>
-        </ActionMenu>
+        <div class="mobile">
+          <Icon hoverable name="ShowMenu" on:click={showMobileMenu} />
+        </div>
+        <div class="desktop">
+          <UpgradeButton />
+        </div>
+        <div class="dropdown">
+          <UserDropdown />
+        </div>
       </div>
-      <div class="content">
+      <div class="main">
         <slot />
       </div>
+      <MobileMenu visible={mobileMenuVisible} on:close={hideMobileMenu} />
     </div>
-  </div>
-  <Modal bind:this={oldSettingsModal} width="30%">
-    <BuilderSettingsModal />
-  </Modal>
+  {/if}
 {/if}
 
 <style>
   .container {
     height: 100%;
-    display: grid;
-    grid-template-columns: 250px 1fr;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
     align-items: stretch;
   }
   .nav {
     background: var(--background);
-    border-right: var(--border-light);
-    overflow: auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    border-bottom: var(--border-light);
+    padding: 0 var(--spacing-l);
+    gap: 24px;
+    position: relative;
   }
-  .main {
-    display: grid;
-    grid-template-rows: auto 1fr;
-    overflow: hidden;
+
+  /* Customise tabs appearance*/
+  .nav :global(.spectrum-Tabs) {
+    margin-bottom: -2px;
+    padding: 5px 0;
+    flex: 1 1 auto;
   }
+  .nav :global(.spectrum-Tabs-content) {
+    display: none;
+  }
+  .nav :global(.spectrum-Tabs-itemLabel) {
+    font-weight: 600;
+  }
+
   .branding {
     display: grid;
-    grid-gap: var(--spacing-s);
-    grid-template-columns: auto auto;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .name {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-gap: var(--spacing-m);
-    align-items: center;
-  }
-  .name:hover {
-    cursor: pointer;
-  }
-  .avatar {
-    display: grid;
-    grid-template-columns: auto auto;
     place-items: center;
-    grid-gap: var(--spacing-xs);
   }
-  .avatar:hover {
-    cursor: pointer;
-    filter: brightness(110%);
-  }
-  .toolbar {
-    background: var(--background);
-    border-bottom: var(--border-light);
-    display: grid;
-    grid-template-columns: 250px auto;
-    justify-content: space-between;
-    padding: var(--spacing-m) calc(var(--spacing-xl) * 2);
-    align-items: center;
-  }
-  img {
-    width: 28px;
-    height: 28px;
-  }
-  span {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-weight: 500;
-  }
-  .content {
+  .main {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: stretch;
     overflow: auto;
+  }
+  .mobile {
+    display: none;
+  }
+  .desktop {
+    display: contents;
+  }
+
+  @media (max-width: 640px) {
+    .mobile {
+      display: contents;
+    }
+    .desktop {
+      display: none;
+    }
+    .nav {
+      flex: 0 0 52px;
+      justify-content: space-between;
+    }
+    .branding {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
+    }
   }
 </style>

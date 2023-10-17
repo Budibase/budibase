@@ -1,7 +1,12 @@
 const dayjs = require("dayjs")
 dayjs.extend(require("dayjs/plugin/duration"))
 dayjs.extend(require("dayjs/plugin/advancedFormat"))
+dayjs.extend(require("dayjs/plugin/isoWeek"))
+dayjs.extend(require("dayjs/plugin/weekYear"))
+dayjs.extend(require("dayjs/plugin/weekOfYear"))
 dayjs.extend(require("dayjs/plugin/relativeTime"))
+dayjs.extend(require("dayjs/plugin/utc"))
+dayjs.extend(require("dayjs/plugin/timezone"))
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -71,7 +76,8 @@ function setLocale(str, pattern, options) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }
-  const opts = getContext(this, defaults, config.options)
+  // for now don't allow this to be configurable, don't pass in options
+  const opts = getContext(this, defaults, {})
 
   // set the language to use
   dayjs.locale(opts.lang || opts.language)
@@ -88,7 +94,19 @@ module.exports.date = (str, pattern, options) => {
 
   setLocale(config.str, config.pattern, config.options)
 
-  return dayjs(new Date(config.str)).format(config.pattern)
+  let date = dayjs(new Date(config.str))
+  if (typeof config.options === "string") {
+    date =
+      config.options.toLowerCase() === "utc"
+        ? date.utc()
+        : date.tz(config.options)
+  } else {
+    date = date.tz(dayjs.tz.guess())
+  }
+  if (config.pattern === "") {
+    return date.toISOString()
+  }
+  return date.format(config.pattern)
 }
 
 module.exports.duration = (str, pattern, format) => {

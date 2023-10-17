@@ -6,11 +6,12 @@
   export let label = null
   export let labelPosition = "above"
   export let error = null
+  export let tooltip = ""
 </script>
 
 <div class="spectrum-Form-item" class:above={labelPosition === "above"}>
   {#if label}
-    <FieldLabel forId={id} {label} position={labelPosition} />
+    <FieldLabel forId={id} {label} position={labelPosition} {tooltip} />
   {/if}
   <div class="spectrum-Form-itemField">
     <slot />

@@ -1,4 +1,4 @@
-const viewTemplate = require("../viewBuilder");
+const viewTemplate = require("../viewBuilder").default;
 
 describe("viewBuilder", () => {
 
@@ -41,6 +41,24 @@ describe("viewBuilder", () => {
         "groupBy": "age",
         "field": "score",
         "filters": [], 
+      })).toMatchSnapshot()
+    })
+  })
+
+  describe("Calculate and filter", () => {
+    it("creates a view with the calculation statistics and filter schema", () => {
+      expect(viewTemplate({
+        "name": "Calculate View",
+        "field": "myField",
+        "calculation": "stats",
+        "tableId": "14f1c4e94d6a47b682ce89d35d4c78b0",
+        "filters": [
+          {
+            "value": 17,
+            "condition": "MT",
+            "key": "age",
+          }
+        ]
       })).toMatchSnapshot()
     })
   })

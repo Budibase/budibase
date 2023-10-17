@@ -2,11 +2,6 @@
 const compose = require("docker-compose")
 const path = require("path")
 const fs = require("fs")
-const { processStringSync } = require("@budibase/string-templates")
-
-function isLinux() {
-  return process.platform !== "darwin" && process.platform !== "win32"
-}
 
 // This script wraps docker-compose allowing you to manage your dev infrastructure with simple commands.
 const CONFIG = {
@@ -22,43 +17,52 @@ const Commands = {
 }
 
 async function init() {
-  // generate envoy file, always do this incase it has changed
-  const hostingPath = path.join(process.cwd(), "..", "..", "hosting")
-  const envoyHbsPath = path.join(hostingPath, "envoy.dev.yaml.hbs")
-  const envoyOutputPath = path.join(hostingPath, ".generated-envoy.dev.yaml")
-  const contents = fs.readFileSync(envoyHbsPath, "utf8")
-  const config = {
-    address: isLinux() ? "172.17.0.1" : "host.docker.internal",
-  }
-  fs.writeFileSync(envoyOutputPath, processStringSync(contents, config))
-
   const envFilePath = path.join(process.cwd(), ".env")
-  const envFileJson = {
-    PORT: 4001,
-    MINIO_URL: "http://localhost:10000/",
-    COUCH_DB_URL: "http://budibase:budibase@localhost:10000/db/",
-    REDIS_URL: "localhost:6379",
-    WORKER_URL: "http://localhost:4002",
-    INTERNAL_API_KEY: "budibase",
-    JWT_SECRET: "testsecret",
-    REDIS_PASSWORD: "budibase",
-    MINIO_ACCESS_KEY: "budibase",
-    MINIO_SECRET_KEY: "budibase",
-    COUCH_DB_PASSWORD: "budibase",
-    COUCH_DB_USER: "budibase",
-    SELF_HOSTED: 1,
+  if (!fs.existsSync(envFilePath)) {
+    const envFileJson = {
+      PORT: 4001,
+      MINIO_URL: "http://localhost:4004",
+      COUCH_DB_URL: "http://budibase:budibase@localhost:4005",
+      REDIS_URL: "localhost:6379",
+      WORKER_URL: "http://localhost:4002",
+      INTERNAL_API_KEY: "budibase",
+      ACCOUNT_PORTAL_URL: "http://localhost:10001",
+      ACCOUNT_PORTAL_API_KEY: "budibase",
+      JWT_SECRET: "testsecret",
+      ENCRYPTION_KEY: "testsecret",
+      REDIS_PASSWORD: "budibase",
+      MINIO_ACCESS_KEY: "budibase",
+      MINIO_SECRET_KEY: "budibase",
+      COUCH_DB_PASSWORD: "budibase",
+      COUCH_DB_USER: "budibase",
+      SELF_HOSTED: 1,
+      DISABLE_ACCOUNT_PORTAL: 1,
+      MULTI_TENANCY: "",
+      DISABLE_THREADING: 1,
+      SERVICE: "app-service",
+      DEPLOYMENT_ENVIRONMENT: "development",
+      BB_ADMIN_USER_EMAIL: "",
+      BB_ADMIN_USER_PASSWORD: "",
+      PLUGINS_DIR: "",
+      TENANT_FEATURE_FLAGS: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR",
+      HTTP_MIGRATIONS: "0",
+      HTTP_LOGGING: "0",
+    }
+    let envFile = ""
+    Object.keys(envFileJson).forEach(key => {
+      envFile += `${key}=${envFileJson[key]}\n`
+    })
+    fs.writeFileSync(envFilePath, envFile)
   }
-  let envFile = ""
-  Object.keys(envFileJson).forEach(key => {
-    envFile += `${key}=${envFileJson[key]}\n`
-  })
-  fs.writeFileSync(envFilePath, envFile)
 }
 
 async function up() {
   console.log("Spinning up your budibase dev environment... 🔧✨")
   await init()
   await compose.upAll(CONFIG)
+
+  // We always ensure to restart the proxy service in case of nginx conf changes
+  await compose.restartOne("proxy-service", CONFIG)
 }
 
 async function down() {

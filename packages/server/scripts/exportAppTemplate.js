@@ -2,9 +2,14 @@
 const yargs = require("yargs")
 const fs = require("fs")
 const { join } = require("path")
-const CouchDB = require("../src/db")
+require("../src/db").init()
+const { db: dbCore } = require("@budibase/backend-core")
 // load environment
 const env = require("../src/environment")
+const {
+  USER_METDATA_PREFIX,
+  LINK_USER_METADATA_PREFIX,
+} = require("../src/db/utils")
 
 // Script to export a chosen budibase app into a package
 // Usage: ./scripts/exportAppTemplate.js export --name=Funky --appId=appId
@@ -43,8 +48,15 @@ yargs
       const writeStream = fs.createWriteStream(join(exportPath, "dump.text"))
       // perform couch dump
 
-      const instanceDb = new CouchDB(appId)
-      await instanceDb.dump(writeStream, {})
+      await dbCore.doWithDB(appId, async db => {
+        return db.dump(writeStream, {
+          filter: doc =>
+            !(
+              doc._id.includes(USER_METDATA_PREFIX) ||
+              doc.includes(LINK_USER_METADATA_PREFIX)
+            ),
+        })
+      })
       console.log(`Template ${name} exported to ${exportPath}`)
     }
   )

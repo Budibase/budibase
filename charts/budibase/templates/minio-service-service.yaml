@@ -1,0 +1,21 @@
+{{- if .Values.services.objectStore.minio }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: minio-service
+  name: minio-service
+spec:
+  ports:
+  - name: {{ .Values.services.objectStore.port | quote }}
+    port: {{ .Values.services.objectStore.port }}
+    targetPort: {{ .Values.services.objectStore.port }}
+  selector:
+    io.kompose.service: minio-service
+status:
+  loadBalancer: {}
+{{- end }}

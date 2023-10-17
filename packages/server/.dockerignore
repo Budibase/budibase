@@ -1,6 +1,7 @@
-node_modules
-npm-debug.log
-Dockerfile
-.dockerignore
-.git
-.gitignore
+*
+!/dist/
+!/scripts/integrations/oracle/
+!/package.json
+!/docker_run.sh
+!/builder/
+!/client/

@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "resolveJsonModule": true
+  },
+  "ts-node": {
+    "require": ["tsconfig-paths/register"],
+    "swc": true
+  },
+  "include": ["src/**/*", "package.json"],
+  "exclude": ["node_modules", "dist"]
+}

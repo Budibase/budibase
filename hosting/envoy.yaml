@@ -21,19 +21,44 @@ static_resources:
                   cluster: app-service
                   prefix_rewrite: "/"
 
+              - match: { path: "/v1/update" }
+                route:
+                  cluster: watchtower-service
+
+              - match: { prefix: "/builder/" }
+                route:
+                  cluster: app-service
+
+              - match: { prefix: "/builder" }
+                route:
+                  cluster: app-service
+              
+              - match: { prefix: "/app_" }
+                route:
+                  cluster: app-service
+
+              # special cases for worker admin (deprecated), global and system API
+              - match: { prefix: "/api/global/" }
+                route:
+                  cluster: worker-service
+
+              - match: { prefix: "/api/admin/" }
+                route:
+                  cluster: worker-service
+
+              - match: { prefix: "/api/system/" }
+                route:
+                  cluster: worker-service
+
               - match: { path: "/" }
                 route:
                   cluster: app-service
 
-              # special case for worker admin API
-              - match: { path: "/api/admin" }
-                route:
-                  cluster: worker-service
-              
               # special case for when API requests are made, can just forward, not to minio    
               - match: { prefix: "/api/" }
                 route:
                   cluster: app-service
+                  timeout: 120s
 
               - match: { prefix: "/worker/" }
                 route: 
@@ -110,4 +135,18 @@ static_resources:
               socket_address:
                 address: couchdb-service
                 port_value: 5984
+
+  - name: watchtower-service
+    connect_timeout: 0.25s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: watchtower-service
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address: 
+                address: watchtower-service
+                port_value: 8080
 

@@ -1,26 +1,31 @@
+
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Launch Program",
-            "program": "${workspaceFolder}/app.js",
-            "skipFiles": [
-                "<node_internals>/**"
-            ]
-        },
-        {
-            "type": "node",
-            "request": "launch",
-            "name": "Debug External",
-            "program": "${workspaceFolder}/packages/cli/bin/budi",
-            "args": [],
-            "cwd":"C:/code/my-apps",
-            "console": "externalTerminal" 
-        }
-    ]
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Budibase Server",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "args": ["${workspaceFolder}/packages/server/src/index.ts"],
+      "cwd": "${workspaceFolder}/packages/server"
+    },
+    {
+      "name": "Budibase Worker",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+      "args": ["${workspaceFolder}/packages/worker/src/index.ts"],
+      "cwd": "${workspaceFolder}/packages/worker"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Start Budibase",
+      "configurations": ["Budibase Server", "Budibase Worker"]
+    }
+  ]
 }

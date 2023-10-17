@@ -48,7 +48,7 @@
           return
         }
         formattedTagline = formattedTagline.replace(
-          new RegExp(`{{\s*${inputPath}\s*}}`),
+          new RegExp(`{{\\s*${inputPath}\\s*}}`),
           prettyValue
         )
       }
@@ -60,6 +60,7 @@
 </script>
 
 <div>
+  <!-- eslint-disable-next-line svelte/no-at-html-tags-->
   {@html html}
 </div>
 

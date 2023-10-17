@@ -10,16 +10,29 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let readonly = false
+  export let autocomplete = false
+  export let sort = false
+  export let autoWidth = false
+  export let searchTerm = null
+  export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
+  export let open = false
+  export let loading
 
   const dispatch = createEventDispatcher()
-  $: selectedLookupMap = getSelectedLookupMap(value)
+
+  $: arrayValue = Array.isArray(value) ? value : [value].filter(x => !!x)
+  $: selectedLookupMap = getSelectedLookupMap(arrayValue)
   $: optionLookupMap = getOptionLookupMap(options)
-  $: fieldText = getFieldText(value, optionLookupMap, placeholder)
+
+  $: fieldText = getFieldText(arrayValue, optionLookupMap, placeholder)
   $: isOptionSelected = optionValue => selectedLookupMap[optionValue] === true
-  $: toggleOption = makeToggleOption(selectedLookupMap, value)
+  $: toggleOption = makeToggleOption(selectedLookupMap, arrayValue)
 
   const getFieldText = (value, map, placeholder) => {
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       if (!map) {
         return ""
       }
@@ -32,7 +45,7 @@
 
   const getSelectedLookupMap = value => {
     let map = {}
-    if (value?.length) {
+    if (Array.isArray(value) && value.length > 0) {
       value.forEach(option => {
         if (option) {
           map[option] = true
@@ -69,14 +82,25 @@
 </script>
 
 <Picker
+  on:loadMore
   {id}
   {error}
   {disabled}
+  {readonly}
   {fieldText}
   {options}
-  isPlaceholder={!value?.length}
+  isPlaceholder={!arrayValue.length}
+  {autocomplete}
+  bind:searchTerm
+  bind:open
   {isOptionSelected}
   {getOptionLabel}
   {getOptionValue}
   onSelectOption={toggleOption}
+  {sort}
+  {autoWidth}
+  {customPopoverHeight}
+  {customPopoverOffsetBelow}
+  {customPopoverMaxHeight}
+  {loading}
 />

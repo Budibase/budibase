@@ -16,8 +16,8 @@ class Preprocessor {
     this.fn = fn
   }
 
-  process(fullString, statement) {
-    const output = this.fn(statement)
+  process(fullString, statement, opts) {
+    const output = this.fn(statement, opts)
     const idx = fullString.indexOf(statement)
     return swapStrings(fullString, idx, statement.length, output)
   }
@@ -28,7 +28,7 @@ module.exports.processors = [
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
     while (startBraceIdx !== -1) {
-      // if the character previous to the literal specifier is alpha-numeric this should happen
+      // if the character previous to the literal specifier is alphanumeric this should happen
       if (isAlphaNumeric(statement.charAt(startBraceIdx - 1))) {
         statement = swapStrings(statement, startBraceIdx + lastIdx, 1, ".[")
       }
@@ -48,7 +48,8 @@ module.exports.processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.FINALISE, statement => {
+  new Preprocessor(PreprocessorNames.FINALISE, (statement, opts) => {
+    const noHelpers = opts && opts.noHelpers
     let insideStatement = statement.slice(2, statement.length - 2)
     if (insideStatement.charAt(0) === " ") {
       insideStatement = insideStatement.slice(1)
@@ -63,7 +64,11 @@ module.exports.processors = [
         return statement
       }
     }
-    if (HelperNames().some(option => option.includes(possibleHelper))) {
+    const testHelper = possibleHelper.trim().toLowerCase()
+    if (
+      !noHelpers &&
+      HelperNames().some(option => testHelper === option.toLowerCase())
+    ) {
       insideStatement = `(${insideStatement})`
     }
     return `{{ all ${insideStatement} }}`

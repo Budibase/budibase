@@ -1,0 +1,19 @@
+#!/bin/sh
+#
+# Configured as part of the DigitalOcean 1-Click Image build process
+
+myip=$(hostname -I | awk '{print$1}')
+cat <<EOF
+********************************************************************************
+
+Welcome to the Budibase DigitalOcean 1-Click Droplet.
+To keep this Droplet secure, the UFW firewall is enabled.
+All ports are BLOCKED except 22 (SSH), 80 (HTTP), 443 (HTTPS), and 10000 
+
+* Budibase website: http://budibase.com
+
+For help and more information, visit https://docs.budibase.com/docs/digitalocean
+
+********************************************************************************
+To delete this message of the day: rm -rf $(readlink -f ${0})
+EOF

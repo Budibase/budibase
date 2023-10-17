@@ -1,14 +1,15 @@
 import { BaseStructure } from "./BaseStructure"
-import { uuid } from "builderStore/uuid"
+import { Helpers } from "@budibase/bbui"
 
 export class Screen extends BaseStructure {
   constructor() {
     super(true)
     this._json = {
-      layoutId: "layout_private_master",
+      showNavigation: true,
+      width: "Large",
       props: {
-        _id: uuid(),
-        _component: "",
+        _id: Helpers.uuid(),
+        _component: "@budibase/standard-components/container",
         _styles: {
           normal: {},
           hover: {},
@@ -17,10 +18,16 @@ export class Screen extends BaseStructure {
         },
         _children: [],
         _instanceName: "",
+        direction: "column",
+        hAlign: "stretch",
+        vAlign: "top",
+        size: "grow",
+        gap: "M",
       },
       routing: {
         route: "",
         roleId: "BASIC",
+        homeScreen: false,
       },
       name: "screen-id",
     }
@@ -41,11 +48,6 @@ export class Screen extends BaseStructure {
     return this
   }
 
-  mainType(type) {
-    this._json.type = type
-    return this
-  }
-
   route(route) {
     this._json.routing.route = route
     return this
@@ -58,6 +60,13 @@ export class Screen extends BaseStructure {
 
   instanceName(name) {
     this._json.props._instanceName = name
+    return this
+  }
+
+  customProps(props) {
+    for (let key of Object.keys(props)) {
+      this._json.props[key] = props[key]
+    }
     return this
   }
 }

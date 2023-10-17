@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from "svelte"
   import ModalContent from "./ModalContent.svelte"
   import Input from "../Form/Input.svelte"
 
@@ -43,7 +42,6 @@
 <style>
   p {
     margin: 0;
-    font-family: var(--font-sans);
     font-size: var(--font-size-s);
   }
   p.error {

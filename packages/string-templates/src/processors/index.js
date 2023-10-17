@@ -2,7 +2,7 @@ const { FIND_HBS_REGEX } = require("../utilities")
 const preprocessor = require("./preprocessor")
 const postprocessor = require("./postprocessor")
 
-function process(output, processors) {
+function process(output, processors, opts) {
   for (let processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {
@@ -15,24 +15,22 @@ function process(output, processors) {
       continue
     }
     for (let match of matches) {
-      output = processor.process(output, match)
+      output = processor.process(output, match, opts)
     }
   }
   return output
 }
 
-module.exports.preprocess = (string, finalise = true) => {
+module.exports.preprocess = (string, opts) => {
   let processors = preprocessor.processors
-  // the pre-processor finalisation stops handlebars from ever throwing an error
-  // might want to pre-process for other benefits but still want to see errors
-  if (!finalise) {
+  if (opts.noFinalise) {
     processors = processors.filter(
       processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
     )
   }
-  return process(string, processors)
+  return process(string, processors, opts)
 }
-
 module.exports.postprocess = string => {
-  return process(string, postprocessor.processors)
+  let processors = postprocessor.processors
+  return process(string, processors)
 }

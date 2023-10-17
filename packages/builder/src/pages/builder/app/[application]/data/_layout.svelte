@@ -1,110 +1,56 @@
 <script>
-  import { isActive, goto } from "@roxi/routify"
-  import { Icon, Modal, Tabs, Tab } from "@budibase/bbui"
-  import TableNavigator from "components/backend/TableNavigator/TableNavigator.svelte"
+  import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
-  import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
-  import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
+  import Panel from "components/design/Panel.svelte"
+  import { isActive, redirect, goto, params } from "@roxi/routify"
+  import BetaButton from "./_components/BetaButton.svelte"
+  import { datasources } from "stores/backend"
 
-  const tabs = [
-    {
-      title: "Internal",
-      key: "table",
-    },
-    {
-      title: "External",
-      key: "datasource",
-    },
-  ]
-
-  let selected = $isActive("./datasource") ? "External" : "Internal"
-
-  function selectFirstTableOrSource({ detail }) {
-    const { key } = tabs.find(t => t.title === detail)
-    if (key === "datasource") {
-      $goto("./datasource")
-    } else {
-      $goto("./table")
+  $: {
+    // If we ever don't have any data other than the users table, prompt the
+    // user to add some
+    // Don't redirect if setting up google sheets, or we lose the query parameter
+    if (!$datasources.hasData && !$params["?continue_google_setup"]) {
+      $redirect("./new")
     }
   }
-
-  let modal
 </script>
 
-<!-- routify:options index=0 -->
-<div class="root">
-  <div class="nav">
-    <Tabs {selected} on:select={selectFirstTableOrSource}>
-      <Tab title="Internal">
-        <div class="tab-content-padding">
-          <TableNavigator />
-          <Modal bind:this={modal}>
-            <CreateTableModal />
-          </Modal>
-        </div>
-      </Tab>
-      <Tab title="External">
-        <div class="tab-content-padding">
-          <DatasourceNavigator />
-          <Modal bind:this={modal}>
-            <CreateDatasourceModal />
-          </Modal>
-        </div>
-      </Tab>
-    </Tabs>
-    <div
-      class="add-button"
-      data-cy={`new-${selected === "External" ? "datasource" : "table"}`}
-    >
-      <Icon hoverable name="AddCircle" on:click={modal.show} />
-    </div>
-  </div>
+<!-- routify:options index=1 -->
+<div class="data">
+  {#if !$isActive("./new")}
+    <Panel title="Sources" borderRight>
+      <Layout paddingX="L" paddingY="XL" gap="S">
+        <Button cta on:click={() => $goto("./new")}>Add source</Button>
+        <DatasourceNavigator />
+      </Layout>
+    </Panel>
+  {/if}
+
   <div class="content">
     <slot />
   </div>
+  <BetaButton />
 </div>
 
 <style>
-  .root {
+  .data {
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
     height: 0;
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
   }
-
   .content {
-    flex: 1 1 auto;
-    padding: var(--spacing-l) 40px 40px 40px;
+    padding: 28px 40px 40px 40px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
     gap: var(--spacing-l);
-  }
-  .content :global(> span) {
-    display: contents;
-  }
-
-  .tab-content-padding {
-    padding: 0 var(--spacing-xl);
-  }
-
-  .nav {
-    overflow-y: auto;
-    background: var(--background);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
-    border-right: var(--border-light);
-    padding-bottom: 60px;
-  }
-
-  .add-button {
-    position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-xl);
+    flex: 1 1 auto;
+    z-index: 1;
   }
 </style>

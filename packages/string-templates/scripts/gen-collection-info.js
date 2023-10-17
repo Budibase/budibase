@@ -9,18 +9,27 @@ const marked = require("marked")
  * full list of supported helpers can be found here:
  * https://github.com/budibase/handlebars-helpers
  */
-
-const DIRECTORY = fs.existsSync("node_modules") ? "." : ".."
-const COLLECTIONS = ["math", "array", "number", "url", "string", "comparison"]
-const FILENAME = `${DIRECTORY}/manifest.json`
+const { join } = require("path")
+const DIRECTORY = join(__dirname, "..", "..", "..")
+const COLLECTIONS = [
+  "math",
+  "array",
+  "number",
+  "url",
+  "string",
+  "comparison",
+  "object",
+]
+const FILENAME = join(__dirname, "..", "manifest.json")
 const outputJSON = {}
 const ADDED_HELPERS = {
   date: {
     date: {
       args: ["datetime", "format"],
       numArgs: 2,
-      example: '{{date now "DD-MM-YYYY"}} -> 21-01-2021',
-      description: "Format a date using moment.js date formatting.",
+      example: '{{date now "DD-MM-YYYY" "America/New_York" }} -> 21-01-2021',
+      description:
+        "Format a date using moment.js date formatting - the timezone is optional and uses the tz database.",
     },
     duration: {
       args: ["time", "durationType"],
@@ -99,6 +108,10 @@ function getCommentInfo(file, func) {
   if (examples.length > 0) {
     docs.example = examples.join(" ")
   }
+  // hacky example fix
+  if (docs.example && docs.example.includes("product")) {
+    docs.example = docs.example.replace("product", "multiply")
+  }
   docs.description = blocks[0].trim()
   return docs
 }
@@ -157,7 +170,7 @@ function run() {
   // convert all markdown to HTML
   for (let collection of Object.values(outputJSON)) {
     for (let helper of Object.values(collection)) {
-      helper.description = marked(helper.description)
+      helper.description = marked.parse(helper.description)
     }
   }
   fs.writeFileSync(FILENAME, JSON.stringify(outputJSON, null, 2))

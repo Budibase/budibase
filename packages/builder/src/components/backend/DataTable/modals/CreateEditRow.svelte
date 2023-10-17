@@ -1,10 +1,9 @@
 <script>
-  import { tables, rows } from "stores/backend"
-  import { notifications } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+  import { tables } from "stores/backend"
+  import { ModalContent, keepOpen, notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
-  import * as api from "../api"
-  import { ModalContent } from "@budibase/bbui"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import { API } from "api"
   import { FIELDS } from "constants/backend"
 
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -12,6 +11,7 @@
   export let row = {}
 
   let errors = []
+  const dispatch = createEventDispatcher()
 
   $: creating = row?._id == null
   $: table = row.tableId
@@ -20,44 +20,60 @@
   $: tableSchema = Object.entries(table?.schema ?? {})
 
   async function saveRow() {
-    const rowResponse = await api.saveRow(
-      { ...row, tableId: table._id },
-      table._id
-    )
+    errors = []
+    try {
+      const res = await API.saveRow({ ...row, tableId: table._id })
+      notifications.success("Row saved successfully")
+      dispatch("updaterows", res._id)
+    } catch (error) {
+      const response = error.json
+      if (error.handled && response?.errors) {
+        errors = response.errors
+      } else if (error.handled && response?.validationErrors) {
+        const mappedErrors = {}
+        for (let field in response.validationErrors) {
+          mappedErrors[
+            field
+          ] = `${field} ${response.validationErrors[field][0]}`
+        }
+        errors = mappedErrors
+      } else {
+        notifications.error(`Failed to save row - ${error.message}`)
+      }
 
-    if (rowResponse.errors) {
-      errors = Object.entries(rowResponse.errors)
-        .map(([key, error]) => ({ dataPath: key, message: error }))
-        .flat()
-      // Prevent modal closing if there were errors
-      return false
-    } else if (rowResponse.status === 400 || rowResponse.status === 500) {
-      errors = [{ message: rowResponse.message }]
-      return false
+      return keepOpen
     }
-
-    notifications.success("Row saved successfully.")
-    rows.save(rowResponse)
   }
 </script>
 
-<ModalContent
-  title={creating ? "Create Row" : "Edit Row"}
-  confirmText={creating ? "Create Row" : "Save Row"}
-  onConfirm={saveRow}
->
-  <ErrorsBox {errors} />
-  {#each tableSchema as [key, meta]}
-    {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
-      <div>
-        <RowFieldControl {meta} bind:value={row[key]} />
-      </div>
-    {/if}
-  {/each}
-</ModalContent>
+<span class="modal-wrap">
+  <ModalContent
+    title={creating ? "Create Row" : "Edit Row"}
+    confirmText={creating ? "Create Row" : "Save Row"}
+    onConfirm={saveRow}
+    showCancelButton={creating}
+    showSecondaryButton={!creating}
+    secondaryButtonWarning={!creating}
+    secondaryButtonText="Delete"
+    secondaryAction={() => {
+      dispatch("deleteRows", row)
+    }}
+  >
+    {#each tableSchema as [key, meta]}
+      {#if !meta.autocolumn && meta.type !== FORMULA_TYPE}
+        <div>
+          <RowFieldControl error={errors[key]} {meta} bind:value={row[key]} />
+        </div>
+      {/if}
+    {/each}
+  </ModalContent>
+</span>
 
 <style>
   div {
     min-width: 0;
+  }
+  .modal-wrap :global(.secondary-action) {
+    margin-right: unset;
   }
 </style>
