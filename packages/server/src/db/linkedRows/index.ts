@@ -90,13 +90,13 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
 
 /**
  * Update link documents for a row or table - this is to be called by the API controller when a change is occurring.
- * @param {string} args.eventType states what type of change which is occurring, means this can be expanded upon in the
+ * @param args.eventType states what type of change which is occurring, means this can be expanded upon in the
  * future quite easily (all updates go through one function).
- * @param {string} args.tableId The ID of the of the table which is being changed.
- * @param {object|undefined} args.row The row which is changing, e.g. created, updated or deleted.
- * @param {object|undefined} args.table If the table has already been retrieved this can be used to reduce database gets.
- * @param {object|undefined} args.oldTable If the table is being updated then the old table can be provided for differencing.
- * @returns {Promise<object>} When the update is complete this will respond successfully. Returns the row for
+ * @param args.tableId The ID of the of the table which is being changed.
+ * @param args.row The row which is changing, e.g. created, updated or deleted.
+ * @param args.table If the table has already been retrieved this can be used to reduce database gets.
+ * @param args.oldTable If the table is being updated then the old table can be provided for differencing.
+ * @returns When the update is complete this will respond successfully. Returns the row for
  * row operations and the table for table operations.
  */
 export async function updateLinks(args: {
@@ -144,9 +144,9 @@ export async function updateLinks(args: {
 /**
  * Given a table and a list of rows this will retrieve all of the attached docs and enrich them into the row.
  * This is required for formula fields, this may only be utilised internally (for now).
- * @param {object} table The table from which the rows originated.
- * @param {array<object>} rows The rows which are to be enriched.
- * @return {Promise<*>} returns the rows with all of the enriched relationships on it.
+ * @param table The table from which the rows originated.
+ * @param rows The rows which are to be enriched.
+ * @return returns the rows with all of the enriched relationships on it.
  */
 export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
   const linkedTableIds = getLinkedTableIDs(table)
@@ -183,9 +183,9 @@ export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
 
 /**
  * This function will take the given enriched rows and squash the links to only contain the primary display field.
- * @param {object} table The table from which the rows originated.
- * @param {array<object>} enriched The pre-enriched rows (full docs) which are to be squashed.
- * @returns {Promise<Array>} The rows after having their links squashed to only contain the ID and primary display.
+ * @param table The table from which the rows originated.
+ * @param enriched The pre-enriched rows (full docs) which are to be squashed.
+ * @returns The rows after having their links squashed to only contain the ID and primary display.
  */
 export async function squashLinksToPrimaryDisplay(
   table: Table,

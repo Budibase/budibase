@@ -36,8 +36,8 @@ export function levelToNumber(perm: PermissionLevel) {
 
 /**
  * Given the specified permission level for the user return the levels they are allowed to carry out.
- * @param {string} userPermLevel The permission level of the user.
- * @return {string[]} All the permission levels this user is allowed to carry out.
+ * @param userPermLevel The permission level of the user.
+ * @return All the permission levels this user is allowed to carry out.
  */
 export function getAllowedLevels(userPermLevel: PermissionLevel): string[] {
   switch (userPermLevel) {
