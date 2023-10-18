@@ -21,17 +21,21 @@ import {
   User,
   UserStatus,
   UserGroup,
-  ContextUser,
 } from "@budibase/types"
 import {
   getAccountHolderFromUserIds,
   isAdmin,
+  isCreator,
   validateUniqueUser,
 } from "./utils"
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
 
-type QuotaUpdateFn = (change: number, cb?: () => Promise<any>) => Promise<any>
+type QuotaUpdateFn = (
+  change: number,
+  creatorsChange: number,
+  cb?: () => Promise<any>
+) => Promise<any>
 type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
 type FeatureFn = () => Promise<Boolean>
 type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
@@ -135,7 +139,7 @@ export class UserDB {
     if (!fullUser.roles) {
       fullUser.roles = {}
     }
-    // add the active status to a user if its not provided
+    // add the active status to a user if it's not provided
     if (fullUser.status == null) {
       fullUser.status = UserStatus.ACTIVE
     }
@@ -246,7 +250,8 @@ export class UserDB {
     }
 
     const change = dbUser ? 0 : 1 // no change if there is existing user
-    return UserDB.quotas.addUsers(change, async () => {
+    const creatorsChange = isCreator(dbUser) !== isCreator(user) ? 1 : 0
+    return UserDB.quotas.addUsers(change, creatorsChange, async () => {
       await validateUniqueUser(email, tenantId)
 
       let builtUser = await UserDB.buildUser(user, opts, tenantId, dbUser)
@@ -308,6 +313,7 @@ export class UserDB {
 
     let usersToSave: any[] = []
     let newUsers: any[] = []
+    let newCreators: any[] = []
 
     const emails = newUsersRequested.map((user: User) => user.email)
     const existingEmails = await searchExistingEmails(emails)
@@ -328,59 +334,66 @@ export class UserDB {
       }
       newUser.userGroups = groups
       newUsers.push(newUser)
+      if (isCreator(newUser)) {
+        newCreators.push(newUser)
+      }
     }
 
     const account = await accountSdk.getAccountByTenantId(tenantId)
-    return UserDB.quotas.addUsers(newUsers.length, async () => {
-      // create the promises array that will be called by bulkDocs
-      newUsers.forEach((user: any) => {
-        usersToSave.push(
-          UserDB.buildUser(
-            user,
-            {
-              hashPassword: true,
-              requirePassword: user.requirePassword,
-            },
-            tenantId,
-            undefined, // no dbUser
-            account
+    return UserDB.quotas.addUsers(
+      newUsers.length,
+      newCreators.length,
+      async () => {
+        // create the promises array that will be called by bulkDocs
+        newUsers.forEach((user: any) => {
+          usersToSave.push(
+            UserDB.buildUser(
+              user,
+              {
+                hashPassword: true,
+                requirePassword: user.requirePassword,
+              },
+              tenantId,
+              undefined, // no dbUser
+              account
+            )
           )
-        )
-      })
+        })
 
-      const usersToBulkSave = await Promise.all(usersToSave)
-      await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
+        const usersToBulkSave = await Promise.all(usersToSave)
+        await usersCore.bulkUpdateGlobalUsers(usersToBulkSave)
 
-      // Post-processing of bulk added users, e.g. events and cache operations
-      for (const user of usersToBulkSave) {
-        // TODO: Refactor to bulk insert users into the info db
-        // instead of relying on looping tenant creation
-        await platform.users.addUser(tenantId, user._id, user.email)
-        await eventHelpers.handleSaveEvents(user, undefined)
-      }
+        // Post-processing of bulk added users, e.g. events and cache operations
+        for (const user of usersToBulkSave) {
+          // TODO: Refactor to bulk insert users into the info db
+          // instead of relying on looping tenant creation
+          await platform.users.addUser(tenantId, user._id, user.email)
+          await eventHelpers.handleSaveEvents(user, undefined)
+        }
 
-      const saved = usersToBulkSave.map(user => {
+        const saved = usersToBulkSave.map(user => {
+          return {
+            _id: user._id,
+            email: user.email,
+          }
+        })
+
+        // now update the groups
+        if (Array.isArray(saved) && groups) {
+          const groupPromises = []
+          const createdUserIds = saved.map(user => user._id)
+          for (let groupId of groups) {
+            groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
+          }
+          await Promise.all(groupPromises)
+        }
+
         return {
-          _id: user._id,
-          email: user.email,
+          successful: saved,
+          unsuccessful,
         }
-      })
-
-      // now update the groups
-      if (Array.isArray(saved) && groups) {
-        const groupPromises = []
-        const createdUserIds = saved.map(user => user._id)
-        for (let groupId of groups) {
-          groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
-        }
-        await Promise.all(groupPromises)
       }
-
-      return {
-        successful: saved,
-        unsuccessful,
-      }
-    })
+    )
   }
 
   static async bulkDelete(userIds: string[]): Promise<BulkUserDeleted> {
@@ -420,11 +433,12 @@ export class UserDB {
       _deleted: true,
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
+    const creatorsToDelete = usersToDelete.filter(isCreator)
 
-    await UserDB.quotas.removeUsers(toDelete.length)
     for (let user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
+    await UserDB.quotas.removeUsers(toDelete.length, creatorsToDelete.length)
 
     // Build Response
     // index users by id
@@ -473,7 +487,8 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev)
 
-    await UserDB.quotas.removeUsers(1)
+    const creatorsToDelete = isCreator(dbUser) ? 1 : 0
+    await UserDB.quotas.removeUsers(1, creatorsToDelete)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })
