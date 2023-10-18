@@ -9,7 +9,9 @@ export const buildRelationshipEndpoints = API => ({
     if (!tableId || !rowId) {
       return []
     }
-    const response = await API.get({ url: `/api/${tableId}/${rowId}/enrich` })
+    const response = await API.get({
+      url: `/api/${tableId}/${rowId}/enrich?field=${fieldName}`,
+    })
     if (!fieldName) {
       return response || []
     } else {

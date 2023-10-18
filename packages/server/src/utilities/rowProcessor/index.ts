@@ -210,6 +210,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   opts: {
     squash?: boolean
     preserveLinks?: boolean
+    fromRow?: Row
     skipBBReferences?: boolean
   } = {
     squash: true,
@@ -227,7 +228,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // attach any linked row information
   let enriched = !opts.preserveLinks
-    ? await linkRows.attachFullLinkedDocs(table, safeRows)
+    ? await linkRows.attachFullLinkedDocs(table, safeRows, {
+        fromRow: opts?.fromRow,
+      })
     : safeRows
 
   // process complex types: attachements, bb references...
