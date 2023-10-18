@@ -5,22 +5,38 @@ LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-ho
 LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-hooks/post-update.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-hooks/post-check.sh"
 
-WORKDIR /app
 
 # handle node-gyp
-RUN apk add --no-cache --virtual .gyp python3 make g++
+RUN apk add --no-cache --virtual .gyp python3 make g++ jq
 RUN yarn global add pm2
 
+WORKDIR /
 
-COPY package.json .
-COPY dist/yarn.lock .
-RUN yarn install --production=true
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+
+
+WORKDIR /string-templates
+COPY packages/string-templates/package.json package.json
+RUN ../scripts/removeWorkspaceDependencies.sh package.json
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true
+COPY packages/string-templates .
+
+
+WORKDIR /app
+COPY packages/worker/package.json .
+COPY packages/worker/dist/yarn.lock .
+RUN cd ../string-templates && yarn link && cd - && yarn link @budibase/string-templates
+
+RUN ../scripts/removeWorkspaceDependencies.sh package.json
+
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
 
-COPY dist/ dist/
-COPY docker_run.sh .
+COPY packages/worker/dist/ dist/
+COPY packages/worker/docker_run.sh .
 
 EXPOSE 4001
 
