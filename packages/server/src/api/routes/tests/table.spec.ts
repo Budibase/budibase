@@ -6,6 +6,8 @@ import {
   Table,
   ViewCalculation,
   AutoFieldSubTypes,
+  InternalTable,
+  FieldSubtype,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -415,6 +417,48 @@ describe("/tables", () => {
         method: "DELETE",
         url: `/api/tables/${testTable._id}/${testTable._rev}`,
       })
+    })
+  })
+
+  describe("migrate", () => {
+    it("should successfully migrate a user relationship to a user column", async () => {
+      const users = await config.api.row.fetch(InternalTable.USER_METADATA)
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      await config.api.row.save(table._id!, {
+        "user relationship": users,
+      })
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USER,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+
+      const rows = await config.api.row.fetch(table._id!)
+      expect(rows[0]["user column"]).toBeDefined()
     })
   })
 })

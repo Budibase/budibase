@@ -1,4 +1,10 @@
-import { SaveTableRequest, SaveTableResponse, Table } from "@budibase/types"
+import {
+  MigrateRequest,
+  MigrateResponse,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+} from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
@@ -37,6 +43,20 @@ export class TableAPI extends TestAPI {
   ): Promise<Table> => {
     const res = await this.request
       .get(`/api/tables/${tableId}`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expectStatus)
+    return res.body
+  }
+
+  migrate = async (
+    tableId: string,
+    data: MigrateRequest,
+    { expectStatus } = { expectStatus: 200 }
+  ): Promise<MigrateResponse> => {
+    const res = await this.request
+      .post(`/api/tables/${tableId}/migrate`)
+      .send(data)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expectStatus)

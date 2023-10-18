@@ -8,8 +8,8 @@ import {
   isBBReferenceField,
   isRelationshipField,
 } from "@budibase/types"
-import { isExternalTable } from "src/integrations/utils"
 import sdk from "../../../sdk"
+import { isExternalTable } from "../../../../src/integrations/utils"
 
 export async function migrate(
   table: Table,
@@ -80,5 +80,6 @@ class UserColumnMigrator implements ColumnMigrator {
 
   async doMigration() {
     let rows = await sdk.rows.fetch(this.table._id!)
+    let links = await sdk.links.fetchWithDocument(this.table._id!)
   }
 }
