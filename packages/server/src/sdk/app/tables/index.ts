@@ -7,6 +7,7 @@ import {
 } from "../../../integrations/utils"
 import {
   Database,
+  FieldSchema,
   Table,
   TableResponse,
   TableViewsResponse,
@@ -14,6 +15,7 @@ import {
 import datasources from "../datasources"
 import { populateExternalTableSchemas } from "./validation"
 import sdk from "../../../sdk"
+import { migrate } from "./migration"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
@@ -84,6 +86,14 @@ async function saveTable(table: Table) {
   }
 }
 
+async function addColumn(table: Table, newColumn: FieldSchema) {
+  if (newColumn.name in table.schema) {
+    throw `Column "${newColumn.name}" already exists on table "${table.name}"`
+  }
+  table.schema[newColumn.name] = newColumn
+  await saveTable(table)
+}
+
 export default {
   getAllInternalTables,
   getAllExternalTables,
@@ -92,4 +102,6 @@ export default {
   populateExternalTableSchemas,
   enrichViewSchemas,
   saveTable,
+  addColumn,
+  migrate,
 }
