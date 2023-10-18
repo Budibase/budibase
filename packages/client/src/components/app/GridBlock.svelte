@@ -24,7 +24,6 @@
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
-  $: handleRowClick = allowEditRows ? undefined : onRowClick
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -61,7 +60,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
-    on:rowclick={e => handleRowClick?.({ row: e.detail })}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
 

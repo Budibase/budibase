@@ -36,7 +36,7 @@
 
   let visible = false
   let isAdding = false
-  let newRow = { _isNewRow: true }
+  let newRow
   let offset = 0
 
   $: firstColumn = $stickyColumn || $visibleColumns[0]
@@ -114,7 +114,7 @@
     }
 
     // Update state and select initial cell
-    newRow = {}
+    newRow = { _isNewRow: true }
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
