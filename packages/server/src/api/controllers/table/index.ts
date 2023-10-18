@@ -11,7 +11,6 @@ import {
   BulkImportRequest,
   BulkImportResponse,
   FetchTablesResponse,
-  InternalTable,
   MigrateRequest,
   MigrateResponse,
   SaveTableRequest,
@@ -19,8 +18,6 @@ import {
   Table,
   TableResponse,
   UserCtx,
-  isBBReferenceField,
-  isRelationshipField,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -164,53 +161,8 @@ export async function validateExistingTableImport(ctx: UserCtx) {
   }
 }
 
-function error(ctx: UserCtx, message: string, status = 400) {
-  ctx.status = status
-  ctx.body = { message }
-}
-
 export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   const { tableId, oldColumn, newColumn } = ctx.request.body
-
-  // For now we're only supporting migrations of user relationships to user
-  // columns in internal tables. In future we may want to support other
-  // migrations but for now return an error if we aren't migrating a user
-  // relationship.
-  if (isExternalTable(tableId)) {
-    return error(ctx, "External tables cannot be migrated")
-  }
-
   const table = await sdk.tables.getTable(tableId)
-
-  if (!(oldColumn.name in table.schema)) {
-    return error(
-      ctx,
-      `Column "${oldColumn.name}" does not exist on table "${table.name}"`
-    )
-  }
-
-  if (newColumn.name in table.schema) {
-    return error(
-      ctx,
-      `Column "${newColumn.name}" already exists on table "${table.name}"`
-    )
-  }
-
-  if (!isBBReferenceField(newColumn)) {
-    return error(ctx, `Column "${newColumn.name}" is not a user column`)
-  }
-
-  if (newColumn.subtype !== "user" && newColumn.subtype !== "users") {
-    return error(ctx, `Column "${newColumn.name}" is not a user column`)
-  }
-
-  if (!isRelationshipField(oldColumn)) {
-    return error(ctx, `Column "${oldColumn.name}" is not a user relationship`)
-  }
-
-  if (oldColumn.tableId !== InternalTable.USER_METADATA) {
-    return error(ctx, `Column "${oldColumn.name}" is not a user relationship`)
-  }
-
-  let rows = await sdk.rows.fetch(tableId)
+  await sdk.tables.migrate(table, oldColumn, newColumn)
 }
