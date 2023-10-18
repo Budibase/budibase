@@ -1,4 +1,4 @@
-import { derived, get } from "svelte/store"
+import { derived } from "svelte/store"
 import {
   MaxCellRenderHeight,
   MaxCellRenderWidthOverflow,
