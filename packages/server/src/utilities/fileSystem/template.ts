@@ -5,8 +5,8 @@ import { objectStore } from "@budibase/backend-core"
 
 /**
  * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns an fs read stream which can be loaded into the database.
+ * @param template The template object retrieved from the Koa context object.
+ * @returns Returns an fs read stream which can be loaded into the database.
  */
 export const getTemplateStream = async (template: any) => {
   if (template.file) {
@@ -20,7 +20,7 @@ export const getTemplateStream = async (template: any) => {
 
 /**
  * Retrieves a template and pipes it to minio as well as making it available temporarily.
- * @param {string} type The type of template which is to be retrieved.
+ * @param type The type of template which is to be retrieved.
  * @param name
  * @return {Promise<*>}
  */

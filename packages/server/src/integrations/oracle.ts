@@ -258,7 +258,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   /**
    * Fetches the tables from the oracle table and assigns them to the datasource.
-   * @param {*} datasourceId - datasourceId to fetch
+   * @param datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
   async buildSchema(
