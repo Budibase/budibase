@@ -1,11 +1,7 @@
-import * as Sentry from "@sentry/node"
-
 if (process.env.DD_APM_ENABLED) {
   require("./ddApm")
 }
 
-// need to load environment first
-import env from "./environment"
 import * as db from "./db"
 db.init()
 import { ServiceType } from "@budibase/types"
@@ -28,10 +24,6 @@ async function start() {
   }
   // startup includes automation runner - if enabled
   await startup(app, server)
-  if (env.isProd()) {
-    env._set("NODE_ENV", "production")
-    Sentry.init()
-  }
 }
 
 start().catch(err => {
