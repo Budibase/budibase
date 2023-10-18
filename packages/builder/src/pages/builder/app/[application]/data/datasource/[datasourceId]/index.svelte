@@ -12,18 +12,11 @@
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
   import SettingsPanel from "./_components/panels/Settings.svelte"
   import { helpers } from "@budibase/shared-core"
-  import { goto } from "@roxi/routify"
 
   let selectedPanel = null
   let panelOptions = []
 
-  // datasources.selected can return null temporarily on datasource deletion
   $: datasource = $datasources.selected
-  $: {
-    if (!datasource) {
-      $goto("./datasource")
-    }
-  }
 
   $: getOptions(datasource)
 
@@ -58,53 +51,51 @@
 
 <PromptQueryModal />
 
-{#if datasource}
-  <section>
-    <Layout noPadding>
-      <Layout gap="XS" noPadding>
-        <header>
-          <svelte:component
-            this={ICONS[datasource.source]}
-            height="26"
-            width="26"
-          />
-          <Heading size="M">{$datasources.selected?.name}</Heading>
-        </header>
-      </Layout>
-      <EditDatasourceConfig {datasource} />
-      <div class="tabs">
-        <Tabs size="L" noPadding noHorizPadding selected={selectedPanel}>
-          {#each panelOptions as panelOption}
-            <Tab
-              title={panelOption}
-              on:click={() => (selectedPanel = panelOption)}
-            />
-          {/each}
-        </Tabs>
-      </div>
-
-      {#if selectedPanel === null}
-        <Body>loading...</Body>
-      {:else if selectedPanel === "Tables"}
-        <TablesPanel {datasource} />
-      {:else if selectedPanel === "Relationships"}
-        <RelationshipsPanel {datasource} />
-      {:else if selectedPanel === "Queries"}
-        <QueriesPanel {datasource} />
-      {:else if selectedPanel === "Headers"}
-        <RestHeadersPanel {datasource} />
-      {:else if selectedPanel === "Authentication"}
-        <RestAuthenticationPanel {datasource} />
-      {:else if selectedPanel === "Variables"}
-        <RestVariablesPanel {datasource} />
-      {:else if selectedPanel === "Settings"}
-        <SettingsPanel {datasource} />
-      {:else}
-        <Body>Something went wrong</Body>
-      {/if}
+<section>
+  <Layout noPadding>
+    <Layout gap="XS" noPadding>
+      <header>
+        <svelte:component
+          this={ICONS[datasource.source]}
+          height="26"
+          width="26"
+        />
+        <Heading size="M">{$datasources.selected?.name}</Heading>
+      </header>
     </Layout>
-  </section>
-{/if}
+    <EditDatasourceConfig {datasource} />
+    <div class="tabs">
+      <Tabs size="L" noPadding noHorizPadding selected={selectedPanel}>
+        {#each panelOptions as panelOption}
+          <Tab
+            title={panelOption}
+            on:click={() => (selectedPanel = panelOption)}
+          />
+        {/each}
+      </Tabs>
+    </div>
+
+    {#if selectedPanel === null}
+      <Body>loading...</Body>
+    {:else if selectedPanel === "Tables"}
+      <TablesPanel {datasource} />
+    {:else if selectedPanel === "Relationships"}
+      <RelationshipsPanel {datasource} />
+    {:else if selectedPanel === "Queries"}
+      <QueriesPanel {datasource} />
+    {:else if selectedPanel === "Headers"}
+      <RestHeadersPanel {datasource} />
+    {:else if selectedPanel === "Authentication"}
+      <RestAuthenticationPanel {datasource} />
+    {:else if selectedPanel === "Variables"}
+      <RestVariablesPanel {datasource} />
+    {:else if selectedPanel === "Settings"}
+      <SettingsPanel {datasource} />
+    {:else}
+      <Body>Something went wrong</Body>
+    {/if}
+  </Layout>
+</section>
 
 <style>
   section {

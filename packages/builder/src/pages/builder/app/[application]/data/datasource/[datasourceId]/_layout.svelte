@@ -23,5 +23,7 @@
 </script>
 
 {#key $params.datasourceId}
-  <slot />
+  {#if $datasources.selected}
+    <slot />
+  {/if}
 {/key}
