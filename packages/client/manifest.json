@@ -5567,18 +5567,35 @@
         "type": "columns/grid",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "table"
+        "dependsOn": [
+          "datasource",
+          {
+            "setting": "datasource.type",
+            "value": "custom",
+            "invert": true
+          }
+        ]
       },
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "initialFilter"
+        "key": "initialFilter",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
       },
       {
         "type": "field/sortable",
         "label": "Sort column",
         "key": "initialSortColumn",
-        "placeholder": "Default"
+        "placeholder": "Default",
+        "dependsOn": {
+          "setting": "datasource.type",
+          "value": "custom",
+          "invert": true
+        }
       },
       {
         "type": "select",

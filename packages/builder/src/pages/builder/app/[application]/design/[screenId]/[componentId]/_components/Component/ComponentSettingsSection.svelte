@@ -70,14 +70,22 @@
   }
 
   const shouldDisplay = (instance, setting) => {
-    // Parse dependant settings
-    if (setting.dependsOn) {
-      let dependantSetting = setting.dependsOn
+    let dependsOn = setting.dependsOn
+    if (dependsOn && !Array.isArray(dependsOn)) {
+      dependsOn = [dependsOn]
+    }
+    if (!dependsOn?.length) {
+      return true
+    }
+
+    // Ensure all conditions are met
+    return dependsOn.every(condition => {
+      let dependantSetting = condition
       let dependantValues = null
-      let invert = !!setting.dependsOn.invert
-      if (typeof setting.dependsOn === "object") {
-        dependantSetting = setting.dependsOn.setting
-        dependantValues = setting.dependsOn.value
+      let invert = !!condition.invert
+      if (typeof condition === "object") {
+        dependantSetting = condition.setting
+        dependantValues = condition.value
       }
       if (!dependantSetting) {
         return false
@@ -93,14 +101,12 @@
       const currentVal = helpers.deepGet(instance, dependantSetting)
       const anyMatches = dependantValues.some(dependantVal => {
         if (dependantVal == null) {
-          return currentVal == null || currentVal === false || currentVal === ""
+          return currentVal != null && currentVal !== false && currentVal !== ""
         }
         return dependantVal === currentVal
       })
       return anyMatches !== invert
-    }
-
-    return typeof setting.visible == "boolean" ? setting.visible : true
+    })
   }
 
   const canRenderControl = (instance, setting, isScreen) => {
