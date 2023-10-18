@@ -149,9 +149,9 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
 /**
  * Gets the role object, this is mainly useful for two purposes, to check if the level exists and
  * to check if the role inherits any others.
- * @param {string|null} roleId The level ID to lookup.
- * @param {object|null} opts options for the function, like whether to halt errors, instead return public.
- * @returns {Promise<Role|object|null>} The role object, which may contain an "inherits" property.
+ * @param roleId The level ID to lookup.
+ * @param opts options for the function, like whether to halt errors, instead return public.
+ * @returns The role object, which may contain an "inherits" property.
  */
 export async function getRole(
   roleId?: string,
@@ -225,8 +225,8 @@ export async function getUserRoleIdHierarchy(
 /**
  * Returns an ordered array of the user's inherited role IDs, this can be used
  * to determine if a user can access something that requires a specific role.
- * @param {string} userRoleId The user's role ID, this can be found in their access token.
- * @returns {Promise<object[]>} returns an ordered array of the roles, with the first being their
+ * @param userRoleId The user's role ID, this can be found in their access token.
+ * @returns returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
 export async function getUserRoleHierarchy(userRoleId?: string) {
@@ -258,7 +258,7 @@ export async function getAllRoleIds(appId?: string) {
 
 /**
  * Given an app ID this will retrieve all of the roles that are currently within that app.
- * @return {Promise<object[]>} An array of the role objects that were found.
+ * @return An array of the role objects that were found.
  */
 export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
   if (appId) {
