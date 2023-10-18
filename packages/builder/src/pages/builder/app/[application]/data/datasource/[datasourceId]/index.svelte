@@ -16,8 +16,7 @@
   let selectedPanel = null
   let panelOptions = []
 
-  // datasources.selected can return null temporarily on datasource deletion
-  $: datasource = $datasources.selected || {}
+  $: datasource = $datasources.selected
 
   $: getOptions(datasource)
 
