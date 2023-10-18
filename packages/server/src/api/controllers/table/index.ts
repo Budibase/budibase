@@ -162,7 +162,11 @@ export async function validateExistingTableImport(ctx: UserCtx) {
 }
 
 export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
-  const { tableId, oldColumn, newColumn } = ctx.request.body
+  const { oldColumn, newColumn } = ctx.request.body
+  let tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
   await sdk.tables.migrate(table, oldColumn, newColumn)
+
+  ctx.status = 200
+  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
 }

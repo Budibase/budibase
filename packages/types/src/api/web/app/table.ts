@@ -36,7 +36,6 @@ export interface BulkImportResponse {
 }
 
 export interface MigrateRequest {
-  tableId: string
   oldColumn: FieldSchema
   newColumn: FieldSchema
 }
