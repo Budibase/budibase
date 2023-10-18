@@ -53,7 +53,7 @@
   })
 </script>
 
-<TestimonialPage>
+<TestimonialPage enabled={$organisation.testimonialsEnabled}>
   <Layout gap="S" noPadding>
     {#if loaded}
       <img alt="logo" src={$organisation.logoUrl || Logo} />
