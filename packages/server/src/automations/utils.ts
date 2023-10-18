@@ -148,8 +148,8 @@ export function isRebootTrigger(auto: Automation) {
 
 /**
  * This function handles checking of any cron jobs that need to be enabled/updated.
- * @param {string} appId The ID of the app in which we are checking for webhooks
- * @param {object|undefined} automation The automation object to be updated.
+ * @param appId The ID of the app in which we are checking for webhooks
+ * @param automation The automation object to be updated.
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
@@ -187,10 +187,10 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
 
 /**
  * This function handles checking if any webhooks need to be created or deleted for automations.
- * @param {string} appId The ID of the app in which we are checking for webhooks
- * @param {object|undefined} oldAuto The old automation object if updating/deleting
- * @param {object|undefined} newAuto The new automation object if creating/updating
- * @returns {Promise<object|undefined>} After this is complete the new automation object may have been updated and should be
+ * @param appId The ID of the app in which we are checking for webhooks
+ * @param oldAuto The old automation object if updating/deleting
+ * @param newAuto The new automation object if creating/updating
+ * @returns After this is complete the new automation object may have been updated and should be
  * written to DB (this does not write to DB as it would be wasteful to repeat).
  */
 export async function checkForWebhooks({ oldAuto, newAuto }: any) {
@@ -257,8 +257,8 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
 
 /**
  * When removing an app/unpublishing it need to make sure automations are cleaned up (cron).
- * @param appId {string} the app that is being removed.
- * @return {Promise<void>} clean is complete if this succeeds.
+ * @param appId the app that is being removed.
+ * @return clean is complete if this succeeds.
  */
 export async function cleanupAutomations(appId: any) {
   await disableAllCrons(appId)
@@ -267,7 +267,7 @@ export async function cleanupAutomations(appId: any) {
 /**
  * Checks if the supplied automation is of a recurring type.
  * @param automation The automation to check.
- * @return {boolean} if it is recurring (cron).
+ * @return if it is recurring (cron).
  */
 export function isRecurring(automation: Automation) {
   return automation.definition.trigger.stepId === definitions.CRON.stepId

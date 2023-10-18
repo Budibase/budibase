@@ -7,11 +7,11 @@ export async function getRow(
   rowId: string,
   opts?: { relationships?: boolean }
 ) {
-  const response = (await handleRequest(Operation.READ, tableId, {
+  const response = await handleRequest(Operation.READ, tableId, {
     id: breakRowIdField(rowId),
     includeSqlRelationships: opts?.relationships
       ? IncludeRelationship.INCLUDE
       : IncludeRelationship.EXCLUDE,
-  })) as Row[]
+  })
   return response ? response[0] : response
 }

@@ -11,8 +11,8 @@ export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 
 /**
  * Uploads the latest client library to the object store.
- * @param {string} appId The ID of the app which is being created.
- * @return {Promise<void>} once promise completes app resources should be ready in object store.
+ * @param appId The ID of the app which is being created.
+ * @return once promise completes app resources should be ready in object store.
  */
 export const createApp = async (appId: string) => {
   await updateClientLibrary(appId)
@@ -20,8 +20,8 @@ export const createApp = async (appId: string) => {
 
 /**
  * Removes all of the assets created for an app in the object store.
- * @param {string} appId The ID of the app which is being deleted.
- * @return {Promise<void>} once promise completes the app resources will be removed from object store.
+ * @param appId The ID of the app which is being deleted.
+ * @return once promise completes the app resources will be removed from object store.
  */
 export const deleteApp = async (appId: string) => {
   await objectStore.deleteFolder(ObjectStoreBuckets.APPS, `${appId}/`)

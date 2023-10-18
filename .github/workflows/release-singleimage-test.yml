@@ -1,0 +1,69 @@
+name: Test
+
+on:
+  workflow_dispatch:
+
+env:
+  CI: true
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  REGISTRY_URL: registry.hub.docker.com
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+jobs:
+  build:
+    name: "build"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18.x]
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "yarn"
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Run Yarn
+        run: yarn
+      - name: Run Yarn Build
+        run: yarn build --scope @budibase/server --scope @budibase/worker
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_API_KEY }}
+      - name: Get the latest release version
+        id: version
+        run: |
+          release_version=$(cat lerna.json | jq -r '.version')
+          echo $release_version
+          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
+      - name: Tag and release Budibase service docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          pull: true
+          platforms: linux/amd64,linux/arm64
+          tags: budibase/budibase-test:test
+          file: ./hosting/single/Dockerfile.v2
+          cache-from: type=registry,ref=budibase/budibase-test:test
+          cache-to: type=inline
+      - name: Tag and release Budibase Azure App Service docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          build-args: TARGETBUILD=aas
+          tags: budibase/budibase-test:aas
+          file: ./hosting/single/Dockerfile.v2

@@ -189,7 +189,7 @@ class SqlTableQueryBuilder {
 
   /**
    * @param json the input JSON structure from which an SQL query will be built.
-   * @return {string} the operation that was found in the JSON.
+   * @return the operation that was found in the JSON.
    */
   _operation(json: QueryJson): Operation {
     return json.endpoint.operation
