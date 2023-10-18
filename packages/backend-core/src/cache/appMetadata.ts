@@ -33,8 +33,8 @@ function isInvalid(metadata?: { state: string }) {
  * Get the requested app metadata by id.
  * Use redis cache to first read the app metadata.
  * If not present fallback to loading the app metadata directly and re-caching.
- * @param {string} appId the id of the app to get metadata from.
- * @returns {object} the app metadata.
+ * @param appId the id of the app to get metadata from.
+ * @returns the app metadata.
  */
 export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
   const client = await getAppClient()
@@ -72,9 +72,9 @@ export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
 
 /**
  * Invalidate/reset the cached metadata when a change occurs in the db.
- * @param appId {string} the cache key to bust/update.
- * @param newMetadata {object|undefined} optional - can simply provide the new metadata to update with.
- * @return {Promise<void>} will respond with success when cache is updated.
+ * @param appId the cache key to bust/update.
+ * @param newMetadata optional - can simply provide the new metadata to update with.
+ * @return will respond with success when cache is updated.
  */
 export async function invalidateAppMetadata(appId: string, newMetadata?: any) {
   if (!appId) {
