@@ -456,9 +456,11 @@ describe("/tables", () => {
 
       const migratedTable = await config.api.table.get(table._id!)
       expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
       const rows = await config.api.row.fetch(table._id!)
       expect(rows[0]["user column"]).toBeDefined()
+      expect(rows[0]["user relationship"]).not.toBeDefined()
     })
   })
 })

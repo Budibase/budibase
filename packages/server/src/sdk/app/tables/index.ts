@@ -16,6 +16,8 @@ import datasources from "../datasources"
 import { populateExternalTableSchemas } from "./validation"
 import sdk from "../../../sdk"
 import { migrate } from "./migration"
+import { DocumentInsertResponse } from "@budibase/nano"
+import { cloneDeep } from "lodash"
 
 async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
@@ -75,23 +77,28 @@ function enrichViewSchemas(table: Table): TableResponse {
   }
 }
 
-async function saveTable(table: Table) {
+async function saveTable(table: Table): Promise<Table> {
   const db = context.getAppDB()
+  let resp: DocumentInsertResponse
   if (isExternalTable(table._id!)) {
     const datasource = await sdk.datasources.get(table.sourceId!)
     datasource.entities![table.name] = table
-    await db.put(datasource)
+    resp = await db.put(datasource)
   } else {
-    await db.put(table)
+    resp = await db.put(table)
   }
+
+  let tableClone = cloneDeep(table)
+  tableClone._rev = resp.rev
+  return tableClone
 }
 
-async function addColumn(table: Table, newColumn: FieldSchema) {
+async function addColumn(table: Table, newColumn: FieldSchema): Promise<Table> {
   if (newColumn.name in table.schema) {
     throw `Column "${newColumn.name}" already exists on table "${table.name}"`
   }
   table.schema[newColumn.name] = newColumn
-  await saveTable(table)
+  return await saveTable(table)
 }
 
 export default {

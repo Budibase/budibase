@@ -1,15 +1,19 @@
-import { BadRequestError } from "@budibase/backend-core"
+import { BadRequestError, context } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
   InternalTable,
   RelationshipFieldMetadata,
+  Row,
   Table,
   isBBReferenceField,
   isRelationshipField,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { isExternalTable } from "../../../../src/integrations/utils"
+import { db as dbCore } from "@budibase/backend-core"
+import { EventType, updateLinks } from "../../../../src/db/linkedRows"
+import { cloneDeep } from "lodash"
 
 export async function migrate(
   table: Table,
@@ -17,10 +21,15 @@ export async function migrate(
   newColumn: FieldSchema
 ) {
   let migrator = getColumnMigrator(table, oldColumn, newColumn)
+  let oldTable = cloneDeep(table)
 
-  await sdk.tables.addColumn(table, newColumn)
+  table = await sdk.tables.addColumn(table, newColumn)
 
-  migrator.doMigration()
+  await migrator.doMigration()
+
+  delete table.schema[oldColumn.name]
+  await sdk.tables.saveTable(table)
+  await updateLinks({ eventType: EventType.TABLE_UPDATED, table, oldTable })
 }
 
 interface ColumnMigrator {
@@ -80,6 +89,29 @@ class UserColumnMigrator implements ColumnMigrator {
 
   async doMigration() {
     let rows = await sdk.rows.fetch(this.table._id!)
+    let rowsById = rows.reduce((acc, row) => {
+      acc[row._id!] = row
+      return acc
+    }, {} as Record<string, Row>)
+
     let links = await sdk.links.fetchWithDocument(this.table._id!)
+    for (let link of links) {
+      if (link.doc1.tableId !== this.table._id) {
+        continue
+      }
+      if (link.doc1.fieldName !== this.oldColumn.name) {
+        continue
+      }
+      if (link.doc2.tableId !== InternalTable.USER_METADATA) {
+        continue
+      }
+
+      let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
+      let row = rowsById[link.doc1.rowId]
+      row[this.newColumn.name] = userId
+    }
+
+    let db = context.getAppDB()
+    await db.bulkDocs(rows)
   }
 }
