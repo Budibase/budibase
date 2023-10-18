@@ -8,9 +8,8 @@ import * as automations from "./automations"
 import { Thread } from "./threads"
 import * as redis from "./utilities/redis"
 import { events, logging, middleware, timers } from "@budibase/backend-core"
-const Sentry = require("@sentry/node")
-const destroyable = require("server-destroy")
-const { userAgent } = require("koa-useragent")
+import destroyable from "server-destroy"
+import { userAgent } from "koa-useragent"
 
 export default function createKoaApp() {
   const app = new Koa()
@@ -35,17 +34,6 @@ export default function createKoaApp() {
   app.use(middleware.correlation)
   app.use(middleware.pino)
   app.use(userAgent)
-
-  if (env.isProd()) {
-    app.on("error", (err: any, ctx: ExtendableContext) => {
-      Sentry.withScope(function (scope: any) {
-        scope.addEventProcessor(function (event: any) {
-          return Sentry.Handlers.parseRequest(event, ctx.request)
-        })
-        Sentry.captureException(err)
-      })
-    })
-  }
 
   const server = http.createServer(app.callback())
   destroyable(server)
