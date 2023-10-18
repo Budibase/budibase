@@ -17,15 +17,15 @@ const OIDCStrategy = require("@techpass/passport-openidconnect").Strategy
 
 export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
   /**
-   * @param {*} issuer The identity provider base URL
-   * @param {*} sub The user ID
-   * @param {*} profile The user profile information. Created by passport from the /userinfo response
-   * @param {*} jwtClaims The parsed id_token claims
-   * @param {*} accessToken The access_token for contacting the identity provider - may or may not be a JWT
-   * @param {*} refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
-   * @param {*} idToken The id_token - always a JWT
-   * @param {*} params The response body from requesting an access_token
-   * @param {*} done The passport callback: err, user, info
+   * @param issuer The identity provider base URL
+   * @param sub The user ID
+   * @param profile The user profile information. Created by passport from the /userinfo response
+   * @param jwtClaims The parsed id_token claims
+   * @param accessToken The access_token for contacting the identity provider - may or may not be a JWT
+   * @param refreshToken The refresh_token for obtaining a new access_token - usually not a JWT
+   * @param idToken The id_token - always a JWT
+   * @param params The response body from requesting an access_token
+   * @param done The passport callback: err, user, info
    */
   return async (
     issuer: string,
@@ -61,8 +61,8 @@ export function buildVerifyFn(saveUserFn: SaveSSOUserFunction) {
 }
 
 /**
- * @param {*} profile The structured profile created by passport using the user info endpoint
- * @param {*} jwtClaims The claims returned in the id token
+ * @param profile The structured profile created by passport using the user info endpoint
+ * @param jwtClaims The claims returned in the id token
  */
 function getEmail(profile: SSOProfile, jwtClaims: JwtClaims) {
   // profile not guaranteed to contain email e.g. github connected azure ad account

@@ -20,7 +20,6 @@ services:
       API_ENCRYPTION_KEY: ${API_ENCRYPTION_KEY}
       JWT_SECRET: ${JWT_SECRET}
       LOG_LEVEL: info
-      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
       ENABLE_ANALYTICS: "true"
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -31,8 +30,8 @@ services:
     depends_on:
       - worker-service
       - redis-service
-#    volumes:
-#      - /some/path/to/plugins:/plugins
+  #    volumes:
+  #      - /some/path/to/plugins:/plugins
 
   worker-service:
     restart: unless-stopped
@@ -51,7 +50,6 @@ services:
       COUCH_DB_USERNAME: ${COUCH_DB_USER}
       COUCH_DB_PASSWORD: ${COUCH_DB_PASSWORD}
       COUCH_DB_URL: http://${COUCH_DB_USER}:${COUCH_DB_PASSWORD}@couchdb-service:5984
-      SENTRY_DSN: https://a34ae347621946bf8acded18e5b7d4b8@o420233.ingest.sentry.io/5338131
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
@@ -113,7 +111,12 @@ services:
       PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
     depends_on:
       - couchdb-service
-    command: ["sh","-c","sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;"]
+    command:
+      [
+        "sh",
+        "-c",
+        "sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;",
+      ]
 
   redis-service:
     restart: unless-stopped

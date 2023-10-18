@@ -6,10 +6,10 @@ import * as cloudfront from "../cloudfront"
  * In production the client library is stored in the object store, however in development
  * we use the symlinked version produced by lerna, located in node modules. We link to this
  * via a specific endpoint (under /api/assets/client).
- * @param {string} appId In production we need the appId to look up the correct bucket, as the
+ * @param appId In production we need the appId to look up the correct bucket, as the
  * version of the client lib may differ between apps.
- * @param {string} version The version to retrieve.
- * @return {string} The URL to be inserted into appPackage response or server rendered
+ * @param version The version to retrieve.
+ * @return The URL to be inserted into appPackage response or server rendered
  * app index file.
  */
 export const clientLibraryUrl = (appId: string, version: string) => {

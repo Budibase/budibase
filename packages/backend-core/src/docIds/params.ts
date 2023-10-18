@@ -12,12 +12,12 @@ import { getProdAppID } from "./conversions"
  * is usually the case as most of our docs are top level e.g. tables, automations, users and so on.
  * More complex cases such as link docs and rows which have multiple levels of IDs that their
  * ID consists of need their own functions to build the allDocs parameters.
- * @param {string} docType The type of document which input params are being built for, e.g. user,
+ * @param docType The type of document which input params are being built for, e.g. user,
  * link, app, table and so on.
- * @param {string|null} docId The ID of the document minus its type - this is only needed if looking
+ * @param docId The ID of the document minus its type - this is only needed if looking
  * for a singular document.
- * @param {object} otherProps Add any other properties onto the request, e.g. include_docs.
- * @returns {object} Parameters which can then be used with an allDocs request.
+ * @param otherProps Add any other properties onto the request, e.g. include_docs.
+ * @returns Parameters which can then be used with an allDocs request.
  */
 export function getDocParams(
   docType: string,
@@ -36,11 +36,11 @@ export function getDocParams(
 
 /**
  * Gets the DB allDocs/query params for retrieving a row.
- * @param {string|null} tableId The table in which the rows have been stored.
- * @param {string|null} rowId The ID of the row which is being specifically queried for. This can be
+ * @param tableId The table in which the rows have been stored.
+ * @param rowId The ID of the row which is being specifically queried for. This can be
  * left null to get all the rows in the table.
- * @param {object} otherProps Any other properties to add to the request.
- * @returns {object} Parameters which can then be used with an allDocs request.
+ * @param otherProps Any other properties to add to the request.
+ * @returns Parameters which can then be used with an allDocs request.
  */
 export function getRowParams(
   tableId?: string | null,
