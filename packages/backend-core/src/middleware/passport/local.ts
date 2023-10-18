@@ -13,10 +13,10 @@ export const options = {
 
 /**
  * Passport Local Authentication Middleware.
- * @param {*} ctx the request structure
- * @param {*} email username to login with
- * @param {*} password plain text password to log in with
- * @param {*} done callback from passport to return user information and errors
+ * @param ctx the request structure
+ * @param email username to login with
+ * @param password plain text password to log in with
+ * @param done callback from passport to return user information and errors
  * @returns The authenticated user, or errors if they occur
  */
 export async function authenticate(
