@@ -14,13 +14,15 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
+  SearchQuery,
+  SearchQueryOperators,
   SearchUsersRequest,
   User,
   ContextUser,
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
-import { user as userCache } from "../cache"
+import { isCreator } from "./utils"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -37,6 +39,31 @@ function removeUserPassword(users: User | User[]) {
     return users
   }
   return users
+}
+
+export const isSupportedUserSearch = (query: SearchQuery) => {
+  const allowed = [
+    { op: SearchQueryOperators.STRING, key: "email" },
+    { op: SearchQueryOperators.EQUAL, key: "_id" },
+  ]
+  for (let [key, operation] of Object.entries(query)) {
+    if (typeof operation !== "object") {
+      return false
+    }
+    const fields = Object.keys(operation || {})
+    // this filter doesn't contain options - ignore
+    if (fields.length === 0) {
+      continue
+    }
+    const allowedOperation = allowed.find(
+      allow =>
+        allow.op === key && fields.length === 1 && fields[0] === allow.key
+    )
+    if (!allowedOperation) {
+      return false
+    }
+  }
+  return true
 }
 
 export const bulkGetGlobalUsersById = async (
@@ -211,8 +238,8 @@ export const searchGlobalUsersByEmail = async (
 
 const PAGE_LIMIT = 8
 export const paginatedUsers = async ({
-  page,
-  email,
+  bookmark,
+  query,
   appId,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
@@ -222,18 +249,20 @@ export const paginatedUsers = async ({
     limit: PAGE_LIMIT + 1,
   }
   // add a startkey if the page was specified (anchor)
-  if (page) {
-    opts.startkey = page
+  if (bookmark) {
+    opts.startkey = bookmark
   }
   // property specifies what to use for the page/anchor
   let userList: User[],
     property = "_id",
     getKey
-  if (appId) {
+  if (query?.equal?._id) {
+    userList = [await getById(query.equal._id)]
+  } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
     getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
-  } else if (email) {
-    userList = await searchGlobalUsersByEmail(email, opts)
+  } else if (query?.string?.email) {
+    userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
     property = "email"
   } else {
     // no search, query allDocs
@@ -253,6 +282,19 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
+}
+
+export async function getCreatorCount() {
+  let creators = 0
+  async function iterate(startPage?: string) {
+    const page = await paginatedUsers({ bookmark: startPage })
+    creators += page.data.filter(isCreator).length
+    if (page.hasNextPage) {
+      await iterate(page.nextPage)
+    }
+  }
+  await iterate()
+  return creators
 }
 
 // used to remove the builder/admin permissions, for processing the

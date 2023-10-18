@@ -1,5 +1,12 @@
-import { ContextUser, User } from "@budibase/types"
+import {
+  ContextUser,
+  DocumentType,
+  SEPARATOR,
+  User,
+  InternalTable,
+} from "@budibase/types"
 import { getProdAppID } from "./applications"
+import * as _ from "lodash/fp"
 
 // checks if a user is specifically a builder, given an app ID
 export function isBuilder(user: User | ContextUser, appId?: string): boolean {
@@ -52,6 +59,18 @@ export function hasAppBuilderPermissions(user?: User | ContextUser): boolean {
   return !isGlobalBuilder && appLength != null && appLength > 0
 }
 
+export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
+  if (!user) {
+    return false
+  }
+  return _.flow(
+    _.get("roles"),
+    _.values,
+    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
+    x => !!x
+  )(user)
+}
+
 // checks if a user is capable of building any app
 export function hasBuilderPermissions(user?: User | ContextUser): boolean {
   if (!user) {
@@ -66,4 +85,34 @@ export function hasAdminPermissions(user?: User | ContextUser): boolean {
     return false
   }
   return !!user.admin?.global
+}
+
+export function isCreator(user?: User | ContextUser): boolean {
+  if (!user) {
+    return false
+  }
+  return (
+    isGlobalBuilder(user) ||
+    hasAdminPermissions(user) ||
+    hasAppBuilderPermissions(user) ||
+    hasAppCreatorPermissions(user)
+  )
+}
+
+export function getGlobalUserID(userId?: string): string | undefined {
+  if (typeof userId !== "string") {
+    return userId
+  }
+  const prefix = `${DocumentType.ROW}${SEPARATOR}${InternalTable.USER_METADATA}${SEPARATOR}`
+  if (!userId.startsWith(prefix)) {
+    return userId
+  }
+  return userId.split(prefix)[1]
+}
+
+export function containsUserID(value: string | undefined): boolean {
+  if (typeof value !== "string") {
+    return false
+  }
+  return value.includes(`${DocumentType.USER}${SEPARATOR}`)
 }

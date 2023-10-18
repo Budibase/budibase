@@ -118,7 +118,7 @@
   }
 
   const getOperatorOptions = condition => {
-    return LuceneUtils.getValidOperatorsForType(condition.valueType)
+    return LuceneUtils.getValidOperatorsForType({ type: condition.valueType })
   }
 
   const onOperatorChange = (condition, newOperator) => {
@@ -137,9 +137,9 @@
     condition.referenceValue = null
 
     // Ensure a valid operator is set
-    const validOperators = LuceneUtils.getValidOperatorsForType(newType).map(
-      x => x.value
-    )
+    const validOperators = LuceneUtils.getValidOperatorsForType({
+      type: newType,
+    }).map(x => x.value)
     if (!validOperators.includes(condition.operator)) {
       condition.operator =
         validOperators[0] ?? Constants.OperatorOptions.Equals.value
