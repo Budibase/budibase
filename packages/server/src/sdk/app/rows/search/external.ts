@@ -55,15 +55,15 @@ export async function search(options: SearchParams) {
   try {
     const table = await sdk.tables.getTable(tableId)
     options = searchInputMapping(table, options)
-    let rows = (await handleRequest(Operation.READ, tableId, {
+    let rows = await handleRequest(Operation.READ, tableId, {
       filters: query,
       sort,
       paginate: paginateObj as PaginationJson,
       includeSqlRelationships: IncludeRelationship.INCLUDE,
-    })) as Row[]
+    })
     let hasNextPage = false
     if (paginate && rows.length === limit) {
-      const nextRows = (await handleRequest(Operation.READ, tableId, {
+      const nextRows = await handleRequest(Operation.READ, tableId, {
         filters: query,
         sort,
         paginate: {
@@ -71,7 +71,7 @@ export async function search(options: SearchParams) {
           page: bookmark! * limit + 1,
         },
         includeSqlRelationships: IncludeRelationship.INCLUDE,
-      })) as Row[]
+      })
       hasNextPage = nextRows.length > 0
     }
 
@@ -172,12 +172,18 @@ export async function exportRows(
   }
 }
 
-export async function fetch(tableId: string) {
-  const response = await handleRequest(Operation.READ, tableId, {
-    includeSqlRelationships: IncludeRelationship.INCLUDE,
-  })
+export async function fetch(tableId: string): Promise<Row[]> {
+  const response = await handleRequest<Operation.READ>(
+    Operation.READ,
+    tableId,
+    {
+      includeSqlRelationships: IncludeRelationship.INCLUDE,
+    }
+  )
   const table = await sdk.tables.getTable(tableId)
-  return await outputProcessing(table, response, { preserveLinks: true })
+  return await outputProcessing<Row[]>(table, response, {
+    preserveLinks: true,
+  })
 }
 
 export async function fetchView(viewName: string) {
