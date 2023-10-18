@@ -7,13 +7,13 @@ import {
   RelationshipType,
   Table,
 } from "@budibase/types"
-import { FieldTypes } from "../../../constants"
+import { FieldTypes } from "../../../../constants"
 import {
   foreignKeyStructure,
   generateForeignKey,
   generateJunctionTableName,
-} from "../../../api/controllers/table/utils"
-import { buildExternalTableId } from "../../../integrations/utils"
+} from "../../../../api/controllers/table/utils"
+import { buildExternalTableId } from "../../../../integrations/utils"
 import { cloneDeep } from "lodash/fp"
 
 export function cleanupRelationships(

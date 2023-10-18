@@ -7,25 +7,29 @@ import {
   ViewV2,
 } from "@budibase/types"
 import { context } from "@budibase/backend-core"
-import { buildExternalTableId } from "../../../integrations/utils"
-import sdk from "../../index"
+import { buildExternalTableId } from "../../../../integrations/utils"
 import {
   foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
-} from "../../../api/controllers/table/utils"
+} from "../../../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
-import { FieldTypes } from "../../../constants"
-import { makeTableRequest } from "../../../api/controllers/table/ExternalRequest"
+import { FieldTypes } from "../../../../constants"
+import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
   isRelationshipSetup,
   cleanupRelationships,
   generateLinkSchema,
   generateManyLinkSchema,
   generateRelatedSchema,
-} from "./externalUtils"
+} from "./utils"
 
-export async function externalSave(
+import { getTable } from "../getters"
+import { populateExternalTableSchemas } from "../validation"
+import datasourceSdk from "../../datasources"
+import * as viewSdk from "../../views"
+
+export async function save(
   datasourceId: string,
   update: Table,
   opts?: { tableId?: string; renaming?: RenameColumn }
@@ -39,7 +43,7 @@ export async function externalSave(
 
   let oldTable: Table | undefined
   if (opts?.tableId) {
-    oldTable = await sdk.tables.getTable(opts.tableId)
+    oldTable = await getTable(opts.tableId)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
@@ -48,9 +52,9 @@ export async function externalSave(
 
   for (let view in tableToSave.views) {
     const tableView = tableToSave.views[view]
-    if (!tableView || !sdk.views.isV2(tableView)) continue
+    if (!tableView || !viewSdk.isV2(tableView)) continue
 
-    tableToSave.views[view] = sdk.views.syncSchema(
+    tableToSave.views[view] = viewSdk.syncSchema(
       oldTable!.views![view] as ViewV2,
       tableToSave.schema,
       opts?.renaming
@@ -58,7 +62,7 @@ export async function externalSave(
   }
 
   const db = context.getAppDB()
-  const datasource = await sdk.datasources.get(datasourceId)
+  const datasource = await datasourceSdk.get(datasourceId)
   if (!datasource.entities) {
     datasource.entities = {}
   }
@@ -155,11 +159,32 @@ export async function externalSave(
   delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
-  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
+  await db.put(populateExternalTableSchemas(datasource))
 
   // Since tables are stored inside datasources, we need to notify clients
   // that the datasource definition changed
-  const updatedDatasource = await sdk.datasources.get(datasource._id!)
+  const updatedDatasource = await datasourceSdk.get(datasource._id!)
 
   return { datasource: updatedDatasource, table: tableToSave }
+}
+
+export async function destroy(datasourceId: string, table: Table) {
+  const db = context.getAppDB()
+  const datasource = await datasourceSdk.get(datasourceId)
+  const tables = datasource.entities
+
+  const operation = Operation.DELETE_TABLE
+  if (tables) {
+    await makeTableRequest(datasource, operation, table, tables)
+    cleanupRelationships(table, tables)
+    delete tables[table.name]
+    datasource.entities = tables
+  }
+
+  await db.put(populateExternalTableSchemas(datasource))
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await datasourceSdk.get(datasource._id!)
+  return { datasource: updatedDatasource, table }
 }
