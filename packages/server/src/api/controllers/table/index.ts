@@ -158,3 +158,5 @@ export async function validateExistingTableImport(ctx: UserCtx) {
     ctx.status = 422
   }
 }
+
+export async function migrate(ctx: UserCtx) {}
