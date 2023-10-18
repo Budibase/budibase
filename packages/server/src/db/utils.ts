@@ -60,7 +60,7 @@ export function getTableParams(tableId?: Optional, otherProps = {}) {
 
 /**
  * Generates a new table ID.
- * @returns {string} The new table ID which the table doc can be stored under.
+ * @returns The new table ID which the table doc can be stored under.
  */
 export function generateTableID() {
   return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
@@ -68,8 +68,8 @@ export function generateTableID() {
 
 /**
  * Given a row ID this will find the table ID within it (only works for internal tables).
- * @param {string} rowId The ID of the row.
- * @returns {string} The table ID.
+ * @param rowId The ID of the row.
+ * @returns The table ID.
  */
 export function getTableIDFromRowID(rowId: string) {
   const components = rowId
@@ -90,7 +90,7 @@ export function getAutomationParams(
 
 /**
  * Generates a new automation ID.
- * @returns {string} The new automation ID which the automation doc can be stored under.
+ * @returns The new automation ID which the automation doc can be stored under.
  */
 export function generateAutomationID() {
   return `${DocumentType.AUTOMATION}${SEPARATOR}${newid()}`
@@ -99,13 +99,13 @@ export function generateAutomationID() {
 /**
  * Generates a new link doc ID. This is currently not usable with the alldocs call,
  * instead a view is built to make walking to tree easier.
- * @param {string} tableId1 The ID of the linker table.
- * @param {string} tableId2 The ID of the linked table.
- * @param {string} rowId1 The ID of the linker row.
- * @param {string} rowId2 The ID of the linked row.
- * @param {string} fieldName1 The name of the field in the linker row.
- * @param {string} fieldName2 the name of the field in the linked row.
- * @returns {string} The new link doc ID which the automation doc can be stored under.
+ * @param tableId1 The ID of the linker table.
+ * @param tableId2 The ID of the linked table.
+ * @param rowId1 The ID of the linker row.
+ * @param rowId2 The ID of the linked row.
+ * @param fieldName1 The name of the field in the linker row.
+ * @param fieldName2 the name of the field in the linked row.
+ * @returns The new link doc ID which the automation doc can be stored under.
  */
 export function generateLinkID(
   tableId1: string,
@@ -130,7 +130,7 @@ export function getLinkParams(otherProps: any = {}) {
 
 /**
  * Generates a new layout ID.
- * @returns {string} The new layout ID which the layout doc can be stored under.
+ * @returns The new layout ID which the layout doc can be stored under.
  */
 export function generateLayoutID(id?: string) {
   return `${DocumentType.LAYOUT}${SEPARATOR}${id || newid()}`
@@ -145,7 +145,7 @@ export function getLayoutParams(layoutId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new screen ID.
- * @returns {string} The new screen ID which the screen doc can be stored under.
+ * @returns The new screen ID which the screen doc can be stored under.
  */
 export function generateScreenID() {
   return `${DocumentType.SCREEN}${SEPARATOR}${newid()}`
@@ -160,7 +160,7 @@ export function getScreenParams(screenId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new webhook ID.
- * @returns {string} The new webhook ID which the webhook doc can be stored under.
+ * @returns The new webhook ID which the webhook doc can be stored under.
  */
 export function generateWebhookID() {
   return `${DocumentType.WEBHOOK}${SEPARATOR}${newid()}`
@@ -175,7 +175,7 @@ export function getWebhookParams(webhookId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new datasource ID.
- * @returns {string} The new datasource ID which the webhook doc can be stored under.
+ * @returns The new datasource ID which the webhook doc can be stored under.
  */
 export function generateDatasourceID({ plus = false } = {}) {
   return `${
@@ -202,7 +202,7 @@ export function getDatasourcePlusParams(
 
 /**
  * Generates a new query ID.
- * @returns {string} The new query ID which the query doc can be stored under.
+ * @returns The new query ID which the query doc can be stored under.
  */
 export function generateQueryID(datasourceId: string) {
   return `${
@@ -242,7 +242,7 @@ export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new flag document ID.
- * @returns {string} The ID of the flag document that was generated.
+ * @returns The ID of the flag document that was generated.
  */
 export function generateUserFlagID(userId: string) {
   return `${DocumentType.USER_FLAG}${SEPARATOR}${userId}`
@@ -288,7 +288,7 @@ export function getMultiIDParams(ids: string[]) {
 
 /**
  * Generates a new view ID.
- * @returns {string} The new view ID which the view doc can be stored under.
+ * @returns The new view ID which the view doc can be stored under.
  */
 export function generateViewID(tableId: string) {
   return `${

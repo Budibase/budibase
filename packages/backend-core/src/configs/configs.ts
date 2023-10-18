@@ -23,7 +23,7 @@ import environment from "../environment"
 
 /**
  * Generates a new configuration ID.
- * @returns {string} The new configuration ID which the config doc can be stored under.
+ * @returns The new configuration ID which the config doc can be stored under.
  */
 export function generateConfigID(type: ConfigType) {
   return `${DocumentType.CONFIG}${SEPARATOR}${type}`
