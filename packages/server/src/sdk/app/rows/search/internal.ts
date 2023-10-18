@@ -6,26 +6,26 @@ import {
 import env from "../../../../environment"
 import { fullSearch, paginatedSearch } from "./internalSearch"
 import {
-  InternalTables,
-  getRowParams,
   DocumentType,
+  getRowParams,
+  InternalTables,
 } from "../../../../db/utils"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
-import { Database, Row, Table, SearchParams } from "@budibase/types"
+import { Database, Row, SearchParams, Table } from "@budibase/types"
 import { cleanExportRows } from "../utils"
 import {
-  Format,
   csv,
+  Format,
   json,
   jsonWithSchema,
 } from "../../../../api/controllers/view/exporters"
 import * as inMemoryViews from "../../../../db/inMemoryView"
 import {
-  migrateToInMemoryView,
-  migrateToDesignView,
   getFromDesignDoc,
   getFromMemoryDoc,
+  migrateToDesignView,
+  migrateToInMemoryView,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult } from "../search"
@@ -139,13 +139,12 @@ export async function exportRows(
   }
 }
 
-export async function fetch(tableId: string) {
+export async function fetch(tableId: string): Promise<Row[]> {
   const db = context.getAppDB()
 
   const table = await sdk.tables.getTable(tableId)
   const rows = await getRawTableData(db, tableId)
-  const result = await outputProcessing(table, rows)
-  return result
+  return await outputProcessing(table, rows)
 }
 
 async function getRawTableData(db: Database, tableId: string) {

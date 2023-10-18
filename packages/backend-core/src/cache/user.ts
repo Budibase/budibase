@@ -61,9 +61,9 @@ async function populateUsersFromDB(
  * Get the requested user by id.
  * Use redis cache to first read the user.
  * If not present fallback to loading the user directly and re-caching.
- * @param {*} userId the id of the user to get
- * @param {*} tenantId the tenant of the user to get
- * @param {*} populateUser function to provide the user for re-caching. default to couch db
+ * @param userId the id of the user to get
+ * @param tenantId the tenant of the user to get
+ * @param populateUser function to provide the user for re-caching. default to couch db
  * @returns
  */
 export async function getUser(
@@ -111,8 +111,8 @@ export async function getUser(
  * Get the requested users by id.
  * Use redis cache to first read the users.
  * If not present fallback to loading the users directly and re-caching.
- * @param {*} userIds the ids of the user to get
- * @param {*} tenantId the tenant of the users to get
+ * @param userIds the ids of the user to get
+ * @param tenantId the tenant of the users to get
  * @returns
  */
 export async function getUsers(

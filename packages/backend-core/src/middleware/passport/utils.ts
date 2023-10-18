@@ -5,9 +5,9 @@ import { ConfigType, GoogleInnerConfig } from "@budibase/types"
 /**
  * Utility to handle authentication errors.
  *
- * @param {*} done The passport callback.
- * @param {*} message Message that will be returned in the response body
- * @param {*} err (Optional) error that will be logged
+ * @param done The passport callback.
+ * @param message Message that will be returned in the response body
+ * @param err (Optional) error that will be logged
  */
 
 export function authError(done: Function, message: string, err?: any) {
