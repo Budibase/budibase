@@ -10,6 +10,7 @@ import { getAccountByTenantId } from "../accounts"
 // extract from shared-core to make easily accessible from backend-core
 export const isBuilder = sdk.users.isBuilder
 export const isAdmin = sdk.users.isAdmin
+export const isCreator = sdk.users.isCreator
 export const isGlobalBuilder = sdk.users.isGlobalBuilder
 export const isAdminOrBuilder = sdk.users.isAdminOrBuilder
 export const hasAdminPermissions = sdk.users.hasAdminPermissions

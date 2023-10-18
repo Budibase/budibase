@@ -6,7 +6,7 @@ import path from "path"
 /**
  * Exactly the same as path.join
  * @param args Any number of string arguments to add to a path
- * @returns {string} The final path ready to use
+ * @returns The final path ready to use
  */
 export function join(...args: string[]) {
   return path.join(...args)
@@ -15,7 +15,7 @@ export function join(...args: string[]) {
 /**
  * Exactly the same as path.resolve
  * @param args Any number of string arguments to add to a path
- * @returns {string} The final path ready to use
+ * @returns The final path ready to use
  */
 export function resolve(...args: string[]) {
   return path.resolve(...args)

@@ -1,16 +1,14 @@
 import { API } from "api"
 import PosthogClient from "./PosthogClient"
 import IntercomClient from "./IntercomClient"
-import SentryClient from "./SentryClient"
 import { Events, EventSource } from "./constants"
 
 const posthog = new PosthogClient(process.env.POSTHOG_TOKEN)
-const sentry = new SentryClient(process.env.SENTRY_DSN)
 const intercom = new IntercomClient(process.env.INTERCOM_TOKEN)
 
 class AnalyticsHub {
   constructor() {
-    this.clients = [posthog, sentry, intercom]
+    this.clients = [posthog, intercom]
   }
 
   async activate() {
@@ -23,12 +21,9 @@ class AnalyticsHub {
 
   identify(id) {
     posthog.identify(id)
-    sentry.identify(id)
   }
 
-  captureException(err) {
-    sentry.captureException(err)
-  }
+  captureException(_err) {}
 
   captureEvent(eventName, props = {}) {
     posthog.captureEvent(eventName, props)
