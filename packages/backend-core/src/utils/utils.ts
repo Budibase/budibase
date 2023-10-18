@@ -79,8 +79,8 @@ export function isPublicApiRequest(ctx: Ctx): boolean {
 
 /**
  * Given a request tries to find the appId, which can be located in various places
- * @param {object} ctx The main request body to look through.
- * @returns {string|undefined} If an appId was found it will be returned.
+ * @param ctx The main request body to look through.
+ * @returns If an appId was found it will be returned.
  */
 export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
@@ -135,7 +135,7 @@ function parseAppIdFromUrl(url?: string) {
 
 /**
  * opens the contents of the specified encrypted JWT.
- * @return {object} the contents of the token.
+ * @return the contents of the token.
  */
 export function openJwt(token: string) {
   if (!token) {
@@ -169,8 +169,8 @@ export function isValidInternalAPIKey(apiKey: string) {
 
 /**
  * Get a cookie from context, and decrypt if necessary.
- * @param {object} ctx The request which is to be manipulated.
- * @param {string} name The name of the cookie to get.
+ * @param ctx The request which is to be manipulated.
+ * @param name The name of the cookie to get.
  */
 export function getCookie(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
@@ -184,10 +184,10 @@ export function getCookie(ctx: Ctx, name: string) {
 
 /**
  * Store a cookie for the request - it will not expire.
- * @param {object} ctx The request which is to be manipulated.
- * @param {string} name The name of the cookie to set.
- * @param {string|object} value The value of cookie which will be set.
- * @param {object} opts options like whether to sign.
+ * @param ctx The request which is to be manipulated.
+ * @param name The name of the cookie to set.
+ * @param value The value of cookie which will be set.
+ * @param opts options like whether to sign.
  */
 export function setCookie(
   ctx: Ctx,
@@ -223,8 +223,8 @@ export function clearCookie(ctx: Ctx, name: string) {
 /**
  * Checks if the API call being made (based on the provided ctx object) is from the client. If
  * the call is not from a client app then it is from the builder.
- * @param {object} ctx The koa context object to be tested.
- * @return {boolean} returns true if the call is from the client lib (a built app rather than the builder).
+ * @param ctx The koa context object to be tested.
+ * @return returns true if the call is from the client lib (a built app rather than the builder).
  */
 export function isClient(ctx: Ctx) {
   return ctx.headers[Header.TYPE] === "client"
