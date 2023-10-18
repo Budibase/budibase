@@ -53,8 +53,8 @@ export const checkDevelopmentEnvironment = () => {
  * Used to retrieve a handlebars file from the system which will be used as a template.
  * This is allowable as the template handlebars files should be static and identical across
  * the cluster.
- * @param {string} path The path to the handlebars file which is to be loaded.
- * @returns {string} The loaded handlebars file as a string - loaded as utf8.
+ * @param path The path to the handlebars file which is to be loaded.
+ * @returns The loaded handlebars file as a string - loaded as utf8.
  */
 export const loadHandlebarsFile = (path: PathLike) => {
   return fs.readFileSync(path, "utf8")
@@ -63,8 +63,8 @@ export const loadHandlebarsFile = (path: PathLike) => {
 /**
  * When return a file from the API need to write the file to the system temporarily so we
  * can create a read stream to send.
- * @param {string} contents the contents of the file which is to be returned from the API.
- * @return {Object} the read stream which can be put into the koa context body.
+ * @param contents the contents of the file which is to be returned from the API.
+ * @return the read stream which can be put into the koa context body.
  */
 export const apiFileReturn = (contents: any) => {
   const path = join(budibaseTempDir(), uuid())
@@ -78,8 +78,8 @@ export const streamFile = (path: string) => {
 
 /**
  * Writes the provided contents to a temporary file, which can be used briefly.
- * @param {string} fileContents contents which will be written to a temp file.
- * @return {string} the path to the temp file.
+ * @param fileContents contents which will be written to a temp file.
+ * @return the path to the temp file.
  */
 export const storeTempFile = (
   fileContents: string | NodeJS.ArrayBufferView
@@ -100,7 +100,7 @@ export const stringToFileStream = (contents: any) => {
 
 /**
  * Creates a temp file and returns it from the API.
- * @param {string} fileContents the contents to be returned in file.
+ * @param fileContents the contents to be returned in file.
  */
 export const sendTempFile = (fileContents: any) => {
   const path = storeTempFile(fileContents)
