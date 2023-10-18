@@ -811,4 +811,11 @@
     gap: 8px;
     display: flex;
   }
+  b {
+    transition: color 130ms ease-out;
+  }
+  b:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
+  }
 </style>
