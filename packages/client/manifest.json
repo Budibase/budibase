@@ -5288,16 +5288,16 @@
     },
     "settings": [
       {
-        "type": "select",
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "radio",
         "label": "Type",
         "key": "actionType",
         "options": ["Create", "Update", "View"],
         "defaultValue": "Create"
-      },
-      {
-        "type": "table",
-        "label": "Data",
-        "key": "dataSource"
       },
       {
         "type": "text",
@@ -5323,7 +5323,7 @@
           },
           {
             "type": "text",
-            "label": "Empty text",
+            "label": "No rows found",
             "key": "noRowsMessage",
             "defaultValue": "We couldn't find a row to display",
             "nested": true
