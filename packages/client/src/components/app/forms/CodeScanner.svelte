@@ -11,6 +11,7 @@
   export let beepOnScan = false
   export let beepFrequency = 2637
   export let customFrequency = 1046
+  export let preferedCamera = "environment"
 
   const dispatch = createEventDispatcher()
 
@@ -20,7 +21,7 @@
   let cameraEnabled
   let cameraStarted = false
   let html5QrCode
-  let cameraSetting = { facingMode: "environment" }
+  let cameraSetting = { facingMode: "{preferedCamera}" }
   let cameraConfig = {
     fps: 25,
     qrbox: { width: 250, height: 250 },

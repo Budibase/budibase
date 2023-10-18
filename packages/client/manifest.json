@@ -3408,6 +3408,22 @@
         ]
       },
       {
+        "type": "select",
+        "label": "Prefered camera",
+        "key": "preferedCamera",
+        "defaultValue": "",
+        "options": [
+          {
+            "label": "Front",
+            "value": "user"
+          },
+          {
+            "label": "Back",
+            "value": "environment"
+          }
+        ]
+      },
+      {
         "type": "number",
         "label": "Sound frequency (Hz)",
         "key": "customFrequency",
