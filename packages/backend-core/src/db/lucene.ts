@@ -599,10 +599,10 @@ async function runQuery<T>(
  * Gets round the fixed limit of 200 results from a query by fetching as many
  * pages as required and concatenating the results. This recursively operates
  * until enough results have been found.
- * @param dbName {string} Which database to run a lucene query on
- * @param index {string} Which search index to utilise
- * @param query {object} The JSON query structure
- * @param params {object} The search params including:
+ * @param dbName Which database to run a lucene query on
+ * @param index Which search index to utilise
+ * @param query The JSON query structure
+ * @param params The search params including:
  *   tableId {string} The table ID to search
  *   sort {string} The sort column
  *   sortOrder {string} The sort order ("ascending" or "descending")
@@ -655,10 +655,10 @@ async function recursiveSearch<T>(
  * Performs a paginated search. A bookmark will be returned to allow the next
  * page to be fetched. There is a max limit off 200 results per page in a
  * paginated search.
- * @param dbName {string} Which database to run a lucene query on
- * @param index {string} Which search index to utilise
- * @param query {object} The JSON query structure
- * @param params {object} The search params including:
+ * @param dbName Which database to run a lucene query on
+ * @param index Which search index to utilise
+ * @param query The JSON query structure
+ * @param params The search params including:
  *   tableId {string} The table ID to search
  *   sort {string} The sort column
  *   sortOrder {string} The sort order ("ascending" or "descending")
@@ -722,10 +722,10 @@ export async function paginatedSearch<T>(
  * desired amount of results. There is a limit of 1000 results to avoid
  * heavy performance hits, and to avoid client components breaking from
  * handling too much data.
- * @param dbName {string} Which database to run a lucene query on
- * @param index {string} Which search index to utilise
- * @param query {object} The JSON query structure
- * @param params {object} The search params including:
+ * @param dbName Which database to run a lucene query on
+ * @param index Which search index to utilise
+ * @param query The JSON query structure
+ * @param params The search params including:
  *   tableId {string} The table ID to search
  *   sort {string} The sort column
  *   sortOrder {string} The sort order ("ascending" or "descending")

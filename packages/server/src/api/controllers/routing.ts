@@ -40,7 +40,7 @@ class Routing {
 
 /**
  * Gets the full routing structure by querying the routing view and processing the result into the tree.
- * @returns {Promise<object>} The routing structure, this is the full structure designed for use in the builder,
+ * @returns The routing structure, this is the full structure designed for use in the builder,
  * if the client routing is required then the updateRoutingStructureForUserRole should be used.
  */
 async function getRoutingStructure() {
