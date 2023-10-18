@@ -1,7 +1,7 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
 import { FieldTypes } from "../../constants"
-import { context } from "@budibase/backend-core"
+import { context, logging } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
 import {
   Database,
@@ -432,8 +432,8 @@ class LinkController {
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }
-      } catch (err) {
-        // Ignored error
+      } catch (err: any) {
+        logging.logWarn(err?.message, err)
       }
     }
     // need to get the full link docs to delete them
