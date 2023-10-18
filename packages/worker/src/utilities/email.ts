@@ -71,12 +71,12 @@ async function getLinkCode(
 
 /**
  * Builds an email using handlebars and the templates found in the system (default or otherwise).
- * @param {string} purpose the purpose of the email being built, e.g. invitation, password reset.
- * @param {string} email the address which it is being sent to for contextual purposes.
- * @param {object} context the context which is being used for building the email (hbs context).
- * @param {object|null} user if being sent to an existing user then the object can be provided for context.
- * @param {string|null} contents if using a custom template can supply contents for context.
- * @return {Promise<string>} returns the built email HTML if all provided parameters were valid.
+ * @param purpose the purpose of the email being built, e.g. invitation, password reset.
+ * @param email the address which it is being sent to for contextual purposes.
+ * @param context the context which is being used for building the email (hbs context).
+ * @param user if being sent to an existing user then the object can be provided for context.
+ * @param contents if using a custom template can supply contents for context.
+ * @return returns the built email HTML if all provided parameters were valid.
  */
 async function buildEmail(
   purpose: EmailTemplatePurpose,
@@ -128,7 +128,7 @@ async function buildEmail(
 
 /**
  * Checks if a SMTP config exists based on passed in parameters.
- * @return {Promise<boolean>} returns true if there is a configuration that can be used.
+ * @return returns true if there is a configuration that can be used.
  */
 export async function isEmailConfigured() {
   // when "testing" or smtp fallback is enabled simply return true
@@ -142,10 +142,10 @@ export async function isEmailConfigured() {
 /**
  * Given an email address and an email purpose this will retrieve the SMTP configuration and
  * send an email using it.
- * @param {string} email The email address to send to.
- * @param {string} purpose The purpose of the email being sent (e.g. reset password).
- * @param {object} opts The options for sending the email.
- * @return {Promise<object>} returns details about the attempt to send email, e.g. if it is successful; based on
+ * @param email The email address to send to.
+ * @param purpose The purpose of the email being sent (e.g. reset password).
+ * @param opts The options for sending the email.
+ * @return returns details about the attempt to send email, e.g. if it is successful; based on
  * nodemailer response.
  */
 export async function sendEmail(
@@ -212,8 +212,8 @@ export async function sendEmail(
 
 /**
  * Given an SMTP configuration this runs it through nodemailer to see if it is in fact functional.
- * @param {object} config an SMTP configuration - this is based on the nodemailer API.
- * @return {Promise<boolean>} returns true if the configuration is valid.
+ * @param config an SMTP configuration - this is based on the nodemailer API.
+ * @return returns true if the configuration is valid.
  */
 export async function verifyConfig(config: SMTPInnerConfig) {
   const transport = createSMTPTransport(config)

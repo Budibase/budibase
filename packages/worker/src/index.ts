@@ -4,8 +4,6 @@ if (process.env.DD_APM_ENABLED) {
 
 // need to load environment first
 import env from "./environment"
-import { Scope } from "@sentry/node"
-import { Event } from "@sentry/types/dist/event"
 import Application from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
@@ -25,9 +23,9 @@ import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
 import * as redis from "./utilities/redis"
-const Sentry = require("@sentry/node")
+
 const koaSession = require("koa-session")
-const { userAgent } = require("koa-useragent")
+import { userAgent } from "koa-useragent"
 
 import destroyable from "server-destroy"
 import { initPro } from "./initPro"
@@ -65,20 +63,6 @@ app.use(auth.passport.session())
 
 // api routes
 app.use(api.routes())
-
-// sentry
-if (env.isProd()) {
-  Sentry.init()
-
-  app.on("error", (err, ctx) => {
-    Sentry.withScope(function (scope: Scope) {
-      scope.addEventProcessor(function (event: Event) {
-        return Sentry.Handlers.parseRequest(event, ctx.request)
-      })
-      Sentry.captureException(err)
-    })
-  })
-}
 
 const server = http.createServer(app.callback())
 destroyable(server)
