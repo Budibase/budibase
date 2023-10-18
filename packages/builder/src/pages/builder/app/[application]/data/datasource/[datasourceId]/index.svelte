@@ -21,9 +21,6 @@
   $: getOptions(datasource)
 
   const getOptions = datasource => {
-    if (!datasource) {
-      return
-    }
     if (datasource.plus) {
       // Google Sheets' integration definition specifies `relationships: false` as it doesn't support relationships like other plus datasources
       panelOptions =
