@@ -14,13 +14,13 @@ import { LoopStep, LoopStepType, LoopInput } from "../definitions/automations"
  * make sure that the post template statement can be cast into the correct type, this function does this for numbers
  * and booleans.
  *
- * @param {object} inputs An object of inputs, please note this will not recurse down into any objects within, it simply
+ * @param inputs An object of inputs, please note this will not recurse down into any objects within, it simply
  * cleanses the top level inputs, however it can be used by recursively calling it deeper into the object structures if
  * the schema is known.
- * @param {object} schema The defined schema of the inputs, in the form of JSON schema. The schema definition of an
+ * @param schema The defined schema of the inputs, in the form of JSON schema. The schema definition of an
  * automation is the likely use case of this, however validate.js syntax can be converted closely enough to use this by
  * wrapping the schema properties in a top level "properties" object.
- * @returns {object} The inputs object which has had all the various types supported by this function converted to their
+ * @returns The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
 export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
@@ -74,9 +74,9 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
  * the automation but is instead part of the Table/Table. This function will get the table schema and use it to instead
  * perform the cleanInputValues function on the input row.
  *
- * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
- * @param {object} row The input row structure which requires clean-up after having been through template statements.
- * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
+ * @param tableId The ID of the Table/Table which the schema is to be retrieved for.
+ * @param row The input row structure which requires clean-up after having been through template statements.
+ * @returns The cleaned up rows object, will should now have all the required primitive types.
  */
 export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
