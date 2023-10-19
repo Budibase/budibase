@@ -123,10 +123,7 @@
 
 {#each sections as section, idx (section.name)}
   {#if section.visible}
-    <DetailSummary
-      name={showSectionTitle ? section.name : ""}
-      collapsible={false}
-    >
+    <DetailSummary name={showSectionTitle ? section.name : ""} show>
       {#if section.info}
         <div class="section-info">
           <InfoDisplay body={section.info} />
