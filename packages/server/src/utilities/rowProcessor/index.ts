@@ -51,11 +51,11 @@ function getRemovedAttachmentKeys(
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
  * time now and the current logged in user making the request.
- * @param {Object} user The user to be used for an appId as well as the createdBy and createdAt fields.
- * @param {Object} table The table which is to be used for the schema, as well as handling auto IDs incrementing.
- * @param {Object} row The row which is to be updated with information for the auto columns.
- * @param {Object} opts specific options for function to carry out optional features.
- * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
+ * @param user The user to be used for an appId as well as the createdBy and createdAt fields.
+ * @param table The table which is to be used for the schema, as well as handling auto IDs incrementing.
+ * @param row The row which is to be updated with information for the auto columns.
+ * @param opts specific options for function to carry out optional features.
+ * @returns The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
 export function processAutoColumn(
@@ -111,9 +111,9 @@ export function processAutoColumn(
 
 /**
  * This will coerce a value to the correct types based on the type transform map
- * @param {object} row The value to coerce
- * @param {object} type The type fo coerce to
- * @returns {object} The coerced value
+ * @param row The value to coerce
+ * @param type The type fo coerce to
+ * @returns The coerced value
  */
 export function coerce(row: any, type: string) {
   // no coercion specified for type, skip it
@@ -135,11 +135,11 @@ export function coerce(row: any, type: string) {
 /**
  * Given an input route this function will apply all the necessary pre-processing to it, such as coercion
  * of column values or adding auto-column values.
- * @param {object} user the user which is performing the input.
- * @param {object} row the row which is being created/updated.
- * @param {object} table the table which the row is being saved to.
- * @param {object} opts some input processing options (like disabling auto-column relationships).
- * @returns {object} the row which has been prepared to be written to the DB.
+ * @param user the user which is performing the input.
+ * @param row the row which is being created/updated.
+ * @param table the table which the row is being saved to.
+ * @param opts some input processing options (like disabling auto-column relationships).
+ * @returns the row which has been prepared to be written to the DB.
  */
 export async function inputProcessing(
   userId: string | null | undefined,
@@ -198,11 +198,11 @@ export async function inputProcessing(
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {object} table the table from which these rows came from originally, this is used to determine
+ * @param table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
- * @param {object[]|object} rows the rows which are to be enriched.
- * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
- * @returns {object[]|object} the enriched rows will be returned.
+ * @param rows the rows which are to be enriched.
+ * @param opts used to set some options for the output, such as disabling relationship squashing.
+ * @returns the enriched rows will be returned.
  */
 export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
@@ -210,6 +210,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   opts: {
     squash?: boolean
     preserveLinks?: boolean
+    fromRow?: Row
     skipBBReferences?: boolean
   } = {
     squash: true,
@@ -227,7 +228,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // attach any linked row information
   let enriched = !opts.preserveLinks
-    ? await linkRows.attachFullLinkedDocs(table, safeRows)
+    ? await linkRows.attachFullLinkedDocs(table, safeRows, {
+        fromRow: opts?.fromRow,
+      })
     : safeRows
 
   // process complex types: attachements, bb references...
@@ -278,13 +281,13 @@ export async function outputProcessing<T extends Row[] | Row>(
 
 /**
  * Clean up any attachments that were attached to a row.
- * @param {object} table The table from which a row is being removed.
- * @param {any} row optional - the row being removed.
- * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
- * @param {any} oldRow optional - if updating a row this will determine the difference.
- * @param {any} oldTable optional - if updating a table, can supply the old table to look for
+ * @param table The table from which a row is being removed.
+ * @param row optional - the row being removed.
+ * @param rows optional - if multiple rows being deleted can do this in bulk.
+ * @param oldRow optional - if updating a row this will determine the difference.
+ * @param oldTable optional - if updating a table, can supply the old table to look for
  * deleted attachment columns.
- * @return {Promise<void>} When all attachments have been removed this will return.
+ * @return When all attachments have been removed this will return.
  */
 export async function cleanupAttachments(
   table: Table,
