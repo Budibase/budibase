@@ -61,9 +61,9 @@ export function sanitizeBucket(input: string) {
 
 /**
  * Gets a connection to the object store using the S3 SDK.
- * @param {string} bucket the name of the bucket which blobs will be uploaded/retrieved from.
- * @param {object} opts configuration for the object store.
- * @return {Object} an S3 object store object, check S3 Nodejs SDK for usage.
+ * @param bucket the name of the bucket which blobs will be uploaded/retrieved from.
+ * @param opts configuration for the object store.
+ * @return an S3 object store object, check S3 Nodejs SDK for usage.
  * @constructor
  */
 export const ObjectStore = (

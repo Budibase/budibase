@@ -14,14 +14,15 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
-  ContextUser,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
+  ContextUser,
 } from "@budibase/types"
-import * as context from "../context"
 import { getGlobalDB } from "../context"
+import * as context from "../context"
+import { isCreator } from "./utils"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -281,6 +282,19 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
+}
+
+export async function getCreatorCount() {
+  let creators = 0
+  async function iterate(startPage?: string) {
+    const page = await paginatedUsers({ bookmark: startPage })
+    creators += page.data.filter(isCreator).length
+    if (page.hasNextPage) {
+      await iterate(page.nextPage)
+    }
+  }
+  await iterate()
+  return creators
 }
 
 // used to remove the builder/admin permissions, for processing the
