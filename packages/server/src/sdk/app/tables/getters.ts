@@ -84,7 +84,7 @@ export async function getExternalTablesInDatasource(
 ): Promise<Record<string, Table>> {
   const datasource = await datasources.get(datasourceId, { enriched: true })
   if (!datasource || !datasource.entities) {
-    throw "Datasource is not configured fully."
+    throw new Error("Datasource is not configured fully.")
   }
   return datasource.entities
 }
