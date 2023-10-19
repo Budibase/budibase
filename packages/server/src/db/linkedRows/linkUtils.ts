@@ -17,33 +17,36 @@ export const IncludeDocs = {
 
 /**
  * Gets the linking documents, not the linked documents themselves.
- * @param {string} args.tableId The table which we are searching for linked rows against.
- * @param {string|null} args.fieldName The name of column/field which is being altered, only looking for
+ * @param args.tableId The table which we are searching for linked rows against.
+ * @param args.fieldName The name of column/field which is being altered, only looking for
  * linking documents that are related to it. If this is not specified then the table level will be assumed.
- * @param {string|null} args.rowId The ID of the row which we want to find linking documents for -
+ * @param args.rowId The ID of the row which we want to find linking documents for -
  * if this is not specified then it will assume table or field level depending on whether the
  * field name has been specified.
- * @param {boolean|null} args.includeDocs whether to include docs in the response call, this is considerably slower so only
+ * @param args.includeDocs whether to include docs in the response call, this is considerably slower so only
  * use this if actually interested in the docs themselves.
- * @returns {Promise<object[]>} This will return an array of the linking documents that were found
+ * @returns This will return an array of the linking documents that were found
  * (if any).
  */
 export async function getLinkDocuments(args: {
   tableId?: string
   rowId?: string
-  includeDocs?: any
+  fieldName?: string
+  includeDocs?: boolean
 }): Promise<LinkDocumentValue[] | LinkDocument[]> {
-  const { tableId, rowId, includeDocs } = args
+  const { tableId, rowId, fieldName, includeDocs } = args
   const db = context.getAppDB()
   let params: any
-  if (rowId != null) {
+  if (rowId) {
     params = { key: [tableId, rowId] }
   }
   // only table is known
   else {
     params = { startKey: [tableId], endKey: [tableId, {}] }
   }
-  params.include_docs = !!includeDocs
+  if (includeDocs) {
+    params.include_docs = true
+  }
   try {
     let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
@@ -63,6 +66,14 @@ export async function getLinkDocuments(args: {
       return unique
     })
 
+    // filter down to just the required field name
+    if (fieldName) {
+      linkRows = linkRows.filter(link => {
+        const value = link.value as LinkDocumentValue
+        return value.fieldName === fieldName
+      })
+    }
+    // return docs if docs requested, otherwise just the value information
     if (includeDocs) {
       return linkRows.map(row => row.doc) as LinkDocument[]
     } else {
@@ -87,7 +98,7 @@ export function getUniqueByProp(array: any[], prop: string) {
   })
 }
 
-export function getLinkedTableIDs(table: Table) {
+export function getLinkedTableIDs(table: Table): string[] {
   return Object.values(table.schema)
     .filter(isRelationshipColumn)
     .map(column => column.tableId)
