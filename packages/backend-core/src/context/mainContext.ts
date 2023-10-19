@@ -62,7 +62,7 @@ export function isTenancyEnabled() {
 
 /**
  * Given an app ID this will attempt to retrieve the tenant ID from it.
- * @return {null|string} The tenant ID found within the app ID.
+ * @return The tenant ID found within the app ID.
  */
 export function getTenantIDFromAppID(appId: string) {
   if (!appId) {

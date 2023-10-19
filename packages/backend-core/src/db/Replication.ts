@@ -8,8 +8,8 @@ class Replication {
 
   /**
    *
-   * @param {String} source - the DB you want to replicate or rollback to
-   * @param {String} target - the DB you want to replicate to, or rollback from
+   * @param source - the DB you want to replicate or rollback to
+   * @param target - the DB you want to replicate to, or rollback from
    */
   constructor({ source, target }: any) {
     this.source = getPouchDB(source)
@@ -38,7 +38,7 @@ class Replication {
 
   /**
    * Two way replication operation, intended to be promise based.
-   * @param {Object} opts - PouchDB replication options
+   * @param opts - PouchDB replication options
    */
   sync(opts = {}) {
     this.replication = this.promisify(this.source.sync, opts)
@@ -47,7 +47,7 @@ class Replication {
 
   /**
    * One way replication operation, intended to be promise based.
-   * @param {Object} opts - PouchDB replication options
+   * @param opts - PouchDB replication options
    */
   replicate(opts = {}) {
     this.replication = this.promisify(this.source.replicate.to, opts)

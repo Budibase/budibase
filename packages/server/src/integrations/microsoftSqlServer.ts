@@ -375,7 +375,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
 
   /**
    * Fetches the tables from the sql server database and assigns them to the datasource.
-   * @param {*} datasourceId - datasourceId to fetch
+   * @param datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
   async buildSchema(

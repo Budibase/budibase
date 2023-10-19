@@ -539,7 +539,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * @param json The JSON query DSL which is to be converted to SQL.
    * @param opts extra options which are to be passed into the query builder, e.g. disableReturning
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
-   * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
+   * @return the query ready to be passed to the driver.
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
     const sqlClient = this.getSqlClient()

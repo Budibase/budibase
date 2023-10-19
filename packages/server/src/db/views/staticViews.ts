@@ -17,7 +17,7 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 /**
  * Creates the link view for the instance, this will overwrite the existing one, but this should only
  * be called if it is found that the view does not exist.
- * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
+ * @returns The view now exists, please note that the next view of this query will actually build it,
  * so it may be slow.
  */
 export async function createLinkView() {

@@ -2,6 +2,7 @@ import {
   FieldType,
   Operation,
   QueryJson,
+  RelationshipFieldMetadata,
   Row,
   SearchFilters,
   SortType,
@@ -24,18 +25,19 @@ function buildInternalFieldList(
   fieldList = fieldList.concat(
     CONSTANT_INTERNAL_ROW_COLS.map(col => `${table._id}.${col}`)
   )
-  for (let col of Object.values(table.schema)) {
-    const isLink = col.type === FieldType.LINK
-    if (isLink && !opts.relationships) {
-      continue
-    }
-    if (isLink) {
-      const relatedTable = tables.find(table => table._id === col.tableId)!
-      fieldList = fieldList.concat(
-        buildInternalFieldList(relatedTable, tables, { relationships: false })
-      )
-    } else {
-      fieldList.push(`${table._id}.${col.name}`)
+  if (opts.relationships) {
+    for (let col of Object.values(table.schema)) {
+      if (col.type === FieldType.LINK) {
+        const linkCol = col as RelationshipFieldMetadata
+        const relatedTable = tables.find(
+          table => table._id === linkCol.tableId
+        )!
+        fieldList = fieldList.concat(
+          buildInternalFieldList(relatedTable, tables, { relationships: false })
+        )
+      } else {
+        fieldList.push(`${table._id}.${col.name}`)
+      }
     }
   }
   return fieldList
@@ -56,13 +58,14 @@ function cleanupFilters(filters: SearchFilters, tables: Table[]) {
       }
 
       // relationship, switch to table ID
-      const tableRelated = tables.find(table =>
-        key.includes(tableInFilter(table.originalName!))
+      const tableRelated = tables.find(
+        table =>
+          table.originalName && key.includes(tableInFilter(table.originalName))
       )
-      if (tableRelated) {
+      if (tableRelated && tableRelated.originalName) {
         filter[
           key.replace(
-            tableInFilter(tableRelated.originalName!),
+            tableInFilter(tableRelated.originalName),
             tableInFilter(tableRelated._id!)
           )
         ] = filter[key]
