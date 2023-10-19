@@ -28,7 +28,7 @@ export async function migrate(
   await migrator.doMigration()
 
   delete table.schema[oldColumn.name]
-  await sdk.tables.saveTable(table)
+  table = await sdk.tables.saveTable(table)
   await updateLinks({ eventType: EventType.TABLE_UPDATED, table, oldTable })
 }
 
@@ -88,7 +88,7 @@ class UserColumnMigrator implements ColumnMigrator {
   ) {}
 
   async doMigration() {
-    let rows = await sdk.rows.fetch(this.table._id!)
+    let rows = await sdk.rows.fetchRaw(this.table._id!)
     let rowsById = rows.reduce((acc, row) => {
       acc[row._id!] = row
       return acc
