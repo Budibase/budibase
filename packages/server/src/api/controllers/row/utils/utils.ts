@@ -1,15 +1,7 @@
 import { InternalTables } from "../../../../db/utils"
 import * as userController from "../../user"
 import { context } from "@budibase/backend-core"
-import {
-  Ctx,
-  FieldType,
-  RelationshipsJson,
-  Row,
-  SearchFilters,
-  Table,
-  UserCtx,
-} from "@budibase/types"
+import { Ctx, RelationshipsJson, Row, Table, UserCtx } from "@budibase/types"
 import {
   processDates,
   processFormulas,
@@ -19,7 +11,6 @@ import {
   updateRelationshipColumns,
 } from "./sqlUtils"
 import { basicProcessing, generateIdForRow, fixArrayTypes } from "./basic"
-import { NoEmptyFilterStrings } from "../../../../constants"
 import sdk from "../../../../sdk"
 
 import validateJs from "validate.js"
@@ -53,7 +44,7 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   return row
 }
 
-export function getTableId(ctx: Ctx) {
+export function getTableId(ctx: Ctx): string {
   // top priority, use the URL first
   if (ctx.params?.sourceId) {
     return ctx.params.sourceId
@@ -70,23 +61,21 @@ export function getTableId(ctx: Ctx) {
   if (ctx.params?.viewName) {
     return ctx.params.viewName
   }
+  throw new Error("Unable to find table ID in request")
 }
 
-export async function validate(opts: {
-  tableId?: string
-  row: Row
-  table?: Table
-}) {
+export async function validate(
+  opts: { row: Row } & ({ tableId: string } | { table: Table })
+) {
   let fetchedTable: Table
-  if (!opts.table) {
+  if ("tableId" in opts) {
     fetchedTable = await sdk.tables.getTable(opts.tableId)
   } else {
     fetchedTable = opts.table
   }
-  const errors: any = {}
   return sdk.rows.utils.validate({
     ...opts,
-    table: fetchedTable || opts.table,
+    table: fetchedTable,
   })
 }
 
@@ -150,35 +139,6 @@ export function sqlOutputProcessing(
   return finalRowArray.map((row: Row) =>
     squashRelationshipColumns(table, tables, row, relationships)
   )
-}
-
-// don't do a pure falsy check, as 0 is included
-// https://github.com/Budibase/budibase/issues/10118
-export function removeEmptyFilters(filters: SearchFilters) {
-  for (let filterField of NoEmptyFilterStrings) {
-    if (!filters[filterField]) {
-      continue
-    }
-
-    for (let filterType of Object.keys(filters)) {
-      if (filterType !== filterField) {
-        continue
-      }
-      // don't know which one we're checking, type could be anything
-      const value = filters[filterType] as unknown
-      if (typeof value === "object") {
-        for (let [key, value] of Object.entries(
-          filters[filterType] as object
-        )) {
-          if (value == null || value === "") {
-            // @ts-ignore
-            delete filters[filterField][key]
-          }
-        }
-      }
-    }
-  }
-  return filters
 }
 
 export function isUserMetadataTable(tableId: string) {

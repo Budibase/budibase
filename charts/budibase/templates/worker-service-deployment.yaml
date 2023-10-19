@@ -130,8 +130,6 @@ spec:
           {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
-        - name: SENTRY_DSN
-          value: {{ .Values.globals.sentryDSN }}
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN

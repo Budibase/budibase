@@ -237,17 +237,8 @@ function isEditableColumn(column: FieldSchema) {
   return !(isExternalAutoColumn || isFormula)
 }
 
-export type ExternalRequestReturnType<T> = T extends Operation.READ
-  ?
-      | Row[]
-      | {
-          row: Row
-          table: Table
-        }
-  : {
-      row: Row
-      table: Table
-    }
+export type ExternalRequestReturnType<T extends Operation> =
+  T extends Operation.READ ? Row[] : { row: Row; table: Table }
 
 export class ExternalRequest<T extends Operation> {
   private readonly operation: T
@@ -657,10 +648,12 @@ export class ExternalRequest<T extends Operation> {
       relationships
     )
     // if reading it'll just be an array of rows, return whole thing
-    return (
-      operation === Operation.READ && Array.isArray(response)
-        ? output
-        : { row: output[0], table }
-    ) as ExternalRequestReturnType<T>
+    if (operation === Operation.READ) {
+      return (
+        Array.isArray(output) ? output : [output]
+      ) as ExternalRequestReturnType<T>
+    } else {
+      return { row: output[0], table } as ExternalRequestReturnType<T>
+    }
   }
 }

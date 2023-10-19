@@ -30,6 +30,9 @@ const FieldTypeMap: Record<FieldType, SQLiteType> = {
   [FieldType.ATTACHMENT]: SQLiteType.BLOB,
   [FieldType.ARRAY]: SQLiteType.BLOB,
   [FieldType.LINK]: SQLiteType.BLOB,
+  [FieldType.BIGINT]: SQLiteType.REAL,
+  // TODO: consider the difference between multi-user and single user types (subtyping)
+  [FieldType.BB_REFERENCE]: SQLiteType.TEXT,
 }
 
 function mapTable(table: Table): { [key: string]: SQLiteType } {

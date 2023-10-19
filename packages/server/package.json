@@ -55,7 +55,6 @@
     "@elastic/elasticsearch": "7.10.0",
     "@google-cloud/firestore": "6.8.0",
     "@koa/router": "8.0.8",
-    "@sentry/node": "6.17.7",
     "@socket.io/redis-adapter": "^8.2.1",
     "airtable": "0.10.1",
     "arangojs": "7.2.0",
