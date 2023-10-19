@@ -58,17 +58,6 @@ export async function save(
   })
   table = await tableSaveFunctions.before(table)
 
-  // make sure that types don't change of a column, have to remove
-  // the column if you want to change the type
-  if (oldTable && oldTable.schema) {
-    for (const propKey of Object.keys(table.schema)) {
-      let oldColumn = oldTable.schema[propKey]
-      if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
-        oldTable.schema[propKey].type = FieldTypes.AUTO
-      }
-    }
-  }
-
   let renaming = opts?.renaming
   if (renaming && renaming.old === renaming.updated) {
     renaming = undefined
@@ -104,17 +93,13 @@ export async function save(
   }
 
   // update linked rows
-  try {
-    const linkResp: any = await updateLinks({
-      eventType: oldTable ? EventType.TABLE_UPDATED : EventType.TABLE_SAVE,
-      table: table,
-      oldTable: oldTable,
-    })
-    if (linkResp != null && linkResp._rev) {
-      table._rev = linkResp._rev
-    }
-  } catch (err) {
-    throw new Error(err as string)
+  const linkResp: any = await updateLinks({
+    eventType: oldTable ? EventType.TABLE_UPDATED : EventType.TABLE_SAVE,
+    table: table,
+    oldTable: oldTable,
+  })
+  if (linkResp != null && linkResp._rev) {
+    table._rev = linkResp._rev
   }
 
   // don't perform any updates until relationships have been

@@ -31,16 +31,12 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
     db = context.getAppDB()
   }
-  const internalTables = await db.allDocs(
+  const internalTables = await db.allDocs<Table[]>(
     getTableParams(null, {
       include_docs: true,
     })
   )
-  return internalTables.rows.map((tableDoc: any) => ({
-    ...tableDoc.doc,
-    type: "internal",
-    sourceId: tableDoc.doc.sourceId || BudibaseInternalDB._id,
-  }))
+  return processInternalTables(internalTables)
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
@@ -63,7 +59,7 @@ export async function getExternalTable(
   return entities[tableName]
 }
 
-export async function getTable(tableId: any): Promise<Table> {
+export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   if (isExternalTable(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
@@ -80,7 +76,7 @@ export async function getAllTables() {
     getAllInternalTables(),
     getAllExternalTables(),
   ])
-  return [...internal, external]
+  return [...internal, ...external]
 }
 
 export async function getExternalTablesInDatasource(
