@@ -68,7 +68,7 @@ export async function save(
     throw new Error("Cannot rename a linked column.")
   }
 
-  table = await tableSaveFunctions.mid(table)
+  table = await tableSaveFunctions.mid(table, renaming)
 
   // update schema of non-statistics views when new columns are added
   for (let view in table.views) {
