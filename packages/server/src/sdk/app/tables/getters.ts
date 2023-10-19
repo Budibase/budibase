@@ -117,7 +117,7 @@ export function enrichViewSchemas(table: Table): TableResponse {
     views: Object.values(table.views ?? [])
       .map(v => sdk.views.enrichSchema(v, table.schema))
       .reduce((p, v) => {
-        p[v.name] = v
+        p[v.name!] = v
         return p
       }, {} as TableViewsResponse),
   }
