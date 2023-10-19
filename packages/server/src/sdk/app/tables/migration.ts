@@ -2,8 +2,12 @@ import { BadRequestError, context } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
+  FieldSubtype,
   InternalTable,
+  ManyToManyRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
   RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   Table,
   isBBReferenceField,
@@ -77,13 +81,30 @@ function getColumnMigrator(
     )
   }
 
-  return new UserColumnMigrator(table, oldColumn, newColumn)
+  if (oldColumn.relationshipType === RelationshipType.ONE_TO_MANY) {
+    if (newColumn.subtype !== FieldSubtype.USER) {
+      throw new BadRequestError(
+        `Column "${oldColumn.name}" is a one-to-many column but "${newColumn.name}" is not a single user column`
+      )
+    }
+    return new OneToManyUserColumnMigrator(table, oldColumn, newColumn)
+  }
+  if (oldColumn.relationshipType === RelationshipType.MANY_TO_MANY) {
+    if (newColumn.subtype !== FieldSubtype.USERS) {
+      throw new BadRequestError(
+        `Column "${oldColumn.name}" is a many-to-many column but "${newColumn.name}" is not a multi user column`
+      )
+    }
+    return new ManyToManyUserColumnMigrator(table, oldColumn, newColumn)
+  }
+
+  throw new BadRequestError(`Unknown migration type`)
 }
 
-class UserColumnMigrator implements ColumnMigrator {
+class OneToManyUserColumnMigrator implements ColumnMigrator {
   constructor(
     private table: Table,
-    private oldColumn: RelationshipFieldMetadata,
+    private oldColumn: OneToManyRelationshipFieldMetadata,
     private newColumn: BBReferenceFieldMetadata
   ) {}
 
@@ -109,6 +130,45 @@ class UserColumnMigrator implements ColumnMigrator {
       let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
       let row = rowsById[link.doc1.rowId]
       row[this.newColumn.name] = userId
+    }
+
+    let db = context.getAppDB()
+    await db.bulkDocs(rows)
+  }
+}
+
+class ManyToManyUserColumnMigrator implements ColumnMigrator {
+  constructor(
+    private table: Table,
+    private oldColumn: ManyToManyRelationshipFieldMetadata,
+    private newColumn: BBReferenceFieldMetadata
+  ) {}
+
+  async doMigration() {
+    let rows = await sdk.rows.fetchRaw(this.table._id!)
+    let rowsById = rows.reduce((acc, row) => {
+      acc[row._id!] = row
+      return acc
+    }, {} as Record<string, Row>)
+
+    let links = await sdk.links.fetchWithDocument(this.table._id!)
+    for (let link of links) {
+      if (link.doc1.tableId !== this.table._id) {
+        continue
+      }
+      if (link.doc1.fieldName !== this.oldColumn.name) {
+        continue
+      }
+      if (link.doc2.tableId !== InternalTable.USER_METADATA) {
+        continue
+      }
+
+      let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
+      let row = rowsById[link.doc1.rowId]
+      if (!row[this.newColumn.name]) {
+        row[this.newColumn.name] = []
+      }
+      row[this.newColumn.name].push(userId)
     }
 
     let db = context.getAppDB()

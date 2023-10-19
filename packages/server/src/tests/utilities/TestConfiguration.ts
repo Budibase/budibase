@@ -55,6 +55,7 @@ import {
   RelationshipType,
   CreateViewRequest,
   RelationshipFieldMetadata,
+  User,
 } from "@budibase/types"
 
 import API from "./api"
@@ -254,7 +255,7 @@ class TestConfiguration {
     } catch (err) {
       existing = { email }
     }
-    const user = {
+    const user: User = {
       _id: id,
       ...existing,
       roles: roles || {},

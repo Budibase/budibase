@@ -27,5 +27,6 @@ export default class API {
     this.datasource = new DatasourceAPI(config)
     this.screen = new ScreenAPI(config)
     this.application = new ApplicationAPI(config)
+    this.global = new GlobalAPI(config)
   }
 }
