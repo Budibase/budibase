@@ -123,7 +123,10 @@
 
 {#each sections as section, idx (section.name)}
   {#if section.visible}
-    <DetailSummary name={showSectionTitle ? section.name : ""} show>
+    <DetailSummary
+      name={showSectionTitle ? section.name : ""}
+      show={section.collapsed !== true}
+    >
       {#if section.info}
         <div class="section-info">
           <InfoDisplay body={section.info} />
