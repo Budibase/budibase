@@ -61,6 +61,10 @@ export async function bulkImport(
 ) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
-  await handleDataImport(ctx.user, table, rows, identifierFields)
+  await handleDataImport(table, {
+    importRows: rows,
+    identifierFields,
+    user: ctx.user,
+  })
   return table
 }
