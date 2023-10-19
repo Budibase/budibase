@@ -52,7 +52,7 @@ export function cleanupRelationships(
   }
 }
 
-export function otherRelationshipType(type?: string) {
+export function otherRelationshipType(type: RelationshipType) {
   if (type === RelationshipType.MANY_TO_MANY) {
     return RelationshipType.MANY_TO_MANY
   }
@@ -68,7 +68,10 @@ export function generateManyLinkSchema(
   relatedTable: Table
 ): Table {
   if (!table.primary || !relatedTable.primary) {
-    throw new Error("Unable to generate many link schema, no primary keys")
+    const noPrimaryName = !table.primary ? table.name : relatedTable.name
+    throw new Error(
+      `Unable to generate many link schema, "${noPrimaryName}" does not have a primary key`
+    )
   }
   const primary = table.name + table.primary[0]
   const relatedPrimary = relatedTable.name + relatedTable.primary[0]

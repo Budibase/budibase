@@ -41,9 +41,10 @@ export async function save(
     ...update,
   }
 
+  const tableId = opts?.tableId || update._id
   let oldTable: Table | undefined
-  if (opts?.tableId) {
-    oldTable = await getTable(opts.tableId)
+  if (tableId) {
+    oldTable = await getTable(tableId)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
@@ -114,6 +115,11 @@ export async function save(
         relatedTable,
         relationType
       )
+      if (fkTable.schema[foreignKey] != null) {
+        throw new Error(
+          `Unable to generate foreign key - column ${foreignKey} already in use.`
+        )
+      }
       fkTable.schema[foreignKey] = foreignKeyStructure(foreignKey)
       if (fkTable.constrained == null) {
         fkTable.constrained = []
@@ -132,7 +138,7 @@ export async function save(
 
   cleanupRelationships(tableToSave, tables, oldTable)
 
-  const operation = oldTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
+  const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
   await makeTableRequest(
     datasource,
     operation,
