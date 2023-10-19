@@ -142,7 +142,7 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
  * this can only be done with redis streams because they will have an end.
  * @param stream A redis stream, specifically as this type of stream will have an end.
  * @param client The client to use for further lookups.
- * @return {Promise<object>} The final output of the stream
+ * @return The final output of the stream
  */
 function promisifyStream(stream: any, client: RedisWrapper) {
   return new Promise((resolve, reject) => {
