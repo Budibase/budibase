@@ -23,10 +23,13 @@ import {
   getTableParams,
 } from "../../../db/utils"
 import sdk from "../../index"
+import datasource from "../../../api/routes/datasource"
 
 const ENV_VAR_PREFIX = "env."
 
-export async function fetch() {
+export async function fetch(opts?: {
+  enriched: boolean
+}): Promise<Datasource[]> {
   // Get internal tables
   const db = context.getAppDB()
   const internalTables = await db.allDocs(
@@ -44,7 +47,7 @@ export async function fetch() {
 
   const bbInternalDb = {
     ...BudibaseInternalDB,
-  }
+  } as Datasource
 
   // Get external datasources
   const datasources = (
@@ -66,7 +69,18 @@ export async function fetch() {
     }
   }
 
-  return [bbInternalDb, ...datasources]
+  if (opts?.enriched) {
+    const envVars = await getEnvironmentVariables()
+    const promises = datasources.map(datasource =>
+      enrichDatasourceWithValues(datasource, envVars)
+    )
+    const enriched = (await Promise.all(promises)).map(
+      result => result.datasource
+    )
+    return [bbInternalDb, ...enriched]
+  } else {
+    return [bbInternalDb, ...datasources]
+  }
 }
 
 export function areRESTVariablesValid(datasource: Datasource) {
@@ -107,9 +121,12 @@ export function checkDatasourceTypes(schema: Integration, config: any) {
   return config
 }
 
-async function enrichDatasourceWithValues(datasource: Datasource) {
+async function enrichDatasourceWithValues(
+  datasource: Datasource,
+  variables?: Record<string, string>
+) {
   const cloned = cloneDeep(datasource)
-  const env = await getEnvironmentVariables()
+  const env = variables ? variables : await getEnvironmentVariables()
   //Do not process entities, as we do not want to process formulas
   const { entities, ...clonedWithoutEntities } = cloned
   const processed = processObjectSync(
@@ -235,9 +252,9 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
     if (value !== PASSWORD_REPLACEMENT) {
       continue
     }
-    if (old.config?.[key]) {
+    if (update.config && old.config && old.config?.[key]) {
       update.config[key] = old.config?.[key]
-    } else {
+    } else if (update.config) {
       delete update.config[key]
     }
   }
