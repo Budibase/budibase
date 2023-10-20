@@ -109,7 +109,7 @@
 
       // Delete numeric only widths as these are grid widths and should be
       // ignored
-      let width = fixedSchema[fieldName].width
+      const width = fixedSchema[fieldName].width
       if (width != null && `${width}`.trim().match(/^[0-9]+$/)) {
         delete fixedSchema[fieldName].width
       }
