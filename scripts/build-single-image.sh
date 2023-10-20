@@ -1,3 +1,4 @@
 #!/bin/bash
 yarn build --scope @budibase/server --scope @budibase/worker
-docker build -f hosting/single/Dockerfile.v2 -t budibase:latest .
+version=$(./scripts/getCurrentVersion.sh)
+docker build -f hosting/single/Dockerfile.v2 -t budibase:latest --build-arg VERSION=$version .
