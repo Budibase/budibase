@@ -6,7 +6,7 @@ EXPOSE 5984
 EXPOSE 4984
 
 RUN apt-get update && apt-get install -y --no-install-recommends software-properties-common wget unzip curl && \
-    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | sudo apt-key add - && \
+    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | apt-key add - && \
     apt-add-repository 'deb http://security.debian.org/debian-security bullseye-security/updates main' && \
     apt-add-repository 'deb http://archive.debian.org/debian stretch-backports main' && \
     apt-add-repository 'deb https://packages.adoptium.net/artifactory/deb bullseye main' && \

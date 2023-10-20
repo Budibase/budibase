@@ -1,5 +1,9 @@
 <script>
-  import { getContextProviderComponents } from "builderStore/dataBinding"
+  import {
+    getContextProviderComponents,
+    readableToRuntimeBinding,
+    runtimeToReadableBinding,
+  } from "builderStore/dataBinding"
   import {
     Button,
     Popover,
@@ -9,6 +13,11 @@
     Heading,
     Drawer,
     DrawerContent,
+    Icon,
+    Modal,
+    ModalContent,
+    CoreDropzone,
+    notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { store, currentAsset } from "builderStore"
@@ -22,6 +31,8 @@
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import { API } from "api"
 
   export let value = {}
   export let otherSources
@@ -31,9 +42,13 @@
 
   const dispatch = createEventDispatcher()
   const arrayTypes = ["attachment", "array"]
+
   let anchorRight, dropdownRight
   let drawer
   let tmpQueryParams
+  let tmpCustomData
+  let customDataValid = true
+  let modal
 
   $: text = value?.label ?? "Choose an option"
   $: tables = $tablesStore.list.map(m => ({
@@ -125,6 +140,10 @@
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
+  $: custom = {
+    type: "custom",
+    label: "JSON / CSV",
+  }
 
   const handleSelected = selected => {
     dispatch("change", selected)
@@ -151,6 +170,11 @@
     drawer.show()
   }
 
+  const openCustomDrawer = () => {
+    tmpCustomData = runtimeToReadableBinding(bindings, value.data || "")
+    drawer.show()
+  }
+
   const getQueryValue = queries => {
     return queries.find(q => q._id === value._id) || value
   }
@@ -162,6 +186,35 @@
     })
     drawer.hide()
   }
+
+  const saveCustomData = () => {
+    handleSelected({
+      ...value,
+      data: readableToRuntimeBinding(bindings, tmpCustomData),
+    })
+    drawer.hide()
+  }
+
+  const promptForCSV = () => {
+    drawer.hide()
+    modal.show()
+  }
+
+  const handleCSV = async e => {
+    try {
+      const csv = await e.detail[0]?.text()
+      if (csv?.length) {
+        const js = await API.csvToJson(csv)
+        tmpCustomData = JSON.stringify(js)
+      }
+      modal.hide()
+      saveCustomData()
+    } catch (error) {
+      notifications.error("Failed to parse CSV")
+      modal.hide()
+      drawer.show()
+    }
+  }
 </script>
 
 <div class="container" bind:this={anchorRight}>
@@ -172,7 +225,9 @@
     on:click={dropdownRight.show}
   />
   {#if value?.type === "query"}
-    <i class="ri-settings-5-line" on:click={openQueryParamsDrawer} />
+    <div class="icon">
+      <Icon hoverable name="Settings" on:click={openQueryParamsDrawer} />
+    </div>
     <Drawer title={"Query Bindings"} bind:this={drawer}>
       <Button slot="buttons" cta on:click={saveQueryParams}>Save</Button>
       <DrawerContent slot="body">
@@ -196,6 +251,29 @@
           />
         </Layout>
       </DrawerContent>
+    </Drawer>
+  {/if}
+  {#if value?.type === "custom"}
+    <div class="icon">
+      <Icon hoverable name="Settings" on:click={openCustomDrawer} />
+    </div>
+    <Drawer title="Custom data" bind:this={drawer}>
+      <div slot="buttons" style="display:contents">
+        <Button primary on:click={promptForCSV}>Load CSV</Button>
+        <Button cta on:click={saveCustomData} disabled={!customDataValid}>
+          Save
+        </Button>
+      </div>
+      <div slot="description">Provide a JSON array to use as data</div>
+      <ClientBindingPanel
+        slot="body"
+        bind:valid={customDataValid}
+        value={tmpCustomData}
+        on:change={event => (tmpCustomData = event.detail)}
+        {bindings}
+        allowJS
+        allowHelpers
+      />
     </Drawer>
   {/if}
 </div>
@@ -285,19 +363,26 @@
         {/each}
       </ul>
     {/if}
-    {#if otherSources?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Other</Heading>
-      </div>
-      <ul>
+    <Divider />
+    <div class="title">
+      <Heading size="XS">Other</Heading>
+    </div>
+    <ul>
+      <li on:click={() => handleSelected(custom)}>{custom.label}</li>
+      {#if otherSources?.length}
         {#each otherSources as source}
           <li on:click={() => handleSelected(source)}>{source.label}</li>
         {/each}
-      </ul>
-    {/if}
+      {/if}
+    </ul>
   </div>
 </Popover>
+
+<Modal bind:this={modal}>
+  <ModalContent title="Load CSV" showConfirmButton={false}>
+    <CoreDropzone compact extensions=".csv" on:change={handleCSV} />
+  </ModalContent>
+</Modal>
 
 <style>
   .container {
@@ -340,16 +425,7 @@
     background-color: var(--spectrum-global-color-gray-200);
   }
 
-  i {
-    margin-left: 5px;
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-  }
-
-  i:hover {
-    transform: scale(1.1);
-    font-weight: 600;
-    cursor: pointer;
+  .icon {
+    margin-left: 8px;
   }
 </style>
