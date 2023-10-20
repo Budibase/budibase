@@ -67,6 +67,10 @@ COPY packages/server/docker_run.sh .
 COPY packages/server/builder/ builder/
 COPY packages/server/client/ client/
 
+ARG VERSION
+RUN test -n "$VERSION"
+ENV VERSION=$VERSION
+
 EXPOSE 4001
 
 # have to add node environment production after install
