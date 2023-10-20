@@ -206,10 +206,8 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
   }
 
   if (body.paginate === false) {
-    console.log("not paginated")
     await getAppUsers(ctx)
   } else {
-    console.log("paginated")
     const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
     for (let user of paginated.data) {
