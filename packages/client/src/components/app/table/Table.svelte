@@ -32,7 +32,8 @@
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
   $: fullSchema = dataProvider?.schema ?? {}
-  $: fields = getFields(fullSchema, columns, false)
+  $: primaryDisplay = dataProvider?.primaryDisplay
+  $: fields = getFields(fullSchema, columns, false, primaryDisplay)
   $: schema = getFilteredSchema(fullSchema, fields, hasChildren)
   $: setSorting = getAction(
     dataProvider?.id,
@@ -55,18 +56,13 @@
     }
   }
 
-  const getFields = (schema, customColumns, showAutoColumns) => {
-    // Check for an invalid column selection
-    let invalid = false
-    customColumns?.forEach(column => {
-      const columnName = typeof column === "string" ? column : column.name
-      if (schema[columnName] == null) {
-        invalid = true
-      }
-    })
-
-    // Use column selection if it exists
-    if (!invalid && customColumns?.length) {
+  const getFields = (
+    schema,
+    customColumns,
+    showAutoColumns,
+    primaryDisplay
+  ) => {
+    if (customColumns?.length) {
       return customColumns
     }
 
@@ -74,13 +70,38 @@
     let columns = []
     let autoColumns = []
     Object.entries(schema).forEach(([field, fieldSchema]) => {
+      if (!fieldSchema.visible) {
+        return
+      }
       if (!fieldSchema?.autocolumn) {
         columns.push(field)
       } else if (showAutoColumns) {
         autoColumns.push(field)
       }
     })
-    return columns.concat(autoColumns)
+
+    // Sort columns to respect grid metadata
+    const allCols = columns.concat(autoColumns)
+    return allCols.sort((a, b) => {
+      if (a === primaryDisplay) {
+        return -1
+      }
+      if (b === primaryDisplay) {
+        return 1
+      }
+      const aOrder = schema[a].order
+      const bOrder = schema[b].order
+      if (aOrder === bOrder) {
+        return 0
+      }
+      if (aOrder == null) {
+        return 1
+      }
+      if (bOrder == null) {
+        return -1
+      }
+      return aOrder < bOrder ? -1 : 1
+    })
   }
 
   const getFilteredSchema = (schema, fields, hasChildren) => {
