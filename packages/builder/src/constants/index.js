@@ -34,8 +34,6 @@ export const UNEDITABLE_USER_FIELDS = [
   "lastName",
 ]
 
-export const UNSORTABLE_TYPES = ["formula", "attachment", "array", "link"]
-
 export const LAYOUT_NAMES = {
   MASTER: {
     PRIVATE: "layout_private_master",

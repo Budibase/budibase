@@ -231,7 +231,7 @@ jobs:
           cache: "yarn"
       - run: yarn --frozen-lockfile
       - name: Build packages
-        run: yarn build --scope @budibase/server --scope @budibase/worker --scope @budibase/client --scope @budibase/backend-core
+        run: yarn build --scope @budibase/server --scope @budibase/worker
       - name: Run tests
         run: |
           cd qa-core

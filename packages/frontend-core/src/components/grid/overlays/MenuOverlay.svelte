@@ -17,6 +17,7 @@
     focusedCellAPI,
     focusedRowId,
     notifications,
+    isDatasourcePlus,
   } = getContext("grid")
 
   $: style = makeStyle($menu)
@@ -75,7 +76,7 @@
       </MenuItem>
       <MenuItem
         icon="Copy"
-        disabled={isNewRow || !$focusedRow?._id}
+        disabled={isNewRow || !$focusedRow?._id || !$isDatasourcePlus}
         on:click={() => copyToClipboard($focusedRow?._id)}
         on:click={menu.actions.close}
       >
