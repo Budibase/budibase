@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - BUDI-7641/push_v2_images_to_qa
   workflow_dispatch:
 
 jobs:
