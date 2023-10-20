@@ -9,13 +9,13 @@ import {
   getLinkedTable,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
-import { FieldTypes } from "../../constants"
 import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
-import { Table, Row, LinkDocumentValue } from "@budibase/types"
+import { Table, Row, LinkDocumentValue, FieldType } from "@budibase/types"
+import sdk from "../../sdk"
 
 export { IncludeDocs, getLinkDocuments, createLinkView } from "./linkUtils"
 
@@ -35,7 +35,7 @@ export const EventType = {
 
 function clearRelationshipFields(table: Table, rows: Row[]) {
   for (let [key, field] of Object.entries(table.schema)) {
-    if (field.type === FieldTypes.LINK) {
+    if (field.type === FieldType.LINK) {
       rows = rows.map(row => {
         delete row[key]
         return row
@@ -45,7 +45,7 @@ function clearRelationshipFields(table: Table, rows: Row[]) {
   return rows
 }
 
-async function getLinksForRows(rows: Row[]) {
+async function getLinksForRows(rows: Row[]): Promise<LinkDocumentValue[]> {
   const tableIds = [...new Set(rows.map(el => el.tableId))]
   // start by getting all the link values for performance reasons
   const promises = tableIds.map(tableId =>
@@ -146,32 +146,57 @@ export async function updateLinks(args: {
  * This is required for formula fields, this may only be utilised internally (for now).
  * @param table The table from which the rows originated.
  * @param rows The rows which are to be enriched.
+ * @param opts optional - options like passing in a base row to use for enrichment.
  * @return returns the rows with all of the enriched relationships on it.
  */
-export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
+export async function attachFullLinkedDocs(
+  table: Table,
+  rows: Row[],
+  opts?: { fromRow?: Row }
+) {
   const linkedTableIds = getLinkedTableIDs(table)
   if (linkedTableIds.length === 0) {
     return rows
   }
-  // get all the links
-  const links = (await getLinksForRows(rows)).filter(link =>
+  // get tables and links
+  let response = await Promise.all([
+    getLinksForRows(rows),
+    sdk.tables.getTables(linkedTableIds),
+  ])
+  // find the links that pertain to one of the rows that is being enriched
+  const links = (response[0] as LinkDocumentValue[]).filter(link =>
     rows.some(row => row._id === link.thisId)
   )
+  // if fromRow has been passed in, then we don't need to fetch it (optimisation)
+  let linksWithoutFromRow = links
+  if (opts?.fromRow) {
+    linksWithoutFromRow = links.filter(link => link.id !== opts?.fromRow?._id)
+  }
+  const linkedTables = response[1] as Table[]
   // clear any existing links that could be dupe'd
   rows = clearRelationshipFields(table, rows)
   // now get the docs and combine into the rows
-  let linked = await getFullLinkedDocs(links)
-  const linkedTables: Table[] = []
+  let linked = []
+  if (linksWithoutFromRow.length > 0) {
+    linked = await getFullLinkedDocs(linksWithoutFromRow)
+  }
   for (let row of rows) {
     for (let link of links.filter(link => link.thisId === row._id)) {
       if (row[link.fieldName] == null) {
         row[link.fieldName] = []
       }
-      const linkedRow = linked.find(row => row._id === link.id)
+      let linkedRow: Row
+      if (opts?.fromRow && opts?.fromRow?._id === link.id) {
+        linkedRow = opts.fromRow!
+      } else {
+        linkedRow = linked.find(row => row._id === link.id)
+      }
       if (linkedRow) {
         const linkedTableId =
           linkedRow.tableId || getRelatedTableForField(table, link.fieldName)
-        const linkedTable = await getLinkedTable(linkedTableId, linkedTables)
+        const linkedTable = linkedTables.find(
+          table => table._id === linkedTableId
+        )
         if (linkedTable) {
           row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
         }
@@ -199,13 +224,13 @@ export async function squashLinksToPrimaryDisplay(
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
     for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
-      if (schema.type !== FieldTypes.LINK || !Array.isArray(row[column])) {
+      if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
       const newLinks = []
       for (let link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
-        const linkedTable = await getLinkedTable(linkTblId, linkedTables)
+        const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }
         if (linkedTable?.primaryDisplay && link[linkedTable.primaryDisplay]) {
           obj.primaryDisplay = link[linkedTable.primaryDisplay]
