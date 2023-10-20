@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - BUDI-7641/remove-npm-from-apps-worker-docker
   workflow_dispatch:
 
 jobs:
