@@ -72,7 +72,8 @@ router
   )
 
   .get("/api/global/users", auth.builderOrAdmin, controller.fetch)
-  .post("/api/global/users/search", auth.builderOrAdmin, controller.search)
+  // search can be used by any user now, to retrieve users for user column
+  .post("/api/global/users/search", controller.search)
   .delete("/api/global/users/:id", auth.adminOnly, controller.destroy)
   .get(
     "/api/global/users/count/:appId",
