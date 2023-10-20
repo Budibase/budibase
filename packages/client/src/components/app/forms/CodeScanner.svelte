@@ -21,7 +21,7 @@
   let cameraEnabled
   let cameraStarted = false
   let html5QrCode
-  let cameraSetting = { facingMode: {preferredCamera} }
+  let cameraSetting = { facingMode: preferredCamera }
   let cameraConfig = {
     fps: 25,
     qrbox: { width: 250, height: 250 },
