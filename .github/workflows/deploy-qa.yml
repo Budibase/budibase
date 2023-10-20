@@ -6,30 +6,15 @@ on:
       - master
   workflow_dispatch:
 
-env:
-  BRANCH: ${{ github.event.pull_request.head.ref }}
-  BASE_BRANCH: ${{ github.event.pull_request.base.ref}}
-  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-  NX_BASE_BRANCH: origin/${{ github.base_ref }}
-  USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' && github.base_ref != 'master'}}
-  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
-
 jobs:
   trigger-deploy-to-qa-env:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Get the current budibase release version
-        id: version
-        run: |
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
-
-      - uses: passeidireto/trigger-external-workflow-action@main
+      - uses: peter-evans/repository-dispatch@v2
         env:
           PAYLOAD_VERSION: ${{ github.sha }}
           REF_NAME: ${{ github.ref_name}}
         with:
           repository: budibase/budibase-deploys
-          event: budicloud-qa-deploy
-          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
+          event-type: budicloud-qa-deploy-v2
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
