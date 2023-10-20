@@ -26,7 +26,7 @@
     tag
   )
 
-  const getSections = (instance, definition, isScreen) => {
+  const getSections = (instance, definition, isScreen, tag) => {
     const settings = definition?.settings ?? []
     const generalSettings = settings.filter(
       setting => !setting.section && setting.tag === tag
