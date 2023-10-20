@@ -5560,7 +5560,8 @@
       {
         "type": "dataSource",
         "label": "Data",
-        "key": "datasource"
+        "key": "table",
+        "required": true
       },
       {
         "type": "columns/grid",
