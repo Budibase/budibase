@@ -14,6 +14,7 @@
   } from "builderStore/dataBinding"
   import { ActionButton } from "@budibase/bbui"
   import { capitalise } from "helpers"
+  import { lowerCase } from "lodash"
 
   const onUpdateName = async value => {
     try {
@@ -55,11 +56,13 @@
           value={title}
           {title}
           placeholder={getComponentText(componentInstance)}
-          on:change={e => {
-            onUpdateName(e.target.value)
-            if (e.target === document.activeElement) {
+          on:keypress={e => {
+            if (e.key.toLowerCase() === "enter") {
               e.target.blur()
             }
+          }}
+          on:change={e => {
+            onUpdateName(e.target.value)
           }}
         />
       </span>
