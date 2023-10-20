@@ -6,7 +6,7 @@ services:
   app-service:
     build:
       context: ..
-      dockerfile: packages/server/Dockerfile
+      dockerfile: packages/server/Dockerfile.v2
     container_name: build-bbapps
     environment:
       SELF_HOSTED: 1
@@ -36,7 +36,7 @@ services:
   worker-service:
     build:
       context: ..
-      dockerfile: packages/worker/Dockerfile
+      dockerfile: packages/worker/Dockerfile.v2
     container_name: build-bbworker
     environment:
       SELF_HOSTED: 1
