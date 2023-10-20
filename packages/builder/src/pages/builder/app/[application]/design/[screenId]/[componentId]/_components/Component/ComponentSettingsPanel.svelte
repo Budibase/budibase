@@ -6,6 +6,7 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
+  import { notifications } from "@budibase/bbui"
 
   import {
     getBindableProperties,
