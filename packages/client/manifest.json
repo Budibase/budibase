@@ -5568,9 +5568,9 @@
         "label": "Columns",
         "key": "columns",
         "dependsOn": [
-          "datasource",
+          "table",
           {
-            "setting": "datasource.type",
+            "setting": "table.type",
             "value": "custom",
             "invert": true
           }
@@ -5581,7 +5581,7 @@
         "label": "Filtering",
         "key": "initialFilter",
         "dependsOn": {
-          "setting": "datasource.type",
+          "setting": "table.type",
           "value": "custom",
           "invert": true
         }
@@ -5592,7 +5592,7 @@
         "key": "initialSortColumn",
         "placeholder": "Default",
         "dependsOn": {
-          "setting": "datasource.type",
+          "setting": "table.type",
           "value": "custom",
           "invert": true
         }
@@ -5642,7 +5642,7 @@
         "key": "allowAddRows",
         "defaultValue": true,
         "dependsOn": {
-          "setting": "datasource.type",
+          "setting": "table.type",
           "value": ["table", "viewV2"]
         }
       },
@@ -5652,7 +5652,7 @@
         "key": "allowEditRows",
         "defaultValue": true,
         "dependsOn": {
-          "setting": "datasource.type",
+          "setting": "table.type",
           "value": ["table", "viewV2"]
         }
       },
@@ -5662,7 +5662,7 @@
         "key": "allowDeleteRows",
         "defaultValue": true,
         "dependsOn": {
-          "setting": "datasource.type",
+          "setting": "table.type",
           "value": ["table", "viewV2"]
         }
       },
