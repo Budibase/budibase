@@ -46,17 +46,13 @@ export default class ViewV2Fetch extends DataFetch {
     } = this.options
     const { cursor, query, definition } = get(this.store)
 
-    // If sort params are not defined, update options to store the sorting
+    // If sort/filter params are not defined, update options to store the
     // params built in to this view. This ensures that we can accurately
-    // compare old and new sorting params and skip a redundant API call.
+    // compare old and new params and skip a redundant API call.
     if (!sortColumn && definition.sort?.field) {
       this.options.sortColumn = definition.sort.field
       this.options.sortOrder = definition.sort.order
     }
-
-    // If sort params are not defined, update options to store the sorting
-    // params built in to this view. This ensures that we can accurately
-    // compare old and new sorting params and skip a redundant API call.
     if (!filter?.length && definition.query?.length) {
       this.options.filter = definition.query
     }
