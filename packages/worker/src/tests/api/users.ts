@@ -134,13 +134,19 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
-  searchUsers = ({ query }: { query?: SearchQuery }, status = 200) => {
-    return this.request
+  searchUsers = (
+    { query }: { query?: SearchQuery },
+    opts?: { status?: number; noHeaders?: boolean }
+  ) => {
+    const req = this.request
       .post("/api/global/users/search")
-      .set(this.config.defaultHeaders())
       .send({ query })
       .expect("Content-Type", /json/)
-      .expect(status ? status : 200)
+      .expect(opts?.status ? opts.status : 200)
+    if (!opts?.noHeaders) {
+      req.set(this.config.defaultHeaders())
+    }
+    return req
   }
 
   getUser = (userId: string, opts?: TestAPIOpts) => {
