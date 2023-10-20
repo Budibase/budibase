@@ -56,6 +56,11 @@ export const syncURLToState = options => {
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {
+    // Clean URL
+    if (url?.endsWith("/index")) {
+      url = url.replace("/index", "")
+    }
+    // Allow custom URL handling
     if (beforeNavigate) {
       const res = beforeNavigate(url, params)
       if (res?.url) {
@@ -114,26 +119,24 @@ export const syncURLToState = options => {
 
   // Updates the URL with new state values
   const mapStateToUrl = state => {
-    let needsUpdate = false
     const urlValue = cachedParams?.[urlParam]
     const stateValue = state?.[stateKey]
-    if (stateValue !== urlValue) {
-      needsUpdate = true
-      log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
-      if (validate && fallbackUrl) {
-        if (!validate(stateValue)) {
-          log("Invalid state param!", stateValue)
-          redirectUrl(fallbackUrl)
-          return
-        }
+
+    // As the store updated, validate that the current state value is valid
+    if (validate && fallbackUrl) {
+      if (!validate(stateValue)) {
+        log("Invalid state param!", stateValue)
+        redirectUrl(fallbackUrl)
+        return
       }
     }
 
     // Avoid updating the URL if not necessary to prevent a wasted render
     // cycle
-    if (!needsUpdate) {
+    if (stateValue === urlValue) {
       return
     }
+    log(`url.${urlParam} (${urlValue}) <= state.${stateKey} (${stateValue})`)
 
     // Navigate to the new URL
     if (!get(isChangingPage)) {

@@ -1,63 +1,74 @@
-import { SourceName, SqlQuery, Datasource, Table } from "@budibase/types"
+import {
+  SqlQuery,
+  Table,
+  SearchFilters,
+  Datasource,
+  FieldType,
+} from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { FieldTypes, BuildSchemaErrors, InvalidColumns } from "../constants"
+import {
+  BuildSchemaErrors,
+  InvalidColumns,
+  NoEmptyFilterStrings,
+} from "../constants"
+import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
 const ENCODED_SPACE = encodeURIComponent(" ")
 
 const SQL_NUMBER_TYPE_MAP = {
-  integer: FieldTypes.NUMBER,
-  int: FieldTypes.NUMBER,
-  decimal: FieldTypes.NUMBER,
-  smallint: FieldTypes.NUMBER,
-  real: FieldTypes.NUMBER,
-  float: FieldTypes.NUMBER,
-  numeric: FieldTypes.NUMBER,
-  mediumint: FieldTypes.NUMBER,
-  dec: FieldTypes.NUMBER,
-  double: FieldTypes.NUMBER,
-  fixed: FieldTypes.NUMBER,
-  "double precision": FieldTypes.NUMBER,
-  number: FieldTypes.NUMBER,
-  binary_float: FieldTypes.NUMBER,
-  binary_double: FieldTypes.NUMBER,
-  money: FieldTypes.NUMBER,
-  smallmoney: FieldTypes.NUMBER,
+  integer: FieldType.NUMBER,
+  int: FieldType.NUMBER,
+  decimal: FieldType.NUMBER,
+  smallint: FieldType.NUMBER,
+  real: FieldType.NUMBER,
+  float: FieldType.NUMBER,
+  numeric: FieldType.NUMBER,
+  mediumint: FieldType.NUMBER,
+  dec: FieldType.NUMBER,
+  double: FieldType.NUMBER,
+  fixed: FieldType.NUMBER,
+  "double precision": FieldType.NUMBER,
+  number: FieldType.NUMBER,
+  binary_float: FieldType.NUMBER,
+  binary_double: FieldType.NUMBER,
+  money: FieldType.NUMBER,
+  smallmoney: FieldType.NUMBER,
 }
 
 const SQL_DATE_TYPE_MAP = {
-  timestamp: FieldTypes.DATETIME,
-  time: FieldTypes.DATETIME,
-  datetime: FieldTypes.DATETIME,
-  smalldatetime: FieldTypes.DATETIME,
-  date: FieldTypes.DATETIME,
+  timestamp: FieldType.DATETIME,
+  time: FieldType.DATETIME,
+  datetime: FieldType.DATETIME,
+  smalldatetime: FieldType.DATETIME,
+  date: FieldType.DATETIME,
 }
 
 const SQL_DATE_ONLY_TYPES = ["date"]
 const SQL_TIME_ONLY_TYPES = ["time"]
 
 const SQL_STRING_TYPE_MAP = {
-  varchar: FieldTypes.STRING,
-  char: FieldTypes.STRING,
-  nchar: FieldTypes.STRING,
-  nvarchar: FieldTypes.STRING,
-  ntext: FieldTypes.STRING,
-  enum: FieldTypes.STRING,
-  blob: FieldTypes.STRING,
-  long: FieldTypes.STRING,
-  text: FieldTypes.STRING,
-  bigint: FieldTypes.STRING,
+  varchar: FieldType.STRING,
+  char: FieldType.STRING,
+  nchar: FieldType.STRING,
+  nvarchar: FieldType.STRING,
+  ntext: FieldType.STRING,
+  enum: FieldType.STRING,
+  blob: FieldType.STRING,
+  long: FieldType.STRING,
+  text: FieldType.STRING,
 }
 
 const SQL_BOOLEAN_TYPE_MAP = {
-  boolean: FieldTypes.BOOLEAN,
-  bit: FieldTypes.BOOLEAN,
-  tinyint: FieldTypes.BOOLEAN,
+  boolean: FieldType.BOOLEAN,
+  bit: FieldType.BOOLEAN,
+  tinyint: FieldType.BOOLEAN,
 }
 
 const SQL_MISC_TYPE_MAP = {
-  json: FieldTypes.JSON,
+  json: FieldType.JSON,
+  bigint: FieldType.BIGINT,
 }
 
 const SQL_TYPE_MAP = {
@@ -148,7 +159,7 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
 }
 
 export function convertSqlType(type: string) {
-  let foundType = FieldTypes.STRING
+  let foundType = FieldType.STRING
   const lcType = type.toLowerCase()
   let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
@@ -163,7 +174,7 @@ export function convertSqlType(type: string) {
     }).internal
   }
   const schema: any = { type: foundType }
-  if (foundType === FieldTypes.DATETIME) {
+  if (foundType === FieldType.DATETIME) {
     schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
     schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
   }
@@ -178,25 +189,17 @@ export function getSqlQuery(query: SqlQuery | string): SqlQuery {
   }
 }
 
-export function isSQL(datasource: Datasource): boolean {
-  if (!datasource || !datasource.source) {
-    return false
-  }
-  const SQL = [
-    SourceName.POSTGRES,
-    SourceName.SQL_SERVER,
-    SourceName.MYSQL,
-    SourceName.ORACLE,
-  ]
-  return SQL.indexOf(datasource.source) !== -1
+export function isSQL(datasource: Datasource) {
+  return helpers.isSQL(datasource)
 }
 
 export function isIsoDateString(str: string) {
-  if (!/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/.test(str)) {
+  const trimmedValue = str.trim()
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(trimmedValue)) {
     return false
   }
-  let d = new Date(str)
-  return d.toISOString() === str
+  let d = new Date(trimmedValue)
+  return d.toISOString() === trimmedValue
 }
 
 /**
@@ -214,7 +217,7 @@ export function shouldCopyRelationship(
   tableIds: string[]
 ) {
   return (
-    column.type === FieldTypes.LINK &&
+    column.type === FieldType.LINK &&
     column.tableId &&
     tableIds.includes(column.tableId)
   )
@@ -232,22 +235,23 @@ export function shouldCopySpecialColumn(
   column: { type: string },
   fetchedColumn: { type: string } | undefined
 ) {
-  const isFormula = column.type === FieldTypes.FORMULA
+  const isFormula = column.type === FieldType.FORMULA
   const specialTypes = [
-    FieldTypes.OPTIONS,
-    FieldTypes.LONGFORM,
-    FieldTypes.ARRAY,
-    FieldTypes.FORMULA,
+    FieldType.OPTIONS,
+    FieldType.LONGFORM,
+    FieldType.ARRAY,
+    FieldType.FORMULA,
+    FieldType.BB_REFERENCE,
   ]
   // column has been deleted, remove - formulas will never exist, always copy
   if (!isFormula && column && !fetchedColumn) {
     return false
   }
   const fetchedIsNumber =
-    !fetchedColumn || fetchedColumn.type === FieldTypes.NUMBER
+    !fetchedColumn || fetchedColumn.type === FieldType.NUMBER
   return (
-    specialTypes.indexOf(column.type as FieldTypes) !== -1 ||
-    (fetchedIsNumber && column.type === FieldTypes.BOOLEAN)
+    specialTypes.indexOf(column.type as FieldType) !== -1 ||
+    (fetchedIsNumber && column.type === FieldType.BOOLEAN)
   )
 }
 
@@ -327,4 +331,61 @@ export function finaliseExternalTables(
     .sort(([a], [b]) => a.localeCompare(b))
     .reduce((r, [k, v]) => ({ ...r, [k]: v }), {})
   return { tables: finalTables, errors }
+}
+
+/**
+ * Checks if the provided input is an object, but specifically not a date type object.
+ * Used during coercion of types and relationship handling, dates are considered valid
+ * and can be used as a display field, but objects and arrays cannot.
+ * @param testValue an unknown type which this function will attempt to extract
+ * a valid primary display string from.
+ */
+export function getPrimaryDisplay(testValue: unknown): string | undefined {
+  if (testValue instanceof Date) {
+    return testValue.toISOString()
+  }
+  if (
+    Array.isArray(testValue) &&
+    testValue[0] &&
+    typeof testValue[0] !== "object"
+  ) {
+    return testValue.join(", ")
+  }
+  if (typeof testValue === "object") {
+    return undefined
+  }
+  return testValue as string
+}
+
+export function isValidFilter(value: any) {
+  return value != null && value !== ""
+}
+
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function removeEmptyFilters(filters: SearchFilters) {
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!filters[filterField]) {
+      continue
+    }
+
+    for (let filterType of Object.keys(filters)) {
+      if (filterType !== filterField) {
+        continue
+      }
+      // don't know which one we're checking, type could be anything
+      const value = filters[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(
+          filters[filterType] as object
+        )) {
+          if (value == null || value === "") {
+            // @ts-ignore
+            delete filters[filterField][key]
+          }
+        }
+      }
+    }
+  }
+  return filters
 }

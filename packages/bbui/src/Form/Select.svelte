@@ -25,7 +25,7 @@
   export let customPopoverHeight
   export let align
   export let footer = null
-
+  export let tag = null
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -61,6 +61,7 @@
     {isOptionEnabled}
     {autocomplete}
     {customPopoverHeight}
+    {tag}
     on:change={onChange}
     on:click
   />

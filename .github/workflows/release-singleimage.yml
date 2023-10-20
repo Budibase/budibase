@@ -5,7 +5,7 @@ on:
 
 env:
   CI: true
-  PERSONAL_ACCESS_TOKEN : ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+  PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REGISTRY_URL: registry.hub.docker.com
 jobs:
   build:
@@ -13,15 +13,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [18.x]
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master'
-        run: | 
-          echo "Ref is not master, you must run this job from master."
-          exit 1
+      - name: Maximize build space
+        uses: easimon/maximize-build-space@master
+        with:
+          root-reserve-mb: 30000
+          swap-size-mb: 1024
+          remove-android: 'true'
+          remove-dotnet: 'true'
+      - name: Fail if not a tag
+        run: |
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
       - name: "Checkout"
         uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v1
         with:
@@ -33,10 +45,8 @@ jobs:
         uses: docker/setup-buildx-action@v1
       - name: Run Yarn
         run: yarn
-      - name: Run Yarn Bootstrap
-        run: yarn bootstrap
-      - name: Runt Yarn Lint
-        run: yarn lint
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
       - name: Run Yarn Build
         run: yarn build:docker:pre
       - name: Login to Docker Hub
@@ -56,7 +66,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: budibase/budibase,budibase/budibase:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase,budibase/budibase:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile
       - name: Tag and release Budibase Azure App Service docker image
         uses: docker/build-push-action@v2
@@ -65,5 +75,5 @@ jobs:
           push: true
           platforms: linux/amd64
           build-args: TARGETBUILD=aas
-          tags: budibase/budibase-aas,budibase/budibase-aas:v${{ env.RELEASE_VERSION }}
+          tags: budibase/budibase-aas,budibase/budibase-aas:${{ env.RELEASE_VERSION }}
           file: ./hosting/single/Dockerfile

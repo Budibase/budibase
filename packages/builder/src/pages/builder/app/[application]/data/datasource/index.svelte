@@ -4,11 +4,13 @@
   import { onMount } from "svelte"
 
   onMount(async () => {
-    const { list, selected } = $datasources
+    const { list, selected, hasData } = $datasources
     if (selected) {
       $redirect(`./${selected?._id}`)
-    } else {
+    } else if (hasData && list?.length) {
       $redirect(`./${list[0]._id}`)
+    } else {
+      $redirect("../new")
     }
   })
 </script>

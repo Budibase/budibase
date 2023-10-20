@@ -58,7 +58,8 @@ const userSchema = object(
       type: "boolean",
     },
     builder: {
-      description: "Describes if the user is a builder user or not.",
+      description:
+        "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
       type: "object",
       properties: {
         global: {
@@ -69,7 +70,8 @@ const userSchema = object(
       },
     },
     admin: {
-      description: "Describes if the user is an admin user or not.",
+      description:
+        "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
       type: "object",
       properties: {
         global: {
@@ -81,7 +83,7 @@ const userSchema = object(
     },
     roles: {
       description:
-        "Contains the roles of the user per app (assuming they are not a builder user).",
+        "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
       type: "object",
       additionalProperties: {
         type: "string",
@@ -90,7 +92,7 @@ const userSchema = object(
       },
     },
   },
-  { required: ["email", "roles"] }
+  { required: ["email"] }
 )
 
 const userOutputSchema = {

@@ -13,7 +13,7 @@
 
   const registerTourNode = (tourKey, stepKey) => {
     if (ready && !registered && tourKey) {
-      currentTourStep = TOURS[tourKey].find(step => step.id === stepKey)
+      currentTourStep = TOURS[tourKey].steps.find(step => step.id === stepKey)
       if (!currentTourStep) {
         return
       }

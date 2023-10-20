@@ -8,27 +8,31 @@
 
   let structureLookupMap = {}
 
-  const registerBlockComponent = (id, order, parentId, instance) => {
+  const registerBlockComponent = (id, parentId, order, instance) => {
     // Ensure child map exists
     if (!structureLookupMap[parentId]) {
       structureLookupMap[parentId] = {}
     }
     // Add this instance in this order, overwriting any existing instance in
     // this order in case of repeaters
-    structureLookupMap[parentId][order] = instance
+    structureLookupMap[parentId][id] = { order, instance }
   }
 
-  const unregisterBlockComponent = (order, parentId) => {
+  const unregisterBlockComponent = (id, parentId) => {
     // Ensure child map exists
     if (!structureLookupMap[parentId]) {
       return
     }
-    delete structureLookupMap[parentId][order]
+    delete structureLookupMap[parentId][id]
   }
 
   const eject = () => {
     // Start the new structure with the root component
-    let definition = structureLookupMap[$component.id][0]
+    const rootMap = structureLookupMap[$component.id] || {}
+    let definition = Object.values(rootMap)[0]?.instance
+    if (!definition) {
+      return
+    }
 
     // Copy styles from block to root component
     definition._styles = {
@@ -49,10 +53,7 @@
   const attachChildren = (rootComponent, map) => {
     // Transform map into children array
     let id = rootComponent._id
-    const children = Object.entries(map[id] || {}).map(([order, instance]) => ({
-      order,
-      instance,
-    }))
+    const children = Object.values(map[id] || {})
     if (!children.length) {
       return
     }

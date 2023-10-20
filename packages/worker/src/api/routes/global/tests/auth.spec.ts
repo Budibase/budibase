@@ -41,7 +41,7 @@ describe("/api/global/auth", () => {
 
   async function createSSOUser() {
     return config.doInTenant(async () => {
-      return userSdk.save(structures.users.ssoUser(), {
+      return userSdk.db.save(structures.users.ssoUser(), {
         requirePassword: false,
       })
     })
@@ -206,7 +206,7 @@ describe("/api/global/auth", () => {
         const newPassword = "newpassword"
         const res = await config.api.auth.updatePassword(code!, newPassword)
 
-        user = await config.getUser(user.email)
+        user = (await config.getUser(user.email))!
         delete user.password
 
         expect(res.body).toEqual({ message: "password reset successfully." })
@@ -245,7 +245,7 @@ describe("/api/global/auth", () => {
             const ssoUser = user as SSOUser
             ssoUser.providerType = structures.sso.providerType()
             delete ssoUser.password
-            await config.doInTenant(() => userSdk.save(ssoUser))
+            await config.doInTenant(() => userSdk.db.save(ssoUser))
 
             await testSSOUser(code!)
           })

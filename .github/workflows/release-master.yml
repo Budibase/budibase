@@ -1,18 +1,14 @@
 name: Budibase Release
-concurrency: release
+concurrency:
+  group: release
+  cancel-in-progress: false
 
 on:
   push:
     tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+"
       # Exclude all pre-releases
-      - "!v*[0-9]+.[0-9]+.[0-9]+-*"
-  workflow_dispatch:
-    inputs:
-      tags:
-        description: "Release tag"
-        required: true
-        type: boolean
+      - "!*[0-9]+.[0-9]+.[0-9]+-*"
 
 env:
   # Posthog token used by ui at build time
@@ -31,39 +27,27 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master'
+      - name: Fail if tag is not in master
         run: |
-          echo "Ref is not master, you must run this job from master."
-          // Change to "exit 1" when merged. Left to 0 to not fail all the pipelines and not to cause noise
-          exit 0
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
 
       - uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 18.x
 
       - run: yarn install --frozen-lockfile
       - name: Update versions
-        run: |
-          version=$(cat lerna.json \
-            | grep version \
-            | head -1 \
-            | awk -F: '{gsub(/"/,"",$2);gsub(/[[:space:]]*/,"",$2); print $2}' \
-            | sed 's/[",]//g')
-          echo "Setting version $version"
-          yarn lerna exec "yarn version --no-git-tag-version --new-version=$version"
-          echo "Updating dependencies"
-          node scripts/syncLocalDependencies.js $version
-          echo "Syncing yarn workspace"
-          yarn
+        run: ./scripts/updateVersions.sh
       - run: yarn lint
-      - run: yarn build --configuration=production
+      - run: yarn build
       - run: yarn build:sdk
 
       - name: Publish budibase packages to NPM
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          RELEASE_VERSION_TYPE: ${{ github.event.inputs.versioning }}
         run: |
           # setup the username and email. I tend to use 'GitHub Actions Bot' with no email by default
           git config --global user.name "Budibase Release Bot"
@@ -73,9 +57,12 @@ jobs:
           echo //registry.npmjs.org/:_authToken=${NPM_TOKEN} >> .npmrc
           yarn release
 
-      - name: "Get Previous tag"
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@v1"
+      - name: "Get Current tag"
+        id: currenttag
+        run: |
+          version=$(./scripts/getCurrentVersion.sh)
+          echo "Using tag $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Build/release Docker images
         run: |
@@ -84,7 +71,7 @@ jobs:
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.previoustag.outputs.tag }}
+          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
   release-helm-chart:
     needs: [release-images]
@@ -111,7 +98,7 @@ jobs:
           git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
-          helm package charts/budibase --version 0.0.0-master --app-version v"$RELEASE_VERSION" --destination sync
+          helm package charts/budibase --version 0.0.0-master --app-version "$RELEASE_VERSION" --destination sync
           echo "Packaging successful"
           git checkout gh-pages
           echo "Indexing helm repo"         
@@ -123,22 +110,15 @@ jobs:
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
 
-  deploy-to-legacy-preprod-env:
-    needs: [release-images]
-    uses: ./.github/workflows/deploy-preprod.yml
-    secrets: inherit
 
-  # Trigger deploy to new EKS preprod environment
-  trigger-deploy-to-preprod-env:
+  trigger-deploy-to-qa-env:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-
-      - name: Get the latest budibase release version
+      - name: Get the current budibase release version
         id: version
         run: |
-          git pull
           release_version=$(cat lerna.json | jq -r '.version')
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
@@ -147,5 +127,5 @@ jobs:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
         with:
           repository: budibase/budibase-deploys
-          event: budicloud-preprod-deploy
+          event: budicloud-qa-deploy
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}

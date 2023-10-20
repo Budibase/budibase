@@ -7,7 +7,4 @@ packages/worker/coverage
 packages/backend-core/coverage
 packages/server/client
 packages/builder/.routify
-packages/builder/cypress/support/queryLevelTransformerFunction.js
-packages/builder/cypress/support/queryLevelTransformerFunctionWithData.js
-packages/builder/cypress/reports
 packages/sdk/sdk

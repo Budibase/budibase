@@ -22,6 +22,7 @@
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import ScimBanner from "../_components/SCIMBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   const DefaultGroup = {
     name: "",
@@ -40,7 +41,7 @@
     { column: "roles", component: GroupAppsTableRenderer },
   ]
 
-  $: readonly = !$auth.isAdmin
+  $: readonly = !sdk.users.isAdmin($auth.user)
   $: schema = {
     name: { displayName: "Group", width: "2fr", minWidth: "200px" },
     users: { sortable: false, width: "1fr" },

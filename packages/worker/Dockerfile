@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:18-alpine
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -13,7 +13,8 @@ RUN yarn global add pm2
 
 
 COPY package.json .
-RUN yarn install --frozen-lockfile --production=true
+COPY dist/yarn.lock .
+RUN yarn install --production=true
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean

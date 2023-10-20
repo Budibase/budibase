@@ -36,6 +36,7 @@ export enum DatasourceFieldType {
   JSON = "json",
   FILE = "file",
   FIELD_GROUP = "fieldGroup",
+  SELECT = "select",
 }
 
 export enum SourceName {
@@ -76,6 +77,7 @@ export enum FilterType {
 export enum DatasourceFeature {
   CONNECTION_CHECKING = "connection",
   FETCH_TABLE_NAMES = "fetch_table_names",
+  EXPORT_SCHEMA = "export_schema",
 }
 
 export interface StepDefinition {
@@ -102,19 +104,43 @@ export interface ExtraQueryConfig {
   }
 }
 
+interface DatasourceBasicFieldConfig {
+  type: DatasourceFieldType
+  display?: string
+  required?: boolean
+  default?: any
+  deprecated?: boolean
+  hidden?: string
+}
+
+interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.SELECT
+  config: { options: string[] }
+}
+
+interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.FIELD_GROUP
+  config: {
+    openByDefault?: boolean
+    nestedFields?: boolean
+  }
+}
+
+type DatasourceFieldConfig =
+  | DatasourceSelectFieldConfig
+  | DatasourceFieldGroupConfig
+  | DatasourceBasicFieldConfig
+
 export interface DatasourceConfig {
-  [key: string]: {
-    type: string
-    display?: string
-    required?: boolean
-    default?: any
-    deprecated?: boolean
+  [key: string]: DatasourceFieldConfig & {
+    fields?: DatasourceConfig
   }
 }
 
 export interface Integration {
   docs: string
   plus?: boolean
+  isSQL?: boolean
   auth?: { type: string }
   features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
@@ -140,6 +166,13 @@ export interface IntegrationBase {
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
   testConnection?(): Promise<ConnectionInfo>
+  getExternalSchema?(): Promise<string>
+  defineTypeCastingFromSchema?(schema: {
+    [key: string]: {
+      name: string
+      type: string
+    }
+  }): void
 }
 
 export interface DatasourcePlus extends IntegrationBase {

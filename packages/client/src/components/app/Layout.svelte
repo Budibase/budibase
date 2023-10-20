@@ -3,16 +3,16 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { FieldTypes } from "constants"
+  import { Constants } from "@budibase/frontend-core"
   import active from "svelte-spa-router/active"
-  import { RoleUtils } from "@budibase/frontend-core"
 
   const sdk = getContext("sdk")
   const {
     routeStore,
+    roleStore,
     styleable,
     linkable,
     builderStore,
-    currentRole,
     sidePanelStore,
   } = sdk
   const component = getContext("component")
@@ -33,6 +33,8 @@
   export let navTextColor
   export let navWidth
   export let pageWidth
+
+  export let embedded = false
 
   const NavigationClasses = {
     Top: "top",
@@ -59,7 +61,7 @@
   })
   setContext("layout", store)
 
-  $: validLinks = getValidLinks(links, $currentRole)
+  $: validLinks = getValidLinks(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
@@ -70,33 +72,40 @@
     $context.device.height
   )
   $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: screenId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-screen`
+    : "screen"
+  $: navigationId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-navigation`
+    : "navigation"
 
-  // Scroll navigation into view if selected
+  // Scroll navigation into view if selected.
+  // Memoize into a primitive to avoid spamming this whenever builder store
+  // changes.
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId?.endsWith("-navigation")
   $: {
-    if (
-      $builderStore.inBuilder &&
-      $builderStore.selectedComponentId === "navigation"
-    ) {
+    if (selected) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
       if (node) {
         node.style.scrollMargin = "100px"
         node.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "nearest",
           inline: "start",
         })
       }
     }
   }
 
-  const getValidLinks = (allLinks, role) => {
+  const getValidLinks = (allLinks, userRoleHierarchy) => {
     // Strip links missing required info
     let validLinks = (allLinks || []).filter(link => link.text && link.url)
-
     // Filter to only links allowed by the current role
-    const priority = RoleUtils.getRolePriority(role)
     return validLinks.filter(link => {
-      return !link.roleId || RoleUtils.getRolePriority(link.roleId) <= priority
+      const role = link.roleId || Constants.Roles.BASIC
+      return userRoleHierarchy?.find(roleId => roleId === role)
     })
   }
 
@@ -144,26 +153,29 @@
 </script>
 
 <div
-  class="layout layout--{typeClass}"
+  class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
+  data-id={screenId}
+  data-name="Screen"
+  data-icon="WebPage"
 >
-  <div class="layout-body">
+  <div class="{screenId}-dom screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
-        class="interactive component navigation"
-        data-id="navigation"
+        class="interactive component {navigationId}"
+        data-id={navigationId}
         data-name="Navigation"
-        data-icon="Link"
+        data-icon="Visibility"
       >
         <div
-          class="nav-wrapper"
+          class="nav-wrapper {navigationId}-dom"
           class:sticky
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}
           on:click={$builderStore.inBuilder
-            ? builderStore.actions.clickNav
+            ? builderStore.actions.selectComponent(navigationId)
             : null}
           style={navStyle}
         >
@@ -180,18 +192,17 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img
-                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                    alt={title}
-                  />
+                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                 {/if}
                 {#if !hideTitle && title}
                   <Heading size="S">{title}</Heading>
                 {/if}
               </div>
-              <div class="portal">
-                <Icon hoverable name="Apps" on:click={navigateToPortal} />
-              </div>
+              {#if !embedded}
+                <div class="portal">
+                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                </div>
+              {/if}
             </div>
             <div
               class="mobile-click-handler"

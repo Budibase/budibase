@@ -1,8 +1,7 @@
 import { get, writable, derived } from "svelte/store"
-import { datasources } from "./"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
-import { SWITCHABLE_TYPES } from "constants/backend"
+import { SWITCHABLE_TYPES, FIELDS } from "constants/backend"
 
 export function createTablesStore() {
   const store = writable({
@@ -20,6 +19,23 @@ export function createTablesStore() {
       ...state,
       list: tables,
     }))
+  }
+
+  const singleFetch = async tableId => {
+    const table = await API.getTable(tableId)
+    store.update(state => {
+      const list = []
+      // update the list, keep order accurate
+      for (let tbl of state.list) {
+        if (table._id === tbl._id) {
+          list.push(table)
+        } else {
+          list.push(tbl)
+        }
+      }
+      state.list = list
+      return state
+    })
   }
 
   const select = tableId => {
@@ -62,19 +78,32 @@ export function createTablesStore() {
     }
 
     const savedTable = await API.saveTable(updatedTable)
-    replaceTable(table._id, savedTable)
-    await datasources.fetch()
+    replaceTable(savedTable._id, savedTable)
     select(savedTable._id)
+    // make sure tables up to date (related)
+    let tableIdsToFetch = []
+    for (let column of Object.values(updatedTable?.schema || {})) {
+      if (column.type === FIELDS.LINK.type) {
+        tableIdsToFetch.push(column.tableId)
+      }
+    }
+    tableIdsToFetch = [...new Set(tableIdsToFetch)]
+    // too many tables to fetch, just get all
+    if (tableIdsToFetch.length > 3) {
+      await fetch()
+    } else {
+      await Promise.all(tableIdsToFetch.map(id => singleFetch(id)))
+    }
     return savedTable
   }
 
   const deleteTable = async table => {
-    if (!table?._id || !table?._rev) {
+    if (!table?._id) {
       return
     }
     await API.deleteTable({
       tableId: table._id,
-      tableRev: table._rev,
+      tableRev: table._rev || "rev",
     })
     replaceTable(table._id, null)
   }
@@ -163,6 +192,13 @@ export function createTablesStore() {
     }
   }
 
+  const removeDatasourceTables = datasourceId => {
+    store.update(state => ({
+      ...state,
+      list: state.list.filter(table => table.sourceId !== datasourceId),
+    }))
+  }
+
   return {
     ...store,
     subscribe: derivedStore.subscribe,
@@ -174,6 +210,7 @@ export function createTablesStore() {
     saveField,
     deleteField,
     replaceTable,
+    removeDatasourceTables,
   }
 }
 

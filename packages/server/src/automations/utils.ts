@@ -8,13 +8,22 @@ import { db as dbCore, context } from "@budibase/backend-core"
 import { getAutomationMetadataParams } from "../db/utils"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
-import { Automation, AutomationJob, WebhookActionType } from "@budibase/types"
+import {
+  Automation,
+  AutomationJob,
+  Webhook,
+  WebhookActionType,
+} from "@budibase/types"
 import sdk from "../sdk"
+import { automationsEnabled } from "../features"
 
 const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
-const Runner = new Thread(ThreadType.AUTOMATION)
+let Runner: Thread
+if (automationsEnabled()) {
+  Runner = new Thread(ThreadType.AUTOMATION)
+}
 
 function loggingArgs(job: AutomationJob) {
   return [
@@ -95,7 +104,8 @@ export async function disableAllCrons(appId: any) {
       }
     }
   }
-  return Promise.all(promises)
+  const results = await Promise.all(promises)
+  return { count: results.length / 2 }
 }
 
 export async function disableCronById(jobId: number | string) {
@@ -143,6 +153,7 @@ export function isRebootTrigger(auto: Automation) {
  */
 export async function enableCronTrigger(appId: any, automation: Automation) {
   const trigger = automation ? automation.definition.trigger : null
+  let enabled = false
 
   // need to create cron job
   if (
@@ -169,8 +180,9 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
       automation._id = response.id
       automation._rev = response.rev
     })
+    enabled = true
   }
-  return automation
+  return { enabled, automation }
 }
 
 /**
@@ -204,15 +216,15 @@ export async function checkForWebhooks({ oldAuto, newAuto }: any) {
     oldTrigger.webhookId
   ) {
     try {
-      let db = context.getAppDB()
+      const db = context.getAppDB()
       // need to get the webhook to get the rev
-      const webhook = await db.get(oldTrigger.webhookId)
+      const webhook = await db.get<Webhook>(oldTrigger.webhookId)
       // might be updating - reset the inputs to remove the URLs
       if (newTrigger) {
         delete newTrigger.webhookId
         newTrigger.inputs = {}
       }
-      await sdk.automations.webhook.destroy(webhook._id, webhook._rev)
+      await sdk.automations.webhook.destroy(webhook._id!, webhook._rev!)
     } catch (err) {
       // don't worry about not being able to delete, if it doesn't exist all good
     }

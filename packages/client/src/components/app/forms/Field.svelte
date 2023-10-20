@@ -33,7 +33,10 @@
     formStep
   )
 
-  $: schemaType = fieldSchema?.type !== "formula" ? fieldSchema?.type : "string"
+  $: schemaType =
+    fieldSchema?.type !== "formula" && fieldSchema?.type !== "bigint"
+      ? fieldSchema?.type
+      : "string"
 
   // Focus label when editing
   let labelNode

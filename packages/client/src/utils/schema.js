@@ -6,6 +6,7 @@ import RelationshipFetch from "@budibase/frontend-core/src/fetch/RelationshipFet
 import NestedProviderFetch from "@budibase/frontend-core/src/fetch/NestedProviderFetch.js"
 import FieldFetch from "@budibase/frontend-core/src/fetch/FieldFetch.js"
 import JSONArrayFetch from "@budibase/frontend-core/src/fetch/JSONArrayFetch.js"
+import ViewV2Fetch from "@budibase/frontend-core/src/fetch/ViewV2Fetch.js"
 
 /**
  * Fetches the schema of any kind of datasource.
@@ -21,6 +22,7 @@ export const fetchDatasourceSchema = async (
   const handler = {
     table: TableFetch,
     view: ViewFetch,
+    viewV2: ViewV2Fetch,
     query: QueryFetch,
     link: RelationshipFetch,
     provider: NestedProviderFetch,
@@ -47,6 +49,15 @@ export const fetchDatasourceSchema = async (
   }
   if (!schema) {
     return null
+  }
+
+  // Strip hidden fields from views
+  if (datasource.type === "viewV2") {
+    Object.keys(schema).forEach(field => {
+      if (!schema[field].visible) {
+        delete schema[field]
+      }
+    })
   }
 
   // Enrich schema with relationships if required

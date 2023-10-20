@@ -14,10 +14,15 @@ async function servedBuilder(timezone: string) {
   await publishEvent(Event.SERVED_BUILDER, properties)
 }
 
-async function servedApp(app: App, timezone: string) {
+async function servedApp(
+  app: App,
+  timezone: string,
+  embed?: boolean | undefined
+) {
   const properties: AppServedEvent = {
     appVersion: app.version,
     timezone,
+    embed: embed === true,
   }
   await publishEvent(Event.SERVED_APP, properties)
 }

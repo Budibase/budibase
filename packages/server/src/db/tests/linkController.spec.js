@@ -2,11 +2,11 @@ const TestConfig = require("../../tests/utilities/TestConfiguration")
 const { basicRow, basicLinkedRow, basicTable } = require("../../tests/utilities/structures")
 const LinkController = require("../linkedRows/LinkController").default
 const { context } = require("@budibase/backend-core")
-const { RelationshipTypes } = require("../../constants")
+const { RelationshipType } = require("../../constants")
 const { cloneDeep } = require("lodash/fp")
 
 describe("test the link controller", () => {
-  let config = new TestConfig(false)
+  let config = new TestConfig()
   let table1, table2, appId
 
   beforeAll(async () => {
@@ -16,7 +16,7 @@ describe("test the link controller", () => {
 
   beforeEach(async () => {
     const { _id } = await config.createTable()
-    table2 = await config.createLinkedTable(RelationshipTypes.MANY_TO_MANY, ["link", "link2"])
+    table2 = await config.createLinkedTable(RelationshipType.MANY_TO_MANY, ["link", "link2"])
     // update table after creating link
     table1 = await config.getTable(_id)
   })
@@ -57,17 +57,17 @@ describe("test the link controller", () => {
     const controller = await createLinkController(table1)
     // empty case
     let output = controller.handleRelationshipType({}, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipTypes.MANY_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipTypes.MANY_TO_MANY)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipTypes.MANY_TO_MANY }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipTypes.MANY_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipTypes.MANY_TO_MANY)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipTypes.MANY_TO_ONE }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipTypes.ONE_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipTypes.MANY_TO_ONE)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipTypes.ONE_TO_MANY }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipTypes.MANY_TO_ONE)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipTypes.ONE_TO_MANY)
+    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
+    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
+    output = controller.handleRelationshipType({ relationshipType: RelationshipType.MANY_TO_MANY }, {})
+    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
+    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
+    output = controller.handleRelationshipType({ relationshipType: RelationshipType.MANY_TO_ONE }, {})
+    expect(output.linkedField.relationshipType).toEqual(RelationshipType.ONE_TO_MANY)
+    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_ONE)
+    output = controller.handleRelationshipType({ relationshipType: RelationshipType.ONE_TO_MANY }, {})
+    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_ONE)
+    expect(output.linkerField.relationshipType).toEqual(RelationshipType.ONE_TO_MANY)
   })
 
   it("should be able to delete a row", async () => {
@@ -157,7 +157,7 @@ describe("test the link controller", () => {
 
   it("should throw an error when overwriting a link column", async () => {
     const update = cloneDeep(table1)
-    update.schema.link.relationshipType = RelationshipTypes.MANY_TO_ONE
+    update.schema.link.relationshipType = RelationshipType.MANY_TO_ONE
     let error
     try {
       const controller = await createLinkController(update)
@@ -183,7 +183,7 @@ describe("test the link controller", () => {
 
   it("shouldn't allow one to many having many relationships against it", async () => {
     const firstTable = await config.createTable()
-    const { _id } = await config.createLinkedTable(RelationshipTypes.MANY_TO_ONE, ["link"])
+    const { _id } = await config.createLinkedTable(RelationshipType.MANY_TO_ONE, ["link"])
     const linkTable = await config.getTable(_id)
     // an initial row to link around
     const row = await createLinkedRow("link", linkTable, firstTable)
@@ -232,5 +232,20 @@ describe("test the link controller", () => {
       autocolumn: true,
     }
     await config.updateTable(table)
+  })
+
+  it("should be able to remove a linked field from a table, even if the linked table does not exist", async () => {
+    await createLinkedRow()
+    await createLinkedRow("link2")
+    table1.schema["link"].tableId = "not_found"
+    const controller = await createLinkController(table1, null, table1)
+    await context.doInAppContext(appId, async () => {
+      let before = await controller.getTableLinkDocs()
+      await controller.removeFieldFromTable("link")
+      let after = await controller.getTableLinkDocs()
+      expect(before.length).toEqual(2)
+      // shouldn't delete the other field
+      expect(after.length).toEqual(1)
+    })
   })
 })

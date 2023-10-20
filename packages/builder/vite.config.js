@@ -1,6 +1,7 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte"
 import replace from "@rollup/plugin-replace"
 import { defineConfig, loadEnv } from "vite"
+import { viteStaticCopy } from "vite-plugin-static-copy"
 import path from "path"
 
 const ignoredWarnings = [
@@ -11,9 +12,31 @@ const ignoredWarnings = [
   "a11y-click-events-have-key-events",
 ]
 
+const copyFonts = dest =>
+  viteStaticCopy({
+    targets: [
+      {
+        src: "../../node_modules/@fontsource/source-sans-pro",
+        dest,
+      },
+      {
+        src: "../../node_modules/remixicon/fonts/*",
+        dest,
+      },
+    ],
+  })
+
 export default defineConfig(({ mode }) => {
   const isProduction = mode === "production"
   const env = loadEnv(mode, process.cwd())
+
+  // Plugins to only run in dev
+  const devOnlyPlugins = [
+    // Copy fonts to an additional path so that svelte's automatic
+    // prefixing of the base URL path can still resolve assets
+    copyFonts("builder/fonts"),
+  ]
+
   return {
     test: {
       setupFiles: ["./vitest.setup.js"],
@@ -59,6 +82,8 @@ export default defineConfig(({ mode }) => {
         ),
         "process.env.SENTRY_DSN": JSON.stringify(process.env.SENTRY_DSN),
       }),
+      copyFonts("fonts"),
+      ...(isProduction ? [] : devOnlyPlugins),
     ],
     optimizeDeps: {
       exclude: ["@roxi/routify"],
@@ -101,6 +126,14 @@ export default defineConfig(({ mode }) => {
         {
           find: "helpers",
           replacement: path.resolve("./src/helpers"),
+        },
+        {
+          find: "@budibase/types",
+          replacement: path.resolve("../types/src"),
+        },
+        {
+          find: "@budibase/shared-core",
+          replacement: path.resolve("../shared-core/src"),
         },
       ],
     },

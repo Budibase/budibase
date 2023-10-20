@@ -1,6 +1,8 @@
+import { Response } from "node-fetch"
 import env from "../../environment"
 import fetch, { HeadersInit } from "node-fetch"
 import { State } from "../../types"
+import { Header } from "@budibase/backend-core"
 
 type APIMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 
@@ -28,7 +30,7 @@ export default class AccountInternalAPIClient {
 
   apiCall =
     (method: APIMethod) =>
-    async (url = "", options: ApiOptions = {}) => {
+    async (url = "", options: ApiOptions = {}): Promise<[Response, any]> => {
       const requestOptions = {
         method,
         body: JSON.stringify(options.body),
@@ -46,7 +48,8 @@ export default class AccountInternalAPIClient {
       if (options.internal) {
         requestOptions.headers = {
           ...requestOptions.headers,
-          ...{ "x-budibase-api-key": env.ACCOUNT_PORTAL_API_KEY },
+          ...{ [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY },
+          cookie: "",
         }
       }
 
@@ -67,11 +70,12 @@ export default class AccountInternalAPIClient {
       }
       const message = `${method} ${url} - ${response.status}`
 
+      const isDebug = process.env.LOG_LEVEL === "debug"
       if (response.status > 499) {
         console.error(message, data)
       } else if (response.status >= 400) {
         console.warn(message, data)
-      } else {
+      } else if (isDebug) {
         console.debug(message, data)
       }
 

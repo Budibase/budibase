@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import {
+    keepOpen,
     ModalContent,
     notifications,
     Body,
@@ -70,10 +71,9 @@
       }
 
       notifications.success(`Imported successfully.`)
-      return true
     } catch (error) {
       notifications.error("Error importing queries")
-      return false
+      return keepOpen
     }
   }
 </script>

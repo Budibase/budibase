@@ -8,10 +8,10 @@ import {
   getLinkedTableIDs,
   getLinkedTable,
 } from "./linkUtils"
-import { flatten } from "lodash"
+import flatten from "lodash/flatten"
 import { FieldTypes } from "../../constants"
 import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
-import { partition } from "lodash"
+import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
 import { context } from "@budibase/backend-core"
@@ -189,11 +189,13 @@ export async function attachFullLinkedDocs(table: Table, rows: Row[]) {
  */
 export async function squashLinksToPrimaryDisplay(
   table: Table,
-  enriched: Row[]
+  enriched: Row[] | Row
 ) {
   // will populate this as we find them
   const linkedTables = [table]
-  for (let row of enriched) {
+  const isArray = Array.isArray(enriched)
+  let enrichedArray = !isArray ? [enriched] : enriched
+  for (let row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
     for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
@@ -213,5 +215,5 @@ export async function squashLinksToPrimaryDisplay(
       row[column] = newLinks
     }
   }
-  return enriched
+  return isArray ? enrichedArray : enrichedArray[0]
 }

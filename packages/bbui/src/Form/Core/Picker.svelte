@@ -2,12 +2,15 @@
   import "@spectrum-css/picker/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onDestroy } from "svelte"
   import clickOutside from "../../Actions/click_outside"
   import Search from "./Search.svelte"
   import Icon from "../../Icon/Icon.svelte"
   import StatusLight from "../../StatusLight/StatusLight.svelte"
   import Popover from "../../Popover/Popover.svelte"
+  import Tags from "../../Tags/Tags.svelte"
+  import Tag from "../../Tags/Tag.svelte"
+  import ProgressCircle from "../../ProgressCircle/ProgressCircle.svelte"
 
   export let id = null
   export let disabled = false
@@ -26,23 +29,27 @@
   export let getOptionIcon = () => null
   export let useOptionIconImage = false
   export let getOptionColour = () => null
+  export let getOptionSubtitle = () => null
   export let open = false
   export let readonly = false
   export let quiet = false
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
-  export let fetchTerm = null
-  export let useFetch = false
+  export let searchTerm = null
   export let customPopoverHeight
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
   export let align = "left"
   export let footer = null
+  export let customAnchor = null
+  export let loading
 
   const dispatch = createEventDispatcher()
 
-  let searchTerm = null
   let button
   let popover
+  let component
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
   $: filteredOptions = getFilteredOptions(
@@ -77,7 +84,7 @@
   }
 
   const getFilteredOptions = (options, term, getLabel) => {
-    if (autocomplete && term && !fetchTerm) {
+    if (autocomplete && term) {
       const lowerCaseTerm = term.toLowerCase()
       return options.filter(option => {
         return `${getLabel(option)}`.toLowerCase().includes(lowerCaseTerm)
@@ -85,6 +92,20 @@
     }
     return options
   }
+
+  const onScroll = e => {
+    const scrollPxThreshold = 100
+    const scrollPositionFromBottom =
+      e.target.scrollHeight - e.target.clientHeight - e.target.scrollTop
+    if (scrollPositionFromBottom < scrollPxThreshold) {
+      dispatch("loadMore")
+    }
+  }
+
+  $: component?.addEventListener("scroll", onScroll)
+  onDestroy(() => {
+    component?.removeEventListener("scroll", null)
+  })
 </script>
 
 <button
@@ -99,9 +120,15 @@
   bind:this={button}
 >
   {#if fieldIcon}
-    <span class="option-extra icon">
-      <Icon size="S" name={fieldIcon} />
-    </span>
+    {#if !useOptionIconImage}
+      <span class="option-extra icon">
+        <Icon size="S" name={fieldIcon} />
+      </span>
+    {:else}
+      <span class="option-extra icon field-icon">
+        <img src={fieldIcon} alt="icon" width="15" height="15" />
+      </span>
+    {/if}
   {/if}
   {#if fieldColour}
     <span class="option-extra">
@@ -133,16 +160,17 @@
     <use xlink:href="#spectrum-css-icon-Chevron100" />
   </svg>
 </button>
-
 <Popover
-  anchor={button}
+  anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
   bind:this={popover}
   {open}
   on:close={() => (open = false)}
   useAnchorWidth={!autoWidth}
   maxWidth={autoWidth ? 400 : null}
+  maxHeight={customPopoverMaxHeight}
   customHeight={customPopoverHeight}
+  offsetBelow={customPopoverOffsetBelow}
 >
   <div
     class="popover-content"
@@ -151,14 +179,13 @@
   >
     {#if autocomplete}
       <Search
-        value={useFetch ? fetchTerm : searchTerm}
-        on:change={event =>
-          useFetch ? (fetchTerm = event.detail) : (searchTerm = event.detail)}
+        value={searchTerm}
+        on:change={event => (searchTerm = event.detail)}
         {disabled}
         placeholder="Search"
       />
     {/if}
-    <ul class="spectrum-Menu" role="listbox">
+    <ul class="spectrum-Menu" role="listbox" bind:this={component}>
       {#if placeholderOption}
         <li
           class="spectrum-Menu-item placeholder"
@@ -209,8 +236,21 @@
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text"
+                  >{getOptionSubtitle(option, idx)}</span
+                >
+              {/if}
+
               {getOptionLabel(option, idx)}
             </span>
+            {#if option.tag}
+              <span class="option-tag">
+                <Tags>
+                  <Tag icon="LockClosed">{option.tag}</Tag>
+                </Tags>
+              </span>
+            {/if}
             <svg
               class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
               focusable="false"
@@ -222,6 +262,12 @@
         {/each}
       {/if}
     </ul>
+
+    {#if loading}
+      <div class="loading" class:loading--withAutocomplete={autocomplete}>
+        <ProgressCircle size="S" />
+      </div>
+    {/if}
 
     {#if footer}
       <div class="footer">
@@ -236,6 +282,17 @@
     width: 100%;
     box-shadow: none;
   }
+
+  .subtitle-text {
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 500;
+    top: 10px;
+    color: var(--spectrum-global-color-gray-600);
+    display: block;
+    margin-bottom: var(--spacing-s);
+  }
+
   .spectrum-Picker-label.auto-width {
     margin-right: var(--spacing-xs);
   }
@@ -287,18 +344,19 @@
   /* Search styles inside popover */
   .popover-content :global(.spectrum-Search) {
     margin-top: -1px;
-    margin-left: -1px;
-    width: calc(100% + 2px);
+    width: 100%;
   }
   .popover-content :global(.spectrum-Search input) {
     height: auto;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+    border-left: 0;
+    border-right: 0;
     padding-top: var(--spectrum-global-dimension-size-100);
     padding-bottom: var(--spectrum-global-dimension-size-100);
   }
   .popover-content :global(.spectrum-Search .spectrum-ClearButton) {
-    right: 1px;
+    right: 2px;
     top: 2px;
   }
   .popover-content :global(.spectrum-Search .spectrum-Textfield-icon) {
@@ -310,5 +368,27 @@
     font-style: italic;
     max-width: 170px;
     font-size: 12px;
+  }
+
+  .option-extra.icon.field-icon {
+    display: flex;
+  }
+
+  .option-tag {
+    margin: 0 var(--spacing-m) 0 var(--spacing-m);
+  }
+
+  .option-tag :global(.spectrum-Tags-item > .spectrum-Icon) {
+    margin-top: 2px;
+  }
+
+  .loading {
+    position: fixed;
+    justify-content: center;
+    right: var(--spacing-s);
+    top: var(--spacing-s);
+  }
+  .loading--withAutocomplete {
+    top: calc(34px + var(--spacing-m));
   }
 </style>

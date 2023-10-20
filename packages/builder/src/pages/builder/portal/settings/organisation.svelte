@@ -13,10 +13,11 @@
   import { auth, organisation, admin } from "stores/portal"
   import { writable } from "svelte/store"
   import { redirect } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   // Only admins allowed here
   $: {
-    if (!$auth.isAdmin) {
+    if (!sdk.users.isAdmin($auth.user)) {
       $redirect("../../portal")
     }
   }
@@ -50,7 +51,7 @@
   }
 </script>
 
-{#if $auth.isAdmin}
+{#if sdk.users.isAdmin($auth.user)}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <Heading size="M">Organisation</Heading>

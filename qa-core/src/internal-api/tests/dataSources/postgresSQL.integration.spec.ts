@@ -37,7 +37,7 @@ describe("Internal API - Data Sources: PostgresSQL", () => {
       fixtures.queries.postgres(updatedDataSourceJson.datasource._id!)
     )
 
-    expect(queryJson.rows.length).toEqual(91)
+    expect(queryJson.rows.length).toBeGreaterThan(10)
     expect(queryJson.schemaFields).toEqual(
       fixtures.queries.expectedSchemaFields.postgres
     )

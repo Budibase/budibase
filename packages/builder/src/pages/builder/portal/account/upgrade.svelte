@@ -10,6 +10,8 @@
     Label,
     ButtonGroup,
     notifications,
+    CopyInput,
+    File,
   } from "@budibase/bbui"
   import { auth, admin } from "stores/portal"
   import { redirect } from "@roxi/routify"
@@ -17,18 +19,24 @@
   import DeleteLicenseKeyModal from "../../../../components/portal/licensing/DeleteLicenseKeyModal.svelte"
   import { API } from "api"
   import { onMount } from "svelte"
+  import { sdk } from "@budibase/shared-core"
 
   $: license = $auth.user.license
   $: upgradeUrl = `${$admin.accountPortalUrl}/portal/upgrade`
 
+  // LICENSE KEY
+
   $: activateDisabled = !licenseKey || licenseKeyDisabled
-
-  let licenseInfo
-
   let licenseKeyDisabled = false
   let licenseKeyType = "text"
   let licenseKey = ""
   let deleteLicenseKeyModal
+
+  // OFFLINE
+
+  let offlineLicenseIdentifier = ""
+  let offlineLicense = undefined
+  const offlineLicenseExtensions = [".txt"]
 
   // Make sure page can't be visited directly in cloud
   $: {
@@ -37,28 +45,115 @@
     }
   }
 
-  const activate = async () => {
+  // LICENSE KEY
+
+  const getLicenseKey = async () => {
     try {
-      await API.activateLicenseKey({ licenseKey })
-      await auth.getSelf()
-      await setLicenseInfo()
-      notifications.success("Successfully activated")
+      licenseKey = await API.getLicenseKey()
+      if (licenseKey) {
+        licenseKey = "**********************************************"
+        licenseKeyType = "password"
+        licenseKeyDisabled = true
+        activateDisabled = true
+      }
     } catch (e) {
-      notifications.error(e.message)
+      console.error(e)
+      notifications.error("Error retrieving license key")
     }
   }
 
-  const destroy = async () => {
+  const activateLicenseKey = async () => {
+    try {
+      await API.activateLicenseKey({ licenseKey })
+      await auth.getSelf()
+      await getLicenseKey()
+      notifications.success("Successfully activated")
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error activating license key")
+    }
+  }
+
+  const deleteLicenseKey = async () => {
     try {
       await API.deleteLicenseKey({ licenseKey })
       await auth.getSelf()
-      await setLicenseInfo()
+      await getLicenseKey()
       // reset the form
       licenseKey = ""
       licenseKeyDisabled = false
-      notifications.success("Successfully deleted")
+      notifications.success("Offline license removed")
     } catch (e) {
-      notifications.error(e.message)
+      console.error(e)
+      notifications.error("Error deleting license key")
+    }
+  }
+
+  // OFFLINE LICENSE
+
+  const getOfflineLicense = async () => {
+    try {
+      const license = await API.getOfflineLicense()
+      if (license) {
+        offlineLicense = {
+          name: "license",
+        }
+      } else {
+        offlineLicense = undefined
+      }
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error loading offline license")
+    }
+  }
+
+  const getOfflineLicenseIdentifier = async () => {
+    try {
+      const res = await API.getOfflineLicenseIdentifier()
+      offlineLicenseIdentifier = res.identifierBase64
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error loading installation identifier")
+    }
+  }
+
+  async function activateOfflineLicense(offlineLicenseToken) {
+    try {
+      await API.activateOfflineLicense({ offlineLicenseToken })
+      await auth.getSelf()
+      await getOfflineLicense()
+      notifications.success("Successfully activated")
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error activating offline license")
+    }
+  }
+
+  async function deleteOfflineLicense() {
+    try {
+      await API.deleteOfflineLicense()
+      await auth.getSelf()
+      await getOfflineLicense()
+      notifications.success("Successfully removed ofline license")
+    } catch (e) {
+      console.error(e)
+      notifications.error("Error upload offline license")
+    }
+  }
+
+  async function onOfflineLicenseChange(event) {
+    if (event.detail) {
+      // prevent file preview jitter by assigning constant
+      // as soon as possible
+      offlineLicense = {
+        name: "license",
+      }
+      const reader = new FileReader()
+      reader.readAsText(event.detail)
+      reader.onload = () => activateOfflineLicense(reader.result)
+    } else {
+      offlineLicense = undefined
+      await deleteOfflineLicense()
     }
   }
 
@@ -73,29 +168,19 @@
     }
   }
 
-  // deactivate the license key field if there is a license key set
-  $: {
-    if (licenseInfo?.licenseKey) {
-      licenseKey = "**********************************************"
-      licenseKeyType = "password"
-      licenseKeyDisabled = true
-      activateDisabled = true
-    }
-  }
-
-  const setLicenseInfo = async () => {
-    licenseInfo = await API.getLicenseInfo()
-  }
-
   onMount(async () => {
-    await setLicenseInfo()
+    if ($admin.offlineMode) {
+      await Promise.all([getOfflineLicense(), getOfflineLicenseIdentifier()])
+    } else {
+      await getLicenseKey()
+    }
   })
 </script>
 
-{#if $auth.isAdmin}
+{#if sdk.users.isAdmin($auth.user)}
   <DeleteLicenseKeyModal
     bind:this={deleteLicenseKeyModal}
-    onConfirm={destroy}
+    onConfirm={deleteLicenseKey}
   />
   <Layout noPadding>
     <Layout gap="XS" noPadding>
@@ -108,42 +193,82 @@
         {:else}
           To manage your plan visit your
           <Link size="L" href={upgradeUrl}>account</Link>
+          <div>&nbsp</div>
         {/if}
       </Body>
     </Layout>
     <Divider />
-    <Layout gap="XS" noPadding>
-      <Heading size="S">Activate</Heading>
-      <Body size="S">Enter your license key below to activate your plan</Body>
-    </Layout>
-    <Layout noPadding>
-      <div class="fields">
-        <div class="field">
-          <Label size="L">License key</Label>
-          <Input
-            thin
-            bind:value={licenseKey}
-            type={licenseKeyType}
-            disabled={licenseKeyDisabled}
+    {#if $admin.offlineMode}
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">Installation identifier</Heading>
+        <Body size="S"
+          >Share this with support@budibase.com to obtain your offline license</Body
+        >
+      </Layout>
+      <Layout noPadding>
+        <div class="identifier-input">
+          <CopyInput value={offlineLicenseIdentifier} />
+        </div>
+      </Layout>
+      <Divider />
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">License</Heading>
+        <Body size="S">Upload your license to activate your plan</Body>
+      </Layout>
+      <Layout noPadding>
+        <div>
+          <File
+            title="Upload license"
+            extensions={offlineLicenseExtensions}
+            value={offlineLicense}
+            on:change={onOfflineLicenseChange}
+            allowClear={true}
+            disabled={!!offlineLicense}
           />
         </div>
-      </div>
-      <ButtonGroup gap="M">
-        <Button cta on:click={activate} disabled={activateDisabled}>
-          Activate
-        </Button>
-        {#if licenseInfo?.licenseKey}
-          <Button warning on:click={() => deleteLicenseKeyModal.show()}>
-            Delete
+      </Layout>
+    {:else}
+      <Layout gap="XS" noPadding>
+        <Heading size="XS">Activate</Heading>
+        <Body size="S">Enter your license key below to activate your plan</Body>
+      </Layout>
+      <Layout noPadding>
+        <div class="fields">
+          <div class="field">
+            <Label size="L">License key</Label>
+            <Input
+              thin
+              bind:value={licenseKey}
+              type={licenseKeyType}
+              disabled={licenseKeyDisabled}
+            />
+          </div>
+        </div>
+        <ButtonGroup gap="M">
+          <Button cta on:click={activateLicenseKey} disabled={activateDisabled}>
+            Activate
           </Button>
-        {/if}
-      </ButtonGroup>
-    </Layout>
+          {#if licenseKey}
+            <Button warning on:click={() => deleteLicenseKeyModal.show()}>
+              Delete
+            </Button>
+          {/if}
+        </ButtonGroup>
+      </Layout>
+    {/if}
     <Divider />
     <Layout gap="XS" noPadding>
-      <Heading size="S">Plan</Heading>
-      <Layout noPadding gap="XXS">
+      <Heading size="XS">Plan</Heading>
+      <Layout noPadding gap="S">
         <Body size="S">You are currently on the {license.plan.type} plan</Body>
+        <div>
+          <Body size="S"
+            >If you purchase or update your plan on the account</Body
+          >
+          <Body size="S"
+            >portal, click the refresh button to sync those changes</Body
+          >
+        </div>
         <Body size="XS">
           {processStringSync("Updated {{ duration time 'millisecond' }} ago", {
             time:
@@ -168,5 +293,8 @@
     grid-template-columns: 100px 1fr;
     grid-gap: var(--spacing-l);
     align-items: center;
+  }
+  .identifier-input {
+    width: 300px;
   }
 </style>

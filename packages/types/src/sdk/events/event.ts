@@ -26,6 +26,9 @@ export enum Event {
   USER_PASSWORD_RESET_REQUESTED = "user:password:reset:requested",
   USER_PASSWORD_RESET = "user:password:reset",
 
+  // USER / COLLABORATION
+  USER_DATA_COLLABORATION = "user:data:collaboration",
+
   // EMAIL
   EMAIL_SMTP_CREATED = "email:smtp:created",
   EMAIL_SMTP_UPDATED = "email:smtp:updated",
@@ -233,6 +236,7 @@ export const AuditedEventFriendlyName: Record<Event, string | undefined> = {
   [Event.USER_PASSWORD_FORCE_RESET]: undefined,
   [Event.USER_GROUP_ONBOARDING]: undefined,
   [Event.USER_ONBOARDING_COMPLETE]: undefined,
+  [Event.USER_DATA_COLLABORATION]: undefined,
 
   // EMAIL
   [Event.EMAIL_SMTP_CREATED]: `Email configuration created`,

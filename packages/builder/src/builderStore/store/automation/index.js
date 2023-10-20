@@ -221,18 +221,6 @@ const automationActions = store => ({
     newAutomation.definition.steps.splice(blockIdx, 0, block)
     await store.actions.save(newAutomation)
   },
-  /**
-   * "rowControl" appears to be the name of the flag used to determine whether
-   * a certain automation block uses values or bindings as inputs
-   */
-  toggleRowControl: async (block, rowControl) => {
-    const newBlock = { ...block, rowControl }
-    const newAutomation = store.actions.getUpdatedDefinition(
-      get(selectedAutomation),
-      newBlock
-    )
-    await store.actions.save(newAutomation)
-  },
   deleteAutomationBlock: async block => {
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
@@ -247,5 +235,37 @@ const automationActions = store => ({
       )
     }
     await store.actions.save(newAutomation)
+  },
+  replace: async (automationId, automation) => {
+    if (!automation) {
+      store.update(state => {
+        // Remove the automation
+        state.automations = state.automations.filter(
+          x => x._id !== automationId
+        )
+        // Select a new automation if required
+        if (automationId === state.selectedAutomationId) {
+          store.actions.select(state.automations[0]?._id)
+        }
+        return state
+      })
+    } else {
+      const index = get(store).automations.findIndex(
+        x => x._id === automation._id
+      )
+      if (index === -1) {
+        // Automation addition
+        store.update(state => ({
+          ...state,
+          automations: [...state.automations, automation],
+        }))
+      } else {
+        // Automation update
+        store.update(state => {
+          state.automations[index] = automation
+          return state
+        })
+      }
+    }
   },
 })

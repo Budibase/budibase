@@ -50,6 +50,7 @@
         type="string"
         {bindings}
         fillWidth={true}
+        updateOnChange={false}
       />
     {/each}
   </div>

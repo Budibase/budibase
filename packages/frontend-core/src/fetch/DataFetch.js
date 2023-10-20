@@ -57,6 +57,7 @@ export default class DataFetch {
       cursor: null,
       cursors: [],
       resetKey: Math.random(),
+      error: null,
     })
 
     // Merge options with their default values
@@ -110,13 +111,26 @@ export default class DataFetch {
   }
 
   /**
+   * Gets the default sort column for this datasource
+   */
+  getDefaultSortColumn(definition, schema) {
+    if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
+      return definition.primaryDisplay
+    } else {
+      return Object.keys(schema)[0]
+    }
+  }
+
+  /**
    * Fetches a fresh set of data from the server, resetting pagination
    */
   async getInitialData() {
     const { datasource, filter, paginate } = this.options
 
-    // Fetch datasource definition and determine feature flags
+    // Fetch datasource definition and extract sort properties if configured
     const definition = await this.getDefinition(datasource)
+
+    // Determine feature flags
     const features = this.determineFeatureFlags(definition)
     this.features = {
       supportsSearch: !!features?.supportsSearch,
@@ -131,30 +145,32 @@ export default class DataFetch {
       return
     }
 
-    // If no sort order, default to descending
-    if (!this.options.sortOrder) {
-      this.options.sortOrder = "ascending"
+    // If an invalid sort column is specified, delete it
+    if (this.options.sortColumn && !schema[this.options.sortColumn]) {
+      this.options.sortColumn = null
     }
 
-    // If no sort column, use the primary display and fallback to first column
+    // If no sort column, get the default column for this datasource
     if (!this.options.sortColumn) {
-      let newSortColumn
-      if (definition?.primaryDisplay && schema[definition.primaryDisplay]) {
-        newSortColumn = definition.primaryDisplay
-      } else {
-        newSortColumn = Object.keys(schema)[0]
-      }
-      this.options.sortColumn = newSortColumn
+      this.options.sortColumn = this.getDefaultSortColumn(definition, schema)
     }
-    const { sortOrder, sortColumn } = this.options
 
-    // Determine what sort type to use
-    let sortType = "string"
-    if (sortColumn) {
-      const type = schema?.[sortColumn]?.type
-      sortType = type === "number" ? "number" : "string"
+    // If we don't have a sort column specified then just ensure we don't set
+    // any sorting params
+    if (!this.options.sortColumn) {
+      this.options.sortOrder = "ascending"
+      this.options.sortType = null
+    } else {
+      // Otherwise determine what sort type to use base on sort column
+      const type = schema?.[this.options.sortColumn]?.type
+      this.options.sortType =
+        type === "number" || type === "bigint" ? "number" : "string"
+
+      // If no sort order, default to ascending
+      if (!this.options.sortOrder) {
+        this.options.sortOrder = "ascending"
+      }
     }
-    this.options.sortType = sortType
 
     // Build the lucene query
     let query = this.options.query
@@ -171,8 +187,6 @@ export default class DataFetch {
       loading: true,
       cursors: [],
       cursor: null,
-      sortOrder,
-      sortColumn,
     }))
 
     // Actually fetch data
@@ -250,6 +264,10 @@ export default class DataFetch {
     try {
       return await this.API.fetchTableDefinition(datasource.tableId)
     } catch (error) {
+      this.store.update(state => ({
+        ...state,
+        error,
+      }))
       return null
     }
   }

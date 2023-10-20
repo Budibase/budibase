@@ -7,8 +7,6 @@
   import { API } from "api"
   import { store, automationStore } from "builderStore"
   import { auth, admin } from "stores/portal"
-  import createFromScratchScreen from "builderStore/store/screenTemplates/createFromScratchScreen"
-  import { Roles } from "constants/backend"
 
   let name = "My first app"
   let url = "my-first-app"
@@ -37,11 +35,6 @@
 
     // Create user
     await auth.setInitInfo({})
-
-    let defaultScreenTemplate = createFromScratchScreen.create()
-    defaultScreenTemplate.routing.route = "/home"
-    defaultScreenTemplate.routing.roldId = Roles.BASIC
-    await store.actions.screens.save(defaultScreenTemplate)
 
     appId = createdApp.instance._id
     return createdApp

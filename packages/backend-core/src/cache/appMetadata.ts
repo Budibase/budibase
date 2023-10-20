@@ -2,9 +2,14 @@ import { getAppClient } from "../redis/init"
 import { doWithDB, DocumentType } from "../db"
 import { Database, App } from "@budibase/types"
 
-const AppState = {
-  INVALID: "invalid",
+export enum AppState {
+  INVALID = "invalid",
 }
+
+export interface DeletedApp {
+  state: AppState
+}
+
 const EXPIRY_SECONDS = 3600
 
 /**
@@ -31,7 +36,7 @@ function isInvalid(metadata?: { state: string }) {
  * @param {string} appId the id of the app to get metadata from.
  * @returns {object} the app metadata.
  */
-export async function getAppMetadata(appId: string) {
+export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
   const client = await getAppClient()
   // try cache
   let metadata = await client.get(appId)
@@ -50,7 +55,7 @@ export async function getAppMetadata(appId: string) {
         throw err
       }
     }
-    // needed for cypress/some scenarios where the caching happens
+    // needed for some scenarios where the caching happens
     // so quickly the requests can get slightly out of sync
     // might store its invalid just before it stores its valid
     if (isInvalid(metadata)) {
@@ -61,11 +66,8 @@ export async function getAppMetadata(appId: string) {
     }
     await client.store(appId, metadata, expiry)
   }
-  // we've stored in the cache an object to tell us that it is currently invalid
-  if (isInvalid(metadata)) {
-    throw { status: 404, message: "No app metadata found" }
-  }
-  return metadata as App
+
+  return metadata
 }
 
 /**

@@ -5,7 +5,7 @@ export async function createUserIndex() {
   const db = getGlobalDB()
   let designDoc
   try {
-    designDoc = await db.get("_design/database")
+    designDoc = await db.get<any>("_design/database")
   } catch (err: any) {
     if (err.status === 404) {
       designDoc = { _id: "_design/database" }

@@ -26,25 +26,25 @@ const SCHEMA: Integration = {
   },
   datasource: {
     host: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
       default: "localhost",
     },
     port: {
-      type: "number",
+      type: DatasourceFieldType.NUMBER,
       required: true,
       default: 6379,
     },
     username: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: false,
     },
     password: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: false,
     },
     db: {
-      type: "number",
+      type: DatasourceFieldType.NUMBER,
       required: false,
       display: "DB",
       default: 0,
@@ -177,7 +177,13 @@ class RedisIntegration {
       const pipeline = this.client.pipeline(pipelineCommands)
       const result = await pipeline.exec()
 
-      return result.map((output: string | string[]) => output[1])
+      return result?.map((output: any) => {
+        if (typeof output === "string") {
+          return output
+        } else if (Array.isArray(output)) {
+          return output[1]
+        }
+      })
     })
   }
 }

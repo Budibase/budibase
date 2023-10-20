@@ -9,7 +9,7 @@
   export let rowFocused = false
   export let rowHovered = false
   export let rowSelected = false
-  export let disableExpand = false
+  export let expandable = false
   export let disableNumber = false
   export let defaultHeight = false
   export let disabled = false
@@ -17,7 +17,8 @@
   const { config, dispatch, selectedRows } = getContext("grid")
   const svelteDispatch = createEventDispatcher()
 
-  const select = () => {
+  const select = e => {
+    e.stopPropagation()
     svelteDispatch("select")
     const id = row?._id
     if (id) {
@@ -25,11 +26,14 @@
     }
   }
 
-  const expand = () => {
+  const bulkDelete = e => {
+    e.stopPropagation()
+    dispatch("request-bulk-delete")
+  }
+
+  const expand = e => {
+    e.stopPropagation()
     svelteDispatch("expand")
-    if (row) {
-      dispatch("edit-row", row)
-    }
   }
 </script>
 
@@ -47,7 +51,7 @@
       <div
         on:click={select}
         class="checkbox"
-        class:visible={$config.allowDeleteRows &&
+        class:visible={$config.canDeleteRows &&
           (disableNumber || rowSelected || rowHovered || rowFocused)}
       >
         <Checkbox value={rowSelected} {disabled} />
@@ -55,27 +59,24 @@
       {#if !disableNumber}
         <div
           class="number"
-          class:visible={!$config.allowDeleteRows ||
+          class:visible={!$config.canDeleteRows ||
             !(rowSelected || rowHovered || rowFocused)}
         >
           {row.__idx + 1}
         </div>
       {/if}
     {/if}
-    {#if rowSelected && $config.allowDeleteRows}
-      <div class="delete" on:click={() => dispatch("request-bulk-delete")}>
+    {#if rowSelected && $config.canDeleteRows}
+      <div class="delete" on:click={bulkDelete}>
         <Icon
           name="Delete"
           size="S"
           color="var(--spectrum-global-color-red-400)"
         />
       </div>
-    {:else if $config.allowExpandRows}
-      <div
-        class="expand"
-        class:visible={!disableExpand && (rowFocused || rowHovered)}
-      >
-        <Icon name="Maximize" hoverable size="S" on:click={expand} />
+    {:else}
+      <div class="expand" class:visible={$config.canExpandRows && expandable}>
+        <Icon size="S" name="Maximize" hoverable on:click={expand} />
       </div>
     {/if}
   </div>

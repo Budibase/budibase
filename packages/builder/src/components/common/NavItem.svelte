@@ -1,6 +1,8 @@
 <script>
   import { Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
+  import { helpers } from "@budibase/shared-core"
+  import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
   export let withArrow = false
@@ -18,12 +20,16 @@
   export let rightAlignIcon = false
   export let id
   export let showTooltip = false
+  export let selectedBy = null
+  export let compact = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
 
   let contentRef
+
   $: selected && contentRef && scrollToView()
+  $: style = getStyle(indentLevel, selectedBy)
 
   const onClick = () => {
     scrollToView()
@@ -42,6 +48,14 @@
     const bounds = contentRef.getBoundingClientRect()
     scrollApi.scrollTo(bounds)
   }
+
+  const getStyle = (indentLevel, selectedBy) => {
+    let style = `padding-left:calc(${indentLevel * 14}px);`
+    if (selectedBy) {
+      style += `--selected-by-color:${helpers.getUserColor(selectedBy)};`
+    }
+    return style
+  }
 </script>
 
 <div
@@ -51,8 +65,7 @@
   class:withActions
   class:scrollable
   class:highlighted
-  style={`padding-left: calc(${indentLevel * 14}px)`}
-  {draggable}
+  class:selectedBy
   on:dragend
   on:dragstart
   on:dragover
@@ -61,13 +74,16 @@
   ondragover="return false"
   ondragenter="return false"
   {id}
+  {style}
+  {draggable}
 >
   <div class="nav-item-content" bind:this={contentRef}>
     {#if withArrow}
       <div
         class:opened
-        class:relative={indentLevel === 0}
-        class:absolute={indentLevel > 0}
+        class:relative={indentLevel === 0 && !compact}
+        class:absolute={indentLevel > 0 && !compact}
+        class:compact
         class="icon arrow"
         on:click={onIconClick}
       >
@@ -85,12 +101,19 @@
         <Icon color={iconColor} size="S" name={icon} />
       </div>
     {/if}
-    <div class="text" title={showTooltip ? text : null}>{text}</div>
+    <div class="text" title={showTooltip ? text : null}>
+      <span title={text}>{text}</span>
+      {#if selectedBy}
+        <UserAvatars size="XS" users={selectedBy} />
+      {/if}
+    </div>
+
     {#if withActions}
       <div class="actions">
         <slot />
       </div>
     {/if}
+
     {#if $$slots.right}
       <div class="right">
         <slot name="right" />
@@ -119,13 +142,16 @@
   }
   .nav-item.highlighted {
     background-color: var(--spectrum-global-color-gray-200);
+    --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
   .nav-item:hover {
     background-color: var(--spectrum-global-color-gray-300);
+    --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions {
     visibility: visible;
@@ -170,9 +196,20 @@
     padding: 8px;
     margin-left: -8px;
   }
+
+  .compact {
+    position: absolute;
+    left: 6px;
+    padding: 8px;
+    margin-left: -8px;
+  }
   .icon.arrow :global(svg) {
     width: 12px;
     height: 12px;
+  }
+  .icon.arrow.compact :global(svg) {
+    width: 9px;
+    height: 9px;
   }
   .icon.arrow.relative {
     position: relative;
@@ -190,13 +227,18 @@
   .text {
     font-weight: 600;
     font-size: 12px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     flex: 1 1 auto;
     color: var(--spectrum-global-color-gray-900);
     order: 2;
     width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .text span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .scrollable .text {
     flex: 0 0 auto;

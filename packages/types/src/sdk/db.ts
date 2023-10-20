@@ -1,7 +1,6 @@
 import Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 import { Writable } from "stream"
-import PouchDB from "pouchdb"
 
 export enum SearchIndex {
   ROWS = "rows",
@@ -89,7 +88,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T | any>
+  get<T>(id?: string): Promise<T>
   remove(
     id: string | Document,
     rev?: string

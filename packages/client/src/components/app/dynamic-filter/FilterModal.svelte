@@ -63,7 +63,7 @@
 
     // Ensure a valid operator is set
     const validOperators = LuceneUtils.getValidOperatorsForType(
-      expression.type,
+      { type: expression.type },
       expression.field,
       datasource
     ).map(x => x.value)
@@ -115,7 +115,7 @@
     </Body>
     {#if filters?.length}
       <div class="fields">
-        {#each filters as filter, idx}
+        {#each filters as filter}
           <Select
             bind:value={filter.field}
             options={fieldOptions}
@@ -125,7 +125,7 @@
           <Select
             disabled={!filter.field}
             options={LuceneUtils.getValidOperatorsForType(
-              filter.type,
+              { type: filter.type, subtype: filter.subtype },
               filter.field,
               datasource
             )}
@@ -133,7 +133,7 @@
             on:change={e => onOperatorChange(filter, e.detail)}
             placeholder={null}
           />
-          {#if ["string", "longform", "number", "formula"].includes(filter.type)}
+          {#if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
             <Input disabled={filter.noValue} bind:value={filter.value} />
           {:else if ["options", "array"].includes(filter.type)}
             <Combobox

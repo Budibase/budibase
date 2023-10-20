@@ -8,9 +8,11 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
+import { SourceName } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
+import { Query } from "@budibase/types"
 
 class QueryRunner {
   datasource: any
@@ -27,6 +29,7 @@ class QueryRunner {
   hasRerun: boolean
   hasRefreshedOAuth: boolean
   hasDynamicVariables: boolean
+  schema: any
 
   constructor(input: QueryEvent, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -36,6 +39,7 @@ class QueryRunner {
     this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
+    this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -50,7 +54,7 @@ class QueryRunner {
   }
 
   async execute(): Promise<any> {
-    let { datasource, fields, queryVerb, transformer } = this
+    let { datasource, fields, queryVerb, transformer, schema } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -68,6 +72,9 @@ class QueryRunner {
     }
 
     const integration = new Integration(datasourceClone.config)
+
+    // define the type casting from the schema
+    integration.defineTypeCastingFromSchema?.(schema)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
@@ -167,7 +174,7 @@ class QueryRunner {
 
   async runAnotherQuery(queryId: string, parameters: any) {
     const db = context.getAppDB()
-    const query = await db.get(queryId)
+    const query = await db.get<Query>(queryId)
     const datasource = await sdk.datasources.get(query.datasourceId, {
       enriched: true,
     })

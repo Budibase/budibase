@@ -23,6 +23,11 @@ router
     authorized(permissions.BUILDER),
     controller.getResourcePerms
   )
+  .get(
+    "/api/permission/:resourceId/dependants",
+    authorized(permissions.BUILDER),
+    controller.getDependantResources
+  )
   // adding a specific role/level for the resource overrides the underlying access control
   .post(
     "/api/permission/:roleId/:resourceId/:level",

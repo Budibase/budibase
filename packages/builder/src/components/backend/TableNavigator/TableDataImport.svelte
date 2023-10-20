@@ -1,17 +1,9 @@
 <script>
-  import { Select } from "@budibase/bbui"
+  import { Select, Icon } from "@budibase/bbui"
   import { FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
-
-  let fileInput
-  let error = null
-  let fileName = null
-  let fileType = null
-
-  let loading = false
-  let validation = {}
-  let validateHash = ""
+  import { canBeDisplayColumn } from "@budibase/shared-core"
 
   export let rows = []
   export let schema = {}
@@ -19,36 +11,109 @@
   export let displayColumn = null
   export let promptUpload = false
 
-  const typeOptions = [
-    {
+  const typeOptions = {
+    [FIELDS.STRING.type]: {
       label: "Text",
       value: FIELDS.STRING.type,
+      config: {
+        type: FIELDS.STRING.type,
+        constraints: FIELDS.STRING.constraints,
+      },
     },
-    {
+    [FIELDS.NUMBER.type]: {
       label: "Number",
       value: FIELDS.NUMBER.type,
+      config: {
+        type: FIELDS.NUMBER.type,
+        constraints: FIELDS.NUMBER.constraints,
+      },
     },
-    {
+    [FIELDS.DATETIME.type]: {
       label: "Date",
       value: FIELDS.DATETIME.type,
+      config: {
+        type: FIELDS.DATETIME.type,
+        constraints: FIELDS.DATETIME.constraints,
+      },
     },
-    {
+    [FIELDS.OPTIONS.type]: {
       label: "Options",
       value: FIELDS.OPTIONS.type,
+      config: {
+        type: FIELDS.OPTIONS.type,
+        constraints: FIELDS.OPTIONS.constraints,
+      },
     },
-    {
+    [FIELDS.ARRAY.type]: {
       label: "Multi-select",
       value: FIELDS.ARRAY.type,
+      config: {
+        type: FIELDS.ARRAY.type,
+        constraints: FIELDS.ARRAY.constraints,
+      },
     },
-    {
+    [FIELDS.BARCODEQR.type]: {
       label: "Barcode/QR",
       value: FIELDS.BARCODEQR.type,
+      config: {
+        type: FIELDS.BARCODEQR.type,
+        constraints: FIELDS.BARCODEQR.constraints,
+      },
     },
-    {
+    [FIELDS.LONGFORM.type]: {
       label: "Long Form Text",
       value: FIELDS.LONGFORM.type,
+      config: {
+        type: FIELDS.LONGFORM.type,
+        constraints: FIELDS.LONGFORM.constraints,
+      },
     },
-  ]
+    user: {
+      label: "User",
+      value: "user",
+      config: {
+        type: FIELDS.USER.type,
+        subtype: FIELDS.USER.subtype,
+        constraints: FIELDS.USER.constraints,
+      },
+    },
+    users: {
+      label: "Users",
+      value: "users",
+      config: {
+        type: FIELDS.USERS.type,
+        subtype: FIELDS.USERS.subtype,
+        constraints: FIELDS.USERS.constraints,
+      },
+    },
+  }
+
+  let fileInput
+  let error = null
+  let fileName = null
+  let loading = false
+  let validation = {}
+  let validateHash = ""
+  let errors = {}
+  let selectedColumnTypes = {}
+
+  $: displayColumnOptions = Object.keys(schema || {}).filter(column => {
+    return validation[column] && canBeDisplayColumn(schema[column].type)
+  })
+
+  $: if (displayColumn && !canBeDisplayColumn(schema[displayColumn].type)) {
+    displayColumn = null
+  }
+
+  $: {
+    // binding in consumer is causing double renders here
+    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
+    if (newValidateHash !== validateHash) {
+      validate(rows, schema)
+    }
+    validateHash = newValidateHash
+  }
+  $: openFileUpload(promptUpload, fileInput)
 
   async function handleFile(e) {
     loading = true
@@ -60,7 +125,13 @@
       rows = response.rows
       schema = response.schema
       fileName = response.fileName
-      fileType = response.fileType
+      selectedColumnTypes = Object.entries(response.schema).reduce(
+        (acc, [colName, fieldConfig]) => ({
+          ...acc,
+          [colName]: fieldConfig.type,
+        }),
+        {}
+      )
     } catch (e) {
       loading = false
       error = e
@@ -69,37 +140,28 @@
 
   async function validate(rows, schema) {
     loading = true
-    error = null
-    validation = {}
-    allValid = false
-
     try {
       if (rows.length > 0) {
         const response = await API.validateNewTableImport({ rows, schema })
         validation = response.schemaValidation
         allValid = response.allValid
+        errors = response.errors
+        error = null
       }
     } catch (e) {
       error = e.message
+      validation = {}
+      allValid = false
+      errors = {}
     }
-
     loading = false
   }
 
-  $: {
-    // binding in consumer is causing double renders here
-    const newValidateHash = JSON.stringify(rows) + JSON.stringify(schema)
-
-    if (newValidateHash !== validateHash) {
-      validate(rows, schema)
-    }
-
-    validateHash = newValidateHash
-  }
-
   const handleChange = (name, e) => {
-    schema[name].type = e.detail
-    schema[name].constraints = FIELDS[e.detail.toUpperCase()].constraints
+    const { config } = typeOptions[e.detail]
+    schema[name].type = config.type
+    schema[name].subtype = config.subtype
+    schema[name].constraints = config.constraints
   }
 
   const openFileUpload = (promptUpload, fileInput) => {
@@ -108,7 +170,13 @@
     }
   }
 
-  $: openFileUpload(promptUpload, fileInput)
+  const deleteColumn = name => {
+    if (loading) {
+      return
+    }
+    delete schema[name]
+    schema = schema
+  }
 </script>
 
 <div class="dropzone">
@@ -121,10 +189,8 @@
     on:change={handleFile}
   />
   <label for="file-upload" class:uploaded={rows.length > 0}>
-    {#if loading}
-      loading...
-    {:else if error}
-      error: {error}
+    {#if error}
+      Error: {error}
     {:else if fileName}
       {fileName}
     {:else}
@@ -138,29 +204,32 @@
       <div class="field">
         <span>{column.name}</span>
         <Select
-          bind:value={column.type}
+          bind:value={selectedColumnTypes[column.name]}
           on:change={e => handleChange(name, e)}
-          options={typeOptions}
+          options={Object.values(typeOptions)}
           placeholder={null}
           getOptionLabel={option => option.label}
           getOptionValue={option => option.value}
-          disabled={loading}
         />
         <span
-          class={loading || validation[column.name]
+          class={validation[column.name]
             ? "fieldStatusSuccess"
             : "fieldStatusFailure"}
         >
-          {validation[column.name] ? "Success" : "Failure"}
+          {#if validation[column.name]}
+            Success
+          {:else}
+            Failure
+            {#if errors[column.name]}
+              <Icon name="Help" tooltip={errors[column.name]} />
+            {/if}
+          {/if}
         </span>
-        <i
-          class={`omit-button ri-close-circle-fill ${
-            loading ? "omit-button-disabled" : ""
-          }`}
-          on:click={() => {
-            delete schema[column.name]
-            schema = schema
-          }}
+        <Icon
+          size="S"
+          name="Close"
+          hoverable
+          on:click={() => deleteColumn(column.name)}
         />
       </div>
     {/each}
@@ -169,7 +238,7 @@
     <Select
       label="Display Column"
       bind:value={displayColumn}
-      options={Object.keys(schema)}
+      options={displayColumnOptions}
       sort
     />
   </div>
@@ -237,23 +306,16 @@
     justify-self: center;
     font-weight: 600;
   }
-
   .fieldStatusFailure {
     color: var(--red);
     justify-self: center;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
   }
-
-  .omit-button {
-    font-size: 1.2em;
-    color: var(--grey-7);
-    cursor: pointer;
-    justify-self: flex-end;
-  }
-
-  .omit-button-disabled {
-    pointer-events: none;
-    opacity: 70%;
+  .fieldStatusFailure :global(.spectrum-Icon) {
+    width: 12px;
   }
 
   .display-column {

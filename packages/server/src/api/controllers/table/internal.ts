@@ -9,13 +9,23 @@ import {
   fixAutoColumnSubType,
 } from "../../../utilities/rowProcessor"
 import { runStaticFormulaChecks } from "./bulkFormula"
-import { Table } from "@budibase/types"
+import {
+  BulkImportRequest,
+  BulkImportResponse,
+  RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  UserCtx,
+  ViewStatisticsSchema,
+  ViewV2,
+} from "@budibase/types"
 import { quotas } from "@budibase/pro"
-import { isEqual } from "lodash"
+import isEqual from "lodash/isEqual"
 import { cloneDeep } from "lodash/fp"
 import sdk from "../../../sdk"
 
-function checkAutoColumns(table: Table, oldTable: Table) {
+function checkAutoColumns(table: Table, oldTable?: Table) {
   if (!table.schema) {
     return table
   }
@@ -33,10 +43,12 @@ function checkAutoColumns(table: Table, oldTable: Table) {
   return table
 }
 
-export async function save(ctx: any) {
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const db = context.getAppDB()
   const { rows, ...rest } = ctx.request.body
-  let tableToSave = {
+  let tableToSave: Table & {
+    _rename?: { old: string; updated: string } | undefined
+  } = {
     type: "table",
     _id: generateTableID(),
     views: {},
@@ -44,9 +56,9 @@ export async function save(ctx: any) {
   }
 
   // if the table obj had an _id then it will have been retrieved
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
-    oldTable = await db.get(ctx.request.body._id)
+    oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   // check all types are correct
@@ -68,19 +80,19 @@ export async function save(ctx: any) {
   // make sure that types don't change of a column, have to remove
   // the column if you want to change the type
   if (oldTable && oldTable.schema) {
-    for (let propKey of Object.keys(tableToSave.schema)) {
+    for (const propKey of Object.keys(tableToSave.schema)) {
       let oldColumn = oldTable.schema[propKey]
-      if (oldColumn && oldColumn.type === "internal") {
-        oldColumn.type = "auto"
+      if (oldColumn && oldColumn.type === FieldTypes.INTERNAL) {
+        oldTable.schema[propKey].type = FieldTypes.AUTO
       }
     }
   }
 
   // Don't rename if the name is the same
-  let { _rename } = tableToSave
+  let _rename: RenameColumn | undefined = tableToSave._rename
   /* istanbul ignore next */
   if (_rename && _rename.old === _rename.updated) {
-    _rename = null
+    _rename = undefined
     delete tableToSave._rename
   }
 
@@ -97,7 +109,20 @@ export async function save(ctx: any) {
     const tableView = tableToSave.views[view]
     if (!tableView) continue
 
-    if (tableView.schema.group || tableView.schema.field) continue
+    if (sdk.views.isV2(tableView)) {
+      tableToSave.views[view] = sdk.views.syncSchema(
+        oldTable!.views![view] as ViewV2,
+        tableToSave.schema,
+        _rename
+      )
+      continue
+    }
+
+    if (
+      (tableView.schema as ViewStatisticsSchema).group ||
+      tableView.schema.field
+    )
+      continue
     tableView.schema = tableToSave.schema
   }
 
@@ -112,7 +137,7 @@ export async function save(ctx: any) {
       tableToSave._rev = linkResp._rev
     }
   } catch (err) {
-    ctx.throw(400, err)
+    ctx.throw(400, err as string)
   }
 
   // don't perform any updates until relationships have been
@@ -138,7 +163,7 @@ export async function save(ctx: any) {
 
 export async function destroy(ctx: any) {
   const db = context.getAppDB()
-  const tableToDelete = await db.get(ctx.params.tableId)
+  const tableToDelete = await sdk.tables.getTable(ctx.params.tableId)
 
   // Delete all rows for that table
   const rowsData = await db.allDocs(
@@ -160,7 +185,7 @@ export async function destroy(ctx: any) {
   })
 
   // don't remove the table itself until very end
-  await db.remove(tableToDelete._id, tableToDelete._rev)
+  await db.remove(tableToDelete._id!, tableToDelete._rev)
 
   // remove table search index
   if (!env.isTest() || env.COUCH_DB_URL) {
@@ -183,8 +208,9 @@ export async function destroy(ctx: any) {
   return tableToDelete
 }
 
-export async function bulkImport(ctx: any) {
-  const db = context.getAppDB()
+export async function bulkImport(
+  ctx: UserCtx<BulkImportRequest, BulkImportResponse>
+) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
   const { rows, identifierFields } = ctx.request.body
   await handleDataImport(ctx.user, table, rows, identifierFields)

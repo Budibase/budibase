@@ -1,7 +1,10 @@
+import { FieldType, FieldSubtype } from "@budibase/types"
+
 export const FIELDS = {
   STRING: {
     name: "Text",
-    type: "string",
+    type: FieldType.STRING,
+    icon: "Text",
     constraints: {
       type: "string",
       length: {},
@@ -10,7 +13,8 @@ export const FIELDS = {
   },
   BARCODEQR: {
     name: "Barcode/QR",
-    type: "barcodeqr",
+    type: FieldType.BARCODEQR,
+    icon: "Camera",
     constraints: {
       type: "string",
       length: {},
@@ -19,7 +23,8 @@ export const FIELDS = {
   },
   LONGFORM: {
     name: "Long Form Text",
-    type: "longform",
+    type: FieldType.LONGFORM,
+    icon: "TextAlignLeft",
     constraints: {
       type: "string",
       length: {},
@@ -28,7 +33,8 @@ export const FIELDS = {
   },
   OPTIONS: {
     name: "Options",
-    type: "options",
+    type: FieldType.OPTIONS,
+    icon: "Dropdown",
     constraints: {
       type: "string",
       presence: false,
@@ -37,7 +43,8 @@ export const FIELDS = {
   },
   ARRAY: {
     name: "Multi-select",
-    type: "array",
+    type: FieldType.ARRAY,
+    icon: "Duplicate",
     constraints: {
       type: "array",
       presence: false,
@@ -46,16 +53,23 @@ export const FIELDS = {
   },
   NUMBER: {
     name: "Number",
-    type: "number",
+    type: FieldType.NUMBER,
+    icon: "123",
     constraints: {
       type: "number",
       presence: false,
       numericality: { greaterThanOrEqualTo: "", lessThanOrEqualTo: "" },
     },
   },
+  BIGINT: {
+    name: "BigInt",
+    type: FieldType.BIGINT,
+    icon: "TagBold",
+  },
   BOOLEAN: {
     name: "Boolean",
-    type: "boolean",
+    type: FieldType.BOOLEAN,
+    icon: "Boolean",
     constraints: {
       type: "boolean",
       presence: false,
@@ -63,7 +77,8 @@ export const FIELDS = {
   },
   DATETIME: {
     name: "Date/Time",
-    type: "datetime",
+    type: FieldType.DATETIME,
+    icon: "Calendar",
     constraints: {
       type: "string",
       length: {},
@@ -76,7 +91,8 @@ export const FIELDS = {
   },
   ATTACHMENT: {
     name: "Attachment",
-    type: "attachment",
+    type: FieldType.ATTACHMENT,
+    icon: "Folder",
     constraints: {
       type: "array",
       presence: false,
@@ -84,7 +100,8 @@ export const FIELDS = {
   },
   LINK: {
     name: "Relationship",
-    type: "link",
+    type: FieldType.LINK,
+    icon: "Link",
     constraints: {
       type: "array",
       presence: false,
@@ -92,15 +109,32 @@ export const FIELDS = {
   },
   FORMULA: {
     name: "Formula",
-    type: "formula",
+    type: FieldType.FORMULA,
+    icon: "Calculator",
     constraints: {},
   },
   JSON: {
     name: "JSON",
-    type: "json",
+    type: FieldType.JSON,
+    icon: "Brackets",
     constraints: {
       type: "object",
       presence: false,
+    },
+  },
+  USER: {
+    name: "User",
+    type: FieldType.BB_REFERENCE,
+    subtype: FieldSubtype.USER,
+    icon: "User",
+  },
+  USERS: {
+    name: "Users",
+    type: FieldType.BB_REFERENCE,
+    subtype: FieldSubtype.USERS,
+    icon: "User",
+    constraints: {
+      type: "array",
     },
   },
 }
@@ -147,10 +181,15 @@ export function isAutoColumnUserRelationship(subtype) {
   )
 }
 
-export const RelationshipTypes = {
+export const RelationshipType = {
   MANY_TO_MANY: "many-to-many",
   ONE_TO_MANY: "one-to-many",
   MANY_TO_ONE: "many-to-one",
+}
+
+export const PrettyRelationshipDefinitions = {
+  MANY: "Many rows",
+  ONE: "One row",
 }
 
 export const ALLOWABLE_STRING_OPTIONS = [
@@ -269,4 +308,10 @@ export const DatasourceTypes = {
   OBJECT_STORE: "Object store",
   GRAPH: "Graph",
   API: "API",
+}
+
+export const ROW_EXPORT_FORMATS = {
+  CSV: "csv",
+  JSON: "json",
+  JSON_WITH_SCHEMA: "jsonWithSchema",
 }

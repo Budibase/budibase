@@ -1,9 +1,9 @@
 import { InternalTables } from "../db/utils"
 import { getGlobalUser } from "./global"
-import { context, db as dbCore, roles } from "@budibase/backend-core"
-import { BBContext } from "@budibase/types"
+import { context, roles } from "@budibase/backend-core"
+import { UserCtx } from "@budibase/types"
 
-export async function getFullUser(ctx: BBContext, userId: string) {
+export async function getFullUser(ctx: UserCtx, userId: string) {
   const global = await getGlobalUser(userId)
   let metadata: any = {}
 
@@ -29,7 +29,7 @@ export async function getFullUser(ctx: BBContext, userId: string) {
   }
 }
 
-export function publicApiUserFix(ctx: BBContext) {
+export function publicApiUserFix(ctx: UserCtx) {
   if (!ctx.request.body) {
     return ctx
   }
@@ -38,12 +38,6 @@ export function publicApiUserFix(ctx: BBContext) {
   }
   if (!ctx.request.body.roles) {
     ctx.request.body.roles = {}
-  } else {
-    const newRoles: { [key: string]: any } = {}
-    for (let [appId, role] of Object.entries(ctx.request.body.roles)) {
-      newRoles[dbCore.getProdAppID(appId)] = role
-    }
-    ctx.request.body.roles = newRoles
   }
   return ctx
 }

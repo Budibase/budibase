@@ -5,8 +5,19 @@ import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, RowAttachment, Table, ContextUser } from "@budibase/types"
-const { cloneDeep } = require("lodash/fp")
+import {
+  AutoColumnFieldMetadata,
+  FieldSubtype,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import {
+  processInputBBReferences,
+  processOutputBBReferences,
+} from "./bbReferenceProcessor"
+import { isExternalTable } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -48,12 +59,12 @@ function getRemovedAttachmentKeys(
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: ContextUser | null,
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !user || !user.userId
+  let noUser = !userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
@@ -70,8 +81,8 @@ export function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (creating && shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.CREATED_AT:
@@ -80,8 +91,8 @@ export function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.UPDATED_AT:
@@ -130,8 +141,8 @@ export function coerce(row: any, type: string) {
  * @param {object} opts some input processing options (like disabling auto-column relationships).
  * @returns {object} the row which has been prepared to be written to the DB.
  */
-export function inputProcessing(
-  user: ContextUser | null,
+export async function inputProcessing(
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
@@ -166,6 +177,13 @@ export function inputProcessing(
         })
       }
     }
+
+    if (field.type === FieldTypes.BB_REFERENCE && value) {
+      clonedRow[key] = await processInputBBReferences(
+        value,
+        field.subtype as FieldSubtype
+      )
+    }
   }
 
   if (!clonedRow._id || !clonedRow._rev) {
@@ -174,7 +192,7 @@ export function inputProcessing(
   }
 
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, table, clonedRow, opts)
+  return processAutoColumn(userId, table, clonedRow, opts)
 }
 
 /**
@@ -186,23 +204,33 @@ export function inputProcessing(
  * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
  * @returns {object[]|object} the enriched rows will be returned.
  */
-export async function outputProcessing(
+export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
-  rows: Row[] | Row,
-  opts = { squash: true }
-) {
+  rows: T,
+  opts: {
+    squash?: boolean
+    preserveLinks?: boolean
+    skipBBReferences?: boolean
+  } = {
+    squash: true,
+    preserveLinks: false,
+    skipBBReferences: false,
+  }
+): Promise<T> {
+  let safeRows: Row[]
   let wasArray = true
   if (!(rows instanceof Array)) {
-    rows = [rows]
+    safeRows = [rows]
     wasArray = false
+  } else {
+    safeRows = rows
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
+  let enriched = !opts.preserveLinks
+    ? await linkRows.attachFullLinkedDocs(table, safeRows)
+    : safeRows
 
-  // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
-
-  // set the attachments URLs
+  // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
@@ -213,12 +241,39 @@ export async function outputProcessing(
           attachment.url = objectStore.getAppFileUrl(attachment.key)
         })
       }
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldTypes.BB_REFERENCE
+    ) {
+      for (let row of enriched) {
+        row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype as FieldSubtype
+        )
+      }
     }
   }
+
+  // process formulas after the complex types had been processed
+  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
+    enriched = (await linkRows.squashLinksToPrimaryDisplay(
+      table,
+      enriched
+    )) as Row[]
   }
-  return wasArray ? enriched : enriched[0]
+  // remove null properties to match internal API
+  if (isExternalTable(table._id!)) {
+    for (let row of enriched) {
+      for (let key of Object.keys(row)) {
+        if (row[key] === null) {
+          delete row[key]
+        }
+      }
+    }
+  }
+  return (wasArray ? enriched : enriched[0]) as T
 }
 
 /**

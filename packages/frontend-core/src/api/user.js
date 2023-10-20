@@ -10,24 +10,28 @@ export const buildUserEndpoints = API => ({
 
   /**
    * Gets a list of users in the current tenant.
-   * @param {string} page The page to retrieve
-   * @param {string} search The starts with string to search username/email by.
+   * @param {string} bookmark The page to retrieve
+   * @param {object} query search filters for lookup by user (all operators not supported).
    * @param {string} appId Facilitate app/role based user searching
-   * @param {boolean} paginated Allow the disabling of pagination
+   * @param {boolean} paginate Allow the disabling of pagination
+   * @param {number} limit How many users to retrieve in a single search
    */
-  searchUsers: async ({ paginated, page, email, appId } = {}) => {
+  searchUsers: async ({ paginate, bookmark, query, appId, limit } = {}) => {
     const opts = {}
-    if (page) {
-      opts.page = page
+    if (bookmark) {
+      opts.bookmark = bookmark
     }
-    if (email) {
-      opts.email = email
+    if (query) {
+      opts.query = query
     }
     if (appId) {
       opts.appId = appId
     }
-    if (typeof paginated === "boolean") {
-      opts.paginated = paginated
+    if (typeof paginate === "boolean") {
+      opts.paginate = paginate
+    }
+    if (limit) {
+      opts.limit = limit
     }
     return await API.post({
       url: `/api/global/users/search`,
@@ -144,8 +148,8 @@ export const buildUserEndpoints = API => ({
       body: {
         email,
         userInfo: {
-          admin: admin ? { global: true } : undefined,
-          builder: builder ? { global: true } : undefined,
+          admin: admin?.global ? { global: true } : undefined,
+          builder: builder?.global ? { global: true } : undefined,
           apps: apps ? apps : undefined,
         },
       },
@@ -160,8 +164,8 @@ export const buildUserEndpoints = API => ({
         return {
           email,
           userInfo: {
-            admin: admin ? { global: true } : undefined,
-            builder: builder ? { global: true } : undefined,
+            admin,
+            builder,
             apps: apps ? apps : undefined,
           },
         }
@@ -179,6 +183,7 @@ export const buildUserEndpoints = API => ({
       url: `/api/global/users/invite/update/${invite.code}`,
       body: {
         apps: invite.apps,
+        builder: invite.builder,
       },
     })
   },
@@ -248,6 +253,28 @@ export const buildUserEndpoints = API => ({
   getUserCountByApp: async ({ appId }) => {
     return await API.get({
       url: `/api/global/users/count/${appId}`,
+    })
+  },
+
+  /**
+   * Adds a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to add as a builder
+   */
+  addAppBuilder: async ({ userId, appId }) => {
+    return await API.post({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
+    })
+  },
+
+  /**
+   * Removes a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to remove as a builder
+   */
+  removeAppBuilder: async ({ userId, appId }) => {
+    return await API.delete({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
     })
   },
 })

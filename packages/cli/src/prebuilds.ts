@@ -5,29 +5,39 @@ import { error } from "./utils"
 
 const PREBUILDS = "prebuilds"
 const ARCH = `${os.platform()}-${os.arch()}`
-const PREBUILD_DIR = join(process.execPath, "..", PREBUILDS, ARCH)
+const PREBUILD_DIR = join(process.execPath, "..", "cli", PREBUILDS, ARCH)
 
 // running as built CLI pkg bundle
 if (!process.argv[0].includes("node")) {
   checkForBinaries()
 }
 
+function localPrebuildPath() {
+  return join(process.execPath, "..", PREBUILDS)
+}
+
 function checkForBinaries() {
-  const readDir = join(__filename, "..", "..", "..", PREBUILDS, ARCH)
+  const readDir = join(__filename, "..", "..", "..", "cli", PREBUILDS, ARCH)
   if (fs.existsSync(PREBUILD_DIR) || !fs.existsSync(readDir)) {
     return
   }
   const natives = fs.readdirSync(readDir)
   if (fs.existsSync(readDir)) {
-    fs.mkdirSync(PREBUILD_DIR, { recursive: true })
+    const writePath = join(localPrebuildPath(), ARCH)
+    fs.mkdirSync(writePath, { recursive: true })
     for (let native of natives) {
       const filename = `${native.split(".fake")[0]}.node`
-      fs.cpSync(join(readDir, native), join(PREBUILD_DIR, filename))
+      fs.cpSync(join(readDir, native), join(writePath, filename))
     }
   }
 }
 
 function cleanup(evt?: number) {
+  // cleanup prebuilds first
+  const path = localPrebuildPath()
+  if (fs.existsSync(path)) {
+    fs.rmSync(path, { recursive: true })
+  }
   if (evt && !isNaN(evt)) {
     return
   }
@@ -38,9 +48,6 @@ function cleanup(evt?: number) {
       )
     )
     console.error(error(evt))
-  }
-  if (fs.existsSync(PREBUILD_DIR)) {
-    fs.rmSync(PREBUILD_DIR, { recursive: true })
   }
 }
 

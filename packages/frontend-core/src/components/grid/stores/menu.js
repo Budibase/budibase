@@ -1,5 +1,4 @@
-import { writable, get } from "svelte/store"
-import { GutterWidth } from "../lib/constants"
+import { writable } from "svelte/store"
 
 export const createStores = () => {
   const menu = writable({
@@ -13,19 +12,26 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
-  const { menu, bounds, focusedCellId, stickyColumn, rowHeight } = context
+export const createActions = context => {
+  const { menu, focusedCellId, rand } = context
 
   const open = (cellId, e) => {
-    const $bounds = get(bounds)
-    const $stickyColumn = get(stickyColumn)
-    const $rowHeight = get(rowHeight)
     e.preventDefault()
+
+    // Get DOM node for grid data wrapper to compute relative position to
+    const gridNode = document.getElementById(`grid-${rand}`)
+    const dataNode = gridNode?.getElementsByClassName("grid-data-outer")?.[0]
+    if (!dataNode) {
+      return
+    }
+
+    // Compute bounds of cell relative to outer data node
+    const targetBounds = e.target.getBoundingClientRect()
+    const dataBounds = dataNode.getBoundingClientRect()
     focusedCellId.set(cellId)
     menu.set({
-      left:
-        e.clientX - $bounds.left + GutterWidth + ($stickyColumn?.width || 0),
-      top: e.clientY - $bounds.top + $rowHeight,
+      left: targetBounds.left - dataBounds.left + e.offsetX,
+      top: targetBounds.top - dataBounds.top + e.offsetY,
       visible: true,
     })
   }

@@ -20,6 +20,8 @@
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import GroupIcon from "./_components/GroupIcon.svelte"
   import GroupUsers from "./_components/GroupUsers.svelte"
+  import { sdk } from "@budibase/shared-core"
+  import { Constants } from "@budibase/frontend-core"
 
   export let groupId
 
@@ -46,7 +48,7 @@
   let editModal, deleteModal
 
   $: scimEnabled = $features.isScimEnabled
-  $: readonly = !$auth.isAdmin || scimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
   $: groupApps = $apps
     .filter(app =>
@@ -56,8 +58,11 @@
     )
     .map(app => ({
       ...app,
-      role: group?.roles?.[apps.getProdAppID(app.devId)],
+      role: group?.builder?.apps.includes(apps.getProdAppID(app.devId))
+        ? Constants.Roles.CREATOR
+        : group?.roles?.[apps.getProdAppID(app.devId)],
     }))
+
   $: {
     if (loaded && !group?._id) {
       $goto("./")
@@ -141,7 +146,7 @@
         customPlaceholder
         allowEditRows={false}
         customRenderers={customAppTableRenderers}
-        on:click={e => $goto(`../../overview/${e.detail.devId}`)}
+        on:click={e => $goto(`/builder/app/${e.detail.devId}`)}
       >
         <div class="placeholder" slot="placeholder">
           <Heading size="S">This group doesn't have access to any apps</Heading>

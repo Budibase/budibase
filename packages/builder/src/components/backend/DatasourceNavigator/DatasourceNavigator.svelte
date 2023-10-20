@@ -1,7 +1,14 @@
 <script>
   import { goto, isActive, params } from "@roxi/routify"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
-  import { database, datasources, queries, tables, views } from "stores/backend"
+  import {
+    database,
+    datasources,
+    queries,
+    tables,
+    views,
+    viewsV2,
+  } from "stores/backend"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -12,8 +19,11 @@
     customQueryText,
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
+  import { TableNames } from "constants"
+  import { userSelectedResourceMap } from "builderStore"
 
   let openDataSources = []
+
   $: enrichedDataSources = enrichDatasources(
     $datasources,
     $params,
@@ -21,6 +31,7 @@
     $tables,
     $queries,
     $views,
+    $viewsV2,
     openDataSources
   )
   $: openDataSource = enrichedDataSources.find(x => x.open)
@@ -38,6 +49,7 @@
     tables,
     queries,
     views,
+    viewsV2,
     openDataSources
   ) => {
     if (!datasources?.list?.length) {
@@ -54,7 +66,8 @@
         isActive,
         tables,
         queries,
-        views
+        views,
+        viewsV2
       )
       const onlySource = datasources.list.length === 1
       return {
@@ -69,6 +82,13 @@
   function selectDatasource(datasource) {
     openNode(datasource)
     $goto(`./datasource/${datasource._id}`)
+  }
+
+  const selectTable = tableId => {
+    tables.select(tableId)
+    if (!$isActive("./table/:tableId")) {
+      $goto(`./table/${tableId}`)
+    }
   }
 
   function closeNode(datasource) {
@@ -96,7 +116,8 @@
     isActive,
     tables,
     queries,
-    views
+    views,
+    viewsV2
   ) => {
     // Check for being on a datasource page
     if (params.datasourceId === datasource._id) {
@@ -142,24 +163,39 @@
 
     // Check for a matching view
     const selectedView = views.selected?.name
-    const table = options.find(table => {
+    const viewTable = options.find(table => {
       return table.views?.[selectedView] != null
     })
-    return table != null
+    if (viewTable) {
+      return true
+    }
+
+    // Check for a matching viewV2
+    const viewV2Table = options.find(x => x._id === viewsV2.selected?.tableId)
+    return viewV2Table != null
   }
 </script>
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    {#each enrichedDataSources as datasource, idx}
+    <NavItem
+      icon="UserGroup"
+      text="App users"
+      selected={$isActive("./table/:tableId") &&
+        $tables.selected?._id === TableNames.USERS}
+      on:click={() => selectTable(TableNames.USERS)}
+      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
+    />
+    {#each enrichedDataSources as datasource}
       <NavItem
-        border={idx > 0}
+        border
         text={datasource.name}
         opened={datasource.open}
         selected={$isActive("./datasource") && datasource.selected}
         withArrow={true}
         on:click={() => selectDatasource(datasource)}
         on:iconClick={() => toggleNode(datasource)}
+        selectedBy={$userSelectedResourceMap[datasource._id]}
       >
         <div class="datasource-icon" slot="icon">
           <IntegrationIcon
@@ -174,7 +210,7 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} />
+        <TableNavigator sourceId={datasource._id} {selectTable} />
         {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
           <NavItem
             indentLevel={1}
@@ -185,6 +221,7 @@
             selected={$isActive("./query/:queryId") &&
               $queries.selectedQueryId === query._id}
             on:click={() => $goto(`./query/${query._id}`)}
+            selectedBy={$userSelectedResourceMap[query._id]}
           >
             <EditQueryPopover {query} />
           </NavItem>
@@ -196,7 +233,7 @@
 
 <style>
   .hierarchy-items-container {
-    margin: 0 calc(-1 * var(--spacing-xl));
+    margin: 0 calc(-1 * var(--spacing-l));
   }
   .datasource-icon {
     display: grid;

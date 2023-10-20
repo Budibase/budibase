@@ -4,7 +4,7 @@ const linkUtils = require("../linkedRows/linkUtils")
 const { context } = require("@budibase/backend-core")
 
 describe("test link functionality", () => {
-  const config = new TestConfig(false)
+  const config = new TestConfig()
   let appId
 
   describe("getLinkedTable", () => {

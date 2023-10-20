@@ -1,31 +1,42 @@
 import {
-  buildExternalTableId,
   breakExternalTableId,
+  buildExternalTableId,
 } from "../../../integrations/utils"
 import {
+  foreignKeyStructure,
   generateForeignKey,
   generateJunctionTableName,
-  foreignKeyStructure,
   hasTypeChanged,
   setStaticSchemas,
 } from "./utils"
 import { FieldTypes } from "../../../constants"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { handleRequest } from "../row/external"
-import { events, context } from "@budibase/backend-core"
-import { parse, isRows, isSchema } from "../../../utilities/schema"
+import { context, events } from "@budibase/backend-core"
+import { isRows, isSchema, parse } from "../../../utilities/schema"
 import {
+  BulkImportRequest,
+  BulkImportResponse,
   Datasource,
-  Table,
-  QueryJson,
-  Operation,
-  RenameColumn,
   FieldSchema,
-  UserCtx,
+  ManyToManyRelationshipFieldMetadata,
+  ManyToOneRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
+  Operation,
+  QueryJson,
+  RelationshipFieldMetadata,
+  RelationshipType,
+  RenameColumn,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
   TableRequest,
-  RelationshipTypes,
+  UserCtx,
+  ViewV2,
 } from "@budibase/types"
 import sdk from "../../../sdk"
+import { builderSocket } from "../../../websockets"
+
 const { cloneDeep } = require("lodash/fp")
 
 async function makeTableRequest(
@@ -68,10 +79,13 @@ function cleanupRelationships(
       schema.type === FieldTypes.LINK &&
       (!oldTable || table.schema[key] == null)
     ) {
+      const schemaTableId = schema.tableId
       const relatedTable = Object.values(tables).find(
-        table => table._id === schema.tableId
+        table => table._id === schemaTableId
       )
-      const foreignKey = schema.foreignKey
+      const foreignKey =
+        schema.relationshipType !== RelationshipType.MANY_TO_MANY &&
+        schema.foreignKey
       if (!relatedTable || !foreignKey) {
         continue
       }
@@ -100,17 +114,17 @@ function getDatasourceId(table: Table) {
 }
 
 function otherRelationshipType(type?: string) {
-  if (type === RelationshipTypes.MANY_TO_MANY) {
-    return RelationshipTypes.MANY_TO_MANY
+  if (type === RelationshipType.MANY_TO_MANY) {
+    return RelationshipType.MANY_TO_MANY
   }
-  return type === RelationshipTypes.ONE_TO_MANY
-    ? RelationshipTypes.MANY_TO_ONE
-    : RelationshipTypes.ONE_TO_MANY
+  return type === RelationshipType.ONE_TO_MANY
+    ? RelationshipType.MANY_TO_ONE
+    : RelationshipType.ONE_TO_MANY
 }
 
 function generateManyLinkSchema(
   datasource: Datasource,
-  column: FieldSchema,
+  column: ManyToManyRelationshipFieldMetadata,
   table: Table,
   relatedTable: Table
 ): Table {
@@ -145,15 +159,17 @@ function generateManyLinkSchema(
 }
 
 function generateLinkSchema(
-  column: FieldSchema,
+  column:
+    | OneToManyRelationshipFieldMetadata
+    | ManyToOneRelationshipFieldMetadata,
   table: Table,
   relatedTable: Table,
-  type: RelationshipTypes
+  type: RelationshipType.ONE_TO_MANY | RelationshipType.MANY_TO_ONE
 ) {
   if (!table.primary || !relatedTable.primary) {
     throw new Error("Unable to generate link schema, no primary keys")
   }
-  const isOneSide = type === RelationshipTypes.ONE_TO_MANY
+  const isOneSide = type === RelationshipType.ONE_TO_MANY
   const primary = isOneSide ? relatedTable.primary[0] : table.primary[0]
   // generate a foreign key
   const foreignKey = generateForeignKey(column, relatedTable)
@@ -164,20 +180,22 @@ function generateLinkSchema(
 }
 
 function generateRelatedSchema(
-  linkColumn: FieldSchema,
+  linkColumn: RelationshipFieldMetadata,
   table: Table,
   relatedTable: Table,
   columnName: string
 ) {
   // generate column for other table
   const relatedSchema = cloneDeep(linkColumn)
+  const isMany2Many =
+    linkColumn.relationshipType === RelationshipType.MANY_TO_MANY
   // swap them from the main link
-  if (linkColumn.foreignKey) {
+  if (!isMany2Many && linkColumn.foreignKey) {
     relatedSchema.fieldName = linkColumn.foreignKey
     relatedSchema.foreignKey = linkColumn.fieldName
   }
   // is many to many
-  else {
+  else if (isMany2Many) {
     // don't need to copy through, already got it
     relatedSchema.fieldName = linkColumn.throughTo
     relatedSchema.throughTo = linkColumn.throughFrom
@@ -191,12 +209,12 @@ function generateRelatedSchema(
   table.schema[columnName] = relatedSchema
 }
 
-function isRelationshipSetup(column: FieldSchema) {
-  return column.foreignKey || column.through
+function isRelationshipSetup(column: RelationshipFieldMetadata) {
+  return (column as any).foreignKey || (column as any).through
 }
 
-export async function save(ctx: UserCtx) {
-  const inputs: TableRequest = ctx.request.body
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+  const inputs = ctx.request.body
   const renamed = inputs?._rename
   // can't do this right now
   delete inputs.rows
@@ -208,16 +226,28 @@ export async function save(ctx: UserCtx) {
   let tableToSave: TableRequest = {
     type: "table",
     _id: buildExternalTableId(datasourceId, inputs.name),
+    sourceId: datasourceId,
     ...inputs,
   }
 
-  let oldTable
+  let oldTable: Table | undefined
   if (ctx.request.body && ctx.request.body._id) {
     oldTable = await sdk.tables.getTable(ctx.request.body._id)
   }
 
   if (hasTypeChanged(tableToSave, oldTable)) {
     ctx.throw(400, "A column type has changed.")
+  }
+
+  for (let view in tableToSave.views) {
+    const tableView = tableToSave.views[view]
+    if (!tableView || !sdk.views.isV2(tableView)) continue
+
+    tableToSave.views[view] = sdk.views.syncSchema(
+      oldTable!.views![view] as ViewV2,
+      tableToSave.schema,
+      renamed
+    )
   }
 
   const db = context.getAppDB()
@@ -239,15 +269,16 @@ export async function save(ctx: UserCtx) {
     if (schema.type !== FieldTypes.LINK || isRelationshipSetup(schema)) {
       continue
     }
+    const schemaTableId = schema.tableId
     const relatedTable = Object.values(tables).find(
-      table => table._id === schema.tableId
+      table => table._id === schemaTableId
     )
     if (!relatedTable) {
       continue
     }
     const relatedColumnName = schema.fieldName!
-    const relationType = schema.relationshipType!
-    if (relationType === RelationshipTypes.MANY_TO_MANY) {
+    const relationType = schema.relationshipType
+    if (relationType === RelationshipType.MANY_TO_MANY) {
       const junctionTable = generateManyLinkSchema(
         datasource,
         schema,
@@ -261,7 +292,7 @@ export async function save(ctx: UserCtx) {
       extraTablesToUpdate.push(junctionTable)
     } else {
       const fkTable =
-        relationType === RelationshipTypes.ONE_TO_MANY
+        relationType === RelationshipType.ONE_TO_MANY
           ? tableToSave
           : relatedTable
       const foreignKey = generateLinkSchema(
@@ -315,7 +346,12 @@ export async function save(ctx: UserCtx) {
   delete tableToSave._rename
   // store it into couch now for budibase reference
   datasource.entities[tableToSave.name] = tableToSave
-  await db.put(datasource)
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await sdk.datasources.get(datasource._id!)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToSave
 }
@@ -341,15 +377,22 @@ export async function destroy(ctx: UserCtx) {
     datasource.entities = tables
   }
 
-  await db.put(datasource)
+  await db.put(sdk.tables.populateExternalTableSchemas(datasource))
+
+  // Since tables are stored inside datasources, we need to notify clients
+  // that the datasource definition changed
+  const updatedDatasource = await sdk.datasources.get(datasource._id!)
+  builderSocket?.emitDatasourceUpdate(ctx, updatedDatasource)
 
   return tableToDelete
 }
 
-export async function bulkImport(ctx: UserCtx) {
+export async function bulkImport(
+  ctx: UserCtx<BulkImportRequest, BulkImportResponse>
+) {
   const table = await sdk.tables.getTable(ctx.params.tableId)
-  const { rows }: { rows: unknown } = ctx.request.body
-  const schema: unknown = table.schema
+  const { rows } = ctx.request.body
+  const schema = table.schema
 
   if (!rows || !isRows(rows) || !isSchema(schema)) {
     ctx.throw(400, "Provided data import information is invalid.")

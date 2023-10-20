@@ -76,7 +76,13 @@ export const createLicensingStore = () => {
       await actions.setQuotaUsage()
     },
     setNavigation: () => {
-      const upgradeUrl = `${get(admin).accountPortalUrl}/portal/upgrade`
+      const adminStore = get(admin)
+      const authStore = get(auth)
+
+      const upgradeUrl = authStore?.user?.accountPortalAccess
+        ? `${adminStore.accountPortalUrl}/portal/upgrade`
+        : "/builder/portal/account/upgrade"
+
       const goToUpgradePage = () => {
         window.location.href = upgradeUrl
       }
@@ -101,7 +107,7 @@ export const createLicensingStore = () => {
         Constants.Features.USER_GROUPS
       )
       const backupsEnabled = license.features.includes(
-        Constants.Features.BACKUPS
+        Constants.Features.APP_BACKUPS
       )
       const scimEnabled = license.features.includes(Constants.Features.SCIM)
       const environmentVariablesEnabled = license.features.includes(
@@ -119,6 +125,13 @@ export const createLicensingStore = () => {
       const syncAutomationsEnabled = license.features.includes(
         Constants.Features.SYNC_AUTOMATIONS
       )
+      const perAppBuildersEnabled = license.features.includes(
+        Constants.Features.APP_BUILDERS
+      )
+
+      const isViewPermissionsEnabled = license.features.includes(
+        Constants.Features.VIEW_PERMISSIONS
+      )
       store.update(state => {
         return {
           ...state,
@@ -134,6 +147,8 @@ export const createLicensingStore = () => {
           auditLogsEnabled,
           enforceableSSO,
           syncAutomationsEnabled,
+          isViewPermissionsEnabled,
+          perAppBuildersEnabled,
         }
       })
     },

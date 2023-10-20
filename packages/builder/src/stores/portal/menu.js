@@ -2,8 +2,12 @@ import { derived } from "svelte/store"
 import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
 import { admin } from "./admin"
 import { auth } from "./auth"
+import { sdk } from "@budibase/shared-core"
 
 export const menu = derived([admin, auth], ([$admin, $auth]) => {
+  const user = $auth?.user
+  const isAdmin = sdk.users.isAdmin(user)
+  const cloud = $admin?.cloud
   // Determine user sub pages
   let userSubPages = [
     {
@@ -24,19 +28,21 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
       title: "Apps",
       href: "/builder/portal/apps",
     },
-    {
+  ]
+  if (sdk.users.isGlobalBuilder(user)) {
+    menu.push({
       title: "Users",
       href: "/builder/portal/users",
       subPages: userSubPages,
-    },
-    {
+    })
+    menu.push({
       title: "Plugins",
       href: "/builder/portal/plugins",
-    },
-  ]
+    })
+  }
 
   // Add settings page for admins
-  if ($auth.isAdmin) {
+  if (isAdmin) {
     let settingsSubPages = [
       {
         title: "Auth",
@@ -59,10 +65,14 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         href: "/builder/portal/settings/environment",
       },
     ]
-    if (!$admin.cloud) {
+    if (!cloud) {
       settingsSubPages.push({
         title: "Version",
         href: "/builder/portal/settings/version",
+      })
+      settingsSubPages.push({
+        title: "Diagnostics",
+        href: "/builder/portal/settings/diagnostics",
       })
     }
     menu.push({
@@ -80,31 +90,35 @@ export const menu = derived([admin, auth], ([$admin, $auth]) => {
         href: "/builder/portal/account/usage",
       },
     ]
-    if ($auth.isAdmin) {
+    if (isAdmin) {
       accountSubPages.push({
         title: "Audit Logs",
         href: "/builder/portal/account/auditLogs",
       })
+
+      if (!cloud) {
+        accountSubPages.push({
+          title: "System Logs",
+          href: "/builder/portal/account/systemLogs",
+        })
+      }
     }
-    if ($admin.cloud && $auth?.user?.accountPortalAccess) {
+    if (cloud && user?.accountPortalAccess) {
       accountSubPages.push({
         title: "Upgrade",
-        href: $admin.accountPortalUrl + "/portal/upgrade",
+        href: $admin?.accountPortalUrl + "/portal/upgrade",
       })
-    } else if (!$admin.cloud && $auth.isAdmin) {
+    } else if (!cloud && isAdmin) {
       accountSubPages.push({
         title: "Upgrade",
         href: "/builder/portal/account/upgrade",
       })
     }
     // add license check here
-    if (
-      $auth?.user?.accountPortalAccess &&
-      $auth.user.account.stripeCustomerId
-    ) {
+    if (user?.accountPortalAccess && user.account.stripeCustomerId) {
       accountSubPages.push({
         title: "Billing",
-        href: $admin.accountPortalUrl + "/portal/billing",
+        href: $admin?.accountPortalUrl + "/portal/billing",
       })
     }
     menu.push({

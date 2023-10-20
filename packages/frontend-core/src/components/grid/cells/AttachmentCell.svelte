@@ -1,7 +1,7 @@
 <script>
   import { onMount } from "svelte"
   import { getContext } from "svelte"
-  import { Dropzone, notifications } from "@budibase/bbui"
+  import { Dropzone } from "@budibase/bbui"
 
   export let value
   export let focused = false
@@ -11,7 +11,7 @@
   export let invertX = false
   export let invertY = false
 
-  const { API } = getContext("grid")
+  const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
@@ -40,7 +40,7 @@
   }
 
   const handleFileTooLarge = fileSizeLimit => {
-    notifications.error(
+    $notifications.error(
       `Files cannot exceed ${
         fileSizeLimit / 1000000
       }MB. Please try again with smaller files.`
@@ -55,7 +55,7 @@
     try {
       return await API.uploadBuilderAttachment(data)
     } catch (error) {
-      notifications.error("Failed to upload attachment")
+      $notifications.error("Failed to upload attachment")
       return []
     }
   }
@@ -138,10 +138,12 @@
     top: 100%;
     left: 0;
     width: 320px;
-    background: var(--background);
+    background: var(--grid-background-alt);
     border: var(--cell-border);
     padding: var(--cell-padding);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .dropzone.invertX {
     left: auto;

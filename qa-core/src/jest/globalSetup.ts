@@ -1,14 +1,10 @@
-import { DEFAULT_TENANT_ID, logging } from "@budibase/backend-core"
+import { DEFAULT_TENANT_ID } from "@budibase/backend-core"
 import { AccountInternalAPI } from "../account-api"
 import * as fixtures from "../internal-api/fixtures"
 import { BudibaseInternalAPI } from "../internal-api"
-import { CreateAccountRequest, Feature } from "@budibase/types"
+import { Account, CreateAccountRequest, Feature } from "@budibase/types"
 import env from "../environment"
 import { APIRequestOpts } from "../types"
-
-// turn off or on context logging i.e. tenantId, appId etc
-// it's not applicable for the qa run
-logging.LOG_CONTEXT = false
 
 const accountsApi = new AccountInternalAPI({})
 const internalApi = new BudibaseInternalAPI({})
@@ -18,37 +14,49 @@ const API_OPTS: APIRequestOpts = { doExpect: false }
 // @ts-ignore
 global.qa = {}
 
-async function createAccount() {
+async function createAccount(): Promise<[CreateAccountRequest, Account]> {
   const account = fixtures.accounts.generateAccount()
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
-  const [res, newAccount] = await accountsApi.accounts.create(account, API_OPTS)
+  const [res, newAccount] = await accountsApi.accounts.create(account, {
+    ...API_OPTS,
+    autoVerify: true,
+  })
   await updateLicense(newAccount.accountId)
-  return account
+  return [account, newAccount]
 }
 
 const UNLIMITED = { value: -1 }
 
 async function updateLicense(accountId: string) {
-  await accountsApi.licenses.updateLicense(accountId, {
-    overrides: {
-      // add all features
-      features: Object.values(Feature),
-      quotas: {
-        usage: {
-          monthly: {
-            automations: UNLIMITED,
-          },
-          static: {
-            rows: UNLIMITED,
-            users: UNLIMITED,
-            userGroups: UNLIMITED,
-            plugins: UNLIMITED,
+  const [response] = await accountsApi.licenses.updateLicense(
+    accountId,
+    {
+      overrides: {
+        // add all features
+        features: Object.values(Feature),
+        quotas: {
+          usage: {
+            monthly: {
+              automations: UNLIMITED,
+            },
+            static: {
+              rows: UNLIMITED,
+              users: UNLIMITED,
+              userGroups: UNLIMITED,
+              plugins: UNLIMITED,
+            },
           },
         },
       },
     },
-  })
+    { doExpect: false }
+  )
+  if (response.status !== 200) {
+    throw new Error(
+      `Could not update license for accountId=${accountId}: ${response.status}`
+    )
+  }
 }
 
 async function loginAsAdmin() {
@@ -67,8 +75,7 @@ async function loginAsAdmin() {
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await internalApi.auth.login(
-    account.tenantId,
+  const [res, cookie] = await accountsApi.auth.login(
     account.email,
     account.password,
     API_OPTS
@@ -85,9 +92,13 @@ async function setup() {
   console.log(`Environment: ${JSON.stringify(env)}`)
 
   if (env.multiTenancy) {
-    const account = await createAccount()
+    const [account, newAccount] = await createAccount()
     // @ts-ignore
     global.qa.tenantId = account.tenantId
+    // @ts-ignore
+    global.qa.email = account.email
+    // @ts-ignore
+    global.qa.accountId = newAccount.accountId
     await loginAsAccount(account)
   } else {
     // @ts-ignore

@@ -44,11 +44,11 @@ export async function generateAPIKey(ctx: any) {
   const id = dbCore.generateDevInfoID(userId)
   let devInfo
   try {
-    devInfo = await db.get(id)
+    devInfo = await db.get<any>(id)
   } catch (err) {
     devInfo = { _id: id, userId }
   }
-  devInfo.apiKey = await apiKey
+  devInfo.apiKey = apiKey
   await db.put(devInfo)
   ctx.body = cleanupDevInfo(devInfo)
 }
@@ -63,7 +63,7 @@ export async function fetchAPIKey(ctx: any) {
     devInfo = {
       _id: id,
       userId: ctx.user._id,
-      apiKey: await newApiKey(),
+      apiKey: newApiKey(),
     }
     await db.put(devInfo)
   }
@@ -91,7 +91,7 @@ export async function getSelf(ctx: any) {
   }
 
   // get the main body of the user
-  const user = await userSdk.getUser(userId)
+  const user = await userSdk.db.getUser(userId)
   ctx.body = await groups.enrichUserRolesFromGroups(user)
 
   // add the feature flags for this tenant
@@ -106,12 +106,12 @@ export async function updateSelf(
 ) {
   const update = ctx.request.body
 
-  let user = await userSdk.getUser(ctx.user._id!)
+  let user = await userSdk.db.getUser(ctx.user._id!)
   user = {
     ...user,
     ...update,
   }
-  user = await userSdk.save(user, { requirePassword: false })
+  user = await userSdk.db.save(user, { requirePassword: false })
 
   if (update.password) {
     // Log all other sessions out apart from the current one

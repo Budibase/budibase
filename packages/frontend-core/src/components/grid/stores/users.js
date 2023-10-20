@@ -30,13 +30,22 @@ export const deriveStores = context => {
     ([$users, $focusedCellId]) => {
       let map = {}
       $users.forEach(user => {
-        if (user.focusedCellId && user.focusedCellId !== $focusedCellId) {
-          map[user.focusedCellId] = user
+        const cellId = user.gridMetadata?.focusedCellId
+        if (cellId && cellId !== $focusedCellId) {
+          map[cellId] = user
         }
       })
       return map
     }
   )
+
+  return {
+    selectedCellMap,
+  }
+}
+
+export const createActions = context => {
+  const { users } = context
 
   const updateUser = user => {
     const $users = get(users)
@@ -51,9 +60,9 @@ export const deriveStores = context => {
     }
   }
 
-  const removeUser = user => {
+  const removeUser = sessionId => {
     users.update(state => {
-      return state.filter(x => x.sessionId !== user.sessionId)
+      return state.filter(x => x.sessionId !== sessionId)
     })
   }
 
@@ -65,6 +74,5 @@ export const deriveStores = context => {
         removeUser,
       },
     },
-    selectedCellMap,
   }
 }

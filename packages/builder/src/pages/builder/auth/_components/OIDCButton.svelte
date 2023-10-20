@@ -29,14 +29,13 @@
     }
   })
 
-  $: src = !$oidc.logo
-    ? OidcLogo
-    : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
+  $: oidcLogoImageURL = preDefinedIcons[$oidc.logo] ?? $oidc.logo
+  $: logoSrc = oidcLogoImageURL ?? OidcLogo
 </script>
 
 {#if show}
   <FancyButton
-    icon={src}
+    icon={logoSrc}
     on:click={() => {
       const url = `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`
       if (samePage) {

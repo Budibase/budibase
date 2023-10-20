@@ -1,27 +1,40 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { apps, templates, licensing, groups } from "stores/portal"
+  import {
+    admin,
+    apps,
+    templates,
+    licensing,
+    groups,
+    auth,
+  } from "stores/portal"
   import { onMount } from "svelte"
   import { redirect } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
+  import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
-  let loaded = $apps.length > 0
+  let loaded = $apps.length != null
 
   onMount(async () => {
     try {
-      // Always load latest
-      await Promise.all([
-        licensing.init(),
-        templates.load(),
-        groups.actions.init(),
-      ])
+      const promises = [licensing.init()]
 
-      if ($templates?.length === 0) {
+      if (!$admin.offlineMode) {
+        promises.push(templates.load())
+      }
+
+      promises.push(groups.actions.init())
+
+      // Always load latest
+      await Promise.all(promises)
+
+      if (!$admin.offlineMode && $templates?.length === 0) {
         notifications.error("There was a problem loading quick start templates")
       }
 
       // Go to new app page if no apps exists
-      if (!$apps.length) {
+      if (!$apps.length && sdk.users.isGlobalBuilder($auth.user)) {
         $redirect("./onboarding")
       }
     } catch (error) {
@@ -32,5 +45,20 @@
 </script>
 
 {#if loaded}
-  <slot />
+  <div class="page">
+    {#if $apps.length > 0}
+      <PortalSideBar />
+    {/if}
+    <slot />
+  </div>
 {/if}
+
+<style>
+  .page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
+  }
+</style>

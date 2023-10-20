@@ -1,57 +1,59 @@
 import env from "../../environment"
 import {
+  createAllSearchIndex,
   createLinkView,
   createRoutingView,
-  createAllSearchIndex,
 } from "../../db/views/staticViews"
-import { createApp, deleteApp } from "../../utilities/fileSystem"
 import {
+  backupClientLibrary,
+  createApp,
+  deleteApp,
+  revertClientLibrary,
+  updateClientLibrary,
+} from "../../utilities/fileSystem"
+import {
+  AppStatus,
+  DocumentType,
   generateAppID,
+  generateDevAppID,
   getLayoutParams,
   getScreenParams,
-  generateDevAppID,
-  DocumentType,
-  AppStatus,
 } from "../../db/utils"
 import {
-  db as dbCore,
-  roles,
   cache,
-  tenancy,
   context,
+  db as dbCore,
+  env as envCore,
+  ErrorCode,
   events,
   migrations,
   objectStore,
-  ErrorCode,
-  env as envCore,
+  roles,
+  tenancy,
+  users,
 } from "@budibase/backend-core"
 import { USERS_TABLE_SCHEMA } from "../../constants"
 import {
-  DEFAULT_BB_DATASOURCE_ID,
   buildDefaultDocs,
+  DEFAULT_BB_DATASOURCE_ID,
 } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
-import { stringToReadStream, isQsTrue } from "../../utilities"
-import { getLocksById, doesUserHaveLock } from "../../utilities/redis"
-import {
-  updateClientLibrary,
-  backupClientLibrary,
-  revertClientLibrary,
-} from "../../utilities/fileSystem"
+import { stringToReadStream } from "../../utilities"
+import { doesUserHaveLock } from "../../utilities/redis"
 import { cleanupAutomations } from "../../automations/utils"
-import { checkAppMetadata } from "../../automations/logging"
 import { getUniqueRows } from "../../utilities/usageQuota/rows"
-import { quotas, groups } from "@budibase/pro"
+import { groups, licensing, quotas } from "@budibase/pro"
 import {
   App,
   Layout,
-  Screen,
   MigrationType,
-  Database,
+  PlanType,
+  Screen,
   UserCtx,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
+import { builderSocket } from "../../websockets"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -114,7 +116,18 @@ function checkAppName(
   }
 }
 
-async function createInstance(appId: string, template: any) {
+interface AppTemplate {
+  templateString: string
+  useTemplate: string
+  file?: {
+    type: string
+    path: string
+    password?: string
+  }
+  key?: string
+}
+
+async function createInstance(appId: string, template: AppTemplate) {
   const db = context.getAppDB()
   await db.put({
     _id: "_design/database",
@@ -153,7 +166,7 @@ export const addSampleData = async (ctx: UserCtx) => {
     // Check if default datasource exists before creating it
     await sdk.datasources.get(DEFAULT_BB_DATASOURCE_ID)
   } catch (err: any) {
-    const defaultDbDocs = buildDefaultDocs()
+    const defaultDbDocs = await buildDefaultDocs()
 
     // add in the default db data docs - tables, datasource, rows and links
     await db.bulkDocs([...defaultDbDocs])
@@ -163,28 +176,10 @@ export const addSampleData = async (ctx: UserCtx) => {
 }
 
 export async function fetch(ctx: UserCtx) {
-  const dev = ctx.query && ctx.query.status === AppStatus.DEV
-  const all = ctx.query && ctx.query.status === AppStatus.ALL
-  const apps = (await dbCore.getAllApps({ dev, all })) as App[]
-
-  const appIds = apps
-    .filter((app: any) => app.status === "development")
-    .map((app: any) => app.appId)
-  // get the locks for all the dev apps
-  if (dev || all) {
-    const locks = await getLocksById(appIds)
-    for (let app of apps) {
-      const lock = locks[app.appId]
-      if (lock) {
-        app.lockedBy = lock
-      } else {
-        // make sure its definitely not present
-        delete app.lockedBy
-      }
-    }
-  }
-
-  ctx.body = await checkAppMetadata(apps)
+  ctx.body = await sdk.applications.fetch(
+    ctx.query.status as AppStatus,
+    ctx.user
+  )
 }
 
 export async function fetchAppDefinition(ctx: UserCtx) {
@@ -204,9 +199,11 @@ export async function fetchAppDefinition(ctx: UserCtx) {
 
 export async function fetchAppPackage(ctx: UserCtx) {
   const db = context.getAppDB()
-  let application = await db.get(DocumentType.APP_METADATA)
+  const appId = context.getAppId()
+  let application = await db.get<any>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
+  const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
@@ -214,7 +211,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
   )
 
   // Only filter screens if the user is not a builder
-  if (!(ctx.user.builder && ctx.user.builder.global)) {
+  if (!users.isBuilder(ctx.user, appId)) {
     const userRoleId = getUserRoleId(ctx)
     const accessController = new roles.AccessController()
     screens = await accessController.checkScreensAccess(screens, userRoleId)
@@ -227,6 +224,7 @@ export async function fetchAppPackage(ctx: UserCtx) {
 
   ctx.body = {
     application: { ...application, upgradableVersion: envCore.VERSION },
+    licenseType: license?.plan.type || PlanType.FREE,
     screens,
     layouts,
     clientLibPath,
@@ -237,19 +235,24 @@ export async function fetchAppPackage(ctx: UserCtx) {
 async function performAppCreate(ctx: UserCtx) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url
+    possibleUrl = ctx.request.body.url,
+    encryptionPassword = ctx.request.body.encryptionPassword
+
   checkAppName(ctx, apps, name)
   const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
   checkAppUrl(ctx, apps, url)
 
   const { useTemplate, templateKey, templateString } = ctx.request.body
-  const instanceConfig: any = {
+  const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
     templateString,
   }
   if (ctx.request.files && ctx.request.files.templateFile) {
-    instanceConfig.file = ctx.request.files.templateFile
+    instanceConfig.file = {
+      ...(ctx.request.files.templateFile as any),
+      password: encryptionPassword,
+    }
   }
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
@@ -278,16 +281,15 @@ async function performAppCreate(ctx: UserCtx) {
         title: name,
         navWidth: "Large",
         navBackground: "var(--spectrum-global-color-gray-100)",
-        links: [
-          {
-            url: "/home",
-            text: "Home",
-          },
-        ],
+        links: [],
       },
       theme: "spectrum--light",
       customTheme: {
         buttonBorderRadius: "16px",
+      },
+      features: {
+        componentValidation: true,
+        disableUserMetadata: true,
       },
     }
 
@@ -308,6 +310,14 @@ async function performAppCreate(ctx: UserCtx) {
           newApplication[key] = existing[key]
         }
       })
+
+      // Keep existing feature flags
+      if (!existing.features?.componentValidation) {
+        newApplication.features!.componentValidation = false
+      }
+      if (!existing.features?.disableUserMetadata) {
+        newApplication.features!.disableUserMetadata = false
+      }
 
       // Migrate navigation settings and screens if required
       if (existing) {
@@ -417,12 +427,20 @@ export async function update(ctx: UserCtx) {
   await events.app.updated(app)
   ctx.status = 200
   ctx.body = app
+  builderSocket?.emitAppMetadataUpdate(ctx, {
+    theme: app.theme,
+    customTheme: app.customTheme,
+    navigation: app.navigation,
+    name: app.name,
+    url: app.url,
+    icon: app.icon,
+  })
 }
 
 export async function updateClient(ctx: UserCtx) {
   // Get current app version
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
   // Update client library and manifest
@@ -446,7 +464,7 @@ export async function updateClient(ctx: UserCtx) {
 export async function revertClient(ctx: UserCtx) {
   // Check app can be reverted
   const db = context.getAppDB()
-  const application = await db.get(DocumentType.APP_METADATA)
+  const application = await db.get<App>(DocumentType.APP_METADATA)
   if (!application.revertableVersion) {
     ctx.throw(400, "There is no version to revert to")
   }
@@ -499,7 +517,7 @@ async function destroyApp(ctx: UserCtx) {
 
   const db = dbCore.getDB(devAppId)
   // standard app deletion flow
-  const app = await db.get(DocumentType.APP_METADATA)
+  const app = await db.get<App>(DocumentType.APP_METADATA)
   const result = await db.destroy()
   await quotas.removeApp()
   await events.app.deleted(app)
@@ -547,6 +565,7 @@ export async function unpublish(ctx: UserCtx) {
   await unpublishApp(ctx)
   await postDestroyApp(ctx)
   ctx.status = 204
+  builderSocket?.emitAppUnpublish(ctx)
 }
 
 export async function sync(ctx: UserCtx) {
@@ -558,10 +577,32 @@ export async function sync(ctx: UserCtx) {
   }
 }
 
+export async function importToApp(ctx: UserCtx) {
+  const { appId } = ctx.params
+  const appExport = ctx.request.files?.appExport
+  const password = ctx.request.body.encryptionPassword as string
+  if (!appExport) {
+    ctx.throw(400, "Must supply app export to import")
+  }
+  if (Array.isArray(appExport)) {
+    ctx.throw(400, "Must only supply one app export")
+  }
+  const fileAttributes = { type: appExport.type!, path: appExport.path! }
+  try {
+    await sdk.applications.updateWithExport(appId, fileAttributes, password)
+  } catch (err: any) {
+    ctx.throw(
+      500,
+      `Unable to perform update, please retry - ${err?.message || err}`
+    )
+  }
+  ctx.body = { message: "app updated" }
+}
+
 export async function updateAppPackage(appPackage: any, appId: any) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    const application = await db.get(DocumentType.APP_METADATA)
+    const application = await db.get<App>(DocumentType.APP_METADATA)
 
     const newAppPackage = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {

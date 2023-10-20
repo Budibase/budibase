@@ -33,7 +33,6 @@ const createScreenStore = () => {
     ]) => {
       let activeLayout, activeScreen
       let screens
-
       if ($builderStore.inBuilder) {
         // Use builder defined definitions if inside the builder preview
         activeScreen = Helpers.cloneDeep($builderStore.screen)
@@ -175,10 +174,10 @@ const createScreenStore = () => {
               },
             ],
             ...navigationSettings,
+            embedded: $appStore.embedded,
           },
         }
       }
-
       return { screens, activeLayout, activeScreen }
     }
   )

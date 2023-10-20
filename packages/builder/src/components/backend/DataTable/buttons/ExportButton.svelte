@@ -7,6 +7,7 @@
   export let sorting
   export let disabled = false
   export let selectedRows
+  export let formats
 
   let modal
 </script>
@@ -15,5 +16,5 @@
   Export
 </ActionButton>
 <Modal bind:this={modal}>
-  <ExportModal {view} {filters} {sorting} {selectedRows} />
+  <ExportModal {view} {filters} {sorting} {selectedRows} {formats} />
 </Modal>

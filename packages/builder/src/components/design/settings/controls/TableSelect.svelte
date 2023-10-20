@@ -1,28 +1,48 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { tables as tablesStore } from "stores/backend"
+  import { createEventDispatcher, onMount } from "svelte"
+  import { tables as tablesStore, viewsV2 } from "stores/backend"
 
   export let value
 
   const dispatch = createEventDispatcher()
 
-  $: tables = $tablesStore.list.map(m => ({
-    label: m.name,
-    tableId: m._id,
+  $: tables = $tablesStore.list.map(table => ({
     type: "table",
+    label: table.name,
+    tableId: table._id,
+    resourceId: table._id,
   }))
+  $: views = $viewsV2.list.map(view => ({
+    type: "viewV2",
+    id: view.id,
+    label: view.name,
+    tableId: view.tableId,
+    resourceId: view.id,
+  }))
+  $: options = [...(tables || []), ...(views || [])]
 
   const onChange = e => {
-    const dataSource = tables?.find(x => x.tableId === e.detail)
-    dispatch("change", dataSource)
+    dispatch(
+      "change",
+      options.find(x => x.resourceId === e.detail)
+    )
   }
+
+  onMount(() => {
+    // Migrate old values before "resourceId" existed
+    if (value && !value.resourceId) {
+      const view = views.find(x => x.resourceId === value.id)
+      const table = tables.find(x => x.resourceId === value.tableId)
+      dispatch("change", view || table)
+    }
+  })
 </script>
 
 <Select
   on:change={onChange}
-  value={value?.tableId}
-  options={tables}
-  getOptionValue={x => x.tableId}
+  value={value?.resourceId}
+  {options}
+  getOptionValue={x => x.resourceId}
   getOptionLabel={x => x.label}
 />

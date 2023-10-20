@@ -2,8 +2,8 @@
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
+  import clickOutside from "../../Actions/click_outside"
 
   export let value = null
   export let id = null
@@ -80,10 +80,11 @@
     </svg>
   </button>
   {#if open}
-    <div class="overlay" on:mousedown|self={() => (open = false)} />
     <div
-      transition:fly={{ y: -20, duration: 200 }}
       class="spectrum-Popover spectrum-Popover--bottom is-open"
+      use:clickOutside={() => {
+        open = false
+      }}
     >
       <ul class="spectrum-Menu" role="listbox">
         {#if options && Array.isArray(options)}
@@ -124,14 +125,6 @@
   }
   .spectrum-Textfield-input {
     width: 0;
-  }
-  .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 999;
   }
   .spectrum-Popover {
     max-height: 240px;

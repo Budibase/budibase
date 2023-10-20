@@ -613,6 +613,23 @@
           "data"
         ]
       },
+      "appExport": {
+        "type": "object",
+        "properties": {
+          "encryptPassword": {
+            "description": "An optional password used to encrypt the export.",
+            "type": "string"
+          },
+          "excludeRows": {
+            "description": "Set whether the internal table rows should be excluded from the export.",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "encryptPassword",
+          "excludeRows"
+        ]
+      },
       "row": {
         "description": "The row to be created/updated, based on the table schema.",
         "type": "object",
@@ -841,7 +858,9 @@
                         "auto",
                         "json",
                         "internal",
-                        "barcodeqr"
+                        "barcodeqr",
+                        "bigint",
+                        "bb_reference"
                       ],
                       "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                     },
@@ -1045,7 +1064,9 @@
                             "auto",
                             "json",
                             "internal",
-                            "barcodeqr"
+                            "barcodeqr",
+                            "bigint",
+                            "bb_reference"
                           ],
                           "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                         },
@@ -1260,7 +1281,9 @@
                               "auto",
                               "json",
                               "internal",
-                              "barcodeqr"
+                              "barcodeqr",
+                              "bigint",
+                              "bb_reference"
                             ],
                             "description": "Defines the type of the column, most explain themselves, a link column is a relationship."
                           },
@@ -1518,7 +1541,7 @@
             "type": "boolean"
           },
           "builder": {
-            "description": "Describes if the user is a builder user or not.",
+            "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
             "type": "object",
             "properties": {
               "global": {
@@ -1528,7 +1551,7 @@
             }
           },
           "admin": {
-            "description": "Describes if the user is an admin user or not.",
+            "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
             "type": "object",
             "properties": {
               "global": {
@@ -1538,7 +1561,7 @@
             }
           },
           "roles": {
-            "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+            "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
             "type": "object",
             "additionalProperties": {
               "type": "string",
@@ -1547,8 +1570,7 @@
           }
         },
         "required": [
-          "email",
-          "roles"
+          "email"
         ]
       },
       "userOutput": {
@@ -1585,7 +1607,7 @@
                 "type": "boolean"
               },
               "builder": {
-                "description": "Describes if the user is a builder user or not.",
+                "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "properties": {
                   "global": {
@@ -1595,7 +1617,7 @@
                 }
               },
               "admin": {
-                "description": "Describes if the user is an admin user or not.",
+                "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "properties": {
                   "global": {
@@ -1605,7 +1627,7 @@
                 }
               },
               "roles": {
-                "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
                 "type": "object",
                 "additionalProperties": {
                   "type": "string",
@@ -1619,7 +1641,6 @@
             },
             "required": [
               "email",
-              "roles",
               "_id"
             ]
           }
@@ -1664,7 +1685,7 @@
                   "type": "boolean"
                 },
                 "builder": {
-                  "description": "Describes if the user is a builder user or not.",
+                  "description": "Describes if the user is a builder user or not. This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "properties": {
                     "global": {
@@ -1674,7 +1695,7 @@
                   }
                 },
                 "admin": {
-                  "description": "Describes if the user is an admin user or not.",
+                  "description": "Describes if the user is an admin user or not. This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "properties": {
                     "global": {
@@ -1684,7 +1705,7 @@
                   }
                 },
                 "roles": {
-                  "description": "Contains the roles of the user per app (assuming they are not a builder user).",
+                  "description": "Contains the roles of the user per app (assuming they are not a builder user). This field can only be set on a business or enterprise license.",
                   "type": "object",
                   "additionalProperties": {
                     "type": "string",
@@ -1698,7 +1719,6 @@
               },
               "required": [
                 "email",
-                "roles",
                 "_id"
               ]
             }
@@ -1829,6 +1849,137 @@
         },
         "required": [
           "name"
+        ]
+      },
+      "rolesAssign": {
+        "type": "object",
+        "properties": {
+          "appBuilder": {
+            "type": "object",
+            "properties": {
+              "appId": {
+                "description": "The app that the users should have app builder privileges granted for.",
+                "type": "string"
+              }
+            },
+            "description": "Allow setting users to builders per app.",
+            "required": [
+              "appId"
+            ]
+          },
+          "builder": {
+            "type": "boolean",
+            "description": "Add/remove global builder permissions from the list of users."
+          },
+          "admin": {
+            "type": "boolean",
+            "description": "Add/remove global admin permissions from the list of users."
+          },
+          "role": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "description": "The role ID, such as BASIC, ADMIN or a custom role ID.",
+                "type": "string"
+              },
+              "appId": {
+                "description": "The app that the role relates to.",
+                "type": "string"
+              }
+            },
+            "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
+            "required": [
+              "roleId",
+              "appId"
+            ]
+          },
+          "userIds": {
+            "description": "The user IDs to be updated to add/remove the specified roles.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
+      },
+      "rolesUnAssign": {
+        "type": "object",
+        "properties": {
+          "appBuilder": {
+            "type": "object",
+            "properties": {
+              "appId": {
+                "description": "The app that the users should have app builder privileges granted for.",
+                "type": "string"
+              }
+            },
+            "description": "Allow setting users to builders per app.",
+            "required": [
+              "appId"
+            ]
+          },
+          "builder": {
+            "type": "boolean",
+            "description": "Add/remove global builder permissions from the list of users."
+          },
+          "admin": {
+            "type": "boolean",
+            "description": "Add/remove global admin permissions from the list of users."
+          },
+          "role": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "description": "The role ID, such as BASIC, ADMIN or a custom role ID.",
+                "type": "string"
+              },
+              "appId": {
+                "description": "The app that the role relates to.",
+                "type": "string"
+              }
+            },
+            "description": "Add/remove a per-app role, such as BASIC, ADMIN etc.",
+            "required": [
+              "roleId",
+              "appId"
+            ]
+          },
+          "userIds": {
+            "description": "The user IDs to be updated to add/remove the specified roles.",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "userIds"
+        ]
+      },
+      "rolesOutput": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "properties": {
+              "userIds": {
+                "description": "The updated users' IDs",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "userIds"
+            ]
+          }
+        },
+        "required": [
+          "data"
         ]
       }
     }
@@ -2029,6 +2180,87 @@
         }
       }
     },
+    "/applications/{appId}/import": {
+      "post": {
+        "operationId": "appImport",
+        "summary": "Import an app to an existing app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "encryptedPassword": {
+                    "description": "Password for the export if it is encrypted.",
+                    "type": "string"
+                  },
+                  "appExport": {
+                    "description": "The app export to import.",
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "appExport"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Application has been updated."
+          }
+        }
+      }
+    },
+    "/applications/{appId}/export": {
+      "post": {
+        "operationId": "appExport",
+        "summary": "Export an app 🔒",
+        "description": "This endpoint is only available on a business or enterprise license.",
+        "tags": [
+          "applications"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/appIdUrl"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/appExport"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A gzip tarball containing the app export, encrypted if password provided.",
+            "content": {
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "example": "Tarball containing database and object store contents..."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/applications/search": {
       "post": {
         "operationId": "appSearch",
@@ -2176,6 +2408,70 @@
                   "queries": {
                     "$ref": "#/components/examples/queries"
                   }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/assign": {
+      "post": {
+        "operationId": "roleAssign",
+        "summary": "Assign a role to a list of users",
+        "description": "This is a business/enterprise only endpoint",
+        "tags": [
+          "roles"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rolesAssign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a list of updated user IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rolesOutput"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roles/unassign": {
+      "post": {
+        "operationId": "roleUnAssign",
+        "summary": "Un-assign a role from a list of users",
+        "description": "This is a business/enterprise only endpoint",
+        "tags": [
+          "roles"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/rolesUnAssign"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Returns a list of updated user IDs",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/rolesOutput"
                 }
               }
             }

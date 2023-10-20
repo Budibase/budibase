@@ -55,7 +55,7 @@
       name: "Automations",
       description: "",
       icon: "Compass",
-      action: () => $goto("./automate"),
+      action: () => $goto("./automation"),
     },
     {
       type: "Publish",
@@ -69,7 +69,7 @@
       name: "App",
       description: "",
       icon: "Play",
-      action: () => window.open(`/${$store.appId}`),
+      action: () => store.update(state => ({ ...state, showPreview: true })),
     },
     {
       type: "Preview",
@@ -93,42 +93,50 @@
           `https://github.com/Budibase/budibase/issues/new?assignees=&labels=bug&template=bug_report.md&title=`
         ),
     },
-    ...$datasources?.list.map(datasource => ({
+    ...($datasources?.list?.map(datasource => ({
       type: "Datasource",
       name: `${datasource.name}`,
       icon: "Data",
       action: () => $goto(`./data/datasource/${datasource._id}`),
-    })),
-    ...$tables?.list.map(table => ({
+    })) ?? []),
+    ...($tables?.list?.map(table => ({
       type: "Table",
       name: table.name,
       icon: "Table",
       action: () => $goto(`./data/table/${table._id}`),
-    })),
-    ...$views?.list.map(view => ({
+    })) ?? []),
+    ...($views?.list?.map(view => ({
       type: "View",
       name: view.name,
       icon: "Remove",
-      action: () => $goto(`./data/view/${view.name}`),
-    })),
-    ...$queries?.list.map(query => ({
+      action: () => {
+        if (view.version === 2) {
+          $goto(`./data/view/v2/${view.id}`)
+        } else {
+          $goto(`./data/view/${view.name}`)
+        }
+      },
+    })) ?? []),
+    ...($queries?.list?.map(query => ({
       type: "Query",
       name: query.name,
       icon: "SQLQuery",
       action: () => $goto(`./data/query/${query._id}`),
-    })),
+    })) ?? []),
     ...$sortedScreens.map(screen => ({
       type: "Screen",
       name: screen.routing.route,
       icon: "WebPage",
-      action: () => $goto(`./design/${screen._id}/components`),
+      action: () => {
+        $goto(`./design/${screen._id}/${screen._id}-screen`)
+      },
     })),
-    ...$automationStore?.automations.map(automation => ({
+    ...($automationStore?.automations?.map(automation => ({
       type: "Automation",
       name: automation.name,
       icon: "ShareAndroid",
-      action: () => $goto(`./automate/${automation._id}`),
-    })),
+      action: () => $goto(`./automation/${automation._id}`),
+    })) ?? []),
     ...Constants.Themes.map(theme => ({
       type: "Change Builder Theme",
       name: theme.name,
@@ -208,8 +216,8 @@
 
   async function deployApp() {
     try {
-      await API.deployAppChanges()
-      notifications.success("Application published successfully")
+      await API.publishAppChanges($store.appId)
+      notifications.success("App published successfully")
     } catch (error) {
       notifications.error("Error publishing app")
     }
@@ -237,11 +245,11 @@
       <Input bind:value={search} quiet placeholder="Search for command" />
     </div>
     <div class="commands">
-      {#each categories as [name, results], catIdx}
+      {#each categories as [name, results]}
         <div class="category">
           <Detail>{name}</Detail>
           <div class="options">
-            {#each results as command, cmdIdx}
+            {#each results as command}
               <div
                 class="command"
                 on:click={() => runAction(command)}

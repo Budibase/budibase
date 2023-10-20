@@ -35,7 +35,7 @@
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(
-      templateScreens.map(screen => `Screen ${screen.props._instanceName}`)
+      templateScreens.map(screen => `Screen ${screen.routing?.route || ""}`)
     )
     confirmDeleteDialog.show()
   }
@@ -44,7 +44,10 @@
     const isSelected = $params.tableId === table._id
     try {
       await tables.delete(table)
-      await store.actions.screens.delete(templateScreens)
+      // Screens need deleted one at a time because of undo/redo
+      for (let screen of templateScreens) {
+        await store.actions.screens.delete(screen)
+      }
       if (table.type === "external") {
         await datasources.fetch()
       }
@@ -65,6 +68,7 @@
     const updatedTable = cloneDeep(table)
     updatedTable.name = updatedName
     await tables.save(updatedTable)
+    await datasources.fetch()
     notifications.success("Table renamed successfully")
   }
 

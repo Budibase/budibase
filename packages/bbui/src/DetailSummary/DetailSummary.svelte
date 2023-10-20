@@ -44,7 +44,9 @@
     align-items: stretch;
     border-bottom: var(--border-light);
   }
-
+  .property-group-container:last-child {
+    border-bottom: 0px;
+  }
   .property-group-name {
     cursor: pointer;
     display: flex;

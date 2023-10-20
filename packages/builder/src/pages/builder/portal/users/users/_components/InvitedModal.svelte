@@ -1,6 +1,7 @@
 <script>
   import { Body, ModalContent, Table } from "@budibase/bbui"
   import { onMount } from "svelte"
+  import InviteResponseRenderer from "./InviteResponseRenderer.svelte"
 
   export let inviteUsersResponse
 
@@ -50,7 +51,7 @@
   }
 </script>
 
-<ModalContent size="M" showCancelButton={false} {title} confirmText="Done">
+<ModalContent size="L" showCancelButton={false} {title} confirmText="Done">
   {#if hasSuccess}
     <Body size="XS">
       Your users should now receive an email invite to get access to their
@@ -67,6 +68,9 @@
       allowEditColumns={false}
       allowEditRows={false}
       allowSelectRows={false}
+      customRenderers={[
+        { column: "reason", component: InviteResponseRenderer },
+      ]}
     />
   {/if}
 </ModalContent>

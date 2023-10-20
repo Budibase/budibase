@@ -4,6 +4,7 @@ jest.mock("../../utilities/redis", () => ({
   checkTestFlag: () => {
     return false
   },
+  shutdown: jest.fn(),
 }))
 
 jest.spyOn(global.console, "error")

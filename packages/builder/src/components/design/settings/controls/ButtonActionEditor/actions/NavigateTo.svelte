@@ -43,7 +43,9 @@
       title="Destination"
       placeholder="/screen"
       value={parameters.url}
-      on:change={value => (parameters.url = value.detail)}
+      on:change={value => {
+        parameters.url = value.detail ? value.detail.trim() : value.detail
+      }}
       {bindings}
       options={urlOptions}
       appendBindingsAsOptions={false}
@@ -55,7 +57,9 @@
       title="Destination"
       placeholder="/url"
       value={parameters.url}
-      on:change={value => (parameters.url = value.detail)}
+      on:change={value => {
+        parameters.url = value.detail ? value.detail.trim() : value.detail
+      }}
       {bindings}
     />
     <div />

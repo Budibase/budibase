@@ -1,4 +1,4 @@
-import { RelationshipTypes } from "constants/backend"
+import { RelationshipType } from "constants/backend"
 
 const typeMismatch = "Column type of the foreign key must match the primary key"
 const columnBeingUsed = "Column name cannot be an existing column"
@@ -40,7 +40,7 @@ export class RelationshipErrorChecker {
   }
 
   isMany() {
-    return this.type === RelationshipTypes.MANY_TO_MANY
+    return this.type === RelationshipType.MANY_TO_MANY
   }
 
   relationshipTypeSet(type) {

@@ -1,27 +1,37 @@
 name: Budibase Release Selfhost
 
 on:
- workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Fail if branch is not master
-        if: github.ref != 'refs/heads/master'
+      - name: Fail if not a tag
         run: |
-          echo "Ref is not master, you must run this job from master."
-          exit 1
+          if [[ $GITHUB_REF != refs/tags/* ]]; then 
+            echo "Workflow Dispatch can only be run on tags" 
+            exit 1 
+          fi
 
       - uses: actions/checkout@v2
-        with: 
-          fetch_depth: 0
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
 
-      - name: Use Node.js 14.x
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.sha }} origin/master; then
+            echo "Tag is not in master. This pipeline can only execute tags that are present on the master branch"
+            exit 1
+          fi
+
+      - name: Use Node.js 18.x
         uses: actions/setup-node@v1
         with:
-          node-version: 14.x
+          node-version: 18.x
 
       - name: Get the latest budibase release version
         id: version
@@ -30,10 +40,10 @@ jobs:
           echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - name: Tag and release Docker images (Self Host)
-        run: | 
+        run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
 
-          release_tag=v${{ env.RELEASE_VERSION }}
+          release_tag=${{ env.RELEASE_VERSION }}
 
           # Pull apps and worker images
           docker pull budibase/apps:$release_tag
@@ -44,7 +54,7 @@ jobs:
           docker tag budibase/apps:$release_tag budibase/apps:$SELFHOST_TAG
           docker tag budibase/worker:$release_tag budibase/worker:$SELFHOST_TAG
           docker tag budibase/proxy:$release_tag budibase/proxy:$SELFHOST_TAG
-          
+
           # Push images
           docker push budibase/apps:$SELFHOST_TAG
           docker push budibase/worker:$SELFHOST_TAG
@@ -57,7 +67,6 @@ jobs:
       - name: Bootstrap and build (CLI)
         run: |
           yarn
-          yarn bootstrap
           yarn build
 
       - name: Build OpenAPI spec
@@ -66,19 +75,19 @@ jobs:
           yarn
           yarn specs
           popd
-      
-      - name: Setup Helm 
+
+      - name: Setup Helm
         uses: azure/setup-helm@v1
         id: helm-install
 
       # due to helm repo index issue: https://github.com/helm/helm/issues/7363
       # we need to create new package in a different dir, merge the index and move the package back
       - name: Build and release helm chart
-        run: | 
+        run: |
           git config user.name "Budibase Helm Bot"
           git config user.email "<>"
           git reset --hard
-          git pull
+          git fetch
           mkdir sync
           echo "Packaging chart to sync dir"
           helm package charts/budibase --version "$RELEASE_VERSION" --app-version "$RELEASE_VERSION" --destination sync
@@ -98,8 +107,8 @@ jobs:
       - name: Perform Github Release
         uses: softprops/action-gh-release@v1
         with:
-          name: v${{ env.RELEASE_VERSION }}
-          tag_name: v${{ env.RELEASE_VERSION }}
+          name: ${{ env.RELEASE_VERSION }}
+          tag_name: ${{ env.RELEASE_VERSION }}
           generate_release_notes: true
           files: |
             packages/cli/build/cli-win.exe

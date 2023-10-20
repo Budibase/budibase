@@ -132,7 +132,7 @@
     --cell-color: var(--user-color);
   }
   .cell.focused {
-    --cell-color: var(--spectrum-global-color-blue-400);
+    --cell-color: var(--accent-color);
   }
   .cell.error {
     --cell-color: var(--spectrum-global-color-red-500);

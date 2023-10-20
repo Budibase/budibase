@@ -1,4 +1,4 @@
-import { merge } from "lodash"
+import merge from "lodash/merge"
 import env from "../environment"
 
 export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"

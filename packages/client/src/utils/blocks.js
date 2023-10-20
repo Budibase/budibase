@@ -6,6 +6,7 @@ const schemaComponentMap = {
   string: "stringfield",
   options: "optionsfield",
   number: "numberfield",
+  bigint: "bigintfield",
   datetime: "datetimefield",
   boolean: "booleanfield",
   formula: "stringfield",

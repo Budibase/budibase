@@ -1,8 +1,19 @@
 {
-  "extends": "./tsconfig-base.build.json",
   "compilerOptions": {
     "target": "es6",
-    "moduleResolution": "node",
-    "outDir": "dist/mjs"
-  }
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "strict": true,
+    "noImplicitAny": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "incremental": true,
+    "sourceMap": true,
+    "declaration": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "**/*.spec.js"]
 }

@@ -19,7 +19,7 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const { resize, columns, stickyColumn, ui } = context
 
   // Starts resizing a certain column

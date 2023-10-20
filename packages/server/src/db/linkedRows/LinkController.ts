@@ -7,8 +7,10 @@ import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
+  FieldType,
   LinkDocumentValue,
-  RelationshipTypes,
+  RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   Table,
 } from "@budibase/types"
@@ -133,19 +135,22 @@ class LinkController {
    * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.
    */
-  handleRelationshipType(linkerField: FieldSchema, linkedField: FieldSchema) {
+  handleRelationshipType(
+    linkerField: RelationshipFieldMetadata,
+    linkedField: RelationshipFieldMetadata
+  ) {
     if (
       !linkerField.relationshipType ||
-      linkerField.relationshipType === RelationshipTypes.MANY_TO_MANY
+      linkerField.relationshipType === RelationshipType.MANY_TO_MANY
     ) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_MANY
+      linkedField.relationshipType = RelationshipType.MANY_TO_MANY
       // make sure by default all are many to many (if not specified)
-      linkerField.relationshipType = RelationshipTypes.MANY_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      linkerField.relationshipType = RelationshipType.MANY_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.MANY_TO_ONE) {
       // Ensure that the other side of the relationship is locked to one record
-      linkedField.relationshipType = RelationshipTypes.ONE_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.ONE_TO_MANY) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_ONE
+      linkedField.relationshipType = RelationshipType.ONE_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.ONE_TO_MANY) {
+      linkedField.relationshipType = RelationshipType.MANY_TO_ONE
     }
     return { linkerField, linkedField }
   }
@@ -182,8 +187,8 @@ class LinkController {
         })
 
         // if 1:N, ensure that this ID is not already attached to another record
-        const linkedTable = await this._db.get(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName!]
+        const linkedTable = await this._db.get<Table>(field.tableId)
+        const linkedSchema = linkedTable.schema[field.fieldName]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
@@ -201,7 +206,8 @@ class LinkController {
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
           if (
-            linkedSchema?.relationshipType === RelationshipTypes.ONE_TO_MANY
+            linkedSchema?.type === FieldType.LINK &&
+            linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
             let links = (
               (await getLinkDocuments({
@@ -293,7 +299,7 @@ class LinkController {
    */
   async removeFieldFromTable(fieldName: string) {
     let oldTable = this._oldTable
-    let field = oldTable?.schema[fieldName] as FieldSchema
+    let field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
     const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
@@ -310,12 +316,19 @@ class LinkController {
         }
       })
     )
-    // remove schema from other table
-    let linkedTable = await this._db.get(field.tableId)
-    if (field.fieldName) {
-      delete linkedTable.schema[field.fieldName]
+    try {
+      // remove schema from other table, if it exists
+      let linkedTable = await this._db.get<Table>(field.tableId)
+      if (field.fieldName) {
+        delete linkedTable.schema[field.fieldName]
+      }
+      await this._db.put(linkedTable)
+    } catch (error: any) {
+      // ignore missing to ensure broken relationship columns can be deleted
+      if (error.statusCode !== 404) {
+        throw error
+      }
     }
-    await this._db.put(linkedTable)
   }
 
   /**
@@ -337,7 +350,7 @@ class LinkController {
         // table for some reason
         let linkedTable
         try {
-          linkedTable = await this._db.get(field.tableId)
+          linkedTable = await this._db.get<Table>(field.tableId)
         } catch (err) {
           /* istanbul ignore next */
           continue
@@ -346,9 +359,9 @@ class LinkController {
           name: field.fieldName,
           type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
-          tableId: table._id,
+          tableId: table._id!,
           fieldName: fieldName,
-        })
+        } as RelationshipFieldMetadata)
 
         // update table schema after checking relationship types
         schema[fieldName] = fields.linkerField
@@ -416,7 +429,7 @@ class LinkController {
       const field = schema[fieldName]
       try {
         if (field.type === FieldTypes.LINK && field.fieldName) {
-          const linkedTable = await this._db.get(field.tableId)
+          const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }

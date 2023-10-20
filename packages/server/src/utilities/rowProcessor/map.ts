@@ -1,6 +1,5 @@
 // @ts-nocheck
 import { FieldTypes } from "../../constants"
-import { logging } from "@budibase/backend-core"
 
 const parseArrayString = value => {
   if (typeof value === "string") {
@@ -12,7 +11,7 @@ const parseArrayString = value => {
       result = JSON.parse(value.replace(/'/g, '"'))
       return result
     } catch (e) {
-      logging.logAlert("Could not parse row value", e)
+      return value
     }
   }
   return value

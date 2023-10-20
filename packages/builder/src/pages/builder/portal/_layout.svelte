@@ -8,13 +8,15 @@
   import Logo from "./_components/Logo.svelte"
   import UserDropdown from "./_components/UserDropdown.svelte"
   import HelpMenu from "components/common/HelpMenu.svelte"
+  import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   let loaded = false
   let mobileMenuVisible = false
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: fullscreen = !$apps.length
+  $: isOnboarding = !$apps.length && sdk.users.isGlobalBuilder($auth.user)
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -33,7 +35,7 @@
   onMount(async () => {
     // Prevent non-builders from accessing the portal
     if ($auth.user) {
-      if (!$auth.user?.builder?.global) {
+      if (!sdk.users.hasBuilderPermissions($auth.user)) {
         $redirect("../")
       } else {
         try {
@@ -49,11 +51,12 @@
 </script>
 
 {#if $auth.user && loaded}
-  {#if fullscreen}
+  {#if isOnboarding}
     <slot />
   {:else}
     <HelpMenu />
     <div class="container">
+      <VerificationPromptBanner />
       <div class="nav">
         <div class="branding">
           <Logo />
@@ -98,7 +101,7 @@
     justify-content: flex-start;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: 0 24px;
+    padding: 0 var(--spacing-l);
     gap: 24px;
     position: relative;
   }

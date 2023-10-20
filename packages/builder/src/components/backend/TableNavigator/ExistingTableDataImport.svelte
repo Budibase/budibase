@@ -6,7 +6,6 @@
 
   let error = null
   let fileName = null
-  let fileType = null
 
   let loading = false
   let updateExistingRows = false
@@ -50,6 +49,15 @@
       label: "Long Form Text",
       value: FIELDS.LONGFORM.type,
     },
+
+    {
+      label: "User",
+      value: `${FIELDS.USER.type}${FIELDS.USER.subtype}`,
+    },
+    {
+      label: "Users",
+      value: `${FIELDS.USERS.type}${FIELDS.USERS.subtype}`,
+    },
   ]
 
   $: {
@@ -74,7 +82,6 @@
       const response = await parseFile(e)
       rows = response.rows
       fileName = response.fileName
-      fileType = response.fileType
     } catch (e) {
       loading = false
       error = e
@@ -145,7 +152,7 @@
       <div class="field">
         <span>{name}</span>
         <Select
-          value={schema[name]?.type}
+          value={`${schema[name]?.type}${schema[name]?.subtype || ""}`}
           options={typeOptions}
           placeholder={null}
           getOptionLabel={option => option.label}

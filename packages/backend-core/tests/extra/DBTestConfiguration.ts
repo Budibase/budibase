@@ -18,7 +18,7 @@ class DBTestConfiguration {
 
   // TENANCY
 
-  doInTenant(task: any) {
+  doInTenant<T>(task: () => Promise<T>) {
     return context.doInTenant(this.tenantId, () => {
       return task()
     })

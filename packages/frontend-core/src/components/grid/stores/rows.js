@@ -1,36 +1,26 @@
 import { writable, derived, get } from "svelte/store"
 import { fetchData } from "../../../fetch/fetchData"
-import { notifications } from "@budibase/bbui"
 import { NewRowID, RowPageSize } from "../lib/constants"
-
-const initialSortState = {
-  column: null,
-  order: "ascending",
-}
+import { tick } from "svelte"
 
 export const createStores = () => {
   const rows = writable([])
-  const table = writable(null)
-  const filter = writable([])
   const loading = writable(false)
   const loaded = writable(false)
-  const sort = writable(initialSortState)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
+  const error = writable(null)
+  const fetch = writable(null)
 
   // Generate a lookup map to quick find a row by ID
-  const rowLookupMap = derived(
-    rows,
-    $rows => {
-      let map = {}
-      for (let i = 0; i < $rows.length; i++) {
-        map[$rows[i]._id] = i
-      }
-      return map
-    },
-    {}
-  )
+  const rowLookupMap = derived(rows, $rows => {
+    let map = {}
+    for (let i = 0; i < $rows.length; i++) {
+      map[$rows[i]._id] = i
+    }
+    return map
+  })
 
   // Mark loaded as true if we've ever stopped loading
   let hasStartedLoading = false
@@ -42,45 +32,6 @@ export const createStores = () => {
     }
   })
 
-  return {
-    rows,
-    rowLookupMap,
-    table,
-    filter,
-    loaded,
-    loading,
-    sort,
-    rowChangeCache,
-    inProgressChanges,
-    hasNextPage,
-  }
-}
-
-export const deriveStores = context => {
-  const {
-    rows,
-    rowLookupMap,
-    table,
-    filter,
-    loading,
-    sort,
-    tableId,
-    API,
-    scroll,
-    validation,
-    focusedCellId,
-    columns,
-    rowChangeCache,
-    inProgressChanges,
-    previousFocusedRowId,
-    hasNextPage,
-  } = context
-  const instanceLoaded = writable(false)
-  const fetch = writable(null)
-
-  // Local cache of row IDs to speed up checking if a row exists
-  let rowCacheMap = {}
-
   // Enrich rows with an index property and any pending changes
   const enrichedRows = derived(
     [rows, rowChangeCache],
@@ -90,59 +41,121 @@ export const deriveStores = context => {
         ...$rowChangeCache[row._id],
         __idx: idx,
       }))
-    },
-    []
+    }
   )
 
-  // Reset everything when table ID changes
+  return {
+    rows: {
+      ...rows,
+      subscribe: enrichedRows.subscribe,
+    },
+    fetch,
+    rowLookupMap,
+    loaded,
+    loading,
+    rowChangeCache,
+    inProgressChanges,
+    hasNextPage,
+    error,
+  }
+}
+
+export const createActions = context => {
+  const {
+    rows,
+    rowLookupMap,
+    definition,
+    filter,
+    loading,
+    sort,
+    datasource,
+    API,
+    scroll,
+    validation,
+    focusedCellId,
+    columns,
+    rowChangeCache,
+    inProgressChanges,
+    previousFocusedRowId,
+    hasNextPage,
+    error,
+    notifications,
+    fetch,
+  } = context
+  const instanceLoaded = writable(false)
+
+  // Local cache of row IDs to speed up checking if a row exists
+  let rowCacheMap = {}
+
+  // Reset everything when datasource changes
   let unsubscribe = null
   let lastResetKey = null
-  tableId.subscribe($tableId => {
+  datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
-    // Reset state
-    filter.set([])
+    // Abandon if we don't have a valid datasource
+    if (!datasource.actions.isDatasourceValid($datasource)) {
+      return
+    }
+
+    // Tick to allow other reactive logic to update stores when datasource changes
+    // before proceeding. This allows us to wipe filters etc if needed.
+    await tick()
+    const $filter = get(filter)
+    const $sort = get(sort)
 
     // Create new fetch model
     const newFetch = fetchData({
       API,
-      datasource: {
-        type: "table",
-        tableId: $tableId,
-      },
+      datasource: $datasource,
       options: {
-        filter: [],
-        sortColumn: initialSortState.column,
-        sortOrder: initialSortState.order,
+        filter: $filter,
+        sortColumn: $sort.column,
+        sortOrder: $sort.order,
         limit: RowPageSize,
         paginate: true,
       },
     })
 
     // Subscribe to changes of this fetch model
-    unsubscribe = newFetch.subscribe($fetch => {
-      if ($fetch.loaded && !$fetch.loading) {
+    unsubscribe = newFetch.subscribe(async $fetch => {
+      if ($fetch.error) {
+        // Present a helpful error to the user
+        let message = "An unknown error occurred"
+        if ($fetch.error.status === 403) {
+          message = "You don't have access to this data"
+        } else if ($fetch.error.message) {
+          message = $fetch.error.message
+        }
+        error.set(message)
+      } else if ($fetch.loaded && !$fetch.loading) {
+        error.set(null)
         hasNextPage.set($fetch.hasNextPage)
         const $instanceLoaded = get(instanceLoaded)
         const resetRows = $fetch.resetKey !== lastResetKey
+        const previousResetKey = lastResetKey
         lastResetKey = $fetch.resetKey
+
+        // If resetting rows due to a datasource change, wipe data and wait for
+        // derived stores to compute. This prevents stale data being passed
+        // to cells when we save the new schema.
+        if (!$instanceLoaded && previousResetKey) {
+          rows.set([])
+          await tick()
+        }
 
         // Reset state properties when dataset changes
         if (!$instanceLoaded || resetRows) {
-          table.set($fetch.definition)
-          sort.set({
-            column: $fetch.sortColumn,
-            order: $fetch.sortOrder,
-          })
+          definition.set($fetch.definition)
         }
 
         // Reset scroll state when data changes
         if (!$instanceLoaded) {
-          // Reset both top and left for a new table ID
+          // Reset both top and left for a new datasource ID
           instanceLoaded.set(true)
           scroll.set({ top: 0, left: 0 })
         } else if (resetRows) {
@@ -161,19 +174,6 @@ export const deriveStores = context => {
     fetch.set(newFetch)
   })
 
-  // Update fetch when filter or sort config changes
-  filter.subscribe($filter => {
-    get(fetch)?.update({
-      filter: $filter,
-    })
-  })
-  sort.subscribe($sort => {
-    get(fetch)?.update({
-      sortOrder: $sort.order,
-      sortColumn: $sort.column,
-    })
-  })
-
   // Gets a row by ID
   const getRow = id => {
     const index = get(rowLookupMap)[id]
@@ -184,10 +184,23 @@ export const deriveStores = context => {
   // state, storing error messages against relevant cells
   const handleValidationError = (rowId, error) => {
     if (error?.json?.validationErrors) {
-      // Normal validation error
+      // Normal validation errors
       const keys = Object.keys(error.json.validationErrors)
       const $columns = get(columns)
+
+      // Filter out missing columns from columns that we have
+      let erroredColumns = []
+      let missingColumns = []
       for (let column of keys) {
+        if (datasource.actions.canUseColumn(column)) {
+          erroredColumns.push(column)
+        } else {
+          missingColumns.push(column)
+        }
+      }
+
+      // Process errors for columns that we have
+      for (let column of erroredColumns) {
         validation.actions.setError(
           `${rowId}-${column}`,
           `${column} ${error.json.validationErrors[column]}`
@@ -202,20 +215,27 @@ export const deriveStores = context => {
           })
         }
       }
+
+      // Notify about missing columns
+      for (let column of missingColumns) {
+        get(notifications).error(`${column} is required but is missing`)
+      }
+
       // Focus the first cell with an error
-      focusedCellId.set(`${rowId}-${keys[0]}`)
+      if (erroredColumns.length) {
+        focusedCellId.set(`${rowId}-${erroredColumns[0]}`)
+      }
     } else {
-      // Some other error - just update the current cell
-      validation.actions.setError(get(focusedCellId), error?.message || "Error")
+      get(notifications).error(error?.message || "An unknown error occurred")
     }
   }
 
   // Adds a new row
   const addRow = async (row, idx, bubble = false) => {
     try {
-      // Create row
-      let newRow = await API.saveRow({ ...row, tableId: get(tableId) })
-      newRow = await fetchRow(newRow._id)
+      // Create row. Spread row so we can mutate and enrich safely.
+      let newRow = { ...row }
+      newRow = await datasource.actions.addRow(newRow)
 
       // Update state
       if (idx != null) {
@@ -229,7 +249,7 @@ export const deriveStores = context => {
       }
 
       // Refresh row to ensure data is in the correct format
-      notifications.success("Row created successfully")
+      get(notifications).success("Row created successfully")
       return newRow
     } catch (error) {
       if (bubble) {
@@ -251,21 +271,6 @@ export const deriveStores = context => {
     } catch (error) {
       handleValidationError(row._id, error)
     }
-  }
-
-  // Fetches a row by ID using the search endpoint
-  const fetchRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(tableId),
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
   }
 
   // Replaces a row in state with the newly defined row, handling updates,
@@ -296,7 +301,7 @@ export const deriveStores = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await fetchRow(id)
+    const row = await datasource.actions.getRow(id)
     replaceRow(id, row)
   }
 
@@ -306,7 +311,7 @@ export const deriveStores = context => {
   }
 
   // Patches a row with some changes
-  const updateRow = async (rowId, changes) => {
+  const updateRow = async (rowId, changes, options = { save: true }) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
@@ -336,13 +341,23 @@ export const deriveStores = context => {
       },
     }))
 
+    // Stop here if we don't want to persist the change
+    if (!options?.save) {
+      return
+    }
+
     // Save change
     try {
       inProgressChanges.update(state => ({
         ...state,
         [rowId]: true,
       }))
-      const saved = await API.saveRow({ ...row, ...get(rowChangeCache)[rowId] })
+
+      // Update row
+      const saved = await datasource.actions.updateRow({
+        ...row,
+        ...get(rowChangeCache)[rowId],
+      })
 
       // Update state after a successful change
       if (saved?._id) {
@@ -368,8 +383,8 @@ export const deriveStores = context => {
   }
 
   // Updates a value of a row
-  const updateValue = async (rowId, column, value) => {
-    return await updateRow(rowId, { [column]: value })
+  const updateValue = async ({ rowId, column, value, save = true }) => {
+    return await updateRow(rowId, { [column]: value }, { save })
   }
 
   // Deletes an array of rows
@@ -382,10 +397,7 @@ export const deriveStores = context => {
     rowsToDelete.forEach(row => {
       delete row.__idx
     })
-    await API.deleteRows({
-      tableId: get(tableId),
-      rows: rowsToDelete,
-    })
+    await datasource.actions.deleteRows(rowsToDelete)
 
     // Update state
     handleRemoveRows(rowsToDelete)
@@ -429,14 +441,11 @@ export const deriveStores = context => {
     get(fetch)?.nextPage()
   }
 
-  // Refreshes the schema of the data fetch subscription
-  const refreshTableDefinition = async () => {
-    const definition = await API.fetchTableDefinition(get(tableId))
-    table.set(definition)
-  }
-
   // Checks if we have a row with a certain ID
   const hasRow = id => {
+    if (id === NewRowID) {
+      return true
+    }
     return get(rowLookupMap)[id] != null
   }
 
@@ -451,7 +460,6 @@ export const deriveStores = context => {
   })
 
   return {
-    enrichedRows,
     rows: {
       ...rows,
       actions: {
@@ -466,7 +474,6 @@ export const deriveStores = context => {
         refreshRow,
         replaceRow,
         refreshData,
-        refreshTableDefinition,
       },
     },
   }

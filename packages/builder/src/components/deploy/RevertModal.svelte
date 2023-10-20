@@ -1,13 +1,9 @@
 <script>
-  import {
-    Input,
-    Modal,
-    notifications,
-    ModalContent,
-    ActionButton,
-  } from "@budibase/bbui"
+  import { Input, Modal, notifications, ModalContent } from "@budibase/bbui"
   import { store } from "builderStore"
   import { API } from "api"
+
+  export let onComplete = () => {}
 
   let revertModal
   let appName
@@ -22,19 +18,20 @@
       const applicationPkg = await API.fetchAppPackage(appId)
       await store.actions.initialise(applicationPkg)
       notifications.info("Changes reverted successfully")
+      onComplete()
     } catch (error) {
       notifications.error(`Error reverting changes: ${error}`)
     }
   }
-</script>
 
-<ActionButton
-  quiet
-  icon="Revert"
-  size="M"
-  tooltip="Revert changes"
-  on:click={revertModal.show}
-/>
+  export const hide = () => {
+    revertModal.hide()
+  }
+
+  export const show = () => {
+    revertModal.show()
+  }
+</script>
 
 <Modal bind:this={revertModal}>
   <ModalContent

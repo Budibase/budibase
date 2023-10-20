@@ -4,6 +4,7 @@ import { SortType } from "../api"
 
 export interface SearchFilters {
   allOr?: boolean
+  onEmptyFilter?: EmptyFilterOption
   string?: {
     [key: string]: string
   }
@@ -32,7 +33,7 @@ export interface SearchFilters {
     [key: string]: any[]
   }
   contains?: {
-    [key: string]: any[]
+    [key: string]: any[] | any
   }
   notContains?: {
     [key: string]: any[]
@@ -98,4 +99,9 @@ export interface QueryJson {
 export interface SqlQuery {
   sql: string
   bindings?: string[]
+}
+
+export enum EmptyFilterOption {
+  RETURN_ALL = "all",
+  RETURN_NONE = "none",
 }

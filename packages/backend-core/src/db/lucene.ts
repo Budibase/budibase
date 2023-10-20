@@ -1,7 +1,6 @@
 import fetch from "node-fetch"
 import { getCouchInfo } from "./couch"
-import { SearchFilters, Row } from "@budibase/types"
-import { createUserIndex } from "./searchIndexes/searchIndexes"
+import { SearchFilters, Row, EmptyFilterOption } from "@budibase/types"
 
 const QUERY_START_REGEX = /\d[0-9]*:/g
 
@@ -65,6 +64,7 @@ export class QueryBuilder<T> {
     this.#index = index
     this.#query = {
       allOr: false,
+      onEmptyFilter: EmptyFilterOption.RETURN_ALL,
       string: {},
       fuzzy: {},
       range: {},
@@ -218,6 +218,10 @@ export class QueryBuilder<T> {
     this.#query.allOr = true
   }
 
+  setOnEmptyFilter(value: EmptyFilterOption) {
+    this.#query.onEmptyFilter = value
+  }
+
   handleSpaces(input: string) {
     if (this.#noEscaping) {
       return input
@@ -289,8 +293,9 @@ export class QueryBuilder<T> {
     const builder = this
     let allOr = this.#query && this.#query.allOr
     let query = allOr ? "" : "*:*"
+    let allFiltersEmpty = true
     const allPreProcessingOpts = { escape: true, lowercase: true, wrap: true }
-    let tableId
+    let tableId: string = ""
     if (this.#query.equal!.tableId) {
       tableId = this.#query.equal!.tableId
       delete this.#query.equal!.tableId
@@ -305,7 +310,7 @@ export class QueryBuilder<T> {
     }
 
     const contains = (key: string, value: any, mode = "AND") => {
-      if (Array.isArray(value) && value.length === 0) {
+      if (!value || (Array.isArray(value) && value.length === 0)) {
         return null
       }
       if (!Array.isArray(value)) {
@@ -343,6 +348,9 @@ export class QueryBuilder<T> {
     }
 
     const oneOf = (key: string, value: any) => {
+      if (!value) {
+        return `*:*`
+      }
       if (!Array.isArray(value)) {
         if (typeof value === "string") {
           value = value.split(",")
@@ -381,6 +389,12 @@ export class QueryBuilder<T> {
           built += ` ${mode} `
         }
         built += expression
+        if (
+          (typeof value !== "string" && value != null) ||
+          (typeof value === "string" && value !== tableId && value !== "")
+        ) {
+          allFiltersEmpty = false
+        }
       }
       if (opts?.returnBuilt) {
         return built
@@ -430,6 +444,9 @@ export class QueryBuilder<T> {
         if (!value) {
           return null
         }
+        if (typeof value === "boolean") {
+          return `(*:* AND !${key}:${value})`
+        }
         return `!${key}:${builder.preprocess(value, allPreProcessingOpts)}`
       })
     }
@@ -456,6 +473,13 @@ export class QueryBuilder<T> {
       query = this.isMultiCondition() ? `(${query})` : query
       allOr = false
       build({ tableId }, equal)
+    }
+    if (allFiltersEmpty) {
+      if (this.#query.onEmptyFilter === EmptyFilterOption.RETURN_NONE) {
+        return ""
+      } else if (this.#query?.allOr) {
+        return query.replace("()", "(*:*)")
+      }
     }
     return query
   }

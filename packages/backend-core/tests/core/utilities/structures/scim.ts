@@ -1,7 +1,6 @@
 import { ScimCreateGroupRequest, ScimCreateUserRequest } from "@budibase/types"
 import { uuid } from "./common"
 import { generator } from "./generator"
-import _ from "lodash"
 
 interface CreateUserRequestFields {
   externalId: string
@@ -20,10 +19,10 @@ export function createUserRequest(userData?: Partial<CreateUserRequestFields>) {
     username: generator.name(),
   }
 
-  const { externalId, email, firstName, lastName, username } = _.assign(
-    defaultValues,
-    userData
-  )
+  const { externalId, email, firstName, lastName, username } = {
+    ...defaultValues,
+    ...userData,
+  }
 
   let user: ScimCreateUserRequest = {
     schemas: [

@@ -1,7 +1,8 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount, tick } from "svelte"
+  import { canBeDisplayColumn } from "@budibase/shared-core"
+  import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
-  import { Icon, Popover, Menu, MenuItem } from "@budibase/bbui"
   import { getColumnIcon } from "../lib/utils"
 
   export let column
@@ -16,33 +17,39 @@
     sort,
     renderedColumns,
     dispatch,
+    subscribe,
     config,
     ui,
     columns,
+    definition,
+    datasource,
   } = getContext("grid")
-
-  const bannedDisplayColumnTypes = [
-    "link",
-    "array",
-    "attachment",
-    "boolean",
-    "formula",
-    "json",
-  ]
 
   let anchor
   let open = false
+  let editIsOpen = false
   let timeout
+  let popover
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
   $: canMoveRight = orderable && idx < $renderedColumns.length - 1
-  $: ascendingLabel = column.schema?.type === "number" ? "low-high" : "A-Z"
-  $: descendingLabel = column.schema?.type === "number" ? "high-low" : "Z-A"
+  $: ascendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "low-high"
+    : "A-Z"
+  $: descendingLabel = ["number", "bigint"].includes(column.schema?.type)
+    ? "high-low"
+    : "Z-A"
 
-  const editColumn = () => {
+  const editColumn = async () => {
+    editIsOpen = true
+    await tick()
     dispatch("edit-column", column.schema)
-    open = false
+  }
+
+  const cancelEdit = () => {
+    popover.hide()
+    editIsOpen = false
   }
 
   const onMouseDown = e => {
@@ -105,6 +112,35 @@
     columns.actions.saveChanges()
     open = false
   }
+
+  const duplicateColumn = async () => {
+    open = false
+
+    // Generate new name
+    let newName = `${column.name} copy`
+    let attempts = 2
+    while ($definition.schema[newName]) {
+      newName = `${column.name} copy ${attempts++}`
+    }
+
+    // Save schema with new column
+    const existingColumnDefinition = $definition.schema[column.name]
+    await datasource.actions.saveDefinition({
+      ...$definition,
+      schema: {
+        ...$definition.schema,
+        [newName]: {
+          ...existingColumnDefinition,
+          name: newName,
+          schema: {
+            ...existingColumnDefinition.schema,
+          },
+        },
+      },
+    })
+  }
+
+  onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
 
 <div
@@ -153,55 +189,78 @@
 
 <Popover
   bind:open
+  bind:this={popover}
   {anchor}
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  animate={false}
+  customZindex={100}
 >
-  <Menu>
-    <MenuItem
-      icon="Edit"
-      on:click={editColumn}
-      disabled={!$config.allowEditColumns || column.schema.disabled}
+  {#if editIsOpen}
+    <div
+      use:clickOutside={() => {
+        editIsOpen = false
+      }}
+      class="content"
     >
-      Edit column
-    </MenuItem>
-    <MenuItem
-      icon="Label"
-      on:click={makeDisplayColumn}
-      disabled={idx === "sticky" ||
-        !$config.allowEditColumns ||
-        bannedDisplayColumnTypes.includes(column.schema.type)}
-    >
-      Use as display column
-    </MenuItem>
-    <MenuItem
-      icon="SortOrderUp"
-      on:click={sortAscending}
-      disabled={column.name === $sort.column && $sort.order === "ascending"}
-    >
-      Sort {ascendingLabel}
-    </MenuItem>
-    <MenuItem
-      icon="SortOrderDown"
-      on:click={sortDescending}
-      disabled={column.name === $sort.column && $sort.order === "descending"}
-    >
-      Sort {descendingLabel}
-    </MenuItem>
-    <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
-      Move left
-    </MenuItem>
-    <MenuItem disabled={!canMoveRight} icon="ChevronRight" on:click={moveRight}>
-      Move right
-    </MenuItem>
-    <MenuItem
-      disabled={idx === "sticky"}
-      icon="VisibilityOff"
-      on:click={hideColumn}>Hide column</MenuItem
-    >
-  </Menu>
+      <slot />
+    </div>
+  {:else}
+    <Menu>
+      <MenuItem
+        icon="Edit"
+        on:click={editColumn}
+        disabled={!$config.canEditColumns || column.schema.disabled}
+      >
+        Edit column
+      </MenuItem>
+      <MenuItem
+        icon="Duplicate"
+        on:click={duplicateColumn}
+        disabled={!$config.canEditColumns}
+      >
+        Duplicate column
+      </MenuItem>
+      <MenuItem
+        icon="Label"
+        on:click={makeDisplayColumn}
+        disabled={idx === "sticky" || !canBeDisplayColumn(column.schema.type)}
+      >
+        Use as display column
+      </MenuItem>
+      <MenuItem
+        icon="SortOrderUp"
+        on:click={sortAscending}
+        disabled={column.name === $sort.column && $sort.order === "ascending"}
+      >
+        Sort {ascendingLabel}
+      </MenuItem>
+      <MenuItem
+        icon="SortOrderDown"
+        on:click={sortDescending}
+        disabled={column.name === $sort.column && $sort.order === "descending"}
+      >
+        Sort {descendingLabel}
+      </MenuItem>
+      <MenuItem disabled={!canMoveLeft} icon="ChevronLeft" on:click={moveLeft}>
+        Move left
+      </MenuItem>
+      <MenuItem
+        disabled={!canMoveRight}
+        icon="ChevronRight"
+        on:click={moveRight}
+      >
+        Move right
+      </MenuItem>
+      <MenuItem
+        disabled={idx === "sticky" || !$config.showControls}
+        icon="VisibilityOff"
+        on:click={hideColumn}
+      >
+        Hide column
+      </MenuItem>
+    </Menu>
+  {/if}
 </Popover>
 
 <style>
@@ -218,7 +277,7 @@
   .header-cell :global(.cell) {
     padding: 0 var(--cell-padding);
     gap: calc(2 * var(--cell-spacing));
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--grid-background-alt);
   }
 
   .name {
@@ -248,5 +307,14 @@
   .header-cell.open .sort-indicator,
   .header-cell:hover .sort-indicator {
     display: none;
+  }
+
+  .content {
+    width: 300px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--spectrum-alias-background-color-secondary);
   }
 </style>

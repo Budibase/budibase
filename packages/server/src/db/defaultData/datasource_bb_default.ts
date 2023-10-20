@@ -7,7 +7,13 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row, RelationshipTypes } from "@budibase/types"
+import {
+  Table,
+  Row,
+  RelationshipType,
+  FieldType,
+  TableSchema,
+} from "@budibase/types"
 
 export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
 export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
@@ -28,21 +34,25 @@ export const DEFAULT_BB_DATASOURCE = defaultDatasource
 function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
     const entry = table.schema[key]
-    if (entry.autocolumn && entry.subtype == "autoID") {
+    if (
+      entry.autocolumn &&
+      entry.type === FieldType.NUMBER &&
+      entry.subtype == AutoFieldSubTypes.AUTO_ID
+    ) {
       entry.lastID = rowCount
     }
   })
 }
 
-function tableImport(table: Table, data: Row[]) {
+async function tableImport(table: Table, data: Row[]) {
   const cloneTable = cloneDeep(table)
-  const rowDocs = importToRows(data, cloneTable)
+  const rowDocs = await importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
   return { rows: rowDocs, table: cloneTable }
 }
 
 // AUTO COLUMNS
-const AUTO_COLUMNS = {
+const AUTO_COLUMNS: TableSchema = {
   "Created At": {
     name: "Created At",
     type: FieldTypes.DATETIME,
@@ -299,7 +309,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
       },
       fieldName: "Assigned",
       name: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       tableId: DEFAULT_JOBS_TABLE_ID,
     },
     "Start Date": {
@@ -458,7 +468,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       type: FieldTypes.LINK,
       tableId: DEFAULT_EMPLOYEE_TABLE_ID,
       fieldName: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       // sortable: true,
     },
     "Works End": {
@@ -601,20 +611,20 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   },
 }
 
-export function buildDefaultDocs() {
-  const inventoryData = tableImport(
+export async function buildDefaultDocs() {
+  const inventoryData = await tableImport(
     DEFAULT_INVENTORY_TABLE_SCHEMA,
     inventoryImport
   )
 
-  const employeeData = tableImport(
+  const employeeData = await tableImport(
     DEFAULT_EMPLOYEE_TABLE_SCHEMA,
     employeeImport
   )
 
-  const jobData = tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
+  const jobData = await tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
 
-  const expensesData = tableImport(
+  const expensesData = await tableImport(
     DEFAULT_EXPENSES_TABLE_SCHEMA,
     expensesImport
   )

@@ -1,11 +1,11 @@
 import {
   auth as authCore,
-  tenancy,
-  utils as coreUtils,
-  sessions,
+  env as coreEnv,
   events,
   HTTPError,
-  env as coreEnv,
+  sessions,
+  tenancy,
+  utils as coreUtils,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
@@ -20,7 +20,7 @@ export async function loginUser(user: User) {
   const sessionId = coreUtils.newid()
   const tenantId = tenancy.getTenantId()
   await sessions.createASession(user._id!, { sessionId, tenantId })
-  const token = jwt.sign(
+  return jwt.sign(
     {
       userId: user._id,
       sessionId,
@@ -28,7 +28,6 @@ export async function loginUser(user: User) {
     },
     coreEnv.JWT_SECRET!
   )
-  return token
 }
 
 export async function logout(opts: PlatformLogoutOpts) {
@@ -58,7 +57,7 @@ export const reset = async (email: string) => {
   }
 
   // exit if user has sso
-  if (await userSdk.isPreventPasswordActions(user)) {
+  if (await userSdk.db.isPreventPasswordActions(user)) {
     return
   }
 
@@ -76,9 +75,9 @@ export const reset = async (email: string) => {
 export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await redis.checkResetPasswordCode(resetCode)
 
-  let user = await userSdk.getUser(userId)
+  let user = await userSdk.db.getUser(userId)
   user.password = password
-  user = await userSdk.save(user)
+  user = await userSdk.db.save(user)
 
   // remove password from the user before sending events
   delete user.password

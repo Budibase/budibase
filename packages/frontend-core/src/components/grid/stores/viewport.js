@@ -10,7 +10,7 @@ export const deriveStores = context => {
   const {
     rowHeight,
     visibleColumns,
-    enrichedRows,
+    rows,
     scrollTop,
     scrollLeft,
     width,
@@ -35,9 +35,9 @@ export const deriveStores = context => {
     0
   )
   const renderedRows = derived(
-    [enrichedRows, scrolledRowCount, visualRowCapacity],
-    ([$enrichedRows, $scrolledRowCount, $visualRowCapacity]) => {
-      return $enrichedRows.slice(
+    [rows, scrolledRowCount, visualRowCapacity],
+    ([$rows, $scrolledRowCount, $visualRowCapacity]) => {
+      return $rows.slice(
         $scrolledRowCount,
         $scrolledRowCount + $visualRowCapacity
       )
@@ -108,11 +108,22 @@ export const deriveStores = context => {
   // Determine the row index at which we should start vertically inverting cell
   // dropdowns
   const rowVerticalInversionIndex = derived(
-    [visualRowCapacity, rowHeight],
-    ([$visualRowCapacity, $rowHeight]) => {
-      return (
-        $visualRowCapacity - Math.ceil(MaxCellRenderHeight / $rowHeight) - 2
-      )
+    [height, rowHeight, scrollTop],
+    ([$height, $rowHeight, $scrollTop]) => {
+      const offset = $scrollTop % $rowHeight
+
+      // Compute the last row index with space to render popovers below it
+      const minBottom =
+        $height - ScrollBarSize * 3 - MaxCellRenderHeight + offset
+      const lastIdx = Math.floor(minBottom / $rowHeight)
+
+      // Compute the first row index with space to render popovers above it
+      const minTop = MaxCellRenderHeight + offset
+      const firstIdx = Math.ceil(minTop / $rowHeight)
+
+      // Use the greater of the two indices so that we prefer content below,
+      // unless there is room to render the entire popover above
+      return Math.max(lastIdx, firstIdx)
     }
   )
 
@@ -125,7 +136,7 @@ export const deriveStores = context => {
       let inversionIdx = $renderedColumns.length
       for (let i = $renderedColumns.length - 1; i >= 0; i--, inversionIdx--) {
         const rightEdge = $renderedColumns[i].left + $renderedColumns[i].width
-        if (rightEdge + MaxCellRenderWidthOverflow < cutoff) {
+        if (rightEdge + MaxCellRenderWidthOverflow <= cutoff) {
           break
         }
       }

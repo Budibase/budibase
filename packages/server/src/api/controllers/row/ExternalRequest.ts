@@ -1,13 +1,17 @@
 import {
+  AutoReason,
   Datasource,
   FieldSchema,
   FieldType,
   FilterType,
   IncludeRelationship,
+  ManyToManyRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
   Operation,
   PaginationJson,
+  RelationshipFieldMetadata,
   RelationshipsJson,
-  RelationshipTypes,
+  RelationshipType,
   Row,
   SearchFilters,
   SortJson,
@@ -19,11 +23,12 @@ import {
   breakRowIdField,
   convertRowId,
   generateRowIdField,
+  getPrimaryDisplay,
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
-import { getDatasourceAndQuery } from "./utils"
-import { FieldTypes } from "../../../constants"
+import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
+import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
@@ -162,7 +167,7 @@ function generateIdForRow(
       fieldName: field,
       isLinked,
     })
-    if (fieldValue) {
+    if (fieldValue != null) {
       idParts.push(fieldValue)
     }
   }
@@ -252,19 +257,48 @@ function fixArrayTypes(row: Row, table: Table) {
   return row
 }
 
-function isOneSide(field: FieldSchema) {
+function isOneSide(
+  field: RelationshipFieldMetadata
+): field is OneToManyRelationshipFieldMetadata {
   return (
     field.relationshipType && field.relationshipType.split("-")[0] === "one"
   )
 }
 
-export class ExternalRequest {
-  private operation: Operation
-  private tableId: string
+function isManyToMany(
+  field: RelationshipFieldMetadata
+): field is ManyToManyRelationshipFieldMetadata {
+  return !!(field as ManyToManyRelationshipFieldMetadata).through
+}
+
+function isEditableColumn(column: FieldSchema) {
+  const isExternalAutoColumn =
+    column.autocolumn &&
+    column.autoReason !== AutoReason.FOREIGN_KEY &&
+    column.subtype !== AutoFieldSubTypes.AUTO_ID
+  const isFormula = column.type === FieldTypes.FORMULA
+  return !(isExternalAutoColumn || isFormula)
+}
+
+export type ExternalRequestReturnType<T> = T extends Operation.READ
+  ?
+      | Row[]
+      | {
+          row: Row
+          table: Table
+        }
+  : {
+      row: Row
+      table: Table
+    }
+
+export class ExternalRequest<T extends Operation> {
+  private readonly operation: T
+  private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
 
-  constructor(operation: Operation, tableId: string, datasource?: Datasource) {
+  constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
     this.tableId = tableId
     this.datasource = datasource
@@ -294,17 +328,7 @@ export class ExternalRequest {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (
-        row[key] == null ||
-        newRow[key] ||
-        field.autocolumn ||
-        field.type === FieldTypes.FORMULA
-      ) {
-        continue
-      }
-      // if its an empty string then it means return the column to null (if possible)
-      if (row[key] === "") {
-        newRow[key] = null
+      if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
         continue
       }
       // parse floats/numbers
@@ -327,17 +351,23 @@ export class ExternalRequest {
       // one to many
       if (isOneSide(field)) {
         let id = row[key][0]
-        if (typeof row[key] === "string") {
-          id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+        if (id) {
+          if (typeof row[key] === "string") {
+            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+          }
+          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
+        } else {
+          // Removing from both new and row, as we don't know if it has already been processed
+          row[field.foreignKey || linkTablePrimary] = null
+          newRow[field.foreignKey || linkTablePrimary] = null
         }
-        newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
       }
       // many to many
-      else if (field.through) {
+      else if (isManyToMany(field)) {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].forEach((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -346,14 +376,14 @@ export class ExternalRequest {
             // leave the ID for enrichment later
             [thisKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
       // many to one
       else {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].forEach((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
@@ -362,7 +392,7 @@ export class ExternalRequest {
             // leave the ID for enrichment later
             [otherKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
     }
     // we return the relationships that may need to be created in the through table
@@ -391,7 +421,10 @@ export class ExternalRequest {
           }
         }
         relatedRow = processFormulas(linkedTable, relatedRow)
-        const relatedDisplay = display ? relatedRow[display] : undefined
+        let relatedDisplay
+        if (display) {
+          relatedDisplay = getPrimaryDisplay(relatedRow[display])
+        }
         row[relationship.column][key] = {
           primaryDisplay: relatedDisplay || "Invalid display column",
           _id: relatedRow._id,
@@ -527,15 +560,12 @@ export class ExternalRequest {
       if (!table.primary || !linkTable.primary) {
         continue
       }
-      const definition: any = {
-        // if no foreign key specified then use the name of the field in other table
-        from: field.foreignKey || table.primary[0],
-        to: field.fieldName,
+      const definition: RelationshipsJson = {
         tableName: linkTableName,
         // need to specify where to put this back into
         column: fieldName,
       }
-      if (field.through) {
+      if (isManyToMany(field)) {
         const { tableName: throughTableName } = breakExternalTableId(
           field.through
         )
@@ -545,6 +575,10 @@ export class ExternalRequest {
         definition.to = field.throughFrom || linkTable.primary[0]
         definition.fromPrimary = table.primary[0]
         definition.toPrimary = linkTable.primary[0]
+      } else {
+        // if no foreign key specified then use the name of the field in other table
+        definition.from = field.foreignKey || table.primary[0]
+        definition.to = field.fieldName
       }
       relationships.push(definition)
     }
@@ -566,7 +600,7 @@ export class ExternalRequest {
     const primaryKey = table.primary[0]
     // make a new request to get the row with all its relationships
     // we need this to work out if any relationships need removed
-    for (let field of Object.values(table.schema)) {
+    for (const field of Object.values(table.schema)) {
       if (
         field.type !== FieldTypes.LINK ||
         !field.fieldName ||
@@ -574,14 +608,14 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      const manyKey = field.throughTo || primaryKey
+
       const lookupField = isMany ? primaryKey : field.foreignKey
-      const fieldName = isMany ? manyKey : field.fieldName
+      const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
       }
@@ -735,7 +769,7 @@ export class ExternalRequest {
     return fields
   }
 
-  async run(config: RunConfig) {
+  async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!tableName) {
@@ -814,7 +848,7 @@ export class ExternalRequest {
     // can't really use response right now
     const response = await getDatasourceAndQuery(json)
     // handle many to many relationships now if we know the ID (could be auto increment)
-    if (operation !== Operation.READ && processed.manyRelationships) {
+    if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",
         response[0],
@@ -823,8 +857,11 @@ export class ExternalRequest {
     }
     const output = this.outputProcessing(response, table, relationships)
     // if reading it'll just be an array of rows, return whole thing
-    return operation === Operation.READ && Array.isArray(response)
-      ? output
-      : { row: output[0], table }
+    const result = (
+      operation === Operation.READ && Array.isArray(response)
+        ? output
+        : { row: output[0], table }
+    ) as ExternalRequestReturnType<T>
+    return result
   }
 }

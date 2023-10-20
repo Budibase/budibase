@@ -1,14 +1,16 @@
 <script>
   import { onMount } from "svelte"
-  import { tables } from "stores/backend"
+  import { datasources, tables } from "stores/backend"
   import { redirect } from "@roxi/routify"
+  import { TableNames } from "constants"
 
-  onMount(async () => {
-    const { list, selected } = $tables
-    if (selected) {
-      $redirect(`./${selected?._id}`)
-    } else if (list?.length) {
-      $redirect(`./${list[0]._id}`)
+  onMount(() => {
+    if ($tables.selected) {
+      $redirect(`./${$tables.selected._id}`)
+    } else if ($datasources.hasData) {
+      $redirect(`./${TableNames.USERS}`)
+    } else {
+      $redirect("../new")
     }
   })
 </script>

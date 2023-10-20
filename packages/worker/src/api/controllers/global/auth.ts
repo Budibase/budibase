@@ -55,8 +55,8 @@ async function passportCallback(
 export const login = async (ctx: Ctx<LoginRequest>, next: any) => {
   const email = ctx.request.body.username
 
-  const user = await userSdk.getUserByEmail(email)
-  if (user && (await userSdk.isPreventPasswordActions(user))) {
+  const user = await userSdk.db.getUserByEmail(email)
+  if (user && (await userSdk.db.isPreventPasswordActions(user))) {
     ctx.throw(403, "Invalid credentials")
   }
 
@@ -140,7 +140,6 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
     {
       provider,
       appId: ctx.query.appId,
-      datasourceId: ctx.query.datasourceId,
     },
     Cookie.DatasourceAuth
   )
@@ -175,7 +174,7 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    userSdk.save
+    userSdk.db.save
   )
 
   return passport.authenticate(strategy, {
@@ -194,7 +193,7 @@ export const googleCallback = async (ctx: any, next: any) => {
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
-    userSdk.save
+    userSdk.db.save
   )
 
   return passport.authenticate(
@@ -229,7 +228,7 @@ export const oidcStrategyFactory = async (ctx: any, configId: any) => {
 
   //Remote Config
   const enrichedConfig = await oidc.fetchStrategyConfig(config, callbackUrl)
-  return oidc.strategyFactory(enrichedConfig, userSdk.save)
+  return oidc.strategyFactory(enrichedConfig, userSdk.db.save)
 }
 
 /**

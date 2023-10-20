@@ -26,6 +26,10 @@ export default function process(updateCb?: UpdateCallback) {
       // if something not found - no changes to perform
       if (err?.status === 404) {
         return
+      }
+      // The user has already been sync in another process
+      else if (err?.status === 409) {
+        return
       } else {
         logging.logAlert("Failed to perform user/group app sync", err)
       }

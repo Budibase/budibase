@@ -24,6 +24,7 @@ describe("/api/system/environment", () => {
         isDev: false,
         multiTenancy: true,
         baseUrl: "http://localhost:10000",
+        offlineMode: false,
       })
     })
   })

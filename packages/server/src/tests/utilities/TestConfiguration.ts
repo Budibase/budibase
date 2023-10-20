@@ -10,7 +10,6 @@ mocks.licenses.useUnlimited()
 import { init as dbInit } from "../../db"
 dbInit()
 import env from "../../environment"
-import { env as coreEnv } from "@budibase/backend-core"
 import {
   basicTable,
   basicRow,
@@ -21,6 +20,7 @@ import {
   basicScreen,
   basicLayout,
   basicWebhook,
+  basicAutomationResults,
 } from "./structures"
 import {
   constants,
@@ -32,6 +32,7 @@ import {
   encryption,
   auth,
   roles,
+  env as coreEnv,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -48,8 +49,15 @@ import {
   Table,
   SearchFilters,
   UserRoles,
+  Automation,
+  View,
+  FieldType,
+  RelationshipType,
+  CreateViewRequest,
+  RelationshipFieldMetadata,
 } from "@budibase/types"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
+
+import API from "./api"
 
 type DefaultUserValues = {
   globalUserId: string
@@ -71,18 +79,18 @@ class TestConfiguration {
   user: any
   globalUserId: any
   userMetadataId: any
-  table: any
-  linkedTable: any
+  table?: Table
   automation: any
-  datasource: any
+  datasource?: Datasource
   tenantId?: string
   defaultUserValues: DefaultUserValues
+  api: API
 
   constructor(openServer = true) {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app").default
+      this.server = require("../../app").getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true
@@ -92,6 +100,8 @@ class TestConfiguration {
     this.appId = null
     this.allApps = []
     this.defaultUserValues = this.populateDefaultUserValues()
+
+    this.api = new API(this)
   }
 
   populateDefaultUserValues(): DefaultUserValues {
@@ -133,7 +143,10 @@ class TestConfiguration {
     }
   }
 
-  async doInContext(appId: string | null, task: any) {
+  async doInContext<T>(
+    appId: string | null,
+    task: () => Promise<T>
+  ): Promise<T> {
     if (!appId) {
       appId = this.appId
     }
@@ -168,7 +181,7 @@ class TestConfiguration {
     if (this.server) {
       this.server.close()
     } else {
-      require("../../app").default.close()
+      require("../../app").getServer().close()
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
@@ -237,7 +250,7 @@ class TestConfiguration {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
-      existing = await db.get(id)
+      existing = await db.get<any>(id)
     } catch (err) {
       existing = { email }
     }
@@ -307,7 +320,7 @@ class TestConfiguration {
     }
   }
 
-  async createGroup(roleId: string = BUILTIN_ROLE_IDS.BASIC) {
+  async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
     return context.doInTenant(this.tenantId!, async () => {
       const baseGroup = structures.userGroups.userGroup()
       baseGroup.roles = {
@@ -413,6 +426,15 @@ class TestConfiguration {
     return headers
   }
 
+  async basicRoleHeaders() {
+    return await this.roleHeaders({
+      email: this.defaultUserValues.email,
+      builder: false,
+      prodApp: true,
+      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    })
+  }
+
   async roleHeaders({
     email = this.defaultUserValues.email,
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
@@ -455,7 +477,7 @@ class TestConfiguration {
   async generateApiKey(userId = this.defaultUserValues.globalUserId) {
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
-    let devInfo
+    let devInfo: any
     try {
       devInfo = await db.get(id)
     } catch (err) {
@@ -517,43 +539,66 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(config?: any): Promise<Table> {
+  async updateTable(
+    config?: Table,
+    { skipReassigning } = { skipReassigning: false }
+  ): Promise<Table> {
     config = config || basicTable()
-    this.table = await this._req(config, null, controllers.table.save)
-    return this.table
+    const response = await this._req(config, null, controllers.table.save)
+    if (!skipReassigning) {
+      this.table = response
+    }
+    return response
   }
 
-  async createTable(config?: Table) {
+  async createTable(config?: Table, options = { skipReassigning: false }) {
     if (config != null && config._id) {
       delete config._id
     }
-    return this.updateTable(config)
+    config = config || basicTable()
+    if (this.datasource && !config.sourceId) {
+      config.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        config.type = "external"
+      }
+    }
+
+    return this.updateTable(config, options)
   }
 
   async getTable(tableId?: string) {
-    tableId = tableId || this.table._id
+    tableId = tableId || this.table!._id!
     return this._req(null, { tableId }, controllers.table.find)
   }
 
-  async createLinkedTable(relationshipType?: string, links: any = ["link"]) {
+  async createLinkedTable(
+    relationshipType = RelationshipType.ONE_TO_MANY,
+    links: any = ["link"],
+    config?: Table
+  ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
-    const tableConfig: any = basicTable()
+    const tableConfig = config || basicTable()
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
-        type: "link",
+        type: FieldType.LINK,
         fieldName: link,
-        tableId: this.table._id,
+        tableId: this.table._id!,
         name: link,
-      }
-      if (relationshipType) {
-        tableConfig.schema[link].relationshipType = relationshipType
+        relationshipType,
+      } as RelationshipFieldMetadata
+    }
+
+    if (this.datasource && !tableConfig.sourceId) {
+      tableConfig.sourceId = this.datasource._id
+      if (this.datasource.plus) {
+        tableConfig.type = "external"
       }
     }
+
     const linkedTable = await this.createTable(tableConfig)
-    this.linkedTable = linkedTable
     return linkedTable
   }
 
@@ -572,7 +617,7 @@ class TestConfiguration {
       throw "Test requires table to be configured."
     }
     const tableId = (config && config.tableId) || this.table._id
-    config = config || basicRow(tableId)
+    config = config || basicRow(tableId!)
     return this._req(config, { tableId }, controllers.row.save)
   }
 
@@ -582,14 +627,14 @@ class TestConfiguration {
 
   async getRows(tableId: string) {
     if (!tableId && this.table) {
-      tableId = this.table._id
+      tableId = this.table._id!
     }
     return this._req(null, { tableId }, controllers.row.fetch)
   }
 
   async searchRows(tableId: string, searchParams: SearchFilters = {}) {
     if (!tableId && this.table) {
-      tableId = this.table._id
+      tableId = this.table._id!
     }
     const body = {
       query: searchParams,
@@ -604,29 +649,36 @@ class TestConfiguration {
     return this._req(config, null, controllers.role.save)
   }
 
-  async addPermission(roleId: string, resourceId: string, level = "read") {
-    return this._req(
-      null,
-      {
-        roleId,
-        resourceId,
-        level,
-      },
-      controllers.perms.addPermission
-    )
-  }
-
   // VIEW
 
-  async createView(config?: any) {
-    if (!this.table) {
+  async createLegacyView(config?: View) {
+    if (!this.table && !config) {
       throw "Test requires table to be configured."
     }
     const view = config || {
-      tableId: this.table._id,
-      name: "ViewTest",
+      tableId: this.table!._id,
+      name: generator.guid(),
     }
-    return this._req(view, null, controllers.view.save)
+    return this._req(view, null, controllers.view.v1.save)
+  }
+
+  async createView(
+    config?: Omit<CreateViewRequest, "tableId" | "name"> & {
+      name?: string
+      tableId?: string
+    }
+  ) {
+    if (!this.table && !config?.tableId) {
+      throw "Test requires table to be configured."
+    }
+
+    const view: CreateViewRequest = {
+      ...config,
+      tableId: config?.tableId || this.table!._id!,
+      name: config?.name || generator.word(),
+    }
+
+    return await this.api.viewV2.create(view)
   }
 
   // AUTOMATION
@@ -674,17 +726,17 @@ class TestConfiguration {
     config = config || basicDatasource()
     const response = await this._req(config, null, controllers.datasource.save)
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
-  async updateDatasource(datasource: any) {
+  async updateDatasource(datasource: Datasource): Promise<Datasource> {
     const response = await this._req(
       datasource,
       { datasourceId: datasource._id },
       controllers.datasource.update
     )
     this.datasource = response.datasource
-    return this.datasource
+    return this.datasource!
   }
 
   async restDatasource(cfg?: any) {
@@ -720,6 +772,26 @@ class TestConfiguration {
     return { datasource, query: basedOnQuery }
   }
 
+  // AUTOMATION LOG
+
+  async createAutomationLog(automation: Automation) {
+    return await context.doInAppContext(this.getProdAppId(), async () => {
+      return await pro.sdk.automations.logs.storeLog(
+        automation,
+        basicAutomationResults(automation._id!)
+      )
+    })
+  }
+
+  async getAutomationLogs() {
+    return context.doInAppContext(this.appId, async () => {
+      const now = new Date()
+      return await pro.sdk.automations.logs.logSearch({
+        startDate: new Date(now.getTime() - 100000).toISOString(),
+      })
+    })
+  }
+
   // QUERY
 
   async previewQuery(
@@ -748,7 +820,7 @@ class TestConfiguration {
     if (!this.datasource && !config) {
       throw "No datasource created for query."
     }
-    config = config || basicQuery(this.datasource._id)
+    config = config || basicQuery(this.datasource!._id!)
     return this._req(config, null, controllers.query.save)
   }
 

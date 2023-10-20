@@ -8,9 +8,9 @@ export default class BaseAPI {
     this.client = client
   }
 
-  async get(url: string): Promise<[Response, any]> {
+  async get(url: string, status?: number): Promise<[Response, any]> {
     const [response, json] = await this.client.get(url)
-    expect(response).toHaveStatusCode(200)
+    expect(response).toHaveStatusCode(status ? status : 200)
     return [response, json]
   }
 

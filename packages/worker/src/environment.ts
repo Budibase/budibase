@@ -1,19 +1,11 @@
-const { join } = require("path")
+import { env as coreEnv } from "@budibase/backend-core"
+import { ServiceType } from "@budibase/types"
+import { join } from "path"
 
-function isDev() {
-  return process.env.NODE_ENV !== "production"
-}
-
-function isTest() {
-  return (
-    process.env.NODE_ENV === "jest" ||
-    process.env.NODE_ENV === "cypress" ||
-    process.env.JEST_WORKER_ID != null
-  )
-}
+coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
 let LOADED = false
-if (!LOADED && isDev() && !isTest()) {
+if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
   require("dotenv").config({
     path: join(__dirname, "..", ".env"),
   })
@@ -27,6 +19,8 @@ function parseIntSafe(number: any) {
 }
 
 const environment = {
+  // features
+  WORKER_FEATURES: process.env.WORKER_FEATURES,
   // auth
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
@@ -79,16 +73,16 @@ const environment = {
     // @ts-ignore
     environment[key] = value
   },
-  isDev,
-  isTest,
+  isDev: coreEnv.isDev,
+  isTest: coreEnv.isTest,
   isProd: () => {
-    return !isDev()
+    return !coreEnv.isDev()
   },
 }
 
 // if some var haven't been set, define them
 if (!environment.APPS_URL) {
-  environment.APPS_URL = isDev()
+  environment.APPS_URL = coreEnv.isDev()
     ? "http://localhost:4001"
     : "http://app-service:4002"
 }

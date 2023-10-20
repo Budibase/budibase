@@ -1,8 +1,4 @@
-import {
-  FieldTypes,
-  RelationshipTypes,
-  FormulaTypes,
-} from "../../src/constants"
+import { FieldTypes, RelationshipType, FormulaTypes } from "../../src/constants"
 import { object } from "./utils"
 import Resource from "./utils/Resource"
 
@@ -100,7 +96,7 @@ const tableSchema = {
               },
               relationshipType: {
                 type: "string",
-                enum: Object.values(RelationshipTypes),
+                enum: Object.values(RelationshipType),
                 description:
                   "Defines the type of relationship that this column will be used for.",
               },

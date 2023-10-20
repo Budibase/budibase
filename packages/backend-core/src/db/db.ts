@@ -11,7 +11,11 @@ export function getDB(dbName?: string, opts?: any): Database {
 // we have to use a callback for this so that we can close
 // the DB when we're done, without this manual requests would
 // need to close the database when done with it to avoid memory leaks
-export async function doWithDB(dbName: string, cb: any, opts = {}) {
+export async function doWithDB<T>(
+  dbName: string,
+  cb: (db: Database) => Promise<T>,
+  opts = {}
+) {
   const db = getDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed

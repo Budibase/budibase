@@ -5,18 +5,12 @@
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
-    "resolveJsonModule": true,
-    "paths": {
-      "@budibase/types": ["../types/src"],
-      "@budibase/backend-core": ["../backend-core/src"],
-      "@budibase/backend-core/*": ["../backend-core/*"]
-    }
+    "resolveJsonModule": true
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],
     "swc": true
   },
-  "references": [{ "path": "../types" }, { "path": "../backend-core" }],
   "include": ["src/**/*", "package.json"],
   "exclude": ["node_modules", "dist"]
 }

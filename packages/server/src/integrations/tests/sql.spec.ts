@@ -26,6 +26,12 @@ function generateReadJson({
     filters: filters || {},
     sort: sort || {},
     paginate: paginate || {},
+    meta: {
+      table: {
+        name: table || TABLE_NAME,
+        primary: ["id"],
+      },
+    },
   }
 }
 
@@ -634,6 +640,46 @@ describe("SQL query builder", () => {
     expect(query).toEqual({
       bindings: [`%jo%`, limit],
       sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+    })
+  })
+
+  it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
+    let query = new Sql(SqlClient.MS_SQL, limit)._query(
+      generateReadJson({
+        sort: {},
+        paginate: {
+          limit: 10,
+        },
+      })
+    )
+    expect(query).toEqual({
+      bindings: [10],
+      sql: `select * from (select top (@p0) * from [test] order by [test].[id] asc) as [test]`,
+    })
+  })
+
+  it("should not parse JSON string as Date", () => {
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+      generateCreateJson(TABLE_NAME, {
+        name: '{ "created_at":"2023-09-09T03:21:06.024Z" }',
+      })
+    )
+    expect(query).toEqual({
+      bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
+      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+    })
+  })
+
+  it("should parse and trim valid string as Date", () => {
+    const dateObj = new Date("2023-09-09T03:21:06.024Z")
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+      generateCreateJson(TABLE_NAME, {
+        name: " 2023-09-09T03:21:06.024Z ",
+      })
+    )
+    expect(query).toEqual({
+      bindings: [dateObj],
+      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
     })
   })
 })

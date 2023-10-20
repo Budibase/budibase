@@ -1,8 +1,13 @@
+import { FieldSubtype } from "@budibase/types"
 import { FieldTypes } from "../constants"
+import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
+import { db } from "@budibase/backend-core"
+import { parseCsvExport } from "../api/controllers/view/exporters"
 
 interface SchemaColumn {
   readonly name: string
   readonly type: FieldTypes
+  readonly subtype: FieldSubtype
   readonly autocolumn?: boolean
   readonly constraints?: {
     presence: boolean
@@ -27,6 +32,7 @@ interface ValidationResults {
   schemaValidation: SchemaValidation
   allValid: boolean
   invalidColumns: Array<string>
+  errors: Record<string, string>
 }
 
 const PARSERS: any = {
@@ -69,16 +75,28 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
     schemaValidation: {},
     allValid: false,
     invalidColumns: [],
+    errors: {},
   }
 
   rows.forEach(row => {
     Object.entries(row).forEach(([columnName, columnData]) => {
       const columnType = schema[columnName]?.type
+      const columnSubtype = schema[columnName]?.subtype
       const isAutoColumn = schema[columnName]?.autocolumn
+
+      // If the column had an invalid value we don't want to override it
+      if (results.schemaValidation[columnName] === false) {
+        return
+      }
 
       // If the columnType is not a string, then it's not present in the schema, and should be added to the invalid columns array
       if (typeof columnType !== "string") {
         results.invalidColumns.push(columnName)
+      } else if (!columnName.match(ValidColumnNameRegex)) {
+        // Check for special characters in column names
+        results.schemaValidation[columnName] = false
+        results.errors[columnName] =
+          "Column names can't contain special characters"
       } else if (
         columnData == null &&
         !schema[columnName].constraints?.presence
@@ -102,6 +120,11 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
         // If provided must be a valid date
         columnType === FieldTypes.DATETIME &&
         isNaN(new Date(columnData).getTime())
+      ) {
+        results.schemaValidation[columnName] = false
+      } else if (
+        columnType === FieldTypes.BB_REFERENCE &&
+        !isValidBBReference(columnData, columnSubtype)
       ) {
         results.schemaValidation[columnName] = false
       } else {
@@ -130,6 +153,7 @@ export function parse(rows: Rows, schema: Schema): Rows {
       }
 
       const columnType = schema[columnName].type
+      const columnSubtype = schema[columnName].subtype
 
       if (columnType === FieldTypes.NUMBER) {
         // If provided must be a valid number
@@ -139,6 +163,23 @@ export function parse(rows: Rows, schema: Schema): Rows {
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
           : columnData
+      } else if (columnType === FieldTypes.BB_REFERENCE) {
+        const parsedValues =
+          !!columnData && parseCsvExport<{ _id: string }[]>(columnData)
+        if (!parsedValues) {
+          parsedRow[columnName] = undefined
+        } else {
+          switch (columnSubtype) {
+            case FieldSubtype.USER:
+              parsedRow[columnName] = parsedValues[0]?._id
+              break
+            case FieldSubtype.USERS:
+              parsedRow[columnName] = parsedValues.map(u => u._id)
+              break
+            default:
+              utils.unreachable(columnSubtype)
+          }
+        }
       } else {
         parsedRow[columnName] = columnData
       }
@@ -146,4 +187,33 @@ export function parse(rows: Rows, schema: Schema): Rows {
 
     return parsedRow
   })
+}
+
+function isValidBBReference(
+  columnData: any,
+  columnSubtype: FieldSubtype
+): boolean {
+  switch (columnSubtype) {
+    case FieldSubtype.USER:
+    case FieldSubtype.USERS:
+      if (typeof columnData !== "string") {
+        return false
+      }
+      const userArray = parseCsvExport<{ _id: string }[]>(columnData)
+      if (!Array.isArray(userArray)) {
+        return false
+      }
+
+      if (columnSubtype === FieldSubtype.USER && userArray.length > 1) {
+        return false
+      }
+
+      const constainsWrongId = userArray.find(
+        user => !db.isGlobalUserID(user._id)
+      )
+      return !constainsWrongId
+
+    default:
+      throw utils.unreachable(columnSubtype)
+  }
 }

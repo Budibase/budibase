@@ -204,12 +204,18 @@
     })
     return columns
       .sort((a, b) => {
+        if (a.divider) {
+          return a
+        }
+        if (b.divider) {
+          return b
+        }
         const orderA = a.order || Number.MAX_SAFE_INTEGER
         const orderB = b.order || Number.MAX_SAFE_INTEGER
         const nameA = getDisplayName(a)
         const nameB = getDisplayName(b)
         if (orderA !== orderB) {
-          return orderA < orderB ? orderA : orderB
+          return orderA < orderB ? a : b
         }
         return nameA < nameB ? a : b
       })
@@ -373,7 +379,7 @@
           </div>
         {/if}
         {#if sortedRows?.length}
-          {#each sortedRows as row, idx}
+          {#each sortedRows as row}
             <div class="spectrum-Table-row" class:clickable={allowClickRows}>
               {#if showEditColumn}
                 <div

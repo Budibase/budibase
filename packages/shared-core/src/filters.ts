@@ -1,4 +1,14 @@
-import { Datasource, FieldType, SortDirection, SortType } from "@budibase/types"
+import {
+  Datasource,
+  FieldSubtype,
+  FieldType,
+  SearchFilter,
+  SearchQuery,
+  SearchQueryFields,
+  SearchQueryOperators,
+  SortDirection,
+  SortType,
+} from "@budibase/types"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
 
@@ -6,10 +16,9 @@ const HBS_REGEX = /{{([^{].*?)}}/g
 
 /**
  * Returns the valid operator options for a certain data type
- * @param type the data type
  */
 export const getValidOperatorsForType = (
-  type: FieldType,
+  fieldType: { type: FieldType; subtype?: FieldSubtype },
   field: string,
   datasource: Datasource & { tableId: any } // TODO: is this table id ever populated?
 ) => {
@@ -36,22 +45,27 @@ export const getValidOperatorsForType = (
     value: string
     label: string
   }[] = []
-  if (type === "string") {
+  const { type, subtype } = fieldType
+  if (type === FieldType.STRING) {
     ops = stringOps
-  } else if (type === "number") {
+  } else if (type === FieldType.NUMBER || type === FieldType.BIGINT) {
     ops = numOps
-  } else if (type === "options") {
+  } else if (type === FieldType.OPTIONS) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
-  } else if (type === "array") {
+  } else if (type === FieldType.ARRAY) {
     ops = [Op.Contains, Op.NotContains, Op.Empty, Op.NotEmpty, Op.ContainsAny]
-  } else if (type === "boolean") {
+  } else if (type === FieldType.BOOLEAN) {
     ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty]
-  } else if (type === "longform") {
+  } else if (type === FieldType.LONGFORM) {
     ops = stringOps
-  } else if (type === "datetime") {
+  } else if (type === FieldType.DATETIME) {
     ops = numOps
-  } else if (type === "formula") {
+  } else if (type === FieldType.FORMULA) {
     ops = stringOps.concat([Op.MoreThan, Op.LessThan])
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USER) {
+    ops = [Op.Equals, Op.NotEquals, Op.Empty, Op.NotEmpty, Op.In]
+  } else if (type === FieldType.BB_REFERENCE && subtype == FieldSubtype.USERS) {
+    ops = [Op.Contains, Op.NotContains, Op.ContainsAny, Op.Empty, Op.NotEmpty]
   }
 
   // Only allow equal/not equal for _id in SQL tables
@@ -73,13 +87,13 @@ export const NoEmptyFilterStrings = [
   OperatorOptions.NotEquals.value,
   OperatorOptions.Contains.value,
   OperatorOptions.NotContains.value,
-] as (keyof QueryFields)[]
+] as (keyof SearchQueryFields)[]
 
 /**
  * Removes any fields that contain empty strings that would cause inconsistent
  * behaviour with how backend tables are filtered (no value means no filter).
  */
-const cleanupQuery = (query: Query) => {
+const cleanupQuery = (query: SearchQuery) => {
   if (!query) {
     return query
   }
@@ -110,66 +124,12 @@ const removeKeyNumbering = (key: string) => {
   }
 }
 
-type Filter = {
-  operator: keyof Query
-  field: string
-  type: any
-  value: any
-  externalType: keyof typeof SqlNumberTypeRangeMap
-}
-
-type Query = QueryFields & QueryConfig
-type QueryFields = {
-  string?: {
-    [key: string]: string
-  }
-  fuzzy?: {
-    [key: string]: string
-  }
-  range?: {
-    [key: string]: {
-      high: number | string
-      low: number | string
-    }
-  }
-  equal?: {
-    [key: string]: any
-  }
-  notEqual?: {
-    [key: string]: any
-  }
-  empty?: {
-    [key: string]: any
-  }
-  notEmpty?: {
-    [key: string]: any
-  }
-  oneOf?: {
-    [key: string]: any[]
-  }
-  contains?: {
-    [key: string]: any[]
-  }
-  notContains?: {
-    [key: string]: any[]
-  }
-  containsAny?: {
-    [key: string]: any[]
-  }
-}
-
-type QueryConfig = {
-  allOr?: boolean
-}
-
-type QueryFieldsType = keyof QueryFields
-
 /**
  * Builds a lucene JSON query from the filter structure generated in the builder
  * @param filter the builder filter structure
  */
-export const buildLuceneQuery = (filter: Filter[]) => {
-  let query: Query = {
+export const buildLuceneQuery = (filter: SearchFilter[]) => {
+  let query: SearchQuery = {
     string: {},
     fuzzy: {},
     range: {},
@@ -184,12 +144,17 @@ export const buildLuceneQuery = (filter: Filter[]) => {
   }
   if (Array.isArray(filter)) {
     filter.forEach(expression => {
-      let { operator, field, type, value, externalType } = expression
+      let { operator, field, type, value, externalType, onEmptyFilter } =
+        expression
       const isHbs =
         typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
       // Parse all values into correct types
       if (operator === "allOr") {
         query.allOr = true
+        return
+      }
+      if (onEmptyFilter) {
+        query.onEmptyFilter = onEmptyFilter
         return
       }
       if (
@@ -227,9 +192,13 @@ export const buildLuceneQuery = (filter: Filter[]) => {
       }
       if (operator.startsWith("range") && query.range) {
         const minint =
-          SqlNumberTypeRangeMap[externalType]?.min || Number.MIN_SAFE_INTEGER
+          SqlNumberTypeRangeMap[
+            externalType as keyof typeof SqlNumberTypeRangeMap
+          ]?.min || Number.MIN_SAFE_INTEGER
         const maxint =
-          SqlNumberTypeRangeMap[externalType]?.max || Number.MAX_SAFE_INTEGER
+          SqlNumberTypeRangeMap[
+            externalType as keyof typeof SqlNumberTypeRangeMap
+          ]?.max || Number.MAX_SAFE_INTEGER
         if (!query.range[field]) {
           query.range[field] = {
             low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
@@ -245,7 +214,7 @@ export const buildLuceneQuery = (filter: Filter[]) => {
         ) {
           query.range[field].high = value
         }
-      } else if (query[operator]) {
+      } else if (query[operator] && operator !== "onEmptyFilter") {
         if (type === "boolean") {
           // Transform boolean filters to cope with null.
           // "equals false" needs to be "not equals true"
@@ -275,7 +244,7 @@ export const buildLuceneQuery = (filter: Filter[]) => {
  * @param docs the data
  * @param query the JSON lucene query
  */
-export const runLuceneQuery = (docs: any[], query?: Query) => {
+export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   if (!docs || !Array.isArray(docs)) {
     return []
   }
@@ -289,7 +258,7 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
   // Iterates over a set of filters and evaluates a fail function against a doc
   const match =
     (
-      type: QueryFieldsType,
+      type: keyof SearchQueryFields,
       failFn: (docValue: any, testValue: any) => boolean
     ) =>
     (doc: any) => {
@@ -305,22 +274,30 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
     }
 
   // Process a string match (fails if the value does not start with the string)
-  const stringMatch = match("string", (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const stringMatch = match(
+    SearchQueryOperators.STRING,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a fuzzy match (treat the same as starts with when running locally)
-  const fuzzyMatch = match("fuzzy", (docValue: string, testValue: string) => {
-    return (
-      !docValue || !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
-    )
-  })
+  const fuzzyMatch = match(
+    SearchQueryOperators.FUZZY,
+    (docValue: string, testValue: string) => {
+      return (
+        !docValue ||
+        !docValue?.toLowerCase().startsWith(testValue?.toLowerCase())
+      )
+    }
+  )
 
   // Process a range match
   const rangeMatch = match(
-    "range",
+    SearchQueryOperators.RANGE,
     (
       docValue: string | number | null,
       testValue: { low: number; high: number }
@@ -336,7 +313,7 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
 
   // Process an equal match (fails if the value is different)
   const equalMatch = match(
-    "equal",
+    SearchQueryOperators.EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue !== testValue
     }
@@ -344,46 +321,58 @@ export const runLuceneQuery = (docs: any[], query?: Query) => {
 
   // Process a not-equal match (fails if the value is the same)
   const notEqualMatch = match(
-    "notEqual",
+    SearchQueryOperators.NOT_EQUAL,
     (docValue: any, testValue: string | null) => {
       return testValue != null && testValue !== "" && docValue === testValue
     }
   )
 
   // Process an empty match (fails if the value is not empty)
-  const emptyMatch = match("empty", (docValue: string | null) => {
-    return docValue != null && docValue !== ""
-  })
+  const emptyMatch = match(
+    SearchQueryOperators.EMPTY,
+    (docValue: string | null) => {
+      return docValue != null && docValue !== ""
+    }
+  )
 
   // Process a not-empty match (fails is the value is empty)
-  const notEmptyMatch = match("notEmpty", (docValue: string | null) => {
-    return docValue == null || docValue === ""
-  })
+  const notEmptyMatch = match(
+    SearchQueryOperators.NOT_EMPTY,
+    (docValue: string | null) => {
+      return docValue == null || docValue === ""
+    }
+  )
 
   // Process an includes match (fails if the value is not included)
-  const oneOf = match("oneOf", (docValue: any, testValue: any) => {
-    if (typeof testValue === "string") {
-      testValue = testValue.split(",")
-      if (typeof docValue === "number") {
-        testValue = testValue.map((item: string) => parseFloat(item))
+  const oneOf = match(
+    SearchQueryOperators.ONE_OF,
+    (docValue: any, testValue: any) => {
+      if (typeof testValue === "string") {
+        testValue = testValue.split(",")
+        if (typeof docValue === "number") {
+          testValue = testValue.map((item: string) => parseFloat(item))
+        }
       }
+      return !testValue?.includes(docValue)
     }
-    return !testValue?.includes(docValue)
-  })
+  )
 
-  const containsAny = match("containsAny", (docValue: any, testValue: any) => {
-    return !docValue?.includes(...testValue)
-  })
+  const containsAny = match(
+    SearchQueryOperators.CONTAINS_ANY,
+    (docValue: any, testValue: any) => {
+      return !docValue?.includes(...testValue)
+    }
+  )
 
   const contains = match(
-    "contains",
+    SearchQueryOperators.CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return !testValue?.every((item: any) => docValue?.includes(item))
     }
   )
 
   const notContains = match(
-    "notContains",
+    SearchQueryOperators.NOT_CONTAINS,
     (docValue: string | any[], testValue: any[]) => {
       return testValue?.every((item: any) => docValue?.includes(item))
     }
@@ -454,4 +443,20 @@ export const luceneLimit = (docs: any[], limit: string) => {
     return docs
   }
   return docs.slice(0, numLimit)
+}
+
+export const hasFilters = (query?: SearchQuery) => {
+  if (!query) {
+    return false
+  }
+  const skipped = ["allOr", "onEmptyFilter"]
+  for (let [key, value] of Object.entries(query)) {
+    if (skipped.includes(key) || typeof value !== "object") {
+      continue
+    }
+    if (Object.keys(value || {}).length !== 0) {
+      return true
+    }
+  }
+  return false
 }

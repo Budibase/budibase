@@ -21,6 +21,7 @@ import { processors } from "./processors"
 import { newid } from "../utils"
 import * as installation from "../installation"
 import * as configs from "../configs"
+import * as users from "../users"
 import { withCache, TTL, CacheKey } from "../cache/generic"
 
 /**
@@ -86,6 +87,7 @@ const getCurrentIdentity = async (): Promise<Identity> => {
       installationId,
       tenantId,
       environment,
+      realTenantId: context.getTenantId(),
       hostInfo: userContext.hostInfo,
     }
   } else {
@@ -163,8 +165,8 @@ const identifyUser = async (
   const id = user._id as string
   const tenantId = await getEventTenantId(user.tenantId)
   const type = IdentityType.USER
-  let builder = user.builder?.global || false
-  let admin = user.admin?.global || false
+  let builder = users.hasBuilderPermissions(user)
+  let admin = users.hasAdminPermissions(user)
   let providerType
   if (isSSOUser(user)) {
     providerType = user.providerType
@@ -263,7 +265,7 @@ const getEventTenantId = async (tenantId: string): Promise<string> => {
   }
 }
 
-const getUniqueTenantId = async (tenantId: string): Promise<string> => {
+export const getUniqueTenantId = async (tenantId: string): Promise<string> => {
   // make sure this tenantId always matches the tenantId in context
   return context.doInTenant(tenantId, () => {
     return withCache(CacheKey.UNIQUE_TENANT_ID, TTL.ONE_DAY, async () => {

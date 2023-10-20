@@ -15,6 +15,8 @@
   import {
     tables as tablesStore,
     queries as queriesStore,
+    viewsV2 as viewsV2Store,
+    views as viewsStore,
   } from "stores/backend"
   import { datasources, integrations } from "stores/backend"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
@@ -39,15 +41,17 @@
     tableId: m._id,
     type: "table",
   }))
-  $: views = $tablesStore.list.reduce((acc, cur) => {
-    let viewsArr = Object.entries(cur.views || {}).map(([key, value]) => ({
-      label: key,
-      name: key,
-      ...value,
-      type: "view",
-    }))
-    return [...acc, ...viewsArr]
-  }, [])
+  $: viewsV1 = $viewsStore.list.map(view => ({
+    ...view,
+    label: view.name,
+    type: "view",
+  }))
+  $: viewsV2 = $viewsV2Store.list.map(view => ({
+    ...view,
+    label: view.name,
+    type: "viewV2",
+  }))
+  $: views = [...(viewsV1 || []), ...(viewsV2 || [])]
   $: queries = $queriesStore.list
     .filter(q => showAllQueries || q.queryVerb === "read" || q.readable)
     .map(query => ({
@@ -143,13 +147,12 @@
   }
 
   const openQueryParamsDrawer = () => {
-    tmpQueryParams = value.queryParams
+    tmpQueryParams = { ...value.queryParams }
     drawer.show()
   }
 
   const getQueryValue = queries => {
-    value = queries.find(q => q._id === value._id) || value
-    return value
+    return queries.find(q => q._id === value._id) || value
   }
 
   const saveQueryParams = () => {
@@ -176,7 +179,10 @@
         <Layout noPadding gap="XS">
           {#if getQueryParams(value).length > 0}
             <BindingBuilder
-              bind:customParams={tmpQueryParams}
+              customParams={tmpQueryParams}
+              on:change={v => {
+                tmpQueryParams = { ...v.detail }
+              }}
               queryBindings={getQueryParams(value)}
               bind:bindings
             />

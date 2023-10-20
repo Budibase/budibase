@@ -22,7 +22,7 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
  */
 export async function createLinkView() {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   const view = {
     map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
@@ -58,7 +58,7 @@ export async function createLinkView() {
 
 export async function createRoutingView() {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   const view = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
@@ -79,7 +79,7 @@ export async function createRoutingView() {
 
 async function searchIndex(indexName: string, fnString: string) {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   designDoc.indexes = {
     [indexName]: {
       index: fnString,

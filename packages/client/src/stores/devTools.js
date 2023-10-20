@@ -2,9 +2,9 @@ import { createLocalStorageStore } from "@budibase/frontend-core"
 import { initialise } from "./initialise"
 import { authStore } from "./auth"
 import { API } from "../api"
+import { get } from "svelte/store"
 
 const initialState = {
-  enabled: false,
   visible: false,
   allowSelection: false,
   role: null,
@@ -12,13 +12,6 @@ const initialState = {
 
 const createDevToolStore = () => {
   const store = createLocalStorageStore("bb-devtools", initialState)
-
-  const setEnabled = enabled => {
-    store.update(state => ({
-      ...state,
-      enabled,
-    }))
-  }
 
   const setVisible = visible => {
     store.update(state => ({
@@ -35,9 +28,15 @@ const createDevToolStore = () => {
   }
 
   const changeRole = async role => {
+    if (role === "self") {
+      role = null
+    }
+    if (role === get(store).role) {
+      return
+    }
     store.update(state => ({
       ...state,
-      role: role === "self" ? null : role,
+      role,
     }))
     API.invalidateCache()
     await authStore.actions.fetchUser()
@@ -46,7 +45,7 @@ const createDevToolStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: { setEnabled, setVisible, setAllowSelection, changeRole },
+    actions: { setVisible, setAllowSelection, changeRole },
   }
 }
 

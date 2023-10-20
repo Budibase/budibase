@@ -9,8 +9,8 @@ import {
   checkDebounce,
   setDebounce,
 } from "../utilities/redis"
-import { db as dbCore, cache, permissions } from "@budibase/backend-core"
-import { BBContext, Database } from "@budibase/types"
+import { db as dbCore, cache } from "@budibase/backend-core"
+import { UserCtx, Database } from "@budibase/types"
 
 const DEBOUNCE_TIME_SEC = 30
 
@@ -23,7 +23,7 @@ const DEBOUNCE_TIME_SEC = 30
  * through the authorized middleware                *
  ****************************************************/
 
-async function checkDevAppLocks(ctx: BBContext) {
+async function checkDevAppLocks(ctx: UserCtx) {
   const appId = ctx.appId
 
   // if any public usage, don't proceed
@@ -42,7 +42,7 @@ async function checkDevAppLocks(ctx: BBContext) {
   }
 }
 
-async function updateAppUpdatedAt(ctx: BBContext) {
+async function updateAppUpdatedAt(ctx: UserCtx) {
   const appId = ctx.appId
   // if debouncing skip this update
   // get methods also aren't updating
@@ -50,20 +50,29 @@ async function updateAppUpdatedAt(ctx: BBContext) {
     return
   }
   await dbCore.doWithDB(appId, async (db: Database) => {
-    const metadata = await db.get(DocumentType.APP_METADATA)
-    metadata.updatedAt = new Date().toISOString()
+    try {
+      const metadata = await db.get<any>(DocumentType.APP_METADATA)
+      metadata.updatedAt = new Date().toISOString()
 
-    metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
+      metadata.updatedBy = getGlobalIDFromUserMetadataID(ctx.user?.userId!)
 
-    const response = await db.put(metadata)
-    metadata._rev = response.rev
-    await cache.app.invalidateAppMetadata(appId, metadata)
-    // set a new debounce record with a short TTL
-    await setDebounce(appId, DEBOUNCE_TIME_SEC)
+      const response = await db.put(metadata)
+      metadata._rev = response.rev
+      await cache.app.invalidateAppMetadata(appId, metadata)
+      // set a new debounce record with a short TTL
+      await setDebounce(appId, DEBOUNCE_TIME_SEC)
+    } catch (err: any) {
+      // if a 409 occurs, then multiple clients connected at the same time - ignore
+      if (err?.status === 409) {
+        return
+      } else {
+        throw err
+      }
+    }
   })
 }
 
-export default async function builder(ctx: BBContext) {
+export default async function builder(ctx: UserCtx) {
   const appId = ctx.appId
   // this only functions within an app context
   if (!appId) {
@@ -76,12 +85,6 @@ export default async function builder(ctx: BBContext) {
   }
 
   const referer = ctx.headers["referer"]
-
-  const overviewPath = "/builder/portal/overview/"
-  const overviewContext = !referer ? false : referer.includes(overviewPath)
-  if (overviewContext) {
-    return
-  }
 
   const hasAppId = !referer ? false : referer.includes(appId)
   const editingApp = referer ? hasAppId : false

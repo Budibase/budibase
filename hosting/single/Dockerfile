@@ -1,7 +1,7 @@
-FROM node:16-slim as build
+FROM node:18-slim as build
 
 # install node-gyp dependencies
-RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python
+RUN apt-get update && apt-get upgrade -y && apt-get install -y --no-install-recommends apt-utils cron g++ make python3
 
 # add pin script
 WORKDIR /
@@ -11,12 +11,16 @@ RUN chmod +x /cleanup.sh
 # build server
 WORKDIR /app
 ADD packages/server .
-RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true --network-timeout 100000
+RUN /cleanup.sh
 
 # build worker
 WORKDIR /worker
 ADD packages/worker .
-RUN yarn install --frozen-lockfile --production=true && /cleanup.sh
+COPY yarn.lock .
+RUN yarn install --production=true --network-timeout 100000
+RUN /cleanup.sh
 
 FROM budibase/couchdb
 ARG TARGETARCH
@@ -32,6 +36,14 @@ COPY --from=build /worker /worker
 # install base dependencies
 RUN apt-get update && \
   apt-get install -y --no-install-recommends software-properties-common nginx uuid-runtime redis-server
+
+# Install postgres client for pg_dump utils
+RUN apt install software-properties-common apt-transport-https gpg -y \
+    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+    && apt update -y \
+    && apt install postgresql-client-15 -y \
+    && apt remove software-properties-common apt-transport-https gpg -y
 
 # install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
 WORKDIR /nodejs

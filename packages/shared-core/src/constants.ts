@@ -67,3 +67,32 @@ export const SqlNumberTypeRangeMap = {
     min: -8388608,
   },
 }
+
+export enum SocketEvent {
+  UserUpdate = "UserUpdate",
+  UserDisconnect = "UserDisconnect",
+  Heartbeat = "Heartbeat",
+}
+
+export enum GridSocketEvent {
+  RowChange = "RowChange",
+  DatasourceChange = "DatasourceChange",
+  SelectDatasource = "SelectDatasource",
+  SelectCell = "SelectCell",
+}
+
+export enum BuilderSocketEvent {
+  SelectApp = "SelectApp",
+  TableChange = "TableChange",
+  DatasourceChange = "DatasourceChange",
+  LockTransfer = "LockTransfer",
+  ScreenChange = "ScreenChange",
+  AppMetadataChange = "AppMetadataChange",
+  SelectResource = "SelectResource",
+  AppPublishChange = "AppPublishChange",
+  AutomationChange = "AutomationChange",
+}
+
+export const SocketSessionTTL = 60
+export const ValidQueryNameRegex = /^[^()]*$/
+export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g

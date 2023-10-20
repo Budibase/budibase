@@ -2,6 +2,7 @@ import { writable } from "svelte/store"
 import { API } from "api"
 import { update } from "lodash"
 import { licensing } from "."
+import { sdk } from "@budibase/shared-core"
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -111,9 +112,20 @@ export function createUsersStore() {
     return await API.saveUser(user)
   }
 
-  const getUserRole = ({ admin, builder }) =>
-    admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
+  async function addAppBuilder(userId, appId) {
+    return await API.addAppBuilder({ userId, appId })
+  }
 
+  async function removeAppBuilder(userId, appId) {
+    return await API.removeAppBuilder({ userId, appId })
+  }
+
+  const getUserRole = user =>
+    sdk.users.isAdmin(user)
+      ? "admin"
+      : sdk.users.isBuilder(user)
+      ? "developer"
+      : "appUser"
   const refreshUsage =
     fn =>
     async (...args) => {
@@ -134,6 +146,8 @@ export function createUsersStore() {
     getInvites,
     updateInvite,
     getUserCountByApp,
+    addAppBuilder,
+    removeAppBuilder,
     // any operation that adds or deletes users
     acceptInvite,
     create: refreshUsage(create),

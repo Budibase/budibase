@@ -2,7 +2,9 @@ const fs = require("fs")
 const { execSync } = require("child_process")
 const path = require("path")
 
-const IMAGES = {
+const IS_SINGLE_IMAGE = process.env.SINGLE_IMAGE
+
+let IMAGES = {
 	worker: "budibase/worker",
 	apps: "budibase/apps",
 	proxy: "budibase/proxy",
@@ -10,7 +12,13 @@ const IMAGES = {
 	couch: "ibmcom/couchdb3",
 	curl: "curlimages/curl",
 	redis: "redis",
-	watchtower: "containrrr/watchtower"
+	watchtower: "containrrr/watchtower",
+}
+
+if (IS_SINGLE_IMAGE) {
+	IMAGES = {
+		budibase: "budibase/budibase"
+	}
 }
 
 const FILES = {
@@ -39,11 +47,10 @@ for (let image in IMAGES) {
 }
 
 // copy config files
-copyFile(FILES.COMPOSE)
+if (!IS_SINGLE_IMAGE) {
+	copyFile(FILES.COMPOSE)
+}
 copyFile(FILES.ENV)
 
 // compress
 execSync(`tar -czf bb-airgapped.tar.gz hosting/scripts/bb-airgapped`)
-
-// clean up
-fs.rmdirSync(OUTPUT_DIR, { recursive: true })

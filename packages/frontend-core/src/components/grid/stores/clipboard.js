@@ -1,4 +1,5 @@
 import { writable, get } from "svelte/store"
+import { Helpers } from "@budibase/bbui"
 
 export const createStores = () => {
   const copiedCell = writable(null)
@@ -8,11 +9,20 @@ export const createStores = () => {
   }
 }
 
-export const deriveStores = context => {
+export const createActions = context => {
   const { copiedCell, focusedCellAPI } = context
 
   const copy = () => {
-    copiedCell.set(get(focusedCellAPI)?.getValue())
+    const value = get(focusedCellAPI)?.getValue()
+    copiedCell.set(value)
+
+    // Also copy a stringified version to the clipboard
+    let stringified = ""
+    if (value != null && value !== "") {
+      // Only conditionally stringify to avoid redundant quotes around text
+      stringified = typeof value === "object" ? JSON.stringify(value) : value
+    }
+    Helpers.copyToClipboard(stringified)
   }
 
   const paste = () => {

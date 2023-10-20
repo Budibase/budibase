@@ -1,6 +1,7 @@
 <script>
-  import { RelationshipTypes } from "constants/backend"
+  import { RelationshipType } from "constants/backend"
   import {
+    keepOpen,
     Button,
     Input,
     ModalContent,
@@ -12,6 +13,8 @@
   import { Helpers } from "@budibase/bbui"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
+  import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import { PrettyRelationshipDefinitions } from "constants/backend"
 
   export let save
   export let datasource
@@ -21,16 +24,21 @@
   export let selectedFromTable
   export let close
 
-  const relationshipTypes = [
-    {
-      label: "One to Many",
-      value: RelationshipTypes.MANY_TO_ONE,
+  let relationshipMap = {
+    [RelationshipType.MANY_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.MANY,
     },
-    {
-      label: "Many to Many",
-      value: RelationshipTypes.MANY_TO_MANY,
+    [RelationshipType.MANY_TO_ONE]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
     },
-  ]
+  }
+  let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
+  let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
+
+  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
+  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
 
   let originalFromColumnName = toRelationship.name,
     originalToColumnName = fromRelationship.name
@@ -48,18 +56,36 @@
   )
   let errors = {}
   let fromPrimary, fromForeign, fromColumn, toColumn
-  let fromId, toId, throughId, throughToKey, throughFromKey
+
+  let throughId, throughToKey, throughFromKey
   let isManyToMany, isManyToOne, relationshipType
   let hasValidated = false
+
+  $: fromId = null
+  $: toId = null
 
   $: tableOptions = plusTables.map(table => ({
     label: table.name,
     value: table._id,
+    name: table.name,
+    _id: table._id,
   }))
-  $: valid = getErrorCount(errors) === 0 && allRequiredAttributesSet()
-  $: isManyToMany = relationshipType === RelationshipTypes.MANY_TO_MANY
-  $: isManyToOne = relationshipType === RelationshipTypes.MANY_TO_ONE
-  $: toRelationship.relationshipType = fromRelationship?.relationshipType
+
+  $: {
+    // Determine the relationship type based on the selected values of both parts
+    relationshipType = Object.entries(relationshipMap).find(
+      ([_, parts]) =>
+        parts.part1 === relationshipPart1 && parts.part2 === relationshipPart2
+    )?.[0]
+
+    changed(() => {
+      hasValidated = false
+    })
+  }
+  $: valid =
+    getErrorCount(errors) === 0 && allRequiredAttributesSet(relationshipType)
+  $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
+  $: isManyToOne = relationshipType === RelationshipType.MANY_TO_ONE
 
   function getTable(id) {
     return plusTables.find(table => table._id === id)
@@ -114,9 +140,9 @@
     return Object.entries(errors).filter(entry => !!entry[1]).length
   }
 
-  function allRequiredAttributesSet() {
+  function allRequiredAttributesSet(relationshipType) {
     const base = getTable(fromId) && getTable(toId) && fromColumn && toColumn
-    if (relationshipType === RelationshipTypes.MANY_TO_ONE) {
+    if (relationshipType === RelationshipType.MANY_TO_ONE) {
       return base && fromPrimary && fromForeign
     } else {
       return base && getTable(throughId) && throughFromKey && throughToKey
@@ -124,9 +150,10 @@
   }
 
   function validate() {
-    if (!allRequiredAttributesSet() && !hasValidated) {
+    if (!allRequiredAttributesSet(relationshipType) && !hasValidated) {
       return
     }
+
     hasValidated = true
     errorChecker.setType(relationshipType)
     const fromTable = getTable(fromId),
@@ -180,6 +207,16 @@
     return getErrorCount(errors) === 0
   }
 
+  function otherRelationshipType(type) {
+    if (type === RelationshipType.MANY_TO_ONE) {
+      return RelationshipType.ONE_TO_MANY
+    } else if (type === RelationshipType.ONE_TO_MANY) {
+      return RelationshipType.MANY_TO_ONE
+    } else if (type === RelationshipType.MANY_TO_MANY) {
+      return RelationshipType.MANY_TO_MANY
+    }
+  }
+
   function buildRelationships() {
     const id = Helpers.uuid()
     //Map temporary variables
@@ -200,6 +237,7 @@
       ...toRelationship,
       tableId: fromId,
       name: fromColumn,
+      relationshipType: otherRelationshipType(relationshipType),
       through: throughId,
       type: "link",
       _id: id,
@@ -207,7 +245,7 @@
 
     // if any to many only need to check from
     const manyToMany =
-      relateFrom.relationshipType === RelationshipTypes.MANY_TO_MANY
+      relateFrom.relationshipType === RelationshipType.MANY_TO_MANY
 
     if (!manyToMany) {
       delete relateFrom.through
@@ -242,7 +280,7 @@
       }
       relateTo = {
         ...relateTo,
-        relationshipType: RelationshipTypes.ONE_TO_MANY,
+        relationshipType: RelationshipType.ONE_TO_MANY,
         foreignKey: relateFrom.fieldName,
         fieldName: fromPrimary,
       }
@@ -267,7 +305,7 @@
 
   async function saveRelationship() {
     if (!validate()) {
-      return false
+      return keepOpen
     }
     buildRelationships()
     removeExistingRelationship()
@@ -279,11 +317,11 @@
     datasource.entities[getTable(toId).name].schema[toRelationship.name] =
       toRelationship
 
-    await save()
+    await save({ action: "saved" })
   }
   async function deleteRelationship() {
     removeExistingRelationship()
-    await save()
+    await save({ action: "deleted" })
     await tables.fetch()
     close()
   }
@@ -310,7 +348,7 @@
       fromColumn = toRelationship.name
     }
     relationshipType =
-      fromRelationship.relationshipType || RelationshipTypes.MANY_TO_ONE
+      fromRelationship.relationshipType || RelationshipType.MANY_TO_ONE
     if (selectedFromTable) {
       fromId = selectedFromTable._id
       fromColumn = selectedFromTable.name
@@ -325,33 +363,34 @@
   onConfirm={saveRelationship}
   disabled={!valid}
 >
-  <Select
-    label="Relationship type"
-    options={relationshipTypes}
-    bind:value={relationshipType}
-    bind:error={errors.relationshipType}
-    on:change={() =>
-      changed(() => {
-        hasValidated = false
-      })}
-  />
   <div class="headings">
     <Detail>Tables</Detail>
   </div>
-  {#if !selectedFromTable}
-    <Select
-      label="Select from table"
-      options={tableOptions}
-      bind:value={fromId}
-      bind:error={errors.fromTable}
-      on:change={e =>
-        changed(() => {
-          const table = plusTables.find(tbl => tbl._id === e.detail)
-          fromColumn = table?.name || ""
-          fromPrimary = table?.primary?.[0]
-        })}
-    />
-  {/if}
+
+  <RelationshipSelector
+    bind:relationshipPart1
+    bind:relationshipPart2
+    bind:relationshipTableIdPrimary={fromId}
+    bind:relationshipTableIdSecondary={toId}
+    {relationshipOpts1}
+    {relationshipOpts2}
+    {tableOptions}
+    {errors}
+    primaryDisabled={selectedFromTable}
+    primaryTableChanged={e =>
+      changed(() => {
+        const table = plusTables.find(tbl => tbl._id === e.detail)
+        fromColumn = table?.name || ""
+        fromPrimary = table?.primary?.[0]
+      })}
+    secondaryTableChanged={e =>
+      changed(() => {
+        const table = plusTables.find(tbl => tbl._id === e.detail)
+        toColumn = table.name || ""
+        fromForeign = null
+      })}
+  />
+
   {#if isManyToOne && fromId}
     <Select
       label={`Primary Key (${getTable(fromId).name})`}
@@ -361,18 +400,6 @@
       on:change={changed}
     />
   {/if}
-  <Select
-    label={"Select to table"}
-    options={tableOptions}
-    bind:value={toId}
-    bind:error={errors.toTable}
-    on:change={e =>
-      changed(() => {
-        const table = plusTables.find(tbl => tbl._id === e.detail)
-        toColumn = table.name || ""
-        fromForeign = null
-      })}
-  />
   {#if isManyToMany}
     <Select
       label={"Through"}

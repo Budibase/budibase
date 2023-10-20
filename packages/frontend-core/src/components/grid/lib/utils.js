@@ -18,12 +18,23 @@ const TypeIconMap = {
   link: "DataCorrelated",
   formula: "Calculator",
   json: "Brackets",
+  bigint: "TagBold",
+  bb_reference: {
+    user: "User",
+    users: "UserGroup",
+  },
 }
 
 export const getColumnIcon = column => {
   if (column.schema.autocolumn) {
     return "MagicWand"
   }
-  const type = column.schema.type
-  return TypeIconMap[type] || "Text"
+  const { type, subtype } = column.schema
+
+  const result =
+    typeof TypeIconMap[type] === "object" && subtype
+      ? TypeIconMap[type][subtype]
+      : TypeIconMap[type]
+
+  return result || "Text"
 }

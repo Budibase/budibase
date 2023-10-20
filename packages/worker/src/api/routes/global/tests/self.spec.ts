@@ -36,7 +36,7 @@ describe("/api/global/self", () => {
         })
         .expect(200)
 
-      const dbUser = await config.getUser(user.email)
+      const dbUser = (await config.getUser(user.email))!
 
       user._rev = dbUser._rev
       user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
@@ -58,7 +58,7 @@ describe("/api/global/self", () => {
       })
       .expect(200)
 
-    const dbUser = await config.getUser(user.email)
+    const dbUser = (await config.getUser(user.email))!
 
     user._rev = dbUser._rev
     user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()

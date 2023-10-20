@@ -186,7 +186,6 @@
   }
 
   div :global(.CodeMirror) {
-    width: var(--code-mirror-width) !important;
     height: var(--code-mirror-height) !important;
     border-radius: var(--border-radius-s);
     font-family: var(--font-mono);

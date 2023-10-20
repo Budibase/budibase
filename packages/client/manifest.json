@@ -2212,16 +2212,158 @@
       }
     ]
   },
+  "histogram": {
+    "name": "Histogram Chart",
+    "description": "Histogram chart",
+    "icon": "Histogram",
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "requiredAncestors": ["dataprovider"],
+    "settings": [
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title"
+      },
+      {
+        "type": "dataProvider",
+        "label": "Provider",
+        "key": "dataProvider",
+        "required": true
+      },
+      {
+        "type": "field",
+        "label": "Data column",
+        "key": "valueColumn",
+        "dependsOn": "dataProvider",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Y axis label",
+        "key": "yAxisLabel",
+        "defaultValue": "Frequency"
+      },
+      {
+        "type": "text",
+        "label": "X axis label",
+        "key": "xAxisLabel"
+      },
+      {
+        "type": "number",
+        "label": "Bucket count",
+        "key": "bucketCount",
+        "defaultValue": 10,
+        "min": 2
+      },
+      {
+        "type": "boolean",
+        "label": "Data labels",
+        "key": "dataLabels",
+        "defaultValue": false
+      },
+      {
+        "type": "text",
+        "label": "Width",
+        "key": "width"
+      },
+      {
+        "type": "text",
+        "label": "Height",
+        "key": "height",
+        "defaultValue": "400"
+      },
+      {
+        "type": "select",
+        "label": "Colors",
+        "key": "palette",
+        "defaultValue": "Palette 1",
+        "options": [
+          "Custom",
+          "Palette 1",
+          "Palette 2",
+          "Palette 3",
+          "Palette 4",
+          "Palette 5",
+          "Palette 6",
+          "Palette 7",
+          "Palette 8",
+          "Palette 9",
+          "Palette 10"
+        ]
+      },
+      {
+        "type": "color",
+        "label": "C1",
+        "key": "c1",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C2",
+        "key": "c2",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C3",
+        "key": "c3",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C4",
+        "key": "c4",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "color",
+        "label": "C5",
+        "key": "c5",
+        "dependsOn": {
+          "setting": "palette",
+          "value": "Custom"
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Animate",
+        "key": "animate",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Horizontal",
+        "key": "horizontal",
+        "defaultValue": false
+      }
+    ]
+  },
   "form": {
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
-    "illegalChildren": ["section", "form"],
+    "illegalChildren": ["section", "form", "formblock"],
     "actions": [
       "ValidateForm",
       "ClearForm",
       "ChangeFormStep",
-      "UpdateFieldValue"
+      "UpdateFieldValue",
+      "ScrollTo"
     ],
     "styles": ["size"],
     "size": {
@@ -2266,6 +2408,13 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+
+      {
+        "type": "text",
+        "label": "Initial form step",
+        "key": "initialFormStep",
+        "defaultValue": 1
       }
     ],
     "context": [
@@ -2303,7 +2452,8 @@
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
-    "illegalChildren": ["section", "form", "form step"],
+    "requiredAncestors": ["form"],
+    "illegalChildren": ["section", "form", "formstep", "formblock"],
     "styles": ["size"],
     "size": {
       "width": 400,
@@ -2322,6 +2472,7 @@
   "fieldgroup": {
     "name": "Field Group",
     "icon": "Group",
+    "requiredAncestors": ["form"],
     "illegalChildren": ["section"],
     "styles": ["size"],
     "hasChildren": true,
@@ -2341,14 +2492,20 @@
             "value": "left"
           },
           {
-            "label": "Right",
-            "value": "right"
-          },
-          {
             "label": "Above",
             "value": "above"
           }
         ]
+      },
+      {
+        "type": "section",
+        "label": "Type",
+        "key": "type",
+        "defaultValue": "oneColumn",
+        "dependsOn": {
+          "setting": "labelPosition",
+          "value": "above"
+        }
       }
     ]
   },
@@ -2382,7 +2539,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2472,7 +2630,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2495,6 +2654,58 @@
         "type": "validation/number",
         "label": "Validation",
         "key": "validation"
+      }
+    ]
+  },
+  "bigintfield": {
+    "name": "BigInt Field",
+    "icon": "TagBold",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/bigint",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue",
+        "supportsConditions": false
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
       }
     ]
   },
@@ -2528,7 +2739,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2633,7 +2845,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -2752,7 +2965,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2935,7 +3149,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -2992,7 +3207,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3093,7 +3309,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3147,7 +3364,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "boolean",
@@ -3160,6 +3378,57 @@
         "label": "Manual entry",
         "key": "allowManualEntry",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Play sound on scan",
+        "key": "beepOnScan",
+        "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Sound pitch",
+        "key": "beepFrequency",
+        "dependsOn": "beepOnScan",
+        "defaultValue": 2637,
+        "options": [
+          {
+            "label": "Low",
+            "value": 2096
+          },
+          {
+            "label": "Regular",
+            "value": 2637
+          },
+          {
+            "label": "High",
+            "value": 3136
+          },
+          { "label": "Custom", "value": "custom" }
+        ]
+      },
+      {
+        "type": "number",
+        "label": "Sound frequency (Hz)",
+        "key": "customFrequency",
+        "defaultValue": 1046,
+        "min": 20,
+        "max": 8000,
+        "dependsOn": {
+          "setting": "beepFrequency",
+          "value": "custom"
+        }
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
       },
       {
         "type": "validation/string",
@@ -3374,7 +3643,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3388,21 +3658,26 @@
         ]
       },
       {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "filter/relationship",
+        "label": "Filtering",
+        "key": "filter"
+      },
+      {
         "type": "boolean",
-        "label": "Autocomplete",
+        "label": "Search",
         "key": "autocomplete",
-        "defaultValue": false
+        "defaultValue": true
       },
       {
         "type": "boolean",
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
-      },
-      {
-        "type": "validation/link",
-        "label": "Validation",
-        "key": "validation"
       }
     ]
   },
@@ -3436,7 +3711,8 @@
       {
         "type": "text",
         "label": "Default value",
-        "key": "defaultValue"
+        "key": "defaultValue",
+        "supportsConditions": false
       },
       {
         "type": "event",
@@ -3468,7 +3744,7 @@
     },
     "settings": [
       {
-        "type": "field/attachment",
+        "type": "field/s3",
         "label": "Field",
         "key": "field",
         "required": true
@@ -3543,7 +3819,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -3862,6 +4139,10 @@
             "value": "bar"
           },
           {
+            "label": "Histogram",
+            "value": "histogram"
+          },
+          {
             "label": "Line",
             "value": "line"
           },
@@ -4113,6 +4394,47 @@
       },
       {
         "section": true,
+        "name": "Histogram Chart",
+        "icon": "Histogram",
+        "dependsOn": {
+          "setting": "chartType",
+          "value": "histogram"
+        },
+        "settings": [
+          {
+            "type": "field",
+            "label": "Value column",
+            "key": "valueColumn",
+            "dependsOn": "dataSource",
+            "required": true
+          },
+          {
+            "type": "text",
+            "label": "Y axis label",
+            "key": "yAxisLabel"
+          },
+          {
+            "type": "text",
+            "label": "X axis label",
+            "key": "xAxisLabel"
+          },
+          {
+            "type": "boolean",
+            "label": "Horizontal",
+            "key": "horizontal",
+            "defaultValue": false
+          },
+          {
+            "type": "number",
+            "label": "Bucket count",
+            "key": "bucketCount",
+            "defaultValue": 10,
+            "min": 2
+          }
+        ]
+      },
+      {
+        "section": true,
         "name": "Line Chart",
         "icon": "GraphTrend",
         "dependsOn": {
@@ -4322,14 +4644,16 @@
           {
             "type": "field/sortable",
             "label": "Sort by",
-            "key": "sortColumn"
+            "key": "sortColumn",
+            "placeholder": "Default"
           },
           {
             "type": "select",
             "label": "Sort order",
             "key": "sortOrder",
             "options": ["Ascending", "Descending"],
-            "defaultValue": "Ascending"
+            "defaultValue": "Ascending",
+            "dependsOn": "sortColumn"
           },
           {
             "type": "select",
@@ -4437,27 +4761,18 @@
             ]
           },
           {
-            "label": "Fields",
+            "label": "",
             "type": "fieldConfiguration",
             "key": "sidePanelFields",
             "nested": true,
             "dependsOn": {
               "setting": "clickBehaviour",
               "value": "details"
-            }
+            },
+            "resetOn": "dataSource"
           },
           {
-            "label": "Show delete",
-            "type": "boolean",
-            "key": "sidePanelShowDelete",
-            "nested": true,
-            "dependsOn": {
-              "setting": "clickBehaviour",
-              "value": "details"
-            }
-          },
-          {
-            "label": "Save label",
+            "label": "Save button",
             "type": "text",
             "key": "sidePanelSaveLabel",
             "defaultValue": "Save",
@@ -4468,11 +4783,21 @@
             }
           },
           {
-            "label": "Delete label",
+            "label": "Delete button",
             "type": "text",
             "key": "sidePanelDeleteLabel",
             "defaultValue": "Delete",
             "nested": true,
+            "dependsOn": {
+              "setting": "clickBehaviour",
+              "value": "details"
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
             "dependsOn": {
               "setting": "clickBehaviour",
               "value": "details"
@@ -4566,7 +4891,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4734,7 +5060,8 @@
       {
         "type": "field/sortable",
         "label": "Sort column",
-        "key": "sortColumn"
+        "key": "sortColumn",
+        "placeholder": "None"
       },
       {
         "type": "select",
@@ -4969,19 +5296,8 @@
       },
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource"
-      },
-      {
-        "type": "text",
-        "label": "Row ID",
-        "key": "rowId",
-        "nested": true,
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "Create",
-          "invert": true
-        }
       },
       {
         "type": "text",
@@ -4990,45 +5306,88 @@
         "nested": true
       },
       {
-        "type": "select",
-        "label": "Size",
-        "key": "size",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ],
-        "defaultValue": "spectrum--medium"
-      },
-      {
-        "type": "text",
-        "label": "Empty text",
-        "key": "noRowsMessage",
-        "defaultValue": "We couldn't find a row to display",
+        "section": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
           "invert": true
-        }
+        },
+        "name": "Row details",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Empty text",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "View",
+          "invert": true
+        },
+        "settings": [
+          {
+            "type": "text",
+            "key": "saveButtonLabel",
+            "label": "Save button",
+            "nested": true,
+            "defaultValue": "Save"
+          },
+          {
+            "type": "text",
+            "key": "deleteButtonLabel",
+            "label": "Delete button",
+            "nested": true,
+            "defaultValue": "Delete",
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Update"
+            }
+          },
+          {
+            "type": "url",
+            "label": "Navigate after button press",
+            "key": "actionUrl",
+            "placeholder": "Choose a screen",
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          },
+          {
+            "type": "boolean",
+            "label": "Hide notifications",
+            "key": "notificationOverride",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
+          }
+        ]
       },
       {
         "section": true,
         "name": "Fields",
         "settings": [
           {
-            "type": "fieldConfiguration",
-            "label": "Fields",
-            "key": "fields",
-            "selectAllFields": true
-          },
-          {
             "type": "select",
-            "label": "Field labels",
+            "label": "Align labels",
             "key": "labelPosition",
             "defaultValue": "left",
             "options": [
@@ -5043,70 +5402,33 @@
             ]
           },
           {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "options": [
+              {
+                "label": "Medium",
+                "value": "spectrum--medium"
+              },
+              {
+                "label": "Large",
+                "value": "spectrum--large"
+              }
+            ],
+            "defaultValue": "spectrum--medium"
+          },
+          {
+            "type": "fieldConfiguration",
+            "key": "fields",
+            "nested": true,
+            "resetOn": "dataSource",
+            "selectAllFields": true
+          },
+          {
             "type": "boolean",
             "label": "Disabled",
             "key": "disabled",
             "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Buttons",
-        "settings": [
-          {
-            "type": "boolean",
-            "label": "Show save button",
-            "key": "showSaveButton",
-            "defaultValue": true,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          },
-          {
-            "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save button label",
-            "nested": true,
-            "defaultValue": "Save",
-            "dependsOn": {
-              "setting": "showSaveButton",
-              "value": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Allow delete",
-            "key": "showDeleteButton",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
-          },
-          {
-            "type": "text",
-            "key": "deleteButtonLabel",
-            "label": "Delete button label",
-            "nested": true,
-            "defaultValue": "Delete",
-            "dependsOn": {
-              "setting": "showDeleteButton",
-              "value": true
-            }
-          },
-          {
-            "type": "url",
-            "label": "Navigate after button press",
-            "key": "actionUrl",
-            "placeholder": "Choose a screen",
             "dependsOn": {
               "setting": "actionType",
               "value": "View",
@@ -5147,7 +5469,7 @@
     "settings": [
       {
         "type": "table",
-        "label": "Table",
+        "label": "Data",
         "key": "dataSource",
         "required": true
       },
@@ -5225,5 +5547,170 @@
       "type": "schema",
       "suffix": "repeater"
     }
+  },
+  "gridblock": {
+    "name": "Grid block",
+    "icon": "Table",
+    "styles": ["size"],
+    "size": {
+      "width": 600,
+      "height": 400
+    },
+    "info": "Grid Blocks are only compatible with internal or SQL tables",
+    "settings": [
+      {
+        "type": "table",
+        "label": "Data",
+        "key": "table",
+        "required": true
+      },
+      {
+        "type": "columns/grid",
+        "label": "Columns",
+        "key": "columns",
+        "dependsOn": "table"
+      },
+      {
+        "type": "filter",
+        "label": "Filtering",
+        "key": "initialFilter"
+      },
+      {
+        "type": "field/sortable",
+        "label": "Sort column",
+        "key": "initialSortColumn",
+        "placeholder": "Default"
+      },
+      {
+        "type": "select",
+        "label": "Sort order",
+        "key": "initialSortOrder",
+        "options": ["Ascending", "Descending"],
+        "defaultValue": "Ascending",
+        "dependsOn": "initialSortColumn"
+      },
+      {
+        "type": "select",
+        "label": "Row height",
+        "key": "fixedRowHeight",
+        "placeholder": "Default",
+        "options": [
+          {
+            "label": "Small",
+            "value": 36
+          },
+          {
+            "label": "Medium",
+            "value": 64
+          },
+          {
+            "label": "Large",
+            "value": 92
+          }
+        ]
+      },
+      {
+        "type": "event",
+        "label": "On row click",
+        "key": "onRowClick",
+        "context": [
+          {
+            "label": "Clicked row",
+            "key": "row"
+          }
+        ],
+        "dependsOn": {
+          "setting": "allowEditRows",
+          "value": false
+        }
+      },
+      {
+        "type": "boolean",
+        "label": "Add rows",
+        "key": "allowAddRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Edit rows",
+        "key": "allowEditRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Delete rows",
+        "key": "allowDeleteRows",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "High contrast",
+        "key": "stripeRows",
+        "defaultValue": false
+      }
+    ]
+  },
+  "bbreferencefield": {
+    "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
+    "name": "User Field",
+    "icon": "User",
+    "styles": ["size"],
+    "requiredAncestors": ["form"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/bb_reference",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Placeholder",
+        "key": "placeholder"
+      },
+      {
+        "type": "text",
+        "label": "Default value",
+        "key": "defaultValue"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/link",
+        "label": "Validation",
+        "key": "validation"
+      },
+      {
+        "type": "boolean",
+        "label": "Search",
+        "key": "autocomplete",
+        "defaultValue": true
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      }
+    ]
   }
 }

@@ -3,7 +3,8 @@ import { getAutomationStore } from "./store/automation"
 import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
-import { derived } from "svelte/store"
+import { getDeploymentStore } from "./store/deployments"
+import { derived, writable } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
@@ -14,6 +15,7 @@ export const automationStore = getAutomationStore()
 export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
 export const userStore = getUserStore()
+export const deploymentStore = getDeploymentStore()
 
 // Setup history for screens
 export const screenHistoryStore = createHistoryStore({
@@ -59,6 +61,12 @@ export const selectedLayout = derived(store, $store => {
 export const selectedComponent = derived(
   [store, selectedScreen],
   ([$store, $selectedScreen]) => {
+    if (
+      $selectedScreen &&
+      $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
+    ) {
+      return $selectedScreen?.props
+    }
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }
@@ -118,3 +126,26 @@ export const selectedAutomation = derived(automationStore, $automationStore => {
     x => x._id === $automationStore.selectedAutomationId
   )
 })
+
+// Derive map of resource IDs to other users.
+// We only ever care about a single user in each resource, so if multiple users
+// share the same datasource we can just overwrite them.
+export const userSelectedResourceMap = derived(userStore, $userStore => {
+  let map = {}
+  $userStore.forEach(user => {
+    const resource = user.builderMetadata?.selectedResourceId
+    if (resource) {
+      if (!map[resource]) {
+        map[resource] = []
+      }
+      map[resource].push(user)
+    }
+  })
+  return map
+})
+
+export const isOnlyUser = derived(userStore, $userStore => {
+  return $userStore.length < 2
+})
+
+export const screensHeight = writable("210px")

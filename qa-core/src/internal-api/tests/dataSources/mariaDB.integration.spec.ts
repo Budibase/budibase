@@ -66,4 +66,41 @@ describe("Internal API - Data Sources: MariaDB", () => {
       updatedDataSourceJson.datasource._rev!
     )
   })
+
+  it("Create a relationship", async () => {
+    // Create app
+    await config.createApp()
+
+    // Get all integrations
+    await config.api.integrations.getAll()
+
+    // Add data source
+    const [dataSourceResponse, dataSourceJson] =
+      await config.api.datasources.add(fixtures.datasources.mariaDB())
+
+    // Update data source
+    const newDataSourceInfo = {
+      ...dataSourceJson.datasource,
+      name: "MariaDB2",
+    }
+    const [updatedDataSourceResponse, updatedDataSourceJson] =
+      await config.api.datasources.update(newDataSourceInfo)
+
+    // Query data source
+    const [queryResponse, queryJson] = await config.api.queries.preview(
+      fixtures.queries.mariaDB(updatedDataSourceJson.datasource._id!)
+    )
+
+    expect(queryJson.rows.length).toBeGreaterThan(9)
+    expect(queryJson.schemaFields).toEqual(
+      fixtures.queries.expectedSchemaFields.mariaDB
+    )
+
+    // Add relationship
+    const relationShipBody = fixtures.datasources.generateRelationshipForMySQL(
+      updatedDataSourceJson
+    )
+    const [relationshipResponse, relationshipJson] =
+      await config.api.datasources.update(relationShipBody)
+  })
 })

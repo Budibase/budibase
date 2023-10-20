@@ -87,7 +87,7 @@
     border-color: var(--spectrum-global-color-gray-400);
   }
   /* Toolbar button color */
-  :global(.EasyMDEContainer .editor-toolbar button i) {
+  :global(.EasyMDEContainer .editor-toolbar button) {
     color: var(--spectrum-global-color-gray-800);
   }
   /* Separator between toolbar buttons*/

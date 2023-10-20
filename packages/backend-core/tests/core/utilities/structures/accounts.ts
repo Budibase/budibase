@@ -1,4 +1,4 @@
-import { generator, uuid, quotas } from "."
+import { generator, quotas, uuid } from "."
 import { generateGlobalUserID } from "../../../../src/docIds"
 import {
   Account,
@@ -6,14 +6,15 @@ import {
   AccountSSOProviderType,
   AuthType,
   CloudAccount,
-  Hosting,
-  SSOAccount,
   CreateAccount,
   CreatePassswordAccount,
+  CreateVerifiableSSOAccount,
+  Hosting,
+  SSOAccount,
 } from "@budibase/types"
-import _ from "lodash"
+import sample from "lodash/sample"
 
-export const account = (): Account => {
+export const account = (partial: Partial<Account> = {}): Account => {
   return {
     accountId: uuid(),
     tenantId: generator.word(),
@@ -29,6 +30,7 @@ export const account = (): Account => {
     size: "10+",
     profession: "Software Engineer",
     quotaUsage: quotas.usage(),
+    ...partial,
   }
 }
 
@@ -45,13 +47,11 @@ export const cloudAccount = (): CloudAccount => {
 }
 
 function providerType(): AccountSSOProviderType {
-  return _.sample(
-    Object.values(AccountSSOProviderType)
-  ) as AccountSSOProviderType
+  return sample(Object.values(AccountSSOProviderType)) as AccountSSOProviderType
 }
 
 function provider(): AccountSSOProvider {
-  return _.sample(Object.values(AccountSSOProvider)) as AccountSSOProvider
+  return sample(Object.values(AccountSSOProvider)) as AccountSSOProvider
 }
 
 export function ssoAccount(account: Account = cloudAccount()): SSOAccount {
@@ -66,6 +66,23 @@ export function ssoAccount(account: Account = cloudAccount()): SSOAccount {
     provider: provider(),
     providerType: providerType(),
     thirdPartyProfile: {},
+  }
+}
+
+export function verifiableSsoAccount(
+  account: Account = cloudAccount()
+): SSOAccount {
+  return {
+    ...account,
+    authType: AuthType.SSO,
+    oauth2: {
+      accessToken: generator.string(),
+      refreshToken: generator.string(),
+    },
+    pictureUrl: generator.url(),
+    provider: AccountSSOProvider.MICROSOFT,
+    providerType: AccountSSOProviderType.MICROSOFT,
+    thirdPartyProfile: { id: "abc123" },
   }
 }
 
@@ -90,6 +107,19 @@ export const cloudSSOCreateAccount: CreateAccount = {
   name: "Budi Armstrong",
   size: "10+",
   profession: "Software Engineer",
+}
+
+export const cloudVerifiableSSOCreateAccount: CreateVerifiableSSOAccount = {
+  email: "cloud-sso@budibase.com",
+  tenantId: "cloud-sso",
+  hosting: Hosting.CLOUD,
+  authType: AuthType.SSO,
+  tenantName: "cloudsso",
+  name: "Budi Armstrong",
+  size: "10+",
+  profession: "Software Engineer",
+  provider: AccountSSOProvider.MICROSOFT,
+  thirdPartyProfile: { id: "abc123" },
 }
 
 export const selfCreateAccount: CreatePassswordAccount = {

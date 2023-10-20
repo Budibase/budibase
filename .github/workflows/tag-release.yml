@@ -1,18 +1,9 @@
 name: Tag release
-concurrency: release-prerelease
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - ".aws/**"
-      - ".github/**"
-      - "charts/**"
-      - "packages/**"
-      - "scripts/**"
-      - "package.json"
-      - "yarn.lock"
   workflow_dispatch:
     inputs:
       versioning:
@@ -26,7 +17,7 @@ on:
         required: true
 
 jobs:
-  tag-prerelease:
+  tag-release:
     runs-on: ubuntu-latest
 
     steps:
@@ -40,10 +31,13 @@ jobs:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - run: yarn
-      - name: Tag prerelease
+      - run: cd scripts && yarn
+      - name: Tag release
         run: |
+          cd scripts
           # setup the username and email.
           git config --global user.name "Budibase Staging Release Bot"
           git config --global user.email "<>"
-          ./scripts/versionCommit.sh ${{ github.event.inputs.versioning }}
+          BUMP_TYPE_INPUT=${{ github.event.inputs.versioning }}
+          BUMP_TYPE=${BUMP_TYPE_INPUT:-"patch"}
+          ./versionCommit.sh $BUMP_TYPE

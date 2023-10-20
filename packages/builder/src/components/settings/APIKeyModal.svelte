@@ -1,5 +1,11 @@
 <script>
-  import { ModalContent, Body, notifications, CopyInput } from "@budibase/bbui"
+  import {
+    ModalContent,
+    keepOpen,
+    Body,
+    notifications,
+    CopyInput,
+  } from "@budibase/bbui"
   import { auth } from "stores/portal"
   import { onMount } from "svelte"
 
@@ -12,8 +18,8 @@
     } catch (err) {
       notifications.error("Unable to generate new API key")
     }
-    // need to return false to keep modal open
-    return false
+
+    return keepOpen
   }
 
   onMount(async () => {

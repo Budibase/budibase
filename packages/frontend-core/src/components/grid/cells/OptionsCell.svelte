@@ -18,6 +18,7 @@
   let focusedOptionIdx = null
 
   $: options = schema?.constraints?.inclusion || []
+  $: optionColors = schema?.optionColors || {}
   $: editable = focused && !readonly
   $: values = Array.isArray(value) ? value : [value].filter(x => x != null)
   $: {
@@ -93,7 +94,7 @@
     on:click={editable ? open : null}
   >
     {#each values as val}
-      {@const color = getOptionColor(val)}
+      {@const color = optionColors[val] || getOptionColor(val)}
       {#if color}
         <div class="badge text" style="--color: {color}">
           <span>
@@ -121,7 +122,7 @@
       use:clickOutside={close}
     >
       {#each options as option, idx}
-        {@const color = getOptionColor(option)}
+        {@const color = optionColors[option] || getOptionColor(option)}
         <div
           class="option"
           on:click={() => toggleOption(option)}
@@ -132,10 +133,7 @@
             {option}
           </div>
           {#if values.includes(option)}
-            <Icon
-              name="Checkmark"
-              color="var(--spectrum-global-color-blue-400)"
-            />
+            <Icon name="Checkmark" color="var(--accent-color)" />
           {/if}
         </div>
       {/each}
@@ -223,6 +221,8 @@
     overflow-y: auto;
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .options.invertX {
     left: auto;
@@ -240,7 +240,7 @@
     justify-content: space-between;
     align-items: center;
     gap: var(--cell-spacing);
-    background-color: var(--background);
+    background-color: var(--grid-background-alt);
   }
   .option:hover,
   .option.focused {

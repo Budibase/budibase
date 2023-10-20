@@ -81,6 +81,7 @@
   <Label>{label}</Label>
   <Editor
     editorHeight="250"
+    editorWidth="320"
     mode="json"
     on:change={({ detail }) => (value = detail.value)}
     value={stringVal}

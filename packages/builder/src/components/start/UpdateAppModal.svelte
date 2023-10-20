@@ -14,6 +14,10 @@
   import EditableIcon from "../common/EditableIcon.svelte"
 
   export let app
+  export let onUpdateComplete
+
+  $: appIdParts = app.appId ? app.appId?.split("_") : []
+  $: appId = appIdParts.slice(-1)[0]
 
   const values = writable({
     name: app.name,
@@ -34,8 +38,20 @@
 
   const setupValidation = async () => {
     const applications = svelteGet(apps)
-    appValidation.name(validation, { apps: applications, currentApp: app })
-    appValidation.url(validation, { apps: applications, currentApp: app })
+    appValidation.name(validation, {
+      apps: applications,
+      currentApp: {
+        ...app,
+        appId,
+      },
+    })
+    appValidation.url(validation, {
+      apps: applications,
+      currentApp: {
+        ...app,
+        appId,
+      },
+    })
     // init validation
     const { url } = $values
     validation.check({
@@ -46,7 +62,7 @@
 
   async function updateApp() {
     try {
-      await apps.update(app.instance._id, {
+      await apps.update(app.appId, {
         name: $values.name?.trim(),
         url: $values.url?.trim(),
         icon: {
@@ -54,6 +70,9 @@
           color: $values.iconColor,
         },
       })
+      if (typeof onUpdateComplete == "function") {
+        onUpdateComplete()
+      }
     } catch (error) {
       console.error(error)
       notifications.error("Error updating app")

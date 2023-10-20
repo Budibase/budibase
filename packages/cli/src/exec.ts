@@ -1,5 +1,6 @@
 import util from "util"
-const runCommand = util.promisify(require("child_process").exec)
+import childProcess from "child_process"
+const runCommand = util.promisify(childProcess.exec)
 
 export async function exec(command: string, dir = "./") {
   const { stdout } = await runCommand(command, { cwd: dir })
@@ -16,12 +17,12 @@ export async function utilityInstalled(utilName: string) {
 }
 
 export async function runPkgCommand(command: string, dir = "./") {
-  const yarn = await exports.utilityInstalled("yarn")
-  const npm = await exports.utilityInstalled("npm")
+  const yarn = await utilityInstalled("yarn")
+  const npm = await utilityInstalled("npm")
   if (!yarn && !npm) {
     throw new Error("Must have yarn or npm installed to run build.")
   }
   const npmCmd = command === "install" ? `npm ${command}` : `npm run ${command}`
   const cmd = yarn ? `yarn ${command} --ignore-engines` : npmCmd
-  await exports.exec(cmd, dir)
+  await exec(cmd, dir)
 }

@@ -8,6 +8,8 @@
   export let disabled = false
   export let error = null
   export let validate = null
+  export let indeterminate = false
+  export let compact = false
 
   const dispatch = createEventDispatcher()
 
@@ -21,11 +23,19 @@
   }
 </script>
 
-<FancyField {error} {value} {validate} {disabled} clickable on:click={onChange}>
+<FancyField
+  {error}
+  {value}
+  {validate}
+  {disabled}
+  {compact}
+  clickable
+  on:click={onChange}
+>
   <span>
-    <Checkbox {disabled} {value} />
+    <Checkbox {disabled} {value} {indeterminate} />
   </span>
-  <div class="text">
+  <div class="text" class:compact>
     {#if text}
       {text}
     {/if}
@@ -46,6 +56,10 @@
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
+  }
+  .text.compact {
+    font-size: 13px;
+    line-height: 15px;
   }
   .text > :global(*) {
     font-size: inherit !important;

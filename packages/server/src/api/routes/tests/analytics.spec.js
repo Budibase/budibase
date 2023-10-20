@@ -55,7 +55,22 @@ describe("/static", () => {
         .expect(200)
 
       expect(events.serve.servedApp).toBeCalledTimes(1)
-      expect(events.serve.servedApp).toBeCalledWith(config.getProdApp(), timezone)
+      expect(events.serve.servedApp).toBeCalledWith(config.getProdApp(), timezone, undefined)
+      expect(events.serve.servedAppPreview).not.toBeCalled()
+    })
+
+    it("should ping from an embedded app", async () => {
+      const headers = config.defaultHeaders()
+      headers[constants.Header.APP_ID] = config.prodAppId
+
+      await request
+        .post("/api/bbtel/ping")
+        .send({source: "app", timezone, embedded: true})
+        .set(headers)
+        .expect(200)
+
+      expect(events.serve.servedApp).toBeCalledTimes(1)
+      expect(events.serve.servedApp).toBeCalledWith(config.getProdApp(), timezone, true)
       expect(events.serve.servedAppPreview).not.toBeCalled()
     })
   })

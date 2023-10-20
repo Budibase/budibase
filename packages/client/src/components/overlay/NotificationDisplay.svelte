@@ -6,7 +6,7 @@
 
 <div class="notifications">
   {#if $notificationStore}
-    {#each $notificationStore as { type, icon, message, id, dismissable } (id)}
+    {#each $notificationStore as { type, icon, message, id, dismissable, count } (id)}
       <div
         in:fly={{
           duration: 300,
@@ -17,7 +17,7 @@
       >
         <Notification
           {type}
-          {message}
+          message={count > 1 ? `(${count}) ${message}` : message}
           {icon}
           {dismissable}
           on:dismiss={() => notificationStore.actions.dismiss(id)}

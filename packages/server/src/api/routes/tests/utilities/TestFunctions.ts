@@ -36,7 +36,10 @@ export const clearAllApps = async (
   exceptions: Array<string> = []
 ) => {
   await tenancy.doInTenant(tenantId, async () => {
-    const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
+    const req: any = {
+      query: { status: AppStatus.DEV },
+      user: { tenantId, builder: { global: true } },
+    }
     await appController.fetch(req)
     const apps = req.body
     if (!apps || apps.length <= 0) {

@@ -8,13 +8,16 @@ import {
   NewRowID,
 } from "../lib/constants"
 
-export const createStores = () => {
+export const createStores = context => {
+  const { props } = context
   const focusedCellId = writable(null)
   const focusedCellAPI = writable(null)
   const selectedRows = writable({})
   const hoveredRowId = writable(null)
-  const rowHeight = writable(DefaultRowHeight)
+  const rowHeight = writable(get(props).fixedRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
+  const gridFocused = writable(false)
+  const isDragging = writable(false)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -46,6 +49,8 @@ export const createStores = () => {
     previousFocusedRowId,
     hoveredRowId,
     rowHeight,
+    gridFocused,
+    isDragging,
     selectedRows: {
       ...selectedRows,
       actions: {
@@ -56,21 +61,13 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const {
-    focusedCellId,
-    selectedRows,
-    hoveredRowId,
-    enrichedRows,
-    rowLookupMap,
-    rowHeight,
-    stickyColumn,
-    width,
-  } = context
+  const { focusedCellId, rows, rowLookupMap, rowHeight, stickyColumn, width } =
+    context
 
   // Derive the row that contains the selected cell
   const focusedRow = derived(
-    [focusedCellId, rowLookupMap, enrichedRows],
-    ([$focusedCellId, $rowLookupMap, $enrichedRows]) => {
+    [focusedCellId, rowLookupMap, rows],
+    ([$focusedCellId, $rowLookupMap, $rows]) => {
       const rowId = $focusedCellId?.split("-")[0]
 
       // Edge case for new rows
@@ -80,23 +77,16 @@ export const deriveStores = context => {
 
       // All normal rows
       const index = $rowLookupMap[rowId]
-      return $enrichedRows[index]
+      return $rows[index]
     },
     null
   )
 
-  // Callback when leaving the grid, deselecting all focussed or selected items
-  const blur = () => {
-    focusedCellId.set(null)
-    selectedRows.set({})
-    hoveredRowId.set(null)
-  }
-
   // Derive the amount of content lines to show in cells depending on row height
   const contentLines = derived(rowHeight, $rowHeight => {
-    if ($rowHeight === LargeRowHeight) {
+    if ($rowHeight >= LargeRowHeight) {
       return 3
-    } else if ($rowHeight === MediumRowHeight) {
+    } else if ($rowHeight >= MediumRowHeight) {
       return 2
     }
     return 1
@@ -111,6 +101,20 @@ export const deriveStores = context => {
     focusedRow,
     contentLines,
     compact,
+  }
+}
+
+export const createActions = context => {
+  const { focusedCellId, selectedRows, hoveredRowId } = context
+
+  // Callback when leaving the grid, deselecting all focussed or selected items
+  const blur = () => {
+    focusedCellId.set(null)
+    selectedRows.set({})
+    hoveredRowId.set(null)
+  }
+
+  return {
     ui: {
       actions: {
         blur,
@@ -127,8 +131,9 @@ export const initialise = context => {
     focusedCellId,
     selectedRows,
     hoveredRowId,
-    table,
+    definition,
     rowHeight,
+    fixedRowHeight,
   } = context
 
   // Ensure we clear invalid rows from state if they disappear
@@ -181,8 +186,19 @@ export const initialise = context => {
     }
   })
 
-  // Pull row height from table
-  table.subscribe($table => {
-    rowHeight.set($table?.rowHeight || DefaultRowHeight)
+  // Pull row height from table as long as we don't have a fixed height
+  definition.subscribe($definition => {
+    if (!get(fixedRowHeight)) {
+      rowHeight.set($definition?.rowHeight || DefaultRowHeight)
+    }
+  })
+
+  // Reset row height when initial row height prop changes
+  fixedRowHeight.subscribe(height => {
+    if (height) {
+      rowHeight.set(height)
+    } else {
+      rowHeight.set(get(definition)?.rowHeight || DefaultRowHeight)
+    }
   })
 }

@@ -15,8 +15,6 @@
 
   const dispatch = createEventDispatcher()
 
-  $: placeholder = !value
-
   const extractProperty = (value, property) => {
     if (value && typeof value === "object") {
       return value[property]

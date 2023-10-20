@@ -18,7 +18,7 @@
         <img
           class="logo"
           alt="logo"
-          src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+          src={logoUrl || "/builder/bblogo.png"}
           height="48"
         />
       </a>

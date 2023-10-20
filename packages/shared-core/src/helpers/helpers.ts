@@ -35,7 +35,10 @@ export const getUserInitials = (user: User) => {
   let initials = ""
   initials += user.firstName ? user.firstName[0] : ""
   initials += user.lastName ? user.lastName[0] : ""
-  return initials === "" ? user.email[0] : initials
+  if (initials !== "") {
+    return initials
+  }
+  return user.email?.[0] || "U"
 }
 
 /**

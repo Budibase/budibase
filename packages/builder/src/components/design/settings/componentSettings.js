@@ -1,4 +1,4 @@
-import { Checkbox, Select, RadioGroup, Stepper } from "@budibase/bbui"
+import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
@@ -17,14 +17,16 @@ import URLSelect from "./controls/URLSelect.svelte"
 import OptionsEditor from "./controls/OptionsEditor/OptionsEditor.svelte"
 import FormFieldSelect from "./controls/FormFieldSelect.svelte"
 import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelte"
-import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
+import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
+import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
+import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 
 const componentMap = {
-  text: DrawerBindableCombobox,
+  text: DrawerBindableInput,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
@@ -43,22 +45,27 @@ const componentMap = {
   schema: SchemaSelect,
   section: SectionSelect,
   filter: FilterEditor,
+  "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
+  "columns/grid": GridColumnEditor,
   "field/sortable": SortableFieldSelect,
   "field/string": FormFieldSelect,
   "field/number": FormFieldSelect,
+  "field/bigint": FormFieldSelect,
   "field/options": FormFieldSelect,
   "field/boolean": FormFieldSelect,
   "field/longform": FormFieldSelect,
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
+  "field/s3": Input,
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,
   "field/barcodeqr": FormFieldSelect,
+  "field/bb_reference": FormFieldSelect,
   // Some validation types are the same as others, so not all types are
   // explicitly listed here. e.g. options uses string validation
   "validation/string": ValidationEditor,
@@ -68,6 +75,7 @@ const componentMap = {
   "validation/datetime": ValidationEditor,
   "validation/attachment": ValidationEditor,
   "validation/link": ValidationEditor,
+  "validation/bb_reference": ValidationEditor,
 }
 
 export const getComponentForSetting = setting => {

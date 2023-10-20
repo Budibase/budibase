@@ -3,6 +3,8 @@ import {
   Customer,
   Feature,
   License,
+  OfflineIdentifier,
+  OfflineLicense,
   PlanModel,
   PlanType,
   PriceDuration,
@@ -11,6 +13,7 @@ import {
   Quotas,
   Subscription,
 } from "@budibase/types"
+import { generator } from "./generator"
 
 export function price(): PurchasedPrice {
   return {
@@ -69,6 +72,11 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
+        creators: {
+          name: "Creators",
+          value: 1,
+          triggers: [],
+        },
         userGroups: {
           name: "User Groups",
           value: 1,
@@ -115,6 +123,10 @@ export function customer(): Customer {
 export function subscription(): Subscription {
   return {
     amount: 10000,
+    amounts: {
+      user: 10000,
+      creator: 0,
+    },
     cancelAt: undefined,
     currency: "usd",
     currentPeriodEnd: 0,
@@ -123,23 +135,46 @@ export function subscription(): Subscription {
     duration: PriceDuration.MONTHLY,
     pastDueAt: undefined,
     quantity: 0,
+    quantities: {
+      user: 0,
+      creator: 0,
+    },
     status: "active",
   }
 }
 
-export const license = (
-  opts: {
-    quotas?: Quotas
-    plan?: PurchasedPlan
-    planType?: PlanType
-    features?: Feature[]
-    billing?: Billing
-  } = {}
-): License => {
+interface GenerateLicenseOpts {
+  quotas?: Quotas
+  plan?: PurchasedPlan
+  planType?: PlanType
+  features?: Feature[]
+  billing?: Billing
+}
+
+export const license = (opts: GenerateLicenseOpts = {}): License => {
   return {
     features: opts.features || [],
     quotas: opts.quotas || quotas(),
     plan: opts.plan || plan(opts.planType),
     billing: opts.billing || billing(),
+  }
+}
+
+export function offlineLicense(opts: GenerateLicenseOpts = {}): OfflineLicense {
+  const base = license(opts)
+  return {
+    ...base,
+    expireAt: new Date().toISOString(),
+    identifier: offlineIdentifier(),
+  }
+}
+
+export function offlineIdentifier(
+  installId: string = generator.guid(),
+  tenantId: string = generator.guid()
+): OfflineIdentifier {
+  return {
+    installId,
+    tenantId,
   }
 }

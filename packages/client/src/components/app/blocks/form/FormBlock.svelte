@@ -12,41 +12,59 @@
   export let fields
   export let labelPosition
   export let title
+  export let showDeleteButton
+  export let showSaveButton
   export let saveButtonLabel
   export let deleteButtonLabel
-  export let showSaveButton
-  export let showDeleteButton
   export let rowId
   export let actionUrl
   export let noRowsMessage
+  export let notificationOverride
+
+  // Accommodate old config to ensure delete button does not reappear
+  $: deleteLabel = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
+  $: saveLabel = showSaveButton === false ? "" : saveButtonLabel?.trim()
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
   const convertOldFieldFormat = fields => {
-    if (typeof fields?.[0] === "string") {
-      return fields.map(field => ({ name: field, displayName: field }))
+    if (!fields) {
+      return []
     }
-
-    return fields
+    return fields.map(field => {
+      if (typeof field === "string") {
+        // existed but was a string
+        return {
+          name: field,
+          active: true,
+        }
+      } else {
+        // existed but had no state
+        return {
+          ...field,
+          active: typeof field?.active != "boolean" ? true : field?.active,
+        }
+      }
+    })
   }
 
   const getDefaultFields = (fields, schema) => {
-    if (schema && (!fields || fields.length === 0)) {
-      const defaultFields = []
-
-      Object.values(schema).forEach(field => {
-        if (field.autocolumn) return
-
-        defaultFields.push({
-          name: field.name,
-          displayName: field.name,
-        })
-      })
-
-      return defaultFields
+    if (!schema) {
+      return []
     }
+    let defaultFields = []
 
-    return fields
+    if (!fields || fields.length === 0) {
+      Object.values(schema)
+        .filter(field => !field.autocolumn)
+        .forEach(field => {
+          defaultFields.push({
+            name: field.name,
+            active: true,
+          })
+        })
+    }
+    return [...fields, ...defaultFields].filter(field => field.active)
   }
 
   let schema
@@ -55,7 +73,6 @@
 
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
-
   $: fetchSchema(dataSource)
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
   $: filter = [
@@ -81,14 +98,12 @@
     fields: fieldsOrDefault,
     labelPosition,
     title,
-    saveButtonLabel,
-    deleteButtonLabel,
-    showSaveButton,
-    showDeleteButton,
+    saveButtonLabel: saveLabel,
+    deleteButtonLabel: deleteLabel,
     schema,
     repeaterId,
+    notificationOverride,
   }
-
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }

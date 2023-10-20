@@ -4,6 +4,7 @@ import {
   InviteUsersRequest,
   User,
   CreateAdminUserRequest,
+  SearchQuery,
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
@@ -133,11 +134,40 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
+  searchUsers = ({ query }: { query?: SearchQuery }, status = 200) => {
+    return this.request
+      .post("/api/global/users/search")
+      .set(this.config.defaultHeaders())
+      .send({ query })
+      .expect("Content-Type", /json/)
+      .expect(status ? status : 200)
+  }
+
   getUser = (userId: string, opts?: TestAPIOpts) => {
     return this.request
       .get(`/api/global/users/${userId}`)
       .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
+  }
+
+  grantBuilderToApp = (
+    userId: string,
+    appId: string,
+    statusCode: number = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(statusCode)
+  }
+
+  revokeBuilderFromApp = (userId: string, appId: string) => {
+    return this.request
+      .delete(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
   }
 }

@@ -21,12 +21,12 @@
   export let componentBindings = []
   export let nested = false
   export let highlighted = false
+  export let propertyFocus = false
   export let info = null
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
-  $: tempValue = safeValue
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
 
   const getAllBindings = (bindings, componentBindings, nested) => {
@@ -79,6 +79,7 @@
   class="property-control"
   class:wide={!label || labelHidden}
   class:highlighted={highlighted && nullishValue}
+  class:property-focus={propertyFocus}
 >
   {#if label && !labelHidden}
     <div class="label">
@@ -99,9 +100,12 @@
       {key}
       {type}
       {...props}
+      on:drawerHide
+      on:drawerShow
     />
   </div>
   {#if info}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     <div class="text">{@html info}</div>
   {/if}
 </div>
@@ -125,6 +129,14 @@
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
   }
+
+  .property-control.property-focus :global(input) {
+    border-color: var(
+      --spectrum-textfield-m-border-color-down,
+      var(--spectrum-alias-border-color-mouse-focus)
+    );
+  }
+
   .label {
     margin-top: 16px;
     transform: translateY(-50%);

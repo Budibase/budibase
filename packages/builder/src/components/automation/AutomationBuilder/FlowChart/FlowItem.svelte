@@ -7,7 +7,6 @@
     Detail,
     Modal,
     Button,
-    Select,
     ActionButton,
     notifications,
     Label,
@@ -39,9 +38,6 @@
     step => step.stepId === ActionStepID.COLLECT
   )
   $: automationId = $selectedAutomation?._id
-  $: showBindingPicker =
-    block.stepId === ActionStepID.CREATE_ROW ||
-    block.stepId === ActionStepID.UPDATE_ROW
   $: isTrigger = block.type === "TRIGGER"
   $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
@@ -73,14 +69,11 @@
     if (!perms["execute"]) {
       role = "BASIC"
     } else {
-      role = perms["execute"]
+      role = perms["execute"].role
     }
   }
 
   async function removeLooping() {
-    let loopBlock = $selectedAutomation?.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
     try {
       await automationStore.actions.deleteAutomationBlock(loopBlock)
     } catch (error) {
@@ -89,10 +82,6 @@
   }
 
   async function deleteStep() {
-    let loopBlock = $selectedAutomation?.definition.steps.find(
-      x => x.blockToLoop === block.id
-    )
-
     try {
       if (loopBlock) {
         await automationStore.actions.deleteAutomationBlock(loopBlock)
@@ -101,15 +90,6 @@
     } catch (error) {
       notifications.error("Error saving automation")
     }
-  }
-
-  /**
-   * "rowControl" appears to be the name of the flag used to determine whether
-   * a certain automation block uses values or bindings as inputs
-   */
-  function toggleRowControl(evt) {
-    const rowControl = evt.detail !== "Use values"
-    automationStore.actions.toggleRowControl(block, rowControl)
   }
 
   async function addLooping() {
@@ -168,8 +148,8 @@
               $automationStore.blockDefinitions.ACTION.LOOP.schema.inputs
                 .properties
             )}
-            block={loopBlock}
             {webhookModal}
+            block={loopBlock}
           />
         </Layout>
       </div>
@@ -191,20 +171,10 @@
         {#if !isTrigger}
           <div>
             <div class="block-options">
-              {#if block?.features?.[Features.LOOPING] || !block.features}
+              {#if !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
                 <ActionButton on:click={() => addLooping()} icon="Reuse">
                   Add Looping
                 </ActionButton>
-              {/if}
-              {#if showBindingPicker}
-                <Select
-                  on:change={toggleRowControl}
-                  defaultValue="Use values"
-                  autoWidth
-                  value={block.rowControl ? "Use bindings" : "Use values"}
-                  options={["Use values", "Use bindings"]}
-                  placeholder={null}
-                />
               {/if}
               <ActionButton
                 on:click={() => deleteStep()}

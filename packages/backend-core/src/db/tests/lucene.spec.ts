@@ -1,6 +1,6 @@
 import { newid } from "../../docIds/newid"
 import { getDB } from "../db"
-import { Database } from "@budibase/types"
+import { Database, EmptyFilterOption } from "@budibase/types"
 import { QueryBuilder, paginatedSearch, fullSearch } from "../lucene"
 
 const INDEX_NAME = "main"
@@ -114,6 +114,25 @@ describe("lucene", () => {
       expect(resp.rows.length).toBe(2)
     })
 
+    it("should return all rows when doing a one of search against falsey value", async () => {
+      const builder = new QueryBuilder(dbName, INDEX_NAME)
+      builder.addOneOf("property", null)
+      let resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", undefined)
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", "")
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(3)
+
+      builder.addOneOf("property", [])
+      resp = await builder.run()
+      expect(resp.rows.length).toBe(0)
+    })
+
     it("should be able to perform a contains search", async () => {
       const builder = new QueryBuilder(dbName, INDEX_NAME)
       builder.addContains("property", ["word"])
@@ -135,6 +154,76 @@ describe("lucene", () => {
       builder.setAllOr()
       const resp = await builder.run()
       expect(resp.rows.length).toBe(2)
+    })
+
+    describe("empty filters behaviour", () => {
+      it("should return all rows by default", async () => {
+        const builder = new QueryBuilder(dbName, INDEX_NAME)
+        builder.addEqual("property", "")
+        builder.addEqual("number", null)
+        builder.addString("property", "")
+        builder.addFuzzy("property", "")
+        builder.addNotEqual("number", undefined)
+        builder.addOneOf("number", null)
+        builder.addContains("array", undefined)
+        builder.addNotContains("array", null)
+        builder.addContainsAny("array", null)
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(3)
+      })
+
+      it("should return all rows when onEmptyFilter is ALL", async () => {
+        const builder = new QueryBuilder(dbName, INDEX_NAME)
+        builder.setOnEmptyFilter(EmptyFilterOption.RETURN_ALL)
+        builder.setAllOr()
+        builder.addEqual("property", "")
+        builder.addEqual("number", null)
+        builder.addString("property", "")
+        builder.addFuzzy("property", "")
+        builder.addNotEqual("number", undefined)
+        builder.addOneOf("number", null)
+        builder.addContains("array", undefined)
+        builder.addNotContains("array", null)
+        builder.addContainsAny("array", null)
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(3)
+      })
+
+      it("should return no rows when onEmptyFilter is NONE", async () => {
+        const builder = new QueryBuilder(dbName, INDEX_NAME)
+        builder.setOnEmptyFilter(EmptyFilterOption.RETURN_NONE)
+        builder.addEqual("property", "")
+        builder.addEqual("number", null)
+        builder.addString("property", "")
+        builder.addFuzzy("property", "")
+        builder.addNotEqual("number", undefined)
+        builder.addOneOf("number", null)
+        builder.addContains("array", undefined)
+        builder.addNotContains("array", null)
+        builder.addContainsAny("array", null)
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(0)
+      })
+
+      it("should return all matching rows when onEmptyFilter is NONE, but a filter value is provided", async () => {
+        const builder = new QueryBuilder(dbName, INDEX_NAME)
+        builder.setOnEmptyFilter(EmptyFilterOption.RETURN_NONE)
+        builder.addEqual("property", "")
+        builder.addEqual("number", 1)
+        builder.addString("property", "")
+        builder.addFuzzy("property", "")
+        builder.addNotEqual("number", undefined)
+        builder.addOneOf("number", null)
+        builder.addContains("array", undefined)
+        builder.addNotContains("array", null)
+        builder.addContainsAny("array", null)
+
+        const resp = await builder.run()
+        expect(resp.rows.length).toBe(1)
+      })
     })
 
     describe("skip", () => {

@@ -1,27 +1,12 @@
-import { generateUserMetadataID, generateUserFlagID } from "../../db/utils"
+import { generateUserFlagID } from "../../db/utils"
 import { InternalTables } from "../../db/utils"
-import { getGlobalUsers } from "../../utilities/global"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import { Ctx, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function fetchMetadata(ctx: UserCtx) {
-  const global = await getGlobalUsers()
-  const metadata = await sdk.users.rawUserMetadata()
-  const users = []
-  for (let user of global) {
-    // find the metadata that matches up to the global ID
-    const info = metadata.find(meta => meta._id.includes(user._id))
-    // remove these props, not for the correct DB
-    users.push({
-      ...user,
-      ...info,
-      tableId: InternalTables.USER_METADATA,
-      // make sure the ID is always a local ID, not a global one
-      _id: generateUserMetadataID(user._id),
-    })
-  }
+export async function fetchMetadata(ctx: Ctx) {
+  const users = await sdk.users.fetchMetadata()
   ctx.body = users
 }
 
@@ -50,8 +35,8 @@ export async function updateMetadata(ctx: UserCtx) {
 export async function destroyMetadata(ctx: UserCtx) {
   const db = context.getAppDB()
   try {
-    const dbUser = await db.get(ctx.params.id)
-    await db.remove(dbUser._id, dbUser._rev)
+    const dbUser = await sdk.users.get(ctx.params.id)
+    await db.remove(dbUser._id!, dbUser._rev)
   } catch (err) {
     // error just means the global user has no config in this app
   }
@@ -74,7 +59,7 @@ export async function setFlag(ctx: UserCtx) {
   const db = context.getAppDB()
   let doc
   try {
-    doc = await db.get(flagDocId)
+    doc = await db.get<any>(flagDocId)
   } catch (err) {
     doc = { _id: flagDocId }
   }

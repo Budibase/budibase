@@ -1,6 +1,7 @@
 import {
   ConnectionInfo,
   DatasourceFeature,
+  DatasourceFieldType,
   Integration,
   QueryType,
   SqlQuery,
@@ -27,27 +28,30 @@ const SCHEMA: Integration = {
   },
   datasource: {
     account: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     username: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     password: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: true,
     },
+    role: {
+      type: DatasourceFieldType.STRING,
+    },
     warehouse: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     database: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     schema: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
   },

@@ -1,8 +1,6 @@
 import { Config } from "@jest/types"
-const preset = require("ts-jest/jest-preset")
 
 const baseConfig: Config.InitialProjectOptions = {
-  ...preset,
   preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
@@ -11,6 +9,7 @@ const baseConfig: Config.InitialProjectOptions = {
   },
   moduleNameMapper: {
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
   },
 }
 
@@ -30,5 +29,7 @@ const config: Config.InitialOptions = {
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
 }
+
+process.env.DISABLE_PINO_LOGGER = "1"
 
 export default config

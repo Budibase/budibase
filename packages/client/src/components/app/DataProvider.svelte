@@ -29,6 +29,9 @@
     paginate,
   })
 
+  // Sanitize schema to remove hidden fields
+  $: schema = sanitizeSchema($fetch.schema)
+
   // Build our action context
   $: actions = [
     {
@@ -66,7 +69,7 @@
     rows: $fetch.rows,
     info: $fetch.info,
     datasource: dataSource || {},
-    schema: $fetch.schema,
+    schema,
     rowsLength: $fetch.rows.length,
 
     // Undocumented properties. These aren't supposed to be used in builder
@@ -92,6 +95,19 @@
         paginate,
       },
     })
+  }
+
+  const sanitizeSchema = schema => {
+    if (!schema) {
+      return schema
+    }
+    let cloned = { ...schema }
+    Object.entries(cloned).forEach(([field, fieldSchema]) => {
+      if (fieldSchema.visible === false) {
+        delete cloned[field]
+      }
+    })
+    return cloned
   }
 
   const addQueryExtension = (key, extension) => {

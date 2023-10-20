@@ -1,3 +1,4 @@
+import { Helpers } from "@budibase/bbui"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAppEndpoints } from "./app"
@@ -22,6 +23,7 @@ import { buildTemplateEndpoints } from "./templates"
 import { buildUserEndpoints } from "./user"
 import { buildSelfEndpoints } from "./self"
 import { buildViewEndpoints } from "./views"
+import { buildViewV2Endpoints } from "./viewsV2"
 import { buildLicensingEndpoints } from "./licensing"
 import { buildGroupsEndpoints } from "./groups"
 import { buildPluginEndpoints } from "./plugins"
@@ -29,6 +31,15 @@ import { buildBackupsEndpoints } from "./backups"
 import { buildEnvironmentVariableEndpoints } from "./environmentVariables"
 import { buildEventEndpoints } from "./events"
 import { buildAuditLogsEndpoints } from "./auditLogs"
+import { buildLogsEndpoints } from "./logs"
+
+/**
+ * Random identifier to uniquely identify a session in a tab. This is
+ * used to determine the originator of calls to the API, which is in
+ * turn used to determine who caused a websocket message to be sent, so
+ * that we can ignore events caused by ourselves.
+ */
+export const APISessionID = Helpers.uuid()
 
 const defaultAPIClientConfig = {
   /**
@@ -66,7 +77,11 @@ export const createAPIClient = config => {
   let cache = {}
 
   // Generates an error object from an API response
-  const makeErrorFromResponse = async (response, method) => {
+  const makeErrorFromResponse = async (
+    response,
+    method,
+    suppressErrors = false
+  ) => {
     // Try to read a message from the error
     let message = response.statusText
     let json = null
@@ -87,6 +102,7 @@ export const createAPIClient = config => {
       url: response.url,
       method,
       handled: true,
+      suppressErrors,
     }
   }
 
@@ -110,12 +126,14 @@ export const createAPIClient = config => {
     json = true,
     external = false,
     parseResponse,
+    suppressErrors = false,
   }) => {
     // Ensure we don't do JSON processing if sending a GET request
     json = json && method !== "GET"
 
     // Build headers
     let headers = { Accept: "application/json" }
+    headers["x-budibase-session-id"] = APISessionID
     if (!external) {
       headers["x-budibase-api-version"] = ApiVersion
     }
@@ -164,7 +182,7 @@ export const createAPIClient = config => {
       }
     } else {
       delete cache[url]
-      throw await makeErrorFromResponse(response, method)
+      throw await makeErrorFromResponse(response, method, suppressErrors)
     }
   }
 
@@ -218,6 +236,14 @@ export const createAPIClient = config => {
     invalidateCache: () => {
       cache = {}
     },
+
+    // Generic utility to extract the current app ID. Assumes that any client
+    // that exists in an app context will be attaching our app ID header.
+    getAppID: () => {
+      let headers = {}
+      config?.attachHeaders(headers)
+      return headers?.["x-budibase-app-id"]
+    },
   }
 
   // Attach all endpoints
@@ -253,5 +279,7 @@ export const createAPIClient = config => {
     ...buildEnvironmentVariableEndpoints(API),
     ...buildEventEndpoints(API),
     ...buildAuditLogsEndpoints(API),
+    ...buildLogsEndpoints(API),
+    viewV2: buildViewV2Endpoints(API),
   }
 }

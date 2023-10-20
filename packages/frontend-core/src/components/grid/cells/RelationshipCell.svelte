@@ -21,6 +21,8 @@
   import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
 
+  const { API, dispatch } = getContext("grid")
+
   export let value
   export let api
   export let readonly
@@ -30,18 +32,20 @@
   export let invertX = false
   export let invertY = false
   export let contentLines = 1
+  export let searchFunction = API.searchTable
+  export let primaryDisplay
 
-  const { API, dispatch } = getContext("grid")
   const color = getColor(0)
 
   let isOpen = false
   let searchResults
   let searchString
   let lastSearchString
-  let primaryDisplay
   let candidateIndex
   let lastSearchId
   let searching = false
+  let valuesHeight = 0
+  let container
 
   $: oneRowOnly = schema?.relationshipType === "one-to-many"
   $: editable = focused && !readonly
@@ -94,7 +98,7 @@
     lastSearchId = Math.random()
     searching = true
     const thisSearchId = lastSearchId
-    const results = await API.searchTable({
+    const results = await searchFunction({
       paginate: false,
       tableId: schema.tableId,
       limit: 20,
@@ -138,6 +142,7 @@
 
   const open = async () => {
     isOpen = true
+    valuesHeight = container.getBoundingClientRect().height
 
     // Find the primary display for the related table
     if (!primaryDisplay) {
@@ -242,22 +247,30 @@
   })
 </script>
 
-<div class="wrapper" class:editable class:focused style="--color:{color};">
-  <div class="container">
+<div
+  class="wrapper"
+  class:editable
+  class:focused
+  class:invertY
+  style="--color:{color};"
+>
+  <div class="container" bind:this={container}>
     <div
       class="values"
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#each value || [] as relationship, idx}
-        {#if relationship.primaryDisplay}
+      {#each value || [] as relationship}
+        {#if relationship[primaryDisplay] || relationship.primaryDisplay}
           <div class="badge">
             <span
               on:click={editable
                 ? () => showRelationship(relationship._id)
                 : null}
             >
-              {readable(relationship.primaryDisplay)}
+              {readable(
+                relationship[primaryDisplay] || relationship.primaryDisplay
+              )}
             </span>
             {#if editable}
               <Icon
@@ -290,6 +303,7 @@
       class:invertY
       on:wheel|stopPropagation
       use:clickOutside={close}
+      style="--values-height:{valuesHeight}px;"
     >
       <div class="search">
         <Input
@@ -319,11 +333,7 @@
                 </span>
               </div>
               {#if isRowSelected(row)}
-                <Icon
-                  size="S"
-                  name="Checkmark"
-                  color="var(--spectrum-global-color-blue-400)"
-                />
+                <Icon size="S" name="Checkmark" color="var(--accent-color)" />
               {/if}
             </div>
           {/each}
@@ -340,7 +350,7 @@
     min-height: var(--row-height);
     max-height: var(--row-height);
     overflow: hidden;
-    --max-relationship-height: 120px;
+    --max-relationship-height: 96px;
   }
   .wrapper.focused {
     position: absolute;
@@ -351,6 +361,10 @@
     z-index: 1;
     max-height: none;
     overflow: visible;
+  }
+  .wrapper.invertY {
+    top: auto;
+    bottom: 0;
   }
 
   .container {
@@ -450,16 +464,17 @@
     left: 0;
     width: 100%;
     max-height: calc(
-      var(--max-cell-render-height) + var(--row-height) -
-        var(--max-relationship-height)
+      var(--max-cell-render-height) + var(--row-height) - var(--values-height)
     );
-    background: var(--background);
+    background: var(--grid-background-alt);
     border: var(--cell-border);
     box-shadow: 0 0 20px -4px rgba(0, 0, 0, 0.15);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     padding: 0 0 8px 0;
+    border-bottom-left-radius: 2px;
+    border-bottom-right-radius: 2px;
   }
   .dropdown.invertY {
     transform: translateY(-100%);

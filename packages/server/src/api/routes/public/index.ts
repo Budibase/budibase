@@ -7,14 +7,14 @@ import userEndpoints from "./users"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
+import { PermissionType, PermissionLevel } from "@budibase/types"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-import { middleware, redis, permissions } from "@budibase/backend-core"
-const { PermissionType, PermissionLevel } = permissions
+import { middleware, redis } from "@budibase/backend-core"
 
 const PREFIX = "/api/public/v1"
 // allow a lot more requests when in test
@@ -111,7 +111,7 @@ function applyAdminRoutes(endpoints: any) {
 
 function applyRoutes(
   endpoints: any,
-  permType: string,
+  permType: PermissionType,
   resource: string,
   subResource?: string
 ) {

@@ -176,7 +176,10 @@
       notifications.success(`Request saved successfully`)
       if (dynamicVariables) {
         datasource.config.dynamicVariables = rebuildVariables(saveId)
-        datasource = await datasources.save(datasource)
+        datasource = await datasources.update({
+          integration: integrationInfo,
+          datasource,
+        })
       }
       prettifyQueryRequestBody(
         query,
@@ -416,16 +419,22 @@
     if (query && !query.fields.pagination) {
       query.fields.pagination = {}
     }
-    dynamicVariables = getDynamicVariables(
-      datasource,
-      query._id,
-      (variable, queryId) => variable.queryId === queryId
-    )
-    globalDynamicBindings = getDynamicVariables(
-      datasource,
-      query._id,
-      (variable, queryId) => variable.queryId !== queryId
-    )
+    // if query doesn't have ID then its new - don't try to copy existing dynamic variables
+    if (!queryId) {
+      dynamicVariables = []
+      globalDynamicBindings = getDynamicVariables(datasource)
+    } else {
+      dynamicVariables = getDynamicVariables(
+        datasource,
+        query._id,
+        (variable, queryId) => variable.queryId === queryId
+      )
+      globalDynamicBindings = getDynamicVariables(
+        datasource,
+        query._id,
+        (variable, queryId) => variable.queryId !== queryId
+      )
+    }
 
     prettifyQueryRequestBody(
       query,

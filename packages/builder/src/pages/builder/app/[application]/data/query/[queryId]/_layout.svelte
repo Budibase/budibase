@@ -3,6 +3,10 @@
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
+  import { store } from "builderStore"
+
+  $: queryId = $queries.selectedQueryId
+  $: store.actions.websocket.selectResource(queryId)
 
   const stopSyncing = syncURLToState({
     urlParam: "queryId",

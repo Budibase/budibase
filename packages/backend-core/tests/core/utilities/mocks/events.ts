@@ -1,5 +1,3 @@
-import * as events from "../../../../src/events"
-
 beforeAll(async () => {
   const processors = await import("../../../../src/events/processors")
   const events = await import("../../../../src/events")

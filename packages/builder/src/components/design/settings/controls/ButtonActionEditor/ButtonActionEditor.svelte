@@ -3,7 +3,6 @@
   import { createEventDispatcher } from "svelte"
   import { notifications } from "@budibase/bbui"
   import ButtonActionDrawer from "./ButtonActionDrawer.svelte"
-  import { automationStore } from "builderStore"
   import { cloneDeep } from "lodash/fp"
 
   const dispatch = createEventDispatcher()
@@ -13,6 +12,7 @@
   export let name
   export let bindings
   export let nested
+  export let componentInstance
 
   let drawer
   let tmpValue
@@ -23,45 +23,9 @@
   }
 
   const saveEventData = async () => {
-    // any automations that need created from event triggers
-    const automationsToCreate = tmpValue.filter(
-      action => action["##eventHandlerType"] === "Trigger Automation"
-    )
-    for (let action of automationsToCreate) {
-      await createAutomation(action.parameters)
-    }
-
     dispatch("change", tmpValue)
     notifications.success("Component actions saved.")
     drawer.hide()
-  }
-
-  // called by the parent modal when actions are saved
-  const createAutomation = async parameters => {
-    if (parameters.automationId || !parameters.newAutomationName) {
-      return
-    }
-    try {
-      let trigger = automationStore.actions.constructBlock(
-        "TRIGGER",
-        "APP",
-        $automationStore.blockDefinitions.TRIGGER.APP
-      )
-      trigger.inputs = {
-        fields: Object.keys(parameters.fields ?? {}).reduce((fields, key) => {
-          fields[key] = "string"
-          return fields
-        }, {}),
-      }
-      const automation = await automationStore.actions.create(
-        parameters.newAutomationName,
-        trigger
-      )
-      parameters.automationId = automation._id
-      delete parameters.newAutomationName
-    } catch (error) {
-      notifications.error("Error creating automation")
-    }
   }
 
   $: actionCount = value?.length
@@ -70,10 +34,11 @@
   } set`
 </script>
 
-<div class="action-count">{actionText}</div>
-<ActionButton on:click={openDrawer}>Define actions</ActionButton>
+<div class="action-editor">
+  <ActionButton on:click={openDrawer}>{actionText}</ActionButton>
+</div>
 
-<Drawer bind:this={drawer} title={"Actions"}>
+<Drawer bind:this={drawer} title={"Actions"} on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Define what actions to run.
   </svelte:fragment>
@@ -85,13 +50,12 @@
     {bindings}
     {key}
     {nested}
+    {componentInstance}
   />
 </Drawer>
 
 <style>
-  .action-count {
-    padding-top: 6px;
-    padding-bottom: var(--spacing-s);
-    font-weight: 600;
+  .action-editor :global(.spectrum-ActionButton) {
+    width: 100%;
   }
 </style>

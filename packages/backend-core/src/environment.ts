@@ -1,15 +1,16 @@
 import { existsSync, readFileSync } from "fs"
+import { ServiceType } from "@budibase/types"
 
 function isTest() {
-  return isCypress() || isJest()
+  return isJest()
 }
 
 function isJest() {
-  return !!(process.env.NODE_ENV === "jest" || process.env.JEST_WORKER_ID)
-}
-
-function isCypress() {
-  return process.env.NODE_ENV === "cypress"
+  return (
+    process.env.NODE_ENV === "jest" ||
+    (process.env.JEST_WORKER_ID != null &&
+      process.env.JEST_WORKER_ID !== "null")
+  )
 }
 
 function isDev() {
@@ -47,7 +48,10 @@ function httpLogging() {
   return process.env.HTTP_LOGGING
 }
 
-function findVersion() {
+function getPackageJsonFields(): {
+  VERSION: string
+  SERVICE_NAME: string
+} {
   function findFileInAncestors(
     fileName: string,
     currentDir: string
@@ -69,17 +73,31 @@ function findVersion() {
   try {
     const packageJsonFile = findFileInAncestors("package.json", process.cwd())
     const content = readFileSync(packageJsonFile!, "utf-8")
-    return JSON.parse(content).version
+    const parsedContent = JSON.parse(content)
+    return {
+      VERSION: parsedContent.version,
+      SERVICE_NAME: parsedContent.name,
+    }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return undefined
+    return { VERSION: "", SERVICE_NAME: "" }
   }
+}
+
+function isWorker() {
+  return environment.SERVICE_TYPE === ServiceType.WORKER
+}
+
+function isApps() {
+  return environment.SERVICE_TYPE === ServiceType.APPS
 }
 
 const environment = {
   isTest,
   isJest,
   isDev,
+  isWorker,
+  isApps,
   isProd: () => {
     return !isDev()
   },
@@ -97,7 +115,6 @@ const environment = {
   REDIS_URL: process.env.REDIS_URL || "localhost:6379",
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
-  MOCK_REDIS: process.env.MOCK_REDIS,
   MINIO_ACCESS_KEY: process.env.MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY: process.env.MINIO_SECRET_KEY,
   AWS_REGION: process.env.AWS_REGION,
@@ -129,6 +146,7 @@ const environment = {
   PLUGIN_BUCKET_NAME:
     process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
   USE_COUCH: process.env.USE_COUCH || true,
+  MOCK_REDIS: process.env.MOCK_REDIS,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
   SERVICE: process.env.SERVICE || "budibase",
   LOG_LEVEL: process.env.LOG_LEVEL || "info",
@@ -146,6 +164,7 @@ const environment = {
   SMTP_FROM_ADDRESS: process.env.SMTP_FROM_ADDRESS,
   DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
   BLACKLIST_IPS: process.env.BLACKLIST_IPS,
+  SERVICE_TYPE: "unknown",
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.
@@ -154,13 +173,15 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
-  VERSION: findVersion(),
+  ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
+  OFFLINE_MODE: process.env.OFFLINE_MODE,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore
     environment[key] = value
   },
+  ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
 }
 
 // clean up any environment variable edge cases

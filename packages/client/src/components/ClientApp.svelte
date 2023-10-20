@@ -16,7 +16,7 @@
     themeStore,
     appStore,
     devToolsStore,
-    environmentStore,
+    devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -45,12 +45,10 @@
 
   let dataLoaded = false
   let permissionError = false
+  let embedNoScreens = false
 
   // Determine if we should show devtools or not
-  $: showDevTools =
-    !$builderStore.inBuilder &&
-    $devToolsStore.enabled &&
-    !$routeStore.queryParams?.peek
+  $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
@@ -70,6 +68,8 @@
         // If the user is logged in but has no screens, they don't have
         // permission to use the app
         permissionError = true
+      } else if ($appStore.embedded) {
+        embedNoScreens = true
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
@@ -88,7 +88,9 @@
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
-      builderStore.actions.analyticsPing({ source: "app" })
+      builderStore.actions.analyticsPing({
+        embedded: !!$appStore.embedded,
+      })
     }
   })
 </script>
@@ -107,6 +109,7 @@
     lang="en"
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
+    class:builder={$builderStore.inBuilder}
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
@@ -138,6 +141,7 @@
                     {#if permissionError}
                       <div class="error">
                         <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                           {@html ErrorSVG}
                           <Heading size="L">
                             You don't have permission to use this app
@@ -150,6 +154,7 @@
                     {:else if !$screenStore.activeLayout}
                       <div class="error">
                         <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                           {@html ErrorSVG}
                           <Heading size="L">
                             Something went wrong rendering your app
@@ -157,6 +162,16 @@
                           <Body size="S">
                             Get in touch with support if this issue persists
                           </Body>
+                        </Layout>
+                      </div>
+                    {:else if embedNoScreens}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            This Budibase app is not publicly accessible
+                          </Heading>
                         </Layout>
                       </div>
                     {:else}
@@ -190,7 +205,7 @@
                     {/if}
                   </div>
 
-                  {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
+                  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
                     <FreeFooter />
                   {/if}
                 </div>
@@ -223,11 +238,13 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
-    background: transparent;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  }
+  #spectrum-root.builder {
+    background: transparent;
   }
 
   #clip-root {

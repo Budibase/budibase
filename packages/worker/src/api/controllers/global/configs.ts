@@ -11,7 +11,6 @@ import {
   tenancy,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
-import { getLicensedConfig } from "../../../utilities/configs"
 import {
   Config,
   ConfigType,
@@ -24,10 +23,12 @@ import {
   isSettingsConfig,
   isSMTPConfig,
   OIDCConfigs,
+  SettingsBrandingConfig,
   SettingsInnerConfig,
   SSOConfig,
   SSOConfigType,
   UserCtx,
+  OIDCLogosConfig,
 } from "@budibase/types"
 import * as pro from "@budibase/pro"
 
@@ -143,12 +144,28 @@ async function hasActivatedConfig(ssoConfigs?: SSOConfigs) {
   return !!Object.values(ssoConfigs).find(c => c?.activated)
 }
 
-async function verifySettingsConfig(config: SettingsInnerConfig) {
+async function verifySettingsConfig(
+  config: SettingsInnerConfig & SettingsBrandingConfig,
+  existingConfig?: SettingsInnerConfig & SettingsBrandingConfig
+) {
   if (config.isSSOEnforced) {
     const valid = await hasActivatedConfig()
     if (!valid) {
       throw new Error("Cannot enforce SSO without an activated configuration")
     }
+  }
+
+  // always preserve file attributes
+  // these should be set via upload instead
+  // only allow for deletion by checking empty string to bypass this behaviour
+
+  if (existingConfig && config.logoUrl !== "") {
+    config.logoUrl = existingConfig.logoUrl
+    config.logoUrlEtag = existingConfig.logoUrlEtag
+  }
+  if (existingConfig && config.faviconUrl !== "") {
+    config.faviconUrl = existingConfig.faviconUrl
+    config.faviconUrlEtag = existingConfig.faviconUrlEtag
   }
 }
 
@@ -199,7 +216,7 @@ export async function save(ctx: UserCtx<Config>) {
         await email.verifyConfig(config)
         break
       case ConfigType.SETTINGS:
-        await verifySettingsConfig(config)
+        await verifySettingsConfig(config, existingConfig?.config)
         break
       case ConfigType.GOOGLE:
         await verifyGoogleConfig(config)
@@ -264,13 +281,39 @@ export async function save(ctx: UserCtx<Config>) {
   }
 }
 
+function enrichOIDCLogos(oidcLogos: OIDCLogosConfig) {
+  if (!oidcLogos) {
+    return
+  }
+  oidcLogos.config = Object.keys(oidcLogos.config || {}).reduce(
+    (acc: any, key: string) => {
+      if (!key.endsWith("Etag")) {
+        const etag = oidcLogos.config[`${key}Etag`]
+        const objectStoreUrl = objectStore.getGlobalFileUrl(
+          oidcLogos.type,
+          key,
+          etag
+        )
+        acc[key] = objectStoreUrl
+      } else {
+        acc[key] = oidcLogos.config[key]
+      }
+      return acc
+    },
+    {}
+  )
+}
+
 export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
-    const scopedConfig = await configs.getConfig(type)
+    let scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
+      if (type === ConfigType.OIDC_LOGOS) {
+        enrichOIDCLogos(scopedConfig)
+      }
       ctx.body = scopedConfig
     } else {
       // don't throw an error, there simply is nothing to return
@@ -284,16 +327,21 @@ export async function find(ctx: UserCtx) {
 export async function publicOidc(ctx: Ctx<void, GetPublicOIDCConfigResponse>) {
   try {
     // Find the config with the most granular scope based on context
-    const config = await configs.getOIDCConfig()
+    const oidcConfig = await configs.getOIDCConfig()
+    const oidcCustomLogos = await configs.getOIDCLogosDoc()
 
-    if (!config) {
+    if (oidcCustomLogos) {
+      enrichOIDCLogos(oidcCustomLogos)
+    }
+
+    if (!oidcConfig) {
       ctx.body = []
     } else {
       ctx.body = [
         {
-          logo: config.logo,
-          name: config.name,
-          uuid: config.uuid,
+          logo: oidcCustomLogos?.config[oidcConfig.logo] ?? oidcConfig.logo,
+          name: oidcConfig.name,
+          uuid: oidcConfig.uuid,
         },
       ]
     }
@@ -321,14 +369,15 @@ export async function publicSettings(
       )
     }
 
-    if (branding.faviconUrl && branding.faviconUrl !== "") {
-      // @ts-ignore
-      config.faviconUrl = objectStore.getGlobalFileUrl(
-        "settings",
-        "faviconUrl",
-        branding.faviconUrl
-      )
-    }
+    // enrich the favicon url - empty url means deleted
+    const faviconUrl =
+      branding.faviconUrl && branding.faviconUrl !== ""
+        ? objectStore.getGlobalFileUrl(
+            "settings",
+            "faviconUrl",
+            branding.faviconUrlEtag
+          )
+        : undefined
 
     // google
     const googleConfig = await configs.getGoogleConfig()
@@ -353,6 +402,7 @@ export async function publicSettings(
       config: {
         ...config,
         ...branding,
+        ...{ faviconUrl },
         google,
         googleDatasourceConfigured,
         oidc,
@@ -457,17 +507,17 @@ export async function configChecklist(ctx: Ctx) {
           smtp: {
             checked: !!smtpConfig,
             label: "Set up email",
-            link: "/builder/portal/manage/email",
+            link: "/builder/portal/settings/email",
           },
           adminUser: {
             checked: userExists,
             label: "Create your first user",
-            link: "/builder/portal/manage/users",
+            link: "/builder/portal/users/users",
           },
           sso: {
             checked: !!googleConfig || !!oidcConfig,
             label: "Set up single sign-on",
-            link: "/builder/portal/manage/auth",
+            link: "/builder/portal/settings/auth",
           },
         }
       }

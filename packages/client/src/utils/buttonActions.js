@@ -42,7 +42,7 @@ const saveRowHandler = async (action, context) => {
     }
 
     // Refresh related datasources
-    await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+    await dataSourceStore.actions.invalidateDataSource(tableId, {
       invalidateRelationships: true,
     })
 
@@ -75,7 +75,7 @@ const duplicateRowHandler = async (action, context) => {
       }
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+      await dataSourceStore.actions.invalidateDataSource(tableId, {
         invalidateRelationships: true,
       })
 
@@ -102,12 +102,46 @@ const fetchRowHandler = async action => {
 }
 
 const deleteRowHandler = async action => {
-  const { tableId, revId, rowId, notificationOverride } = action.parameters
-  if (tableId && rowId) {
+  const { tableId, rowId: rowConfig, notificationOverride } = action.parameters
+
+  if (tableId && rowConfig) {
     try {
-      await API.deleteRow({ tableId, rowId, revId })
+      let requestConfig
+
+      let parsedRowConfig = []
+      if (typeof rowConfig === "string") {
+        try {
+          parsedRowConfig = JSON.parse(rowConfig)
+        } catch (e) {
+          parsedRowConfig = rowConfig
+            .split(",")
+            .map(id => id.trim())
+            .filter(id => id)
+        }
+      } else {
+        parsedRowConfig = rowConfig
+      }
+
+      if (
+        typeof parsedRowConfig === "object" &&
+        parsedRowConfig.constructor === Object
+      ) {
+        requestConfig = [parsedRowConfig]
+      } else if (Array.isArray(parsedRowConfig)) {
+        requestConfig = parsedRowConfig
+      }
+
+      if (!requestConfig.length) {
+        notificationStore.actions.warning("No valid rows were supplied")
+        return false
+      }
+
+      const resp = await API.deleteRows({ tableId, rows: requestConfig })
+
       if (!notificationOverride) {
-        notificationStore.actions.success("Row deleted")
+        notificationStore.actions.success(
+          resp?.length == 1 ? "Row deleted" : `${resp.length} Rows deleted`
+        )
       }
 
       // Refresh related datasources
@@ -115,8 +149,10 @@ const deleteRowHandler = async action => {
         invalidateRelationships: true,
       })
     } catch (error) {
-      // Abort next actions
-      return false
+      console.error(error)
+      notificationStore.actions.error(
+        "An error occurred while executing the query"
+      )
     }
   }
 }
@@ -151,6 +187,17 @@ const triggerAutomationHandler = async action => {
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
+}
+
+const scrollHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ScrollTo,
+    {
+      field: action.parameters.field,
+    }
+  )
 }
 
 const queryExecutionHandler = async action => {
@@ -369,6 +416,7 @@ const handlerMap = {
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
+  ["Scroll To Field"]: scrollHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
@@ -466,7 +514,7 @@ export const enrichButtonActions = (actions, context) => {
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(await next())
+                  resolve(typeof next === "function" ? await next() : true)
                 } else {
                   resolve(false)
                 }

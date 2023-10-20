@@ -12,6 +12,7 @@
   export let emphasized = false
   export let onTop = false
   export let size = "M"
+  export let beforeSwitch = null
 
   let thisSelected = undefined
 
@@ -28,9 +29,18 @@
       thisSelected = selected
       dispatch("select", thisSelected)
     } else if ($tab.title !== thisSelected) {
-      thisSelected = $tab.title
-      selected = $tab.title
-      dispatch("select", thisSelected)
+      if (typeof beforeSwitch == "function") {
+        const proceed = beforeSwitch($tab.title)
+        if (proceed) {
+          thisSelected = $tab.title
+          selected = $tab.title
+          dispatch("select", thisSelected)
+        }
+      } else {
+        thisSelected = $tab.title
+        selected = $tab.title
+        dispatch("select", thisSelected)
+      }
     }
     if ($tab.title !== thisSelected) {
       tab.update(state => {
@@ -47,10 +57,8 @@
   function calculateIndicatorLength() {
     if (!vertical) {
       width = $tab.info?.width + "px"
-      height = $tab.info?.height
     } else {
       height = $tab.info?.height + 4 + "px"
-      width = $tab.info?.width
     }
   }
 

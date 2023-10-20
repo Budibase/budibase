@@ -1,9 +1,17 @@
 import { Knex, knex } from "knex"
-import { Operation, QueryJson, RenameColumn, Table } from "@budibase/types"
+import {
+  FieldSubtype,
+  NumberFieldMetadata,
+  Operation,
+  QueryJson,
+  RenameColumn,
+  Table,
+} from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { FieldTypes, RelationshipTypes } from "../../constants"
+import { FieldTypes, RelationshipType } from "../../constants"
+import { utils } from "@budibase/shared-core"
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -15,7 +23,7 @@ function generateSchema(
   let primaryKey = table && table.primary ? table.primary[0] : null
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
-  let metaCols = columns.filter(col => col.meta)
+  let metaCols = columns.filter(col => (col as NumberFieldMetadata).meta)
   let isJunction = metaCols.length === columns.length
   // can't change primary once its set for now
   if (primaryKey && !oldTable && !isJunction) {
@@ -25,7 +33,9 @@ function generateSchema(
   }
 
   // check if any columns need added
-  const foreignKeys = Object.values(table.schema).map(col => col.foreignKey)
+  const foreignKeys = Object.values(table.schema).map(
+    col => (col as any).foreignKey
+  )
   for (let [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
@@ -43,6 +53,19 @@ function generateSchema(
       case FieldTypes.BARCODEQR:
         schema.text(key)
         break
+      case FieldTypes.BB_REFERENCE:
+        const subtype = column.subtype as FieldSubtype
+        switch (subtype) {
+          case FieldSubtype.USER:
+            schema.text(key)
+            break
+          case FieldSubtype.USERS:
+            schema.json(key)
+            break
+          default:
+            throw utils.unreachable(subtype)
+        }
+        break
       case FieldTypes.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {
@@ -52,6 +75,9 @@ function generateSchema(
         } else if (foreignKeys.indexOf(key) === -1) {
           schema.float(key)
         }
+        break
+      case FieldTypes.BIGINT:
+        schema.bigint(key)
         break
       case FieldTypes.BOOLEAN:
         schema.boolean(key)
@@ -67,8 +93,8 @@ function generateSchema(
       case FieldTypes.LINK:
         // this side of the relationship doesn't need any SQL work
         if (
-          column.relationshipType !== RelationshipTypes.MANY_TO_ONE &&
-          column.relationshipType !== RelationshipTypes.MANY_TO_MANY
+          column.relationshipType !== RelationshipType.MANY_TO_ONE &&
+          column.relationshipType !== RelationshipType.MANY_TO_MANY
         ) {
           if (!column.foreignKey || !column.tableId) {
             throw "Invalid relationship schema"

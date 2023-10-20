@@ -66,7 +66,7 @@ describe("/api/global/users", () => {
       expect(res.body._id).toBeDefined()
       const user = await config.getUser(email)
       expect(user).toBeDefined()
-      expect(user._id).toEqual(res.body._id)
+      expect(user!._id).toEqual(res.body._id)
       expect(events.user.inviteAccepted).toBeCalledTimes(1)
       expect(events.user.inviteAccepted).toBeCalledWith(user)
     })
@@ -480,7 +480,7 @@ describe("/api/global/users", () => {
       function createSSOUser() {
         return config.doInTenant(() => {
           const user = structures.users.ssoUser()
-          return userSdk.save(user, { requirePassword: false })
+          return userSdk.db.save(user, { requirePassword: false })
         })
       }
 
@@ -541,6 +541,36 @@ describe("/api/global/users", () => {
       expect(events.user.deleted).toBeCalledTimes(3)
       expect(events.user.permissionAdminRemoved).toBeCalledTimes(1)
       expect(events.user.permissionBuilderRemoved).toBeCalledTimes(2)
+    })
+  })
+
+  describe("POST /api/global/users/search", () => {
+    it("should be able to search by email", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { string: { email: user.email } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
+
+    it("should be able to search by _id", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { equal: { _id: user._id } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should throw an error when unimplemented options used", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: { equal: { firstName: user.firstName } },
+        },
+        501
+      )
     })
   })
 

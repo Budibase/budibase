@@ -9,7 +9,10 @@ export function createViewsStore() {
   const derivedStore = derived([store, tables], ([$store, $tables]) => {
     let list = []
     $tables.list?.forEach(table => {
-      list = list.concat(Object.values(table?.views || {}))
+      const views = Object.values(table?.views || {}).filter(view => {
+        return view.version !== 2
+      })
+      list = list.concat(views)
     })
     return {
       ...$store,
@@ -26,14 +29,12 @@ export function createViewsStore() {
   }
 
   const deleteView = async view => {
-    await API.deleteView(view)
+    await API.deleteView(view.name)
 
     // Update tables
     tables.update(state => {
       const table = state.list.find(table => table._id === view.tableId)
-      if (table) {
-        delete table.views[view.name]
-      }
+      delete table.views[view.name]
       return { ...state }
     })
   }

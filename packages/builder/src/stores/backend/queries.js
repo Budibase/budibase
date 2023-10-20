@@ -121,6 +121,13 @@ export function createQueriesStore() {
     return await save(datasourceId, newQuery)
   }
 
+  const removeDatasourceQueries = datasourceId => {
+    store.update(state => ({
+      ...state,
+      list: state.list.filter(table => table.datasourceId !== datasourceId),
+    }))
+  }
+
   return {
     subscribe: derivedStore.subscribe,
     fetch,
@@ -131,6 +138,7 @@ export function createQueriesStore() {
     delete: deleteQuery,
     preview,
     duplicate,
+    removeDatasourceQueries,
   }
 }
 

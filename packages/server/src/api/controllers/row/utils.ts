@@ -1,14 +1,35 @@
 import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
-import { FieldTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
-import { makeExternalQuery } from "../../../integrations/base/query"
-import { Row, Table } from "@budibase/types"
-import { Format } from "../view/exporters"
-import { UserCtx } from "@budibase/types"
+import {
+  Ctx,
+  FieldType,
+  ManyToOneRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
+  Row,
+  SearchFilters,
+  Table,
+  UserCtx,
+} from "@budibase/types"
+import { FieldTypes, NoEmptyFilterStrings } from "../../../constants"
 import sdk from "../../../sdk"
-const validateJs = require("validate.js")
-const { cloneDeep } = require("lodash/fp")
+
+import validateJs from "validate.js"
+import { cloneDeep } from "lodash/fp"
+
+function isForeignKey(key: string, table: Table) {
+  const relationships = Object.values(table.schema).filter(
+    column => column.type === FieldType.LINK
+  )
+  return relationships.some(
+    relationship =>
+      (
+        relationship as
+          | OneToManyRelationshipFieldMetadata
+          | ManyToOneRelationshipFieldMetadata
+      ).foreignKey === key
+  )
+}
 
 validateJs.extend(validateJs.validators.datetime, {
   parse: function (value: string) {
@@ -20,15 +41,9 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
-export async function getDatasourceAndQuery(json: any) {
-  const datasourceId = json.endpoint.datasourceId
-  const datasource = await sdk.datasources.get(datasourceId)
-  return makeExternalQuery(datasource, json)
-}
-
 export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
-  let row
+  let row: Row
   // TODO remove special user case in future
   if (tableId === InternalTables.USER_METADATA) {
     ctx.params = {
@@ -43,6 +58,25 @@ export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
     throw "Supplied tableId does not match the rows tableId"
   }
   return row
+}
+
+export function getTableId(ctx: Ctx) {
+  // top priority, use the URL first
+  if (ctx.params?.sourceId) {
+    return ctx.params.sourceId
+  }
+  // now check for old way of specifying table ID
+  if (ctx.params?.tableId) {
+    return ctx.params.tableId
+  }
+  // check body for a table ID
+  if (ctx.request.body?.tableId) {
+    return ctx.request.body.tableId
+  }
+  // now check if a specific view name
+  if (ctx.params?.viewName) {
+    return ctx.params.viewName
+  }
 }
 
 export async function validate({
@@ -65,13 +99,17 @@ export async function validate({
     const column = fetchedTable.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
     const type = column.type
+    // foreign keys are likely to be enriched
+    if (isForeignKey(fieldName, fetchedTable)) {
+      continue
+    }
     // formulas shouldn't validated, data will be deleted anyway
     if (type === FieldTypes.FORMULA || column.autocolumn) {
       continue
     }
     // special case for options, need to always allow unselected (empty)
-    if (type === FieldTypes.OPTIONS && constraints.inclusion) {
-      constraints.inclusion.push(null, "")
+    if (type === FieldTypes.OPTIONS && constraints?.inclusion) {
+      constraints.inclusion.push(null as any, "")
     }
     let res
 
@@ -83,13 +121,13 @@ export async function validate({
         }
         row[fieldName].map((val: any) => {
           if (
-            !constraints.inclusion.includes(val) &&
-            constraints.inclusion.length !== 0
+            !constraints?.inclusion?.includes(val) &&
+            constraints?.inclusion?.length !== 0
           ) {
             errors[fieldName] = "Field not in list"
           }
         })
-      } else if (constraints.presence && row[fieldName].length === 0) {
+      } else if (constraints?.presence && row[fieldName].length === 0) {
         // non required MultiSelect creates an empty array, which should not throw errors
         errors[fieldName] = [`${fieldName} is required`]
       }
@@ -118,51 +156,35 @@ export async function validate({
   return { valid: Object.keys(errors).length === 0, errors }
 }
 
-export function cleanExportRows(
-  rows: any[],
-  schema: any,
-  format: string,
-  columns: string[]
-) {
-  let cleanRows = [...rows]
+// don't do a pure falsy check, as 0 is included
+// https://github.com/Budibase/budibase/issues/10118
+export function removeEmptyFilters(filters: SearchFilters) {
+  for (let filterField of NoEmptyFilterStrings) {
+    if (!filters[filterField]) {
+      continue
+    }
 
-  const relationships = Object.entries(schema)
-    .filter((entry: any[]) => entry[1].type === FieldTypes.LINK)
-    .map(entry => entry[0])
-
-  relationships.forEach(column => {
-    cleanRows.forEach(row => {
-      delete row[column]
-    })
-    delete schema[column]
-  })
-
-  if (format === Format.CSV) {
-    // Intended to append empty values in export
-    const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
-      if (columns?.length && columns.indexOf(key) > 0) {
+    for (let filterType of Object.keys(filters)) {
+      if (filterType !== filterField) {
         continue
       }
-      for (let row of cleanRows) {
-        if (row[key] == null) {
-          row[key] = undefined
+      // don't know which one we're checking, type could be anything
+      const value = filters[filterType] as unknown
+      if (typeof value === "object") {
+        for (let [key, value] of Object.entries(
+          filters[filterType] as object
+        )) {
+          if (value == null || value === "") {
+            // @ts-ignore
+            delete filters[filterField][key]
+          }
         }
       }
     }
   }
-
-  return cleanRows
+  return filters
 }
 
-export function getTableId(ctx: any) {
-  if (ctx.request.body && ctx.request.body.tableId) {
-    return ctx.request.body.tableId
-  }
-  if (ctx.params && ctx.params.tableId) {
-    return ctx.params.tableId
-  }
-  if (ctx.params && ctx.params.viewName) {
-    return ctx.params.viewName
-  }
+export function isUserMetadataTable(tableId: string) {
+  return tableId === InternalTables.USER_METADATA
 }

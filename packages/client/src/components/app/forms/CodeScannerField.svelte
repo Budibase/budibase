@@ -11,6 +11,9 @@
   export let onChange
   export let allowManualEntry
   export let scanButtonText
+  export let beepOnScan
+  export let beepFrequency
+  export let customFrequency
 
   let fieldState
   let fieldApi
@@ -42,6 +45,9 @@
       disabled={fieldState.disabled}
       {allowManualEntry}
       scanButtonText={scanText}
+      {beepOnScan}
+      {beepFrequency}
+      {customFrequency}
     />
   {/if}
 </Field>

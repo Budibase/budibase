@@ -20,6 +20,11 @@ export interface CreatePassswordAccount extends CreateAccount {
   password: string
 }
 
+export interface CreateVerifiableSSOAccount extends CreateAccount {
+  provider?: AccountSSOProvider
+  thirdPartyProfile?: any
+}
+
 export const isCreatePasswordAccount = (
   account: CreateAccount
 ): account is CreatePassswordAccount => account.authType === AuthType.PASSWORD
@@ -50,7 +55,10 @@ export interface Account extends CreateAccount {
   licenseKeyActivatedAt?: number
   licenseRequestedAt?: number
   licenseOverrides?: LicenseOverrides
+  provider?: AccountSSOProvider
+  providerType?: AccountSSOProviderType
   quotaUsage?: QuotaUsage
+  offlineLicenseToken?: string
 }
 
 export interface PasswordAccount extends Account {
@@ -84,6 +92,13 @@ export enum AccountSSOProviderType {
 export enum AccountSSOProvider {
   GOOGLE = "google",
   MICROSOFT = "microsoft",
+}
+
+const verifiableSSOProviders: AccountSSOProvider[] = [
+  AccountSSOProvider.MICROSOFT,
+]
+export function isVerifiableSSOProvider(provider: AccountSSOProvider): boolean {
+  return verifiableSSOProviders.includes(provider)
 }
 
 export interface AccountSSO {

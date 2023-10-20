@@ -1,3 +1,4 @@
+import { HealthStatusResponse } from "@budibase/types"
 import { TestConfiguration } from "../../../../tests"
 import { accounts as _accounts } from "@budibase/backend-core"
 const accounts = jest.mocked(_accounts)
@@ -31,13 +32,15 @@ describe("/api/system/status", () => {
     })
 
     it("returns status in cloud", async () => {
-      const value = {
-        health: {
-          passing: false,
+      const value: HealthStatusResponse = {
+        passing: false,
+        checks: {
+          login: false,
+          search: false,
         },
       }
 
-      accounts.getStatus.mockReturnValueOnce(Promise.resolve(value))
+      accounts.getStatus.mockResolvedValue(value)
 
       const res = await config.api.status.getStatus()
 

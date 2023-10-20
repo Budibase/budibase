@@ -71,7 +71,7 @@
   <Layout noPadding gap="XS">
     <Label size="S">Trigger</Label>
     <div class="item-list">
-      {#each triggers as [idx, trigger]}
+      {#each triggers as [_, trigger]}
         <div
           class="item"
           class:selected={selectedTrigger === trigger.name}

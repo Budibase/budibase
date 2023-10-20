@@ -2,16 +2,9 @@
   import { getContext } from "svelte"
   import { GutterWidth } from "../lib/constants"
 
-  const {
-    columns,
-    resize,
-    renderedColumns,
-    stickyColumn,
-    isReordering,
-    scrollLeft,
-  } = getContext("grid")
+  const { resize, renderedColumns, stickyColumn, isReordering, scrollLeft } =
+    getContext("grid")
 
-  $: cutoff = $scrollLeft + GutterWidth + ($columns[0]?.width || 0)
   $: offset = GutterWidth + ($stickyColumn?.width || 0)
   $: activeColumn = $resize.column
 
@@ -65,6 +58,6 @@
     margin-left: -1px;
     width: 2px;
     height: 100%;
-    background: var(--spectrum-global-color-blue-400);
+    background: var(--accent-color);
   }
 </style>

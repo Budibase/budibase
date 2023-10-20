@@ -30,7 +30,7 @@
     }
   }
   $: settings = getBarSettings(definition)
-  $: isScreen = id === $builderStore.screen?.props?._id
+  $: isRoot = id === $builderStore.screen?.props?._id
 
   const getBarSettings = definition => {
     let allSettings = []
@@ -160,11 +160,11 @@
       {:else if setting.type === "color"}
         <SettingsColorPicker prop={setting.key} />
       {/if}
-      {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isScreen)}
+      {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
         <div class="divider" />
       {/if}
     {/each}
-    {#if !isScreen}
+    {#if !isRoot}
       <SettingsButton
         icon="Duplicate"
         on:click={() => {

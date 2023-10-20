@@ -1,3 +1,7 @@
+<script context="module">
+  export const keepOpen = Symbol("keepOpen")
+</script>
+
 <script>
   import "@spectrum-css/dialog/dist/index-vars.css"
   import { getContext } from "svelte"
@@ -30,7 +34,7 @@
 
   async function secondary(e) {
     loading = true
-    if (!secondaryAction || (await secondaryAction(e)) !== false) {
+    if (!secondaryAction || (await secondaryAction(e)) !== keepOpen) {
       hide()
     }
     loading = false
@@ -38,7 +42,7 @@
 
   async function confirm() {
     loading = true
-    if (!onConfirm || (await onConfirm()) !== false) {
+    if (!onConfirm || (await onConfirm()) !== keepOpen) {
       hide()
     }
     loading = false
@@ -46,7 +50,7 @@
 
   async function close() {
     loading = true
-    if (!onCancel || (await onCancel()) !== false) {
+    if (!onCancel || (await onCancel()) !== keepOpen) {
       cancel()
     }
     loading = false

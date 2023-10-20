@@ -20,9 +20,9 @@ export const getUserStore = () => {
     }
   }
 
-  const removeUser = user => {
+  const removeUser = sessionId => {
     store.update(state => {
-      return state.filter(x => x.sessionId !== user.sessionId)
+      return state.filter(x => x.sessionId !== sessionId)
     })
   }
 

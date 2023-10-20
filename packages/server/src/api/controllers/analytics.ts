@@ -1,5 +1,5 @@
 import { events } from "@budibase/backend-core"
-import { AnalyticsPingRequest, PingSource } from "@budibase/types"
+import { AnalyticsPingRequest, App, PingSource } from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
 import { context } from "@budibase/backend-core"
 
@@ -12,16 +12,17 @@ export const isEnabled = async (ctx: any) => {
 
 export const ping = async (ctx: any) => {
   const body = ctx.request.body as AnalyticsPingRequest
+
   switch (body.source) {
     case PingSource.APP: {
       const db = context.getAppDB({ skip_setup: true })
-      const appInfo = await db.get(DocumentType.APP_METADATA)
+      const appInfo = await db.get<App>(DocumentType.APP_METADATA)
       let appId = context.getAppId()
 
       if (isDevAppID(appId)) {
         await events.serve.servedAppPreview(appInfo, body.timezone)
       } else {
-        await events.serve.servedApp(appInfo, body.timezone)
+        await events.serve.servedApp(appInfo, body.timezone, body.embedded)
       }
       break
     }

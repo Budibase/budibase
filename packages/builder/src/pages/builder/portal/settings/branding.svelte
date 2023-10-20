@@ -18,6 +18,7 @@
   import { API } from "api"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { sdk } from "@budibase/shared-core"
 
   const imageExtensions = [
     ".png",
@@ -44,14 +45,14 @@
   let config = {}
   let updated = false
 
-  $: onConfigUpdate(config, mounted)
-  $: init = Object.keys(config).length > 0
+  $: onConfigUpdate(config)
+  $: initialised = Object.keys(config).length > 0
 
   $: isCloud = $admin.cloud
   $: brandingEnabled = $licensing.brandingEnabled
 
   const onConfigUpdate = () => {
-    if (!mounted || updated || !init) {
+    if (!mounted || updated || !initialised) {
       return
     }
     updated = true
@@ -122,34 +123,27 @@
     return response
   }
 
-  async function saveConfig() {
-    saving = true
-
+  async function saveFiles() {
     if (logoFile) {
       const logoResp = await uploadLogo(logoFile)
       if (logoResp.url) {
-        config = {
-          ...config,
-          logoUrl: logoResp.url,
-        }
         logoFile = null
         logoPreview = null
       }
+      config.logoUrl = undefined
     }
 
     if (faviconFile) {
       const faviconResp = await uploadFavicon(faviconFile)
       if (faviconResp.url) {
-        config = {
-          ...config,
-          faviconUrl: faviconResp.url,
-        }
         faviconFile = null
         faviconPreview = null
       }
+      config.faviconUrl = undefined
     }
+  }
 
-    // Trim
+  function trimFields() {
     const userStrings = [
       "metaTitle",
       "platformTitle",
@@ -168,11 +162,18 @@
       ...config,
       ...trimmed,
     }
+  }
+
+  async function saveConfig() {
+    saving = true
+
+    await saveFiles()
+    trimFields()
 
     try {
       // Update settings
       await organisation.save(config)
-      await organisation.init()
+      await init()
       notifications.success("Branding settings updated")
     } catch (e) {
       console.error("Branding updated failed", e)
@@ -182,9 +183,10 @@
     saving = false
   }
 
-  onMount(async () => {
-    await organisation.init()
-
+  async function init() {
+    if (!$organisation.loaded) {
+      await organisation.init()
+    }
     config = {
       faviconUrl: $organisation.faviconUrl,
       logoUrl: $organisation.logoUrl,
@@ -197,11 +199,15 @@
       metaImageUrl: $organisation.metaImageUrl,
       metaTitle: $organisation.metaTitle,
     }
+  }
+
+  onMount(async () => {
+    await init()
     mounted = true
   })
 </script>
 
-{#if $auth.isAdmin && mounted}
+{#if sdk.users.isAdmin($auth.user) && mounted}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
       <div class="title">
@@ -262,6 +268,7 @@
               faviconFile = e.detail
               faviconPreview = null
             } else {
+              faviconFile = null
               clone.faviconUrl = ""
             }
             config = clone
@@ -271,20 +278,18 @@
           allowClear={true}
         />
       </div>
-      {#if !isCloud}
-        <div class="field">
-          <Label size="L">Title</Label>
-          <Input
-            on:change={e => {
-              let clone = { ...config }
-              clone.platformTitle = e.detail ? e.detail : ""
-              config = clone
-            }}
-            value={config.platformTitle || ""}
-            disabled={!brandingEnabled || saving}
-          />
-        </div>
-      {/if}
+      <div class="field">
+        <Label size="L">Title</Label>
+        <Input
+          on:change={e => {
+            let clone = { ...config }
+            clone.platformTitle = e.detail ? e.detail : ""
+            config = clone
+          }}
+          value={config.platformTitle || ""}
+          disabled={!brandingEnabled || saving}
+        />
+      </div>
       <div>
         <Toggle
           text={"Remove Budibase brand from emails"}
@@ -299,54 +304,52 @@
       </div>
     </div>
 
-    {#if !isCloud}
-      <Divider />
-      <Layout gap="XS" noPadding>
-        <Heading size="S">Login page</Heading>
-        <Body />
-      </Layout>
-      <div class="login">
-        <div class="fields">
-          <div class="field">
-            <Label size="L">Header</Label>
-            <Input
-              on:change={e => {
-                let clone = { ...config }
-                clone.loginHeading = e.detail ? e.detail : ""
-                config = clone
-              }}
-              value={config.loginHeading || ""}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
+    <Divider />
+    <Layout gap="XS" noPadding>
+      <Heading size="S">Login page</Heading>
+      <Body />
+    </Layout>
+    <div class="login">
+      <div class="fields">
+        <div class="field">
+          <Label size="L">Header</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.loginHeading = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.loginHeading || ""}
+            disabled={!brandingEnabled || saving}
+          />
+        </div>
 
-          <div class="field">
-            <Label size="L">Button</Label>
-            <Input
-              on:change={e => {
-                let clone = { ...config }
-                clone.loginButton = e.detail ? e.detail : ""
-                config = clone
-              }}
-              value={config.loginButton || ""}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
-          <div>
-            <Toggle
-              text={"Remove customer testimonials"}
-              on:change={e => {
-                let clone = { ...config }
-                clone.testimonialsEnabled = !e.detail
-                config = clone
-              }}
-              value={!config.testimonialsEnabled}
-              disabled={!brandingEnabled || saving}
-            />
-          </div>
+        <div class="field">
+          <Label size="L">Button</Label>
+          <Input
+            on:change={e => {
+              let clone = { ...config }
+              clone.loginButton = e.detail ? e.detail : ""
+              config = clone
+            }}
+            value={config.loginButton || ""}
+            disabled={!brandingEnabled || saving}
+          />
+        </div>
+        <div>
+          <Toggle
+            text={"Remove customer testimonials"}
+            on:change={e => {
+              let clone = { ...config }
+              clone.testimonialsEnabled = !e.detail
+              config = clone
+            }}
+            value={!config.testimonialsEnabled}
+            disabled={!brandingEnabled || saving}
+          />
         </div>
       </div>
-    {/if}
+    </div>
     <Divider />
     <Layout gap="XS" noPadding>
       <Heading size="S">Application previews</Heading>
@@ -398,7 +401,7 @@
           on:click={() => {
             if (isCloud && $auth?.user?.accountPortalAccess) {
               window.open($admin.accountPortalUrl + "/portal/upgrade", "_blank")
-            } else if ($auth.isAdmin) {
+            } else if (sdk.users.isAdmin($auth.user)) {
               $goto("/builder/portal/account/upgrade")
             }
           }}
@@ -408,7 +411,11 @@
           Upgrade
         </Button>
       {/if}
-      <Button on:click={saveConfig} cta disabled={saving || !updated || !init}>
+      <Button
+        on:click={saveConfig}
+        cta
+        disabled={saving || !updated || !$organisation.loaded}
+      >
         Save
       </Button>
     </div>
