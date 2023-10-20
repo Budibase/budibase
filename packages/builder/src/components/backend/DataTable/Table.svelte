@@ -24,17 +24,21 @@
 
   let selectedRows = []
   let customRenderers = []
+  let parsedSchema = {}
+
+  $: if (schema) {
+    parsedSchema = Object.keys(schema).reduce((acc, key) => {
+      acc[key] = { ...schema[key] }
+      if (!canBeSortColumn(acc[key].type)) {
+        acc[key].sortable = false
+      }
+      return acc
+    }, {})
+  }
 
   $: selectedRows, dispatch("selectionUpdated", selectedRows)
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
-  $: {
-    Object.values(schema || {}).forEach(col => {
-      if (!canBeSortColumn(col.type)) {
-        col.sortable = false
-      }
-    })
-  }
   $: {
     if (isUsersTable) {
       customRenderers = [
@@ -44,24 +48,24 @@
         },
       ]
       UNEDITABLE_USER_FIELDS.forEach(field => {
-        if (schema[field]) {
-          schema[field].editable = false
+        if (parsedSchema[field]) {
+          parsedSchema[field].editable = false
         }
       })
-      if (schema.email) {
-        schema.email.displayName = "Email"
+      if (parsedSchema.email) {
+        parsedSchema.email.displayName = "Email"
       }
-      if (schema.roleId) {
-        schema.roleId.displayName = "Role"
+      if (parsedSchema.roleId) {
+        parsedSchema.roleId.displayName = "Role"
       }
-      if (schema.firstName) {
-        schema.firstName.displayName = "First Name"
+      if (parsedSchema.firstName) {
+        parsedSchema.firstName.displayName = "First Name"
       }
-      if (schema.lastName) {
-        schema.lastName.displayName = "Last Name"
+      if (parsedSchema.lastName) {
+        parsedSchema.lastName.displayName = "Last Name"
       }
-      if (schema.status) {
-        schema.status.displayName = "Status"
+      if (parsedSchema.status) {
+        parsedSchema.status.displayName = "Status"
       }
     }
   }
@@ -97,7 +101,7 @@
     <div class="table-wrapper">
       <Table
         {data}
-        {schema}
+        schema={parsedSchema}
         {loading}
         {customRenderers}
         {rowCount}
