@@ -164,14 +164,14 @@ export class UserDB {
     }
   }
 
-  static async getUsersByAppAccess(appId?: string) {
-    const opts: any = {
+  static async getUsersByAppAccess(opts: { appId?: string; limit?: number }) {
+    const params: any = {
       include_docs: true,
-      limit: 50,
+      limit: opts.limit || 50,
     }
     let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
-      appId,
-      opts
+      opts.appId,
+      params
     )
     return response
   }
