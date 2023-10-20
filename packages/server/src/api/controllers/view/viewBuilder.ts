@@ -88,8 +88,8 @@ const SCHEMA_MAP: Record<string, any> = {
 /**
  * Iterates through the array of filters to create a JS
  * expression that gets used in a CouchDB view.
- * @param {Array} filters - an array of filter objects
- * @returns {String} JS Expression
+ * @param filters - an array of filter objects
+ * @returns JS Expression
  */
 function parseFilterExpression(filters: ViewFilter[]) {
   const expression = []
@@ -125,8 +125,8 @@ function parseFilterExpression(filters: ViewFilter[]) {
 /**
  * Returns a CouchDB compliant emit() expression that is used to emit the
  * correct key/value pairs for custom views.
- * @param {String?} field - field to use for calculations, if any
- * @param {String?} groupBy - field to group calculation results on, if any
+ * @param field - field to use for calculations, if any
+ * @param groupBy - field to group calculation results on, if any
  */
 function parseEmitExpression(field: string, groupBy: string) {
   return `emit(doc["${groupBy || "_id"}"], doc["${field}"]);`
@@ -136,7 +136,7 @@ function parseEmitExpression(field: string, groupBy: string) {
  * Return a fully parsed CouchDB compliant view definition
  * that will be stored in the design document in the database.
  *
- * @param {Object} viewDefinition - the JSON definition for a custom view.
+ * @param viewDefinition - the JSON definition for a custom view.
  * field: field that calculations will be performed on
  * tableId: tableId of the table this view was created from
  * groupBy: field that calculations will be grouped by. Field must be present for this to be useful
