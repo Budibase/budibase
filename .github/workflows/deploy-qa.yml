@@ -3,8 +3,8 @@ name: Deploy QA
 on:
   push:
     branches:
-      - master
       - BUDI-7641/remove-npm-from-apps-worker-docker
+      - master
   workflow_dispatch:
 
 jobs:
