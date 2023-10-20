@@ -14,7 +14,6 @@
   } from "builderStore/dataBinding"
   import { ActionButton } from "@budibase/bbui"
   import { capitalise } from "helpers"
-  import { lowerCase } from "lodash"
 
   const onUpdateName = async value => {
     try {
