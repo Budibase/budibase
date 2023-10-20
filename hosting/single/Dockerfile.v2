@@ -118,6 +118,9 @@ EXPOSE 443
 EXPOSE 2222
 VOLUME /data
 
+ARG VERSION
+RUN test -n "$VERSION"
+ENV VERSION=$VERSION
 
 HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
 
