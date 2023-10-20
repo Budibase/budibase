@@ -32,7 +32,7 @@ export const API = createAPIClient({
   },
 
   // Show an error notification for all API failures.
-  // We could also log these to sentry.
+  // We could also log these to Posthog.
   // Or we could check error.status and redirect to login on a 403 etc.
   onError: error => {
     const { status, method, url, message, handled, suppressErrors } =

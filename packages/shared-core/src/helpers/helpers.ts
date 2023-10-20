@@ -8,7 +8,7 @@ import { User } from "@budibase/types"
  * will return "foo" over "bar".
  * @param obj the object
  * @param key the key
- * @return {*|null} the value or null if a value was not found for this key
+ * @return the value or null if a value was not found for this key
  */
 export const deepGet = (obj: { [x: string]: any }, key: string) => {
   if (!obj || !key) {

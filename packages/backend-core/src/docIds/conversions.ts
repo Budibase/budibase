@@ -25,7 +25,7 @@ export function isDevApp(app: App) {
 
 /**
  * Generates a development app ID from a real app ID.
- * @returns {string} the dev app ID which can be used for dev database.
+ * @returns the dev app ID which can be used for dev database.
  */
 export function getDevelopmentAppID(appId: string) {
   if (!appId || appId.startsWith(APP_DEV_PREFIX)) {
