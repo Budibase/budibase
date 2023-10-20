@@ -2,7 +2,7 @@ import { SearchFilter, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
 
 export interface View {
-  name: string
+  name?: string
   tableId: string
   field?: string
   filters: ViewFilter[]
