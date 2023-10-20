@@ -1,6 +1,7 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { store, selectedComponent, selectedScreen } from "builderStore"
+  import { getComponentText } from "builderStore/componentUtils"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
@@ -12,6 +13,14 @@
   } from "builderStore/dataBinding"
   import { ActionButton } from "@budibase/bbui"
   import { capitalise } from "helpers"
+
+  const onUpdateName = async value => {
+    try {
+      await store.actions.components.updateSetting("_instanceName", value)
+    } catch (error) {
+      notifications.error("Error updating component name")
+    }
+  }
 
   $: componentInstance = $selectedComponent
   $: componentDefinition = store.actions.components.getDefinition(
@@ -39,6 +48,20 @@
 {#if $selectedComponent}
   {#key $selectedComponent._id}
     <Panel {title} icon={componentDefinition?.icon} borderLeft wide>
+      <span class="panel-title-content" slot="panel-title-content">
+        <input
+          class="input"
+          value={title}
+          {title}
+          placeholder={getComponentText(componentInstance)}
+          on:change={e => {
+            onUpdateName(e.target.value)
+            if (e.target === document.activeElement) {
+              e.target.blur()
+            }
+          }}
+        />
+      </span>
       <span slot="panel-header-content">
         <div class="settings-tabs">
           {#each tabs as tab}
@@ -89,5 +112,25 @@
     gap: var(--spacing-s);
     padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
+  }
+  .input {
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    background-color: transparent;
+    border: none;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-title-content {
+    display: contents;
+  }
+  .input:focus {
+    outline: none;
+  }
+  input::placeholder {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
