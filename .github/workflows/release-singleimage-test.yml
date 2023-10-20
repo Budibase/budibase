@@ -54,6 +54,7 @@ jobs:
           push: true
           pull: true
           platforms: linux/amd64,linux/arm64
+          build-args: VERSION=0.0.0+test
           tags: budibase/budibase-test:test
           file: ./hosting/single/Dockerfile.v2
           cache-from: type=registry,ref=budibase/budibase-test:test
@@ -64,6 +65,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          build-args: TARGETBUILD=aas
+          build-args: |
+            TARGETBUILD=aas
+            VERSION=0.0.0+test
           tags: budibase/budibase-test:aas
           file: ./hosting/single/Dockerfile.v2
