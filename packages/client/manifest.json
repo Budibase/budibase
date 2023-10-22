@@ -3841,6 +3841,13 @@
         "key": "paginate",
         "defaultValue": true,
         "info": "Pagination is only available for data stored in tables"
+      },
+      {
+        "type": "text",
+        "label": "Paginate title",
+        "key": "paginateTitle",
+        "defaultValue": true,
+        "info": "Change the Page title of pagination"
       }
     ],
     "context": {

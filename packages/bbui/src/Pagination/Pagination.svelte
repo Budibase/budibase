@@ -8,6 +8,7 @@
   export let goToNextPage
   export let hasPrevPage = true
   export let hasNextPage = true
+  export let title = "Page"
 </script>
 
 <nav class="spectrum-Pagination spectrum-Pagination--explicit">
@@ -27,7 +28,8 @@
     </svg>
   </div>
   <span class="spectrum-Body--secondary spectrum-Pagination-counter">
-    Page {page}
+    {title}
+    {page}
   </span>
   <div
     href="#"

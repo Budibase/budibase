@@ -9,6 +9,7 @@
   export let sortOrder
   export let limit
   export let paginate
+  export let paginateTitle
 
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
@@ -157,6 +158,7 @@
             hasNextPage={$fetch.hasNextPage}
             goToPrevPage={fetch.prevPage}
             goToNextPage={fetch.nextPage}
+            title={paginateTitle}
           />
         </div>
       {/if}
