@@ -70,7 +70,7 @@
     let columns = []
     let autoColumns = []
     Object.entries(schema).forEach(([field, fieldSchema]) => {
-      if (!fieldSchema.visible) {
+      if (fieldSchema.visible === false) {
         return
       }
       if (!fieldSchema?.autocolumn) {
