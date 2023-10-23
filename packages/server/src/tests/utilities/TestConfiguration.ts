@@ -295,7 +295,7 @@ class TestConfiguration {
       admin?: boolean
       roles?: UserRoles
     } = {}
-  ) {
+  ): Promise<User> {
     let { id, firstName, lastName, email, builder, admin, roles } = user
     firstName = firstName || this.defaultUserValues.firstName
     lastName = lastName || this.defaultUserValues.lastName
@@ -315,10 +315,7 @@ class TestConfiguration {
       roles,
     })
     await cache.user.invalidateUser(globalId)
-    return {
-      ...resp,
-      globalId,
-    }
+    return resp
   }
 
   async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
