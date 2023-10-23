@@ -57,6 +57,6 @@ export async function fetchView(
   tableId: string,
   viewName: string,
   params: ViewParams
-) {
+): Promise<Row[]> {
   return pickApi(tableId).fetchView(viewName, params)
 }
