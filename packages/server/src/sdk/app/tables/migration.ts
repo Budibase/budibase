@@ -23,7 +23,8 @@ export async function migrate(
   let migrator = getColumnMigrator(table, oldColumn, newColumn)
   let oldTable = cloneDeep(table)
 
-  table = await sdk.tables.addColumn(table, newColumn)
+  table.schema[newColumn.name] = newColumn
+  table = await sdk.tables.saveTable(table)
 
   await migrator.doMigration()
 
