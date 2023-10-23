@@ -1,13 +1,10 @@
 import { get } from "svelte/store"
+import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 
 export const createActions = context => {
-  const { definition, API, datasource, columns, stickyColumn } = context
-
-  const refreshDefinition = async () => {
-    definition.set(await API.fetchTableDefinition(get(datasource).tableId))
-  }
+  const { API, datasource, columns, stickyColumn } = context
 
   const saveDefinition = async newDefinition => {
     await API.saveTable(newDefinition)
@@ -49,10 +46,13 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
+  const getFeatures = () => {
+    return new TableFetch({ API }).determineFeatureFlags()
+  }
+
   return {
     table: {
       actions: {
-        refreshDefinition,
         saveDefinition,
         addRow: saveRow,
         updateRow: saveRow,
@@ -60,6 +60,7 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }
