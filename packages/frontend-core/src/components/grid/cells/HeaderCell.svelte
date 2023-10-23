@@ -1,6 +1,6 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
-  import { canBeDisplayColumn } from "@budibase/shared-core"
+  import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
   import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
@@ -23,6 +23,7 @@
     columns,
     definition,
     datasource,
+    schema,
   } = getContext("grid")
 
   let anchor
@@ -119,16 +120,16 @@
     // Generate new name
     let newName = `${column.name} copy`
     let attempts = 2
-    while ($definition.schema[newName]) {
+    while ($schema[newName]) {
       newName = `${column.name} copy ${attempts++}`
     }
 
     // Save schema with new column
-    const existingColumnDefinition = $definition.schema[column.name]
+    const existingColumnDefinition = $schema[column.name]
     await datasource.actions.saveDefinition({
       ...$definition,
       schema: {
-        ...$definition.schema,
+        ...$schema,
         [newName]: {
           ...existingColumnDefinition,
           name: newName,
@@ -231,14 +232,16 @@
       <MenuItem
         icon="SortOrderUp"
         on:click={sortAscending}
-        disabled={column.name === $sort.column && $sort.order === "ascending"}
+        disabled={!canBeSortColumn(column.schema.type) ||
+          (column.name === $sort.column && $sort.order === "ascending")}
       >
         Sort {ascendingLabel}
       </MenuItem>
       <MenuItem
         icon="SortOrderDown"
         on:click={sortDescending}
-        disabled={column.name === $sort.column && $sort.order === "descending"}
+        disabled={!canBeSortColumn(column.schema.type) ||
+          (column.name === $sort.column && $sort.order === "descending")}
       >
         Sort {descendingLabel}
       </MenuItem>
