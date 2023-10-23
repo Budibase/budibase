@@ -49,6 +49,7 @@ function httpLogging() {
 }
 
 function getPackageJsonFields(): {
+  VERSION: string
   SERVICE_NAME: string
 } {
   function findFileInAncestors(
@@ -74,11 +75,12 @@ function getPackageJsonFields(): {
     const content = readFileSync(packageJsonFile!, "utf-8")
     const parsedContent = JSON.parse(content)
     return {
+      VERSION: process.env.VERSION || parsedContent.version,
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return { SERVICE_NAME: "" }
+    return { VERSION: process.env.VERSION || "", SERVICE_NAME: "" }
   }
 }
 
@@ -171,7 +173,6 @@ const environment = {
   ENABLE_SSO_MAINTENANCE_MODE: selfHosted
     ? process.env.ENABLE_SSO_MAINTENANCE_MODE
     : false,
-  VERSION: process.env.VERSION!,
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
