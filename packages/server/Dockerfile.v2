@@ -67,9 +67,9 @@ COPY packages/server/docker_run.sh .
 COPY packages/server/builder/ builder/
 COPY packages/server/client/ client/
 
-ARG VERSION
-RUN test -n "$VERSION"
-ENV VERSION=$VERSION
+ARG BUDIBASE_VERSION
+RUN test -n "$BUDIBASE_VERSION"
+ENV BUDIBASE_VERSION=$VERSION
 
 EXPOSE 4001
 
