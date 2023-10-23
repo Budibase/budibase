@@ -287,19 +287,6 @@ export async function getUserCount() {
   return response.total_rows
 }
 
-export async function getCreatorCount() {
-  let creators = 0
-  async function iterate(startPage?: string) {
-    const page = await paginatedUsers({ bookmark: startPage })
-    creators += page.data.filter(isCreator).length
-    if (page.hasNextPage) {
-      await iterate(page.nextPage)
-    }
-  }
-  await iterate()
-  return creators
-}
-
 // used to remove the builder/admin permissions, for processing the
 // user as an app user (they may have some specific role/group
 export function removePortalUserPermissions(user: User | ContextUser) {
