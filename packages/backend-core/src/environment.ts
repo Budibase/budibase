@@ -75,12 +75,12 @@ function getPackageJsonFields(): {
     const content = readFileSync(packageJsonFile!, "utf-8")
     const parsedContent = JSON.parse(content)
     return {
-      VERSION: parsedContent.version,
+      VERSION: process.env.BUDIBASE_VERSION || parsedContent.version,
       SERVICE_NAME: parsedContent.name,
     }
   } catch {
     // throwing an error here is confusing/causes backend-core to be hard to import
-    return { VERSION: "", SERVICE_NAME: "" }
+    return { VERSION: process.env.BUDIBASE_VERSION || "", SERVICE_NAME: "" }
   }
 }
 
