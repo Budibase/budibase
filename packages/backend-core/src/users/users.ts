@@ -14,16 +14,15 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
+  ContextUser,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
-  ContextUser,
   DatabaseQueryOpts,
 } from "@budibase/types"
-import { getGlobalDB } from "../context"
 import * as context from "../context"
-import { isCreator } from "./utils"
+import { getGlobalDB } from "../context"
 
 type GetOpts = { cleanup?: boolean }
 
