@@ -119,6 +119,7 @@ EXPOSE 2222
 VOLUME /data
 
 ARG BUDIBASE_VERSION
+# Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
 ENV BUDIBASE_VERSION=$VERSION
 
