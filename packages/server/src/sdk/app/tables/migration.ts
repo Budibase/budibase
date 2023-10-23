@@ -5,8 +5,8 @@ import {
   FieldSubtype,
   InternalTable,
   ManyToManyRelationshipFieldMetadata,
+  ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
-  RelationshipFieldMetadata,
   RelationshipType,
   Row,
   Table,
@@ -88,21 +88,24 @@ function getColumnMigrator(
         `Column "${oldColumn.name}" is a one-to-many column but "${newColumn.name}" is not a single user column`
       )
     }
-    return new OneToManyUserColumnMigrator(table, oldColumn, newColumn)
+    return new SingleUserColumnMigrator(table, oldColumn, newColumn)
   }
-  if (oldColumn.relationshipType === RelationshipType.MANY_TO_MANY) {
+  if (
+    oldColumn.relationshipType === RelationshipType.MANY_TO_MANY ||
+    oldColumn.relationshipType === RelationshipType.MANY_TO_ONE
+  ) {
     if (newColumn.subtype !== FieldSubtype.USERS) {
       throw new BadRequestError(
-        `Column "${oldColumn.name}" is a many-to-many column but "${newColumn.name}" is not a multi user column`
+        `Column "${oldColumn.name}" is a ${oldColumn.relationshipType} column but "${newColumn.name}" is not a multi user column`
       )
     }
-    return new ManyToManyUserColumnMigrator(table, oldColumn, newColumn)
+    return new MultiUserColumnMigrator(table, oldColumn, newColumn)
   }
 
   throw new BadRequestError(`Unknown migration type`)
 }
 
-class OneToManyUserColumnMigrator implements ColumnMigrator {
+class SingleUserColumnMigrator implements ColumnMigrator {
   constructor(
     private table: Table,
     private oldColumn: OneToManyRelationshipFieldMetadata,
@@ -138,10 +141,12 @@ class OneToManyUserColumnMigrator implements ColumnMigrator {
   }
 }
 
-class ManyToManyUserColumnMigrator implements ColumnMigrator {
+class MultiUserColumnMigrator implements ColumnMigrator {
   constructor(
     private table: Table,
-    private oldColumn: ManyToManyRelationshipFieldMetadata,
+    private oldColumn:
+      | ManyToManyRelationshipFieldMetadata
+      | ManyToOneRelationshipFieldMetadata,
     private newColumn: BBReferenceFieldMetadata
   ) {}
 
