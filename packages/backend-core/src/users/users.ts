@@ -19,6 +19,7 @@ import {
   SearchUsersRequest,
   User,
   ContextUser,
+  DatabaseQueryOpts,
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
@@ -241,12 +242,14 @@ export const paginatedUsers = async ({
   bookmark,
   query,
   appId,
+  limit,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
+  const pageLimit = limit ? limit + 1 : PAGE_LIMIT + 1
   // get one extra document, to have the next page
-  const opts: any = {
+  const opts: DatabaseQueryOpts = {
     include_docs: true,
-    limit: PAGE_LIMIT + 1,
+    limit: pageLimit,
   }
   // add a startkey if the page was specified (anchor)
   if (bookmark) {
@@ -269,7 +272,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, PAGE_LIMIT, {
+  return pagination(userList, pageLimit, {
     paginate: true,
     property,
     getKey,

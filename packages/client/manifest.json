@@ -5920,10 +5920,9 @@
       "width": 600,
       "height": 400
     },
-    "info": "Grid Blocks are only compatible with internal or SQL tables",
     "settings": [
       {
-        "type": "table",
+        "type": "dataSource",
         "label": "Data",
         "key": "table",
         "required": true
@@ -5932,18 +5931,35 @@
         "type": "columns/grid",
         "label": "Columns",
         "key": "columns",
-        "dependsOn": "table"
+        "dependsOn": [
+          "table",
+          {
+            "setting": "table.type",
+            "value": "custom",
+            "invert": true
+          }
+        ]
       },
       {
         "type": "filter",
         "label": "Filtering",
-        "key": "initialFilter"
+        "key": "initialFilter",
+        "dependsOn": {
+          "setting": "table.type",
+          "value": "custom",
+          "invert": true
+        }
       },
       {
         "type": "field/sortable",
         "label": "Sort column",
         "key": "initialSortColumn",
-        "placeholder": "Default"
+        "placeholder": "Default",
+        "dependsOn": {
+          "setting": "table.type",
+          "value": "custom",
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -5982,29 +5998,37 @@
             "label": "Clicked row",
             "key": "row"
           }
-        ],
-        "dependsOn": {
-          "setting": "allowEditRows",
-          "value": false
-        }
+        ]
       },
       {
         "type": "boolean",
         "label": "Add rows",
         "key": "allowAddRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "table.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",
         "label": "Edit rows",
         "key": "allowEditRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "table.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",
         "label": "Delete rows",
         "key": "allowDeleteRows",
-        "defaultValue": true
+        "defaultValue": true,
+        "dependsOn": {
+          "setting": "table.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "type": "boolean",

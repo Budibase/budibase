@@ -69,7 +69,7 @@ export const deriveStores = context => {
 }
 
 export const createActions = context => {
-  const { columns, stickyColumn, datasource, definition } = context
+  const { columns, stickyColumn, datasource, definition, schema } = context
 
   // Updates the datasources primary display column
   const changePrimaryDisplay = async column => {
@@ -101,7 +101,7 @@ export const createActions = context => {
     const $columns = get(columns)
     const $definition = get(definition)
     const $stickyColumn = get(stickyColumn)
-    const newSchema = cloneDeep($definition.schema)
+    let newSchema = cloneDeep(get(schema)) || {}
 
     // Build new updated datasource schema
     Object.keys(newSchema).forEach(column => {
@@ -142,26 +142,35 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { definition, columns, stickyColumn, schema } = context
+  const { definition, columns, stickyColumn, enrichedSchema } = context
 
   // Merge new schema fields with existing schema in order to preserve widths
-  schema.subscribe($schema => {
-    if (!$schema) {
+  enrichedSchema.subscribe($enrichedSchema => {
+    if (!$enrichedSchema) {
       columns.set([])
       stickyColumn.set(null)
       return
     }
     const $definition = get(definition)
+    const $columns = get(columns)
+    const $stickyColumn = get(stickyColumn)
+
+    // Generate array of all columns to easily find pre-existing columns
+    let allColumns = $columns || []
+    if ($stickyColumn) {
+      allColumns.push($stickyColumn)
+    }
 
     // Find primary display
     let primaryDisplay
-    if ($definition.primaryDisplay && $schema[$definition.primaryDisplay]) {
-      primaryDisplay = $definition.primaryDisplay
+    const candidatePD = $definition.primaryDisplay || $stickyColumn?.name
+    if (candidatePD && $enrichedSchema[candidatePD]) {
+      primaryDisplay = candidatePD
     }
 
     // Get field list
     let fields = []
-    Object.keys($schema).forEach(field => {
+    Object.keys($enrichedSchema).forEach(field => {
       if (field !== primaryDisplay) {
         fields.push(field)
       }
@@ -170,14 +179,18 @@ export const initialise = context => {
     // Update columns, removing extraneous columns and adding missing ones
     columns.set(
       fields
-        .map(field => ({
-          name: field,
-          label: $schema[field].displayName || field,
-          schema: $schema[field],
-          width: $schema[field].width || DefaultColumnWidth,
-          visible: $schema[field].visible ?? true,
-          order: $schema[field].order,
-        }))
+        .map(field => {
+          const fieldSchema = $enrichedSchema[field]
+          const oldColumn = allColumns?.find(x => x.name === field)
+          return {
+            name: field,
+            label: fieldSchema.displayName || field,
+            schema: fieldSchema,
+            width: fieldSchema.width || oldColumn?.width || DefaultColumnWidth,
+            visible: fieldSchema.visible ?? true,
+            order: fieldSchema.order ?? oldColumn?.order,
+          }
+        })
         .sort((a, b) => {
           // Sort by order first
           const orderA = a.order
@@ -205,11 +218,13 @@ export const initialise = context => {
       stickyColumn.set(null)
       return
     }
+    const stickySchema = $enrichedSchema[primaryDisplay]
+    const oldStickyColumn = allColumns?.find(x => x.name === primaryDisplay)
     stickyColumn.set({
       name: primaryDisplay,
-      label: $schema[primaryDisplay].displayName || primaryDisplay,
-      schema: $schema[primaryDisplay],
-      width: $schema[primaryDisplay].width || DefaultColumnWidth,
+      label: stickySchema.displayName || primaryDisplay,
+      schema: stickySchema,
+      width: stickySchema.width || oldStickyColumn?.width || DefaultColumnWidth,
       visible: true,
       order: 0,
       left: GutterWidth,
