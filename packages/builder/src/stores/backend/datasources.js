@@ -81,9 +81,9 @@ export function createDatasourcesStore() {
     }))
   }
 
-  const updateDatasource = response => {
+  const updateDatasource = (response, { ignoreErrors } = {}) => {
     const { datasource, errors } = response
-    if (errors && Object.keys(errors).length > 0) {
+    if (!ignoreErrors && errors && Object.keys(errors).length > 0) {
       throw new TableImportError(errors)
     }
     replaceDatasource(datasource._id, datasource)
@@ -137,7 +137,7 @@ export function createDatasourcesStore() {
       fetchSchema: integration.plus,
     })
 
-    return updateDatasource(response)
+    return updateDatasource(response, { ignoreErrors: true })
   }
 
   const update = async ({ integration, datasource }) => {
