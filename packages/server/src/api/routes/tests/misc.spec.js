@@ -12,14 +12,14 @@ describe("run misc tests", () => {
   })
 
   describe("/bbtel", () => {
-      it("check if analytics enabled", async () => {
-        const res = await request
-          .get(`/api/bbtel`)
-          .set(config.defaultHeaders())
-          .expect("Content-Type", /json/)
-          .expect(200)
-        expect(typeof res.body.enabled).toEqual("boolean")
-      })
+    it("check if analytics enabled", async () => {
+      const res = await request
+        .get(`/api/bbtel`)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(typeof res.body.enabled).toEqual("boolean")
+    })
   })
 
   describe("/health", () => {
@@ -37,7 +37,6 @@ describe("run misc tests", () => {
       } else {
         expect(text.split(".").length).toEqual(3)
       }
-      
     })
   })
 
@@ -93,77 +92,79 @@ describe("run misc tests", () => {
               constraints: {
                 type: "array",
                 presence: {
-                  "allowEmpty": true
+                  allowEmpty: true,
                 },
-                inclusion: [
-                  "One",
-                  "Two",
-                  "Three",
-                ]
+                inclusion: ["One", "Two", "Three"],
               },
               name: "Sample Tags",
-              sortable: false
+              sortable: false,
             },
             g: {
               type: "options",
               constraints: {
                 type: "string",
                 presence: false,
-                inclusion: [
-                  "Alpha",
-                  "Beta",
-                  "Gamma"
-                ]
+                inclusion: ["Alpha", "Beta", "Gamma"],
               },
-              name: "Sample Opts"
-            }
+              name: "Sample Opts",
+            },
           },
         })
-        
+
+        const importRows = [
+          { a: "1", b: "2", c: "3", d: "4", f: "['One']", g: "Alpha" },
+          { a: "5", b: "6", c: "7", d: "8", f: "[]", g: undefined },
+          { a: "9", b: "10", c: "11", d: "12", f: "['Two','Four']", g: "" },
+          { a: "13", b: "14", c: "15", d: "16", g: "Omega" },
+        ]
         // Shift specific row tests to the row spec
-        await tableUtils.handleDataImport(
-          { userId: "test" },
-          table,
-          [
-            { a: '1', b: '2', c: '3', d: '4', f: "['One']", g: "Alpha" },
-            { a: '5', b: '6', c: '7', d: '8', f: "[]", g: undefined},   
-            { a: '9', b: '10', c: '11', d: '12', f: "['Two','Four']", g: ""},
-            { a: '13', b: '14', c: '15', d: '16', g: "Omega"}
-          ]
-        )
+        await tableUtils.handleDataImport(table, {
+          importRows,
+          user: { userId: "test" },
+        })
 
         // 4 rows imported, the auto ID starts at 1
         // We expect the handleDataImport function to update the lastID
-        expect(table.schema.e.lastID).toEqual(4);
-        
+        expect(table.schema.e.lastID).toEqual(4)
+
         // Array/Multi - should have added a new value to the inclusion.
-        expect(table.schema.f.constraints.inclusion).toEqual(['Four','One','Three','Two']);
+        expect(table.schema.f.constraints.inclusion).toEqual([
+          "Four",
+          "One",
+          "Three",
+          "Two",
+        ])
 
         // Options - should have a new value in the inclusion
-        expect(table.schema.g.constraints.inclusion).toEqual(['Alpha','Beta','Gamma','Omega']);
+        expect(table.schema.g.constraints.inclusion).toEqual([
+          "Alpha",
+          "Beta",
+          "Gamma",
+          "Omega",
+        ])
 
         const rows = await config.getRows()
-        expect(rows.length).toEqual(4);
+        expect(rows.length).toEqual(4)
 
         const rowOne = rows.find(row => row.e === 1)
         expect(rowOne.a).toEqual("1")
-        expect(rowOne.f).toEqual(['One'])
-        expect(rowOne.g).toEqual('Alpha')
+        expect(rowOne.f).toEqual(["One"])
+        expect(rowOne.g).toEqual("Alpha")
 
         const rowTwo = rows.find(row => row.e === 2)
         expect(rowTwo.a).toEqual("5")
         expect(rowTwo.f).toEqual([])
         expect(rowTwo.g).toEqual(undefined)
-        
+
         const rowThree = rows.find(row => row.e === 3)
         expect(rowThree.a).toEqual("9")
-        expect(rowThree.f).toEqual(['Two','Four'])
+        expect(rowThree.f).toEqual(["Two", "Four"])
         expect(rowThree.g).toEqual(null)
 
         const rowFour = rows.find(row => row.e === 4)
         expect(rowFour.a).toEqual("13")
         expect(rowFour.f).toEqual(undefined)
-        expect(rowFour.g).toEqual('Omega')
+        expect(rowFour.g).toEqual("Omega")
       })
     })
   })
