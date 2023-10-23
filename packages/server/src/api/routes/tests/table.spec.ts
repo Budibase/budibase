@@ -511,6 +511,67 @@ describe("/tables", () => {
       })
 
       const row2 = await config.api.row.save(table._id!, {
+        "user relationship": [users[1], users[2]],
+      })
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
+        .body as Row
+      expect(row1Migrated["user relationship"]).not.toBeDefined()
+      expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
+        expect.arrayContaining([users[0]._id, users[1]._id])
+      )
+
+      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
+        .body as Row
+      expect(row2Migrated["user relationship"]).not.toBeDefined()
+      expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual(
+        expect.arrayContaining([users[1]._id, users[2]._id])
+      )
+    })
+
+    it("should successfully migrate a many-to-one user relationship to a users column", async () => {
+      const users = await Promise.all([
+        config.createUser({ email: "1@example.com" }),
+        config.createUser({ email: "2@example.com" }),
+        config.createUser({ email: "3@example.com" }),
+      ])
+
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.MANY_TO_ONE,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      const row1 = await config.api.row.save(table._id!, {
+        "user relationship": [users[0], users[1]],
+      })
+
+      const row2 = await config.api.row.save(table._id!, {
         "user relationship": [users[2]],
       })
 
