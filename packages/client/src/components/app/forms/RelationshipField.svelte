@@ -18,6 +18,7 @@
   export let filter
   export let datasourceType = "table"
   export let primaryDisplay
+  export let span
 
   let fieldState
   let fieldApi
@@ -186,6 +187,7 @@
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
+  {span}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
