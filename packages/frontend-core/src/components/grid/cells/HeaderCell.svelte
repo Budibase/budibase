@@ -10,6 +10,7 @@
   export let orderable = true
 
   const {
+    API,
     reorder,
     isReordering,
     isResizing,
@@ -111,6 +112,24 @@
       return state.slice()
     })
     columns.actions.saveChanges()
+    open = false
+  }
+
+  const migrateUserColumn = async () => {
+    let subtype = "users"
+    if (column.schema.relationshipType === "one-to-many") {
+      subtype = "user"
+    }
+
+    await API.migrateColumn({
+      tableId: $definition._id,
+      oldColumn: column.schema,
+      newColumn: {
+        name: `${column.schema.name} migrated`,
+        type: "bb_reference",
+        subtype,
+      },
+    })
     open = false
   }
 
@@ -262,6 +281,11 @@
       >
         Hide column
       </MenuItem>
+      {#if column.schema.type === "link" && column.schema.tableId === "ta_users"}
+        <MenuItem icon="User" on:click={migrateUserColumn}>
+          Migrate to user column
+        </MenuItem>
+      {/if}
     </Menu>
   {/if}
 </Popover>
