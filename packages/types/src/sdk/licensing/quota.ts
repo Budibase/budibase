@@ -14,7 +14,6 @@ export enum StaticQuotaName {
   ROWS = "rows",
   APPS = "apps",
   USERS = "users",
-  CREATORS = "creators",
   USER_GROUPS = "userGroups",
   PLUGINS = "plugins",
 }
@@ -68,7 +67,6 @@ export type StaticQuotas = {
   [StaticQuotaName.ROWS]: Quota
   [StaticQuotaName.APPS]: Quota
   [StaticQuotaName.USERS]: Quota
-  [StaticQuotaName.CREATORS]: Quota
   [StaticQuotaName.USER_GROUPS]: Quota
   [StaticQuotaName.PLUGINS]: Quota
 }
