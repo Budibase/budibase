@@ -53,6 +53,6 @@ ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 ARG BUDIBASE_VERSION
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
-ENV BUDIBASE_VERSION=$VERSION
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
 CMD ["./docker_run.sh"]

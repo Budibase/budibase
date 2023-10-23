@@ -70,7 +70,7 @@ COPY packages/server/client/ client/
 ARG BUDIBASE_VERSION
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
-ENV BUDIBASE_VERSION=$VERSION
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
 EXPOSE 4001
 
