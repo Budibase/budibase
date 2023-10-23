@@ -55,6 +55,7 @@ export interface SearchUsersRequest {
   bookmark?: string
   query?: SearchQuery
   appId?: string
+  limit?: number
   paginate?: boolean
 }
 
