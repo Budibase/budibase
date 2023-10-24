@@ -17,7 +17,7 @@ export const createStores = context => {
 }
 
 export const initialise = context => {
-  const { sort, initialSortColumn, initialSortOrder, definition } = context
+  const { sort, initialSortColumn, initialSortOrder, schema } = context
 
   // Reset sort when initial sort props change
   initialSortColumn.subscribe(newSortColumn => {
@@ -28,15 +28,12 @@ export const initialise = context => {
   })
 
   // Derive if the current sort column exists in the schema
-  const sortColumnExists = derived(
-    [sort, definition],
-    ([$sort, $definition]) => {
-      if (!$sort?.column || !$definition) {
-        return true
-      }
-      return $definition.schema?.[$sort.column] != null
+  const sortColumnExists = derived([sort, schema], ([$sort, $schema]) => {
+    if (!$sort?.column || !$schema) {
+      return true
     }
-  )
+    return $schema[$sort.column] != null
+  })
 
   // Clear sort state if our sort column does not exist
   sortColumnExists.subscribe(exists => {
