@@ -12,6 +12,7 @@
   export let column
 
   let newColumnName = `${column.schema.name} (migrated)`
+  $: newAndOldNameMatch = column.schema.name === newColumnName
 
   const migrateUserColumn = async () => {
     let subtype = "users"
@@ -43,6 +44,7 @@
   confirmText="Continue"
   cancelText="Cancel"
   onConfirm={migrateUserColumn}
+  disabled={newAndOldNameMatch}
   size="M"
 >
   This operation will kick off a migration of the column "{column.schema.name}"
@@ -54,5 +56,11 @@
     header="Are you sure?"
     message="This will leave bindings which utilised the user relationship column in a state where they will need to be updated to use the new column instead."
   />
-  <Input bind:value={newColumnName} label="New column name" />
+  <Input
+    bind:value={newColumnName}
+    label="New column name"
+    error={newAndOldNameMatch
+      ? "New column name can't be the same as the existing column name"
+      : undefined}
+  />
 </ModalContent>
