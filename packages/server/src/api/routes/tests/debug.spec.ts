@@ -41,7 +41,7 @@ describe("/component", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body).toEqual({
-        budibaseVersion: "0.0.0",
+        budibaseVersion: "0.0.0+jest",
         cpuArch: "arm64",
         cpuCores: 1,
         cpuInfo: "test",
