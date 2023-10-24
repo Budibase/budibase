@@ -72,6 +72,11 @@ export function quotas(): Quotas {
           value: 1,
           triggers: [],
         },
+        creators: {
+          name: "Creators",
+          value: 1,
+          triggers: [],
+        },
         userGroups: {
           name: "User Groups",
           value: 1,

@@ -4,7 +4,6 @@ import {
   getQueryParams,
   getTableParams,
 } from "../../db/utils"
-import { destroy as tableDestroy } from "./table/internal"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
@@ -325,11 +324,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
 
   // Destroy the tables.
   for (const table of datasourceTableDocs) {
-    await tableDestroy({
-      params: {
-        tableId: table._id,
-      },
-    })
+    await sdk.tables.internal.destroy(table)
   }
 }
 

@@ -14,7 +14,6 @@ env:
   # Posthog token used by ui at build time
   POSTHOG_TOKEN: phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
   INTERCOM_TOKEN: ${{ secrets.INTERCOM_TOKEN }}
-  SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
 jobs:
@@ -110,7 +109,6 @@ jobs:
           git commit -m "Helm Release: ${{ env.RELEASE_VERSION }}"
           git push
 
-
   trigger-deploy-to-qa-env:
     needs: [release-helm-chart]
     runs-on: ubuntu-latest
@@ -125,6 +123,7 @@ jobs:
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
+          REF_NAME: ${{ github.ref_name}}
         with:
           repository: budibase/budibase-deploys
           event: budicloud-qa-deploy
