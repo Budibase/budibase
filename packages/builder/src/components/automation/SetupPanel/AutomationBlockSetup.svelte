@@ -183,20 +183,17 @@
         }
       }
       const outputs = Object.entries(schema)
-
       let bindingIcon = ""
-      let bindindingRank = 0
-
+      let bindingRank = 0
       if (idx === 0) {
         bindingIcon = automation.trigger.icon
       } else if (isLoopBlock) {
         bindingIcon = "Reuse"
-        bindindingRank = idx + 1
+        bindingRank = idx + 1
       } else {
         bindingIcon = allSteps[idx].icon
-        bindindingRank = idx - loopBlockCount
+        bindingRank = idx - loopBlockCount
       }
-
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
@@ -205,12 +202,21 @@
             ? `steps[${idx - loopBlockCount}].${name}`
             : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
-          const categoryName =
-            idx === 0
-              ? "Trigger outputs"
-              : isLoopBlock
-              ? "Loop Outputs"
-              : `Step ${idx - loopBlockCount} outputs`
+
+          let bindingName =
+            automation.stepNames[allSteps[bindingRank - loopBlockCount].id]
+
+          let categoryName
+          if (idx === 0) {
+            categoryName = "Trigger outputs"
+          } else if (isLoopBlock) {
+            categoryName = "Loop Outputs"
+          } else if (bindingName) {
+            categoryName = `${bindingName} outputs`
+          } else {
+            categoryName = `Step ${idx - loopBlockCount} outputs`
+          }
+
           return {
             readableBinding: runtime,
             runtimeBinding: runtime,
@@ -221,7 +227,7 @@
             display: {
               type: value.type,
               name: name,
-              rank: bindindingRank,
+              rank: bindingRank,
             },
           }
         })
