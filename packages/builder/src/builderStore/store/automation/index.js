@@ -221,6 +221,30 @@ const automationActions = store => ({
     newAutomation.definition.steps.splice(blockIdx, 0, block)
     await store.actions.save(newAutomation)
   },
+  saveAutomationName: async (stepId, name) => {
+    const automation = get(selectedAutomation)
+    let newAutomation = cloneDeep(automation)
+    if (!automation) {
+      return
+    }
+    newAutomation.definition.stepNames = {
+      ...newAutomation.definition.stepNames,
+      [stepId]: name,
+    }
+
+    await store.actions.save(newAutomation)
+  },
+  deleteAutomationName: async stepId => {
+    const automation = get(selectedAutomation)
+    let newAutomation = cloneDeep(automation)
+    if (!automation) {
+      return
+    }
+    delete newAutomation.definition.stepNames[stepId]
+
+    await store.actions.save(newAutomation)
+  },
+
   deleteAutomationBlock: async block => {
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
