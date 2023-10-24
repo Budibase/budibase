@@ -11,13 +11,14 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { API, definition, schemaOverrides, columnWhitelist, datasource } = context
+  const { API, definition, schemaOverrides, columnWhitelist, datasource } =
+    context
 
   const schema = derived(definition, $definition => {
     let schema = getDatasourceSchema({
       API,
       datasource: get(datasource),
-      definition: $definition
+      definition: $definition,
     })
     if (!schema) {
       return null
