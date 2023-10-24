@@ -189,7 +189,10 @@ export const destroy = async (ctx: any) => {
 
 export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
   const body = ctx.request.body
-  const users = await userSdk.db.getUsersByAppAccess(body?.appId)
+  const users = await userSdk.db.getUsersByAppAccess({
+    appId: body.appId,
+    limit: body.limit,
+  })
 
   ctx.body = { data: users }
 }
