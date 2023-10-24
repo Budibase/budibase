@@ -26,6 +26,7 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 # We will never want to sync pro, but the script is still required
 RUN echo '' > scripts/syncProPackage.js
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
+RUN ./scripts/removeWorkspaceDependencies.sh package.json
 RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production
 
 # copy the actual code
@@ -117,6 +118,10 @@ EXPOSE 443
 EXPOSE 2222
 VOLUME /data
 
+ARG BUDIBASE_VERSION
+# Ensuring the version argument is sent
+RUN test -n "$BUDIBASE_VERSION"
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
 HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
 
