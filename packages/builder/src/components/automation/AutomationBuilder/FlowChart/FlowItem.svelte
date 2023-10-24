@@ -16,11 +16,7 @@
   import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import {
-    ActionStepID,
-    TriggerStepID,
-    Features,
-  } from "constants/backend/automations"
+  import { ActionStepID, TriggerStepID } from "constants/backend/automations"
   import { permissions } from "stores/backend"
 
   export let block
@@ -172,28 +168,14 @@
     {block}
     {testDataModal}
     {idx}
+    {addLooping}
+    {deleteStep}
     on:toggle={() => (open = !open)}
   />
   {#if open}
     <Divider noMargin />
     <div class="blockSection">
       <Layout noPadding gap="S">
-        {#if !isTrigger}
-          <div>
-            <div class="block-options">
-              {#if !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
-                <ActionButton on:click={() => addLooping()} icon="Reuse">
-                  Add Looping
-                </ActionButton>
-              {/if}
-              <ActionButton
-                on:click={() => deleteStep()}
-                icon="DeleteOutline"
-              />
-            </div>
-          </div>
-        {/if}
-
         {#if isAppAction}
           <Label>Role</Label>
           <RoleSelect bind:value={role} />
