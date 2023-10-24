@@ -30,7 +30,15 @@ export async function migrate(
   table.schema[newColumn.name] = newColumn
   table = await sdk.tables.saveTable(table)
 
-  await migrator.doMigration()
+  try {
+    await migrator.doMigration()
+  } catch (e) {
+    // If the migration fails then we need to roll back the table schema
+    // change.
+    delete table.schema[newColumn.name]
+    await sdk.tables.saveTable(table)
+    throw e
+  }
 
   delete table.schema[oldColumn.name]
   table = await sdk.tables.saveTable(table)
@@ -133,6 +141,13 @@ class SingleUserColumnMigrator implements ColumnMigrator {
 
       let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
       let row = rowsById[link.doc1.rowId]
+      if (!row) {
+        // This can happen if the row has been deleted but the link hasn't,
+        // which was a state that was found during the initial testing of this
+        // feature. Not sure exactly what can cause it, but best to be safe.
+        continue
+      }
+
       row[this.newColumn.name] = userId
     }
 
@@ -171,6 +186,13 @@ class MultiUserColumnMigrator implements ColumnMigrator {
 
       let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
       let row = rowsById[link.doc1.rowId]
+      if (!row) {
+        // This can happen if the row has been deleted but the link hasn't,
+        // which was a state that was found during the initial testing of this
+        // feature. Not sure exactly what can cause it, but best to be safe.
+        continue
+      }
+
       if (!row[this.newColumn.name]) {
         row[this.newColumn.name] = []
       }
