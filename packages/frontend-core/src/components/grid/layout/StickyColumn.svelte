@@ -74,7 +74,7 @@
           class="row"
           on:mouseenter={$isDragging ? null : () => ($hoveredRowId = row._id)}
           on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
-          on:click={() => dispatch("rowclick", row)}
+          on:click={() => dispatch("rowclick", rows.actions.cleanRow(row))}
         >
           <GutterCell {row} {rowFocused} {rowHovered} {rowSelected} />
           {#if $stickyColumn}
