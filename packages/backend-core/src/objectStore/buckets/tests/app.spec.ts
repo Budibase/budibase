@@ -1,19 +1,11 @@
 import * as app from "../app"
+import { getAppFileUrl } from "../app"
 import { testEnv } from "../../../../tests/extra"
 
 describe("app", () => {
   beforeEach(() => {
     testEnv.nodeJest()
   })
-
-  function baseCheck(url: string, tenantId?: string) {
-    expect(url).toContain("/api/assets/client")
-    if (tenantId) {
-      expect(url).toContain(`tenantId=${tenantId}`)
-    }
-    expect(url).toContain("appId=app_123")
-    expect(url).toContain("version=2.0.0")
-  }
 
   describe("clientLibraryUrl", () => {
     function getClientUrl() {
@@ -28,19 +20,31 @@ describe("app", () => {
       it("gets url in dev", () => {
         testEnv.nodeDev()
         const url = getClientUrl()
-        baseCheck(url)
+        expect(url).toBe("/api/assets/client")
+      })
+
+      it("gets url with embedded minio", () => {
+        testEnv.withMinio()
+        const url = getClientUrl()
+        expect(url).toBe(
+          "/files/signed/prod-budi-app-assets/app_123/budibase-client.js/budibase-client.js"
+        )
       })
 
       it("gets url with custom S3", () => {
         testEnv.withS3()
         const url = getClientUrl()
-        baseCheck(url)
+        expect(url).toBe(
+          "http://s3.example.com/prod-budi-app-assets/app_123/budibase-client.js/budibase-client.js"
+        )
       })
 
       it("gets url with cloudfront + s3", () => {
         testEnv.withCloudfront()
         const url = getClientUrl()
-        baseCheck(url)
+        expect(url).toBe(
+          "http://cf.example.com/app_123/budibase-client.js/budibase-client.js?v=2.0.0"
+        )
       })
     })
 
@@ -53,7 +57,7 @@ describe("app", () => {
         testEnv.nodeDev()
         await testEnv.withTenant(tenantId => {
           const url = getClientUrl()
-          baseCheck(url, tenantId)
+          expect(url).toBe("/api/assets/client")
         })
       })
 
@@ -61,7 +65,9 @@ describe("app", () => {
         await testEnv.withTenant(tenantId => {
           testEnv.withMinio()
           const url = getClientUrl()
-          baseCheck(url, tenantId)
+          expect(url).toBe(
+            "/files/signed/prod-budi-app-assets/app_123/budibase-client.js/budibase-client.js"
+          )
         })
       })
 
@@ -69,7 +75,9 @@ describe("app", () => {
         await testEnv.withTenant(tenantId => {
           testEnv.withS3()
           const url = getClientUrl()
-          baseCheck(url, tenantId)
+          expect(url).toBe(
+            "http://s3.example.com/prod-budi-app-assets/app_123/budibase-client.js/budibase-client.js"
+          )
         })
       })
 
@@ -77,7 +85,9 @@ describe("app", () => {
         await testEnv.withTenant(tenantId => {
           testEnv.withCloudfront()
           const url = getClientUrl()
-          baseCheck(url, tenantId)
+          expect(url).toBe(
+            "http://cf.example.com/app_123/budibase-client.js/budibase-client.js?v=2.0.0"
+          )
         })
       })
     })

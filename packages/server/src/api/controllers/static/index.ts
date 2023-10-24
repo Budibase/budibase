@@ -16,7 +16,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx } from "@budibase/types"
+import { App } from "@budibase/types"
 
 const send = require("koa-send")
 
@@ -39,7 +39,7 @@ async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
   }
 }
 
-export const toggleBetaUiFeature = async function (ctx: Ctx) {
+export const toggleBetaUiFeature = async function (ctx: any) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
@@ -67,14 +67,16 @@ export const toggleBetaUiFeature = async function (ctx: Ctx) {
   }
 }
 
-export const serveBuilder = async function (ctx: Ctx) {
+export const serveBuilder = async function (ctx: any) {
   const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
-export const uploadFile = async function (ctx: Ctx) {
-  const file = ctx.request?.files?.file
-  let files = file && Array.isArray(file) ? Array.from(file) : [file]
+export const uploadFile = async function (ctx: any) {
+  let files =
+    ctx.request.files.file.length > 1
+      ? Array.from(ctx.request.files.file)
+      : [ctx.request.files.file]
 
   const uploads = files.map(async (file: any) => {
     const fileExtension = [...file.name.split(".")].pop()
@@ -91,14 +93,14 @@ export const uploadFile = async function (ctx: Ctx) {
   ctx.body = await Promise.all(uploads)
 }
 
-export const deleteObjects = async function (ctx: Ctx) {
+export const deleteObjects = async function (ctx: any) {
   ctx.body = await objectStore.deleteFiles(
     ObjectStoreBuckets.APPS,
     ctx.request.body.keys
   )
 }
 
-export const serveApp = async function (ctx: Ctx) {
+export const serveApp = async function (ctx: any) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -179,7 +181,7 @@ export const serveApp = async function (ctx: Ctx) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: Ctx) {
+export const serveBuilderPreview = async function (ctx: any) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
@@ -195,29 +197,18 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
   }
 }
 
-export const serveClientLibrary = async function (ctx: Ctx) {
-  const appId = context.getAppId() || (ctx.request.query.appId as string)
+export const serveClientLibrary = async function (ctx: any) {
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  if (!appId) {
-    ctx.throw(400, "No app ID provided - cannot fetch client library.")
+  // incase running from TS directly
+  if (env.isDev() && !fs.existsSync(rootPath)) {
+    rootPath = join(require.resolve("@budibase/client"), "..")
   }
-  if (env.isProd()) {
-    ctx.body = await objectStore.getReadStream(
-      ObjectStoreBuckets.APPS,
-      objectStore.clientLibraryPath(appId!)
-    )
-  } else if (env.isDev()) {
-    // incase running from TS directly
-    const tsPath = join(require.resolve("@budibase/client"), "..")
-    return send(ctx, "budibase-client.js", {
-      root: !fs.existsSync(rootPath) ? tsPath : rootPath,
-    })
-  } else {
-    ctx.throw(500, "Unable to retrieve client library.")
-  }
+  return send(ctx, "budibase-client.js", {
+    root: rootPath,
+  })
 }
 
-export const getSignedUploadURL = async function (ctx: Ctx) {
+export const getSignedUploadURL = async function (ctx: any) {
   // Ensure datasource is valid
   let datasource
   try {
@@ -256,7 +247,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
       publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
-    } catch (error: any) {
+    } catch (error) {
       ctx.throw(400, error)
     }
   }
