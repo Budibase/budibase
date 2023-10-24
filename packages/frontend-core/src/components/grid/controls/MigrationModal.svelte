@@ -1,10 +1,17 @@
 <script>
-  import { ModalContent, notifications } from "@budibase/bbui"
+  import {
+    ModalContent,
+    notifications,
+    Input,
+    InlineAlert,
+  } from "@budibase/bbui"
   import { getContext } from "svelte"
 
   const { API, dispatch, definition, rows } = getContext("grid")
 
   export let column
+
+  let newColumnName = `${column.schema.name} (migrated)`
 
   const migrateUserColumn = async () => {
     let subtype = "users"
@@ -17,7 +24,7 @@
         tableId: $definition._id,
         oldColumn: column.schema,
         newColumn: {
-          name: `${column.schema.name} migrated`,
+          name: newColumnName,
           type: "bb_reference",
           subtype,
         },
@@ -38,5 +45,14 @@
   onConfirm={migrateUserColumn}
   size="M"
 >
-  TODO: copy here
+  This operation will kick off a migration of the column "{column.schema.name}"
+  to a new column, with the name provided - this operation may take a moment to
+  complete.
+
+  <InlineAlert
+    type="error"
+    header="Are you sure?"
+    message="This will leave bindings which utilised the user relationship column in a state where they will need to be updated to use the new column instead."
+  />
+  <Input bind:value={newColumnName} label="New column name" />
 </ModalContent>

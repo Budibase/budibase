@@ -55,6 +55,7 @@
   }
 
   const refreshDefinitions = async () => {
+    console.log("woot")
     await tables.fetch()
     await datasources.fetch()
   }
