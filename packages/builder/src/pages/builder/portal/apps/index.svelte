@@ -227,9 +227,7 @@
       <div class="welcome">
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
-          <Body size="M">
-            I have changed this.
-          </Body>
+          <Body size="M">I have changed this.</Body>
         </Layout>
       </div>
     </div>
