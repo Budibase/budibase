@@ -44,7 +44,7 @@ export async function handleRequest<T extends Operation>(
     return [] as any
   }
 
-  return new ExternalRequest(operation, tableId, opts?.datasource).run(
+  return new ExternalRequest<T>(operation, tableId, opts?.datasource).run(
     opts || {}
   )
 }
@@ -148,17 +148,17 @@ export async function find(ctx: UserCtx): Promise<Row> {
 export async function destroy(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const _id = ctx.request.body._id
-  const { row } = (await handleRequest(Operation.DELETE, tableId, {
+  const { row } = await handleRequest(Operation.DELETE, tableId, {
     id: breakRowIdField(_id),
     includeSqlRelationships: IncludeRelationship.EXCLUDE,
-  })) as { row: Row }
+  })
   return { response: { ok: true, id: _id }, row }
 }
 
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
   const tableId = utils.getTableId(ctx)
-  let promises: Promise<Row[] | { row: Row; table: Table }>[] = []
+  let promises: Promise<{ row: Row; table: Table }>[] = []
   for (let row of rows) {
     promises.push(
       handleRequest(Operation.DELETE, tableId, {
@@ -167,7 +167,7 @@ export async function bulkDestroy(ctx: UserCtx) {
       })
     )
   }
-  const responses = (await Promise.all(promises)) as { row: Row }[]
+  const responses = await Promise.all(promises)
   return { response: { ok: true }, rows: responses.map(resp => resp.row) }
 }
 
@@ -183,11 +183,11 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     ctx.throw(400, "Datasource has not been configured for plus API.")
   }
   const tables = datasource.entities
-  const response = (await handleRequest(Operation.READ, tableId, {
+  const response = await handleRequest(Operation.READ, tableId, {
     id,
     datasource,
     includeSqlRelationships: IncludeRelationship.INCLUDE,
-  })) as Row[]
+  })
   const table: Table = tables[tableName]
   const row = response[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
