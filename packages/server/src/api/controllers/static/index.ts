@@ -206,6 +206,7 @@ export const serveClientLibrary = async function (ctx: Ctx) {
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
+    ctx.set("Content-Type", "application/javascript")
   } else if (env.isDev()) {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
