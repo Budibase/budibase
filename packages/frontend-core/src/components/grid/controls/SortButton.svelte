@@ -1,6 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { ActionButton, Popover, Select } from "@budibase/bbui"
+  import { canBeSortColumn } from "@budibase/shared-core"
 
   const { sort, columns, stickyColumn } = getContext("grid")
 
@@ -19,7 +20,7 @@
         type: stickyColumn.schema?.type,
       })
     }
-    return [
+    options = [
       ...options,
       ...columns.map(col => ({
         label: col.label || col.name,
@@ -27,6 +28,7 @@
         type: col.schema?.type,
       })),
     ]
+    return options.filter(col => canBeSortColumn(col.type))
   }
 
   const getOrderOptions = (column, columnOptions) => {

@@ -3,13 +3,10 @@
   import { goto, params } from "@roxi/routify"
   import { Table, Heading, Layout } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
-  import {
-    TableNames,
-    UNEDITABLE_USER_FIELDS,
-    UNSORTABLE_TYPES,
-  } from "constants"
+  import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import RoleCell from "./cells/RoleCell.svelte"
   import { createEventDispatcher } from "svelte"
+  import { canBeSortColumn } from "@budibase/shared-core"
 
   export let schema = {}
   export let data = []
@@ -32,12 +29,10 @@
   $: isUsersTable = tableId === TableNames.USERS
   $: data && resetSelectedRows()
   $: {
-    UNSORTABLE_TYPES.forEach(type => {
-      Object.values(schema || {}).forEach(col => {
-        if (col.type === type) {
-          col.sortable = false
-        }
-      })
+    Object.values(schema || {}).forEach(col => {
+      if (!canBeSortColumn(col.type)) {
+        col.sortable = false
+      }
     })
   }
   $: {

@@ -14,15 +14,15 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
+  ContextUser,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
-  ContextUser,
+  DatabaseQueryOpts,
 } from "@budibase/types"
-import { getGlobalDB } from "../context"
 import * as context from "../context"
-import { isCreator } from "./utils"
+import { getGlobalDB } from "../context"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -241,12 +241,14 @@ export const paginatedUsers = async ({
   bookmark,
   query,
   appId,
+  limit,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
+  const pageLimit = limit ? limit + 1 : PAGE_LIMIT + 1
   // get one extra document, to have the next page
-  const opts: any = {
+  const opts: DatabaseQueryOpts = {
     include_docs: true,
-    limit: PAGE_LIMIT + 1,
+    limit: pageLimit,
   }
   // add a startkey if the page was specified (anchor)
   if (bookmark) {
@@ -269,7 +271,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, PAGE_LIMIT, {
+  return pagination(userList, pageLimit, {
     paginate: true,
     property,
     getKey,
@@ -282,19 +284,6 @@ export async function getUserCount() {
     include_docs: false,
   })
   return response.total_rows
-}
-
-export async function getCreatorCount() {
-  let creators = 0
-  async function iterate(startPage?: string) {
-    const page = await paginatedUsers({ bookmark: startPage })
-    creators += page.data.filter(isCreator).length
-    if (page.hasNextPage) {
-      await iterate(page.nextPage)
-    }
-  }
-  await iterate()
-  return creators
 }
 
 // used to remove the builder/admin permissions, for processing the
