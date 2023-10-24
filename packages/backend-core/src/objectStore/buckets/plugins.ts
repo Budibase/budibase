@@ -6,7 +6,7 @@ import { Plugin } from "@budibase/types"
 
 // URLS
 
-export function enrichPluginURLs(plugins: Plugin[]) {
+export const enrichPluginURLs = (plugins: Plugin[]) => {
   if (!plugins || !plugins.length) {
     return []
   }
@@ -17,12 +17,12 @@ export function enrichPluginURLs(plugins: Plugin[]) {
   })
 }
 
-function getPluginJSUrl(plugin: Plugin) {
+const getPluginJSUrl = (plugin: Plugin) => {
   const s3Key = getPluginJSKey(plugin)
   return getPluginUrl(s3Key)
 }
 
-function getPluginIconUrl(plugin: Plugin): string | undefined {
+const getPluginIconUrl = (plugin: Plugin): string | undefined => {
   const s3Key = getPluginIconKey(plugin)
   if (!s3Key) {
     return
@@ -30,7 +30,7 @@ function getPluginIconUrl(plugin: Plugin): string | undefined {
   return getPluginUrl(s3Key)
 }
 
-function getPluginUrl(s3Key: string) {
+const getPluginUrl = (s3Key: string) => {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
@@ -40,11 +40,11 @@ function getPluginUrl(s3Key: string) {
 
 // S3 KEYS
 
-export function getPluginJSKey(plugin: Plugin) {
+export const getPluginJSKey = (plugin: Plugin) => {
   return getPluginS3Key(plugin, "plugin.min.js")
 }
 
-export function getPluginIconKey(plugin: Plugin) {
+export const getPluginIconKey = (plugin: Plugin) => {
   // stored iconUrl is deprecated - hardcode to icon.svg in this case
   const iconFileName = plugin.iconUrl ? "icon.svg" : plugin.iconFileName
   if (!iconFileName) {
@@ -53,12 +53,12 @@ export function getPluginIconKey(plugin: Plugin) {
   return getPluginS3Key(plugin, iconFileName)
 }
 
-function getPluginS3Key(plugin: Plugin, fileName: string) {
+const getPluginS3Key = (plugin: Plugin, fileName: string) => {
   const s3Key = getPluginS3Dir(plugin.name)
   return `${s3Key}/${fileName}`
 }
 
-export function getPluginS3Dir(pluginName: string) {
+export const getPluginS3Dir = (pluginName: string) => {
   let s3Key = `${pluginName}`
   if (env.MULTI_TENANCY) {
     const tenantId = context.getTenantId()
