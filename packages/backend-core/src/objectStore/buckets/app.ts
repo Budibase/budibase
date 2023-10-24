@@ -2,6 +2,7 @@ import env from "../../environment"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
 import qs from "querystring"
+import { getTenantId, DEFAULT_TENANT_ID } from "../../context"
 
 export function clientLibraryPath(appId: string) {
   return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
@@ -28,11 +29,19 @@ export function clientLibraryCDNUrl(appId: string, version: string) {
 }
 
 export function clientLibraryUrl(appId: string, version: string) {
-  const queryString = qs.encode({
-    appId,
-    version,
-  })
-  return `/api/assets/client?${queryString}`
+  let tenantId, qsParams: { appId: string; version: string; tenantId?: string }
+  try {
+    tenantId = getTenantId()
+  } finally {
+    qsParams = {
+      appId,
+      version,
+    }
+  }
+  if (tenantId) {
+    qsParams.tenantId = tenantId
+  }
+  return `/api/assets/client?${qs.encode(qsParams)}`
 }
 
 export function getAppFileUrl(s3Key: string) {
