@@ -1,6 +1,6 @@
 import { MonthlyQuotaName, QuotaUsage } from "@budibase/types"
 
-export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
+export const usage = (): QuotaUsage => {
   return {
     _id: "usage_quota",
     quotaReset: new Date().toISOString(),
@@ -58,8 +58,7 @@ export const usage = (users: number = 0, creators: number = 0): QuotaUsage => {
     usageQuota: {
       apps: 0,
       plugins: 0,
-      users,
-      creators,
+      users: 0,
       userGroups: 0,
       rows: 0,
       triggers: {},
