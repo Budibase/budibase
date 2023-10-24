@@ -123,6 +123,7 @@ jobs:
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
           PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
+          REF_NAME: ${{ github.ref_name}}
         with:
           repository: budibase/budibase-deploys
           event: budicloud-qa-deploy

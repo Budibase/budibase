@@ -2,8 +2,8 @@
   import { getContext } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
-  import { UnsortableTypes } from "../../../constants"
   import { onDestroy } from "svelte"
+  import { canBeSortColumn } from "@budibase/shared-core"
 
   export let dataProvider
   export let columns
@@ -123,7 +123,7 @@
         return
       }
       newSchema[columnName] = schema[columnName]
-      if (UnsortableTypes.includes(schema[columnName].type)) {
+      if (!canBeSortColumn(schema[columnName].type)) {
         newSchema[columnName].sortable = false
       }
 

@@ -1,12 +1,4 @@
-import { FieldType as FieldTypes } from "@budibase/types"
 export { FieldType as FieldTypes } from "@budibase/types"
-
-export const UnsortableTypes = [
-  FieldTypes.FORMULA,
-  FieldTypes.ATTACHMENT,
-  FieldTypes.ARRAY,
-  FieldTypes.LINK,
-]
 
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
