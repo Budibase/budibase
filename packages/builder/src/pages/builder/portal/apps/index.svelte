@@ -228,7 +228,7 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">
-            Below you'll find the list of apps that you have access to
+            I have changed this.
           </Body>
         </Layout>
       </div>
