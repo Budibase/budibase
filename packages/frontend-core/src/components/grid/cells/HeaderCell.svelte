@@ -1,9 +1,17 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
   import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
-  import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
+  import {
+    Icon,
+    Popover,
+    Menu,
+    MenuItem,
+    clickOutside,
+    Modal,
+  } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
+  import MigrationModal from "../controls/MigrationModal.svelte"
 
   export let column
   export let idx
@@ -32,6 +40,7 @@
   let editIsOpen = false
   let timeout
   let popover
+  let migrationModal
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
@@ -115,24 +124,6 @@
     open = false
   }
 
-  const migrateUserColumn = async () => {
-    let subtype = "users"
-    if (column.schema.relationshipType === "one-to-many") {
-      subtype = "user"
-    }
-
-    await API.migrateColumn({
-      tableId: $definition._id,
-      oldColumn: column.schema,
-      newColumn: {
-        name: `${column.schema.name} migrated`,
-        type: "bb_reference",
-        subtype,
-      },
-    })
-    open = false
-  }
-
   const duplicateColumn = async () => {
     open = false
 
@@ -160,8 +151,17 @@
     })
   }
 
+  const openMigrationModal = () => {
+    migrationModal.show()
+    open = false
+  }
+
   onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
+
+<Modal bind:this={migrationModal}>
+  <MigrationModal {column} />
+</Modal>
 
 <div
   class="header-cell"
@@ -281,8 +281,8 @@
       >
         Hide column
       </MenuItem>
-      {#if column.schema.type === "link" && column.schema.tableId === "ta_users"}
-        <MenuItem icon="User" on:click={migrateUserColumn}>
+      {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === "ta_users"}
+        <MenuItem icon="User" on:click={openMigrationModal}>
           Migrate to user column
         </MenuItem>
       {/if}
