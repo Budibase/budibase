@@ -3,6 +3,7 @@
   import { Icon, Body, StatusLight, AbsTooltip } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
+  import { Features } from "constants/backend/automations"
 
   export let block
   export let open
@@ -10,16 +11,19 @@
   export let testResult
   export let isTrigger
   export let idx
+  export let addLooping
+  export let deleteStep
 
-  $: console.log($selectedAutomation)
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
-  let automationName = block?.name || ""
-
-  $: automationNameError = getAutomationNameError(automationName)
 
   const dispatch = createEventDispatcher()
 
+  $: stepNames = $selectedAutomation.definition.stepNames
+  $: automationName = stepNames[block.id] || block.name || ""
+  $: automationNameError = getAutomationNameError(automationName)
+  $: status = updateStatus(testResult, isTrigger)
+  $: isTrigger = isTrigger || block.type === "TRIGGER"
   $: {
     if (!testResult) {
       testResult = $automationStore.testResults?.steps?.filter(step =>
@@ -27,9 +31,9 @@
       )?.[0]
     }
   }
-  $: isTrigger = isTrigger || block.type === "TRIGGER"
-
-  $: status = updateStatus(testResult, isTrigger)
+  $: loopBlock = $selectedAutomation?.definition.steps.find(
+    x => x.blockToLoop === block.id
+  )
 
   async function onSelect(block) {
     await automationStore.update(state => {
@@ -53,15 +57,29 @@
   }
 
   const getAutomationNameError = name => {
-    let invalidRoleName = !validRegex.test(name)
-    if (invalidRoleName) {
-      return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+    if (name.length > 0) {
+      let invalidRoleName = !validRegex.test(name)
+      if (invalidRoleName) {
+        return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+      }
     }
     return null
   }
 
   const startTyping = async () => {
     typing = true
+  }
+
+  const saveName = async () => {
+    if (automationNameError) {
+      return
+    }
+
+    if (automationName.length === 0) {
+      automationStore.actions.deleteAutomationName(block.id)
+    } else {
+      automationStore.actions.saveAutomationName(block.id, automationName)
+    }
   }
 </script>
 
@@ -99,6 +117,7 @@
         <input
           placeholder="Enter some text"
           name="name"
+          value={automationName}
           on:input={e => {
             automationNameError = getAutomationNameError(e.target.value)
             automationName = e.target.value
@@ -106,13 +125,14 @@
               automationNameError = false // Reset the error when input is valid
             }
           }}
-          value={automationName}
           on:click={startTyping}
-          on:blur={() => {
+          on:blur={async () => {
             typing = false
             if (automationNameError) {
-              automationName = block?.name
+              automationName = stepNames[block.id]
               automationNameError = null
+            } else {
+              await saveName()
             }
           }}
         />
@@ -137,11 +157,13 @@
         }}
       >
         {#if !showTestStatus}
-          <AbsTooltip type="info" text="Add looping">
-            <Icon hoverable name="RotateCW" />
-          </AbsTooltip>
+          {#if !isTrigger && !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
+            <AbsTooltip type="info" text="Add looping">
+              <Icon on:click={addLooping} hoverable name="RotateCW" />
+            </AbsTooltip>
+          {/if}
           <AbsTooltip type="negative" text="Delete step">
-            <Icon hoverable name="DeleteOutline" />
+            <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
           </AbsTooltip>
         {/if}
         <Icon
