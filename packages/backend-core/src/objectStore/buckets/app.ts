@@ -1,37 +1,41 @@
 import env from "../../environment"
 import * as objectStore from "../objectStore"
 import * as cloudfront from "../cloudfront"
+import qs from "querystring"
+
+export function clientLibraryPath(appId: string) {
+  return `${objectStore.sanitizeKey(appId)}/budibase-client.js`
+}
 
 /**
- * In production the client library is stored in the object store, however in development
- * we use the symlinked version produced by lerna, located in node modules. We link to this
- * via a specific endpoint (under /api/assets/client).
- * @param appId In production we need the appId to look up the correct bucket, as the
- * version of the client lib may differ between apps.
- * @param version The version to retrieve.
- * @return The URL to be inserted into appPackage response or server rendered
- * app index file.
+ * Previously we used to serve the client library directly from Cloudfront, however
+ * due to issues with the domain we were unable to continue doing this - keeping
+ * incase we are able to switch back to CDN path again in future.
  */
-export const clientLibraryUrl = (appId: string, version: string) => {
-  if (env.isProd()) {
-    let file = `${objectStore.sanitizeKey(appId)}/budibase-client.js`
-    if (env.CLOUDFRONT_CDN) {
-      // append app version to bust the cache
-      if (version) {
-        file += `?v=${version}`
-      }
-      // don't need to use presigned for client with cloudfront
-      // file is public
-      return cloudfront.getUrl(file)
-    } else {
-      return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
+export function clientLibraryCDNUrl(appId: string, version: string) {
+  let file = clientLibraryPath(appId)
+  if (env.CLOUDFRONT_CDN) {
+    // append app version to bust the cache
+    if (version) {
+      file += `?v=${version}`
     }
+    // don't need to use presigned for client with cloudfront
+    // file is public
+    return cloudfront.getUrl(file)
   } else {
-    return `/api/assets/client`
+    return objectStore.getPresignedUrl(env.APPS_BUCKET_NAME, file)
   }
 }
 
-export const getAppFileUrl = (s3Key: string) => {
+export function clientLibraryUrl(appId: string, version: string) {
+  const queryString = qs.encode({
+    appId,
+    version,
+  })
+  return `/api/assets/client?${queryString}`
+}
+
+export function getAppFileUrl(s3Key: string) {
   if (env.CLOUDFRONT_CDN) {
     return cloudfront.getPresignedUrl(s3Key)
   } else {
