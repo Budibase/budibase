@@ -18,7 +18,6 @@
   export let orderable = true
 
   const {
-    API,
     reorder,
     isReordering,
     isResizing,
