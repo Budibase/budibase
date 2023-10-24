@@ -7,6 +7,8 @@ services:
     build:
       context: ..
       dockerfile: packages/server/Dockerfile.v2
+      args:
+        - BUDIBASE_VERSION=0.0.0+dev-docker
     container_name: build-bbapps
     environment:
       SELF_HOSTED: 1
@@ -30,13 +32,13 @@ services:
     depends_on:
       - worker-service
       - redis-service
-  #    volumes:
-  #      - /some/path/to/plugins:/plugins
 
   worker-service:
     build:
       context: ..
       dockerfile: packages/worker/Dockerfile.v2
+      args:
+        - BUDIBASE_VERSION=0.0.0+dev-docker
     container_name: build-bbworker
     environment:
       SELF_HOSTED: 1
