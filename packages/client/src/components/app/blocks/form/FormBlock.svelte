@@ -12,6 +12,7 @@
   export let fields
   export let labelPosition
   export let title
+  export let description
   export let showDeleteButton
   export let showSaveButton
   export let saveButtonLabel
@@ -98,6 +99,7 @@
     fields: fieldsOrDefault,
     labelPosition,
     title,
+    description,
     saveButtonLabel: saveLabel,
     deleteButtonLabel: deleteLabel,
     schema,
