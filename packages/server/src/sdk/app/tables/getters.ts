@@ -20,11 +20,15 @@ import datasources from "../datasources"
 import sdk from "../../../sdk"
 
 function processInternalTables(docs: AllDocsResponse<Table[]>): Table[] {
-  return docs.rows.map((tableDoc: any) => ({
-    ...tableDoc.doc,
+  return docs.rows.map(tableDoc => processInternalTable(tableDoc.doc))
+}
+
+export function processInternalTable(table: Table): Table {
+  return {
+    ...table,
     type: "internal",
-    sourceId: tableDoc.doc.sourceId || BudibaseInternalDB._id,
-  }))
+    sourceId: table.sourceId || BudibaseInternalDB._id,
+  }
 }
 
 export async function getAllInternalTables(db?: Database): Promise<Table[]> {

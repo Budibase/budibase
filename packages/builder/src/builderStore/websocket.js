@@ -47,6 +47,7 @@ export const createBuilderWebsocket = appId => {
 
   // Data section events
   socket.onOther(BuilderSocketEvent.TableChange, ({ id, table }) => {
+    console.log("Table change", id, table)
     tables.replaceTable(id, table)
   })
   socket.onOther(BuilderSocketEvent.DatasourceChange, ({ id, datasource }) => {
