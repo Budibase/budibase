@@ -5,12 +5,14 @@ import {
   FieldTypeSubtypes,
   Table,
   SearchParams,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 
 const tableId = "ta_a"
 const tableWithUserCol: Table = {
   _id: tableId,
   name: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
   schema: {
     user: {
       name: "user",
@@ -23,6 +25,7 @@ const tableWithUserCol: Table = {
 const tableWithUsersCol: Table = {
   _id: tableId,
   name: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
   schema: {
     user: {
       name: "user",

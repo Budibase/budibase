@@ -31,6 +31,7 @@ import { structures } from "@budibase/backend-core/tests"
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
 import GoogleSheetsIntegration from "../googlesheets"
 import { FieldType, Table, TableSchema } from "@budibase/types"
+import { generateDatasourceID } from "../../db/utils"
 
 describe("Google Sheets Integration", () => {
   let integration: any,
@@ -61,6 +62,7 @@ describe("Google Sheets Integration", () => {
   function createBasicTable(name: string, columns: string[]): Table {
     return {
       name,
+      sourceId: generateDatasourceID(),
       schema: {
         ...columns.reduce((p, c) => {
           p[c] = {

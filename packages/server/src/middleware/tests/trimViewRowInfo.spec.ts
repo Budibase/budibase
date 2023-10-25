@@ -1,5 +1,11 @@
 import { generator } from "@budibase/backend-core/tests"
-import { BBRequest, FieldType, Row, Table } from "@budibase/types"
+import {
+  BBRequest,
+  FieldType,
+  Row,
+  Table,
+  INTERNAL_TABLE_SOURCE_ID,
+} from "@budibase/types"
 import * as utils from "../../db/utils"
 import trimViewRowInfoMiddleware from "../trimViewRowInfo"
 
@@ -73,6 +79,7 @@ describe("trimViewRowInfo middleware", () => {
   const table: Table = {
     _id: tableId,
     name: generator.word(),
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
     type: "table",
     schema: {
       name: {

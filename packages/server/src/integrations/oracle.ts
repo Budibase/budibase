@@ -5,7 +5,7 @@ import {
   QueryJson,
   QueryType,
   SqlQuery,
-  ExternalTable,
+  Table,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
@@ -263,14 +263,14 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
+    entities: Record<string, Table>
   ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
-    const tables: { [key: string]: ExternalTable } = {}
+    const tables: { [key: string]: Table } = {}
 
     // iterate each table
     Object.values(oracleTables).forEach(oracleTable => {

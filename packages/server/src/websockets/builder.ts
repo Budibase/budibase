@@ -17,7 +17,7 @@ import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import { processInternalTable } from "../sdk/app/tables/getters"
-import { isExternalTable, isInternalTable } from "../integrations/utils"
+import { isInternalTable } from "../integrations/utils"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {

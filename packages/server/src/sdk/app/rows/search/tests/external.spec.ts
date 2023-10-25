@@ -15,6 +15,7 @@ import {
   expectAnyExternalColsAttributes,
   generator,
 } from "@budibase/backend-core/tests"
+import datasource from "../../../../../api/routes/datasource"
 
 jest.unmock("mysql2/promise")
 
@@ -23,36 +24,7 @@ jest.setTimeout(30000)
 describe.skip("external", () => {
   const config = new TestConfiguration()
 
-  let externalDatasource: Datasource
-
-  const tableData: Table = {
-    name: generator.word(),
-    type: "external",
-    primary: ["id"],
-    schema: {
-      id: {
-        name: "id",
-        type: FieldType.AUTO,
-        autocolumn: true,
-      },
-      name: {
-        name: "name",
-        type: FieldType.STRING,
-      },
-      surname: {
-        name: "surname",
-        type: FieldType.STRING,
-      },
-      age: {
-        name: "age",
-        type: FieldType.NUMBER,
-      },
-      address: {
-        name: "address",
-        type: FieldType.STRING,
-      },
-    },
-  }
+  let externalDatasource: Datasource, tableData: Table
 
   beforeAll(async () => {
     const container = await new GenericContainer("mysql")
@@ -84,6 +56,36 @@ describe.skip("external", () => {
         },
       },
     })
+
+    tableData = {
+      name: generator.word(),
+      type: "external",
+      primary: ["id"],
+      sourceId: externalDatasource._id!,
+      schema: {
+        id: {
+          name: "id",
+          type: FieldType.AUTO,
+          autocolumn: true,
+        },
+        name: {
+          name: "name",
+          type: FieldType.STRING,
+        },
+        surname: {
+          name: "surname",
+          type: FieldType.STRING,
+        },
+        age: {
+          name: "age",
+          type: FieldType.NUMBER,
+        },
+        address: {
+          name: "address",
+          type: FieldType.STRING,
+        },
+      },
+    }
   })
 
   describe("search", () => {

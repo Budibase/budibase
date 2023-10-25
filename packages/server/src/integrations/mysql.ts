@@ -4,7 +4,7 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  ExternalTable,
+  Table,
   TableSchema,
   DatasourcePlus,
   DatasourceFeature,
@@ -278,9 +278,9 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
+    entities: Record<string, Table>
   ): Promise<Schema> {
-    const tables: { [key: string]: ExternalTable } = {}
+    const tables: { [key: string]: Table } = {}
     await this.connect()
 
     try {

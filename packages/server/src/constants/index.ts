@@ -1,5 +1,9 @@
 import { objectStore, roles, constants } from "@budibase/backend-core"
-import { FieldType as FieldTypes } from "@budibase/types"
+import {
+  FieldType as FieldTypes,
+  Table,
+  INTERNAL_TABLE_SOURCE_ID,
+} from "@budibase/types"
 export {
   FieldType as FieldTypes,
   RelationshipType,
@@ -70,9 +74,10 @@ export enum SortDirection {
   DESCENDING = "DESCENDING",
 }
 
-export const USERS_TABLE_SCHEMA = {
+export const USERS_TABLE_SCHEMA: Table = {
   _id: "ta_users",
   type: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
   views: {},
   name: "Users",
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
@@ -87,12 +92,10 @@ export const USERS_TABLE_SCHEMA = {
         },
         presence: true,
       },
-      fieldName: "email",
       name: "email",
     },
     firstName: {
       name: "firstName",
-      fieldName: "firstName",
       type: FieldTypes.STRING,
       constraints: {
         type: FieldTypes.STRING,
@@ -101,7 +104,6 @@ export const USERS_TABLE_SCHEMA = {
     },
     lastName: {
       name: "lastName",
-      fieldName: "lastName",
       type: FieldTypes.STRING,
       constraints: {
         type: FieldTypes.STRING,
@@ -109,7 +111,6 @@ export const USERS_TABLE_SCHEMA = {
       },
     },
     roleId: {
-      fieldName: "roleId",
       name: "roleId",
       type: FieldTypes.OPTIONS,
       constraints: {
@@ -119,7 +120,6 @@ export const USERS_TABLE_SCHEMA = {
       },
     },
     status: {
-      fieldName: "status",
       name: "status",
       type: FieldTypes.OPTIONS,
       constraints: {

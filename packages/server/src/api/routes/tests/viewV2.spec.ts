@@ -10,6 +10,7 @@ import {
   UIFieldMetadata,
   UpdateViewRequest,
   ViewV2,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import { generateDatasourceID } from "../../../db/utils"
@@ -18,6 +19,7 @@ function priceTable(): Table {
   return {
     name: "table",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
     schema: {
       Price: {
         type: FieldType.NUMBER,

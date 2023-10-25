@@ -1,4 +1,9 @@
-import { FieldType, Table, ViewV2 } from "@budibase/types"
+import {
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  Table,
+  ViewV2,
+} from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../.."
 
@@ -13,6 +18,7 @@ describe("table sdk", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,

@@ -21,6 +21,7 @@ import {
   SortType,
   StaticQuotaName,
   Table,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -65,6 +66,7 @@ describe.each([
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         id: {
           type: FieldType.AUTO,
@@ -880,6 +882,7 @@ describe.each([
     async function userTable(): Promise<Table> {
       return {
         name: `users_${generator.word()}`,
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
         type: "table",
         primary: ["id"],
         schema: {
@@ -1062,6 +1065,7 @@ describe.each([
       async function userTable(): Promise<Table> {
         return {
           name: `users_${generator.word()}`,
+          sourceId: INTERNAL_TABLE_SOURCE_ID,
           type: "table",
           primary: ["id"],
           schema: {
@@ -1597,7 +1601,7 @@ describe.each([
       const tableConfig = generateTableConfig()
 
       if (config.datasource) {
-        tableConfig.sourceId = config.datasource._id
+        tableConfig.sourceId = config.datasource._id!
         if (config.datasource.plus) {
           tableConfig.type = "external"
         }

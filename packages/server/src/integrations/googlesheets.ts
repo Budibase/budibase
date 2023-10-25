@@ -12,7 +12,7 @@ import {
   Row,
   SearchFilters,
   SortJson,
-  ExternalTable,
+  Table,
   TableRequest,
   Schema,
 } from "@budibase/types"
@@ -262,7 +262,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     id?: string
   ) {
     // base table
-    const table: ExternalTable = {
+    const table: Table = {
       name: title,
       primary: [GOOGLE_SHEETS_PRIMARY_KEY],
       schema: {},
@@ -283,7 +283,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
+    entities: Record<string, Table>
   ): Promise<Schema> {
     // not fully configured yet
     if (!this.config.auth) {
@@ -291,7 +291,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
     await this.connect()
     const sheets = this.client.sheetsByIndex
-    const tables: Record<string, ExternalTable> = {}
+    const tables: Record<string, Table> = {}
     let errors: Record<string, string> = {}
     await utils.parallelForeach(
       sheets,
