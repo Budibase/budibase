@@ -33,7 +33,6 @@
 {#if schemaHasOptions(schema) && schema.type !== "array"}
   <Select
     on:change={e => onChange(e, field)}
-    label={field}
     value={value[field]}
     options={schema.constraints.inclusion}
   />
@@ -46,7 +45,6 @@
 {:else if schema.type === "boolean"}
   <Select
     on:change={e => onChange(e, field)}
-    label={field}
     value={value[field]}
     options={[
       { label: "True", value: "true" },
@@ -56,7 +54,6 @@
 {:else if schema.type === "array"}
   <Multiselect
     bind:value={value[field]}
-    label={field}
     options={schema.constraints.inclusion}
     on:change={e => onChange(e, field)}
   />
@@ -92,7 +89,6 @@
     panel={AutomationBindingPanel}
     value={value[field]}
     on:change={e => onChange(e, field)}
-    label={field}
     type="string"
     bindings={parsedBindings}
     fillWidth={true}
