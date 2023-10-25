@@ -569,8 +569,12 @@ describe("/api/global/users", () => {
         {
           query: { equal: { firstName: user.firstName } },
         },
-        501
+        { status: 501 }
       )
+    })
+
+    it("should throw an error if public query performed", async () => {
+      await config.api.users.searchUsers({}, { status: 403, noHeaders: true })
     })
   })
 
