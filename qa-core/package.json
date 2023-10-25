@@ -17,7 +17,7 @@
     "test:notify": "node scripts/testResultsWebhook",
     "test:cloud:prod": "yarn run test --testPathIgnorePatterns=\\.integration\\.",
     "test:cloud:qa": "yarn run test",
-    "test:self:ci": "yarn run test --testPathIgnorePatterns=\\.integration\\. \\.cloud\\.",
+    "test:self:ci": "yarn run test --testPathIgnorePatterns=\\.integration\\. \\.cloud\\. \\.license\\.",
     "serve:test:self:ci": "start-server-and-test dev:built http://localhost:4001/health test:self:ci",
     "serve": "start-server-and-test dev:built http://localhost:4001/health",
     "dev:built": "cd ../ && yarn dev:built"
