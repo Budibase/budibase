@@ -126,7 +126,7 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      collapsible={false}
+      show={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">
