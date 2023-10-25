@@ -21,6 +21,7 @@
   const ignoredOriginSelectors = [
     ".spectrum-Modal",
     "#builder-side-panel-container",
+    "[data-grid-ignore]",
   ]
 
   // Global key listener which intercepts all key events
