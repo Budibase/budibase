@@ -13,8 +13,10 @@ import { createContext, runMiddlewares } from "./middleware"
 
 export interface EmitOptions {
   // Whether to include the originator of the request from the broadcast,
-  // defaults to false.
-  includeSelf?: boolean
+  // defaults to false because it is assumed that the user who triggered
+  // an action will already have the changes of that action reflected in their
+  // own UI, so there is no need to send them again.
+  includeOriginator?: boolean
 }
 
 const anonUser = () => ({
@@ -284,7 +286,7 @@ export class BaseSocket {
     options?: EmitOptions
   ) {
     let emitPayload = { ...payload }
-    if (!options?.includeSelf) {
+    if (!options?.includeOriginator) {
       emitPayload.apiSessionId = ctx.headers?.[Header.SESSION_ID]
     }
     this.io.in(room).emit(event, emitPayload)
