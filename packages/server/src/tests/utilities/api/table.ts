@@ -58,8 +58,13 @@ export class TableAPI extends TestAPI {
       .post(`/api/tables/${tableId}/migrate`)
       .send(data)
       .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    if (res.status !== expectStatus) {
+      throw new Error(
+        `Expected status ${expectStatus} but got ${
+          res.status
+        } with body ${JSON.stringify(res.body)}`
+      )
+    }
     return res.body
   }
 }

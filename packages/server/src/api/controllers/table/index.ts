@@ -165,7 +165,11 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   const { oldColumn, newColumn } = ctx.request.body
   let tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
-  await sdk.tables.migrate(table, oldColumn, newColumn)
+  let result = await sdk.tables.migrate(table, oldColumn, newColumn)
+
+  for (let table of result.tablesUpdated) {
+    builderSocket?.emitTableUpdate(ctx, table)
+  }
 
   ctx.status = 200
   ctx.body = { message: `Column ${oldColumn.name} migrated.` }
