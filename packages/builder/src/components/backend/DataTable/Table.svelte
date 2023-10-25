@@ -28,7 +28,9 @@
 
   $: if (schema) {
     parsedSchema = Object.keys(schema).reduce((acc, key) => {
-      acc[key] = { ...schema[key] }
+      acc[key] =
+        typeof schema[key] === "string" ? { type: schema[key] } : schema[key]
+
       if (!canBeSortColumn(acc[key].type)) {
         acc[key].sortable = false
       }

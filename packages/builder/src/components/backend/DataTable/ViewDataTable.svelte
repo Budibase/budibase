@@ -19,21 +19,8 @@
   let loading = false
   let type = "internal"
 
-  // Grouped views have a fixed schema layout
-  const parseSchema = view => {
-    if (!view.groupBy) {
-      return view.schema
-    }
-    const { group, field, value } = view.schema
-    return {
-      group,
-      field: { type: field },
-      value: { type: value },
-    }
-  }
-
   $: name = view.name
-  $: schema = parseSchema(view)
+  $: schema = view.schema
   $: calculation = view.calculation
 
   $: supportedFormats = Object.values(ROW_EXPORT_FORMATS).filter(key => {
