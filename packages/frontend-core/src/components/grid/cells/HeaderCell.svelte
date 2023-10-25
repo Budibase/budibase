@@ -14,6 +14,7 @@
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
   import { FieldType, FormulaTypes } from "@budibase/types"
+  import { TableNames } from "../../../constants"
 
   export let column
   export let idx
@@ -381,7 +382,7 @@
       >
         Hide column
       </MenuItem>
-      {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === "ta_users"}
+      {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS}
         <MenuItem icon="User" on:click={openMigrationModal}>
           Migrate to user column
         </MenuItem>
