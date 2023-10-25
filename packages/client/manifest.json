@@ -5485,6 +5485,12 @@
         "nested": true
       },
       {
+        "type": "text",
+        "label": "Description",
+        "key": "description",
+        "nested": true
+      },
+      {
         "section": true,
         "dependsOn": {
           "setting": "actionType",
