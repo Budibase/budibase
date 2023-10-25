@@ -17,8 +17,8 @@
   $: error = checkNewColumnName(newColumnName)
 
   const checkNewColumnName = newColumnName => {
-    if (column.schema.name === newColumnName) {
-      return "New column name can't be the same as the existing column name."
+    if (newColumnName in $definition.schema) {
+      return "New column name can't be the same as an existing column name."
     }
     if (newColumnName.match(ValidColumnNameRegex) === null) {
       return "Illegal character; must be alpha-numeric."
