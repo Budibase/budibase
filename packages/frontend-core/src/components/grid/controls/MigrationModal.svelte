@@ -45,7 +45,6 @@
       notifications.error(`Failed to migrate: ${e.message}`)
     }
     await rows.actions.refreshData()
-    dispatch("refreshdefintions")
   }
 </script>
 

@@ -53,11 +53,6 @@
       await datasources.fetch()
     }
   }
-
-  const refreshDefinitions = async () => {
-    await tables.fetch()
-    await datasources.fetch()
-  }
 </script>
 
 <div class="wrapper">
@@ -71,7 +66,6 @@
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
-    on:refreshdefinitions={refreshDefinitions}
   >
     <svelte:fragment slot="filter">
       {#if isUsersTable && $store.features.disableUserMetadata}
