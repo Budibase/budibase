@@ -27,8 +27,10 @@
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
     selectedRows,
-    loading,
+    loaded,
+    refreshing,
     config,
+    filter,
   } = getContext("grid")
 
   let visible = false
@@ -153,7 +155,7 @@
 <!-- New row FAB -->
 <TempTooltip
   text="Click here to create your first row"
-  condition={hasNoRows && !$loading}
+  condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}
   type={TooltipType.Info}
 >
   {#if !visible && !selectedRowCount && $config.canAddRows}
