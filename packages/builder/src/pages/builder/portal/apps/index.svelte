@@ -228,6 +228,8 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">I have changed this.</Body>
+          <Body size="M">Adding some other stuff here. </Body>
+          <img src="https://static.wikia.nocookie.net/joke-battles/images/e/e4/Yee.jpg/revision/latest/scale-to-width-down/400?cb=20161119164635" />
         </Layout>
       </div>
     </div>
