@@ -34,10 +34,8 @@ export async function migrate(
   table = await sdk.tables.saveTable(table)
 
   let migrator = getColumnMigrator(table, oldColumn, newColumn)
-  let result: MigrationResult
-
   try {
-    result = await migrator.doMigration()
+    return await migrator.doMigration()
   } catch (e) {
     // If the migration fails then we need to roll back the table schema
     // change.
@@ -45,8 +43,6 @@ export async function migrate(
     await sdk.tables.saveTable(table)
     throw e
   }
-
-  return result
 }
 
 interface ColumnMigrator {
