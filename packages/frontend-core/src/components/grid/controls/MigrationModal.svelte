@@ -7,7 +7,7 @@
   } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldSubtype, RelationshipType } from "@budibase/types"
+  import { FieldSubtype, FieldType, RelationshipType } from "@budibase/types"
 
   const { API, definition, rows } = getContext("grid")
 
@@ -37,7 +37,7 @@
         oldColumn: column.schema,
         newColumn: {
           name: newColumnName,
-          type: "bb_reference",
+          type: FieldType.BB_REFERENCE,
           subtype,
         },
       })
