@@ -24,6 +24,7 @@ import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
+import { processInternalTable } from "../../../sdk/app/tables/getters"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -168,7 +169,9 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   let result = await sdk.tables.migrate(table, oldColumn, newColumn)
 
   for (let table of result.tablesUpdated) {
-    builderSocket?.emitTableUpdate(ctx, table, { includeSelf: true })
+    builderSocket?.emitTableUpdate(ctx, processInternalTable(table), {
+      includeSelf: true,
+    })
   }
 
   ctx.status = 200
