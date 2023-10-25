@@ -46,7 +46,7 @@ export enum MigrationName {
   GLOBAL_INFO_SYNC_USERS = "global_info_sync_users",
   TABLE_SETTINGS_LINKS_TO_ACTIONS = "table_settings_links_to_actions",
   // increment this number to re-activate this migration
-  SYNC_QUOTAS = "sync_quotas_1",
+  SYNC_QUOTAS = "sync_quotas_2",
 }
 
 export interface MigrationDefinition {
