@@ -8,7 +8,7 @@
   import { getContext } from "svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
 
-  const { API, dispatch, definition, rows } = getContext("grid")
+  const { API, definition, rows } = getContext("grid")
 
   export let column
 
