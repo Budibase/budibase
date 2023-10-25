@@ -117,6 +117,7 @@
         <input
           placeholder="Enter some text"
           name="name"
+          autocomplete="off"
           value={automationName}
           on:input={e => {
             automationNameError = getAutomationNameError(e.target.value)
