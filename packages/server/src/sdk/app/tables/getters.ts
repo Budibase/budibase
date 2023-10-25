@@ -1,20 +1,16 @@
 import { context } from "@budibase/backend-core"
-import {
-  BudibaseInternalDB,
-  getMultiIDParams,
-  getTableParams,
-} from "../../../db/utils"
+import { getMultiIDParams, getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
   isExternalTable,
   isSQL,
 } from "../../../integrations/utils"
 import {
-  AllDocsResponse,
   Database,
   Table,
   TableResponse,
   TableViewsResponse,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import datasources from "../datasources"
 import sdk from "../../../sdk"
@@ -27,7 +23,7 @@ export function processInternalTable(table: Table): Table {
   return {
     ...table,
     type: "internal",
-    sourceId: table.sourceId || BudibaseInternalDB._id,
+    sourceId: table.sourceId || INTERNAL_TABLE_SOURCE_ID,
   }
 }
 

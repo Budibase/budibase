@@ -2,6 +2,7 @@ import _ from "lodash"
 import {
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSchema,
   ViewV2,
@@ -14,6 +15,7 @@ describe("table sdk", () => {
     _id: generator.guid(),
     name: "TestTable",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
     schema: {
       name: {
         type: FieldType.STRING,

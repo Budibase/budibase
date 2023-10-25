@@ -2,6 +2,7 @@ import {
   FieldSubtype,
   FieldType,
   FieldTypeSubtypes,
+  INTERNAL_TABLE_SOURCE_ID,
   Table,
 } from "@budibase/types"
 import { outputProcessing } from ".."
@@ -26,6 +27,7 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -71,6 +73,7 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -108,6 +111,7 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,

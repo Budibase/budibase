@@ -24,7 +24,6 @@ import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
-import { processInternalTable } from "../../../sdk/app/tables/getters"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
@@ -50,7 +49,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
         type: "external",
-        sourceId: datasource._id,
+        sourceId: datasource._id!,
         sql: isSQL(datasource),
       }))
     } else {

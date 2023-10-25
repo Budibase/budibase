@@ -56,6 +56,7 @@ import {
   CreateViewRequest,
   RelationshipFieldMetadata,
   User,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 
 import API from "./api"
@@ -66,6 +67,10 @@ type DefaultUserValues = {
   firstName: string
   lastName: string
   csrfToken: string
+}
+
+interface TableToBuild extends Omit<Table, "sourceId"> {
+  sourceId?: string
 }
 
 class TestConfiguration {
@@ -538,10 +543,13 @@ class TestConfiguration {
   // TABLE
 
   async updateTable(
-    config?: Table,
+    config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
+    if (!config.sourceId) {
+      config.sourceId = INTERNAL_TABLE_SOURCE_ID
+    }
     const response = await this._req(config, null, controllers.table.save)
     if (!skipReassigning) {
       this.table = response
@@ -549,13 +557,19 @@ class TestConfiguration {
     return response
   }
 
-  async createTable(config?: Table, options = { skipReassigning: false }) {
+  async createTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
     if (config != null && config._id) {
       delete config._id
     }
     config = config || basicTable()
+    if (!config.sourceId) {
+      config.sourceId = INTERNAL_TABLE_SOURCE_ID
+    }
     if (this.datasource && !config.sourceId) {
-      config.sourceId = this.datasource._id
+      config.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
       if (this.datasource.plus) {
         config.type = "external"
       }
@@ -572,12 +586,15 @@ class TestConfiguration {
   async createLinkedTable(
     relationshipType = RelationshipType.ONE_TO_MANY,
     links: any = ["link"],
-    config?: Table
+    config?: TableToBuild
   ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
     const tableConfig = config || basicTable()
+    if (!tableConfig.sourceId) {
+      tableConfig.sourceId = INTERNAL_TABLE_SOURCE_ID
+    }
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
@@ -590,7 +607,7 @@ class TestConfiguration {
     }
 
     if (this.datasource && !tableConfig.sourceId) {
-      tableConfig.sourceId = this.datasource._id
+      tableConfig.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
       if (this.datasource.plus) {
         tableConfig.type = "external"
       }

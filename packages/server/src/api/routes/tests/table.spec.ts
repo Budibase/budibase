@@ -9,6 +9,7 @@ import {
   InternalTable,
   FieldSubtype,
   Row,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
@@ -432,6 +433,7 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
         schema: {
           "user relationship": {
             type: FieldType.LINK,
@@ -491,6 +493,7 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
         schema: {
           "user relationship": {
             type: FieldType.LINK,
@@ -552,6 +555,7 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
         schema: {
           "user relationship": {
             type: FieldType.LINK,

@@ -1,36 +1,50 @@
 import { populateExternalTableSchemas } from "../validation"
 import { cloneDeep } from "lodash/fp"
-import { AutoReason, Datasource, Table } from "@budibase/types"
+import {
+  AutoReason,
+  Datasource,
+  FieldType,
+  RelationshipType,
+  SourceName,
+  Table,
+} from "@budibase/types"
 import { isEqual } from "lodash"
+import { generateDatasourceID } from "../../../../db/utils"
 
-const SCHEMA = {
+const datasourceId = generateDatasourceID()
+
+const SCHEMA: Datasource = {
+  source: SourceName.POSTGRES,
+  type: "datasource",
+  _id: datasourceId,
   entities: {
     client: {
       _id: "tableA",
       name: "client",
       primary: ["idC"],
       primaryDisplay: "Name",
+      sourceId: datasourceId,
       schema: {
         idC: {
           autocolumn: true,
           externalType: "int unsigned",
           name: "idC",
-          type: "number",
+          type: FieldType.NUMBER,
         },
         Name: {
           autocolumn: false,
           externalType: "varchar(255)",
           name: "Name",
-          type: "string",
+          type: FieldType.STRING,
         },
         project: {
           fieldName: "idC",
           foreignKey: "idC",
           main: true,
           name: "project",
-          relationshipType: "many-to-one",
+          relationshipType: RelationshipType.MANY_TO_ONE,
           tableId: "tableB",
-          type: "link",
+          type: FieldType.LINK,
         },
       },
     },
@@ -39,31 +53,32 @@ const SCHEMA = {
       name: "project",
       primary: ["idP"],
       primaryDisplay: "Name",
+      sourceId: datasourceId,
       schema: {
         idC: {
           externalType: "int unsigned",
           name: "idC",
-          type: "number",
+          type: FieldType.NUMBER,
         },
         idP: {
           autocolumn: true,
           externalType: "int unsigned",
           name: "idProject",
-          type: "number",
+          type: FieldType.NUMBER,
         },
         Name: {
           autocolumn: false,
           externalType: "varchar(255)",
           name: "Name",
-          type: "string",
+          type: FieldType.STRING,
         },
         client: {
           fieldName: "idC",
           foreignKey: "idC",
           name: "client",
-          relationshipType: "one-to-many",
+          relationshipType: RelationshipType.ONE_TO_MANY,
           tableId: "tableA",
-          type: "link",
+          type: FieldType.LINK,
         },
       },
       sql: true,
@@ -95,12 +110,12 @@ describe("validation and update of external table schemas", () => {
   function noOtherTableChanges(response: any) {
     checkOtherColumns(
       response.entities!.client!,
-      SCHEMA.entities.client as Table,
+      SCHEMA.entities!.client,
       OTHER_CLIENT_COLS
     )
     checkOtherColumns(
       response.entities!.project!,
-      SCHEMA.entities.project as Table,
+      SCHEMA.entities!.project,
       OTHER_PROJECT_COLS
     )
   }

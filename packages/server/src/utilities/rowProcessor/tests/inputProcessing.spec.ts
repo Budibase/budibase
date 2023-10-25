@@ -1,6 +1,11 @@
 import { inputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
-import { FieldType, FieldTypeSubtypes, Table } from "@budibase/types"
+import {
+  FieldType,
+  FieldTypeSubtypes,
+  INTERNAL_TABLE_SOURCE_ID,
+  Table,
+} from "@budibase/types"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
 jest.mock("../bbReferenceProcessor", (): typeof bbReferenceProcessor => ({
@@ -20,6 +25,7 @@ describe("rowProcessor - inputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -70,6 +76,7 @@ describe("rowProcessor - inputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -110,6 +117,7 @@ describe("rowProcessor - inputProcessing", () => {
         _id: generator.guid(),
         name: "TestTable",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
         schema: {
           name: {
             type: FieldType.STRING,
@@ -150,6 +158,7 @@ describe("rowProcessor - inputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         name: {
           type: FieldType.STRING,
