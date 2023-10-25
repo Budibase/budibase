@@ -16,6 +16,8 @@ import { gridSocket } from "./index"
 import { clearLock, updateLock } from "../utilities/redis"
 import { Socket } from "socket.io"
 import { BuilderSocketEvent } from "@budibase/shared-core"
+import { processInternalTable } from "../sdk/app/tables/getters"
+import { isExternalTable, isInternalTable } from "../integrations/utils"
 
 export default class BuilderSocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
@@ -101,6 +103,13 @@ export default class BuilderSocket extends BaseSocket {
   }
 
   emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {
+    // This was added to make sure that sourceId is always present when
+    // sending this message to clients. Without this, tables without a
+    // sourceId (e.g. ta_users) won't get correctly updated client-side.
+    if (isInternalTable(table._id!)) {
+      table = processInternalTable(table)
+    }
+
     this.emitToRoom(
       ctx,
       ctx.appId,
