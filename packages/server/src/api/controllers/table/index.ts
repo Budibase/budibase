@@ -168,7 +168,7 @@ export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   let result = await sdk.tables.migrate(table, oldColumn, newColumn)
 
   for (let table of result.tablesUpdated) {
-    builderSocket?.emitTableUpdate(ctx, table)
+    builderSocket?.emitTableUpdate(ctx, table, { includeSelf: true })
   }
 
   ctx.status = 200

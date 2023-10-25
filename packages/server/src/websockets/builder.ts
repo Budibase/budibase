@@ -1,5 +1,5 @@
 import authorized from "../middleware/authorized"
-import { BaseSocket } from "./websocket"
+import { BaseSocket, EmitOptions } from "./websocket"
 import { permissions, events, context } from "@budibase/backend-core"
 import http from "http"
 import Koa from "koa"
@@ -100,11 +100,17 @@ export default class BuilderSocket extends BaseSocket {
     })
   }
 
-  emitTableUpdate(ctx: any, table: Table) {
-    this.emitToRoom(ctx, ctx.appId, BuilderSocketEvent.TableChange, {
-      id: table._id,
-      table,
-    })
+  emitTableUpdate(ctx: any, table: Table, options?: EmitOptions) {
+    this.emitToRoom(
+      ctx,
+      ctx.appId,
+      BuilderSocketEvent.TableChange,
+      {
+        id: table._id,
+        table,
+      },
+      options
+    )
     gridSocket?.emitTableUpdate(ctx, table)
   }
 
