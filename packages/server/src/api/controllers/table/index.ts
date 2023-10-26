@@ -10,6 +10,7 @@ import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  DocumentType,
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
@@ -20,6 +21,7 @@ import {
   TableResponse,
   TableSourceType,
   UserCtx,
+  SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -30,7 +32,12 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
     tableId = table._id
   }
-  if (table && table.sourceType === TableSourceType.EXTERNAL) {
+  if (
+    table?.sourceId &&
+    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR)
+  ) {
+    return external
+  } else if (table?.sourceType === TableSourceType.EXTERNAL) {
     return external
   } else if (tableId && isExternalTable(tableId)) {
     return external
