@@ -20,7 +20,7 @@
   const dispatch = createEventDispatcher()
 
   $: stepNames = $selectedAutomation.definition.stepNames
-  $: automationName = stepNames[block.id] || block.name || ""
+  $: automationName = stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult, isTrigger)
   $: isTrigger = isTrigger || block.type === "TRIGGER"
@@ -32,7 +32,7 @@
     }
   }
   $: loopBlock = $selectedAutomation?.definition.steps.find(
-    x => x.blockToLoop === block.id
+    x => x.blockToLoop === block?.id
   )
 
   async function onSelect(block) {
@@ -59,13 +59,14 @@
   const getAutomationNameError = name => {
     if (name !== block.name && block.name.includes(name)) {
       if (name?.length > 0) {
-      let invalidRoleName = !validRegex.test(name)
-      if (invalidRoleName) {
-        return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+        let invalidRoleName = !validRegex.test(name)
+        if (invalidRoleName) {
+          return "Please enter a role name consisting of only alphanumeric symbols and underscores"
+        }
       }
+      return null
     }
-    return null
-  }}
+  }
 
   const startTyping = async () => {
     typing = true
