@@ -1,9 +1,14 @@
-import { context, db as dbCore, events, roles } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  roles,
+  Header,
+} from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
 import { sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
-import { BUILTIN_ROLE_IDS } from "@budibase/backend-core/src/security/roles"
 
 const UpdateRolesOptions = {
   CREATED: "created",
@@ -146,8 +151,8 @@ export async function accessible(ctx: UserCtx) {
   }
 
   // If a custom role is provided in the header, filter out higher level roles
-  const roleHeader = ctx.header?.["x-budibase-role"] as string
-  if (roleHeader && !Object.keys(BUILTIN_ROLE_IDS).includes(roleHeader)) {
+  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
+  if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
     const inherits = (await roles.getRole(roleHeader))?.inherits
     const orderedRoles = ctx.body.reverse()
     let filteredRoles = [roleHeader]
