@@ -13,7 +13,6 @@
     "dev:builder": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
-  "jest": {},
   "devDependencies": {
     "@budibase/nano": "10.1.2",
     "@types/koa": "2.13.4",
