@@ -570,10 +570,6 @@ class TestConfiguration {
     if (!config.sourceId) {
       config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
-    if (this.datasource?._id) {
-      config.sourceId = this.datasource._id
-      config.sourceType = TableSourceType.EXTERNAL
-    }
     return this.updateTable(config, options)
   }
 
