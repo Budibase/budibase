@@ -54,7 +54,8 @@ export type DatabaseDeleteIndexOpts = {
   type?: string | undefined
 }
 
-export type DatabaseKey = string | number | {} | DatabaseKey[]
+type DBPrimitiveKey = string | number | {}
+export type DatabaseKey = DBPrimitiveKey | DBPrimitiveKey[]
 
 export type DatabaseQueryOpts = {
   include_docs?: boolean
