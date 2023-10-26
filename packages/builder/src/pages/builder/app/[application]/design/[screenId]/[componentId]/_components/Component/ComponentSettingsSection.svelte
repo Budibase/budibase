@@ -34,10 +34,14 @@
       setting => setting.section && setting.tag === tag
     )
     let sections = [
-      {
-        name: "General",
-        settings: generalSettings,
-      },
+      ...(generalSettings?.length
+        ? [
+            {
+              name: "General",
+              settings: generalSettings,
+            },
+          ]
+        : []),
       ...(customSections || []),
     ]
 
@@ -142,7 +146,7 @@
         <div class="section-info">
           <InfoDisplay body={section.info} />
         </div>
-      {:else if idx === 0 && section.name === "General" && componentDefinition.info && !tag}
+      {:else if idx === 0 && section.name === "General" && componentDefinition?.info && !tag}
         <InfoDisplay
           title={componentDefinition.name}
           body={componentDefinition.info}
