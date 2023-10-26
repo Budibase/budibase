@@ -574,7 +574,21 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
+    return this.updateTable(config, options)
+  }
 
+  async createExternalTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
+    if (config != null && config._id) {
+      delete config._id
+    }
+    config = config || basicTable()
+    if (this.datasource?._id) {
+      config.sourceId = this.datasource._id
+      config.sourceType = TableSourceType.EXTERNAL
+    }
     return this.updateTable(config, options)
   }
 
