@@ -11,7 +11,6 @@
     maxScrollLeft,
     bounds,
     hoveredRowId,
-    hiddenColumnsWidth,
     menu,
   } = getContext("grid")
 
@@ -23,10 +22,10 @@
   let initialTouchX
   let initialTouchY
 
-  $: style = generateStyle($scroll, $rowHeight, $hiddenColumnsWidth)
+  $: style = generateStyle($scroll, $rowHeight)
 
-  const generateStyle = (scroll, rowHeight, hiddenWidths) => {
-    const offsetX = scrollHorizontally ? -1 * scroll.left + hiddenWidths : 0
+  const generateStyle = (scroll, rowHeight) => {
+    const offsetX = scrollHorizontally ? -1 * scroll.left : 0
     const offsetY = scrollVertically ? -1 * (scroll.top % rowHeight) : 0
     return `transform: translate3d(${offsetX}px, ${offsetY}px, 0);`
   }
