@@ -93,7 +93,7 @@ describe.skip("external", () => {
   describe("search", () => {
     const rows: Row[] = []
     beforeAll(async () => {
-      const table = await config.createTable({
+      const table = await config.createExternalTable({
         ...tableData,
         sourceId: externalDatasource._id,
       })

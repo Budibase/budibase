@@ -58,7 +58,7 @@ describe.each([
         },
       })
 
-      return config.createTable({
+      return config.createExternalTable({
         ...priceTable(),
         sourceId: datasource._id,
         sourceType: TableSourceType.EXTERNAL,

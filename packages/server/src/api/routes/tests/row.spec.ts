@@ -140,7 +140,12 @@ describe.each([
 
   beforeAll(async () => {
     const tableConfig = generateTableConfig()
-    const table = await config.createTable(tableConfig)
+    let table
+    if (dsProvider) {
+      table = await config.createExternalTable(tableConfig)
+    } else {
+      table = await config.createTable(tableConfig)
+    }
     tableId = table._id!
   })
 
