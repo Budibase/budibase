@@ -48,10 +48,10 @@ function tarFilesToTmp(tmpDir: string, files: string[]) {
 
 /**
  * Exports a DB to either file or a variable (memory).
- * @param {string} dbName the DB which is to be exported.
- * @param {object} opts various options for the export, e.g. whether to stream,
+ * @param dbName the DB which is to be exported.
+ * @param opts various options for the export, e.g. whether to stream,
  * a filter function or the name of the export.
- * @return {*} either a readable stream or a string
+ * @return either a readable stream or a string
  */
 export async function exportDB(
   dbName: string,
@@ -98,9 +98,9 @@ function defineFilter(excludeRows?: boolean, excludeLogs?: boolean) {
 /**
  * Local utility to back up the database state for an app, excluding global user
  * data or user relationships.
- * @param {string} appId The app to back up
- * @param {object} config Config to send to export DB/attachment export
- * @returns {*} either a string or a stream of the backup
+ * @param appId The app to back up
+ * @param config Config to send to export DB/attachment export
+ * @returns either a string or a stream of the backup
  */
 export async function exportApp(appId: string, config?: ExportOpts) {
   const prodAppId = dbCore.getProdAppID(appId)
@@ -175,10 +175,10 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 
 /**
  * Streams a backup of the database state for an app
- * @param {string} appId The ID of the app which is to be backed up.
- * @param {boolean} excludeRows Flag to state whether the export should include data.
- * @param {string} encryptPassword password for encrypting the export.
- * @returns {*} a readable stream of the backup which is written in real time
+ * @param appId The ID of the app which is to be backed up.
+ * @param excludeRows Flag to state whether the export should include data.
+ * @param encryptPassword password for encrypting the export.
+ * @returns a readable stream of the backup which is written in real time
  */
 export async function streamExportApp({
   appId,

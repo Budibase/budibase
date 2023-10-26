@@ -59,11 +59,10 @@ export async function update(tableId: string, view: ViewV2): Promise<ViewV2> {
   const existingView = Object.values(views).find(
     v => isV2(v) && v.id === view.id
   )
-  if (!existingView) {
+  if (!existingView || !existingView.name) {
     throw new HTTPError(`View ${view.id} not found in table ${tableId}`, 404)
   }
 
-  console.log("set to", view)
   delete views[existingView.name]
   views[view.name] = view
   await db.put(ds)
