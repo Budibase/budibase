@@ -1,44 +1,52 @@
-import { BadRequestError, context } from "@budibase/backend-core"
+import { BadRequestError, context, db as dbCore } from "@budibase/backend-core"
 import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldSubtype,
   InternalTable,
-  ManyToManyRelationshipFieldMetadata,
-  ManyToOneRelationshipFieldMetadata,
-  OneToManyRelationshipFieldMetadata,
+  isBBReferenceField,
+  isRelationshipField,
+  LinkDocument,
+  RelationshipFieldMetadata,
   RelationshipType,
   Row,
   Table,
-  isBBReferenceField,
-  isRelationshipField,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { isExternalTable } from "../../../../src/integrations/utils"
-import { db as dbCore } from "@budibase/backend-core"
-import { EventType, updateLinks } from "../../../../src/db/linkedRows"
+import { isExternalTable } from "../../../integrations/utils"
+import { EventType, updateLinks } from "../../../db/linkedRows"
 import { cloneDeep } from "lodash"
+
+export interface MigrationResult {
+  tablesUpdated: Table[]
+}
 
 export async function migrate(
   table: Table,
   oldColumn: FieldSchema,
   newColumn: FieldSchema
-) {
-  let migrator = getColumnMigrator(table, oldColumn, newColumn)
-  let oldTable = cloneDeep(table)
+): Promise<MigrationResult> {
+  if (newColumn.name in table.schema) {
+    throw new BadRequestError(`Column "${newColumn.name}" already exists`)
+  }
 
   table.schema[newColumn.name] = newColumn
   table = await sdk.tables.saveTable(table)
 
-  await migrator.doMigration()
-
-  delete table.schema[oldColumn.name]
-  table = await sdk.tables.saveTable(table)
-  await updateLinks({ eventType: EventType.TABLE_UPDATED, table, oldTable })
+  let migrator = getColumnMigrator(table, oldColumn, newColumn)
+  try {
+    return await migrator.doMigration()
+  } catch (e) {
+    // If the migration fails then we need to roll back the table schema
+    // change.
+    delete table.schema[newColumn.name]
+    await sdk.tables.saveTable(table)
+    throw e
+  }
 }
 
 interface ColumnMigrator {
-  doMigration(): Promise<void>
+  doMigration(): Promise<MigrationResult>
 }
 
 function getColumnMigrator(
@@ -46,8 +54,8 @@ function getColumnMigrator(
   oldColumn: FieldSchema,
   newColumn: FieldSchema
 ): ColumnMigrator {
-  // For now we're only supporting migrations of user relationships to user
-  // columns in internal tables. In future we may want to support other
+  // For now, we're only supporting migrations of user relationships to user
+  // columns in internal tables. In the future, we may want to support other
   // migrations but for now return an error if we aren't migrating a user
   // relationship.
   if (isExternalTable(table._id!)) {
@@ -56,10 +64,6 @@ function getColumnMigrator(
 
   if (!(oldColumn.name in table.schema)) {
     throw new BadRequestError(`Column "${oldColumn.name}" does not exist`)
-  }
-
-  if (newColumn.name in table.schema) {
-    throw new BadRequestError(`Column "${newColumn.name}" already exists`)
   }
 
   if (!isBBReferenceField(newColumn)) {
@@ -105,14 +109,17 @@ function getColumnMigrator(
   throw new BadRequestError(`Unknown migration type`)
 }
 
-class SingleUserColumnMigrator implements ColumnMigrator {
+abstract class UserColumnMigrator implements ColumnMigrator {
   constructor(
-    private table: Table,
-    private oldColumn: OneToManyRelationshipFieldMetadata,
-    private newColumn: BBReferenceFieldMetadata
+    protected table: Table,
+    protected oldColumn: RelationshipFieldMetadata,
+    protected newColumn: BBReferenceFieldMetadata
   ) {}
 
-  async doMigration() {
+  abstract updateRow(row: Row, link: LinkDocument): void
+
+  async doMigration(): Promise<MigrationResult> {
+    let oldTable = cloneDeep(this.table)
     let rows = await sdk.rows.fetchRaw(this.table._id!)
     let rowsById = rows.reduce((acc, row) => {
       acc[row._id!] = row
@@ -121,63 +128,58 @@ class SingleUserColumnMigrator implements ColumnMigrator {
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {
-      if (link.doc1.tableId !== this.table._id) {
-        continue
-      }
-      if (link.doc1.fieldName !== this.oldColumn.name) {
-        continue
-      }
-      if (link.doc2.tableId !== InternalTable.USER_METADATA) {
+      if (
+        link.doc1.tableId !== this.table._id ||
+        link.doc1.fieldName !== this.oldColumn.name ||
+        link.doc2.tableId !== InternalTable.USER_METADATA
+      ) {
         continue
       }
 
-      let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
       let row = rowsById[link.doc1.rowId]
-      row[this.newColumn.name] = userId
+      if (!row) {
+        // This can happen if the row has been deleted but the link hasn't,
+        // which was a state that was found during the initial testing of this
+        // feature. Not sure exactly what can cause it, but best to be safe.
+        continue
+      }
+
+      this.updateRow(row, link)
     }
 
     let db = context.getAppDB()
     await db.bulkDocs(rows)
+
+    delete this.table.schema[this.oldColumn.name]
+    this.table = await sdk.tables.saveTable(this.table)
+    await updateLinks({
+      eventType: EventType.TABLE_UPDATED,
+      table: this.table,
+      oldTable,
+    })
+
+    let otherTable = await sdk.tables.getTable(this.oldColumn.tableId)
+    return {
+      tablesUpdated: [this.table, otherTable],
+    }
   }
 }
 
-class MultiUserColumnMigrator implements ColumnMigrator {
-  constructor(
-    private table: Table,
-    private oldColumn:
-      | ManyToManyRelationshipFieldMetadata
-      | ManyToOneRelationshipFieldMetadata,
-    private newColumn: BBReferenceFieldMetadata
-  ) {}
+class SingleUserColumnMigrator extends UserColumnMigrator {
+  updateRow(row: Row, link: LinkDocument): void {
+    row[this.newColumn.name] = dbCore.getGlobalIDFromUserMetadataID(
+      link.doc2.rowId
+    )
+  }
+}
 
-  async doMigration() {
-    let rows = await sdk.rows.fetchRaw(this.table._id!)
-    let rowsById = rows.reduce((acc, row) => {
-      acc[row._id!] = row
-      return acc
-    }, {} as Record<string, Row>)
-
-    let links = await sdk.links.fetchWithDocument(this.table._id!)
-    for (let link of links) {
-      if (link.doc1.tableId !== this.table._id) {
-        continue
-      }
-      if (link.doc1.fieldName !== this.oldColumn.name) {
-        continue
-      }
-      if (link.doc2.tableId !== InternalTable.USER_METADATA) {
-        continue
-      }
-
-      let userId = dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
-      let row = rowsById[link.doc1.rowId]
-      if (!row[this.newColumn.name]) {
-        row[this.newColumn.name] = []
-      }
-      row[this.newColumn.name].push(userId)
+class MultiUserColumnMigrator extends UserColumnMigrator {
+  updateRow(row: Row, link: LinkDocument): void {
+    if (!row[this.newColumn.name]) {
+      row[this.newColumn.name] = []
     }
-
-    let db = context.getAppDB()
-    await db.bulkDocs(rows)
+    row[this.newColumn.name].push(
+      dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
+    )
   }
 }

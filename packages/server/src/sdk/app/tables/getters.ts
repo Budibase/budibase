@@ -19,12 +19,16 @@ import {
 import datasources from "../datasources"
 import sdk from "../../../sdk"
 
-function processInternalTables(docs: AllDocsResponse<Table[]>): Table[] {
-  return docs.rows.map((tableDoc: any) => ({
-    ...tableDoc.doc,
+function processInternalTables(tables: Table[]): Table[] {
+  return tables.map(processInternalTable)
+}
+
+export function processInternalTable(table: Table): Table {
+  return {
+    ...table,
     type: "internal",
-    sourceId: tableDoc.doc.sourceId || BudibaseInternalDB._id,
-  }))
+    sourceId: table.sourceId || BudibaseInternalDB._id,
+  }
 }
 
 export async function getAllInternalTables(db?: Database): Promise<Table[]> {
@@ -36,7 +40,7 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
       include_docs: true,
     })
   )
-  return processInternalTables(internalTables)
+  return processInternalTables(internalTables.rows.map(row => row.doc!))
 }
 
 async function getAllExternalTables(): Promise<Table[]> {
@@ -106,7 +110,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
     const internalTableDocs = await db.allDocs<Table[]>(
       getMultiIDParams(internalTableIds)
     )
-    tables = tables.concat(processInternalTables(internalTableDocs))
+    tables = tables.concat(
+      processInternalTables(internalTableDocs.rows.map(row => row.doc!))
+    )
   }
   return tables
 }

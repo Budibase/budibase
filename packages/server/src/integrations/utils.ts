@@ -87,6 +87,10 @@ export function isExternalTable(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)
 }
 
+export function isInternalTable(tableId: string) {
+  return !isExternalTable(tableId)
+}
+
 export function buildExternalTableId(datasourceId: string, tableName: string) {
   // encode spaces
   if (tableName.includes(" ")) {
