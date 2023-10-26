@@ -47,7 +47,7 @@
     tables.replaceTable(id, e.detail)
 
     // We need to refresh datasources when an external table changes.
-    if (e.detail?.sourceType === DB_TYPE_EXTERNAL || e.detail?.sql) {
+    if (e.detail?.sourceType === DB_TYPE_EXTERNAL) {
       await datasources.fetch()
     }
   }
