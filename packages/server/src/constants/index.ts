@@ -1,9 +1,11 @@
-import { objectStore, roles, constants } from "@budibase/backend-core"
+import { constants, objectStore, roles } from "@budibase/backend-core"
 import {
   FieldType as FieldTypes,
-  Table,
   INTERNAL_TABLE_SOURCE_ID,
+  Table,
+  TableSourceType,
 } from "@budibase/types"
+
 export {
   FieldType as FieldTypes,
   RelationshipType,
@@ -78,6 +80,7 @@ export const USERS_TABLE_SCHEMA: Table = {
   _id: "ta_users",
   type: "table",
   sourceId: INTERNAL_TABLE_SOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   views: {},
   name: "Users",
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out

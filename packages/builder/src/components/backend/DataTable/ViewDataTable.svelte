@@ -17,7 +17,6 @@
   let hideAutocolumns = true
   let data = []
   let loading = false
-  let type = "internal"
 
   $: name = view.name
   $: calculation = view.calculation
@@ -65,7 +64,6 @@
   tableId={view.tableId}
   {data}
   {loading}
-  {type}
   rowCount={10}
   allowEditing={false}
   bind:hideAutocolumns

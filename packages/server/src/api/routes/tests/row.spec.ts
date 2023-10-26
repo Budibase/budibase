@@ -10,6 +10,7 @@ import {
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
+  INTERNAL_TABLE_SOURCE_ID,
   MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
@@ -21,7 +22,7 @@ import {
   SortType,
   StaticQuotaName,
   Table,
-  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -66,6 +67,7 @@ describe.each([
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
+      sourceType: TableSourceType.INTERNAL,
       sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         id: {
@@ -441,6 +443,7 @@ describe.each([
   describe("view save", () => {
     it("views have extra data trimmed", async () => {
       const table = await config.createTable({
+        type: "table",
         name: "orders",
         primary: ["OrderID"],
         schema: {
@@ -883,6 +886,7 @@ describe.each([
       return {
         name: `users_${generator.word()}`,
         sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
         type: "table",
         primary: ["id"],
         schema: {
@@ -1066,6 +1070,7 @@ describe.each([
         return {
           name: `users_${generator.word()}`,
           sourceId: INTERNAL_TABLE_SOURCE_ID,
+          sourceType: TableSourceType.INTERNAL,
           type: "table",
           primary: ["id"],
           schema: {
@@ -1603,7 +1608,7 @@ describe.each([
       if (config.datasource) {
         tableConfig.sourceId = config.datasource._id!
         if (config.datasource.plus) {
-          tableConfig.type = "external"
+          tableConfig.sourceType = TableSourceType.EXTERNAL
         }
       }
       const table = await config.api.table.create({

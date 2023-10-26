@@ -7,6 +7,7 @@ import {
   SourceName,
   Table,
   SearchParams,
+  TableSourceType,
 } from "@budibase/types"
 
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
@@ -59,9 +60,10 @@ describe.skip("external", () => {
 
     tableData = {
       name: generator.word(),
-      type: "external",
+      type: "table",
       primary: ["id"],
       sourceId: externalDatasource._id!,
+      sourceType: TableSourceType.EXTERNAL,
       schema: {
         id: {
           name: "id",

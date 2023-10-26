@@ -5,8 +5,14 @@ import { TableSchema } from "./schema"
 
 export const INTERNAL_TABLE_SOURCE_ID = "bb_internal"
 
+export enum TableSourceType {
+  EXTERNAL = "external",
+  INTERNAL = "internal",
+}
+
 export interface Table extends Document {
-  type?: string
+  type: "table"
+  sourceType: TableSourceType
   views?: { [key: string]: View | ViewV2 }
   name: string
   sourceId: string
