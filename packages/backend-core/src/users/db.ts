@@ -160,13 +160,9 @@ export class UserDB {
   }
 
   static async getUsersByAppAccess(opts: { appId?: string; limit?: number }) {
-    const params: any = {
-      include_docs: true,
-      limit: opts.limit || 50,
-    }
     let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
       opts.appId,
-      params
+      { limit: opts.limit || 50 }
     )
     return response
   }
