@@ -1,6 +1,6 @@
 <script>
   import { helpers } from "@budibase/shared-core"
-  import { Input, DetailSummary, notifications } from "@budibase/bbui"
+  import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
@@ -16,7 +16,6 @@
   export let isScreen = false
   export let onUpdateSetting
   export let showSectionTitle = true
-  export let showInstanceName = true
   export let tag
 
   $: sections = getSections(
@@ -137,7 +136,7 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      collapsible={false}
+      show={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">
@@ -150,15 +149,6 @@
         />
       {/if}
       <div class="settings">
-        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen && showInstanceName}
-          <PropertyControl
-            control={Input}
-            label="Name"
-            key="_instanceName"
-            value={componentInstance._instanceName}
-            onChange={val => updateSetting({ key: "_instanceName" }, val)}
-          />
-        {/if}
         {#each section.settings as setting (setting.key)}
           {#if setting.visible}
             <PropertyControl

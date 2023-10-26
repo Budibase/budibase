@@ -10,6 +10,7 @@
   export let defaultHeight = false
   export let center = false
   export let readonly = false
+  export let hidden = false
 
   $: style = getStyle(width, selectedUser)
 
@@ -30,6 +31,7 @@
   class:error
   class:center
   class:readonly
+  class:hidden
   class:default-height={defaultHeight}
   class:selected-other={selectedUser != null}
   class:alt={rowIdx % 2 === 1}
@@ -80,6 +82,9 @@
   }
   .cell.center {
     align-items: center;
+  }
+  .cell.hidden {
+    content-visibility: hidden;
   }
 
   /* Cell border */
