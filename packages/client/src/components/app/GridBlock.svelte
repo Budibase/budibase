@@ -4,6 +4,7 @@
   import { getContext } from "svelte"
   import { Grid } from "@budibase/frontend-core"
 
+  // table is actually any datasource, but called table for legacy compatibility
   export let table
   export let allowAddRows = true
   export let allowEditRows = true
@@ -21,7 +22,6 @@
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
-  $: handleRowClick = allowEditRows ? undefined : onRowClick
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -58,7 +58,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
-    on:rowclick={e => handleRowClick?.({ row: e.detail })}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
 

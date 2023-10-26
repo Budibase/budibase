@@ -1,12 +1,14 @@
 import { writable, derived, get } from "svelte/store"
-import { fetchData } from "../../../fetch/fetchData"
+import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
+import { Helpers } from "@budibase/bbui"
 
 export const createStores = () => {
   const rows = writable([])
   const loading = writable(false)
   const loaded = writable(false)
+  const refreshing = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
@@ -52,6 +54,7 @@ export const createStores = () => {
     fetch,
     rowLookupMap,
     loaded,
+    refreshing,
     loading,
     rowChangeCache,
     inProgressChanges,
@@ -65,7 +68,7 @@ export const createActions = context => {
     rows,
     rowLookupMap,
     definition,
-    filter,
+    allFilters,
     loading,
     sort,
     datasource,
@@ -76,11 +79,12 @@ export const createActions = context => {
     columns,
     rowChangeCache,
     inProgressChanges,
-    previousFocusedRowId,
     hasNextPage,
     error,
     notifications,
     fetch,
+    isDatasourcePlus,
+    refreshing,
   } = context
   const instanceLoaded = writable(false)
 
@@ -93,30 +97,36 @@ export const createActions = context => {
   datasource.subscribe(async $datasource => {
     // Unsub from previous fetch if one exists
     unsubscribe?.()
+    unsubscribe = null
     fetch.set(null)
     instanceLoaded.set(false)
     loading.set(true)
 
     // Abandon if we don't have a valid datasource
     if (!datasource.actions.isDatasourceValid($datasource)) {
+      error.set("Datasource is invalid")
       return
     }
 
     // Tick to allow other reactive logic to update stores when datasource changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()
-    const $filter = get(filter)
+    const $allFilters = get(allFilters)
     const $sort = get(sort)
+
+    // Determine how many rows to fetch per page
+    const features = datasource.actions.getFeatures()
+    const limit = features?.supportsPagination ? RowPageSize : null
 
     // Create new fetch model
     const newFetch = fetchData({
       API,
       datasource: $datasource,
       options: {
-        filter: $filter,
+        filter: $allFilters,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
-        limit: RowPageSize,
+        limit,
         paginate: true,
       },
     })
@@ -169,6 +179,9 @@ export const createActions = context => {
         // Notify that we're loaded
         loading.set(false)
       }
+
+      // Update refreshing state
+      refreshing.set($fetch.loading)
     })
 
     fetch.set(newFetch)
@@ -355,7 +368,7 @@ export const createActions = context => {
 
       // Update row
       const saved = await datasource.actions.updateRow({
-        ...row,
+        ...cleanRow(row),
         ...get(rowChangeCache)[rowId],
       })
 
@@ -411,8 +424,17 @@ export const createActions = context => {
     }
     let rowsToAppend = []
     let newRow
+    const $isDatasourcePlus = get(isDatasourcePlus)
     for (let i = 0; i < newRows.length; i++) {
       newRow = newRows[i]
+
+      // Ensure we have a unique _id.
+      // This means generating one for non DS+, overriting any that may already
+      // exist as we cannot allow duplicates.
+      if (!$isDatasourcePlus) {
+        newRow._id = Helpers.uuid()
+      }
+
       if (!rowCacheMap[newRow._id]) {
         rowCacheMap[newRow._id] = true
         rowsToAppend.push(newRow)
@@ -449,15 +471,16 @@ export const createActions = context => {
     return get(rowLookupMap)[id] != null
   }
 
-  // Wipe the row change cache when changing row
-  previousFocusedRowId.subscribe(id => {
-    if (id && !get(inProgressChanges)[id]) {
-      rowChangeCache.update(state => {
-        delete state[id]
-        return state
-      })
+  // Cleans a row by removing any internal grid metadata from it.
+  // Call this before passing a row to any sort of external flow.
+  const cleanRow = row => {
+    let clone = { ...row }
+    delete clone.__idx
+    if (!get(isDatasourcePlus)) {
+      delete clone._id
     }
-  })
+    return clone
+  }
 
   return {
     rows: {
@@ -474,7 +497,22 @@ export const createActions = context => {
         refreshRow,
         replaceRow,
         refreshData,
+        cleanRow,
       },
     },
   }
+}
+
+export const initialise = context => {
+  const { rowChangeCache, inProgressChanges, previousFocusedRowId } = context
+
+  // Wipe the row change cache when changing row
+  previousFocusedRowId.subscribe(id => {
+    if (id && !get(inProgressChanges)[id]) {
+      rowChangeCache.update(state => {
+        delete state[id]
+        return state
+      })
+    }
+  })
 }

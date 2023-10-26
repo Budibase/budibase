@@ -1,7 +1,9 @@
-import { derived, get, writable } from "svelte/store"
+import { derived, get } from "svelte/store"
+import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
+import { memo } from "../../../utils"
 
 export const createStores = () => {
-  const definition = writable(null)
+  const definition = memo(null)
 
   return {
     definition,
@@ -9,21 +11,43 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { definition, schemaOverrides, columnWhitelist } = context
+  const { API, definition, schemaOverrides, columnWhitelist, datasource } =
+    context
 
-  const schema = derived(
-    [definition, schemaOverrides, columnWhitelist],
-    ([$definition, $schemaOverrides, $columnWhitelist]) => {
-      if (!$definition?.schema) {
+  const schema = derived(definition, $definition => {
+    let schema = getDatasourceSchema({
+      API,
+      datasource: get(datasource),
+      definition: $definition,
+    })
+    if (!schema) {
+      return null
+    }
+
+    // Ensure schema is configured as objects.
+    // Certain datasources like queries use primitives.
+    Object.keys(schema || {}).forEach(key => {
+      if (typeof schema[key] !== "object") {
+        schema[key] = { type: schema[key] }
+      }
+    })
+
+    return schema
+  })
+
+  const enrichedSchema = derived(
+    [schema, schemaOverrides, columnWhitelist],
+    ([$schema, $schemaOverrides, $columnWhitelist]) => {
+      if (!$schema) {
         return null
       }
-      let newSchema = { ...$definition?.schema }
+      let enrichedSchema = { ...$schema }
 
       // Apply schema overrides
       Object.keys($schemaOverrides || {}).forEach(field => {
-        if (newSchema[field]) {
-          newSchema[field] = {
-            ...newSchema[field],
+        if (enrichedSchema[field]) {
+          enrichedSchema[field] = {
+            ...enrichedSchema[field],
             ...$schemaOverrides[field],
           }
         }
@@ -31,41 +55,64 @@ export const deriveStores = context => {
 
       // Apply whitelist if specified
       if ($columnWhitelist?.length) {
-        Object.keys(newSchema).forEach(key => {
+        Object.keys(enrichedSchema).forEach(key => {
           if (!$columnWhitelist.includes(key)) {
-            delete newSchema[key]
+            delete enrichedSchema[key]
           }
         })
       }
 
-      return newSchema
+      return enrichedSchema
     }
   )
 
+  const isDatasourcePlus = derived(datasource, $datasource => {
+    return ["table", "viewV2"].includes($datasource?.type)
+  })
+
   return {
     schema,
+    enrichedSchema,
+    isDatasourcePlus,
   }
 }
 
 export const createActions = context => {
-  const { datasource, definition, config, dispatch, table, viewV2 } = context
+  const {
+    API,
+    datasource,
+    definition,
+    config,
+    dispatch,
+    table,
+    viewV2,
+    nonPlus,
+  } = context
 
   // Gets the appropriate API for the configured datasource type
   const getAPI = () => {
     const $datasource = get(datasource)
-    switch ($datasource?.type) {
+    const type = $datasource?.type
+    if (!type) {
+      return null
+    }
+    switch (type) {
       case "table":
         return table
       case "viewV2":
         return viewV2
       default:
-        return null
+        return nonPlus
     }
   }
 
   // Refreshes the datasource definition
   const refreshDefinition = async () => {
-    return await getAPI()?.actions.refreshDefinition()
+    const def = await getDatasourceDefinition({
+      API,
+      datasource: get(datasource),
+    })
+    definition.set(def)
   }
 
   // Saves the datasource definition
@@ -113,6 +160,11 @@ export const createActions = context => {
     return getAPI()?.actions.canUseColumn(name)
   }
 
+  // Gets the default number of rows for a single page
+  const getFeatures = () => {
+    return getAPI()?.actions.getFeatures()
+  }
+
   return {
     datasource: {
       ...datasource,
@@ -125,6 +177,7 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }

@@ -5,6 +5,7 @@ import {
   encodeJSBinding,
   findHBSBlocks,
 } from "@budibase/string-templates"
+import { capitalise } from "helpers"
 
 /**
  * Recursively searches for a specific component ID
@@ -241,4 +242,14 @@ export const makeComponentUnique = component => {
 
   // Recurse on all children
   return JSON.parse(definition)
+}
+
+export const getComponentText = component => {
+  if (component?._instanceName) {
+    return component._instanceName
+  }
+  const type =
+    component._component.replace("@budibase/standard-components/", "") ||
+    "component"
+  return capitalise(type)
 }
