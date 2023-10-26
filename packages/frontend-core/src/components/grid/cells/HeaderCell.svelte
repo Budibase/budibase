@@ -26,7 +26,7 @@
     isResizing,
     rand,
     sort,
-    renderedColumns,
+    visibleColumns,
     dispatch,
     subscribe,
     config,
@@ -60,7 +60,7 @@
 
   $: sortedBy = column.name === $sort.column
   $: canMoveLeft = orderable && idx > 0
-  $: canMoveRight = orderable && idx < $renderedColumns.length - 1
+  $: canMoveRight = orderable && idx < $visibleColumns.length - 1
   $: sortingLabels = getSortingLabels(column.schema?.type)
   $: searchable = isColumnSearchable(column)
   $: resetSearchValue(column.name)
