@@ -204,7 +204,7 @@
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
 
           let bindingName =
-            automation.stepNames[allSteps[bindingRank - loopBlockCount].id]
+            automation.stepNames?.[allSteps[bindingRank - loopBlockCount].id]
 
           let categoryName
           if (idx === 0) {
@@ -287,7 +287,8 @@
     return (
       value.customType !== "row" &&
       value.customType !== "code" &&
-      value.customType !== "queryParams"
+      value.customType !== "queryParams" &&
+      value.customType !== "cron"
     )
   }
 

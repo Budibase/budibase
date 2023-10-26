@@ -229,7 +229,7 @@ const automationActions = store => ({
     }
     newAutomation.definition.stepNames = {
       ...newAutomation.definition.stepNames,
-      [stepId]: name,
+      [stepId]: name.trim(),
     }
 
     await store.actions.save(newAutomation)

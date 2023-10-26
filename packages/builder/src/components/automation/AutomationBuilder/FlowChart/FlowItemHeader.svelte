@@ -31,7 +31,7 @@
       )?.[0]
     }
   }
-  $: loopBlock = $selectedAutomation?.definition.steps.find(
+  $: loopBlock = $selectedAutomation.definition.steps.find(
     x => x.blockToLoop === block?.id
   )
 
@@ -57,12 +57,10 @@
   }
 
   const getAutomationNameError = name => {
-    if (name !== block.name && block.name.includes(name)) {
-      if (name?.length > 0) {
-        let invalidRoleName = !validRegex.test(name)
-        if (invalidRoleName) {
-          return "Please enter a role name consisting of only alphanumeric symbols and underscores"
-        }
+    if (name !== block.name && name?.length > 0) {
+      let invalidRoleName = !validRegex.test(name)
+      if (invalidRoleName) {
+        return "Please enter a role name consisting of only alphanumeric symbols and underscores"
       }
       return null
     }
@@ -73,14 +71,14 @@
   }
 
   const saveName = async () => {
-    if (automationNameError) {
+    if (automationNameError || block.name === automationName) {
       return
     }
 
     if (automationName.length === 0) {
-      automationStore.actions.deleteAutomationName(block.id)
+      await automationStore.actions.deleteAutomationName(block.id)
     } else {
-      automationStore.actions.saveAutomationName(block.id, automationName)
+      await automationStore.actions.saveAutomationName(block.id, automationName)
     }
   }
 </script>
@@ -114,7 +112,9 @@
         {#if isTrigger}
           <Body size="XS"><b>Trigger</b></Body>
         {:else}
-          <Body size="XS"><b>Step {idx}</b></Body>
+          <div style="margin-left: 2px;">
+            <Body size="XS"><b>Step {idx}</b></Body>
+          </div>
         {/if}
         <input
           placeholder="Enter some text"
@@ -122,18 +122,13 @@
           autocomplete="off"
           value={automationName}
           on:input={e => {
-            automationNameError = getAutomationNameError(e.target.value)
-            automationName = e.target.value
-            if (!automationNameError) {
-              automationNameError = false // Reset the error when input is valid
-            }
+            automationName = e.target.value.trim()
           }}
           on:click={startTyping}
           on:blur={async () => {
             typing = false
             if (automationNameError) {
               automationName = stepNames[block.id]
-              automationNameError = null
             } else {
               await saveName()
             }
@@ -225,7 +220,7 @@
     font-family: var(--font-sans);
     color: var(--ink);
     background-color: transparent;
-    border: none;
+    border: 1px solid transparent;
     font-size: var(--spectrum-alias-font-size-default);
     width: 260px;
     box-sizing: border-box;
@@ -246,11 +241,13 @@
   }
 
   .typing {
-    border: 0.5px solid var(--spectrum-global-color-static-blue-500);
+    border: 1px solid var(--spectrum-global-color-static-blue-500);
+    border-radius: 4px 4px 4px 4px;
   }
 
   .typing-error {
-    border: 0.5px solid var(--spectrum-global-color-static-red-500);
+    border: 1px solid var(--spectrum-global-color-static-red-500);
+    border-radius: 4px 4px 4px 4px;
   }
 
   .error-icon :global(.spectrum-Icon) {
