@@ -570,11 +570,9 @@ class TestConfiguration {
     if (!config.sourceId) {
       config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
-    if (this.datasource && !config.sourceId) {
-      config.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
-      if (this.datasource.plus) {
-        config.sourceType = TableSourceType.EXTERNAL
-      }
+    if (this.datasource?._id) {
+      config.sourceId = this.datasource._id
+      config.sourceType = TableSourceType.EXTERNAL
     }
 
     return this.updateTable(config, options)
@@ -608,11 +606,9 @@ class TestConfiguration {
       } as RelationshipFieldMetadata
     }
 
-    if (this.datasource && !tableConfig.sourceId) {
-      tableConfig.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
-      if (this.datasource.plus) {
-        tableConfig.sourceType = TableSourceType.EXTERNAL
-      }
+    if (this.datasource?._id) {
+      tableConfig.sourceId = this.datasource._id
+      tableConfig.sourceType = TableSourceType.EXTERNAL
     }
 
     return await this.createTable(tableConfig)
