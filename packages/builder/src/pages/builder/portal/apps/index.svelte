@@ -228,7 +228,7 @@
         <Layout noPadding gap="XS">
           <Heading size="L">{welcomeHeader}</Heading>
           <Body size="M">I have changed this.</Body>
-          <Body size="M">Testing</Body>
+          <Body size="M">Testing 12345</Body>
           <img
             src="https://static.wikia.nocookie.net/joke-battles/images/e/e4/Yee.jpg"
           />
