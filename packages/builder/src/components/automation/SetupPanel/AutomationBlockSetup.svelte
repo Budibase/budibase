@@ -283,6 +283,14 @@
     return !dependsOn || !!inputData[dependsOn]
   }
 
+  function shouldRenderField(value) {
+    return (
+      value.customType !== "row" &&
+      value.customType !== "code" &&
+      value.customType !== "queryParams"
+    )
+  }
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -295,15 +303,15 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
-      <div class:block-field={value.customType !== "row"}>
-        {#if key !== "fields" && value.type !== "boolean" && value.customType !== "row"}
+      <div class:block-field={shouldRenderField(value)}>
+        {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
               : null}>{value.title || (key === "row" ? "Table" : key)}</Label
           >
         {/if}
-        <div class:field-width={value.customType !== "row"}>
+        <div class:field-width={shouldRenderField(value)}>
           {#if value.type === "string" && value.enum && canShowField(key, value)}
             <Select
               on:change={e => onChange(e, key)}
