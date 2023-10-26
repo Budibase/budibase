@@ -167,6 +167,20 @@ router
     tableController.bulkImport
   )
 
+  /**
+   * @api {post} /api/tables/:tableId/migrate Migrate from one column type to another
+   * @apiName Migrate from one column type to another
+   * @apiGroup tables
+   * @apiPermission builder
+   * @apiDescription This endpoint will migrate a column from one type to another. You pass an old column definition
+   * that currently exists on the table, and a new column definition that doesn't, and the endpoint figures out how
+   * to migrate between the two. If it can't, an error is returned.
+   *
+   * @apiParam {string} tableId The ID of the table you're migrating columns for.
+   * @apiParam (Body) {object} [oldColumn] The old column definition.
+   * @apiParam (Body) {object} [newColumn] The new column definition.
+   * @apiSuccess {string} message A message stating that the data was migrated successfully.
+   */
   .post(
     "/api/tables/:tableId/migrate",
     paramResource("tableId"),
