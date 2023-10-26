@@ -57,14 +57,15 @@
   }
 
   const getAutomationNameError = name => {
-    if (name.length > 0) {
+    if (name !== block.name && block.name.includes(name)) {
+      if (name?.length > 0) {
       let invalidRoleName = !validRegex.test(name)
       if (invalidRoleName) {
         return "Please enter a role name consisting of only alphanumeric symbols and underscores"
       }
     }
     return null
-  }
+  }}
 
   const startTyping = async () => {
     typing = true
