@@ -5,6 +5,7 @@ import {
   Row,
   Table,
   INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
 } from "@budibase/types"
 import * as utils from "../../db/utils"
 import trimViewRowInfoMiddleware from "../trimViewRowInfo"
@@ -80,6 +81,7 @@ describe("trimViewRowInfo middleware", () => {
     _id: tableId,
     name: generator.word(),
     sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     type: "table",
     schema: {
       name: {

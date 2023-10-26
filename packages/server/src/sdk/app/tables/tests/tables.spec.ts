@@ -2,6 +2,7 @@ import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
+  TableSourceType,
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
@@ -19,6 +20,7 @@ describe("table sdk", () => {
       name: "TestTable",
       type: "table",
       sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,

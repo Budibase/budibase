@@ -11,6 +11,7 @@ import {
   ConnectionInfo,
   SourceName,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -309,11 +310,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         // table key doesn't exist yet
         if (!tables[tableName] || !tables[tableName].schema) {
           tables[tableName] = {
+            type: "table",
             _id: buildExternalTableId(datasourceId, tableName),
             primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
             sourceId: datasourceId,
+            sourceType: TableSourceType.EXTERNAL,
           }
         }
 

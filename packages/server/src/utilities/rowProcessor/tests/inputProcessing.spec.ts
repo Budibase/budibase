@@ -5,6 +5,7 @@ import {
   FieldTypeSubtypes,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import * as bbReferenceProcessor from "../bbReferenceProcessor"
 
@@ -26,6 +27,7 @@ describe("rowProcessor - inputProcessing", () => {
       name: "TestTable",
       type: "table",
       sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -77,6 +79,7 @@ describe("rowProcessor - inputProcessing", () => {
       name: "TestTable",
       type: "table",
       sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -118,6 +121,7 @@ describe("rowProcessor - inputProcessing", () => {
         name: "TestTable",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
         schema: {
           name: {
             type: FieldType.STRING,
@@ -159,6 +163,7 @@ describe("rowProcessor - inputProcessing", () => {
       name: "TestTable",
       type: "table",
       sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,

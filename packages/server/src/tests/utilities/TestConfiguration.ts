@@ -2,37 +2,31 @@ import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
-mocks.licenses.init(pro)
-
-// use unlimited license by default
-mocks.licenses.useUnlimited()
-
 import { init as dbInit } from "../../db"
-dbInit()
 import env from "../../environment"
 import {
-  basicTable,
-  basicRow,
-  basicRole,
   basicAutomation,
-  basicDatasource,
-  basicQuery,
-  basicScreen,
-  basicLayout,
-  basicWebhook,
   basicAutomationResults,
+  basicDatasource,
+  basicLayout,
+  basicQuery,
+  basicRole,
+  basicRow,
+  basicScreen,
+  basicTable,
+  basicWebhook,
 } from "./structures"
 import {
-  constants,
-  tenancy,
-  sessions,
+  auth,
   cache,
+  constants,
   context,
   db as dbCore,
   encryption,
-  auth,
-  roles,
   env as coreEnv,
+  roles,
+  sessions,
+  tenancy,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -43,23 +37,31 @@ import supertest from "supertest"
 import {
   App,
   AuthToken,
+  Automation,
+  CreateViewRequest,
   Datasource,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  RelationshipFieldMetadata,
+  RelationshipType,
   Row,
+  SearchFilters,
   SourceName,
   Table,
-  SearchFilters,
-  UserRoles,
-  Automation,
-  View,
-  FieldType,
-  RelationshipType,
-  CreateViewRequest,
-  RelationshipFieldMetadata,
+  TableSourceType,
   User,
-  INTERNAL_TABLE_SOURCE_ID,
+  UserRoles,
+  View,
 } from "@budibase/types"
 
 import API from "./api"
+
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
+dbInit()
 
 type DefaultUserValues = {
   globalUserId: string
@@ -69,8 +71,9 @@ type DefaultUserValues = {
   csrfToken: string
 }
 
-interface TableToBuild extends Omit<Table, "sourceId"> {
+interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
+  sourceType?: TableSourceType
 }
 
 class TestConfiguration {
@@ -547,9 +550,8 @@ class TestConfiguration {
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    if (!config.sourceId) {
-      config.sourceId = INTERNAL_TABLE_SOURCE_ID
-    }
+    config.sourceType = config.sourceType || TableSourceType.INTERNAL
+    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
     const response = await this._req(config, null, controllers.table.save)
     if (!skipReassigning) {
       this.table = response
@@ -571,7 +573,7 @@ class TestConfiguration {
     if (this.datasource && !config.sourceId) {
       config.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
       if (this.datasource.plus) {
-        config.type = "external"
+        config.sourceType = TableSourceType.EXTERNAL
       }
     }
 
@@ -609,12 +611,11 @@ class TestConfiguration {
     if (this.datasource && !tableConfig.sourceId) {
       tableConfig.sourceId = this.datasource._id || INTERNAL_TABLE_SOURCE_ID
       if (this.datasource.plus) {
-        tableConfig.type = "external"
+        tableConfig.sourceType = TableSourceType.EXTERNAL
       }
     }
 
-    const linkedTable = await this.createTable(tableConfig)
-    return linkedTable
+    return await this.createTable(tableConfig)
   }
 
   async createAttachmentTable() {

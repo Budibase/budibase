@@ -11,6 +11,7 @@ import {
   ConnectionInfo,
   SourceName,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -317,8 +318,10 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         }
         if (!tables[tableName]) {
           tables[tableName] = {
+            type: "table",
             _id: buildExternalTableId(datasourceId, tableName),
             sourceId: datasourceId,
+            sourceType: TableSourceType.EXTERNAL,
             primary: primaryKeys,
             name: tableName,
             schema,

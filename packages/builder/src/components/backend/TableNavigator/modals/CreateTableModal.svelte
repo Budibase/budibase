@@ -8,6 +8,7 @@
   import {
     BUDIBASE_INTERNAL_DB_ID,
     BUDIBASE_DATASOURCE_TYPE,
+    DB_TYPE_INTERNAL,
   } from "constants/backend"
 
   $: tableNames = $tables.list.map(table => table.name)
@@ -55,8 +56,9 @@
       name,
       schema: { ...schema },
       rows,
-      type: "internal",
+      type: "table",
       sourceId: targetDatasourceId,
+      sourceType: DB_TYPE_INTERNAL,
     }
 
     // Only set primary display if defined

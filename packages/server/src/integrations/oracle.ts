@@ -10,6 +10,7 @@ import {
   DatasourceFeature,
   ConnectionInfo,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -277,11 +278,13 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       let table = tables[oracleTable.name]
       if (!table) {
         table = {
+          type: "table",
           _id: buildExternalTableId(datasourceId, oracleTable.name),
           primary: [],
           name: oracleTable.name,
           schema: {},
           sourceId: datasourceId,
+          sourceType: TableSourceType.EXTERNAL,
         }
         tables[oracleTable.name] = table
       }

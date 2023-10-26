@@ -10,11 +10,12 @@ import {
   QueryJson,
   QueryType,
   Row,
+  Schema,
   SearchFilters,
   SortJson,
   Table,
   TableRequest,
-  Schema,
+  TableSourceType,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -263,10 +264,12 @@ class GoogleSheetsIntegration implements DatasourcePlus {
   ) {
     // base table
     const table: Table = {
+      type: "table",
       name: title,
       primary: [GOOGLE_SHEETS_PRIMARY_KEY],
       schema: {},
       sourceId: datasourceId,
+      sourceType: TableSourceType.EXTERNAL,
     }
     if (id) {
       table._id = id

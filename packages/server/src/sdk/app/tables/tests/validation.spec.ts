@@ -7,6 +7,7 @@ import {
   RelationshipType,
   SourceName,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import { isEqual } from "lodash"
 import { generateDatasourceID } from "../../../../db/utils"
@@ -19,11 +20,13 @@ const SCHEMA: Datasource = {
   _id: datasourceId,
   entities: {
     client: {
+      type: "table",
       _id: "tableA",
       name: "client",
       primary: ["idC"],
       primaryDisplay: "Name",
       sourceId: datasourceId,
+      sourceType: TableSourceType.EXTERNAL,
       schema: {
         idC: {
           autocolumn: true,
@@ -49,11 +52,13 @@ const SCHEMA: Datasource = {
       },
     },
     project: {
+      type: "table",
       _id: "tableB",
       name: "project",
       primary: ["idP"],
       primaryDisplay: "Name",
       sourceId: datasourceId,
+      sourceType: TableSourceType.EXTERNAL,
       schema: {
         idC: {
           externalType: "int unsigned",
@@ -82,7 +87,6 @@ const SCHEMA: Datasource = {
         },
       },
       sql: true,
-      type: "table",
     },
   },
 }

@@ -13,12 +13,13 @@ import {
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
+  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   TableResponse,
+  TableSourceType,
   UserCtx,
-  Row,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -29,7 +30,7 @@ function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
   if (table && !tableId) {
     tableId = table._id
   }
-  if (table && table.type === "external") {
+  if (table && table.sourceType === TableSourceType.EXTERNAL) {
     return external
   } else if (tableId && isExternalTable(tableId)) {
     return external
@@ -48,7 +49,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
-        type: "external",
+        sourceType: TableSourceType.EXTERNAL,
         sourceId: datasource._id!,
         sql: isSQL(datasource),
       }))

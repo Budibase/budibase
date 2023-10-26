@@ -6,6 +6,7 @@ import {
   RelationshipFieldMetadata,
   RelationshipType,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import { FieldTypes } from "../../../../constants"
 import {
@@ -78,12 +79,14 @@ export function generateManyLinkSchema(
   const jcTblName = generateJunctionTableName(column, table, relatedTable)
   const datasourceId = datasource._id!
   // first create the new table
-  const junctionTable = {
+  const junctionTable: Table = {
+    type: "table",
     _id: buildExternalTableId(datasourceId, jcTblName),
     name: jcTblName,
     primary: [primary, relatedPrimary],
     constrained: [primary, relatedPrimary],
     sourceId: datasourceId,
+    sourceType: TableSourceType.EXTERNAL,
     schema: {
       [primary]: foreignKeyStructure(primary, {
         toTable: table.name,

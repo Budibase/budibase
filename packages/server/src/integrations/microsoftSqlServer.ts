@@ -12,6 +12,7 @@ import {
   ConnectionInfo,
   SourceName,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -439,7 +440,9 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
+        type: "table",
         sourceId: datasourceId,
+        sourceType: TableSourceType.EXTERNAL,
         primary: primaryKeys,
         name: tableName,
         schema,
