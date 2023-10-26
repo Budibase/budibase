@@ -2,17 +2,16 @@
   import { getContext, onMount } from "svelte"
   import { Icon, Popover, clickOutside } from "@budibase/bbui"
 
-  const { renderedColumns, scroll, hiddenColumnsWidth, width, subscribe } =
-    getContext("grid")
+  const { visibleColumns, scroll, width, subscribe } = getContext("grid")
 
   let anchor
   let open = false
 
-  $: columnsWidth = $renderedColumns.reduce(
+  $: columnsWidth = $visibleColumns.reduce(
     (total, col) => (total += col.width),
     0
   )
-  $: end = $hiddenColumnsWidth + columnsWidth - 1 - $scroll.left
+  $: end = columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - 40, end)
 
   const close = () => {
@@ -34,7 +33,7 @@
 <Popover
   bind:open
   {anchor}
-  align={$renderedColumns.length ? "right" : "left"}
+  align={$visibleColumns.length ? "right" : "left"}
   offset={0}
   popoverTarget={document.getElementById(`add-column-button`)}
   customZindex={100}

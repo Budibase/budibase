@@ -134,8 +134,6 @@ spec:
           {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
-        - name: SENTRY_DSN
-          value: {{ .Values.globals.sentryDSN | quote }}
         - name: POSTHOG_TOKEN
           value: {{ .Values.globals.posthogToken | quote }}
         - name: WORKER_URL
