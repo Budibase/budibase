@@ -260,31 +260,29 @@
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#if Array.isArray(value) && value.length}
-        {#each value as relationship}
-          {#if relationship[primaryDisplay] || relationship.primaryDisplay}
-            <div class="badge">
-              <span
-                on:click={editable
-                  ? () => showRelationship(relationship._id)
-                  : null}
-              >
-                {readable(
-                  relationship[primaryDisplay] || relationship.primaryDisplay
-                )}
-              </span>
-              {#if editable}
-                <Icon
-                  name="Close"
-                  size="XS"
-                  hoverable
-                  on:click={() => toggleRow(relationship)}
-                />
-              {/if}
-            </div>
-          {/if}
-        {/each}
-      {/if}
+      {#each value || [] as relationship}
+        {#if relationship[primaryDisplay] || relationship.primaryDisplay}
+          <div class="badge">
+            <span
+              on:click={editable
+                ? () => showRelationship(relationship._id)
+                : null}
+            >
+              {readable(
+                relationship[primaryDisplay] || relationship.primaryDisplay
+              )}
+            </span>
+            {#if editable}
+              <Icon
+                name="Close"
+                size="XS"
+                hoverable
+                on:click={() => toggleRow(relationship)}
+              />
+            {/if}
+          </div>
+        {/if}
+      {/each}
       {#if editable}
         <div class="add" on:click={open}>
           <Icon name="Add" size="S" />
@@ -320,7 +318,7 @@
         <div class="searching">
           <ProgressCircle size="S" />
         </div>
-      {:else if Array.isArray(searchResults) && searchResults.length}
+      {:else if searchResults?.length}
         <div class="results">
           {#each searchResults as row, idx}
             <div
