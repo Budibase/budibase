@@ -78,7 +78,10 @@ export function createQueriesStore() {
     const parameters = query.parameters.reduce(
       (acc, next) => ({
         ...acc,
-        [next.name]: next.default,
+        [next.name]: {
+          default: next.default,
+          extendedType: next.extendedType,
+        },
       }),
       {}
     )

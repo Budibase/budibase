@@ -2,7 +2,6 @@ import {
   CreateDatasourceRequest,
   Datasource,
   VerifyDatasourceRequest,
-  VerifyDatasourceResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"

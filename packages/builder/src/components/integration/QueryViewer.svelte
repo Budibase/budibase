@@ -25,6 +25,7 @@
   import { Utils } from "@budibase/frontend-core"
 
   export let query
+  export let source
   let queryHash
 
   let loading = false
@@ -263,12 +264,14 @@
         {#key newQuery.parameters}
           <BindingBuilder
             hideHeading
+            {source}
             queryBindings={newQuery.parameters}
             on:change={e => {
               newQuery.parameters = e.detail.map(binding => {
                 return {
                   name: binding.name,
                   default: binding.value,
+                  extendedType: binding.extendedType,
                 }
               })
             }}

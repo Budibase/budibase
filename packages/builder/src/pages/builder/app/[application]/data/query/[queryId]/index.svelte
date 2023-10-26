@@ -15,6 +15,6 @@
   {#if isRestQuery}
     <RestQueryViewer queryId={$queries.selectedQueryId} />
   {:else}
-    <QueryViewer query={editableQuery} />
+    <QueryViewer source={datasource?.source} query={editableQuery} />
   {/if}
 {/if}

@@ -47,7 +47,7 @@ export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
 
 export async function enrichContext(
   fields: Record<string, any>,
-  inputs = {}
+  inputs: Record<string, any> = {}
 ): Promise<Record<string, any>> {
   const enrichedQuery: Record<string, any> = Array.isArray(fields) ? [] : {}
   if (!fields || !inputs) {

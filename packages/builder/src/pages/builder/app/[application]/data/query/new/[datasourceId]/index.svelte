@@ -36,6 +36,6 @@
   {#if isRestQuery}
     <RestQueryViewer />
   {:else}
-    <QueryViewer {query} />
+    <QueryViewer source={datasource?.source} {query} />
   {/if}
 {/if}

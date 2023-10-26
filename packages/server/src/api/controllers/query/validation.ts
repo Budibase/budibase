@@ -15,6 +15,7 @@ export function queryValidation() {
       Joi.object({
         name: Joi.string(),
         default: Joi.string().allow(""),
+        extendedType: Joi.string().allow(null).allow(""),
       })
     ),
     queryVerb: Joi.string().allow().required(),

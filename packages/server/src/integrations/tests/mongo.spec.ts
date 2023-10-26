@@ -2,6 +2,16 @@ const mongo = require("mongodb")
 import { default as MongoDBIntegration } from "../mongodb"
 jest.mock("mongodb")
 
+jest.mock("../../sdk", () => ({
+  queries: jest.requireActual("../../sdk/app/queries/queries.ts"),
+}))
+jest.mock("@budibase/backend-core", () => ({
+  ...jest.requireActual("@budibase/backend-core"),
+  context: {
+    getEnvironmentVariables: () => ({}),
+  },
+}))
+
 class TestConfiguration {
   integration: any
 
@@ -53,43 +63,35 @@ describe("MongoDB Integration", () => {
 
   it("calls the delete method with the correct params", async () => {
     const query = {
-      json: {
-        filter: {
-          id: "test",
-        },
-        options: {
-          opt: "option",
-        },
-      },
+      json: `{ "id": "test" },
+        { "opt": "option" }`,
       extra: { collection: "testCollection", actionType: "deleteOne" },
     }
     await config.integration.delete(query)
     expect(config.integration.client.deleteOne).toHaveBeenCalledWith(
-      query.json.filter,
-      query.json.options
+      { id: "test" },
+      { opt: "option" }
     )
   })
 
   it("calls the update method with the correct params", async () => {
     const query = {
-      json: {
-        filter: {
-          id: "test",
+      json: `{
+          "id": "test"
         },
-        update: {
-          name: "TestName",
+        {
+          "name": "TestName"
         },
-        options: {
-          upsert: false,
-        },
-      },
+        {
+          "upsert": false
+        }`,
       extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
     expect(config.integration.client.updateOne).toHaveBeenCalledWith(
-      query.json.filter,
-      query.json.update,
-      query.json.options
+      { id: "test" },
+      { name: "TestName" },
+      { upsert: false }
     )
   })
 
@@ -112,19 +114,17 @@ describe("MongoDB Integration", () => {
 
   it("creates ObjectIds if the field contains a match on ObjectId", async () => {
     const query = {
-      json: {
-        filter: {
-          _id: "ObjectId('ACBD12345678ABCD12345678')",
-          name: "ObjectId('BBBB12345678ABCD12345678')",
+      json: `{
+          "_id": "ObjectId('ACBD12345678ABCD12345678')",
+          "name": "ObjectId('BBBB12345678ABCD12345678')"
         },
-        update: {
-          _id: "ObjectId('FFFF12345678ABCD12345678')",
-          name: "ObjectId('CCCC12345678ABCD12345678')",
+        {
+          "_id": "ObjectId('FFFF12345678ABCD12345678')",
+          "name": "ObjectId('CCCC12345678ABCD12345678')"
         },
-        options: {
-          upsert: false,
-        },
-      },
+        {
+          "upsert": false
+        }`,
       extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
@@ -146,21 +146,19 @@ describe("MongoDB Integration", () => {
 
   it("creates ObjectIds if the $ operator fields contains a match on ObjectId", async () => {
     const query = {
-      json: {
-        filter: {
-          _id: {
-            $eq: "ObjectId('ACBD12345678ABCD12345678')",
-          },
+      json: `{
+          "_id": {
+            "$eq": "ObjectId('ACBD12345678ABCD12345678')"
+          }
         },
-        update: {
-          $set: {
-            _id: "ObjectId('FFFF12345678ABCD12345678')",
-          },
+        {
+          "$set": {
+            "_id": "ObjectId('FFFF12345678ABCD12345678')"
+          }
         },
-        options: {
-          upsert: true,
-        },
-      },
+        {
+          "upsert": true
+        }`,
       extra: { collection: "testCollection", actionType: "updateOne" },
     }
     await config.integration.update(query)
@@ -184,22 +182,20 @@ describe("MongoDB Integration", () => {
 
   it("supports findOneAndUpdate", async () => {
     const query = {
-      json: {
-        filter: {
-          _id: {
-            $eq: "ObjectId('ACBD12345678ABCD12345678')",
-          },
+      json: `{
+          "_id": {
+            "$eq": "ObjectId('ACBD12345678ABCD12345678')"
+          }
         },
-        update: {
-          $set: {
-            name: "UPDATED",
-            age: 99,
-          },
+        {
+          "$set": {
+            "name": "UPDATED",
+            "age": 99
+          }
         },
-        options: {
-          upsert: false,
-        },
-      },
+        {
+          "upsert": false
+        }`,
       extra: { collection: "testCollection", actionType: "findOneAndUpdate" },
     }
     await config.integration.read(query)

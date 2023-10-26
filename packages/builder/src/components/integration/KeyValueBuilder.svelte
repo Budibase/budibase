@@ -35,15 +35,23 @@
   export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
+  export let extendedTypes
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
-    value,
+    value: value.value,
+    extendedType: value.extendedType,
   }))
   let fieldActivity = buildFieldActivity(activity)
 
   $: object = fields.reduce(
-    (acc, next) => ({ ...acc, [next.name]: next.value }),
+    (acc, next) => ({
+      ...acc,
+      [next.name]: {
+        value: next.value,
+        extendedType: next.extendedType,
+      },
+    }),
     {}
   )
 
@@ -61,7 +69,7 @@
   }
 
   export function addEntry() {
-    fields = [...fields, { name: "", value: "" }]
+    fields = [...fields, { name: "", value: "", extendedType: "" }]
     fieldActivity = [...fieldActivity, true]
     changed()
   }
@@ -89,9 +97,16 @@
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
 {#if Object.keys(object || {}).length > 0}
   {#if headings}
-    <div class="container" class:container-active={toggle}>
+    <div
+      class="container"
+      class:container-active={toggle}
+      class:container-extended-types={extendedTypes}
+    >
       <Label {tooltip}>{keyHeading || keyPlaceholder}</Label>
       <Label>{valueHeading || valuePlaceholder}</Label>
+      {#if extendedTypes}
+        <Label>Type</Label>
+      {/if}
       {#if toggle}
         <Label>Active</Label>
       {/if}
@@ -103,6 +118,7 @@
     class:container-menu={showMenu}
     class:readOnly
     class:readOnly-menu={readOnly && showMenu}
+    class:container-extended-types={extendedTypes}
   >
     {#each fields as field, idx}
       <Input
@@ -134,6 +150,14 @@
           readonly={readOnly}
           bind:value={field.value}
           on:blur={changed}
+        />
+      {/if}
+      {#if extendedTypes}
+        <Select
+          placeholder={"Default"}
+          bind:value={field.extendedType}
+          on:change={changed}
+          options={extendedTypes}
         />
       {/if}
       {#if toggle}
@@ -170,6 +194,9 @@
 {/if}
 
 <style>
+  .container-extended-types {
+    grid-template-columns: 1fr 1fr 1fr 20px !important;
+  }
   .container {
     display: grid;
     grid-template-columns: 1fr 1fr 20px;

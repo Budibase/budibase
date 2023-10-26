@@ -8,9 +8,8 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { SourceName } from "@budibase/types"
 
-import { isSQL } from "../integrations/utils"
+import { hasExtendedTypes, isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
 import { Query } from "@budibase/types"
 
@@ -20,6 +19,7 @@ class QueryRunner {
   queryId: string
   fields: any
   parameters: any
+  extendedTypeParameters: any
   pagination: any
   transformer: any
   cachedVariables: any[]
@@ -35,7 +35,14 @@ class QueryRunner {
     this.datasource = input.datasource
     this.queryVerb = input.queryVerb
     this.fields = input.fields
-    this.parameters = input.parameters
+    this.parameters = Object.entries(input.parameters || {}).reduce(
+      (acc: any, [key, value]) => {
+        acc[key] = value?.default ?? value
+        return acc
+      },
+      {}
+    )
+    this.extendedTypeParameters = input.parameters
     this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
@@ -96,9 +103,13 @@ class QueryRunner {
     }
 
     let query
-    // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
+      // handle SQL injections by interpolating the variables
       query = await interpolateSQL(fieldsClone, enrichedContext, integration)
+    } else if (hasExtendedTypes(datasourceClone)) {
+      // handle extended type binding mapping in the integration
+      query = fieldsClone
+      query.parameters = this.extendedTypeParameters
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }

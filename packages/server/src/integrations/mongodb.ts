@@ -9,14 +9,17 @@ import {
 import {
   MongoClient,
   ObjectId,
-  Filter,
-  UpdateFilter,
+  Decimal128,
+  Long,
   FindOneAndUpdateOptions,
   UpdateOptions,
-  OperationOptions,
   MongoClientOptions,
+  WithId,
+  Document,
 } from "mongodb"
 import environment from "../environment"
+import sdk from "../sdk"
+import cloneDeep from "lodash/fp/cloneDeep"
 
 interface MongoDBConfig {
   connectionString: string
@@ -27,10 +30,25 @@ interface MongoDBConfig {
 }
 
 interface MongoDBQuery {
+  parameters?: {
+    [key: string]: ExtendedTypeParam
+  }
   json: object | string
   extra: {
     [key: string]: string
   }
+}
+
+interface ExtendedTypeParam {
+  name: string
+  default: any
+  extendedType: string
+}
+
+interface MongoDBQueryParams {
+  filter: object
+  update?: object
+  options?: object
 }
 
 const getSchema = () => {
@@ -385,55 +403,180 @@ class MongoIntegration implements IntegrationBase {
   matchId(value?: string) {
     return value?.match(/(?<=objectid\(['"]).*(?=['"]\))/gi)?.[0]
   }
-
-  hasObjectId(value?: any): boolean {
-    return (
-      typeof value === "string" && value.toLowerCase().startsWith("objectid")
-    )
+  replaceTempIds(
+    enriched: { [key: string]: any },
+    extended: {
+      tempId: string
+      value: any
+    }
+  ) {
+    for (let field of Object.keys(enriched || {})) {
+      if (
+        enriched[field] ===
+        extended.tempId.substring(1, extended.tempId.length - 1)
+      ) {
+        enriched[field] = extended.value
+      } else if (
+        enriched[field] instanceof Object &&
+        !(enriched[field] instanceof ObjectId)
+      ) {
+        this.replaceTempIds(enriched[field], extended)
+      }
+    }
+  }
+  createObjectIds(enriched: { [key: string]: any }) {
+    Object.keys(enriched || {}).forEach(field => {
+      if (typeof enriched[field] === "string") {
+        const objectId = this.matchId(enriched[field])
+        if (objectId) {
+          enriched[field] = ObjectId.createFromHexString(objectId)
+        }
+      } else if (
+        enriched[field] instanceof Object &&
+        !(enriched[field] instanceof ObjectId)
+      ) {
+        this.createObjectIds(enriched[field])
+      }
+    })
+    return enriched
+  }
+  createObjectIdsFromBindings(
+    json: string,
+    extendedParams?: { [key: string]: any }
+  ): object {
+    let tempId = this.matchId(json)
+    let regex = new RegExp(`(objectid\\(['"])${tempId}(['"]\\))`, "gi")
+    let objectIds = []
+    while (tempId) {
+      json = json.replace(regex, tempId.substring(1, tempId.length - 1))
+      objectIds.push(tempId)
+      tempId = this.matchId(json)
+    }
+    let jsonObj = JSON.parse(json)
+    for (let extended of Object.values(extendedParams || {})) {
+      if (objectIds.includes(extended.tempId)) {
+        this.replaceTempIds(jsonObj, {
+          tempId: extended.tempId,
+          value: ObjectId.createFromHexString(extended.value),
+        })
+      }
+    }
+    return jsonObj
   }
 
-  createObjectIds(json: any): any {
-    const self = this
-
-    function interpolateObjectIds(json: any) {
-      for (let field of Object.keys(json || {})) {
-        if (json[field] instanceof Object) {
-          json[field] = self.createObjectIds(json[field])
-        }
-        if (self.hasObjectId(json[field])) {
-          const id = self.matchId(json[field])
-          if (id) {
-            json[field] = ObjectId.createFromHexString(id)
-          }
-        }
-      }
-      return json
+  getJsonString(value: object | string): string {
+    if (typeof value === "string") {
+      return value
     }
-
-    if (Array.isArray(json)) {
-      for (let i = 0; i < json.length; i++) {
-        if (self.hasObjectId(json[i])) {
-          const id = self.matchId(json[i])
-          if (id) {
-            json[i] = ObjectId.createFromHexString(id)
-          }
-        } else {
-          json[i] = interpolateObjectIds(json[i])
-        }
-      }
-      return json
-    }
-    return interpolateObjectIds(json)
+    return JSON.stringify(value)
   }
 
-  parseQueryParams(params: string, mode: string) {
+  async enrichQuery(
+    json: string,
+    parameters:
+      | {
+          [key: string]: ExtendedTypeParam
+        }
+      | undefined
+  ): Promise<object | object[]> {
+    let extendedParams: {
+      [key: string]: any
+    } = cloneDeep(parameters || {})
+    for (let [key, value] of Object.entries(parameters || {})) {
+      const tempId =
+        Date.now().toString(36) + Math.random().toString(36).substring(2)
+      if (value.extendedType === "Decimal128") {
+        extendedParams[key] = {
+          tempId: `"${tempId}"`,
+          value: Decimal128.fromString(value.default),
+        }
+      } else if (value.extendedType === "Long") {
+        extendedParams[key] = {
+          tempId: `"${tempId}"`,
+          value: Long.fromString(value.default),
+        }
+      } else if (value.extendedType === "ObjectId") {
+        extendedParams[key] = {
+          tempId: `"${tempId}"`,
+          value: value.default
+            ? ObjectId.createFromHexString(value.default)
+            : new ObjectId(),
+        }
+      } else if (value.extendedType === "Date") {
+        extendedParams[key] = {
+          tempId: `"${tempId}"`,
+          value: value.default ? new Date(value.default) : null,
+        }
+      } else {
+        extendedParams[key] = {
+          tempId: `"${tempId}"`,
+          value: value.default,
+        }
+      }
+    }
+    let placeholderParams: any = cloneDeep(parameters)
+    for (let key of Object.keys(placeholderParams || {})) {
+      placeholderParams[key] = extendedParams[key].tempId
+    }
+    let enriched = await sdk.queries.enrichContext({ json }, placeholderParams)
+    if (typeof enriched.json === "string") {
+      // create objectids from string for backwards compatibility
+      enriched.json = this.createObjectIdsFromBindings(
+        enriched.json,
+        extendedParams || {}
+      )
+    }
+    for (let extended of Object.values(extendedParams || {})) {
+      this.replaceTempIds(enriched.json, extended)
+    }
+    if (typeof enriched?.json !== "object") {
+      throw "Invalid JSON"
+    }
+    return this.createObjectIds(enriched.json)
+  }
+
+  convertResponseType(doc: WithId<Document> | null): object | null {
+    if (!doc) {
+      return doc
+    }
+    for (let [key, value] of Object.entries(doc)) {
+      switch (value?._bsontype) {
+        case "Timestamp":
+          doc[key] = value.toJSON()["$timestamp"]
+          break
+        case "Decimal128":
+          doc[key] = value.toString()
+          break
+        case "Long":
+          doc[key] = value.toString()
+          break
+      }
+    }
+    return doc
+  }
+  convertResponseTypes(response: WithId<Document>[]): object {
+    for (let doc of response) {
+      this.convertResponseType(doc)
+    }
+    return response
+  }
+
+  async parseQueryParams(
+    json: string,
+    mode: string,
+    parameters:
+      | {
+          [key: string]: ExtendedTypeParam
+        }
+      | undefined
+  ): Promise<MongoDBQueryParams> {
     let queryParams = []
     let openCount = 0
     let inQuotes = false
     let i = 0
     let startIndex = 0
-    for (let c of params) {
-      if (c === '"' && i > 0 && params[i - 1] !== "\\") {
+    for (let c of json) {
+      if (c === '"' && i > 0 && json[i - 1] !== "\\") {
         inQuotes = !inQuotes
       }
       if (c === "{" && !inQuotes) {
@@ -443,7 +586,7 @@ class MongoIntegration implements IntegrationBase {
         }
       } else if (c === "}" && !inQuotes) {
         if (openCount === 1) {
-          queryParams.push(JSON.parse(params.substring(startIndex, i + 1)))
+          queryParams.push(json.substring(startIndex, i + 1))
         }
         openCount--
       }
@@ -454,14 +597,14 @@ class MongoIntegration implements IntegrationBase {
     let group3 = queryParams[2] ?? {}
     if (mode === "update") {
       return {
-        filter: group1,
-        update: group2,
-        options: group3,
+        filter: await this.enrichQuery(group1, parameters),
+        update: await this.enrichQuery(group2, parameters),
+        options: await this.enrichQuery(group3, parameters),
       }
     }
     return {
-      filter: group1,
-      options: group2,
+      filter: await this.enrichQuery(group1, parameters),
+      options: await this.enrichQuery(group2, parameters),
     }
   }
 
@@ -470,7 +613,10 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let json = this.createObjectIds(query.json)
+      let json = await this.enrichQuery(
+        this.getJsonString(query.json),
+        query.parameters
+      )
 
       // For mongodb we add an extra actionType to specify
       // which method we want to call on the collection
@@ -479,7 +625,7 @@ class MongoIntegration implements IntegrationBase {
           return await collection.insertOne(json)
         }
         case "insertMany": {
-          return await collection.insertMany(json)
+          return await collection.insertMany(json as object[])
         }
         default: {
           throw new Error(
@@ -500,39 +646,48 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let json = this.createObjectIds(query.json)
+      let json = {}
+      if (query.extra.actionType !== "findOneAndUpdate") {
+        json = await this.enrichQuery(
+          this.getJsonString(query.json),
+          query.parameters
+        )
+      }
 
       switch (query.extra.actionType) {
         case "find": {
           if (json) {
-            return await collection.find(json).toArray()
+            return this.convertResponseTypes(
+              await collection.find(json).toArray()
+            )
           } else {
-            return await collection.find().toArray()
+            return this.convertResponseTypes(await collection.find().toArray())
           }
         }
         case "findOne": {
-          return await collection.findOne(json)
+          return this.convertResponseType(await collection.findOne(json))
         }
         case "findOneAndUpdate": {
-          if (typeof query.json === "string") {
-            json = this.parseQueryParams(query.json, "update")
-          }
-          let findAndUpdateJson = this.createObjectIds(json) as {
-            filter: Filter<any>
-            update: UpdateFilter<any>
-            options: FindOneAndUpdateOptions
-          }
-          return await collection.findOneAndUpdate(
-            findAndUpdateJson.filter,
-            findAndUpdateJson.update,
-            findAndUpdateJson.options
+          let json = await this.parseQueryParams(
+            this.getJsonString(query.json),
+            "update",
+            query.parameters
+          )
+          return this.convertResponseType(
+            (
+              await collection.findOneAndUpdate(
+                json.filter,
+                json.update || {},
+                json.options as FindOneAndUpdateOptions
+              )
+            )?.value
           )
         }
         case "count": {
           return await collection.countDocuments(json)
         }
         case "distinct": {
-          return await collection.distinct(json)
+          return await collection.distinct(json?.toString())
         }
         default: {
           throw new Error(
@@ -553,28 +708,23 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let queryJson = query.json
-      if (typeof queryJson === "string") {
-        queryJson = this.parseQueryParams(queryJson, "update")
-      }
-      let json = this.createObjectIds(queryJson) as {
-        filter: Filter<any>
-        update: UpdateFilter<any>
-        options: object
-      }
-
+      let json = await this.parseQueryParams(
+        this.getJsonString(query.json),
+        "update",
+        query.parameters
+      )
       switch (query.extra.actionType) {
         case "updateOne": {
           return await collection.updateOne(
             json.filter,
-            json.update,
+            json.update || {},
             json.options as UpdateOptions
           )
         }
         case "updateMany": {
           return await collection.updateMany(
             json.filter,
-            json.update,
+            json.update || {},
             json.options as UpdateOptions
           )
         }
@@ -597,14 +747,11 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let queryJson = query.json
-      if (typeof queryJson === "string") {
-        queryJson = this.parseQueryParams(queryJson, "delete")
-      }
-      let json = this.createObjectIds(queryJson) as {
-        filter: Filter<any>
-        options: OperationOptions
-      }
+      let json = await this.parseQueryParams(
+        this.getJsonString(query.json),
+        "delete",
+        query.parameters
+      )
       if (!json.options) {
         json = {
           filter: json,
@@ -634,9 +781,12 @@ class MongoIntegration implements IntegrationBase {
   }
 
   async aggregate(query: {
-    json: object
+    json: string | object
     steps: any[]
     extra: { [key: string]: string }
+    parameters?: {
+      [key: string]: ExtendedTypeParam
+    }
   }) {
     try {
       await this.connect()
@@ -644,20 +794,24 @@ class MongoIntegration implements IntegrationBase {
       const collection = db.collection(query.extra.collection)
       let response = []
       if (query.extra?.actionType === "pipeline") {
-        for await (const doc of collection.aggregate(
-          query.steps.map(({ key, value }) => {
-            let temp: any = {}
-            temp[key] = JSON.parse(value.value)
-            return this.createObjectIds(temp)
+        let steps = []
+        for (let step of query.steps) {
+          steps.push({
+            [step.key]: await this.enrichQuery(
+              step.value.value,
+              query.parameters
+            ),
           })
-        )) {
+        }
+        for await (const doc of collection.aggregate(steps)) {
           response.push(doc)
         }
       } else {
-        const stages: Array<any> = query.json as Array<any>
-        for await (const doc of collection.aggregate(
-          stages ? this.createObjectIds(stages) : []
-        )) {
+        const stages = (await this.enrichQuery(
+          this.getJsonString(query.json),
+          query.parameters
+        )) as object[]
+        for await (const doc of collection.aggregate(stages ?? [])) {
           response.push(doc)
         }
       }

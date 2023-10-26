@@ -231,11 +231,14 @@ async function execute(
     authConfigCtx = getAuthConfig(ctx)
   }
   const enrichedParameters = ctx.request.body.parameters || {}
-  // make sure parameters are fully enriched with defaults
+  // make sure parameters are fully enriched
   if (query && query.parameters) {
     for (let parameter of query.parameters) {
-      if (!enrichedParameters[parameter.name]) {
-        enrichedParameters[parameter.name] = parameter.default
+      enrichedParameters[parameter.name] = {
+        default: !enrichedParameters[parameter.name]
+          ? parameter.default
+          : enrichedParameters[parameter.name],
+        extendedType: parameter.extendedType,
       }
     }
   }

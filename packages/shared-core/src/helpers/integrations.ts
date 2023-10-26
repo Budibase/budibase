@@ -16,3 +16,11 @@ export function isSQL(datasource: Datasource): boolean {
   ]
   return SQL.indexOf(datasource.source) !== -1 || datasource.isSQL === true
 }
+
+export function hasExtendedTypes(datasource: Datasource): boolean {
+  if (!datasource || !datasource.source) {
+    return false
+  }
+  const EXTENDED_TYPE_DATASOURCES = [SourceName.MONGODB]
+  return EXTENDED_TYPE_DATASOURCES.indexOf(datasource.source) !== -1
+}

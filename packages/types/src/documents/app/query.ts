@@ -14,6 +14,7 @@ export interface Query extends Document {
 export interface QueryParameter {
   name: string
   default: string
+  extendedType: string
 }
 
 export interface RestQueryFields {
