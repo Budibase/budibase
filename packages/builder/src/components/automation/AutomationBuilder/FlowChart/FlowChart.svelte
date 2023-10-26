@@ -15,7 +15,6 @@
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
-  let hasScrolled = false
   $: blocks = getBlocks(automation)
 
   const getBlocks = automation => {
@@ -36,13 +35,11 @@
   }
 
   const handleScroll = e => {
-    if (e.target.scrollTop >= 30 && !hasScrolled) {
+    if (e.target.scrollTop >= 30) {
       scrolling = true
-      hasScrolled = true
-    } else if (e.target.scrollTop < 30 && hasScrolled) {
+    } else if (e.target.scrollTop) {
       // Set scrolling back to false if scrolled back to less than 100px
       scrolling = false
-      hasScrolled = false
     }
   }
 </script>
