@@ -43,7 +43,5 @@ export const initialise = context => {
 
   // Wipe the caches whenever the datasource changes to ensure we aren't
   // storing any stale information
-  datasource.subscribe(() => {
-    cache.actions.resetPrimaryDisplayCache()
-  })
+  datasource.subscribe(cache.actions.resetPrimaryDisplayCache)
 }
