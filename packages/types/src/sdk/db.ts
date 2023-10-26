@@ -54,15 +54,17 @@ export type DatabaseDeleteIndexOpts = {
   type?: string | undefined
 }
 
+export type DatabaseKey = string | number | {} | DatabaseKey[]
+
 export type DatabaseQueryOpts = {
   include_docs?: boolean
-  startkey?: string
-  endkey?: string
+  startkey?: DatabaseKey
+  endkey?: DatabaseKey
   limit?: number
   skip?: number
   descending?: boolean
-  key?: string
-  keys?: string[]
+  key?: DatabaseKey
+  keys?: DatabaseKey[]
   group?: boolean
   startkey_docid?: string
 }
