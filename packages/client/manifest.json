@@ -258,6 +258,186 @@
     "description": "Contains your app screens",
     "static": true
   },
+  "buttongroup": {
+    "name": "Button group",
+    "icon": "Button",
+    "hasChildren": false,
+    "settings": [
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "buttonConfiguration",
+            "key": "buttons",
+            "nested": true,
+            "defaultValue": [
+              {
+                "type": "cta",
+                "text": "Button 1"
+              },
+              {
+                "type": "primary",
+                "text": "Button 2"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Layout",
+        "settings": [
+          {
+            "type": "select",
+            "label": "Direction",
+            "key": "direction",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Column",
+                "value": "column",
+                "barIcon": "ViewColumn",
+                "barTitle": "Column layout"
+              },
+              {
+                "label": "Row",
+                "value": "row",
+                "barIcon": "ViewRow",
+                "barTitle": "Row layout"
+              }
+            ],
+            "defaultValue": "row"
+          },
+          {
+            "type": "select",
+            "label": "Horiz. align",
+            "key": "hAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Left",
+                "value": "left",
+                "barIcon": "AlignLeft",
+                "barTitle": "Align left"
+              },
+              {
+                "label": "Center",
+                "value": "center",
+                "barIcon": "AlignCenter",
+                "barTitle": "Align center"
+              },
+              {
+                "label": "Right",
+                "value": "right",
+                "barIcon": "AlignRight",
+                "barTitle": "Align right"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveLeftRight",
+                "barTitle": "Align stretched horizontally"
+              }
+            ],
+            "defaultValue": "left"
+          },
+          {
+            "type": "select",
+            "label": "Vert. align",
+            "key": "vAlign",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Top",
+                "value": "top",
+                "barIcon": "AlignTop",
+                "barTitle": "Align top"
+              },
+              {
+                "label": "Middle",
+                "value": "middle",
+                "barIcon": "AlignMiddle",
+                "barTitle": "Align middle"
+              },
+              {
+                "label": "Bottom",
+                "value": "bottom",
+                "barIcon": "AlignBottom",
+                "barTitle": "Align bottom"
+              },
+              {
+                "label": "Stretch",
+                "value": "stretch",
+                "barIcon": "MoveUpDown",
+                "barTitle": "Align stretched vertically"
+              }
+            ],
+            "defaultValue": "top"
+          },
+          {
+            "type": "select",
+            "label": "Size",
+            "key": "size",
+            "showInBar": true,
+            "barStyle": "buttons",
+            "options": [
+              {
+                "label": "Shrink",
+                "value": "shrink",
+                "barIcon": "Minimize",
+                "barTitle": "Shrink container"
+              },
+              {
+                "label": "Grow",
+                "value": "grow",
+                "barIcon": "Maximize",
+                "barTitle": "Grow container"
+              }
+            ],
+            "defaultValue": "shrink"
+          },
+          {
+            "type": "select",
+            "label": "Gap",
+            "key": "gap",
+            "showInBar": true,
+            "barStyle": "picker",
+            "options": [
+              {
+                "label": "None",
+                "value": "N"
+              },
+              {
+                "label": "Small",
+                "value": "S"
+              },
+              {
+                "label": "Medium",
+                "value": "M"
+              },
+              {
+                "label": "Large",
+                "value": "L"
+              }
+            ],
+            "defaultValue": "M"
+          },
+          {
+            "type": "boolean",
+            "label": "Wrap",
+            "key": "wrap",
+            "showInBar": true,
+            "barIcon": "ModernGridView",
+            "barTitle": "Wrap"
+          }
+        ]
+      }
+    ]
+  },
   "button": {
     "name": "Button",
     "description": "A basic html button that is ready for styling",
@@ -2409,7 +2589,6 @@
         "key": "disabled",
         "defaultValue": false
       },
-
       {
         "type": "text",
         "label": "Initial form step",
