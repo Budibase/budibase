@@ -17,7 +17,7 @@ import {
   processInputBBReferences,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
-import { isExternalTable } from "../../integrations/utils"
+import { isExternalTableID } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -267,7 +267,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     )) as Row[]
   }
   // remove null properties to match internal API
-  if (isExternalTable(table._id!)) {
+  if (isExternalTableID(table._id!)) {
     for (let row of enriched) {
       for (let key of Object.keys(row)) {
         if (row[key] === null) {

@@ -1,5 +1,5 @@
 import { Table, RenameColumn } from "@budibase/types"
-import { isExternalTable } from "../../../integrations/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 import sdk from "../../index"
 import { context } from "@budibase/backend-core"
 import { isExternal } from "./utils"
@@ -14,7 +14,7 @@ export * as internal from "./internal"
 export async function saveTable(table: Table): Promise<Table> {
   const db = context.getAppDB()
   let resp: DocumentInsertResponse
-  if (isExternalTable(table._id!)) {
+  if (isExternalTableID(table._id!)) {
     const datasource = await sdk.datasources.get(table.sourceId!)
     datasource.entities![table.name] = table
     resp = await db.put(datasource)
