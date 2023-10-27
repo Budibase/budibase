@@ -2080,10 +2080,10 @@
     striptags "^3.1.1"
     to-gfm-code-block "^0.1.1"
 
-"@budibase/nano@10.1.3":
-  version "10.1.3"
-  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.3.tgz#81b99d76b5c256a393e6ee0e284a6aecc517e4b8"
-  integrity sha512-UuhwjKCfVO+oVB0dbKpssZfTfb5k3CTrbrjqdx0kd971zzSRMFJ0TwvBB/2Z7kgOOA+Evoq4BSd747meEz21YA==
+"@budibase/nano@10.1.4":
+  version "10.1.4"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.4.tgz#5c2670d0b4c12d736ddd6581c57d47c0aa45efad"
+  integrity sha512-J+IVaAljGideDvJss/AUxXA1599HEIUJo5c0LLlmc1KMA3GZWZjyX+w2fxAw3qF7hqFvX+qAStQgdcD3+/GPMA==
   dependencies:
     "@types/tough-cookie" "^4.0.2"
     axios "^1.1.3"
