@@ -102,13 +102,13 @@
 </div>
 
 <style>
-  .spectrum-Form-item.span-2 {
+  :global(.form-block .spectrum-Form-item.span-2) {
     grid-column: span 2;
   }
-  .spectrum-Form-item.span-3 {
+  :global(.form-block .spectrum-Form-item.span-3) {
     grid-column: span 3;
   }
-  .spectrum-Form-item.span-6 {
+  :global(.form-block .spectrum-Form-item.span-6) {
     grid-column: span 6;
   }
   .spectrum-Form-item.above {
