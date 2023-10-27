@@ -1,7 +1,15 @@
 import { roles } from "@budibase/backend-core"
 import { BASE_LAYOUT_PROP_IDS } from "./layouts"
 
-export function createHomeScreen() {
+export function createHomeScreen(
+  config: {
+    roleId: string
+    route: string
+  } = {
+    roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+    route: "/",
+  }
+) {
   return {
     description: "",
     url: "",
@@ -40,8 +48,8 @@ export function createHomeScreen() {
       gap: "M",
     },
     routing: {
-      route: "/",
-      roleId: roles.BUILTIN_ROLE_IDS.BASIC,
+      route: config.route,
+      roleId: config.roleId,
     },
     name: "home-screen",
   }
