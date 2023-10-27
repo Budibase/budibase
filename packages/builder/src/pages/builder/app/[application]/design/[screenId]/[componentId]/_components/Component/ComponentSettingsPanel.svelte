@@ -91,7 +91,12 @@
         />
       {/if}
       {#if section == "styles"}
-        <DesignSection {componentInstance} {componentDefinition} {bindings} />
+        <DesignSection
+          {componentInstance}
+          {componentBindings}
+          {componentDefinition}
+          {bindings}
+        />
         <CustomStylesSection
           {componentInstance}
           {componentDefinition}

@@ -5392,38 +5392,6 @@
         "name": "Fields",
         "settings": [
           {
-            "type": "select",
-            "label": "Align labels",
-            "key": "labelPosition",
-            "defaultValue": "left",
-            "options": [
-              {
-                "label": "Left",
-                "value": "left"
-              },
-              {
-                "label": "Above",
-                "value": "above"
-              }
-            ]
-          },
-          {
-            "type": "select",
-            "label": "Size",
-            "key": "size",
-            "options": [
-              {
-                "label": "Medium",
-                "value": "spectrum--medium"
-              },
-              {
-                "label": "Large",
-                "value": "spectrum--large"
-              }
-            ],
-            "defaultValue": "spectrum--medium"
-          },
-          {
             "type": "fieldConfiguration",
             "key": "fields",
             "nested": true,
@@ -5442,6 +5410,40 @@
             }
           }
         ]
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Align labels",
+        "key": "labelPosition",
+        "defaultValue": "left",
+        "options": [
+          {
+            "label": "Left",
+            "value": "left"
+          },
+          {
+            "label": "Above",
+            "value": "above"
+          }
+        ]
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
       }
     ],
     "context": [
