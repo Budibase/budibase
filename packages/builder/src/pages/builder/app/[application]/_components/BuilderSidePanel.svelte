@@ -114,8 +114,9 @@
       query: {
         appId: query || !filterByAppAccess ? null : prodAppId,
         email: query,
-        paginated: query || !filterByAppAccess ? null : false,
       },
+      limit: 50,
+      paginate: query || !filterByAppAccess ? null : false,
     })
     await usersFetch.refresh()
 

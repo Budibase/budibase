@@ -1,46 +1,32 @@
 import { get } from "svelte/store"
 
-const SuppressErrors = true
-
 export const createActions = context => {
-  const { definition, API, datasource, columns, stickyColumn } = context
+  const { columns, stickyColumn, table, viewV2 } = context
 
-  const refreshDefinition = async () => {
-    definition.set(await API.fetchTableDefinition(get(datasource).tableId))
+  const saveDefinition = async () => {
+    throw "This datasource does not support updating the definition"
   }
 
-  const saveDefinition = async newDefinition => {
-    await API.saveTable(newDefinition)
+  const saveRow = async () => {
+    throw "This datasource does not support saving rows"
   }
 
-  const saveRow = async row => {
-    row.tableId = get(datasource)?.tableId
-    return await API.saveRow(row, SuppressErrors)
+  const deleteRows = async () => {
+    throw "This datasource does not support deleting rows"
   }
 
-  const deleteRows = async rows => {
-    await API.deleteRows({
-      tableId: get(datasource).tableId,
-      rows,
-    })
+  const getRow = () => {
+    throw "This datasource does not support fetching individual rows"
   }
 
   const isDatasourceValid = datasource => {
-    return datasource?.type === "table" && datasource?.tableId
-  }
-
-  const getRow = async id => {
-    const res = await API.searchTable({
-      tableId: get(datasource).tableId,
-      limit: 1,
-      query: {
-        equal: {
-          _id: id,
-        },
-      },
-      paginate: false,
-    })
-    return res?.rows?.[0]
+    // There are many different types and shapes of datasource, so we only
+    // check that we aren't null
+    return (
+      !table.actions.isDatasourceValid(datasource) &&
+      !viewV2.actions.isDatasourceValid(datasource) &&
+      datasource?.type != null
+    )
   }
 
   const canUseColumn = name => {
@@ -49,10 +35,14 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
+  const getFeatures = () => {
+    // We don't support any features
+    return {}
+  }
+
   return {
-    table: {
+    nonPlus: {
       actions: {
-        refreshDefinition,
         saveDefinition,
         addRow: saveRow,
         updateRow: saveRow,
@@ -60,38 +50,46 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
+        getFeatures,
       },
     },
   }
 }
 
+// Small util to compare datasource definitions
+const isSameDatasource = (a, b) => {
+  return JSON.stringify(a) === JSON.stringify(b)
+}
+
 export const initialise = context => {
   const {
     datasource,
-    fetch,
-    filter,
     sort,
-    table,
+    filter,
+    inlineFilters,
+    allFilters,
+    nonPlus,
     initialFilter,
     initialSortColumn,
     initialSortOrder,
+    fetch,
   } = context
-
   // Keep a list of subscriptions so that we can clear them when the datasource
   // config changes
   let unsubscribers = []
 
-  // Observe datasource changes and apply logic for table datasources
+  // Observe datasource changes and apply logic for view V2 datasources
   datasource.subscribe($datasource => {
     // Clear previous subscriptions
     unsubscribers?.forEach(unsubscribe => unsubscribe())
     unsubscribers = []
-    if (!table.actions.isDatasourceValid($datasource)) {
+    if (!nonPlus.actions.isDatasourceValid($datasource)) {
       return
     }
 
     // Wipe state
     filter.set(get(initialFilter))
+    inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
       order: get(initialSortOrder) || "ascending",
@@ -99,14 +97,14 @@ export const initialise = context => {
 
     // Update fetch when filter changes
     unsubscribers.push(
-      filter.subscribe($filter => {
+      allFilters.subscribe($allFilters => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
         $fetch.update({
-          filter: $filter,
+          filter: $allFilters,
         })
       })
     )
@@ -116,7 +114,7 @@ export const initialise = context => {
       sort.subscribe($sort => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
-        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+        if (!isSameDatasource($fetch?.options?.datasource, $datasource)) {
           return
         }
         $fetch.update({

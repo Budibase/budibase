@@ -16,6 +16,7 @@ jest.mock("../../sdk", () => ({
 import sdk from "../../sdk"
 import { Next } from "koa"
 
+const tableId = utils.generateTableID()
 const mockGetView = sdk.views.get as jest.MockedFunction<typeof sdk.views.get>
 const mockGetTable = sdk.tables.getTable as jest.MockedFunction<
   typeof sdk.tables.getTable
@@ -41,6 +42,7 @@ class TestConfiguration {
       body: ctxRequestBody,
     }
     this.params.viewId = viewId
+    this.params.sourceId = tableId
     return this.middleware(
       {
         request: this.request as any,
@@ -69,7 +71,7 @@ describe("trimViewRowInfo middleware", () => {
   })
 
   const table: Table = {
-    _id: utils.generateTableID(),
+    _id: tableId,
     name: generator.word(),
     type: "table",
     schema: {

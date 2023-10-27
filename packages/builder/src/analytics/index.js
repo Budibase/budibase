@@ -23,7 +23,7 @@ class AnalyticsHub {
     posthog.identify(id)
   }
 
-  captureException(err) {}
+  captureException(_err) {}
 
   captureEvent(eventName, props = {}) {
     posthog.captureEvent(eventName, props)

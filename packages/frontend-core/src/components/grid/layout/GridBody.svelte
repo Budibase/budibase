@@ -7,7 +7,7 @@
   const {
     bounds,
     renderedRows,
-    renderedColumns,
+    visibleColumns,
     rowVerticalInversionIndex,
     hoveredRowId,
     dispatch,
@@ -17,7 +17,7 @@
 
   let body
 
-  $: renderColumnsWidth = $renderedColumns.reduce(
+  $: columnsWidth = $visibleColumns.reduce(
     (total, col) => (total += col.width),
     0
   )
@@ -47,7 +47,7 @@
       <div
         class="blank"
         class:highlighted={$hoveredRowId === BlankRowID}
-        style="width:{renderColumnsWidth}px"
+        style="width:{columnsWidth}px"
         on:mouseenter={$isDragging ? null : () => ($hoveredRowId = BlankRowID)}
         on:mouseleave={$isDragging ? null : () => ($hoveredRowId = null)}
         on:click={() => dispatch("add-row-inline")}

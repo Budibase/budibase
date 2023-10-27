@@ -6,7 +6,7 @@
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
   import { createEventDispatcher } from "svelte"
-  import { UNSORTABLE_TYPES } from "constants"
+  import { canBeSortColumn } from "@budibase/shared-core"
 
   export let componentInstance = {}
   export let value = ""
@@ -20,7 +20,7 @@
 
   const getSortableFields = schema => {
     return Object.entries(schema || {})
-      .filter(entry => !UNSORTABLE_TYPES.includes(entry[1].type))
+      .filter(entry => canBeSortColumn(entry[1].type))
       .map(entry => entry[0])
   }
 
