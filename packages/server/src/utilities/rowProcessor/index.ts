@@ -241,7 +241,7 @@ export async function outputProcessing<T extends Row[] | Row>(
           continue
         }
         row[property].forEach((attachment: RowAttachment) => {
-          attachment.url = objectStore.getAppFileUrl(attachment.key)
+          attachment.url ??= objectStore.getAppFileUrl(attachment.key)
         })
       }
     } else if (
