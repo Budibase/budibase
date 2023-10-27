@@ -1,19 +1,22 @@
-import { events, context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import {
-  FieldType,
-  SaveTableRequest,
-  RelationshipType,
-  Table,
-  ViewCalculation,
   AutoFieldSubTypes,
-  InternalTable,
   FieldSubtype,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
+  RelationshipType,
   Row,
+  SaveTableRequest,
+  Table,
+  TableSourceType,
+  ViewCalculation,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-const { basicTable } = setup.structures
 import sdk from "../../../sdk"
+
+const { basicTable } = setup.structures
 
 describe("/tables", () => {
   let request = setup.getRequest()
@@ -242,7 +245,8 @@ describe("/tables", () => {
         .expect(200)
       const fetchedTable = res.body[0]
       expect(fetchedTable.name).toEqual(testTable.name)
-      expect(fetchedTable.type).toEqual("internal")
+      expect(fetchedTable.type).toEqual("table")
+      expect(fetchedTable.sourceType).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -432,6 +436,8 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
         schema: {
           "user relationship": {
             type: FieldType.LINK,
@@ -491,6 +497,8 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
         schema: {
           "user relationship": {
             type: FieldType.LINK,
@@ -552,6 +560,8 @@ describe("/tables", () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
         schema: {
           "user relationship": {
             type: FieldType.LINK,

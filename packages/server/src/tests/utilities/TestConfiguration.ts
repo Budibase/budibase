@@ -2,37 +2,31 @@ import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
-mocks.licenses.init(pro)
-
-// use unlimited license by default
-mocks.licenses.useUnlimited()
-
 import { init as dbInit } from "../../db"
-dbInit()
 import env from "../../environment"
 import {
-  basicTable,
-  basicRow,
-  basicRole,
   basicAutomation,
-  basicDatasource,
-  basicQuery,
-  basicScreen,
-  basicLayout,
-  basicWebhook,
   basicAutomationResults,
+  basicDatasource,
+  basicLayout,
+  basicQuery,
+  basicRole,
+  basicRow,
+  basicScreen,
+  basicTable,
+  basicWebhook,
 } from "./structures"
 import {
-  constants,
-  tenancy,
-  sessions,
+  auth,
   cache,
+  constants,
   context,
   db as dbCore,
   encryption,
-  auth,
-  roles,
   env as coreEnv,
+  roles,
+  sessions,
+  tenancy,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -43,22 +37,31 @@ import supertest from "supertest"
 import {
   App,
   AuthToken,
+  Automation,
+  CreateViewRequest,
   Datasource,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  RelationshipFieldMetadata,
+  RelationshipType,
   Row,
+  SearchFilters,
   SourceName,
   Table,
-  SearchFilters,
-  UserRoles,
-  Automation,
-  View,
-  FieldType,
-  RelationshipType,
-  CreateViewRequest,
-  RelationshipFieldMetadata,
+  TableSourceType,
   User,
+  UserRoles,
+  View,
 } from "@budibase/types"
 
 import API from "./api"
+
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
+dbInit()
 
 type DefaultUserValues = {
   globalUserId: string
@@ -66,6 +69,11 @@ type DefaultUserValues = {
   firstName: string
   lastName: string
   csrfToken: string
+}
+
+interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+  sourceId?: string
+  sourceType?: TableSourceType
 }
 
 class TestConfiguration {
@@ -538,10 +546,12 @@ class TestConfiguration {
   // TABLE
 
   async updateTable(
-    config?: Table,
+    config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
+    config.sourceType = config.sourceType || TableSourceType.INTERNAL
+    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
     const response = await this._req(config, null, controllers.table.save)
     if (!skipReassigning) {
       this.table = response
@@ -549,18 +559,32 @@ class TestConfiguration {
     return response
   }
 
-  async createTable(config?: Table, options = { skipReassigning: false }) {
+  async createTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
     if (config != null && config._id) {
       delete config._id
     }
     config = config || basicTable()
-    if (this.datasource && !config.sourceId) {
-      config.sourceId = this.datasource._id
-      if (this.datasource.plus) {
-        config.type = "external"
-      }
+    if (!config.sourceId) {
+      config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
+    return this.updateTable(config, options)
+  }
 
+  async createExternalTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
+    if (config != null && config._id) {
+      delete config._id
+    }
+    config = config || basicTable()
+    if (this.datasource?._id) {
+      config.sourceId = this.datasource._id
+      config.sourceType = TableSourceType.EXTERNAL
+    }
     return this.updateTable(config, options)
   }
 
@@ -572,12 +596,15 @@ class TestConfiguration {
   async createLinkedTable(
     relationshipType = RelationshipType.ONE_TO_MANY,
     links: any = ["link"],
-    config?: Table
+    config?: TableToBuild
   ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
     const tableConfig = config || basicTable()
+    if (!tableConfig.sourceId) {
+      tableConfig.sourceId = INTERNAL_TABLE_SOURCE_ID
+    }
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
@@ -589,15 +616,12 @@ class TestConfiguration {
       } as RelationshipFieldMetadata
     }
 
-    if (this.datasource && !tableConfig.sourceId) {
+    if (this.datasource?._id) {
       tableConfig.sourceId = this.datasource._id
-      if (this.datasource.plus) {
-        tableConfig.type = "external"
-      }
+      tableConfig.sourceType = TableSourceType.EXTERNAL
     }
 
-    const linkedTable = await this.createTable(tableConfig)
-    return linkedTable
+    return await this.createTable(tableConfig)
   }
 
   async createAttachmentTable() {

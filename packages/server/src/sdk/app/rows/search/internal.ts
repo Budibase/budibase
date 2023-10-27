@@ -197,11 +197,7 @@ export async function fetchView(
     try {
       table = await sdk.tables.getTable(viewInfo.meta.tableId)
     } catch (err) {
-      /* istanbul ignore next */
-      table = {
-        name: "",
-        schema: {},
-      }
+      throw new Error("Unable to retrieve view table.")
     }
     rows = await outputProcessing(table, response.rows)
   }

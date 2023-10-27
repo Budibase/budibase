@@ -19,12 +19,16 @@ import {
   FieldType,
   SourceName,
   Table,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
 } from "@budibase/types"
 
 export function basicTable(): Table {
   return {
     name: "TestTable",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     schema: {
       name: {
         type: FieldType.STRING,

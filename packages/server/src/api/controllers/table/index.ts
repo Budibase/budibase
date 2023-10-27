@@ -5,34 +5,38 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { isExternalTable, isSQL } from "../../../integrations/utils"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  DocumentType,
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
+  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   TableResponse,
+  TableSourceType,
   UserCtx,
-  Row,
+  SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
 import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
-import { processInternalTable } from "../../../sdk/app/tables/getters"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
-  if (table && !tableId) {
-    tableId = table._id
-  }
-  if (table && table.type === "external") {
+  if (table && isExternalTable(table)) {
     return external
-  } else if (tableId && isExternalTable(tableId)) {
+  }
+  if (tableId && isExternalTableID(tableId)) {
     return external
   }
   return internal
@@ -49,8 +53,8 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
-        type: "external",
-        sourceId: datasource._id,
+        sourceType: TableSourceType.EXTERNAL,
+        sourceId: datasource._id!,
         sql: isSQL(datasource),
       }))
     } else {

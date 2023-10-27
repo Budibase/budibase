@@ -1,5 +1,5 @@
 import { Row, SearchFilters, SearchParams } from "@budibase/types"
-import { isExternalTable } from "../../../integrations/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
@@ -12,7 +12,7 @@ export interface ViewParams {
 }
 
 function pickApi(tableId: any) {
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     return external
   }
   return internal
