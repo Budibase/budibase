@@ -5757,22 +5757,6 @@
         "settings": [
           {
             "type": "select",
-            "label": "Align labels",
-            "key": "labelPosition",
-            "defaultValue": "left",
-            "options": [
-              {
-                "label": "Left",
-                "value": "left"
-              },
-              {
-                "label": "Above",
-                "value": "above"
-              }
-            ]
-          },
-          {
-            "type": "select",
             "label": "Size",
             "key": "size",
             "options": [
