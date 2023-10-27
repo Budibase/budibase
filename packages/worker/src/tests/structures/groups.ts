@@ -1,8 +1,8 @@
 import { generator } from "@budibase/backend-core/tests"
 import { db } from "@budibase/backend-core"
-import { UserGroupRoles } from "@budibase/types"
+import { UserGroup as UserGroupType, UserGroupRoles } from "@budibase/types"
 
-export const UserGroup = () => {
+export function UserGroup(): UserGroupType {
   const appsCount = generator.integer({ min: 0, max: 3 })
   const roles = Array.from({ length: appsCount }).reduce(
     (p: UserGroupRoles, v) => {
@@ -14,13 +14,11 @@ export const UserGroup = () => {
     {}
   )
 
-  let group = {
-    apps: [],
+  return {
     color: generator.color(),
     icon: generator.word(),
     name: generator.word(),
     roles: roles,
     users: [],
   }
-  return group
 }
