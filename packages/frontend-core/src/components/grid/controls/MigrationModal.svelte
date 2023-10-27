@@ -17,6 +17,9 @@
   $: error = checkNewColumnName(newColumnName)
 
   const checkNewColumnName = newColumnName => {
+    if (newColumnName === "") {
+      return "Column name can't be empty."
+    }
     if (newColumnName in $definition.schema) {
       return "New column name can't be the same as an existing column name."
     }
