@@ -35,7 +35,6 @@
   export let isLayout = false
   export let isRoot = false
   export let isBlock = false
-  export let onClick = null
 
   // Get parent contexts
   const context = getContext("context")
@@ -132,10 +131,7 @@
   // Interactive components can be selected, dragged and highlighted inside
   // the builder preview
   $: builderInteractive =
-    $builderStore.inBuilder &&
-    insideScreenslot &&
-    (!isBlock || onClick) &&
-    !instance.static
+    $builderStore.inBuilder && insideScreenslot && !isBlock && !instance.static
   $: devToolsInteractive = $devToolsStore.allowSelection && !isBlock
   $: interactive = !isRoot && (builderInteractive || devToolsInteractive)
   $: editing = editable && selected && $builderStore.editMode
@@ -200,7 +196,6 @@
       draggable,
       editable,
       isBlock,
-      onClick,
     },
     empty: emptyState,
     selected,

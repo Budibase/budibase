@@ -2,10 +2,9 @@
   import { Icon, Popover, Layout } from "@budibase/bbui"
   import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
   import { getContext } from "svelte"
-  import { onPreviewEvent } from "builderStore/previewEvents"
 
   export let anchor
   export let componentInstance
@@ -21,7 +20,7 @@
   let open = false
 
   // Auto hide the component when another item is selected
-  $: if (open && $draggable.selected != componentInstance._id) {
+  $: if (open && $draggable.selected !== componentInstance._id) {
     popover.hide()
   }
 
@@ -79,22 +78,6 @@
 
     return { ...cfg, left, top }
   }
-
-  const handlePreviewEvent = event => {
-    const { type, data } = event?.data || {}
-    if (type === "click-form-block-field") {
-      console.log(data.field)
-      if (data.field === "asdasd") {
-        popover.show()
-        open = true
-      } else {
-        popover.hide()
-        open = false
-      }
-    }
-  }
-
-  onMount(() => onPreviewEvent(handlePreviewEvent))
 </script>
 
 <Icon
@@ -117,13 +100,13 @@
   }}
   on:close={() => {
     open = false
-    if ($draggable.selected == componentInstance._id) {
+    if ($draggable.selected === componentInstance._id) {
       $draggable.actions.select()
     }
   }}
   {anchor}
   align="left-outside"
-  showPopover={drawers.length == 0}
+  showPopover={drawers.length === 0}
   clickOutsideOverride={drawers.length > 0}
   maxHeight={600}
   handlePostionUpdate={customPositionHandler}

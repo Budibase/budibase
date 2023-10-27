@@ -8,7 +8,6 @@ const createBuilderStore = () => {
     inBuilder: false,
     screen: null,
     selectedComponentId: null,
-    selectedBlockComponentId: null,
     editMode: false,
     previewId: null,
     theme: null,
@@ -35,9 +34,6 @@ const createBuilderStore = () => {
       }))
       devToolsStore.actions.setAllowSelection(false)
       eventStore.actions.dispatchEvent("select-component", { id })
-    },
-    clickFormBlockField: field => {
-      eventStore.actions.dispatchEvent("click-form-block-field", { field })
     },
     updateProp: (prop, value) => {
       eventStore.actions.dispatchEvent("update-prop", { prop, value })
