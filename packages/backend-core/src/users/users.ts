@@ -20,6 +20,7 @@ import {
   SearchUsersRequest,
   User,
   DatabaseQueryOpts,
+  CouchFindOptions,
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
@@ -140,7 +141,7 @@ export const getGlobalUserByEmail = async (
 
 export const searchGlobalUsersByApp = async (
   appId: any,
-  opts: any,
+  opts: DatabaseQueryOpts,
   getOpts?: GetOpts
 ) => {
   if (typeof appId !== "string") {
@@ -166,7 +167,10 @@ export const searchGlobalUsersByApp = async (
   Return any user who potentially has access to the application
   Admins, developers and app users with the explicitly role.
 */
-export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
+export const searchGlobalUsersByAppAccess = async (
+  appId: any,
+  opts?: { limit?: number }
+) => {
   const roleSelector = `roles.${appId}`
 
   let orQuery: any[] = [
@@ -187,7 +191,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
     orQuery.push(roleCheck)
   }
 
-  let searchOptions = {
+  let searchOptions: CouchFindOptions = {
     selector: {
       $or: orQuery,
       _id: {
@@ -198,7 +202,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
   }
 
   const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
-  return resp?.rows
+  return resp.rows
 }
 
 export const getGlobalUserByAppPage = (appId: string, user: User) => {
