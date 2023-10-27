@@ -11,7 +11,6 @@
   export let name
   export let order = 0
   export let containsSlot = false
-  export let onClick = null
 
   // ID is only exposed as a prop so that it can be bound to from parent
   // block components
@@ -26,7 +25,6 @@
   $: id = `${block.id}-${context ?? rand}`
   $: parentId = $component?.id
   $: inBuilder = $builderStore.inBuilder
-  $: blockSelected = $builderStore.selectedComponentId === block.id
   $: instance = {
     ...props,
     _component: getComponent(type),
@@ -78,6 +76,6 @@
   })
 </script>
 
-<Component {instance} isBlock onClick={blockSelected ? onClick : null}>
+<Component {instance} isBlock>
   <slot />
 </Component>
