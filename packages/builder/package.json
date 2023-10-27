@@ -85,7 +85,7 @@
     "@babel/preset-env": "^7.13.12",
     "@rollup/plugin-replace": "^5.0.3",
     "@roxi/routify": "2.18.12",
-    "@sveltejs/vite-plugin-svelte": "2.4.6",
+    "@sveltejs/vite-plugin-svelte": "1.4.0",
     "@testing-library/jest-dom": "5.17.0",
     "@testing-library/svelte": "^3.2.2",
     "babel-jest": "^29.6.2",
