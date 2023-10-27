@@ -233,7 +233,7 @@
       {/if}
       {#key fields}
         <BlockComponent type="container">
-          <div class="fields" class:mobile={$context.device.mobile}>
+          <div class="form-block fields" class:mobile={$context.device.mobile}>
             {#each fields as field, idx}
               {#if getComponentForField(field) && field.active}
                 <BlockComponent
