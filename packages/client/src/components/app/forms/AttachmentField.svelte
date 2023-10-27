@@ -3,13 +3,16 @@
   import { CoreDropzone } from "@budibase/bbui"
   import { getContext } from "svelte"
   import { ValidFileExtensions } from "@budibase/shared-core"
+  import { environmentStore } from "../../../stores/index.js"
 
   export let field
   export let label
   export let disabled = false
   export let compact = false
   export let validation
-  export let extensions = ValidFileExtensions.map(ext => `.${ext}`).join(", ")
+  export let extensions = $environmentStore.cloud
+    ? ValidFileExtensions.map(ext => `.${ext}`).join(", ")
+    : "*"
   export let onChange
   export let maximum = undefined
 
