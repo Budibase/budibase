@@ -10,7 +10,6 @@
   export let size
   export let disabled
   export let fields
-  export let labelPosition
   export let title
   export let description
   export let saveButtonLabel
