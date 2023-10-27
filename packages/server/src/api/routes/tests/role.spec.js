@@ -158,5 +158,25 @@ describe("/roles", () => {
       expect(res.body.length).toBe(1)
       expect(res.body[0]).toBe("PUBLIC")
     })
+
+    it("should not fetch higher level accessible roles when a custom role header is provided", async () => {
+      await createRole({
+        name: `CUSTOM_ROLE`,
+        inherits: roles.BUILTIN_ROLE_IDS.BASIC,
+        permissionId: permissions.BuiltinPermissionID.READ_ONLY,
+        version: "name",
+      })
+      const res = await request
+        .get("/api/roles/accessible")
+        .set({
+          ...config.defaultHeaders(),
+          "x-budibase-role": "CUSTOM_ROLE"
+        })
+        .expect(200)
+      expect(res.body.length).toBe(3)
+      expect(res.body[0]).toBe("CUSTOM_ROLE")
+      expect(res.body[1]).toBe("BASIC")
+      expect(res.body[2]).toBe("PUBLIC")
+    })
   })
 })
