@@ -39,7 +39,15 @@
     allowCreator
   ) => {
     if (allowedRoles?.length) {
-      return roles.filter(role => allowedRoles.includes(role._id))
+      const filteredRoles = roles.filter(role =>
+        allowedRoles.includes(role._id)
+      )
+      return [
+        ...filteredRoles,
+        ...(allowedRoles.includes(Constants.Roles.CREATOR)
+          ? [{ _id: Constants.Roles.CREATOR, name: "Creator", enabled: false }]
+          : []),
+      ]
     }
     let newRoles = [...roles]
 
@@ -129,8 +137,9 @@
     getOptionColour={getColor}
     getOptionIcon={getIcon}
     isOptionEnabled={option =>
-      option._id !== Constants.Roles.CREATOR ||
-      $licensing.perAppBuildersEnabled}
+      (option._id !== Constants.Roles.CREATOR ||
+        $licensing.perAppBuildersEnabled) &&
+      option.enabled !== false}
     {placeholder}
     {error}
   />

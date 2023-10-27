@@ -20,6 +20,7 @@
   let type = "internal"
 
   $: name = view.name
+  $: schema = view.schema
   $: calculation = view.calculation
 
   $: supportedFormats = Object.values(ROW_EXPORT_FORMATS).filter(key => {
@@ -61,7 +62,7 @@
 
 <Table
   title={decodeURI(name)}
-  schema={view.schema}
+  {schema}
   tableId={view.tableId}
   {data}
   {loading}
