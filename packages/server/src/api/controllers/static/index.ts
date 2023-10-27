@@ -1,3 +1,5 @@
+import { ValidFileExtensions } from "@budibase/shared-core"
+
 require("svelte/register")
 
 import { join } from "../../../utilities/centralPath"
@@ -17,6 +19,7 @@ import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import { App, Ctx } from "@budibase/types"
+import environment from "../../../environment"
 
 const send = require("koa-send")
 
@@ -78,6 +81,17 @@ export const uploadFile = async function (ctx: Ctx) {
 
   const uploads = files.map(async (file: any) => {
     const fileExtension = [...file.name.split(".")].pop()
+    if (
+      !environment.SELF_HOSTED &&
+      !ValidFileExtensions.includes(fileExtension)
+    ) {
+      ctx.throw(
+        400,
+        `Invalid file extension. Valid extensions are: ${ValidFileExtensions.join(
+          ", "
+        )}`
+      )
+    }
     // filenames converted to UUIDs so they are unique
     const processedFileName = `${uuid.v4()}.${fileExtension}`
 

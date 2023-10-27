@@ -159,8 +159,10 @@
           {#if selectedImage.size}
             <div class="filesize">
               {#if selectedImage.size <= BYTES_IN_MB}
-                {`${selectedImage.size / BYTES_IN_KB} KB`}
-              {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
+                {`${(selectedImage.size / BYTES_IN_KB).toFixed(1)} KB`}
+              {:else}{`${(selectedImage.size / BYTES_IN_MB).toFixed(
+                  1
+                )} MB`}{/if}
             </div>
           {/if}
           {#if !disabled}
@@ -203,8 +205,8 @@
             {#if file.size}
               <div class="filesize">
                 {#if file.size <= BYTES_IN_MB}
-                  {`${file.size / BYTES_IN_KB} KB`}
-                {:else}{`${file.size / BYTES_IN_MB} MB`}{/if}
+                  {`${(file.size / BYTES_IN_KB).toFixed(1)} KB`}
+                {:else}{`${(file.size / BYTES_IN_MB).toFixed(1)} MB`}{/if}
               </div>
             {/if}
             {#if !disabled}

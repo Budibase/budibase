@@ -14,6 +14,7 @@
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import Editor from "../../integration/QueryEditor.svelte"
   import { ValidFileExtensions } from "@budibase/shared-core"
+  import { admin } from "stores/portal"
 
   export let defaultValue
   export let meta
@@ -21,7 +22,9 @@
   export let readonly
   export let error
 
-  let validExtensions = ValidFileExtensions.map(ext => `.${ext}`).join(", ")
+  let validExtensions = $admin.cloud
+    ? ValidFileExtensions.map(ext => `.${ext}`).join(", ")
+    : "*"
 
   const resolveTimeStamp = timestamp => {
     if (!timestamp) {
