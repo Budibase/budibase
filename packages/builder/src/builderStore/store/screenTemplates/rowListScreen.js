@@ -2,14 +2,14 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 
-export default function (datasources) {
+export default function (datasources, mode = "table") {
   if (!Array.isArray(datasources)) {
     return []
   }
   return datasources.map(datasource => {
     return {
       name: `${datasource.label} - List`,
-      create: () => createScreen(datasource),
+      create: () => createScreen(datasource, mode),
       id: ROW_LIST_TEMPLATE,
       resourceId: datasource.resourceId,
     }
@@ -40,10 +40,24 @@ const generateTableBlock = datasource => {
   return tableBlock
 }
 
-const createScreen = datasource => {
+const generateGridBlock = datasource => {
+  const gridBlock = new Component("@budibase/standard-components/gridblock")
+  gridBlock
+    .customProps({
+      table: datasource,
+    })
+    .instanceName(`${datasource.label} - Grid block`)
+  return gridBlock
+}
+
+const createScreen = (datasource, mode) => {
   return new Screen()
     .route(rowListUrl(datasource))
     .instanceName(`${datasource.label} - List`)
-    .addChild(generateTableBlock(datasource))
+    .addChild(
+      mode === "table"
+        ? generateTableBlock(datasource)
+        : generateGridBlock(datasource)
+    )
     .json()
 }
