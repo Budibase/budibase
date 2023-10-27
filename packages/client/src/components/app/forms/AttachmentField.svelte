@@ -2,13 +2,14 @@
   import Field from "./Field.svelte"
   import { CoreDropzone } from "@budibase/bbui"
   import { getContext } from "svelte"
+  import { ValidFileExtensions } from "@budibase/shared-core"
 
   export let field
   export let label
   export let disabled = false
   export let compact = false
   export let validation
-  export let extensions
+  export let extensions = ValidFileExtensions.map(ext => `.${ext}`).join(", ")
   export let onChange
   export let maximum = undefined
 
