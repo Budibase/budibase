@@ -2,11 +2,15 @@
   "name": "root",
   "private": true,
   "devDependencies": {
+    "@babel/core": "^7.22.5",
+    "@babel/eslint-parser": "^7.22.15",
+    "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@typescript-eslint/parser": "6.7.2",
+    "@typescript-eslint/parser": "6.9.0",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.8.0",
-    "eslint": "^8.44.0",
+    "eslint": "^8.52.0",
+    "eslint-plugin-svelte": "^2.34.0",
     "husky": "^8.0.3",
     "kill-port": "^1.6.1",
     "lerna": "7.1.1",
@@ -16,12 +20,8 @@
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
-    "typescript": "5.2.2",
-    "@babel/core": "^7.22.5",
-    "@babel/eslint-parser": "^7.22.5",
-    "@babel/preset-env": "^7.22.5",
-    "eslint-plugin-svelte": "^2.32.2",
-    "svelte-eslint-parser": "^0.32.0"
+    "svelte-eslint-parser": "^0.33.1",
+    "typescript": "5.2.2"
   },
   "scripts": {
     "preinstall": "node scripts/syncProPackage.js",
