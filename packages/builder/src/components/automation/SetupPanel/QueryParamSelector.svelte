@@ -28,7 +28,7 @@
 </script>
 
 <div class="schema-fields">
-  <Label>Table</Label>
+  <Label>Query</Label>
   <div class="field-width">
     <Select
       on:change={onChangeQuery}
