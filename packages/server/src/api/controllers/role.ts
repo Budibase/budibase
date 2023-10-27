@@ -1,4 +1,10 @@
-import { context, db as dbCore, events, roles } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  roles,
+  Header,
+} from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
 import { sdk as sharedSdk } from "@budibase/shared-core"
@@ -142,5 +148,21 @@ export async function accessible(ctx: UserCtx) {
     ctx.body = await roles.getAllRoleIds(appId)
   } else {
     ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
+  }
+
+  // If a custom role is provided in the header, filter out higher level roles
+  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
+  if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
+    const inherits = (await roles.getRole(roleHeader))?.inherits
+    const orderedRoles = ctx.body.reverse()
+    let filteredRoles = [roleHeader]
+    for (let role of orderedRoles) {
+      filteredRoles = [role, ...filteredRoles]
+      if (role === inherits) {
+        break
+      }
+    }
+    filteredRoles.pop()
+    ctx.body = [roleHeader, ...filteredRoles]
   }
 }
