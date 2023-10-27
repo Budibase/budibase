@@ -32,12 +32,24 @@ export const fetchData = ({ API, datasource, options }) => {
   return new Fetch({ API, datasource, ...options })
 }
 
-// Fetches the definition of any type of datasource
-export const getDatasourceDefinition = async ({ API, datasource }) => {
+// Creates an empty fetch instance with no datasource configured, so no data
+// will initially be loaded
+const createEmptyFetchInstance = ({ API, datasource }) => {
   const handler = DataFetchMap[datasource?.type]
   if (!handler) {
     return null
   }
-  const instance = new handler({ API })
-  return await instance.getDefinition(datasource)
+  return new handler({ API })
+}
+
+// Fetches the definition of any type of datasource
+export const getDatasourceDefinition = async ({ API, datasource }) => {
+  const instance = createEmptyFetchInstance({ API, datasource })
+  return await instance?.getDefinition(datasource)
+}
+
+// Fetches the schema of any type of datasource
+export const getDatasourceSchema = ({ API, datasource, definition }) => {
+  const instance = createEmptyFetchInstance({ API, datasource })
+  return instance?.getSchema(datasource, definition)
 }
