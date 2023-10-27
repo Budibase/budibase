@@ -96,8 +96,8 @@ async function updateAutomations(prodAppId: string, db: Database) {
 
 /**
  * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns a fs read stream which can be loaded into the database.
+ * @param template The template object retrieved from the Koa context object.
+ * @returns Returns a fs read stream which can be loaded into the database.
  */
 async function getTemplateStream(template: TemplateType) {
   if (template.file && template.file.type !== "text/plain") {

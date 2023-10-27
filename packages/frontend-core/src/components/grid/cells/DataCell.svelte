@@ -21,6 +21,7 @@
   export let invertX = false
   export let invertY = false
   export let contentLines = 1
+  export let hidden = false
 
   const emptyError = writable(null)
 
@@ -34,7 +35,7 @@
     column.schema.autocolumn ||
     column.schema.disabled ||
     column.schema.type === "formula" ||
-    (!$config.canEditRows && row._id)
+    (!$config.canEditRows && !row._isNewRow)
 
   // Register this cell API if the row is focused
   $: {
@@ -78,6 +79,7 @@
   {focused}
   {selectedUser}
   {readonly}
+  {hidden}
   error={$error}
   on:click={() => focusedCellId.set(cellId)}
   on:contextmenu={e => menu.actions.open(cellId, e)}

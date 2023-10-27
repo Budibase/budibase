@@ -1,6 +1,6 @@
 <script>
-  import { isEmpty } from "lodash/fp"
-  import { Input, DetailSummary, notifications } from "@budibase/bbui"
+  import { helpers } from "@budibase/shared-core"
+  import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
@@ -16,19 +16,32 @@
   export let isScreen = false
   export let onUpdateSetting
   export let showSectionTitle = true
-  export let showInstanceName = true
+  export let tag
 
-  $: sections = getSections(componentInstance, componentDefinition, isScreen)
+  $: sections = getSections(
+    componentInstance,
+    componentDefinition,
+    isScreen,
+    tag
+  )
 
-  const getSections = (instance, definition, isScreen) => {
+  const getSections = (instance, definition, isScreen, tag) => {
     const settings = definition?.settings ?? []
-    const generalSettings = settings.filter(setting => !setting.section)
-    const customSections = settings.filter(setting => setting.section)
+    const generalSettings = settings.filter(
+      setting => !setting.section && setting.tag === tag
+    )
+    const customSections = settings.filter(
+      setting => setting.section && setting.tag === tag
+    )
     let sections = [
-      {
-        name: "General",
-        settings: generalSettings,
-      },
+      ...(generalSettings?.length
+        ? [
+            {
+              name: "General",
+              settings: generalSettings,
+            },
+          ]
+        : []),
       ...(customSections || []),
     ]
 
@@ -70,41 +83,43 @@
   }
 
   const shouldDisplay = (instance, setting) => {
-    // Parse dependant settings
-    if (setting.dependsOn) {
-      let dependantSetting = setting.dependsOn
-      let dependantValue = null
-      let invert = !!setting.dependsOn.invert
-      if (typeof setting.dependsOn === "object") {
-        dependantSetting = setting.dependsOn.setting
-        dependantValue = setting.dependsOn.value
+    let dependsOn = setting.dependsOn
+    if (dependsOn && !Array.isArray(dependsOn)) {
+      dependsOn = [dependsOn]
+    }
+    if (!dependsOn?.length) {
+      return true
+    }
+
+    // Ensure all conditions are met
+    return dependsOn.every(condition => {
+      let dependantSetting = condition
+      let dependantValues = null
+      let invert = !!condition.invert
+      if (typeof condition === "object") {
+        dependantSetting = condition.setting
+        dependantValues = condition.value
       }
       if (!dependantSetting) {
         return false
       }
 
-      // If no specific value is depended upon, check if a value exists at all
-      // for the dependent setting
-      if (dependantValue == null) {
-        const currentValue = instance[dependantSetting]
-        if (currentValue === false) {
-          return false
-        }
-        if (currentValue === true) {
-          return true
-        }
-        return !isEmpty(currentValue)
+      // Ensure values is an array
+      if (!Array.isArray(dependantValues)) {
+        dependantValues = [dependantValues]
       }
 
-      // Otherwise check the value matches
-      if (invert) {
-        return instance[dependantSetting] !== dependantValue
-      } else {
-        return instance[dependantSetting] === dependantValue
-      }
-    }
-
-    return typeof setting.visible == "boolean" ? setting.visible : true
+      // If inverting, we want to ensure that we don't have any matches.
+      // If not inverting, we want to ensure that we do have any matches.
+      const currentVal = helpers.deepGet(instance, dependantSetting)
+      const anyMatches = dependantValues.some(dependantVal => {
+        if (dependantVal == null) {
+          return currentVal != null && currentVal !== false && currentVal !== ""
+        }
+        return dependantVal === currentVal
+      })
+      return anyMatches !== invert
+    })
   }
 
   const canRenderControl = (instance, setting, isScreen) => {
@@ -125,28 +140,19 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      collapsible={false}
+      show={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">
           <InfoDisplay body={section.info} />
         </div>
-      {:else if idx === 0 && section.name === "General" && componentDefinition.info}
+      {:else if idx === 0 && section.name === "General" && componentDefinition?.info && !tag}
         <InfoDisplay
           title={componentDefinition.name}
           body={componentDefinition.info}
         />
       {/if}
       <div class="settings">
-        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen && showInstanceName}
-          <PropertyControl
-            control={Input}
-            label="Name"
-            key="_instanceName"
-            value={componentInstance._instanceName}
-            onChange={val => updateSetting({ key: "_instanceName" }, val)}
-          />
-        {/if}
         {#each section.settings as setting (setting.key)}
           {#if setting.visible}
             <PropertyControl
@@ -189,7 +195,7 @@
     </DetailSummary>
   {/if}
 {/each}
-{#if componentDefinition?.block}
+{#if componentDefinition?.block && !tag}
   <DetailSummary name="Eject" collapsible={false}>
     <EjectBlockButton />
   </DetailSummary>

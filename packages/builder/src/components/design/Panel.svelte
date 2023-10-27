@@ -16,6 +16,7 @@
   export let closeButtonIcon = "Close"
 
   $: customHeaderContent = $$slots["panel-header-content"]
+  $: customTitleContent = $$slots["panel-title-content"]
 </script>
 
 <div
@@ -33,7 +34,11 @@
       <Icon name={icon} />
     {/if}
     <div class="title">
-      <Body size="S">{title}</Body>
+      {#if customTitleContent}
+        <slot name="panel-title-content" />
+      {:else}
+        <Body size="S">{title || ""}</Body>
+      {/if}
     </div>
     {#if showAddButton}
       <div class="add-button" on:click={onClickAddButton}>
@@ -133,5 +138,8 @@
   }
   .custom-content-wrap {
     border-bottom: var(--border-light);
+  }
+  .title {
+    display: flex;
   }
 </style>

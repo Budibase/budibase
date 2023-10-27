@@ -20,23 +20,26 @@
     datasource,
     subscribe,
     renderedRows,
-    renderedColumns,
+    visibleColumns,
     rowHeight,
     hasNextPage,
     maxScrollTop,
     rowVerticalInversionIndex,
     columnHorizontalInversionIndex,
     selectedRows,
-    loading,
+    loaded,
+    refreshing,
     config,
+    filter,
+    columnRenderMap,
   } = getContext("grid")
 
   let visible = false
   let isAdding = false
-  let newRow = {}
+  let newRow
   let offset = 0
 
-  $: firstColumn = $stickyColumn || $renderedColumns[0]
+  $: firstColumn = $stickyColumn || $visibleColumns[0]
   $: width = GutterWidth + ($stickyColumn?.width || 0)
   $: $datasource, (visible = false)
   $: invertY = shouldInvertY(offset, $rowVerticalInversionIndex, $renderedRows)
@@ -58,7 +61,9 @@
 
     // Create row
     const newRowIndex = offset ? undefined : 0
-    const savedRow = await rows.actions.addRow(newRow, newRowIndex)
+    let rowToCreate = { ...newRow }
+    delete rowToCreate._isNewRow
+    const savedRow = await rows.actions.addRow(rowToCreate, newRowIndex)
     if (savedRow) {
       // Reset state
       clear()
@@ -109,7 +114,7 @@
     }
 
     // Update state and select initial cell
-    newRow = {}
+    newRow = { _isNewRow: true }
     visible = true
     $hoveredRowId = NewRowID
     if (firstColumn) {
@@ -151,7 +156,7 @@
 <!-- New row FAB -->
 <TempTooltip
   text="Click here to create your first row"
-  condition={hasNoRows && !$loading}
+  condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}
   type={TooltipType.Info}
 >
   {#if !visible && !selectedRowCount && $config.canAddRows}
@@ -207,29 +212,28 @@
     <div class="normal-columns" transition:fade|local={{ duration: 130 }}>
       <GridScrollWrapper scrollHorizontally attachHandlers>
         <div class="row">
-          {#each $renderedColumns as column, columnIdx}
+          {#each $visibleColumns as column, columnIdx}
             {@const cellId = `new-${column.name}`}
-            {#key cellId}
-              <DataCell
-                {cellId}
-                {column}
-                {updateValue}
-                rowFocused
-                row={newRow}
-                focused={$focusedCellId === cellId}
-                width={column.width}
-                topRow={offset === 0}
-                invertX={columnIdx >= $columnHorizontalInversionIndex}
-                {invertY}
-              >
-                {#if column?.schema?.autocolumn}
-                  <div class="readonly-overlay">Can't edit auto column</div>
-                {/if}
-                {#if isAdding}
-                  <div in:fade={{ duration: 130 }} class="loading-overlay" />
-                {/if}
-              </DataCell>
-            {/key}
+            <DataCell
+              {cellId}
+              {column}
+              {updateValue}
+              rowFocused
+              row={newRow}
+              focused={$focusedCellId === cellId}
+              width={column.width}
+              topRow={offset === 0}
+              invertX={columnIdx >= $columnHorizontalInversionIndex}
+              {invertY}
+              hidden={!$columnRenderMap[column.name]}
+            >
+              {#if column?.schema?.autocolumn}
+                <div class="readonly-overlay">Can't edit auto column</div>
+              {/if}
+              {#if isAdding}
+                <div in:fade={{ duration: 130 }} class="loading-overlay" />
+              {/if}
+            </DataCell>
           {/each}
         </div>
       </GridScrollWrapper>

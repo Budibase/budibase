@@ -1,7 +1,7 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
 import { FieldTypes } from "../../constants"
-import { context } from "@budibase/backend-core"
+import { context, logging } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
 import {
   Database,
@@ -38,7 +38,7 @@ class LinkController {
 
   /**
    * Retrieves the table, if it was not already found in the eventData.
-   * @returns {Promise<object>} This will return a table based on the event data, either
+   * @returns This will return a table based on the event data, either
    * if it was in the event already, or it uses the specified tableId to get it.
    */
   async table() {
@@ -52,8 +52,8 @@ class LinkController {
   /**
    * Checks if the table this was constructed with has any linking columns currently.
    * If the table has not been retrieved this will retrieve it based on the eventData.
-   * @params {object|null} table If a table that is not known to the link controller is to be tested.
-   * @returns {Promise<boolean>} True if there are any linked fields, otherwise it will return
+   * @params table If a table that is not known to the link controller is to be tested.
+   * @returns True if there are any linked fields, otherwise it will return
    * false.
    */
   async doesTableHaveLinkedFields(table?: Table) {
@@ -159,7 +159,7 @@ class LinkController {
   /**
    * When a row is saved this will carry out the necessary operations to make sure
    * the link has been created/updated.
-   * @returns {Promise<object>} returns the row that has been cleaned and prepared to be written to the DB - links
+   * @returns returns the row that has been cleaned and prepared to be written to the DB - links
    * have also been created.
    */
   async rowSaved() {
@@ -271,7 +271,7 @@ class LinkController {
   /**
    * When a row is deleted this will carry out the necessary operations to make sure
    * any links that existed have been removed.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. This also returns the row that was deleted.
    */
   async rowDeleted() {
@@ -293,8 +293,8 @@ class LinkController {
 
   /**
    * Remove a field from a table as well as any linked rows that pertained to it.
-   * @param {string} fieldName The field to be removed from the table.
-   * @returns {Promise<void>} The table has now been updated.
+   * @param fieldName The field to be removed from the table.
+   * @returns The table has now been updated.
    */
   async removeFieldFromTable(fieldName: string) {
     let oldTable = this._oldTable
@@ -333,7 +333,7 @@ class LinkController {
   /**
    * When a table is saved this will carry out the necessary operations to make sure
    * any linked tables are notified and updated correctly.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. Also returns the table that was operated on.
    */
   async tableSaved() {
@@ -394,7 +394,7 @@ class LinkController {
   /**
    * Update a table, this means if a field is removed need to handle removing from other table and removing
    * any link docs that pertained to it.
-   * @returns {Promise<Object>} The table which has been saved, same response as with the tableSaved function.
+   * @returns The table which has been saved, same response as with the tableSaved function.
    */
   async tableUpdated() {
     const oldTable = this._oldTable
@@ -418,7 +418,7 @@ class LinkController {
    * When a table is deleted this will carry out the necessary operations to make sure
    * any linked tables have the joining column correctly removed as well as removing any
    * now stale linking documents.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. Also returns the table that was operated on.
    */
   async tableDeleted() {
@@ -432,8 +432,8 @@ class LinkController {
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }
-      } catch (err) {
-        // Ignored error
+      } catch (err: any) {
+        logging.logWarn(err?.message, err)
       }
     }
     // need to get the full link docs to delete them
