@@ -81,6 +81,7 @@
       sortOrder: $fetch.sortOrder,
     },
     limit,
+    primaryDisplay: $fetch.definition?.primaryDisplay,
   }
 
   const createFetch = datasource => {

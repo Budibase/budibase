@@ -3,6 +3,7 @@
   import CreationPage from "components/common/CreationPage.svelte"
   import blankImage from "./blank.png"
   import tableImage from "./table.png"
+  import gridImage from "./grid.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import { store } from "builderStore"
 
@@ -41,6 +42,16 @@
         <div class="text">
           <Body size="S">Table</Body>
           <Body size="XS">View, edit and delete rows on a table</Body>
+        </div>
+      </div>
+
+      <div class="card" on:click={() => createScreenModal.show("grid")}>
+        <div class="image">
+          <img alt="" src={gridImage} />
+        </div>
+        <div class="text">
+          <Body size="S">Grid</Body>
+          <Body size="XS">View and manipulate rows on a grid</Body>
         </div>
       </div>
     </div>
