@@ -29,8 +29,15 @@
         "ecmaVersion": 2019,
         "sourceType": "module",
         "allowImportExportEverywhere": true
+      },
+      "rules": {
+        "svelte/valid-compile": [
+          "error",
+          {
+            "ignoreWarnings": true
+          }
+        ]
       }
-
     },
     {
       "files": ["**/*.ts"],
@@ -48,7 +55,14 @@
   ],
   "rules": {
     "no-self-assign": "off",
-    "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }]
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ]
   },
   "globals": {
     "GeolocationPositionError": true
