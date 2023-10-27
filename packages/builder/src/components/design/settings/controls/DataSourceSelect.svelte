@@ -284,7 +284,12 @@
     </div>
     <ul>
       {#each tables as table}
-        <li class:selected={value.label === table.label} on:click={() => handleSelected(table)}>{table.label}</li>
+        <li
+          class:selected={value.label === table.label}
+          on:click={() => handleSelected(table)}
+        >
+          {table.label}
+        </li>
       {/each}
     </ul>
     {#if views?.length}
@@ -294,7 +299,12 @@
       </div>
       <ul>
         {#each views as view}
-          <li class:selected={value.label === view.label} on:click={() => handleSelected(view)}>{view.label}</li>
+          <li
+            class:selected={value.label === view.label}
+            on:click={() => handleSelected(view)}
+          >
+            {view.label}
+          </li>
         {/each}
       </ul>
     {/if}
@@ -321,7 +331,12 @@
       </div>
       <ul>
         {#each links as link}
-          <li class:selected={value.label === link.label} on:click={() => handleSelected(link)}>{link.label}</li>
+          <li
+            class:selected={value.label === link.label}
+            on:click={() => handleSelected(link)}
+          >
+            {link.label}
+          </li>
         {/each}
       </ul>
     {/if}
@@ -332,7 +347,12 @@
       </div>
       <ul>
         {#each fields as field}
-          <li class:selected={value.label === field.label} on:click={() => handleSelected(field)}>{field.label}</li>
+          <li
+            class:selected={value.label === field.label}
+            on:click={() => handleSelected(field)}
+          >
+            {field.label}
+          </li>
         {/each}
       </ul>
     {/if}
@@ -343,7 +363,12 @@
       </div>
       <ul>
         {#each jsonArrays as field}
-          <li class:selected={value.label === field.label} on:click={() => handleSelected(field)}>{field.label}</li>
+          <li
+            class:selected={value.label === field.label}
+            on:click={() => handleSelected(field)}
+          >
+            {field.label}
+          </li>
         {/each}
       </ul>
     {/if}
@@ -368,7 +393,12 @@
       <Heading size="XS">Other</Heading>
     </div>
     <ul>
-      <li class:selected={value.label === custom.label} on:click={() => handleSelected(custom)}>{custom.label}</li>
+      <li
+        class:selected={value.label === custom.label}
+        on:click={() => handleSelected(custom)}
+      >
+        {custom.label}
+      </li>
       {#if otherSources?.length}
         {#each otherSources as source}
           <li on:click={() => handleSelected(source)}>{source.label}</li>
