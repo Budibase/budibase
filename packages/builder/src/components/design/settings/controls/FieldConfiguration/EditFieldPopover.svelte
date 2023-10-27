@@ -134,6 +134,7 @@
         <span>{field.field}</span>
       </div>
       <ComponentSettingsSection
+        includeHidden
         componentInstance={pseudoComponentInstance}
         componentDefinition={parsedComponentDef}
         isScreen={false}

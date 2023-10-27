@@ -16,10 +16,16 @@
   export let isScreen = false
   export let onUpdateSetting
   export let showSectionTitle = true
+  export let includeHidden = false
 
-  $: sections = getSections(componentInstance, componentDefinition, isScreen)
+  $: sections = getSections(
+    componentInstance,
+    componentDefinition,
+    isScreen,
+    includeHidden
+  )
 
-  const getSections = (instance, definition, isScreen) => {
+  const getSections = (instance, definition, isScreen, includeHidden) => {
     const settings = definition?.settings ?? []
     const generalSettings = settings.filter(setting => !setting.section)
     const customSections = settings.filter(setting => setting.section)
@@ -38,7 +44,12 @@
         return
       }
       section.settings.forEach(setting => {
-        setting.visible = canRenderControl(instance, setting, isScreen)
+        setting.visible = canRenderControl(
+          instance,
+          setting,
+          isScreen,
+          includeHidden
+        )
       })
       section.visible =
         section.name === "General" ||
@@ -108,16 +119,20 @@
     })
   }
 
-  const canRenderControl = (instance, setting, isScreen) => {
+  const canRenderControl = (instance, setting, isScreen, includeHidden) => {
     // Prevent rendering on click setting for screens
     if (setting?.type === "event" && isScreen) {
       return false
     }
+    // Check we have a component to render for this setting
     const control = getComponentForSetting(setting)
     if (!control) {
       return false
     }
-
+    // Check if setting is hidden
+    if (setting.hidden && !includeHidden) {
+      return false
+    }
     return shouldDisplay(instance, setting)
   }
 </script>
