@@ -82,7 +82,7 @@
       if (loopBlock) {
         await automationStore.actions.deleteAutomationBlock(loopBlock)
       }
-      await automationStore.actions.deleteAutomationBlock(block)
+      await automationStore.actions.deleteAutomationBlock(block, blockIdx)
     } catch (error) {
       notifications.error("Error saving automation")
     }

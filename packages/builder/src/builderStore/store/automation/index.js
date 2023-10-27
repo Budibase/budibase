@@ -3,6 +3,7 @@ import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { selectedAutomation } from "builderStore"
+import { notifications } from "@budibase/bbui"
 
 const initialAutomationState = {
   automations: [],
@@ -19,6 +20,38 @@ export const getAutomationStore = () => {
   const store = writable(initialAutomationState)
   store.actions = automationActions(store)
   return store
+}
+
+function updateReferencesInObject(obj, modifiedIndex, action) {
+  const regex = /{{\s*steps\.(\d+)\./g
+
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = regex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+        if (action === "add" && referencedStep >= modifiedIndex) {
+          obj[key] = obj[key].replace(
+            `{{ steps.${referencedStep}.`,
+            `{{ steps.${referencedStep + 1}.`
+          )
+        } else if (action === "delete" && referencedStep > modifiedIndex) {
+          obj[key] = obj[key].replace(
+            `{{ steps.${referencedStep}.`,
+            `{{ steps.${referencedStep - 1}.`
+          )
+        }
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      updateReferencesInObject(obj[key], modifiedIndex, action)
+    }
+  }
+}
+
+function updateStepReferences(steps, modifiedIndex, action) {
+  steps.forEach(step => {
+    updateReferencesInObject(step.inputs, modifiedIndex, action)
+  })
 }
 
 const automationActions = store => ({
@@ -218,6 +251,12 @@ const automationActions = store => ({
     if (!automation) {
       return
     }
+
+    try {
+      updateStepReferences(newAutomation.definition.steps, blockIdx, "add")
+    } catch (e) {
+      notifications.error("Error adding automation block")
+    }
     newAutomation.definition.steps.splice(blockIdx, 0, block)
     await store.actions.save(newAutomation)
   },
@@ -245,7 +284,7 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
 
-  deleteAutomationBlock: async block => {
+  deleteAutomationBlock: async (block, blockIdx) => {
     const automation = get(selectedAutomation)
     let newAutomation = cloneDeep(automation)
 
@@ -259,6 +298,12 @@ const automationActions = store => ({
       )
       delete newAutomation.definition.stepNames[block.id]
     }
+    try {
+      updateStepReferences(newAutomation.definition.steps, blockIdx, "delete")
+    } catch (e) {
+      notifications.error("Error deleting automation block")
+    }
+
     await store.actions.save(newAutomation)
   },
   replace: async (automationId, automation) => {
