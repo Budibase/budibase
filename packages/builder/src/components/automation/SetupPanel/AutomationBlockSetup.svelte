@@ -194,6 +194,9 @@
         bindingIcon = allSteps[idx].icon
         bindingRank = idx - loopBlockCount
       }
+      let bindingName =
+        automation.stepNames?.[allSteps[bindingRank - loopBlockCount].id]
+
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
@@ -202,9 +205,6 @@
             ? `steps[${idx - loopBlockCount}].${name}`
             : `steps.${idx - loopBlockCount}.${name}`
           const runtime = idx === 0 ? `trigger.${name}` : runtimeName
-
-          let bindingName =
-            automation.stepNames?.[allSteps[bindingRank - loopBlockCount].id]
 
           let categoryName
           if (idx === 0) {
@@ -218,7 +218,7 @@
           }
 
           return {
-            readableBinding: runtime,
+            readableBinding: bindingName ? `${bindingName}.${name}` : runtime,
             runtimeBinding: runtime,
             type: value.type,
             description: value.description,
