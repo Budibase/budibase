@@ -48,6 +48,7 @@
         <DrawerBindableInput
           panel={AutomationBindingPanel}
           extraThin
+          value={value[field.name]}
           on:change={e => onChange(e, field)}
           type="string"
           {bindings}

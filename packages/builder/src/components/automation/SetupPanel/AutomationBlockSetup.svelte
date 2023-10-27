@@ -197,7 +197,6 @@
       let bindingName =
         automation.stepNames?.[allSteps[bindingRank - loopBlockCount].id]
 
-      console.log(bindings)
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
