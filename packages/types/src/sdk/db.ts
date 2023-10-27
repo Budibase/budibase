@@ -1,4 +1,4 @@
-import Nano from "@budibase/nano"
+import type Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document } from "../"
 import { Writable } from "stream"
 
