@@ -23,7 +23,8 @@
   $: automationName = stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult, isTrigger)
-  $: isTrigger = isTrigger || block.type === "TRIGGER"
+  $: isHeaderTrigger = isTrigger || block.type === "TRIGGER"
+
   $: {
     if (!testResult) {
       testResult = $automationStore.testResults?.steps?.filter(step =>
@@ -109,7 +110,7 @@
         </svg>
       {/if}
       <div class="iconAlign">
-        {#if isTrigger}
+        {#if isHeaderTrigger}
           <Body size="XS"><b>Trigger</b></Body>
         {:else}
           <div style="margin-left: 2px;">
@@ -138,13 +139,21 @@
     </div>
     <div class="blockTitle">
       {#if showTestStatus && testResult}
-        <div style="float: right;">
-          <StatusLight
-            positive={status?.positive}
-            yellow={status?.yellow}
-            negative={status?.negative}
-            ><Body size="XS">{status?.message}</Body></StatusLight
-          >
+        <div class="status-container">
+          <div style="float:right;">
+            <StatusLight
+              positive={status?.positive}
+              yellow={status?.yellow}
+              negative={status?.negative}
+            >
+              <Body size="XS">{status?.message}</Body>
+            </StatusLight>
+          </div>
+          <Icon
+            on:click={() => dispatch("toggle")}
+            hoverable
+            name={open ? "ChevronUp" : "ChevronDown"}
+          />
         </div>
       {/if}
       <div
@@ -155,7 +164,7 @@
         }}
       >
         {#if !showTestStatus}
-          {#if !isTrigger && !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
+          {#if !isHeaderTrigger && !loopBlock && (block?.features?.[Features.LOOPING] || !block.features)}
             <AbsTooltip type="info" text="Add looping">
               <Icon on:click={addLooping} hoverable name="RotateCW" />
             </AbsTooltip>
@@ -164,11 +173,13 @@
             <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
           </AbsTooltip>
         {/if}
-        <Icon
-          on:click={() => dispatch("toggle")}
-          hoverable
-          name={open ? "ChevronUp" : "ChevronDown"}
-        />
+        {#if !showTestStatus}
+          <Icon
+            on:click={() => dispatch("toggle")}
+            hoverable
+            name={open ? "ChevronUp" : "ChevronDown"}
+          />
+        {/if}
       </div>
       {#if automationNameError}
         <div class="error-container">
@@ -184,10 +195,17 @@
 </div>
 
 <style>
+  .status-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-m);
+    /* You can also add padding or margin to adjust the spacing between the text and the chevron if needed. */
+  }
+
   .context-actions {
     display: flex;
     gap: var(--spacing-l);
-    margin-left: 10px;
     margin-bottom: var(--spacing-xs);
   }
   .center-items {
@@ -210,7 +228,6 @@
 
   .blockTitle {
     display: flex;
-    align-items: center;
   }
 
   .hide-context-actions {
@@ -222,7 +239,7 @@
     background-color: transparent;
     border: 1px solid transparent;
     font-size: var(--spectrum-alias-font-size-default);
-    width: 260px;
+    width: 230px;
     box-sizing: border-box;
     overflow: hidden;
     text-overflow: ellipsis;

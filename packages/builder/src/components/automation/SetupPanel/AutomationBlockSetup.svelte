@@ -197,6 +197,7 @@
       let bindingName =
         automation.stepNames?.[allSteps[bindingRank - loopBlockCount].id]
 
+      console.log(bindings)
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
@@ -288,7 +289,8 @@
       value.customType !== "row" &&
       value.customType !== "code" &&
       value.customType !== "queryParams" &&
-      value.customType !== "cron"
+      value.customType !== "cron" &&
+      value.customType !== "triggerSchema"
     )
   }
 
