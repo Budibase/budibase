@@ -16,18 +16,32 @@
   export let isScreen = false
   export let onUpdateSetting
   export let showSectionTitle = true
+  export let tag
 
-  $: sections = getSections(componentInstance, componentDefinition, isScreen)
+  $: sections = getSections(
+    componentInstance,
+    componentDefinition,
+    isScreen,
+    tag
+  )
 
-  const getSections = (instance, definition, isScreen) => {
+  const getSections = (instance, definition, isScreen, tag) => {
     const settings = definition?.settings ?? []
-    const generalSettings = settings.filter(setting => !setting.section)
-    const customSections = settings.filter(setting => setting.section)
+    const generalSettings = settings.filter(
+      setting => !setting.section && setting.tag === tag
+    )
+    const customSections = settings.filter(
+      setting => setting.section && setting.tag === tag
+    )
     let sections = [
-      {
-        name: "General",
-        settings: generalSettings,
-      },
+      ...(generalSettings?.length
+        ? [
+            {
+              name: "General",
+              settings: generalSettings,
+            },
+          ]
+        : []),
       ...(customSections || []),
     ]
 
@@ -132,7 +146,7 @@
         <div class="section-info">
           <InfoDisplay body={section.info} />
         </div>
-      {:else if idx === 0 && section.name === "General" && componentDefinition.info}
+      {:else if idx === 0 && section.name === "General" && componentDefinition?.info && !tag}
         <InfoDisplay
           title={componentDefinition.name}
           body={componentDefinition.info}
@@ -181,7 +195,7 @@
     </DetailSummary>
   {/if}
 {/each}
-{#if componentDefinition?.block}
+{#if componentDefinition?.block && !tag}
   <DetailSummary name="Eject" collapsible={false}>
     <EjectBlockButton />
   </DetailSummary>
