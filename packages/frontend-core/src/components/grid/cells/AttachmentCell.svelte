@@ -2,6 +2,7 @@
   import { onMount } from "svelte"
   import { getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
+  import { ValidFileExtensions } from "@budibase/shared-core"
 
   export let value
   export let focused = false
@@ -13,6 +14,7 @@
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
+  const validExtensions = ValidFileExtensions.map(ext => `.${ext}`).join(", ")
 
   let isOpen = false
 
@@ -96,6 +98,7 @@
       {value}
       compact
       on:change={e => onChange(e.detail)}
+      extensions={validExtensions}
       {processFiles}
       {deleteAttachments}
       {handleFileTooLarge}
