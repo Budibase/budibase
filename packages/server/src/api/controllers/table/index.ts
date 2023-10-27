@@ -5,7 +5,11 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { isExternalTable, isSQL } from "../../../integrations/utils"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
@@ -29,17 +33,10 @@ import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
-  if (table && !tableId) {
-    tableId = table._id
+  if (table && isExternalTable(table)) {
+    return external
   }
-  if (
-    table?.sourceId &&
-    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR)
-  ) {
-    return external
-  } else if (table?.sourceType === TableSourceType.EXTERNAL) {
-    return external
-  } else if (tableId && isExternalTable(tableId)) {
+  if (tableId && isExternalTableID(tableId)) {
     return external
   }
   return internal

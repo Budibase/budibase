@@ -13,7 +13,7 @@ import {
   Table,
 } from "@budibase/types"
 import sdk from "../../../sdk"
-import { isExternalTable } from "../../../integrations/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 import { EventType, updateLinks } from "../../../db/linkedRows"
 import { cloneDeep } from "lodash"
 
@@ -58,7 +58,7 @@ function getColumnMigrator(
   // columns in internal tables. In the future, we may want to support other
   // migrations but for now return an error if we aren't migrating a user
   // relationship.
-  if (isExternalTable(table._id!)) {
+  if (isExternalTableID(table._id!)) {
     throw new BadRequestError("External tables cannot be migrated")
   }
 

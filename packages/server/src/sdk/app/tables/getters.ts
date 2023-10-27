@@ -2,7 +2,7 @@ import { context } from "@budibase/backend-core"
 import { getMultiIDParams, getTableParams } from "../../../db/utils"
 import {
   breakExternalTableId,
-  isExternalTable,
+  isExternalTableID,
   isSQL,
 } from "../../../integrations/utils"
 import {
@@ -17,7 +17,7 @@ import datasources from "../datasources"
 import sdk from "../../../sdk"
 
 export function processTable(table: Table): Table {
-  if (table._id && isExternalTable(table._id)) {
+  if (table._id && isExternalTableID(table._id)) {
     return {
       ...table,
       type: "table",
@@ -79,7 +79,7 @@ export async function getExternalTable(
 export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   let output: Table
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await datasources.get(datasourceId!)
     const table = await getExternalTable(datasourceId!, tableName!)
@@ -109,8 +109,10 @@ export async function getExternalTablesInDatasource(
 }
 
 export async function getTables(tableIds: string[]): Promise<Table[]> {
-  const externalTableIds = tableIds.filter(tableId => isExternalTable(tableId)),
-    internalTableIds = tableIds.filter(tableId => !isExternalTable(tableId))
+  const externalTableIds = tableIds.filter(tableId =>
+      isExternalTableID(tableId)
+    ),
+    internalTableIds = tableIds.filter(tableId => !isExternalTableID(tableId))
   let tables: Table[] = []
   if (externalTableIds.length) {
     const externalTables = await getAllExternalTables()

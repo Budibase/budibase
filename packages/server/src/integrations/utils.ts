@@ -4,10 +4,13 @@ import {
   SearchFilters,
   Datasource,
   FieldType,
+  TableSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
 import { InvalidColumns, NoEmptyFilterStrings } from "../constants"
 import { helpers } from "@budibase/shared-core"
+import * as external from "../api/controllers/table/external"
+import * as internal from "../api/controllers/table/internal"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -82,12 +85,26 @@ export enum SqlClient {
   ORACLE = "oracledb",
 }
 
-export function isExternalTable(tableId: string) {
+export function isExternalTableID(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)
 }
 
-export function isInternalTable(tableId: string) {
-  return !isExternalTable(tableId)
+export function isInternalTableID(tableId: string) {
+  return !isExternalTableID(tableId)
+}
+
+export function isExternalTable(table: Table) {
+  if (
+    table?.sourceId &&
+    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR)
+  ) {
+    return true
+  } else if (table?.sourceType === TableSourceType.EXTERNAL) {
+    return true
+  } else if (table?._id && isExternalTableID(table._id)) {
+    return true
+  }
+  return false
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
