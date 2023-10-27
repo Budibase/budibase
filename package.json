@@ -36,7 +36,7 @@
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
     "nuke:docker": "lerna run --stream dev:stack:nuke",
-    "clean": "lerna clean -y",
+    "clean": "lerna clean -y && echo Cleaning top level node modules 🧹 && rm -rf ./node_modules && echo Done! 🚀",
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
     "kill-accountportal": "kill-port 3001 4003",
