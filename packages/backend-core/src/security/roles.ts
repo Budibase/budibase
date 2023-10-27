@@ -179,7 +179,7 @@ export async function getRole(
     role = Object.assign(role, dbRole)
     // finalise the ID
     role._id = getExternalRoleID(role._id, role.version)
-  } catch (err: any) {
+  } catch (err) {
     if (!isBuiltin(roleId) && opts?.defaultPublic) {
       return cloneDeep(BUILTIN_ROLES.PUBLIC)
     }
