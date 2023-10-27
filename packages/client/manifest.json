@@ -2603,6 +2603,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -2688,6 +2689,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -2768,6 +2770,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -2853,6 +2856,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3049,6 +3053,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3239,6 +3244,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3347,6 +3353,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3454,6 +3461,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3563,6 +3571,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3692,6 +3701,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3896,6 +3906,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -3992,6 +4003,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -4072,6 +4084,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
@@ -6094,6 +6107,7 @@
         "label": "Layout",
         "key": "span",
         "defaultValue": 6,
+        "hidden": true,
         "showInBar": true,
         "barStyle": "buttons",
         "options": [
