@@ -7,7 +7,7 @@
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
-  import DraggableList from "../DraggableList.svelte"
+  import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import { store, selectedScreen } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
@@ -50,7 +50,7 @@
     updateSanitsedFields(sanitisedValue)
     unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
     fieldList = [...sanitisedFields, ...unconfigured]
-      .map(buildSudoInstance)
+      .map(buildPseudoInstance)
       .filter(x => x != null)
   }
 
@@ -104,7 +104,7 @@
     })
   }
 
-  const buildSudoInstance = instance => {
+  const buildPseudoInstance = instance => {
     if (instance._component) {
       return instance
     }
