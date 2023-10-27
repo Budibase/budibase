@@ -53,7 +53,8 @@
   }
   .alert-wrap {
     display: flex;
-    width: 100%;
+    flex: 0 0 auto;
+    margin: -28px -40px 14px -40px;
   }
   .alert-wrap :global(> *) {
     flex: 1;
