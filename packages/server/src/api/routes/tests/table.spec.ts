@@ -10,11 +10,13 @@ import {
   SaveTableRequest,
   Table,
   TableSourceType,
+  User,
   ViewCalculation,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
+import uuid from "uuid"
 
 const { basicTable } = setup.structures
 
@@ -426,13 +428,16 @@ describe("/tables", () => {
   })
 
   describe("migrate", () => {
-    it("should successfully migrate a one-to-many user relationship to a user column", async () => {
-      const users = await Promise.all([
-        config.createUser({ email: "1@example.com" }),
-        config.createUser({ email: "2@example.com" }),
-        config.createUser({ email: "3@example.com" }),
+    let users: User[]
+    beforeAll(async () => {
+      users = await Promise.all([
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
       ])
+    })
 
+    it("should successfully migrate a one-to-many user relationship to a user column", async () => {
       const table = await config.api.table.create({
         name: "table",
         type: "table",
@@ -488,12 +493,6 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-many user relationship to a users column", async () => {
-      const users = await Promise.all([
-        config.createUser({ email: "1@example.com" }),
-        config.createUser({ email: "2@example.com" }),
-        config.createUser({ email: "3@example.com" }),
-      ])
-
       const table = await config.api.table.create({
         name: "table",
         type: "table",
@@ -551,12 +550,6 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-one user relationship to a users column", async () => {
-      const users = await Promise.all([
-        config.createUser({ email: "1@example.com" }),
-        config.createUser({ email: "2@example.com" }),
-        config.createUser({ email: "3@example.com" }),
-      ])
-
       const table = await config.api.table.create({
         name: "table",
         type: "table",
@@ -611,6 +604,103 @@ describe("/tables", () => {
       expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual([
         users[2]._id,
       ])
+    })
+
+    describe("unhappy paths", () => {
+      let table: Table
+      beforeAll(async () => {
+        table = await config.api.table.create({
+          name: "table",
+          type: "table",
+          sourceId: INTERNAL_TABLE_SOURCE_ID,
+          sourceType: TableSourceType.INTERNAL,
+          schema: {
+            "user relationship": {
+              type: FieldType.LINK,
+              fieldName: "test",
+              name: "user relationship",
+              constraints: {
+                type: "array",
+                presence: false,
+              },
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              tableId: InternalTable.USER_METADATA,
+            },
+            num: {
+              type: FieldType.NUMBER,
+              name: "num",
+              constraints: {
+                type: "number",
+                presence: false,
+              },
+            },
+          },
+        })
+      })
+
+      it("should fail if the new column name is blank", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the new column name is a reserved name", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "_id",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the new column name is the same as an existing column", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "num",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the old column name isn't a column in the table", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: {
+              name: "not a column",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+            newColumn: {
+              name: "new column",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
     })
   })
 })
