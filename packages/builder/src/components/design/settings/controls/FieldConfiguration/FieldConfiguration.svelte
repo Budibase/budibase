@@ -148,8 +148,6 @@
     return { ...instance, ...pseudoComponentInstance }
   }
 
-  // maybe add a whitelist to draggablelist
-
   const processItemUpdate = e => {
     const updatedField = e.detail
     const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
