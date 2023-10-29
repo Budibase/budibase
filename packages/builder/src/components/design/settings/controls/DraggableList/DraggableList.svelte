@@ -7,11 +7,12 @@
   import DragHandle from "./drag-handle.svelte"
 
   export let items = []
-  export let showHandle = true
+  export let hideHandle = false
   export let listType
   export let listTypeProps = {}
   export let listItemKey
-  export let draggable = true
+  export let whitelist = null
+  export let noDrag = false
   export let focus
 
   let store = writable({
@@ -39,7 +40,7 @@
   let draggableItems = []
 
   const buildDraggable = items => {
-    return items
+    const draggableItems = items
       .map(item => {
         return {
           id: listItemKey ? item[listItemKey] : generate(),
@@ -47,6 +48,13 @@
         }
       })
       .filter(item => item.id)
+
+    if (whitelist) {
+      return draggableItems.filter(item => whitelist.includes(item.item.field))
+
+    }
+
+    return draggableItems;
   }
 
   $: if (items) {
@@ -58,15 +66,25 @@
   }
 
   const serialiseUpdate = () => {
-    return draggableItems.reduce((acc, ele) => {
+    let update = draggableItems.reduce((acc, ele) => {
       acc.push(ele.item)
       return acc
     }, [])
+
+    // Items not on the whitelist will be excluded from reordering updates, so re-add them here
+    if (whitelist) {
+      const omittedItems = items.filter(item => !whitelist.includes(item.field))
+      update = update.concat(omittedItems);
+    }
+
+    return update
   }
 
   const handleFinalize = e => {
     updateRowOrder(e)
-    dispatch("change", serialiseUpdate())
+    const foo = serialiseUpdate();
+    console.log(foo);
+    dispatch("change", foo)
   }
 
   const onItemChanged = e => {
@@ -80,7 +98,7 @@
     items: draggableItems,
     flipDurationMs,
     dropTargetStyle: { outline: "none" },
-    dragDisabled: !draggable,
+    dragDisabled: noDrag,
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
@@ -92,13 +110,12 @@
       }}
       bind:this={anchors[draggable.id]}
       class:highlighted={draggable.id === $store.selected}
+      class:noDrag
     >
       <div class="left-content">
-        {#if showHandle}
-          <div class="handle">
-            <DragHandle />
-          </div>
-        {/if}
+        <div class:hideHandle class="handle">
+          <DragHandle />
+        </div>
       </div>
       <div class="right-content">
         <svelte:component
@@ -172,5 +189,17 @@
     margin-left: 2px;
     width: var(--spectrum-global-dimension-size-65);
     height: 100%;
+  }
+
+  .hideHandle {
+    opacity: 0;
+  }
+
+  .noDrag:hover {
+    cursor: default !important;
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    ) !important;
   }
 </style>

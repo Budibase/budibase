@@ -11,10 +11,14 @@
   import { createEventDispatcher } from "svelte"
   import { store, selectedScreen } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
+  import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
   export let value
+  export let includeAutoColumns = false;
+  export let preventDraggingPrimaryColumn = false
+  export let forcedComponent
 
   const dispatch = createEventDispatcher()
   let sanitisedFields
@@ -24,6 +28,7 @@
   let options
   let sanitisedValue
   let unconfigured
+  let primaryDisplayColumn
 
   $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
   $: actionType = componentInstance.actionType
@@ -38,6 +43,7 @@
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: resourceId = datasource?.resourceId || datasource?.tableId
+  let previousResourceId = null;
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
@@ -45,6 +51,7 @@
 
   const updateState = value => {
     schema = getSchema($currentAsset, datasource)
+    primaryDisplayColumn = getPrimaryDisplayColumn($currentAsset, datasource)
     options = Object.keys(schema || {})
     sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
     updateSanitsedFields(sanitisedValue)
@@ -52,10 +59,19 @@
     fieldList = [...sanitisedFields, ...unconfigured]
       .map(buildPseudoInstance)
       .filter(x => x != null)
+
+    if (resourceId !== previousResourceId) {
+      if (previousResourceId !== null) {
+        fieldList = fieldList.map(fl => ({...fl, active: true }));
+        dispatch("change", fieldList);
+      }
+
+      previousResourceId = resourceId;
+    }
   }
 
   $: updateState(cachedValue, resourceId)
-
+ 
   // Builds unused ones only
   const buildUnconfiguredOptions = (schema, selected) => {
     if (!schema) {
@@ -67,7 +83,7 @@
     })
 
     return Object.keys(schemaClone)
-      .filter(key => !schemaClone[key].autocolumn)
+      .filter(key => includeAutoColumns || !schemaClone[key].autocolumn)
       .map(key => {
         const col = schemaClone[key]
         let toggleOn = !value
@@ -90,6 +106,10 @@
     return schema
   }
 
+  const getPrimaryDisplayColumn = (asset, datasource) => {
+    return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay;
+  }
+
   const updateSanitsedFields = value => {
     sanitisedFields = cloneDeep(value)
   }
@@ -108,7 +128,7 @@
     if (instance._component) {
       return instance
     }
-    const type = getComponentForField(instance.field, schema)
+    const type = forcedComponent ?? getComponentForField(instance.field, schema)
     if (!type) {
       return null
     }
@@ -120,13 +140,15 @@
         _instanceName: instance.field,
         field: instance.field,
         label: instance.field,
-        placeholder: instance.field,
+        placeholder: instance.field
       },
       {}
     )
 
     return { ...instance, ...pseudoComponentInstance }
   }
+
+  // maybe add a whitelist to draggablelist
 
   const processItemUpdate = e => {
     const updatedField = e.detail
@@ -152,6 +174,25 @@
 </script>
 
 <div class="field-configuration">
+  {#if preventDraggingPrimaryColumn}
+    <div class="primaryColumn">
+      <DraggableList
+        noDrag
+        hideHandle
+        on:change={listUpdated}
+        on:itemChange={processItemUpdate}
+        items={fieldList}
+        listItemKey={"_id"}
+        listType={PrimaryColumnFieldSetting}
+        listTypeProps={{
+          componentBindings,
+          bindings,
+          hideToggle: true
+        }}
+        whitelist={[primaryDisplayColumn]}
+      />
+    </div>
+  {/if}
   {#if fieldList?.length}
     <DraggableList
       on:change={listUpdated}
@@ -163,6 +204,7 @@
         componentBindings,
         bindings,
       }}
+        whitelist={preventDraggingPrimaryColumn ? fieldList.map(field => field.field).filter(field => field !== primaryDisplayColumn) : null}
     />
   {/if}
 </div>
@@ -170,5 +212,9 @@
 <style>
   .field-configuration :global(.spectrum-ActionButton) {
     width: 100%;
+  }
+
+  .primaryColumn {
+    margin-bottom: 6px;
   }
 </style>

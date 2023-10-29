@@ -20,19 +20,19 @@
   const component = getContext("component")
   const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 
-  $: columnWhitelist = columns?.map(col => col.name)
+  $: columnWhitelist = columns?.filter(col => col.active)?.map(col => col.field)
   $: schemaOverrides = getSchemaOverrides(columns)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
     columns?.forEach(column => {
-      overrides[column.name] = {
-        displayName: column.displayName || column.name,
-        visible: true,
+      overrides[column.field] = {
+        displayName: column.label
       }
     })
     return overrides
   }
+
 </script>
 
 <div

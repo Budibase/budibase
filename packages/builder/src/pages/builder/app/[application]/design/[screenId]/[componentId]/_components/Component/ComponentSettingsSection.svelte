@@ -189,6 +189,11 @@
                 // Number fields
                 min: setting.min ?? null,
                 max: setting.max ?? null,
+
+                // Grid fields
+                includeAutoColumns: setting.includeAutoColumns,
+                preventDraggingPrimaryColumn: setting.preventDraggingPrimaryColumn,
+                forcedComponent: setting.forcedComponent
               }}
               {bindings}
               {componentBindings}

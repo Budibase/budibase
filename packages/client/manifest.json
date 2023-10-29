@@ -2699,6 +2699,22 @@
       }
     ]
   },
+  "labelfield": {
+    "name": "Text Field",
+    "icon": "Text",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 32
+    },
+    "settings": [
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
@@ -6232,19 +6248,6 @@
         "required": true
       },
       {
-        "type": "columns/grid",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": [
-          "table",
-          {
-            "setting": "table.type",
-            "value": "custom",
-            "invert": true
-          }
-        ]
-      },
-      {
         "type": "filter",
         "label": "Filtering",
         "key": "initialFilter",
@@ -6339,6 +6342,22 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Columns",
+        "settings": [
+          {
+            "type": "fieldConfiguration",
+            "key": "columns",
+            "nested": true,
+            "resetOn": "dataSource",
+            "selectAllFields": true,
+            "includeAutoColumns": true,
+            "preventDraggingPrimaryColumn": true,
+            "forcedComponent": "labelfield"
+          }
+        ]
       }
     ]
   },
