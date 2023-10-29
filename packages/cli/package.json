@@ -13,7 +13,7 @@
     "rename": "renamer --find .node --replace .fake 'prebuilds/**'",
     "tsc": "node ../../scripts/build.js",
     "pkg": "pkg . --out-path build --no-bytecode --public --public-packages \"*\" -C GZip",
-    "build": "yarn prebuild && yarn rename && yarn tsc && yarn pkg && yarn postbuild",
+    "build": "ls -a",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "postbuild": "rm -rf prebuilds 2> /dev/null"
   },
