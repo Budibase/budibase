@@ -16,7 +16,7 @@
 
   export let componentInstance
   export let value
-  export let includeAutoColumns = false;
+  export let includeAutoColumns = false
   export let preventDraggingPrimaryColumn = false
   export let forcedComponent
 
@@ -43,7 +43,7 @@
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: resourceId = datasource?.resourceId || datasource?.tableId
-  let previousResourceId = null;
+  let previousResourceId = null
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
@@ -62,16 +62,16 @@
 
     if (resourceId !== previousResourceId) {
       if (previousResourceId !== null) {
-        fieldList = fieldList.map(fl => ({...fl, active: true }));
-        dispatch("change", fieldList);
+        fieldList = fieldList.map(fl => ({ ...fl, active: true }))
+        dispatch("change", fieldList)
       }
 
-      previousResourceId = resourceId;
+      previousResourceId = resourceId
     }
   }
 
   $: updateState(cachedValue, resourceId)
- 
+
   // Builds unused ones only
   const buildUnconfiguredOptions = (schema, selected) => {
     if (!schema) {
@@ -107,7 +107,7 @@
   }
 
   const getPrimaryDisplayColumn = (asset, datasource) => {
-    return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay;
+    return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay
   }
 
   const updateSanitsedFields = value => {
@@ -140,7 +140,7 @@
         _instanceName: instance.field,
         field: instance.field,
         label: instance.field,
-        placeholder: instance.field
+        placeholder: instance.field,
       },
       {}
     )
@@ -187,7 +187,7 @@
         listTypeProps={{
           componentBindings,
           bindings,
-          hideToggle: true
+          hideToggle: true,
         }}
         whitelist={[primaryDisplayColumn]}
       />
@@ -204,7 +204,11 @@
         componentBindings,
         bindings,
       }}
-        whitelist={preventDraggingPrimaryColumn ? fieldList.map(field => field.field).filter(field => field !== primaryDisplayColumn) : null}
+      whitelist={preventDraggingPrimaryColumn
+        ? fieldList
+            .map(field => field.field)
+            .filter(field => field !== primaryDisplayColumn)
+        : null}
     />
   {/if}
 </div>

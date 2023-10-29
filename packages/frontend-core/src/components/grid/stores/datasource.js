@@ -55,17 +55,17 @@ export const deriveStores = context => {
 
       // Apply whitelist if specified
       if ($columnWhitelist?.length) {
-        const sortedColumns = {};
+        const sortedColumns = {}
 
         $columnWhitelist.forEach((columnKey, idx) => {
-          const enrichedColumn = enrichedSchema[columnKey];
+          const enrichedColumn = enrichedSchema[columnKey]
           if (enrichedColumn) {
-            sortedColumns[columnKey] = enrichedColumn;
-            sortedColumns[columnKey].order = idx;
+            sortedColumns[columnKey] = enrichedColumn
+            sortedColumns[columnKey].order = idx
           }
-        });
+        })
 
-        return sortedColumns;
+        return sortedColumns
       }
 
       return enrichedSchema

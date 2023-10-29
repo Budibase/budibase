@@ -192,8 +192,9 @@
 
                 // Grid fields
                 includeAutoColumns: setting.includeAutoColumns,
-                preventDraggingPrimaryColumn: setting.preventDraggingPrimaryColumn,
-                forcedComponent: setting.forcedComponent
+                preventDraggingPrimaryColumn:
+                  setting.preventDraggingPrimaryColumn,
+                forcedComponent: setting.forcedComponent,
               }}
               {bindings}
               {componentBindings}

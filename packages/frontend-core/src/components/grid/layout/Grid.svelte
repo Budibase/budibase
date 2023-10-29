@@ -48,7 +48,7 @@
   export let fixedRowHeight = null
   export let notifySuccess = null
   export let notifyError = null
-  export let useWhiteListColumnsForStickyColumn = false;
+  export let useWhiteListColumnsForStickyColumn = false
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()

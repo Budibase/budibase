@@ -27,12 +27,11 @@
     let overrides = {}
     columns?.forEach(column => {
       overrides[column.field] = {
-        displayName: column.label
+        displayName: column.label,
       }
     })
     return overrides
   }
-
 </script>
 
 <div

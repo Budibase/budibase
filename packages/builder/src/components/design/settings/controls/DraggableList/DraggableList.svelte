@@ -51,10 +51,9 @@
 
     if (whitelist) {
       return draggableItems.filter(item => whitelist.includes(item.item.field))
-
     }
 
-    return draggableItems;
+    return draggableItems
   }
 
   $: if (items) {
@@ -74,7 +73,7 @@
     // Items not on the whitelist will be excluded from reordering updates, so re-add them here
     if (whitelist) {
       const omittedItems = items.filter(item => !whitelist.includes(item.field))
-      update = update.concat(omittedItems);
+      update = update.concat(omittedItems)
     }
 
     return update
@@ -82,8 +81,8 @@
 
   const handleFinalize = e => {
     updateRowOrder(e)
-    const foo = serialiseUpdate();
-    console.log(foo);
+    const foo = serialiseUpdate()
+    console.log(foo)
     dispatch("change", foo)
   }
 

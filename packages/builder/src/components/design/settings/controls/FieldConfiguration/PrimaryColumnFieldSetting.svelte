@@ -1,8 +1,6 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { TooltipWrapper, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { cloneDeep } from "lodash/fp"
+  import { Icon } from "@budibase/bbui"
   import { store } from "builderStore"
   import { runtimeToReadableBinding } from "builderStore/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
@@ -13,13 +11,6 @@
   export let anchor
   export let hideToggle = false
 
-  const dispatch = createEventDispatcher()
-  const onToggle = item => {
-    return e => {
-      item.active = e.detail
-      dispatch("change", { ...cloneDeep(item), active: e.detail })
-    }
-  }
   const getReadableText = () => {
     if (item.label) {
       return isJSBinding(item.label)
@@ -58,7 +49,10 @@
     </EditComponentPopover>
     <div class="field-label">{readableText}</div>
   </div>
-  <div title="The leftmost column is dictated by your datasource's primary column, which can be changed in the data section" class="list-item-right">
+  <div
+    title="The leftmost column is dictated by your datasource's primary column, which can be changed in the data section"
+    class="list-item-right"
+  >
     <Icon name={"Info"} />
   </div>
 </div>
