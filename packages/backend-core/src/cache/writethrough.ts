@@ -119,8 +119,8 @@ export class Writethrough {
     this.writeRateMs = writeRateMs
   }
 
-  async put(doc: any) {
-    return put(this.db, doc, this.writeRateMs)
+  async put(doc: any, writeRateMs: number = this.writeRateMs) {
+    return put(this.db, doc, writeRateMs)
   }
 
   async get(id: string) {
