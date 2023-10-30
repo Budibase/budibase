@@ -17,7 +17,6 @@
   export let fileTags = []
   export let maximum = undefined
   export let compact = false
-  export let extensions = undefined
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -40,7 +39,6 @@
     {fileTags}
     {maximum}
     {compact}
-    {extensions}
     on:change={onChange}
   />
 </Field>

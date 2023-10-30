@@ -13,18 +13,12 @@
   import { capitalise } from "helpers"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import Editor from "../../integration/QueryEditor.svelte"
-  import { ValidFileExtensions } from "@budibase/shared-core"
-  import { admin } from "stores/portal"
 
   export let defaultValue
   export let meta
   export let value = defaultValue || (meta.type === "boolean" ? false : "")
   export let readonly
   export let error
-
-  let validExtensions = $admin.cloud
-    ? ValidFileExtensions.map(ext => `.${ext}`).join(", ")
-    : "*"
 
   const resolveTimeStamp = timestamp => {
     if (!timestamp) {
@@ -65,7 +59,7 @@
     bind:value
   />
 {:else if type === "attachment"}
-  <Dropzone {label} {error} extensions={validExtensions} bind:value />
+  <Dropzone {label} {error} bind:value />
 {:else if type === "boolean"}
   <Toggle text={label} {error} bind:value />
 {:else if type === "array" && meta.constraints.inclusion.length !== 0}
