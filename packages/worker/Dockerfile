@@ -14,7 +14,7 @@ RUN yarn global add pm2
 
 COPY package.json .
 COPY dist/yarn.lock .
-RUN yarn install --production=true
+RUN yarn install --production=true --network-timeout 1000000
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
