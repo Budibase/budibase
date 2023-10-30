@@ -56,8 +56,6 @@
     "build:specs": "lerna run --stream specs",
     "build:docker": "lerna run --stream build:docker && yarn build:docker:proxy && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh $BUDIBASE_RELEASE_VERSION && cd -",
     "build:docker:proxy": "docker build hosting/proxy -t proxy-service",
-    "build:docker:selfhost": "lerna run --stream build:docker && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh latest && cd -",
-    "build:docker:develop": "node scripts/pinVersions && lerna run --stream build:docker && yarn build:docker:proxy && cd hosting/scripts/linux/ && ./release-to-docker-hub.sh develop && cd -",
     "build:docker:airgap": "node hosting/scripts/airgapped/airgappedDockerBuild",
     "build:docker:airgap:single": "SINGLE_IMAGE=1 node hosting/scripts/airgapped/airgappedDockerBuild",
     "build:digitalocean": "cd hosting/digitalocean && ./build.sh && cd -",
