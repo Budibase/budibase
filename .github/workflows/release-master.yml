@@ -66,14 +66,47 @@ jobs:
       - name: Setup Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-      - name: Build/release Docker images
+
+      - name: Docker login
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build docker (budibase/worker)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUDIBASE_VERSION=${{ env.BUDIBASE_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./packages/worker/Dockerfile.v2
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: budibase/worker
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build docker (budibase/apps)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUDIBASE_VERSION=${{ env.BUDIBASE_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./packages/server/Dockerfile.v2
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: budibase/apps
+          IMAGE_TAG: ${{ inputs.image_tag }}
+          BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
   release-helm-chart:
     needs: [release-images]
