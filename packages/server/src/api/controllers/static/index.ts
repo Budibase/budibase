@@ -13,34 +13,20 @@ import {
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
 import { DocumentType } from "../../../db/utils"
-import { context, objectStore, utils, configs } from "@budibase/backend-core"
+import {
+  context,
+  objectStore,
+  utils,
+  configs,
+  BadRequestError,
+} from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx } from "@budibase/types"
-import environment from "../../../environment"
+import { App, Ctx, ProcessAttachmentResponse, Upload } from "@budibase/types"
 
 const send = require("koa-send")
-
-async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await objectStore.upload({
-    bucket,
-    metadata,
-    filename: s3Key,
-    path: file.path,
-    type: file.type,
-  })
-
-  // don't store a URL, work this out on the way out as the URL could change
-  return {
-    size: file.size,
-    name: file.name,
-    url: objectStore.getAppFileUrl(s3Key),
-    extension: [...file.name.split(".")].pop(),
-    key: response.Key,
-  }
-}
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -75,34 +61,58 @@ export const serveBuilder = async function (ctx: Ctx) {
   await send(ctx, ctx.file, { root: builderPath })
 }
 
-export const uploadFile = async function (ctx: Ctx) {
+export const uploadFile = async function (
+  ctx: Ctx<{}, ProcessAttachmentResponse>
+) {
   const file = ctx.request?.files?.file
+  if (!file) {
+    throw new BadRequestError("No file provided")
+  }
+
   let files = file && Array.isArray(file) ? Array.from(file) : [file]
 
-  const uploads = files.map(async (file: any) => {
-    const fileExtension = [...file.name.split(".")].pop()
-    if (
-      !environment.SELF_HOSTED &&
-      !ValidFileExtensions.includes(fileExtension)
-    ) {
-      ctx.throw(
-        400,
-        `Invalid file extension. Valid extensions are: ${ValidFileExtensions.join(
-          ", "
-        )}`
-      )
-    }
-    // filenames converted to UUIDs so they are unique
-    const processedFileName = `${uuid.v4()}.${fileExtension}`
+  ctx.body = await Promise.all(
+    files.map(async file => {
+      if (!file.name) {
+        throw new BadRequestError(
+          "Attempted to upload a file without a filename"
+        )
+      }
 
-    return prepareUpload({
-      file,
-      s3Key: `${context.getProdAppId()}/attachments/${processedFileName}`,
-      bucket: ObjectStoreBuckets.APPS,
+      const extension = [...file.name.split(".")].pop()
+      if (!extension) {
+        throw new BadRequestError(
+          `File "${file.name}" has no extension, an extension is required to upload a file`
+        )
+      }
+
+      if (!env.SELF_HOSTED && !ValidFileExtensions.includes(extension)) {
+        throw new BadRequestError(
+          `File "${file.name}" has an invalid extension: "${extension}"`
+        )
+      }
+
+      // filenames converted to UUIDs so they are unique
+      const processedFileName = `${uuid.v4()}.${extension}`
+
+      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+
+      const response = await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: s3Key,
+        path: file.path,
+        type: file.type,
+      })
+
+      return {
+        size: file.size,
+        name: file.name,
+        url: objectStore.getAppFileUrl(s3Key),
+        extension,
+        key: response.Key,
+      }
     })
-  })
-
-  ctx.body = await Promise.all(uploads)
+  )
 }
 
 export const deleteObjects = async function (ctx: Ctx) {
