@@ -18,7 +18,7 @@
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
-    "build:docker": "yarn build && docker build . -t app-service --label version=$BUDIBASE_RELEASE_VERSION --build-arg BUDIBASE_VERSION=$BUDIBASE_RELEASE_VERSION",
+    "build:docker": "yarn nx build && docker build ../.. -t app-service --label version=$BUDIBASE_RELEASE_VERSION --build-arg BUDIBASE_VERSION=$BUDIBASE_RELEASE_VERSION -f Dockerfile.v2",
     "run:docker": "node dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:up": "node scripts/dev/manage.js up",
