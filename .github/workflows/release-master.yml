@@ -118,7 +118,7 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
           cache-to: type=inline
         env:
-          IMAGE_NAME: proxy-service
+          IMAGE_NAME: budibase/proxy-service
           IMAGE_TAG: ${{ inputs.image_tag }}
 
   release-helm-chart:
