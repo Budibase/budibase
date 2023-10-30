@@ -55,6 +55,7 @@ import {
 } from "@budibase/types"
 
 import API from "./api"
+import { cloneDeep } from "lodash"
 
 mocks.licenses.init(pro)
 
@@ -197,30 +198,38 @@ class TestConfiguration {
     }
   }
 
-  // MODES
-  setMultiTenancy = (value: boolean) => {
-    env._set("MULTI_TENANCY", value)
-    coreEnv._set("MULTI_TENANCY", value)
+  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+    let cleanup = this.setEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
   }
 
-  setSelfHosted = (value: boolean) => {
-    env._set("SELF_HOSTED", value)
-    coreEnv._set("SELF_HOSTED", value)
-  }
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setEnv(newEnvVars: Partial<typeof env>): () => void {
+    const oldEnv = cloneDeep(env)
+    const oldCoreEnv = cloneDeep(coreEnv)
 
-  setGoogleAuth = (value: string) => {
-    env._set("GOOGLE_CLIENT_ID", value)
-    env._set("GOOGLE_CLIENT_SECRET", value)
-    coreEnv._set("GOOGLE_CLIENT_ID", value)
-    coreEnv._set("GOOGLE_CLIENT_SECRET", value)
-  }
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      env._set(key, newEnvVars[key])
+      coreEnv._set(key, newEnvVars[key])
+    }
 
-  modeCloud = () => {
-    this.setSelfHosted(false)
-  }
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
+        env._set(key, value)
+      }
 
-  modeSelf = () => {
-    this.setSelfHosted(true)
+      for (const [key, value] of Object.entries(oldCoreEnv)) {
+        coreEnv._set(key, value)
+      }
+    }
   }
 
   // UTILS

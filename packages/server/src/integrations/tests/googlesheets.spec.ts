@@ -36,13 +36,18 @@ import { generateDatasourceID } from "../../db/utils"
 describe("Google Sheets Integration", () => {
   let integration: any,
     config = new TestConfiguration()
+  let cleanupEnv: () => void
 
   beforeAll(() => {
-    config.setGoogleAuth("test")
+    cleanupEnv = config.setEnv({
+      GOOGLE_CLIENT_ID: "test",
+      GOOGLE_CLIENT_SECRET: "test",
+    })
   })
 
   afterAll(async () => {
-    await config.end()
+    cleanupEnv()
+    config.end()
   })
 
   beforeEach(async () => {
