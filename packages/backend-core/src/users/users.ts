@@ -14,11 +14,11 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
-  ContextUser,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
+  ContextUser,
   DatabaseQueryOpts,
   CouchFindOptions,
 } from "@budibase/types"
