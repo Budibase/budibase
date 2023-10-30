@@ -129,7 +129,7 @@
           on:blur={async () => {
             typing = false
             if (automationNameError) {
-              automationName = stepNames[block.id]
+              automationName = stepNames[block.id] || block?.name
             } else {
               await saveName()
             }
@@ -224,6 +224,7 @@
 
   .blockSection {
     padding: var(--spacing-xl);
+    border: 1px solid transparent;
   }
 
   .blockTitle {
