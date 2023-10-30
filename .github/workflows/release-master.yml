@@ -114,6 +114,7 @@ jobs:
         with:
           context: ./hosting/proxy
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           file: ./hosting/proxy/Dockerfile
           cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
