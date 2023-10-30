@@ -42,6 +42,39 @@ jobs:
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
+  test-release-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+
+      - run: yarn install --frozen-lockfile
+      - name: Update versions
+        run: ./scripts/updateVersions.sh
+      - run: yarn lint
+      - run: yarn build
+      - run: yarn build:sdk
+
+      - name: "Get Current tag"
+        id: currenttag
+        run: |
+          version=$(./scripts/getCurrentVersion.sh)
+          echo "Using tag $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Build/release Docker images
+        run: |
+          yarn lerna run --stream build:docker
+        env:
+          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
   build:
     runs-on: ubuntu-latest
     steps:
