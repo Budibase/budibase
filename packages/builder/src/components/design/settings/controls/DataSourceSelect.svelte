@@ -286,7 +286,8 @@
       {#each tables as table}
         <li
           class="spectrum-Menu-item"
-          class:is-selected={value.label === table.label}
+          class:is-selected={value?.label === table.label &&
+            value?.type === table.type}
           role="option"
           aria-selected="true"
           tabindex="0"
@@ -314,7 +315,8 @@
         {#each views as view}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === view.label}
+            class:is-selected={value?.label === view.label &&
+              value?.type === view.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -343,7 +345,8 @@
         {#each queries as query}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === query.label}
+            class:is-selected={value?.label === query.label &&
+              value?.type === query.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -372,7 +375,8 @@
         {#each links as link}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === link.label}
+            class:is-selected={value?.label === link.label &&
+              value?.type === link.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -401,7 +405,8 @@
         {#each fields as field}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === field.label}
+            class:is-selected={value?.label === field.label &&
+              value?.type === field.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -430,7 +435,8 @@
         {#each jsonArrays as field}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === field.label}
+            class:is-selected={value?.label === field.label &&
+              value?.type === field.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -459,7 +465,8 @@
         {#each dataProviders as provider}
           <li
             class="spectrum-Menu-item"
-            class:is-selected={value.label === provider.label}
+            class:is-selected={value?.label === provider.label &&
+              value?.type === provider.type}
             role="option"
             aria-selected="true"
             tabindex="0"
@@ -486,7 +493,8 @@
     <ul class="spectrum-Menu" role="listbox">
       <li
         class="spectrum-Menu-item"
-        class:is-selected={value.label === custom.label}
+        class:is-selected={value?.label === custom.label &&
+          value?.type === custom.type}
         role="option"
         aria-selected="true"
         tabindex="0"
