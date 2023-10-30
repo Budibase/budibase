@@ -1,7 +1,6 @@
 <script>
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
-  import { capitalise } from "helpers"
   import { notifications } from "@budibase/bbui"
   import {
     selectedScreen,
@@ -10,7 +9,10 @@
     selectedComponent,
     selectedComponentPath,
   } from "stores/frontend"
-  import { findComponentPath } from "stores/frontend/components/utils"
+  import {
+    findComponentPath,
+    getComponentText,
+  } from "stores/frontend/components/utils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
 
@@ -34,16 +36,6 @@
       mousePosition,
     })
     return false
-  }
-
-  const getComponentText = component => {
-    if (component._instanceName) {
-      return component._instanceName
-    }
-    const type =
-      component._component.replace("@budibase/standard-components/", "") ||
-      "component"
-    return capitalise(type)
   }
 
   const getComponentIcon = component => {
