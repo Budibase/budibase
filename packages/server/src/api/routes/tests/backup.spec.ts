@@ -5,6 +5,8 @@ import sdk from "../../../sdk"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"
 
+mocks.licenses.useBackups()
+
 describe("/backups", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
@@ -15,13 +17,13 @@ describe("/backups", () => {
     await config.init()
   })
 
-  describe("exportAppDump", () => {
+  describe("/api/backups/export", () => {
     it("should be able to export app", async () => {
-      const res = await request
-        .post(`/api/backups/export?appId=${config.getAppId()}`)
-        .set(config.defaultHeaders())
-        .expect(200)
-      expect(res.headers["content-type"]).toEqual("application/gzip")
+      const { body, headers } = await config.api.backup.exportBasicBackup(
+        config.getAppId()!
+      )
+      expect(body instanceof Buffer).toBe(true)
+      expect(headers["content-type"]).toEqual("application/gzip")
       expect(events.app.exported).toBeCalledTimes(1)
     })
 
@@ -36,14 +38,29 @@ describe("/backups", () => {
     it("should infer the app name from the app", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
-      const res = await request
-        .post(`/api/backups/export?appId=${config.getAppId()}`)
-        .set(config.defaultHeaders())
+      const { headers } = await config.api.backup.exportBasicBackup(
+        config.getAppId()!
+      )
 
-      expect(res.headers["content-disposition"]).toEqual(
+      expect(headers["content-disposition"]).toEqual(
         `attachment; filename="${
           config.getApp()!.name
         }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`
+      )
+    })
+  })
+
+  describe("/api/backups/import", () => {
+    it("should be able to import an app", async () => {
+      const appId = config.getAppId()!
+      const automation = await config.createAutomation()
+      await config.createAutomationLog(automation, appId)
+      await config.createScreen()
+      const exportRes = await config.api.backup.createBackup(appId)
+      expect(exportRes.backupId).toBeDefined()
+      const importRes = await config.api.backup.importBackup(
+        appId,
+        exportRes.backupId
       )
     })
   })

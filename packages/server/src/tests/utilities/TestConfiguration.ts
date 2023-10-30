@@ -774,8 +774,9 @@ class TestConfiguration {
 
   // AUTOMATION LOG
 
-  async createAutomationLog(automation: Automation) {
-    return await context.doInAppContext(this.getProdAppId(), async () => {
+  async createAutomationLog(automation: Automation, appId?: string) {
+    appId = appId || this.getProdAppId()
+    return await context.doInAppContext(appId!, async () => {
       return await pro.sdk.automations.logs.storeLog(
         automation,
         basicAutomationResults(automation._id!)
