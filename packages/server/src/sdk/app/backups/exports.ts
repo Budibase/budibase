@@ -84,7 +84,11 @@ export async function exportDB(
 }
 
 function defineFilter(excludeRows?: boolean, excludeLogs?: boolean) {
-  const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
+  const ids = [
+    USER_METDATA_PREFIX,
+    LINK_USER_METADATA_PREFIX,
+    AUTOMATION_LOG_PREFIX,
+  ]
   if (excludeRows) {
     ids.push(TABLE_ROW_PREFIX)
   }
