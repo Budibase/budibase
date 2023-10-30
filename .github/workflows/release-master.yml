@@ -89,7 +89,7 @@ jobs:
           cache-to: type=inline
         env:
           IMAGE_NAME: budibase/worker
-          IMAGE_TAG: ${{ inputs.image_tag }}
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
           BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
       - name: Build server docker
@@ -106,7 +106,7 @@ jobs:
           cache-to: type=inline
         env:
           IMAGE_NAME: budibase/apps
-          IMAGE_TAG: ${{ inputs.image_tag }}
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
           BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
       - name: Build proxy docker
@@ -120,7 +120,7 @@ jobs:
           cache-to: type=inline
         env:
           IMAGE_NAME: budibase/proxy
-          IMAGE_TAG: ${{ inputs.image_tag }}
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
 
   release-helm-chart:
     needs: [release-images]
