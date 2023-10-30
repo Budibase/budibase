@@ -552,10 +552,6 @@
     font-size: var(--font-size-m);
   }
 
-  .selected {
-    color: var(--spectrum-global-color-blue-600);
-  }
-
   li:hover {
     background-color: var(--spectrum-global-color-gray-200);
   }
