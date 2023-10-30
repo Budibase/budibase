@@ -282,13 +282,26 @@
     <div class="title">
       <Heading size="XS">Tables</Heading>
     </div>
-    <ul>
+    <ul class="spectrum-Menu" role="listbox">
       {#each tables as table}
         <li
-          class:selected={value.label === table.label}
+          class="spectrum-Menu-item"
+          class:is-selected={value.label === table.label}
+          role="option"
+          aria-selected="true"
+          tabindex="0"
           on:click={() => handleSelected(table)}
         >
-          {table.label}
+          <span class="spectrum-Menu-itemLabel">
+            {table.label}
+          </span>
+          <svg
+            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+            focusable="false"
+            aria-hidden="true"
+          >
+            <use xlink:href="#spectrum-css-icon-Checkmark100" />
+          </svg>
         </li>
       {/each}
     </ul>
@@ -297,13 +310,26 @@
       <div class="title">
         <Heading size="XS">Views</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each views as view}
           <li
-            class:selected={value.label === view.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === view.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(view)}
           >
-            {view.label}
+            <span class="spectrum-Menu-itemLabel">
+              {view.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -313,13 +339,26 @@
       <div class="title">
         <Heading size="XS">Queries</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each queries as query}
           <li
-            class:selected={value.label === query.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === query.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(query)}
           >
-            {query.label}
+            <span class="spectrum-Menu-itemLabel">
+              {query.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -329,13 +368,26 @@
       <div class="title">
         <Heading size="XS">Relationships</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each links as link}
           <li
-            class:selected={value.label === link.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === link.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(link)}
           >
-            {link.label}
+            <span class="spectrum-Menu-itemLabel">
+              {link.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -345,13 +397,26 @@
       <div class="title">
         <Heading size="XS">Fields</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each fields as field}
           <li
-            class:selected={value.label === field.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === field.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(field)}
           >
-            {field.label}
+            <span class="spectrum-Menu-itemLabel">
+              {field.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -361,13 +426,26 @@
       <div class="title">
         <Heading size="XS">JSON Arrays</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each jsonArrays as field}
           <li
-            class:selected={value.label === field.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === field.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(field)}
           >
-            {field.label}
+            <span class="spectrum-Menu-itemLabel">
+              {field.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -377,13 +455,26 @@
       <div class="title">
         <Heading size="XS">Data Providers</Heading>
       </div>
-      <ul>
+      <ul class="spectrum-Menu" role="listbox">
         {#each dataProviders as provider}
           <li
-            class:selected={value.label === provider.label}
+            class="spectrum-Menu-item"
+            class:is-selected={value.label === provider.label}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
             on:click={() => handleSelected(provider)}
           >
-            {provider.label}
+            <span class="spectrum-Menu-itemLabel">
+              {provider.label}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
           </li>
         {/each}
       </ul>
@@ -392,19 +483,32 @@
     <div class="title">
       <Heading size="XS">Other</Heading>
     </div>
-    <ul>
+    <ul class="spectrum-Menu" role="listbox">
       <li
-        class:selected={value.label === custom.label}
+        class="spectrum-Menu-item"
+        class:is-selected={value.label === custom.label}
+        role="option"
+        aria-selected="true"
+        tabindex="0"
         on:click={() => handleSelected(custom)}
       >
-        {custom.label}
+        <span class="spectrum-Menu-itemLabel">
+          {custom.label}
+        </span>
+        <svg
+          class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+          focusable="false"
+          aria-hidden="true"
+        >
+          <use xlink:href="#spectrum-css-icon-Checkmark100" />
+        </svg>
       </li>
-      {#if otherSources?.length}
-        {#each otherSources as source}
-          <li on:click={() => handleSelected(source)}>{source.label}</li>
-        {/each}
-      {/if}
     </ul>
+    {#if otherSources?.length}
+      {#each otherSources as source}
+        <li on:click={() => handleSelected(source)}>{source.label}</li>
+      {/each}
+    {/if}
   </div>
 </Popover>
 
@@ -438,6 +542,7 @@
     list-style: none;
     padding-left: 0px;
     margin: 0px;
+    width: 100%;
   }
 
   li {
