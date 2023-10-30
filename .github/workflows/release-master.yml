@@ -112,7 +112,7 @@ jobs:
       - name: Build proxy docker
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: ./hosting/proxy
           push: true
           tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           file: ./hosting/proxy/Dockerfile
