@@ -5,14 +5,14 @@
   import HeaderCell from "../cells/HeaderCell.svelte"
   import { TempTooltip, TooltipType } from "@budibase/bbui"
 
-  const { renderedColumns, config, hasNonAutoColumn, datasource, loading } =
+  const { visibleColumns, config, hasNonAutoColumn, datasource, loading } =
     getContext("grid")
 </script>
 
 <div class="header">
   <GridScrollWrapper scrollHorizontally>
     <div class="row">
-      {#each $renderedColumns as column, idx}
+      {#each $visibleColumns as column, idx}
         <HeaderCell {column} {idx}>
           <slot name="edit-column" />
         </HeaderCell>
