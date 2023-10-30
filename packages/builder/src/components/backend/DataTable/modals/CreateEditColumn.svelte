@@ -27,7 +27,7 @@
     SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
   } from "constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
+  import { getAutoColumnInformation, buildAutoColumn } from "builder/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"

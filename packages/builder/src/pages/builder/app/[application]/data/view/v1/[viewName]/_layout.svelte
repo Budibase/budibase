@@ -3,10 +3,10 @@
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { store } from "builderStore"
+  import { builderStore } from "stores/frontend"
 
   $: name = $views.selectedViewName
-  $: store.actions.websocket.selectResource(name)
+  $: builderStore.selectResource(name)
 
   const stopSyncing = syncURLToState({
     urlParam: "viewName",

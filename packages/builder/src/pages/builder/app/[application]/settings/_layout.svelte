@@ -3,7 +3,7 @@
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import { isOnlyUser } from "builderStore"
+  import { isOnlyUser } from "stores/frontend"
   import { auth } from "stores/portal"
   import { sdk } from "@budibase/shared-core"
 

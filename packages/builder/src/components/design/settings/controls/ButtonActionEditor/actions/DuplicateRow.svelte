@@ -1,11 +1,11 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
+  import { currentAsset, componentStore } from "stores/frontend"
   import { tables, viewsV2 } from "stores/backend"
   import {
     getContextProviderComponents,
     getSchemaForDatasourcePlus,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import SaveFields from "./SaveFields.svelte"
 
   export let parameters
@@ -13,12 +13,12 @@
 
   $: formComponents = getContextProviderComponents(
     $currentAsset,
-    $store.selectedComponentId,
+    $componentStore.selectedComponentId,
     "form"
   )
   $: schemaComponents = getContextProviderComponents(
     $currentAsset,
-    $store.selectedComponentId,
+    $componentStore.selectedComponentId,
     "schema"
   )
   $: providerOptions = getProviderOptions(formComponents, schemaComponents)
@@ -35,7 +35,7 @@
 
   // Gets a context definition of a certain type from a component definition
   const extractComponentContext = (component, contextType) => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     if (!def) {
       return null
     }

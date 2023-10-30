@@ -1,5 +1,5 @@
 <script>
-  import { selectedAutomation } from "builderStore"
+  import { selectedAutomation } from "stores/frontend"
   import Flowchart from "./FlowChart/FlowChart.svelte"
 </script>
 

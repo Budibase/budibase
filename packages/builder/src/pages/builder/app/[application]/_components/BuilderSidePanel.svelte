@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { builderStore, appStore } from "stores/frontend"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import {
     fetchData,
@@ -55,7 +55,7 @@
 
   let inviteFailureResponse = ""
   $: validEmail = emailValidator(email) === true
-  $: prodAppId = apps.getProdAppID($store.appId)
+  $: prodAppId = apps.getProdAppID($appStore.appId)
   $: promptInvite = showInvite(
     filteredInvites,
     filteredUsers,
@@ -182,7 +182,7 @@
   const debouncedUpdateFetch = Utils.debounce(searchUsers, 250)
   $: debouncedUpdateFetch(
     query,
-    $store.builderSidePanel,
+    $builderStore.builderSidePanel,
     loaded,
     filterByAppAccess
   )
@@ -200,7 +200,7 @@
         [prodAppId]: role,
       },
     })
-    await searchUsers(query, $store.builderSidePanel, loaded)
+    await searchUsers(query, $builderStore.builderSidePanel, loaded)
   }
 
   const onUpdateUser = async (user, role) => {
@@ -486,7 +486,7 @@
     loaded = true
   }
 
-  $: initSidePanel($store.builderSidePanel)
+  $: initSidePanel($builderStore.builderSidePanel)
 
   function handleKeyDown(evt) {
     if (evt.key === "Enter" && validEmail && !inviting) {
@@ -523,12 +523,7 @@
 <div
   transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
-  use:clickOutside={() => {
-    store.update(state => {
-      state.builderSidePanel = false
-      return state
-    })
-  }}
+  use:clickOutside={builderStore.hideBuilderSidePanel}
 >
   <div class="builder-side-panel-header">
     <div
@@ -551,10 +546,7 @@
         name="RailRightClose"
         hoverable
         on:click={() => {
-          store.update(state => {
-            state.builderSidePanel = false
-            return state
-          })
+          builderStore.hideBuilderSidePanel()
         }}
       />
     </div>

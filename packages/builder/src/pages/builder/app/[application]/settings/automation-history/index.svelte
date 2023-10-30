@@ -12,7 +12,7 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore, store } from "builderStore"
+  import { automationStore, appStore } from "stores/frontend"
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
@@ -229,7 +229,7 @@
 {#if selectedHistory}
   <Portal target="#side-panel">
     <HistoryDetailsPanel
-      appId={$store.appId}
+      appId={$appStore.appId}
       bind:history={selectedHistory}
       close={sidePanel.close}
     />

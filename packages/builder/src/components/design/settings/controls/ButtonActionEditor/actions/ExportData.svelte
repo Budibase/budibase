@@ -3,13 +3,13 @@
   import {
     findAllMatchingComponents,
     findComponent,
-  } from "builderStore/componentUtils"
-  import { currentAsset } from "builderStore"
+  } from "stores/frontend/components/utils"
+  import { currentAsset } from "stores/frontend"
   import { onMount } from "svelte"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
 
   export let parameters
 

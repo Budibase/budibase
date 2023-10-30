@@ -296,7 +296,7 @@
   {/if}
   <div class="controls">
     {#if !readonly}
-      <ButtonGroup>
+      <ButtonGroup gap="M">
         <Button
           disabled={readonly}
           on:click={$licensing.userLimitReached

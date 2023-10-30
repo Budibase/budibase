@@ -1,6 +1,7 @@
 <script>
   import ViewDataTable from "components/backend/DataTable/ViewDataTable.svelte"
-  import { views, database } from "stores/backend"
+  import { views } from "stores/backend"
+  import { database } from "stores/frontend/database"
 
   $: selectedView = $views.selected
 </script>

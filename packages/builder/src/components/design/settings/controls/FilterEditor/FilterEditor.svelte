@@ -4,9 +4,9 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import FilterDrawer from "./FilterDrawer.svelte"
-  import { currentAsset } from "builderStore"
+  import { currentAsset } from "stores/frontend"
 
   const dispatch = createEventDispatcher()
 

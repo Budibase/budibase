@@ -12,7 +12,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
-  import { isOnlyUser } from "builderStore"
+  import { isOnlyUser } from "stores/frontend"
 
   export let row
 

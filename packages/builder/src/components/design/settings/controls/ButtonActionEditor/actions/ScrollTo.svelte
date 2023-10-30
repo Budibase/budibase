@@ -1,11 +1,11 @@
 <script>
-  import { currentAsset, store } from "builderStore"
+  import { currentAsset, componentStore } from "stores/frontend"
   import { Label, Combobox, Select } from "@budibase/bbui"
   import {
     getActionProviderComponents,
     buildFormSchema,
-  } from "builderStore/dataBinding"
-  import { findComponent } from "builderStore/componentUtils"
+  } from "builder/dataBinding"
+  import { findComponent } from "stores/frontend/components/utils"
 
   export let parameters
 
@@ -14,7 +14,7 @@
   $: fieldOptions = Object.keys(formSchema || {})
   $: actionProviders = getActionProviderComponents(
     $currentAsset,
-    $store.selectedComponentId,
+    $componentStore.selectedComponentId,
     "ScrollTo"
   )
 </script>

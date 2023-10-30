@@ -5,11 +5,10 @@
     getSchemaForDatasource,
     getBindableProperties,
     getComponentBindableProperties,
-  } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  } from "builder/dataBinding"
   import DraggableList from "../DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store, selectedScreen } from "builderStore"
+  import { selectedScreen, currentAsset, componentStore } from "stores/frontend"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
@@ -114,7 +113,7 @@
     }
     instance._component = `@budibase/standard-components/${type}`
 
-    const pseudoComponentInstance = store.actions.components.createInstance(
+    const pseudoComponentInstance = componentStore.createInstance(
       instance._component,
       {
         _instanceName: instance.field,

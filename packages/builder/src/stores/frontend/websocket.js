@@ -1,15 +1,17 @@
 import { createWebsocket } from "@budibase/frontend-core"
 import {
-  userStore,
-  store,
-  deploymentStore,
   automationStore,
-} from "builderStore"
+  userStore,
+  appStore,
+  themeStore,
+  navigationStore,
+  deploymentStore,
+} from "stores/frontend"
 import { datasources, tables } from "stores/backend"
 import { get } from "svelte/store"
-import { auth } from "stores/portal"
+import { auth, apps } from "stores/portal"
+import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent } from "@budibase/shared-core"
-import { apps } from "stores/portal"
 import { notifications } from "@budibase/bbui"
 import { helpers } from "@budibase/shared-core"
 
@@ -38,7 +40,7 @@ export const createBuilderWebsocket = appId => {
   })
   socket.onOther(BuilderSocketEvent.LockTransfer, ({ userId }) => {
     if (userId === get(auth)?.user?._id) {
-      store.update(state => ({
+      appStore.update(state => ({
         ...state,
         hasLock: true,
       }))
@@ -55,17 +57,20 @@ export const createBuilderWebsocket = appId => {
 
   // Design section events
   socket.onOther(BuilderSocketEvent.ScreenChange, ({ id, screen }) => {
-    store.actions.screens.replace(id, screen)
+    screenStore.replace(id, screen)
   })
   socket.onOther(BuilderSocketEvent.AppMetadataChange, ({ metadata }) => {
-    store.actions.metadata.replace(metadata)
+    //Sync app metadata across the stores
+    appStore.syncMetadata(metadata)
+    themeStore.syncMetadata(metadata)
+    navigationStore.syncMetadata(metadata)
   })
   socket.onOther(
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }) => {
       await apps.load()
       if (published) {
-        await deploymentStore.actions.load()
+        await deploymentStore.load()
       }
       const verb = published ? "published" : "unpublished"
       notifications.success(`${helpers.getUserLabel(user)} ${verb} this app`)

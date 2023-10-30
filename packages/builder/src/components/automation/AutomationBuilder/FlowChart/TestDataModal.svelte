@@ -7,7 +7,7 @@
     Label,
     notifications,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation } from "stores/frontend"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import { cloneDeep } from "lodash/fp"
 

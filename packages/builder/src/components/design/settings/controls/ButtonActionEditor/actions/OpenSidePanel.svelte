@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { selectedScreen } from "builderStore"
-  import { findAllMatchingComponents } from "builderStore/componentUtils"
+  import { selectedScreen } from "stores/frontend"
+  import { findAllMatchingComponents } from "stores/frontend/components/utils"
 
   export let parameters
 

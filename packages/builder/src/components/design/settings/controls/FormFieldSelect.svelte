@@ -1,6 +1,6 @@
 <script>
   import { Combobox } from "@budibase/bbui"
-  import { currentAsset } from "builderStore"
+  import { currentAsset } from "stores/frontend"
   import { getComponentFieldOptions } from "helpers/formFields"
 
   export let componentInstance

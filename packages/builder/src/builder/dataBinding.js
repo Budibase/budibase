@@ -5,8 +5,13 @@ import {
   findComponent,
   findComponentPath,
   getComponentSettings,
-} from "./componentUtils"
-import { store, currentAsset } from "builderStore"
+} from "stores/frontend/components/utils"
+import {
+  currentAsset,
+  componentStore,
+  screenStore,
+  appStore,
+} from "stores/frontend"
 import {
   queries as queriesStores,
   tables as tablesStore,
@@ -178,7 +183,7 @@ export const getComponentBindableProperties = (asset, componentId) => {
 
   // Ensure that the component exists and exposes context
   const component = findComponent(asset.props, componentId)
-  const def = store.actions.components.getDefinition(component?._component)
+  const def = componentStore.getDefinition(component?._component)
   if (!def?.context) {
     return []
   }
@@ -209,7 +214,7 @@ export const getContextProviderComponents = (
 
   // Filter by only data provider components
   return path.filter(component => {
-    const def = store.actions.components.getDefinition(component._component)
+    const def = componentStore.getDefinition(component._component)
     if (!def?.context) {
       return false
     }
@@ -240,7 +245,7 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
 
   // Filter by only data provider components
   return path.filter(component => {
-    const def = store.actions.components.getDefinition(component._component)
+    const def = componentStore.getDefinition(component._component)
     return def?.actions?.includes(actionType)
   })
 }
@@ -312,7 +317,7 @@ const getProviderContextBindings = (asset, dataProviders) => {
   // Create bindings for each data provider
   let bindings = []
   dataProviders.forEach(component => {
-    const def = store.actions.components.getDefinition(component._component)
+    const def = componentStore.getDefinition(component._component)
     const contexts = Array.isArray(def.context) ? def.context : [def.context]
 
     // Create bindings for each context block provided by this data provider
@@ -502,7 +507,7 @@ export const getUserBindings = () => {
  */
 const getDeviceBindings = () => {
   let bindings = []
-  if (get(store).clientFeatures?.deviceAwareness) {
+  if (get(appStore).clientFeatures?.deviceAwareness) {
     const safeDevice = makePropSafe("device")
 
     bindings = [
@@ -540,7 +545,7 @@ const getDeviceBindings = () => {
  */
 const getSelectedRowsBindings = asset => {
   let bindings = []
-  if (get(store).clientFeatures?.rowSelection) {
+  if (get(appStore).clientFeatures?.rowSelection) {
     // Add bindings for table components
     let tables = findAllMatchingComponents(asset?.props, component =>
       component._component.endsWith("table")
@@ -595,7 +600,7 @@ export const makeStateBinding = key => {
  */
 const getStateBindings = () => {
   let bindings = []
-  if (get(store).clientFeatures?.state) {
+  if (get(appStore).clientFeatures?.state) {
     bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings
@@ -671,8 +676,7 @@ export const getEventContextBindings = ({
   }
 
   const definition =
-    componentDefinition ??
-    store.actions.components.getDefinition(component?._component)
+    componentDefinition ?? componentStore.getDefinition(component?._component)
 
   const settings = getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
@@ -1015,7 +1019,7 @@ export const getAllStateVariables = () => {
   })
 
   // Add on load settings from screens
-  get(store).screens.forEach(screen => {
+  get(screenStore).screens.forEach(screen => {
     if (screen.onLoad) {
       eventSettings.push(screen.onLoad)
     }
@@ -1044,8 +1048,8 @@ export const getAllStateVariables = () => {
 export const getAllAssets = () => {
   // Get all component containing assets
   let allAssets = []
-  allAssets = allAssets.concat(get(store).layouts || [])
-  allAssets = allAssets.concat(get(store).screens || [])
+  allAssets = allAssets.concat(get(appStore).layouts || [])
+  allAssets = allAssets.concat(get(screenStore).screens || [])
 
   return allAssets
 }

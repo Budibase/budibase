@@ -1,15 +1,16 @@
 <script>
-  import { store, userSelectedResourceMap } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { capitalise } from "helpers"
   import { notifications } from "@budibase/bbui"
   import {
-    selectedComponentPath,
-    selectedComponent,
     selectedScreen,
-  } from "builderStore"
-  import { findComponentPath } from "builderStore/componentUtils"
+    componentStore,
+    userSelectedResourceMap,
+    selectedComponent,
+    selectedComponentPath,
+  } from "stores/frontend"
+  import { findComponentPath } from "stores/frontend/components/utils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
 
@@ -20,8 +21,8 @@
 
   $: filteredComponents = components?.filter(component => {
     return (
-      !$store.componentToPaste?.isCut ||
-      component._id !== $store.componentToPaste?._id
+      !$componentStore.componentToPaste?.isCut ||
+      component._id !== $componentStore.componentToPaste?._id
     )
   })
 
@@ -46,12 +47,12 @@
   }
 
   const getComponentIcon = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.icon
   }
 
   const componentSupportsChildren = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.hasChildren
   }
 
@@ -102,7 +103,7 @@
     {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
     <li
       on:click|stopPropagation={() => {
-        $store.selectedComponentId = component._id
+        componentStore.select(component._id)
       }}
       id={`component-${component._id}`}
     >
@@ -119,7 +120,7 @@
         icon={getComponentIcon(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
-        selected={$store.selectedComponentId === component._id}
+        selected={$componentStore.selectedComponentId === component._id}
         {opened}
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}

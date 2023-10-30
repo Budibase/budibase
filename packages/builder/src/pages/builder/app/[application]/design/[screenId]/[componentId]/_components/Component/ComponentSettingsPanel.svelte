@@ -1,6 +1,10 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import { store, selectedComponent, selectedScreen } from "builderStore"
+  import {
+    selectedScreen,
+    componentStore,
+    selectedComponent,
+  } from "stores/frontend"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
@@ -9,22 +13,22 @@
   import {
     getBindableProperties,
     getComponentBindableProperties,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import { ActionButton } from "@budibase/bbui"
   import { capitalise } from "helpers"
 
   $: componentInstance = $selectedComponent
-  $: componentDefinition = store.actions.components.getDefinition(
+  $: componentDefinition = componentStore.getDefinition(
     $selectedComponent?._component
   )
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
 
   $: componentBindings = getComponentBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
   $: title = isScreen ? "Screen" : $selectedComponent?._instanceName

@@ -3,11 +3,12 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
+  import { builderStore } from "stores/frontend"
 
   export let panel = ClientBindingPanel
   export let value = ""
@@ -21,6 +22,7 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
+  export let key
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -34,6 +36,7 @@
   const saveBinding = () => {
     onChange(tempValue)
     onBlur()
+    builderStore.propertyFocus()
     bindingDrawer.hide()
   }
 
@@ -48,6 +51,11 @@
 
   const onBlur = () => {
     dispatch("blur", currentVal)
+  }
+
+  const onDrawerHide = e => {
+    builderStore.propertyFocus()
+    dispatch("drawerHide", e.detail)
   }
 </script>
 
@@ -66,6 +74,7 @@
     <div
       class="icon"
       on:click={() => {
+        builderStore.propertyFocus(key)
         bindingDrawer.show()
       }}
     >
@@ -74,7 +83,7 @@
   {/if}
 </div>
 <Drawer
-  on:drawerHide
+  on:drawerHide={onDrawerHide}
   on:drawerShow
   {fillWidth}
   bind:this={bindingDrawer}

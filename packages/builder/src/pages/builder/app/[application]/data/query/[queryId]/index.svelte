@@ -1,9 +1,10 @@
 <script>
-  import { database, queries, datasources } from "stores/backend"
+  import { queries, datasources } from "stores/backend"
   import QueryViewer from "components/integration/QueryViewer.svelte"
   import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
   import { cloneDeep } from "lodash/fp"
+  import { database } from "stores/frontend/database"
 
   $: query = $queries.selected
   $: editableQuery = cloneDeep(query)

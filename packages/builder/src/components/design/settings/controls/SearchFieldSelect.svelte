@@ -3,8 +3,8 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  } from "builder/dataBinding"
+  import { currentAsset } from "stores/frontend"
   import { tables } from "stores/backend"
   import { createEventDispatcher } from "svelte"
   import { getFields } from "helpers/searchFields"

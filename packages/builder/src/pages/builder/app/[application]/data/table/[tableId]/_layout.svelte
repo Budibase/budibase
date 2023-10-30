@@ -3,10 +3,10 @@
   import { tables } from "stores/backend"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { store } from "builderStore"
+  import { builderStore } from "stores/frontend"
 
   $: tableId = $tables.selectedTableId
-  $: store.actions.websocket.selectResource(tableId)
+  $: builderStore.selectResource(tableId)
 
   const stopSyncing = syncURLToState({
     urlParam: "tableId",
