@@ -1,8 +1,8 @@
-import { findClosestMatchingComponent } from "builderStore/componentUtils"
+import { findClosestMatchingComponent } from "stores/frontend/components/utils"
 import {
   getDatasourceForProvider,
   getSchemaForDatasource,
-} from "builderStore/dataBinding"
+} from "builder/dataBinding"
 
 export const getComponentFieldOptions = (asset, id, type, loose = true) => {
   const form = findClosestMatchingComponent(

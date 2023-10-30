@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset, store } from "builderStore"
-  import { getActionProviderComponents } from "builderStore/dataBinding"
+  import { currentAsset, componentStore } from "stores/frontend"
+  import { getActionProviderComponents } from "builder/dataBinding"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
@@ -10,7 +10,7 @@
 
   $: actionProviders = getActionProviderComponents(
     $currentAsset,
-    $store.selectedComponentId,
+    $componentStore.selectedComponentId,
     "ChangeFormStep"
   )
 

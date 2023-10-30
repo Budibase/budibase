@@ -2,7 +2,7 @@
   import { Heading, Layout } from "@budibase/bbui"
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import ViewDynamicVariables from "./ViewDynamicVariables.svelte"
-  import { getEnvironmentBindings } from "builderStore/dataBinding"
+  import { getEnvironmentBindings } from "builder/dataBinding"
   import { licensing } from "stores/portal"
   import { queries } from "stores/backend"
   import { cloneDeep } from "lodash/fp"

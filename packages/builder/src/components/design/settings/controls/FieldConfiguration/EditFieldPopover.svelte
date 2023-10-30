@@ -1,6 +1,6 @@
 <script>
   import { Icon, Popover, Layout } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/frontend"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher } from "svelte"
   import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
@@ -26,7 +26,7 @@
   $: if (field) {
     pseudoComponentInstance = field
   }
-  $: componentDef = store.actions.components.getDefinition(
+  $: componentDef = componentStore.getDefinition(
     pseudoComponentInstance._component
   )
   $: parsedComponentDef = processComponentDefinitionSettings(componentDef)
@@ -48,10 +48,7 @@
   const updateSetting = async (setting, value) => {
     const nestedComponentInstance = cloneDeep(pseudoComponentInstance)
 
-    const patchFn = store.actions.components.updateComponentSetting(
-      setting.key,
-      value
-    )
+    const patchFn = componentStore.updateComponentSetting(setting.key, value)
     patchFn(nestedComponentInstance)
 
     const update = {

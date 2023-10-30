@@ -1,7 +1,7 @@
 import { createLocalStorageStore } from "@budibase/frontend-core"
 import { get } from "svelte/store"
 
-export const getTemporalStore = () => {
+export const createTemporalStore = () => {
   const initialValue = {}
 
   const localStorageKey = `bb-temporal`
@@ -41,3 +41,5 @@ export const getTemporalStore = () => {
     actions: { setExpiring, getExpiring },
   }
 }
+
+export const temporalStore = createTemporalStore()

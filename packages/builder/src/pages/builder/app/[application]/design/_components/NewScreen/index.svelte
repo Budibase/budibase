@@ -4,13 +4,13 @@
   import blankImage from "./blank.png"
   import tableImage from "./table.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/frontend"
 
   export let onClose = null
 
   let createScreenModal
 
-  $: hasScreens = $store.screens?.length
+  $: hasScreens = $screenStore.screens?.length
 </script>
 
 <div class="page">

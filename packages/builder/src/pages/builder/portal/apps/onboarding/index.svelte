@@ -5,7 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "api"
-  import { store, automationStore } from "builderStore"
+  import { database } from "stores/frontend/database"
   import { auth, admin } from "stores/portal"
 
   let name = "My first app"
@@ -27,9 +27,8 @@
     const createdApp = await API.createApp(data)
 
     // Select Correct Application/DB in prep for creating user
-    const pkg = await API.fetchAppPackage(createdApp.instance._id)
-    await store.actions.initialise(pkg)
-    await automationStore.actions.fetch()
+    database.syncAppDatabase(createdApp)
+
     // Update checklist - in case first app
     await admin.init()
 

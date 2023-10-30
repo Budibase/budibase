@@ -3,7 +3,7 @@
   import { RoleUtils } from "@budibase/frontend-core"
   import { roles } from "stores/backend"
   import { get } from "svelte/store"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/frontend"
   import { onMount } from "svelte"
 
   export let onConfirm
@@ -26,7 +26,7 @@
     if (!url || !role) {
       return false
     }
-    return get(store).screens.some(
+    return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === role

@@ -3,7 +3,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { createEventDispatcher } from "svelte"
 

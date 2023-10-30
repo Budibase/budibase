@@ -7,7 +7,7 @@
     Layout,
     Label,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { themeStore } from "stores/frontend"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let column
@@ -42,7 +42,7 @@
         <ColorPicker
           value={column.background}
           on:change={e => (column.background = e.detail)}
-          spectrumTheme={$store.theme}
+          spectrumTheme={$themeStore.theme}
         />
       </Layout>
       <Layout noPadding gap="XS">
@@ -50,7 +50,7 @@
         <ColorPicker
           value={column.color}
           on:change={e => (column.color = e.detail)}
-          spectrumTheme={$store.theme}
+          spectrumTheme={$themeStore.theme}
         />
       </Layout>
     </Layout>

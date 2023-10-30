@@ -14,6 +14,7 @@ import {
   dndIsDragging,
   confirmationStore,
   roleStore,
+  appStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -28,6 +29,7 @@ import { getAPIKey } from "./utils/api.js"
 export default {
   API,
   authStore,
+  appStore,
   notificationStore,
   routeStore,
   rowSelectionStore,

@@ -1,8 +1,8 @@
 <script>
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { currentAsset, store } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
-  import { makeDatasourceFormComponents } from "builderStore/store/screenTemplates/utils/commonComponents"
+  import { currentAsset, componentStore } from "stores/frontend"
+  import { findClosestMatchingComponent } from "stores/frontend/components/utils"
+  import { makeDatasourceFormComponents } from "builder/store/screenTemplates/utils/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let componentInstance
@@ -18,7 +18,7 @@
     const dataSource = form?.dataSource
     const fields = makeDatasourceFormComponents(dataSource)
     try {
-      await store.actions.components.updateSetting(
+      await componentStore.updateSetting(
         "_children",
         fields.map(field => field.json())
       )

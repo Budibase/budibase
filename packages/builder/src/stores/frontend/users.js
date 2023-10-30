@@ -1,6 +1,6 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 
-export const getUserStore = () => {
+export const createUserStore = () => {
   const store = writable([])
 
   const init = users => {
@@ -40,3 +40,23 @@ export const getUserStore = () => {
     },
   }
 }
+
+export const userStore = createUserStore()
+
+export const userSelectedResourceMap = derived(userStore, $userStore => {
+  let map = {}
+  $userStore.forEach(user => {
+    const resource = user.builderMetadata?.selectedResourceId
+    if (resource) {
+      if (!map[resource]) {
+        map[resource] = []
+      }
+      map[resource].push(user)
+    }
+  })
+  return map
+})
+
+export const isOnlyUser = derived(userStore, $userStore => {
+  return $userStore.length < 2
+})

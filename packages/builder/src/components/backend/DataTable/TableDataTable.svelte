@@ -4,7 +4,7 @@
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
-  import { store } from "builderStore"
+  import { appStore } from "stores/frontend"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"
@@ -61,14 +61,14 @@
     datasource={gridDatasource}
     canAddRows={!isUsersTable}
     canDeleteRows={!isUsersTable}
-    canEditRows={!isUsersTable || !$store.features.disableUserMetadata}
-    canEditColumns={!isUsersTable || !$store.features.disableUserMetadata}
+    canEditRows={!isUsersTable || !$appStore.features.disableUserMetadata}
+    canEditColumns={!isUsersTable || !$appStore.features.disableUserMetadata}
     schemaOverrides={isUsersTable ? userSchemaOverrides : null}
     showAvatars={false}
     on:updatedatasource={handleGridTableUpdate}
   >
     <svelte:fragment slot="filter">
-      {#if isUsersTable && $store.features.disableUserMetadata}
+      {#if isUsersTable && $appStore.features.disableUserMetadata}
         <GridUsersTableButton />
       {/if}
       <GridFilterButton />

@@ -1,7 +1,12 @@
 <script>
   import { notifications, Icon, Body } from "@budibase/bbui"
   import { isActive, goto } from "@roxi/routify"
-  import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
+  import {
+    selectedScreen,
+    screenStore,
+    componentStore,
+    userSelectedResourceMap,
+  } from "stores/frontend"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore } from "./dndStore.js"
@@ -49,18 +54,18 @@
           <NavItem
             text="Screen"
             indentLevel={0}
-            selected={$store.selectedComponentId ===
-              `${$store.selectedScreenId}-screen`}
+            selected={$componentStore.selectedComponentId ===
+              `${$screenStore.selectedScreenId}-screen`}
             opened
             scrollable
             icon="WebPage"
             on:drop={onDrop}
             on:click={() => {
-              $store.selectedComponentId = `${$store.selectedScreenId}-screen`
+              componentStore.select(`${$screenStore.selectedScreenId}-screen`)
             }}
             id={`component-screen`}
             selectedBy={$userSelectedResourceMap[
-              `${$store.selectedScreenId}-screen`
+              `${$screenStore.selectedScreenId}-screen`
             ]}
           >
             <ScreenslotDropdownMenu component={$selectedScreen?.props} />
@@ -68,20 +73,22 @@
           <NavItem
             text="Navigation"
             indentLevel={0}
-            selected={$store.selectedComponentId ===
-              `${$store.selectedScreenId}-navigation`}
+            selected={$componentStore.selectedComponentId ===
+              `${$screenStore.selectedScreenId}-navigation`}
             opened
             scrollable
-            icon={$selectedScreen.showNavigation
+            icon={$selectedScreen?.showNavigation
               ? "Visibility"
               : "VisibilityOff"}
             on:drop={onDrop}
             on:click={() => {
-              $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
+              componentStore.select(
+                `${$screenStore.selectedScreenId}-navigation`
+              )
             }}
             id={`component-nav`}
             selectedBy={$userSelectedResourceMap[
-              `${$store.selectedScreenId}-navigation`
+              `${$screenStore.selectedScreenId}-navigation`
             ]}
           />
           <ComponentTree

@@ -1,4 +1,4 @@
-import { store } from "./index"
+import { componentStore } from "."
 import { Helpers } from "@budibase/bbui"
 import {
   decodeJSBinding,
@@ -156,7 +156,7 @@ export const getComponentSettings = componentType => {
   }
 
   // Otherwise get the settings and cache them
-  const def = store.actions.components.getDefinition(componentType)
+  const def = componentStore.getDefinition(componentType)
   let settings = []
   if (def) {
     settings = def.settings?.filter(setting => !setting.section) ?? []

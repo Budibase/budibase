@@ -1,5 +1,5 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation } from "stores/frontend"
   import {
     Icon,
     Divider,

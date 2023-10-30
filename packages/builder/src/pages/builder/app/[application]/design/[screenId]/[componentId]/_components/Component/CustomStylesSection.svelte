@@ -6,13 +6,13 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { selectedScreen, store } from "builderStore"
+  import { selectedScreen, componentStore } from "stores/frontend"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import {
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
 
   export let componentInstance
 
@@ -21,7 +21,7 @@
 
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
 
   const openDrawer = () => {
@@ -35,7 +35,7 @@
   const save = async () => {
     try {
       const value = readableToRuntimeBinding(bindings, tempValue)
-      await store.actions.components.updateCustomStyle(value)
+      await componentStore.updateCustomStyle(value)
     } catch (error) {
       notifications.error("Error updating custom style")
     }

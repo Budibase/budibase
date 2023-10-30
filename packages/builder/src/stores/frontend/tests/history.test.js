@@ -1,5 +1,5 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import { Operations, initialState, createHistoryStore } from "./history"
+import { Operations, initialState, createHistoryStore } from "../history"
 
 import { writable, derived, get } from "svelte/store"
 import * as jsonpatch from "fast-json-patch/index.mjs"

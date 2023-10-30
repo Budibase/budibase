@@ -1,8 +1,8 @@
 <script>
   import { ColorPicker } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { themeStore } from "stores/frontend"
 
   export let value
 </script>
 
-<ColorPicker {value} on:change spectrumTheme={$store.theme} />
+<ColorPicker {value} on:change spectrumTheme={$themeStore.theme} />

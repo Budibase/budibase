@@ -10,11 +10,13 @@
   import { API } from "api"
   import { goto } from "@roxi/routify"
   import {
-    store,
-    sortedScreens,
     automationStore,
-    themeStore,
-  } from "builderStore"
+    previewStore,
+    builderStore,
+    sortedScreens,
+    appStore,
+  } from "stores/frontend"
+  import { themeStore } from "stores/portal"
   import { datasources, queries, tables, views } from "stores/backend"
   import { getContext } from "svelte"
   import { Constants } from "@budibase/frontend-core"
@@ -26,8 +28,7 @@
       name: "Invite users and manage app access",
       description: "",
       icon: "User",
-      action: () =>
-        store.update(state => ({ ...state, builderSidePanel: true })),
+      action: () => builderStore.showBuilderSidePanel(),
     },
     {
       type: "Navigate",
@@ -69,13 +70,13 @@
       name: "App",
       description: "",
       icon: "Play",
-      action: () => store.update(state => ({ ...state, showPreview: true })),
+      action: () => previewStore.showPreview(true),
     },
     {
       type: "Preview",
       name: "Published App",
       icon: "Play",
-      action: () => window.open(`/app${$store.url}`),
+      action: () => window.open(`/app${$appStore.url}`),
     },
     {
       type: "Support",
@@ -216,7 +217,7 @@
 
   async function deployApp() {
     try {
-      await API.publishAppChanges($store.appId)
+      await API.publishAppChanges($appStore.appId)
       notifications.success("App published successfully")
     } catch (error) {
       notifications.error("Error publishing app")

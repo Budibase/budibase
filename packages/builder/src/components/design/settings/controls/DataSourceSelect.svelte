@@ -3,7 +3,7 @@
     getContextProviderComponents,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import {
     Button,
     Popover,
@@ -20,7 +20,7 @@
     notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, currentAsset } from "builderStore"
+  import { currentAsset, componentStore } from "stores/frontend"
   import {
     tables as tablesStore,
     queries as queriesStore,
@@ -77,7 +77,7 @@
     }))
   $: contextProviders = getContextProviderComponents(
     $currentAsset,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
   $: dataProviders = contextProviders
     .filter(component => component._component?.endsWith("/dataprovider"))

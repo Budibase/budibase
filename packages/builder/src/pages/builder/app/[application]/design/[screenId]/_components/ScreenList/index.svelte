@@ -1,11 +1,11 @@
 <script>
   import { Icon, Layout, Body } from "@budibase/bbui"
   import {
-    store,
+    screenStore,
     sortedScreens,
     userSelectedResourceMap,
     screensHeight,
-  } from "builderStore"
+  } from "stores/frontend"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
@@ -141,9 +141,9 @@
         <NavItem
           icon={screen.routing.homeScreen ? "Home" : null}
           indentLevel={0}
-          selected={$store.selectedScreenId === screen._id}
+          selected={$screenStore.selectedScreenId === screen._id}
           text={screen.routing.route}
-          on:click={() => store.actions.screens.select(screen._id)}
+          on:click={() => screenStore.select(screen._id)}
           rightAlignIcon
           showTooltip
           selectedBy={$userSelectedResourceMap[screen._id]}

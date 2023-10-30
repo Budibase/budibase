@@ -1,13 +1,13 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset, store } from "builderStore"
-  import { getActionProviderComponents } from "builderStore/dataBinding"
+  import { currentAsset, componentStore } from "stores/frontend"
+  import { getActionProviderComponents } from "builder/dataBinding"
 
   export let parameters
 
   $: actionProviders = getActionProviderComponents(
     $currentAsset,
-    $store.selectedComponentId,
+    $componentStore.selectedComponentId,
     "ValidateForm"
   )
 </script>

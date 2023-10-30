@@ -18,7 +18,7 @@
     Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation } from "stores/frontend"
   import { tables } from "stores/backend"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
@@ -42,7 +42,7 @@
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import { Utils } from "@budibase/frontend-core"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"

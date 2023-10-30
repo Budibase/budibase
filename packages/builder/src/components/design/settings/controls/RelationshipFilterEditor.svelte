@@ -1,10 +1,10 @@
 <script>
-  import { currentAsset } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
+  import { currentAsset } from "stores/frontend"
+  import { findClosestMatchingComponent } from "stores/frontend/components/utils"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
   import { tables } from "stores/backend"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 

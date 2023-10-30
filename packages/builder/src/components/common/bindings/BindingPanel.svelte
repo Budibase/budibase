@@ -18,7 +18,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "builder/dataBinding"
 
   import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"

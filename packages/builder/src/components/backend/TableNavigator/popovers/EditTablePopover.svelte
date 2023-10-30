@@ -1,8 +1,8 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import { tables, datasources } from "stores/backend"
+  import { screenStore } from "stores/frontend"
   import {
     ActionMenu,
     Icon,
@@ -31,7 +31,7 @@
   $: allowDeletion = !external || table?.created
 
   function showDeleteModal() {
-    templateScreens = $store.screens.filter(
+    templateScreens = $screenStore.screens.filter(
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(
@@ -46,7 +46,7 @@
       await tables.delete(table)
       // Screens need deleted one at a time because of undo/redo
       for (let screen of templateScreens) {
-        await store.actions.screens.delete(screen)
+        await screenStore.delete(screen)
       }
       if (table.type === "external") {
         await datasources.fetch()
