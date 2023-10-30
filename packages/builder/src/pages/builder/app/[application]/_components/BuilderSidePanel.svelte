@@ -516,6 +516,13 @@
     }
     return null
   }
+
+  const parseRole = user => {
+    if (user.isAdminOrGlobalBuilder) {
+      return Constants.Roles.CREATOR
+    }
+    return user.role
+  }
 </script>
 
 <svelte:window on:keydown={handleKeyDown} />
@@ -725,7 +732,7 @@
                     <RoleSelect
                       footer={getRoleFooter(user)}
                       placeholder={false}
-                      value={user.role}
+                      value={parseRole(user)}
                       allowRemove={user.role && !user.group}
                       allowPublic={false}
                       allowCreator={true}
@@ -744,7 +751,7 @@
                       autoWidth
                       align="right"
                       allowedRoles={user.isAdminOrGlobalBuilder
-                        ? [Constants.Roles.ADMIN]
+                        ? [Constants.Roles.CREATOR]
                         : null}
                     />
                   </div>
