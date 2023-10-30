@@ -51,9 +51,10 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           fetch-depth: 0
 
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
           node-version: 18.x
+          cache: "yarn"
 
       - run: yarn install --frozen-lockfile
       - name: Update versions
@@ -69,6 +70,9 @@ jobs:
           echo "Using tag $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
       - name: Build/release Docker images
         run: |
           yarn lerna run --stream build:docker
