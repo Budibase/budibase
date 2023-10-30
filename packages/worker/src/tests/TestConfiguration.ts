@@ -190,6 +190,16 @@ class TestConfiguration {
     }
   }
 
+  async withUser(user: User, f: () => Promise<void>) {
+    const oldUser = this.user
+    this.user = user
+    try {
+      await f()
+    } finally {
+      this.user = oldUser
+    }
+  }
+
   authHeaders(user: User) {
     const authToken: AuthToken = {
       userId: user._id!,
@@ -257,9 +267,10 @@ class TestConfiguration {
     })
   }
 
-  async createUser(user?: User) {
-    if (!user) {
-      user = structures.users.user()
+  async createUser(opts?: Partial<User>) {
+    let user = structures.users.user()
+    if (user) {
+      user = { ...user, ...opts }
     }
     const response = await this._req(user, null, controllers.users.save)
     const body = response as SaveUserResponse

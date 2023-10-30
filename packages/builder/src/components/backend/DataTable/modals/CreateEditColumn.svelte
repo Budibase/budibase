@@ -777,7 +777,8 @@
   disabled={deleteColName !== originalName}
 >
   <p>
-    Are you sure you wish to delete the column <b>{originalName}?</b>
+    Are you sure you wish to delete the column
+    <b on:click={() => (deleteColName = originalName)}>{originalName}?</b>
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
@@ -809,5 +810,12 @@
   .row {
     gap: 8px;
     display: flex;
+  }
+  b {
+    transition: color 130ms ease-out;
+  }
+  b:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>

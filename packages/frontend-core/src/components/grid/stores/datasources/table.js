@@ -71,6 +71,8 @@ export const initialise = context => {
     datasource,
     fetch,
     filter,
+    inlineFilters,
+    allFilters,
     sort,
     table,
     initialFilter,
@@ -93,6 +95,7 @@ export const initialise = context => {
 
     // Wipe state
     filter.set(get(initialFilter))
+    inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
       order: get(initialSortOrder) || "ascending",
@@ -100,14 +103,14 @@ export const initialise = context => {
 
     // Update fetch when filter changes
     unsubscribers.push(
-      filter.subscribe($filter => {
+      allFilters.subscribe($allFilters => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
         if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
           return
         }
         $fetch.update({
-          filter: $filter,
+          filter: $allFilters,
         })
       })
     )
