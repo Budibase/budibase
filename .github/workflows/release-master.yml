@@ -74,7 +74,7 @@ jobs:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
 
-      - name: Build docker (budibase/worker)
+      - name: Build worker docker
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -91,7 +91,7 @@ jobs:
           IMAGE_TAG: ${{ inputs.image_tag }}
           BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
 
-      - name: Build docker (budibase/apps)
+      - name: Build server docker
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -107,6 +107,19 @@ jobs:
           IMAGE_NAME: budibase/apps
           IMAGE_TAG: ${{ inputs.image_tag }}
           BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build proxy docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./hosting/proxy/Dockerfile
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: proxy-service
+          IMAGE_TAG: ${{ inputs.image_tag }}
 
   release-helm-chart:
     needs: [release-images]
