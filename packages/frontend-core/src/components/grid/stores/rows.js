@@ -403,6 +403,12 @@ export const createActions = context => {
     handleRemoveRows(rowsToDelete)
   }
 
+  // Deletes all rows
+  const deleteAllRows = async () => {
+    const allRows = get(rows)
+    await deleteRows(allRows)
+  }
+
   // Local handler to process new rows inside the fetch, and append any new
   // rows to state that we haven't encountered before
   const handleNewRows = (newRows, resetRows) => {
@@ -469,6 +475,7 @@ export const createActions = context => {
         updateValue,
         updateRow,
         deleteRows,
+        deleteAllRows,
         hasRow,
         loadNextPage,
         refreshRow,

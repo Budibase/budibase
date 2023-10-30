@@ -16,6 +16,7 @@
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
+  import GridTruncateButton from "components/backend/DataTable/buttons/grid/GridTruncateButton.svelte"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -91,6 +92,9 @@
         <GridEditUserModal />
       {:else}
         <GridCreateEditRowModal />
+      {/if}
+      {#if isInternal}
+        <GridTruncateButton />
       {/if}
     </svelte:fragment>
     <svelte:fragment slot="edit-column">
