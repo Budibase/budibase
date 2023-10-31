@@ -58,7 +58,7 @@ export async function startup(app?: any, server?: any) {
     return
   }
   STARTUP_RAN = true
-  if (server) {
+  if (server && env.CLUSTER_MODE?.toLowerCase() !== "true") {
     console.log(`Budibase running on ${JSON.stringify(server.address())}`)
     env._set("PORT", server.address().port)
   }
