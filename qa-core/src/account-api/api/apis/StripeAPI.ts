@@ -39,14 +39,15 @@ export default class StripeAPI extends BaseAPI {
   }
 
   async linkStripeCustomer(
-      accountId: string,
-      stripeCustomerId: string,
-      opts: APIRequestOpts = { status: 200 }) {
+    accountId: string,
+    stripeCustomerId: string,
+    opts: APIRequestOpts = { status: 200 }
+  ) {
     return this.doRequest(() => {
       return this.client.post(`/api/stripe/link`, {
         body: {
           accountId,
-          stripeCustomerId
+          stripeCustomerId,
         },
         internal: true,
       })
