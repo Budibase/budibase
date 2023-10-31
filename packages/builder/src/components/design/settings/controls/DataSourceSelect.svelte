@@ -7,10 +7,8 @@
   import {
     Button,
     Popover,
-    Divider,
     Select,
     Layout,
-    Heading,
     Drawer,
     DrawerContent,
     Icon,
@@ -380,27 +378,6 @@
     padding: var(--spacing-m) 0;
     z-index: 99999999;
     overflow-y: scroll;
-  }
-  .title {
-    padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 0px;
-    margin: 0px;
-    width: 100%;
-  }
-
-  li {
-    cursor: pointer;
-    margin: 0px;
-    padding: var(--spacing-s) var(--spacing-m);
-    font-size: var(--font-size-m);
-  }
-
-  li:hover {
-    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .icon {
