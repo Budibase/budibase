@@ -63,6 +63,9 @@ jobs:
           echo "Using tag $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
       - name: Build/release Docker images
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
