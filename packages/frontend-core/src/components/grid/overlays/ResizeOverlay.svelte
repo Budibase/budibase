@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { GutterWidth } from "../lib/constants"
 
-  const { resize, renderedColumns, stickyColumn, isReordering, scrollLeft } =
+  const { resize, visibleColumns, stickyColumn, isReordering, scrollLeft } =
     getContext("grid")
 
   $: offset = GutterWidth + ($stickyColumn?.width || 0)
@@ -26,7 +26,7 @@
       <div class="resize-indicator" />
     </div>
   {/if}
-  {#each $renderedColumns as column}
+  {#each $visibleColumns as column}
     <div
       class="resize-slider"
       class:visible={activeColumn === column.name}

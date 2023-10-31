@@ -1,10 +1,10 @@
 <script>
-  import { Icon } from "@budibase/bbui"
   import { dndzone } from "svelte-dnd-action"
   import { createEventDispatcher } from "svelte"
   import { generate } from "shortid"
   import { setContext } from "svelte"
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
+  import DragHandle from "./drag-handle.svelte"
 
   export let items = []
   export let showHandle = true
@@ -12,6 +12,7 @@
   export let listTypeProps = {}
   export let listItemKey
   export let draggable = true
+  export let focus
 
   let store = writable({
     selected: null,
@@ -26,6 +27,10 @@
   })
 
   setContext("draggable", store)
+
+  $: if (focus && store) {
+    get(store).actions.select(focus)
+  }
 
   const dispatch = createEventDispatcher()
   const flipDurationMs = 150
@@ -82,13 +87,16 @@
 >
   {#each draggableItems as draggable (draggable.id)}
     <li
+      on:mousedown={() => {
+        get(store).actions.select()
+      }}
       bind:this={anchors[draggable.id]}
       class:highlighted={draggable.id === $store.selected}
     >
       <div class="left-content">
         {#if showHandle}
-          <div class="handle" aria-label="drag-handle">
-            <Icon name="DragHandle" size="XL" />
+          <div class="handle">
+            <DragHandle />
           </div>
         {/if}
       </div>
@@ -142,8 +150,9 @@
     border-top-right-radius: 4px;
   }
   .list-wrap > li:last-child {
-    border-top-left-radius: var(--spectrum-table-regular-border-radius);
-    border-top-right-radius: var(--spectrum-table-regular-border-radius);
+    border-bottom-left-radius: 4px;
+    border-bottom-right-radius: 4px;
+    border-bottom: 0px;
   }
   .right-content {
     flex: 1;
@@ -152,5 +161,16 @@
   .list-wrap li {
     padding-left: var(--spacing-s);
     padding-right: var(--spacing-s);
+  }
+  .handle {
+    display: flex;
+    height: var(--spectrum-global-dimension-size-150);
+  }
+  .handle :global(svg) {
+    fill: var(--spectrum-global-color-gray-500);
+    margin-right: var(--spacing-m);
+    margin-left: 2px;
+    width: var(--spectrum-global-dimension-size-65);
+    height: 100%;
   }
 </style>

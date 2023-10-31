@@ -36,6 +36,7 @@
       "heading",
       "text",
       "button",
+      "buttongroup",
       "tag",
       "spectrumcard",
       "cardstat",

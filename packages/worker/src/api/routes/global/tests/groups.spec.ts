@@ -1,7 +1,7 @@
 import { events } from "@budibase/backend-core"
 import { generator } from "@budibase/backend-core/tests"
 import { structures, TestConfiguration, mocks } from "../../../../tests"
-import { UserGroup } from "@budibase/types"
+import { User, UserGroup } from "@budibase/types"
 
 mocks.licenses.useGroups()
 
@@ -227,6 +227,41 @@ describe("/api/global/groups", () => {
             bookmark: undefined,
             hasNextPage: false,
           })
+        })
+      })
+    })
+  })
+
+  describe("with global builder role", () => {
+    let builder: User
+    let group: UserGroup
+
+    beforeAll(async () => {
+      builder = await config.createUser({
+        builder: { global: true },
+        admin: { global: false },
+      })
+      await config.createSession(builder)
+
+      let resp = await config.api.groups.saveGroup(
+        structures.groups.UserGroup()
+      )
+      group = resp.body as UserGroup
+    })
+
+    it("find should return 200", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.searchUsers(group._id!, {
+          emailSearch: `user1`,
+        })
+      })
+    })
+
+    it("update should return 200", async () => {
+      await config.withUser(builder, async () => {
+        await config.api.groups.updateGroupUsers(group._id!, {
+          add: [builder._id!],
+          remove: [],
         })
       })
     })
