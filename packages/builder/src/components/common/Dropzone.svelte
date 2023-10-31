@@ -23,7 +23,7 @@
     try {
       return await API.uploadBuilderAttachment(data)
     } catch (error) {
-      notifications.error("Failed to upload attachment")
+      notifications.error(error.message || "Failed to upload attachment")
       return []
     }
   }
