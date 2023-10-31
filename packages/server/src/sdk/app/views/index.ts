@@ -4,13 +4,13 @@ import { cloneDeep } from "lodash"
 
 import sdk from "../../../sdk"
 import * as utils from "../../../db/utils"
-import { isExternalTable } from "../../../integrations/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 
 import * as internal from "./internal"
 import * as external from "./external"
 
 function pickApi(tableId: any) {
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     return external
   }
   return internal
