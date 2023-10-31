@@ -3,7 +3,6 @@
     Heading,
     Body,
     Button,
-    ButtonGroup,
     Table,
     Layout,
     Modal,
@@ -296,7 +295,7 @@
   {/if}
   <div class="controls">
     {#if !readonly}
-      <ButtonGroup>
+      <div class="buttons">
         <Button
           disabled={readonly}
           on:click={$licensing.userLimitReached
@@ -315,7 +314,7 @@
         >
           Import
         </Button>
-      </ButtonGroup>
+      </div>
     {:else}
       <ScimBanner />
     {/if}
@@ -390,12 +389,15 @@
 </Modal>
 
 <style>
+  .buttons {
+    display: flex;
+    gap: 10px;
+  }
   .pagination {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
   }
-
   .controls {
     display: flex;
     flex-direction: row;
@@ -403,7 +405,6 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
-
   .controls-right {
     display: flex;
     flex-direction: row;
@@ -411,7 +412,6 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
-
   .controls-right :global(.spectrum-Search) {
     width: 200px;
   }
