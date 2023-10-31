@@ -45,6 +45,10 @@
     datasource: {
       type: "user",
     },
+    options: {
+      paginate: true,
+      limit: 10,
+    },
   })
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
@@ -64,10 +68,12 @@
     { column: "role", component: RoleTableRenderer },
   ]
   let userData = []
+  let invitesLoaded = false
+  let pendingInvites = []
+  let parsedInvites = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user) || $features.isScimEnabled
-
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -87,16 +93,6 @@
       width: "1fr",
     },
   }
-
-  const getPendingSchema = tblSchema => {
-    if (!tblSchema) {
-      return {}
-    }
-    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Invites"
-    return pendingSchema
-  }
-
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
@@ -120,9 +116,15 @@
       }
     })
   }
-  let invitesLoaded = false
-  let pendingInvites = []
-  let parsedInvites = []
+
+  const getPendingSchema = tblSchema => {
+    if (!tblSchema) {
+      return {}
+    }
+    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
+    pendingSchema.email.displayName = "Pending Invites"
+    return pendingSchema
+  }
 
   const invitesToSchema = invites => {
     return invites.map(invite => {
