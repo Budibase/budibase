@@ -32,6 +32,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import DataSourceSelect from "components/design/settings/controls/DataSourceSelectItem/SelectItem.svelte"
   import { API } from "api"
 
   export let value = {}
@@ -279,243 +280,81 @@
 </div>
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
-    <div class="title">
-      <Heading size="XS">Tables</Heading>
-    </div>
-    <ul class="spectrum-Menu" role="listbox">
-      {#each tables as table}
-        <li
-          class="spectrum-Menu-item"
-          class:is-selected={value?.label === table.label &&
-            value?.type === table.type}
-          role="option"
-          aria-selected="true"
-          tabindex="0"
-          on:click={() => handleSelected(table)}
-        >
-          <span class="spectrum-Menu-itemLabel">
-            {table.label}
-          </span>
-          <svg
-            class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-css-icon-Checkmark100" />
-          </svg>
-        </li>
-      {/each}
-    </ul>
+    <DataSourceSelect
+      heading="Tables"
+      dataSet={tables}
+      {value}
+      onSelect={handleSelected}
+    />
     {#if views?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Views</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each views as view}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === view.label &&
-              value?.type === view.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(view)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {view.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="Views"
+        dataSet={views}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if queries?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Queries</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each queries as query}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === query.label &&
-              value?.type === query.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(query)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {query.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="Queries"
+        dataSet={queries}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if links?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Relationships</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each links as link}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === link.label &&
-              value?.type === link.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(link)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {link.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="Links"
+        dataSet={links}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if fields?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Fields</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each fields as field}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === field.label &&
-              value?.type === field.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(field)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {field.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="Fields"
+        dataSet={fields}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if jsonArrays?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">JSON Arrays</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each jsonArrays as field}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === field.label &&
-              value?.type === field.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(field)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {field.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="JSON Arrays"
+        dataSet={jsonArrays}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if showDataProviders && dataProviders?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Data Providers</Heading>
-      </div>
-      <ul class="spectrum-Menu" role="listbox">
-        {#each dataProviders as provider}
-          <li
-            class="spectrum-Menu-item"
-            class:is-selected={value?.label === provider.label &&
-              value?.type === provider.type}
-            role="option"
-            aria-selected="true"
-            tabindex="0"
-            on:click={() => handleSelected(provider)}
-          >
-            <span class="spectrum-Menu-itemLabel">
-              {provider.label}
-            </span>
-            <svg
-              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-              focusable="false"
-              aria-hidden="true"
-            >
-              <use xlink:href="#spectrum-css-icon-Checkmark100" />
-            </svg>
-          </li>
-        {/each}
-      </ul>
+      <DataSourceSelect
+        dividerState={true}
+        heading="Data Providers"
+        dataSet={dataProviders}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
-    <Divider />
-    <div class="title">
-      <Heading size="XS">Other</Heading>
-    </div>
-    <ul class="spectrum-Menu" role="listbox">
-      <li
-        class="spectrum-Menu-item"
-        class:is-selected={value?.label === custom.label &&
-          value?.type === custom.type}
-        role="option"
-        aria-selected="true"
-        tabindex="0"
-        on:click={() => handleSelected(custom)}
-      >
-        <span class="spectrum-Menu-itemLabel">
-          {custom.label}
-        </span>
-        <svg
-          class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-          focusable="false"
-          aria-hidden="true"
-        >
-          <use xlink:href="#spectrum-css-icon-Checkmark100" />
-        </svg>
-      </li>
-    </ul>
+    <DataSourceSelect
+      dividerState={true}
+      heading="Other"
+      dataSet={[custom]}
+      {value}
+      onSelect={handleSelected}
+    />
     {#if otherSources?.length}
-      {#each otherSources as source}
-        <li on:click={() => handleSelected(source)}>{source.label}</li>
-      {/each}
+      <DataSourceSelect
+        dividerState={false}
+        heading=""
+        dataSet={otherSources}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
   </div>
 </Popover>
