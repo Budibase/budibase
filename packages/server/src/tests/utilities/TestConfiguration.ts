@@ -2,37 +2,31 @@ import { generator, mocks, structures } from "@budibase/backend-core/tests"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
-mocks.licenses.init(pro)
-
-// use unlimited license by default
-mocks.licenses.useUnlimited()
-
 import { init as dbInit } from "../../db"
-dbInit()
 import env from "../../environment"
 import {
-  basicTable,
-  basicRow,
-  basicRole,
   basicAutomation,
-  basicDatasource,
-  basicQuery,
-  basicScreen,
-  basicLayout,
-  basicWebhook,
   basicAutomationResults,
+  basicDatasource,
+  basicLayout,
+  basicQuery,
+  basicRole,
+  basicRow,
+  basicScreen,
+  basicTable,
+  basicWebhook,
 } from "./structures"
 import {
-  constants,
-  tenancy,
-  sessions,
+  auth,
   cache,
+  constants,
   context,
   db as dbCore,
   encryption,
-  auth,
-  roles,
   env as coreEnv,
+  roles,
+  sessions,
+  tenancy,
 } from "@budibase/backend-core"
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
@@ -43,21 +37,32 @@ import supertest from "supertest"
 import {
   App,
   AuthToken,
+  Automation,
+  CreateViewRequest,
   Datasource,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  RelationshipFieldMetadata,
+  RelationshipType,
   Row,
+  SearchFilters,
   SourceName,
   Table,
-  SearchFilters,
+  TableSourceType,
+  User,
   UserRoles,
-  Automation,
   View,
-  FieldType,
-  RelationshipType,
-  CreateViewRequest,
-  RelationshipFieldMetadata,
 } from "@budibase/types"
 
 import API from "./api"
+import { cloneDeep } from "lodash"
+
+mocks.licenses.init(pro)
+
+// use unlimited license by default
+mocks.licenses.useUnlimited()
+
+dbInit()
 
 type DefaultUserValues = {
   globalUserId: string
@@ -65,6 +70,11 @@ type DefaultUserValues = {
   firstName: string
   lastName: string
   csrfToken: string
+}
+
+interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+  sourceId?: string
+  sourceType?: TableSourceType
 }
 
 class TestConfiguration {
@@ -188,30 +198,38 @@ class TestConfiguration {
     }
   }
 
-  // MODES
-  setMultiTenancy = (value: boolean) => {
-    env._set("MULTI_TENANCY", value)
-    coreEnv._set("MULTI_TENANCY", value)
+  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+    let cleanup = this.setEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
   }
 
-  setSelfHosted = (value: boolean) => {
-    env._set("SELF_HOSTED", value)
-    coreEnv._set("SELF_HOSTED", value)
-  }
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setEnv(newEnvVars: Partial<typeof env>): () => void {
+    const oldEnv = cloneDeep(env)
+    const oldCoreEnv = cloneDeep(coreEnv)
 
-  setGoogleAuth = (value: string) => {
-    env._set("GOOGLE_CLIENT_ID", value)
-    env._set("GOOGLE_CLIENT_SECRET", value)
-    coreEnv._set("GOOGLE_CLIENT_ID", value)
-    coreEnv._set("GOOGLE_CLIENT_SECRET", value)
-  }
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      env._set(key, newEnvVars[key])
+      coreEnv._set(key, newEnvVars[key])
+    }
 
-  modeCloud = () => {
-    this.setSelfHosted(false)
-  }
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
+        env._set(key, value)
+      }
 
-  modeSelf = () => {
-    this.setSelfHosted(true)
+      for (const [key, value] of Object.entries(oldCoreEnv)) {
+        coreEnv._set(key, value)
+      }
+    }
   }
 
   // UTILS
@@ -254,7 +272,7 @@ class TestConfiguration {
     } catch (err) {
       existing = { email }
     }
-    const user = {
+    const user: User = {
       _id: id,
       ...existing,
       roles: roles || {},
@@ -294,7 +312,7 @@ class TestConfiguration {
       admin?: boolean
       roles?: UserRoles
     } = {}
-  ) {
+  ): Promise<User> {
     let { id, firstName, lastName, email, builder, admin, roles } = user
     firstName = firstName || this.defaultUserValues.firstName
     lastName = lastName || this.defaultUserValues.lastName
@@ -314,10 +332,7 @@ class TestConfiguration {
       roles,
     })
     await cache.user.invalidateUser(globalId)
-    return {
-      ...resp,
-      globalId,
-    }
+    return resp
   }
 
   async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
@@ -540,10 +555,12 @@ class TestConfiguration {
   // TABLE
 
   async updateTable(
-    config?: Table,
+    config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
+    config.sourceType = config.sourceType || TableSourceType.INTERNAL
+    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
     const response = await this._req(config, null, controllers.table.save)
     if (!skipReassigning) {
       this.table = response
@@ -551,18 +568,32 @@ class TestConfiguration {
     return response
   }
 
-  async createTable(config?: Table, options = { skipReassigning: false }) {
+  async createTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
     if (config != null && config._id) {
       delete config._id
     }
     config = config || basicTable()
-    if (this.datasource && !config.sourceId) {
-      config.sourceId = this.datasource._id
-      if (this.datasource.plus) {
-        config.type = "external"
-      }
+    if (!config.sourceId) {
+      config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
+    return this.updateTable(config, options)
+  }
 
+  async createExternalTable(
+    config?: TableToBuild,
+    options = { skipReassigning: false }
+  ) {
+    if (config != null && config._id) {
+      delete config._id
+    }
+    config = config || basicTable()
+    if (this.datasource?._id) {
+      config.sourceId = this.datasource._id
+      config.sourceType = TableSourceType.EXTERNAL
+    }
     return this.updateTable(config, options)
   }
 
@@ -574,12 +605,15 @@ class TestConfiguration {
   async createLinkedTable(
     relationshipType = RelationshipType.ONE_TO_MANY,
     links: any = ["link"],
-    config?: Table
+    config?: TableToBuild
   ) {
     if (!this.table) {
       throw "Must have created a table first."
     }
     const tableConfig = config || basicTable()
+    if (!tableConfig.sourceId) {
+      tableConfig.sourceId = INTERNAL_TABLE_SOURCE_ID
+    }
     tableConfig.primaryDisplay = "name"
     for (let link of links) {
       tableConfig.schema[link] = {
@@ -591,15 +625,12 @@ class TestConfiguration {
       } as RelationshipFieldMetadata
     }
 
-    if (this.datasource && !tableConfig.sourceId) {
+    if (this.datasource?._id) {
       tableConfig.sourceId = this.datasource._id
-      if (this.datasource.plus) {
-        tableConfig.type = "external"
-      }
+      tableConfig.sourceType = TableSourceType.EXTERNAL
     }
 
-    const linkedTable = await this.createTable(tableConfig)
-    return linkedTable
+    return await this.createTable(tableConfig)
   }
 
   async createAttachmentTable() {
