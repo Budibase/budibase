@@ -14,6 +14,7 @@ describe("/backups", () => {
   afterAll(setup.afterAll)
 
   beforeEach(async () => {
+    tk.reset()
     await config.init()
   })
 

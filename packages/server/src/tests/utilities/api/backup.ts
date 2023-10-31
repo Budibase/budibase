@@ -4,8 +4,6 @@ import {
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
-import tk from "timekeeper"
-import { mocks } from "@budibase/backend-core/tests"
 
 export class BackupAPI extends TestAPI {
   constructor(config: TestConfiguration) {
@@ -25,7 +23,6 @@ export class BackupAPI extends TestAPI {
   }
 
   createBackup = async (appId: string) => {
-    tk.freeze(mocks.date.MOCK_DATE_PLUS(1))
     const result = await this.request
       .post(`/api/apps/${appId}/backups`)
       .set(this.config.defaultHeaders())
@@ -38,7 +35,6 @@ export class BackupAPI extends TestAPI {
     appId: string,
     backupId: string
   ): Promise<ImportAppBackupResponse> => {
-    tk.freeze(mocks.date.MOCK_DATE_PLUS(1))
     const result = await this.request
       .post(`/api/apps/${appId}/backups/${backupId}/import`)
       .set(this.config.defaultHeaders())
