@@ -3,7 +3,6 @@
     Heading,
     Body,
     Button,
-    ButtonGroup,
     Table,
     Layout,
     Modal,
@@ -46,6 +45,10 @@
     datasource: {
       type: "user",
     },
+    options: {
+      paginate: true,
+      limit: 10,
+    },
   })
 
   let groupsLoaded = !$licensing.groupsEnabled || $groups?.length
@@ -65,10 +68,12 @@
     { column: "role", component: RoleTableRenderer },
   ]
   let userData = []
+  let invitesLoaded = false
+  let pendingInvites = []
+  let parsedInvites = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
   $: readonly = !sdk.users.isAdmin($auth.user) || $features.isScimEnabled
-
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -88,16 +93,6 @@
       width: "1fr",
     },
   }
-
-  const getPendingSchema = tblSchema => {
-    if (!tblSchema) {
-      return {}
-    }
-    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
-    pendingSchema.email.displayName = "Pending Invites"
-    return pendingSchema
-  }
-
   $: pendingSchema = getPendingSchema(schema)
   $: userData = []
   $: inviteUsersResponse = { successful: [], unsuccessful: [] }
@@ -121,9 +116,15 @@
       }
     })
   }
-  let invitesLoaded = false
-  let pendingInvites = []
-  let parsedInvites = []
+
+  const getPendingSchema = tblSchema => {
+    if (!tblSchema) {
+      return {}
+    }
+    let pendingSchema = JSON.parse(JSON.stringify(tblSchema))
+    pendingSchema.email.displayName = "Pending Invites"
+    return pendingSchema
+  }
 
   const invitesToSchema = invites => {
     return invites.map(invite => {
@@ -143,7 +144,9 @@
   const updateFetch = email => {
     fetch.update({
       query: {
-        email,
+        string: {
+          email,
+        },
       },
     })
   }
@@ -296,7 +299,7 @@
   {/if}
   <div class="controls">
     {#if !readonly}
-      <ButtonGroup>
+      <div class="buttons">
         <Button
           disabled={readonly}
           on:click={$licensing.userLimitReached
@@ -315,7 +318,7 @@
         >
           Import
         </Button>
-      </ButtonGroup>
+      </div>
     {:else}
       <ScimBanner />
     {/if}
@@ -390,12 +393,15 @@
 </Modal>
 
 <style>
+  .buttons {
+    display: flex;
+    gap: 10px;
+  }
   .pagination {
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
   }
-
   .controls {
     display: flex;
     flex-direction: row;
@@ -403,7 +409,6 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
-
   .controls-right {
     display: flex;
     flex-direction: row;
@@ -411,7 +416,6 @@
     align-items: center;
     gap: var(--spacing-xl);
   }
-
   .controls-right :global(.spectrum-Search) {
     width: 200px;
   }
