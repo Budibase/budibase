@@ -99,9 +99,15 @@ export default class LicenseAPI extends BaseAPI {
     }, opts)
   }
 
-  async updatePlan(opts: APIRequestOpts = { status: 200 }) {
+  async updatePlan(
+      priceId: string,
+      opts: APIRequestOpts = { status: 200 }
+  ) {
     return this.doRequest(() => {
-      return this.client.put(`/api/license/plan`)
+      return this.client.put(`/api/license/plan`,
+          {
+            body: { priceId },
+          })
     }, opts)
   }
 
