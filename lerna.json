@@ -1,5 +1,5 @@
 {
-  "version": "2.11.45",
+  "version": "2.12.1",
   "npmClient": "yarn",
   "packages": ["packages/*", "packages/account-portal/packages/*"],
   "useNx": true,
