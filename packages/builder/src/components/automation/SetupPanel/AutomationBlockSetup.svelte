@@ -58,7 +58,6 @@
   let fillWidth = true
   let inputData
   let codeBindingOpen = false
-  $: console.log($selectedAutomation?.definition)
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
@@ -136,7 +135,6 @@
         await automationStore.actions.addTestDataToAutomation(newTestData)
       } else {
         const data = { schema, [key]: e.detail }
-        console.log(data)
         await automationStore.actions.updateBlockInputs(block, data)
       }
     } catch (error) {
@@ -156,7 +154,7 @@
     }
     let blockIdx = allSteps.findIndex(step => step.id === block.id)
 
-    // Extract all outputs from all previous steps as available bindins
+    // Extract all outputs from all previous steps as available bindingsx§x
     let bindings = []
     let loopBlockCount = 0
     for (let idx = 0; idx < blockIdx; idx++) {
@@ -197,7 +195,6 @@
       }
       let bindingName =
         automation.stepNames?.[allSteps[idx - loopBlockCount].id]
-      console.log(bindingName)
       bindings = bindings.concat(
         outputs.map(([name, value]) => {
           let runtimeName = isLoopBlock
