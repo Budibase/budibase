@@ -11,10 +11,11 @@ import {
   isOIDCConfig,
   isSettingsConfig,
   ConfigType,
+  DatabaseQueryOpts,
 } from "@budibase/types"
 import env from "./../../../../environment"
 
-export const getConfigParams = () => {
+export function getConfigParams(): DatabaseQueryOpts {
   return {
     include_docs: true,
     startkey: `${DocumentType.CONFIG}${SEPARATOR}`,

@@ -5,12 +5,13 @@ import {
   QueryType,
   QueryJson,
   SqlQuery,
-  ExternalTable,
+  Table,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
   SourceName,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -273,7 +274,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
+    entities: Record<string, Table>
   ): Promise<Schema> {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
@@ -300,7 +301,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const columnsResponse: { rows: PostgresColumn[] } =
         await this.client.query(this.COLUMNS_SQL)
 
-      const tables: { [key: string]: ExternalTable } = {}
+      const tables: { [key: string]: Table } = {}
 
       for (let column of columnsResponse.rows) {
         const tableName: string = column.table_name
@@ -309,11 +310,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         // table key doesn't exist yet
         if (!tables[tableName] || !tables[tableName].schema) {
           tables[tableName] = {
+            type: "table",
             _id: buildExternalTableId(datasourceId, tableName),
             primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
             sourceId: datasourceId,
+            sourceType: TableSourceType.EXTERNAL,
           }
         }
 
