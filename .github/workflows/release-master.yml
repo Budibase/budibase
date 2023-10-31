@@ -36,6 +36,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 18.x
+          cache: yarn
 
       - run: yarn install --frozen-lockfile
       - name: Update versions
@@ -63,14 +64,64 @@ jobs:
           echo "Using tag $version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Build/release Docker images
+      - name: Setup Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Docker login
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-          yarn build:docker
         env:
           DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_API_KEY }}
-          BUDIBASE_RELEASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build worker docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUDIBASE_VERSION=${{ env.BUDIBASE_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./packages/worker/Dockerfile.v2
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: budibase/worker
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
+          BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build server docker
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            BUDIBASE_VERSION=${{ env.BUDIBASE_VERSION }}
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./packages/server/Dockerfile.v2
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: budibase/apps
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
+          BUDIBASE_VERSION: ${{ steps.currenttag.outputs.version }}
+
+      - name: Build proxy docker
+        uses: docker/build-push-action@v5
+        with:
+          context: ./hosting/proxy
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          file: ./hosting/proxy/Dockerfile
+          cache-from: type=registry,ref=${{ env.IMAGE_NAME }}:latest
+          cache-to: type=inline
+        env:
+          IMAGE_NAME: budibase/proxy
+          IMAGE_TAG: ${{ steps.currenttag.outputs.version }}
 
   release-helm-chart:
     needs: [release-images]

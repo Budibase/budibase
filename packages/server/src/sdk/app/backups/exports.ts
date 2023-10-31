@@ -26,7 +26,6 @@ export interface DBDumpOpts {
 export interface ExportOpts extends DBDumpOpts {
   tar?: boolean
   excludeRows?: boolean
-  excludeLogs?: boolean
   encryptPassword?: string
 }
 
@@ -83,13 +82,14 @@ export async function exportDB(
   })
 }
 
-function defineFilter(excludeRows?: boolean, excludeLogs?: boolean) {
-  const ids = [USER_METDATA_PREFIX, LINK_USER_METADATA_PREFIX]
+function defineFilter(excludeRows?: boolean) {
+  const ids = [
+    USER_METDATA_PREFIX,
+    LINK_USER_METADATA_PREFIX,
+    AUTOMATION_LOG_PREFIX,
+  ]
   if (excludeRows) {
     ids.push(TABLE_ROW_PREFIX)
-  }
-  if (excludeLogs) {
-    ids.push(AUTOMATION_LOG_PREFIX)
   }
   return (doc: any) =>
     !ids.map(key => doc._id.includes(key)).reduce((prev, curr) => prev || curr)
@@ -118,7 +118,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
         fs.writeFileSync(join(tmpPath, path), contents)
       }
     }
-    // get all of the files
+    // get all the files
     else {
       tmpPath = await objectStore.retrieveDirectory(
         ObjectStoreBuckets.APPS,
@@ -141,7 +141,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // enforce an export of app DB to the tmp path
   const dbPath = join(tmpPath, DB_EXPORT_FILE)
   await exportDB(appId, {
-    filter: defineFilter(config?.excludeRows, config?.excludeLogs),
+    filter: defineFilter(config?.excludeRows),
     exportPath: dbPath,
   })
 
@@ -191,7 +191,6 @@ export async function streamExportApp({
 }) {
   const tmpPath = await exportApp(appId, {
     excludeRows,
-    excludeLogs: true,
     tar: true,
     encryptPassword,
   })

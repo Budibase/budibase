@@ -1,7 +1,7 @@
 import { quotas } from "@budibase/pro"
 import * as internal from "./internal"
 import * as external from "./external"
-import { isExternalTable } from "../../../integrations/utils"
+import { isExternalTableID } from "../../../integrations/utils"
 import {
   Ctx,
   UserCtx,
@@ -30,7 +30,7 @@ import { Format } from "../view/exporters"
 export * as views from "./views"
 
 function pickApi(tableId: any) {
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     return external
   }
   return internal
@@ -227,7 +227,7 @@ export async function search(ctx: Ctx<SearchRowRequest, SearchRowResponse>) {
 export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   const tableId = utils.getTableId(ctx)
   // external tables are hard to validate currently
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     ctx.body = { valid: true, errors: {} }
   } else {
     ctx.body = await sdk.rows.utils.validate({
