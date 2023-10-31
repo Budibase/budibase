@@ -1,4 +1,11 @@
-import { FieldType, Row, Table, SearchParams } from "@budibase/types"
+import {
+  FieldType,
+  Row,
+  Table,
+  SearchParams,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
+} from "@budibase/types"
 import TestConfiguration from "../../../../../tests/utilities/TestConfiguration"
 import { search } from "../internal"
 import {
@@ -12,6 +19,8 @@ describe("internal", () => {
   const tableData: Table = {
     name: generator.word(),
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     schema: {
       name: {
         name: "name",
