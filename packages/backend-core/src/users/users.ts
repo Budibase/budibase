@@ -276,7 +276,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, pageLimit, {
+  return pagination(userList, limit ?? PAGE_LIMIT, {
     paginate: true,
     property,
     getKey,
