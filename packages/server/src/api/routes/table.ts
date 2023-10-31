@@ -52,4 +52,11 @@ router
     tableController.bulkImport
   )
 
+  .post(
+    "/api/tables/:tableId/migrate",
+    paramResource("tableId"),
+    authorized(BUILDER),
+    tableController.migrate
+  )
+
 export default router
