@@ -282,6 +282,7 @@
   }
 
   function shouldRenderField(value) {
+    console.log(value)
     return (
       value.customType !== "row" &&
       value.customType !== "code" &&

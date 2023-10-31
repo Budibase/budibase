@@ -1,11 +1,5 @@
 <script>
-  import {
-    Select,
-    DatePicker,
-    Multiselect,
-    TextArea,
-    Label,
-  } from "@budibase/bbui"
+  import { Select, DatePicker, Multiselect, TextArea } from "@budibase/bbui"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
@@ -37,11 +31,7 @@
     options={schema.constraints.inclusion}
   />
 {:else if schema.type === "datetime"}
-  <DatePicker
-    label={field}
-    value={value[field]}
-    on:change={e => onChange(e, field)}
-  />
+  <DatePicker value={value[field]} on:change={e => onChange(e, field)} />
 {:else if schema.type === "boolean"}
   <Select
     on:change={e => onChange(e, field)}
@@ -58,14 +48,9 @@
     on:change={e => onChange(e, field)}
   />
 {:else if schema.type === "longform"}
-  <TextArea
-    label={field}
-    bind:value={value[field]}
-    on:change={e => onChange(e, field)}
-  />
+  <TextArea bind:value={value[field]} on:change={e => onChange(e, field)} />
 {:else if schema.type === "json"}
   <span>
-    <Label>{field}</Label>
     <Editor
       editorHeight="150"
       mode="json"
