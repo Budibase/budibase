@@ -5,6 +5,7 @@ import { default as applications } from "./app/applications"
 import { default as datasources } from "./app/datasources"
 import { default as queries } from "./app/queries"
 import { default as rows } from "./app/rows"
+import { default as links } from "./app/links"
 import { default as users } from "./users"
 import { default as plugins } from "./plugins"
 import * as views from "./app/views"
@@ -22,6 +23,7 @@ const sdk = {
   plugins,
   views,
   permissions,
+  links,
 }
 
 // default export for TS

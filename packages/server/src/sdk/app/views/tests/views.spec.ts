@@ -2,8 +2,10 @@ import _ from "lodash"
 import {
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSchema,
+  TableSourceType,
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
@@ -14,6 +16,8 @@ describe("table sdk", () => {
     _id: generator.guid(),
     name: "TestTable",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     schema: {
       name: {
         type: FieldType.STRING,
