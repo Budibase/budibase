@@ -132,7 +132,6 @@
               title={value.title}
               panel={AutomationBindingPanel}
               type={schema.type}
-              label={field}
               {schema}
               value={value[field]}
               on:change={e => onChange(e, field)}
