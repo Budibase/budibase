@@ -20,3 +20,8 @@ export interface CreateAppBackupResponse {
 export interface UpdateAppBackupRequest {
   name: string
 }
+
+export interface ImportAppBackupResponse {
+  restoreId: string
+  message: string
+}
