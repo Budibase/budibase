@@ -5,18 +5,27 @@ import {
   isSchema,
   validate as validateSchema,
 } from "../../../utilities/schema"
-import { isExternalTable, isSQL } from "../../../integrations/utils"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
 import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
+  DocumentType,
   FetchTablesResponse,
+  MigrateRequest,
+  MigrateResponse,
+  Row,
   SaveTableRequest,
   SaveTableResponse,
   Table,
   TableResponse,
+  TableSourceType,
   UserCtx,
-  Row,
+  SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
@@ -24,12 +33,10 @@ import { builderSocket } from "../../../websockets"
 import { cloneDeep, isEqual } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
-  if (table && !tableId) {
-    tableId = table._id
-  }
-  if (table && table.type === "external") {
+  if (table && isExternalTable(table)) {
     return external
-  } else if (tableId && isExternalTable(tableId)) {
+  }
+  if (tableId && isExternalTableID(tableId)) {
     return external
   }
   return internal
@@ -46,8 +53,8 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
-        type: "external",
-        sourceId: datasource._id,
+        sourceType: TableSourceType.EXTERNAL,
+        sourceId: datasource._id!,
         sql: isSQL(datasource),
       }))
     } else {
@@ -157,4 +164,20 @@ export async function validateExistingTableImport(ctx: UserCtx) {
   } else {
     ctx.status = 422
   }
+}
+
+export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
+  const { oldColumn, newColumn } = ctx.request.body
+  let tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+  let result = await sdk.tables.migrate(table, oldColumn, newColumn)
+
+  for (let table of result.tablesUpdated) {
+    builderSocket?.emitTableUpdate(ctx, table, {
+      includeOriginator: true,
+    })
+  }
+
+  ctx.status = 200
+  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
 }

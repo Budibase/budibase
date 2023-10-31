@@ -35,10 +35,10 @@ export async function save(
   opts?: { tableId?: string; renaming?: RenameColumn }
 ) {
   let tableToSave: TableRequest = {
+    ...update,
     type: "table",
     _id: buildExternalTableId(datasourceId, update.name),
     sourceId: datasourceId,
-    ...update,
   }
 
   const tableId = opts?.tableId || update._id
