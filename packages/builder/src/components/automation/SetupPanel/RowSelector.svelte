@@ -97,6 +97,7 @@
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
   $: if (value?.tableId == null) value = { tableId: "" }
+  $: console.log($tables.list)
 </script>
 
 <div class="schema-fields">

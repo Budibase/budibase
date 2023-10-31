@@ -168,8 +168,10 @@
     <div class="blockSection">
       <Layout noPadding gap="S">
         {#if isAppAction}
-          <Label>Role</Label>
-          <RoleSelect bind:value={role} />
+          <div>
+            <Label>Role</Label>
+            <RoleSelect bind:value={role} />
+          </div>
         {/if}
         <AutomationBlockSetup
           schemaProperties={Object.entries(block.schema.inputs.properties)}
