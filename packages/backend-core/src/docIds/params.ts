@@ -6,6 +6,7 @@ import {
   ViewName,
 } from "../constants"
 import { getProdAppID } from "./conversions"
+import { DatabaseQueryOpts } from "@budibase/types"
 
 /**
  * If creating DB allDocs/query params with only a single top level ID this can be used, this
@@ -22,8 +23,8 @@ import { getProdAppID } from "./conversions"
 export function getDocParams(
   docType: string,
   docId?: string | null,
-  otherProps: any = {}
-) {
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   if (docId == null) {
     docId = ""
   }
@@ -45,8 +46,8 @@ export function getDocParams(
 export function getRowParams(
   tableId?: string | null,
   rowId?: string | null,
-  otherProps = {}
-) {
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   if (tableId == null) {
     return getDocParams(DocumentType.ROW, null, otherProps)
   }
@@ -88,7 +89,10 @@ export const isDatasourceId = (id: string) => {
 /**
  * Gets parameters for retrieving workspaces.
  */
-export function getWorkspaceParams(id = "", otherProps = {}) {
+export function getWorkspaceParams(
+  id = "",
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   return {
     ...otherProps,
     startkey: `${DocumentType.WORKSPACE}${SEPARATOR}${id}`,
@@ -99,7 +103,10 @@ export function getWorkspaceParams(id = "", otherProps = {}) {
 /**
  * Gets parameters for retrieving users.
  */
-export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
+export function getGlobalUserParams(
+  globalId: any,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   if (!globalId) {
     globalId = ""
   }
@@ -117,11 +124,17 @@ export function getGlobalUserParams(globalId: any, otherProps: any = {}) {
 /**
  * Gets parameters for retrieving users, this is a utility function for the getDocParams function.
  */
-export function getUserMetadataParams(userId?: string | null, otherProps = {}) {
+export function getUserMetadataParams(
+  userId?: string | null,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   return getRowParams(InternalTable.USER_METADATA, userId, otherProps)
 }
 
-export function getUsersByAppParams(appId: any, otherProps: any = {}) {
+export function getUsersByAppParams(
+  appId: any,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+): DatabaseQueryOpts {
   const prodAppId = getProdAppID(appId)
   return {
     ...otherProps,

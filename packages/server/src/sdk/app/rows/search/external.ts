@@ -186,6 +186,12 @@ export async function fetch(tableId: string): Promise<Row[]> {
   })
 }
 
+export async function fetchRaw(tableId: string): Promise<Row[]> {
+  return await handleRequest<Operation.READ>(Operation.READ, tableId, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
+  })
+}
+
 export async function fetchView(viewName: string) {
   // there are no views in external datasources, shouldn't ever be called
   // for now just fetch

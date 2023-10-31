@@ -140,14 +140,13 @@ export async function exportRows(
 }
 
 export async function fetch(tableId: string): Promise<Row[]> {
-  const db = context.getAppDB()
-
   const table = await sdk.tables.getTable(tableId)
-  const rows = await getRawTableData(db, tableId)
+  const rows = await fetchRaw(tableId)
   return await outputProcessing(table, rows)
 }
 
-async function getRawTableData(db: Database, tableId: string) {
+export async function fetchRaw(tableId: string): Promise<Row[]> {
+  const db = context.getAppDB()
   let rows
   if (tableId === InternalTables.USER_METADATA) {
     rows = await sdk.users.fetchMetadata()
@@ -182,7 +181,7 @@ export async function fetchView(
     })
   } else {
     const tableId = viewInfo.meta.tableId
-    const data = await getRawTableData(db, tableId)
+    const data = await fetchRaw(tableId)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
@@ -198,11 +197,7 @@ export async function fetchView(
     try {
       table = await sdk.tables.getTable(viewInfo.meta.tableId)
     } catch (err) {
-      /* istanbul ignore next */
-      table = {
-        name: "",
-        schema: {},
-      }
+      throw new Error("Unable to retrieve view table.")
     }
     rows = await outputProcessing(table, response.rows)
   }
