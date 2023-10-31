@@ -249,7 +249,8 @@ export const paginatedUsers = async ({
   limit,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
-  const pageLimit = limit ? limit + 1 : PAGE_LIMIT + 1
+  const pageSize = limit ?? PAGE_LIMIT
+  const pageLimit = pageSize + 1
   // get one extra document, to have the next page
   const opts: DatabaseQueryOpts = {
     include_docs: true,
@@ -276,7 +277,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, limit ?? PAGE_LIMIT, {
+  return pagination(userList, pageSize, {
     paginate: true,
     property,
     getKey,
