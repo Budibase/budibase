@@ -142,7 +142,7 @@
   const updateFetch = email => {
     fetch.update({
       query: {
-        email,
+        email: email || null,
       },
     })
   }
