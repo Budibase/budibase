@@ -39,12 +39,12 @@ describe("syncGlobalUsers", () => {
       expect(metadata).toHaveLength(3)
       expect(metadata).toContainEqual(
         expect.objectContaining({
-          _id: db.generateUserMetadataID(user1._id),
+          _id: db.generateUserMetadataID(user1._id!),
         })
       )
       expect(metadata).toContainEqual(
         expect.objectContaining({
-          _id: db.generateUserMetadataID(user2._id),
+          _id: db.generateUserMetadataID(user2._id!),
         })
       )
     })
@@ -59,7 +59,7 @@ describe("syncGlobalUsers", () => {
       expect(metadata).toHaveLength(1)
       expect(metadata).not.toContainEqual(
         expect.objectContaining({
-          _id: db.generateUserMetadataID(user._id),
+          _id: db.generateUserMetadataID(user._id!),
         })
       )
     })
@@ -70,7 +70,7 @@ describe("syncGlobalUsers", () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
       const user1 = await config.createUser({ admin: false, builder: false })
       const user2 = await config.createUser({ admin: false, builder: false })
-      await proSdk.groups.addUsers(group.id, [user1._id, user2._id])
+      await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
 
       await config.doInContext(config.appId, async () => {
         await syncGlobalUsers()
@@ -87,12 +87,12 @@ describe("syncGlobalUsers", () => {
         expect(metadata).toHaveLength(3)
         expect(metadata).toContainEqual(
           expect.objectContaining({
-            _id: db.generateUserMetadataID(user1._id),
+            _id: db.generateUserMetadataID(user1._id!),
           })
         )
         expect(metadata).toContainEqual(
           expect.objectContaining({
-            _id: db.generateUserMetadataID(user2._id),
+            _id: db.generateUserMetadataID(user2._id!),
           })
         )
       })
@@ -109,7 +109,7 @@ describe("syncGlobalUsers", () => {
           { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
         ],
       })
-      await proSdk.groups.addUsers(group.id, [user1._id, user2._id])
+      await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
 
       await config.doInContext(config.appId, async () => {
         await syncGlobalUsers()

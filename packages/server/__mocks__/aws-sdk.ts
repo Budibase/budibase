@@ -70,6 +70,13 @@ module AwsMock {
         Contents: {},
       })
     )
+
+    // @ts-ignore
+    this.getObject = jest.fn(
+      response({
+        Body: "",
+      })
+    )
   }
 
   aws.DynamoDB = { DocumentClient }
