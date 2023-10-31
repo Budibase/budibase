@@ -106,7 +106,7 @@
     <Select
       on:change={onChangeTable}
       value={value.tableId}
-      options={$tables.list}
+      options={$tables.list.filter(table => table._id !== "ta_users")}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
