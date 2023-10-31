@@ -23,7 +23,7 @@ function runBuild(entry, outfile) {
   )
 
   if (
-    !fs.existsSync("../pro/src") &&
+    !fs.existsSync(path.join(__dirname, "../packages/pro/src")) &&
     tsconfigPathPluginContent.compilerOptions?.paths
   ) {
     // If we don't have pro, we cannot bundle backend-core.
