@@ -17,7 +17,7 @@ import {
   processInputBBReferences,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
-import { isExternalTable } from "../../integrations/utils"
+import { isExternalTableID } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -51,7 +51,7 @@ function getRemovedAttachmentKeys(
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
  * time now and the current logged in user making the request.
- * @param user The user to be used for an appId as well as the createdBy and createdAt fields.
+ * @param userId The user to be used for an appId as well as the createdBy and createdAt fields.
  * @param table The table which is to be used for the schema, as well as handling auto IDs incrementing.
  * @param row The row which is to be updated with information for the auto columns.
  * @param opts specific options for function to carry out optional features.
@@ -267,7 +267,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     )) as Row[]
   }
   // remove null properties to match internal API
-  if (isExternalTable(table._id!)) {
+  if (isExternalTableID(table._id!)) {
     for (let row of enriched) {
       for (let key of Object.keys(row)) {
         if (row[key] === null) {
