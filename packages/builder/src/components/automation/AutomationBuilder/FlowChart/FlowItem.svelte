@@ -7,9 +7,9 @@
     Detail,
     Modal,
     Button,
-    ActionButton,
     notifications,
     Label,
+    AbsTooltip,
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
@@ -125,6 +125,10 @@
         </div>
 
         <div class="blockTitle">
+          <AbsTooltip type="negative" text="Remove looping">
+            <Icon on:click={removeLooping} hoverable name="DeleteOutline" />
+          </AbsTooltip>
+
           <div style="margin-left: 10px;" on:click={() => {}}>
             <Icon hoverable name={showLooping ? "ChevronDown" : "ChevronUp"} />
           </div>
@@ -135,9 +139,6 @@
     <Divider noMargin />
     {#if !showLooping}
       <div class="blockSection">
-        <div class="block-options">
-          <ActionButton on:click={() => removeLooping()} icon="DeleteOutline" />
-        </div>
         <Layout noPadding gap="S">
           <AutomationBlockSetup
             schemaProperties={Object.entries(
@@ -252,5 +253,6 @@
   .blockTitle {
     display: flex;
     align-items: center;
+    gap: var(--spacing-s);
   }
 </style>

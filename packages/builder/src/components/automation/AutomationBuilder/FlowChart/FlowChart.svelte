@@ -15,8 +15,7 @@
   let testDataModal
   let confirmDeleteDialog
   let scrolling = false
-  $: blocks = getBlocks(automation)
-
+  $: blocks = getBlocks(automation).filter(x => x.stepId !== ActionStepID.LOOP)
   const getBlocks = automation => {
     let blocks = []
     if (automation.definition.trigger) {
@@ -138,9 +137,9 @@
 
   .header.scrolling {
     background: var(--background);
-    z-index: -1;
     border-bottom: var(--border-light);
-    background: var(--background);
+    border-left: var(--border-light);
+    z-index: 1;
   }
 
   .header {

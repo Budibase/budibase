@@ -22,9 +22,8 @@ export const getAutomationStore = () => {
   return store
 }
 
-function updateReferencesInObject(obj, modifiedIndex, action) {
+const updateReferencesInObject = (obj, modifiedIndex, action) => {
   const regex = /{{\s*steps\.(\d+)\./g
-
   for (const key in obj) {
     if (typeof obj[key] === "string") {
       let matches
@@ -48,7 +47,7 @@ function updateReferencesInObject(obj, modifiedIndex, action) {
   }
 }
 
-function updateStepReferences(steps, modifiedIndex, action) {
+const updateStepReferences = (steps, modifiedIndex, action) => {
   steps.forEach(step => {
     updateReferencesInObject(step.inputs, modifiedIndex, action)
   })
@@ -296,7 +295,7 @@ const automationActions = store => ({
       newAutomation.definition.steps = newAutomation.definition.steps.filter(
         step => step.id !== block.id
       )
-      delete newAutomation.definition.stepNames[block.id]
+      delete newAutomation.definition.stepNames?.[block.id]
     }
     try {
       updateStepReferences(newAutomation.definition.steps, blockIdx, "delete")
