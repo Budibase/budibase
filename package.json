@@ -83,6 +83,7 @@
   "workspaces": {
     "packages": [
       "packages/*",
+      "!packages/account-portal",
       "packages/account-portal/packages/*"
     ]
   },
