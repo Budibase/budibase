@@ -7,11 +7,12 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { InvalidColumns, NoEmptyFilterStrings } from "../constants"
+import {
+  InvalidColumns,
+  NoEmptyFilterStrings,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "../constants"
 import { helpers } from "@budibase/shared-core"
-import * as external from "../api/controllers/table/external"
-import * as internal from "../api/controllers/table/internal"
-import { DEFAULT_BB_DATASOURCE_ID } from "../db/defaultData/datasource_bb_default"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
