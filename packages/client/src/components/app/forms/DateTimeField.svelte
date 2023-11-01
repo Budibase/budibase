@@ -30,6 +30,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   type="datetime"
@@ -41,7 +42,7 @@
       value={fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
-      {readonly}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       appendTo={document.getElementById("flatpickr-root")}

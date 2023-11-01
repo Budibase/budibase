@@ -11,6 +11,7 @@
   export let defaultValue
   export let type
   export let disabled = false
+  export let readonly = false
   export let validation
 
   // Get contexts
@@ -29,6 +30,7 @@
     type,
     defaultValue,
     disabled,
+    readonly,
     validation,
     formStep
   )

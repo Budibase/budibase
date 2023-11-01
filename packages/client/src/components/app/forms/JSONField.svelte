@@ -49,6 +49,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   type="json"
@@ -61,7 +62,7 @@
         value={serialiseValue(fieldState.value)}
         on:change={handleChange}
         disabled={fieldState.disabled}
-        {readonly}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}
