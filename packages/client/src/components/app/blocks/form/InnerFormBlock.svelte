@@ -220,14 +220,10 @@
               </BlockComponent>
             {/if}
           </BlockComponent>
-          {#if description}
-            <BlockComponent
-              type="text"
-              props={{ text: description }}
-              order={1}
-            />
-          {/if}
         </BlockComponent>
+      {/if}
+      {#if description}
+        <BlockComponent type="text" props={{ text: description }} order={1} />
       {/if}
       {#key fields}
         <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
