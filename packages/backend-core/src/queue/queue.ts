@@ -4,15 +4,16 @@ import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
 import BullQueue, { QueueOptions } from "bull"
 import { addListeners, StalledFn } from "./listeners"
+import { Duration } from "../utils"
 import * as timers from "../timers"
 import * as Redis from "ioredis"
 
 // the queue lock is held for 5 minutes
-const QUEUE_LOCK_MS = 300000
+const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
 // queue lock is refreshed every 30 seconds
-const QUEUE_LOCK_RENEW_INTERNAL_MS = 30000
+const QUEUE_LOCK_RENEW_INTERNAL_MS = Duration.fromSeconds(30).toMs()
 // cleanup the queue every 60 seconds
-const CLEANUP_PERIOD_MS = 60 * 1000
+const CLEANUP_PERIOD_MS = Duration.fromSeconds(60).toMs()
 let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
 let cleanupInterval: NodeJS.Timeout
 
