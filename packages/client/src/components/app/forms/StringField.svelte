@@ -11,6 +11,7 @@
   export let defaultValue = ""
   export let align
   export let onChange
+  export let readonly = false
 
   let fieldState
   let fieldApi
@@ -44,6 +45,7 @@
       {placeholder}
       {type}
       {align}
+      {readonly}
     />
   {/if}
 </Field>

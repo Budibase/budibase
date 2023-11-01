@@ -8,6 +8,7 @@
   export let id = null
   export let fullScreenOffset = 0
   export let disabled = false
+  export let readonly = false
   export let easyMDEOptions
 
   const dispatch = createEventDispatcher()
@@ -19,6 +20,7 @@
   // control
   $: checkValue(value)
   $: mde?.codemirror.on("change", debouncedUpdate)
+  $: mde?.codemirror.setOption("readOnly", readonly)
 
   const checkValue = val => {
     if (mde && val !== latestValue) {
@@ -43,7 +45,7 @@
   const debouncedUpdate = debounce(update, 250)
 </script>
 
-{#key height}
+{#key (height, readonly)}
   <SpectrumMDE
     bind:mde
     scroll={true}
@@ -54,6 +56,7 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
+      toolbar: readonly ? false : undefined,
       ...easyMDEOptions,
     }}
   />
