@@ -32,11 +32,8 @@ import {
   tenancy,
   users,
 } from "@budibase/backend-core"
-import { USERS_TABLE_SCHEMA } from "../../constants"
-import {
-  buildDefaultDocs,
-  DEFAULT_BB_DATASOURCE_ID,
-} from "../../db/defaultData/datasource_bb_default"
+import { USERS_TABLE_SCHEMA, DEFAULT_BB_DATASOURCE_ID } from "../../constants"
+import { buildDefaultDocs } from "../../db/defaultData/datasource_bb_default"
 import { removeAppFromUserRoles } from "../../utilities/workerRequests"
 import { stringToReadStream } from "../../utilities"
 import { doesUserHaveLock } from "../../utilities/redis"
