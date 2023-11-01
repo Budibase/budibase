@@ -56,7 +56,7 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
-      toolbar: readonly ? false : undefined,
+      toolbar: disabled || readonly ? false : undefined,
       ...easyMDEOptions,
     }}
   />

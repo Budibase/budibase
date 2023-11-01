@@ -5640,12 +5640,7 @@
             "type": "boolean",
             "label": "Disabled",
             "key": "disabled",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "defaultValue": false
           }
         ]
       },

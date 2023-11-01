@@ -136,7 +136,8 @@
       actionType: actionType === "Create" ? "Create" : "Update",
       dataSource,
       size,
-      disabled: disabled || actionType === "View",
+      disabled,
+      readonly: !disabled && actionType === "View",
     }}
     styles={{
       normal: {
