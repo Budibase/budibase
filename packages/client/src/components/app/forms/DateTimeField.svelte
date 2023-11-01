@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let enableTime = true
   export let timeOnly = false
   export let time24hr = false
@@ -40,6 +41,7 @@
       value={fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
+      {readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       appendTo={document.getElementById("flatpickr-root")}
