@@ -5,11 +5,15 @@ describe("/static", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let app
+  let cleanupEnv
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    setup.afterAll()
+    cleanupEnv()
+  })
 
   beforeAll(async () => {
-    config.modeSelf()
+    cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
     app = await config.init()
   })
 

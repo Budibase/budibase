@@ -5,11 +5,12 @@ import {
   QueryJson,
   QueryType,
   SqlQuery,
-  ExternalTable,
+  Table,
   DatasourcePlus,
   DatasourceFeature,
   ConnectionInfo,
   Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -263,25 +264,27 @@ class OracleIntegration extends Sql implements DatasourcePlus {
    */
   async buildSchema(
     datasourceId: string,
-    entities: Record<string, ExternalTable>
+    entities: Record<string, Table>
   ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
     const oracleTables = this.mapColumns(columnsResponse)
 
-    const tables: { [key: string]: ExternalTable } = {}
+    const tables: { [key: string]: Table } = {}
 
     // iterate each table
     Object.values(oracleTables).forEach(oracleTable => {
       let table = tables[oracleTable.name]
       if (!table) {
         table = {
+          type: "table",
           _id: buildExternalTableId(datasourceId, oracleTable.name),
           primary: [],
           name: oracleTable.name,
           schema: {},
           sourceId: datasourceId,
+          sourceType: TableSourceType.EXTERNAL,
         }
         tables[oracleTable.name] = table
       }
