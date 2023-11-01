@@ -28,6 +28,7 @@ const env = {
   MARIADB_DB: process.env.MARIADB_DB,
   MARIADB_USER: process.env.MARIADB_USER,
   MARIADB_PASSWORD: process.env.MARIADB_PASSWORD,
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
 }
 
 export = env
