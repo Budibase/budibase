@@ -9,12 +9,13 @@ vi.mock("../websocket.js")
 describe("Builder store", () => {
   beforeEach(ctx => {
     vi.clearAllMocks()
-    const builderStorex = new BuilderStore()
+    const builderStore = new BuilderStore()
+    ctx.test = {}
     ctx.test = {
       get store() {
-        return get(builderStorex)
+        return get(builderStore)
       },
-      builderStorex,
+      builderStore,
     }
   })
 
@@ -147,13 +148,13 @@ describe("Builder store", () => {
     const designURL =
       "/builder/app/app_dev_123/design/screen_456/screen_456-screen"
 
-    ctx.test.builderStorex.setPreviousTopNavPath(dataRoute, dataURL)
+    ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
     expect(ctx.test.store.previousTopNavPath).toStrictEqual({
       [dataRoute]: dataURL,
     })
 
-    ctx.test.builderStorex.setPreviousTopNavPath(designRoute, designURL)
+    ctx.test.builderStore.setPreviousTopNavPath(designRoute, designURL)
 
     expect(ctx.test.store.previousTopNavPath).toStrictEqual({
       [dataRoute]: dataURL,
@@ -161,24 +162,47 @@ describe("Builder store", () => {
     })
   })
 
-  it("Overrite an existing route/path mapping with a new URL", () => {
-    // expect(ctx.test.store.previousTopNavPath).toStrictEqual({})
-    // ctx.test.builderStore.refresh()
+  it("Overrite an existing route/path mapping with a new URL", ctx => {
+    expect(ctx.test.store.previousTopNavPath).toStrictEqual({})
     console.log(INITIAL_BUILDER_STATE)
-    // const dataRoute = "/builder/app/:application/data"
-    // const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
-    // const updatedURL = "/builder/app/app_dev_123/data/table/ta_employees"
+    const dataRoute = "/builder/app/:application/data"
+    const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
+    const updatedURL = "/builder/app/app_dev_123/data/table/ta_employees"
 
-    // ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
+    ctx.test.builderStore.setPreviousTopNavPath(dataRoute, dataURL)
 
-    // expect(ctx.test.store.previousTopNavPath).toStrictEqual({
-    //   [dataRoute]: dataURL,
-    // })
+    expect(ctx.test.store.previousTopNavPath).toStrictEqual({
+      [dataRoute]: dataURL,
+    })
 
-    // ctx.test.builderStore.setPreviousTopNavPath(dataRoute, updatedURL)
+    ctx.test.builderStore.setPreviousTopNavPath(dataRoute, updatedURL)
 
-    // expect(ctx.test.store.previousTopNavPath).toStrictEqual({
-    //   [dataRoute]: updatedURL,
-    // })
+    expect(ctx.test.store.previousTopNavPath).toStrictEqual({
+      [dataRoute]: updatedURL,
+    })
+  })
+
+  it("Register a builder tour node", ctx => {
+    const fakeNode = { name: "node" }
+    ctx.test.builderStore.registerTourNode("sampleKey", fakeNode)
+
+    const registeredNodes = ctx.test.store.tourNodes
+
+    expect(registeredNodes).not.toBeNull()
+    expect(Object.keys(registeredNodes).length).toBe(1)
+    expect(registeredNodes["sampleKey"]).toStrictEqual(fakeNode)
+  })
+
+  it("Clear a destroyed tour node", ctx => {
+    const fakeNode = { name: "node" }
+    ctx.test.builderStore.registerTourNode("sampleKey", fakeNode)
+
+    const registeredNodes = ctx.test.store.tourNodes
+
+    expect(registeredNodes).not.toBeNull()
+    expect(Object.keys(registeredNodes).length).toBe(1)
+
+    ctx.test.builderStore.destroyTourNode("sampleKey")
+    expect(registeredNodes).toBe({})
   })
 })

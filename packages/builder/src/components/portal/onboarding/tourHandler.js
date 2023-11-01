@@ -11,16 +11,7 @@ const registerNode = async (node, tourStepKey) => {
     return
   }
 
-  builderStore.update(state => {
-    const update = {
-      ...state,
-      tourNodes: {
-        ...state.tourNodes,
-        [tourStepKey]: node,
-      },
-    }
-    return update
-  })
+  builderStore.registerTourNode(tourStepKey, node)
 }
 
 export function tourHandler(node, tourStepKey) {
@@ -29,19 +20,7 @@ export function tourHandler(node, tourStepKey) {
   }
   return {
     destroy: () => {
-      const updatedTourNodes = get(builderStore).tourNodes
-      if (updatedTourNodes && updatedTourNodes[tourStepKey]) {
-        delete updatedTourNodes[tourStepKey]
-        builderStore.update(state => {
-          const update = {
-            ...state,
-            tourNodes: {
-              ...updatedTourNodes,
-            },
-          }
-          return update
-        })
-      }
+      builderStore.destroyTourNode(tourStepKey)
     },
   }
 }

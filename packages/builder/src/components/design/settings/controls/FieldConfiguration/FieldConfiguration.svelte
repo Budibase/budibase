@@ -6,7 +6,7 @@
     getBindableProperties,
     getComponentBindableProperties,
   } from "builder/dataBinding"
-  import DraggableList from "../DraggableList.svelte"
+  import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import { selectedScreen, currentAsset, componentStore } from "stores/frontend"
   import FieldSetting from "./FieldSetting.svelte"

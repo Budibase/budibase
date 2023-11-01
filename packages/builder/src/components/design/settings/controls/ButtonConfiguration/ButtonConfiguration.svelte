@@ -2,8 +2,8 @@
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
+  import { componentStore } from "stores/frontend"
 
   export let componentBindings
   export let bindings
@@ -47,7 +47,7 @@
   }
 
   const buildPseudoInstance = cfg => {
-    return store.actions.components.createInstance(
+    return componentStore.createInstance(
       `@budibase/standard-components/button`,
       {
         _instanceName: Helpers.uuid(),

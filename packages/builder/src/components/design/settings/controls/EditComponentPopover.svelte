@@ -30,9 +30,7 @@
     open = true
   }
 
-  $: componentDef = store.actions.components.getDefinition(
-    componentInstance._component
-  )
+  $: componentDef = componentStore.getDefinition(componentInstance._component)
   $: parsedComponentDef = processComponentDefinitionSettings(componentDef)
 
   const processComponentDefinitionSettings = componentDef => {

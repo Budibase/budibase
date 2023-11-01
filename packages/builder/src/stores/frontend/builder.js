@@ -2,6 +2,7 @@ import { writable } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import BudiStore from "./BudiStore"
+import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 
 export const INITIAL_BUILDER_STATE = {
   previousTopNavPath: {},
@@ -69,11 +70,13 @@ export class BuilderStore extends BudiStore {
   }
 
   setPreviousTopNavPath(route, url) {
-    this.update(state => {
-      if (!state.previousTopNavPath) state.previousTopNavPath = {}
-      state.previousTopNavPath[route] = url
-      return state
-    })
+    this.update(state => ({
+      ...state,
+      previousTopNavPath: {
+        ...(state.previousTopNavPath || {}),
+        [route]: url,
+      },
+    }))
   }
 
   selectResource(id) {
@@ -82,9 +85,8 @@ export class BuilderStore extends BudiStore {
     })
   }
 
-  /*
-  register
-    update(state => {
+  registerTourNode(tourStepKey, node) {
+    this.update(state => {
       const update = {
         ...state,
         tourNodes: {
@@ -94,7 +96,34 @@ export class BuilderStore extends BudiStore {
       }
       return update
     })
-  */
+  }
+
+  destroyTourNode(tourStepKey) {
+    if (this.tourNodes[tourStepKey]) {
+      this.update(state => ({
+        ...state,
+        tourNodes: {
+          [tourStepKey]: _,
+          ...this.tourNodes,
+        },
+      }))
+    }
+  }
+
+  startBuilderOnboarding() {
+    this.update(state => ({
+      ...state,
+      onboarding: true,
+      tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
+    }))
+  }
+
+  startTour(tourKey) {
+    this.update(state => ({
+      ...state,
+      tourKey: tourKey,
+    }))
+  }
 }
 
 export const builderStore = new BuilderStore()

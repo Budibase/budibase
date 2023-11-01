@@ -4,6 +4,7 @@ import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
 import { findAllMatchingComponents } from "stores/frontend/components/utils"
 import {
+  layoutStore,
   appStore,
   componentStore,
   navigationStore,
@@ -36,7 +37,7 @@ export class ScreenStore extends BudiStore {
     this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
-    // this.removeCustomLayout = this.removeCustomLayout(this)
+    this.removeCustomLayout = this.removeCustomLayout(this)
 
     this.selected = derived(this.store, $store => {
       return get(this.store).screens.find(
@@ -452,16 +453,16 @@ export class ScreenStore extends BudiStore {
   }
 
   // Move to layouts store
-  // async removeCustomLayout(screen) {
-  //   // Pull relevant settings from old layout, if required
-  //   const layout = get(this.store).layouts.find(x => x._id === screen.layoutId)
-  //   const patchFn = screen => {
-  //     screen.layoutId = null
-  //     screen.showNavigation = layout?.props.navigation !== "None"
-  //     screen.width = layout?.props.width || "Large"
-  //   }
-  //   await this.patch(patchFn, screen._id)
-  // }
+  async removeCustomLayout(screen) {
+    // Pull relevant settings from old layout, if required
+    const layout = get(layoutStore).layouts.find(x => x._id === screen.layoutId)
+    const patchFn = screen => {
+      screen.layoutId = null
+      screen.showNavigation = layout?.props.navigation !== "None"
+      screen.width = layout?.props.width || "Large"
+    }
+    await this.patch(patchFn, screen._id)
+  }
 
   /**
    * Parse the entire screen component tree and ensure settings are valid
