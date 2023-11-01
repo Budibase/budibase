@@ -24,9 +24,12 @@ import BlockComponent from "components/BlockComponent.svelte"
 import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
+import { enrichButtonActions } from "./utils/buttonActions.js"
 
 export default {
   API,
+
+  // Stores
   authStore,
   notificationStore,
   routeStore,
@@ -41,13 +44,20 @@ export default {
   currentRole,
   confirmationStore,
   roleStore,
+
+  // Utils
   styleable,
   linkable,
   getAction,
   fetchDatasourceSchema,
-  Provider,
-  ActionTypes,
   getAPIKey,
+  enrichButtonActions,
+
+  // Components
+  Provider,
   Block,
   BlockComponent,
+
+  // Constants
+  ActionTypes,
 }

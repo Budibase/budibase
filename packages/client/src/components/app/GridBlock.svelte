@@ -2,6 +2,7 @@
   // NOTE: this is not a block - it's just named as such to avoid confusing users,
   // because it functions similarly to one
   import { getContext } from "svelte"
+  import { get } from "svelte/store"
   import { Grid } from "@budibase/frontend-core"
 
   // table is actually any datasource, but called table for legacy compatibility
@@ -16,12 +17,21 @@
   export let fixedRowHeight = null
   export let columns = null
   export let onRowClick = null
+  export let buttons = null
 
+  const context = getContext("context")
   const component = getContext("component")
-  const { styleable, API, builderStore, notificationStore } = getContext("sdk")
+  const {
+    styleable,
+    API,
+    builderStore,
+    notificationStore,
+    enrichButtonActions,
+  } = getContext("sdk")
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
+  $: parsedButtons = parseButtons(buttons)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -32,6 +42,20 @@
       }
     })
     return overrides
+  }
+
+  const parseButtons = buttons => {
+    if (!buttons?.length) {
+      return null
+    }
+    return buttons.map(settings => ({
+      size: "M",
+      text: settings.text,
+      type: settings.type,
+      onClick: async () => {
+        return await enrichButtonActions(settings.onClick, get(context))()
+      },
+    }))
   }
 </script>
 
@@ -58,6 +82,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
+    buttons={parsedButtons}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
