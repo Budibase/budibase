@@ -13,6 +13,7 @@
     notifications,
   } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { DB_TYPE_EXTERNAL } from "constants/backend"
 
   export let table
 
@@ -27,8 +28,8 @@
   let willBeDeleted
   let deleteTableName
 
-  $: external = table?.type === "external"
-  $: allowDeletion = !external || table?.created
+  $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
+  $: allowDeletion = !externalTable || table?.created
 
   function showDeleteModal() {
     templateScreens = $screenStore.screens.filter(
@@ -48,7 +49,7 @@
       for (let screen of templateScreens) {
         await screenStore.delete(screen)
       }
-      if (table.type === "external") {
+      if (table.sourceType === DB_TYPE_EXTERNAL) {
         await datasources.fetch()
       }
       notifications.success("Table deleted")
@@ -91,7 +92,7 @@
     <div slot="control" class="icon">
       <Icon s hoverable name="MoreSmallList" />
     </div>
-    {#if !external}
+    {#if !externalTable}
       <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
     {/if}
     <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>

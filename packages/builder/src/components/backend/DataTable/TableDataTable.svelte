@@ -16,6 +16,7 @@
   import GridRelationshipButton from "components/backend/DataTable/buttons/grid/GridRelationshipButton.svelte"
   import GridEditColumnModal from "components/backend/DataTable/modals/grid/GridEditColumnModal.svelte"
   import GridUsersTableButton from "components/backend/DataTable/modals/grid/GridUsersTableButton.svelte"
+  import { DB_TYPE_EXTERNAL } from "constants/backend"
 
   const userSchemaOverrides = {
     firstName: { displayName: "First name", disabled: true },
@@ -27,7 +28,7 @@
 
   $: id = $tables.selected?._id
   $: isUsersTable = id === TableNames.USERS
-  $: isInternal = $tables.selected?.type !== "external"
+  $: isInternal = $tables.selected?.sourceType !== DB_TYPE_EXTERNAL
   $: gridDatasource = {
     type: "table",
     tableId: id,
@@ -46,10 +47,7 @@
     tables.replaceTable(id, e.detail)
 
     // We need to refresh datasources when an external table changes.
-    // Type "external" may exist - sometimes type is "table" and sometimes it
-    // is "external" - it has different meanings in different endpoints.
-    // If we check both these then we hopefully catch all external tables.
-    if (e.detail?.type === "external" || e.detail?.sql) {
+    if (e.detail?.sourceType === DB_TYPE_EXTERNAL) {
       await datasources.fetch()
     }
   }

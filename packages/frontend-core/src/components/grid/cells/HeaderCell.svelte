@@ -1,11 +1,20 @@
 <script>
   import { getContext, onMount, tick } from "svelte"
   import { canBeDisplayColumn, canBeSortColumn } from "@budibase/shared-core"
-  import { Icon, Popover, Menu, MenuItem, clickOutside } from "@budibase/bbui"
+  import {
+    Icon,
+    Popover,
+    Menu,
+    MenuItem,
+    clickOutside,
+    Modal,
+  } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
   import { getColumnIcon } from "../lib/utils"
+  import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
   import { FieldType, FormulaTypes } from "@budibase/types"
+  import { TableNames } from "../../../constants"
 
   export let column
   export let idx
@@ -45,6 +54,7 @@
   let editIsOpen = false
   let timeout
   let popover
+  let migrationModal
   let searchValue
   let input
 
@@ -189,6 +199,11 @@
     })
   }
 
+  const openMigrationModal = () => {
+    migrationModal.show()
+    open = false
+  }
+
   const startSearching = async () => {
     $focusedCellId = null
     searchValue = ""
@@ -223,6 +238,10 @@
 
   onMount(() => subscribe("close-edit-column", cancelEdit))
 </script>
+
+<Modal bind:this={migrationModal}>
+  <MigrationModal {column} />
+</Modal>
 
 <div
   class="header-cell"
@@ -363,6 +382,11 @@
       >
         Hide column
       </MenuItem>
+      {#if $config.canEditColumns && column.schema.type === "link" && column.schema.tableId === TableNames.USERS}
+        <MenuItem icon="User" on:click={openMigrationModal}>
+          Migrate to user column
+        </MenuItem>
+      {/if}
     </Menu>
   {/if}
 </Popover>
