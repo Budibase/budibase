@@ -11,6 +11,14 @@ import { SocketSession } from "@budibase/types"
 import { v4 as uuid } from "uuid"
 import { createContext, runMiddlewares } from "./middleware"
 
+export interface EmitOptions {
+  // Whether to include the originator of the request from the broadcast,
+  // defaults to false because it is assumed that the user who triggered
+  // an action will already have the changes of that action reflected in their
+  // own UI, so there is no need to send them again.
+  includeOriginator?: boolean
+}
+
 const anonUser = () => ({
   _id: uuid(),
   email: "user@mail.com",
@@ -270,10 +278,17 @@ export class BaseSocket {
 
   // Emit an event to everyone in a room, including metadata of whom
   // the originator of the request was
-  emitToRoom(ctx: any, room: string | string[], event: string, payload: any) {
-    this.io.in(room).emit(event, {
-      ...payload,
-      apiSessionId: ctx.headers?.[Header.SESSION_ID],
-    })
+  emitToRoom(
+    ctx: any,
+    room: string | string[],
+    event: string,
+    payload: any,
+    options?: EmitOptions
+  ) {
+    let emitPayload = { ...payload }
+    if (!options?.includeOriginator) {
+      emitPayload.apiSessionId = ctx.headers?.[Header.SESSION_ID]
+    }
+    this.io.in(room).emit(event, emitPayload)
   }
 }

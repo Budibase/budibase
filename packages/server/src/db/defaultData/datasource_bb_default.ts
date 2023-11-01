@@ -1,4 +1,12 @@
-import { FieldTypes, AutoFieldSubTypes } from "../../constants"
+import {
+  AutoFieldSubTypes,
+  FieldTypes,
+  DEFAULT_BB_DATASOURCE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_JOBS_TABLE_ID,
+} from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
 import LinkDocument from "../linkedRows/LinkDocument"
@@ -8,18 +16,13 @@ import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
 import {
-  Table,
-  Row,
-  RelationshipType,
   FieldType,
+  RelationshipType,
+  Row,
+  Table,
   TableSchema,
+  TableSourceType,
 } from "@budibase/types"
-
-export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 
 const defaultDatasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,
@@ -89,9 +92,10 @@ const AUTO_COLUMNS: TableSchema = {
 
 export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
   _id: DEFAULT_INVENTORY_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Item Name",
   name: "Inventory",
   schema: {
@@ -198,10 +202,11 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
 
 export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EMPLOYEE_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   name: "Employees",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "First Name",
   schema: {
     "First Name": {
@@ -346,9 +351,10 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
 
 export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
   _id: DEFAULT_JOBS_TABLE_ID,
-  type: "internal",
+  type: "table",
   name: "Jobs",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Job ID",
   schema: {
     "Job ID": {
@@ -503,10 +509,11 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
 
 export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EXPENSES_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   name: "Expenses",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Expense ID",
   schema: {
     "Expense ID": {

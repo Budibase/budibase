@@ -4,7 +4,7 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
-  import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
+  import { DEFAULT_BB_DATASOURCE_ID, DB_TYPE_EXTERNAL } from "constants/backend"
   import { onMount } from "svelte"
   import { builderStore } from "stores/frontend"
 
@@ -13,7 +13,8 @@
   $: builderStore.selectResource(DEFAULT_BB_DATASOURCE_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
-      table.type !== "external" && table.sourceId === DEFAULT_BB_DATASOURCE_ID
+      table.sourceType !== DB_TYPE_EXTERNAL &&
+      table.sourceId === DEFAULT_BB_DATASOURCE_ID
   )
 
   onMount(() => {

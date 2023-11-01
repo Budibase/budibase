@@ -5,7 +5,7 @@
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
-  import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
+  import { BUDIBASE_INTERNAL_DB_ID, DB_TYPE_EXTERNAL } from "constants/backend"
   import { TableNames } from "constants"
   import { builderStore } from "stores/frontend"
 
@@ -14,7 +14,7 @@
   $: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
-      table.type !== "external" &&
+      table.sourceType !== DB_TYPE_EXTERNAL &&
       table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
       table._id !== TableNames.USERS
   )

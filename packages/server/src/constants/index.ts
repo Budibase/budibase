@@ -1,5 +1,11 @@
-import { objectStore, roles, constants } from "@budibase/backend-core"
-import { FieldType as FieldTypes } from "@budibase/types"
+import { constants, objectStore, roles } from "@budibase/backend-core"
+import {
+  FieldType as FieldTypes,
+  INTERNAL_TABLE_SOURCE_ID,
+  Table,
+  TableSourceType,
+} from "@budibase/types"
+
 export {
   FieldType as FieldTypes,
   RelationshipType,
@@ -70,9 +76,11 @@ export enum SortDirection {
   DESCENDING = "DESCENDING",
 }
 
-export const USERS_TABLE_SCHEMA = {
+export const USERS_TABLE_SCHEMA: Table = {
   _id: "ta_users",
   type: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   views: {},
   name: "Users",
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
@@ -87,12 +95,10 @@ export const USERS_TABLE_SCHEMA = {
         },
         presence: true,
       },
-      fieldName: "email",
       name: "email",
     },
     firstName: {
       name: "firstName",
-      fieldName: "firstName",
       type: FieldTypes.STRING,
       constraints: {
         type: FieldTypes.STRING,
@@ -101,7 +107,6 @@ export const USERS_TABLE_SCHEMA = {
     },
     lastName: {
       name: "lastName",
-      fieldName: "lastName",
       type: FieldTypes.STRING,
       constraints: {
         type: FieldTypes.STRING,
@@ -109,7 +114,6 @@ export const USERS_TABLE_SCHEMA = {
       },
     },
     roleId: {
-      fieldName: "roleId",
       name: "roleId",
       type: FieldTypes.OPTIONS,
       constraints: {
@@ -119,7 +123,6 @@ export const USERS_TABLE_SCHEMA = {
       },
     },
     status: {
-      fieldName: "status",
       name: "status",
       type: FieldTypes.OPTIONS,
       constraints: {
@@ -169,3 +172,8 @@ export enum AutomationErrors {
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
 export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"
+export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
+export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
+export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
+export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"

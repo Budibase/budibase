@@ -10,6 +10,6 @@
 <ImportButton
   {disabled}
   tableId={$datasource?.tableId}
-  tableType={$definition?.type}
+  tableType={$definition?.sourceType}
   on:importrows={rows.actions.refreshData}
 />
