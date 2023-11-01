@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let optionsType = "select"
   export let validation
   export let defaultValue
@@ -58,6 +59,7 @@
         value={fieldState.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        {readonly}
         error={fieldState.error}
         {options}
         {placeholder}
@@ -72,6 +74,7 @@
         value={fieldState.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        {readonly}
         error={fieldState.error}
         {options}
         {direction}
