@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue
   export let optionsSource = "schema"
@@ -71,6 +72,7 @@
         getOptionValue={flatOptions ? x => x : x => x.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        {readonly}
         on:change={handleChange}
         {placeholder}
         {options}
@@ -81,6 +83,7 @@
         value={fieldState.value || []}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        {readonly}
         error={fieldState.error}
         {options}
         {direction}

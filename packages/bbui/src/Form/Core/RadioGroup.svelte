@@ -8,6 +8,7 @@
   export let options = []
   export let error = null
   export let disabled = false
+  export let readonly = false
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionTitle = option => option
@@ -43,6 +44,11 @@
       >
         <input
           on:change={onChange}
+          on:click={e => {
+            if (readonly) {
+              e.preventDefault()
+            }
+          }}
           bind:group={value}
           value={getOptionValue(option)}
           type="radio"
