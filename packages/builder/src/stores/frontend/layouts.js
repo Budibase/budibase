@@ -1,32 +1,43 @@
-import { writable, derived, get } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { componentStore } from "stores/frontend"
+import BudiStore from "./BudiStore"
 import { API } from "api"
 
-// Review the purpose of these
-const INITIAL_LAYOUT_STATE = {
+export const INITIAL_LAYOUT_STATE = {
   layouts: [],
   selectedLayoutId: null,
 }
 
-export const createLayoutStore = () => {
-  const store = writable({
-    ...INITIAL_LAYOUT_STATE,
-  })
+export class LayoutStore extends BudiStore {
+  constructor() {
+    super(INITIAL_LAYOUT_STATE)
 
-  const reset = () => {
-    store.set({ ...INITIAL_LAYOUT_STATE })
+    this.reset = this.reset.bind(this)
+    this.syncAppLayouts = this.syncAppLayouts.bind(this)
+    this.select = this.select.bind(this)
+    this.deleteLayout = this.deleteLayout.bind(this)
+
+    this.selectedLayout = derived(this.store, $store => {
+      return $store.layouts?.find(
+        layout => layout._id === $store.selectedLayoutId
+      )
+    })
   }
 
-  const syncAppLayouts = pkg => {
-    store.update(state => ({
+  reset() {
+    this.store.set({ ...INITIAL_LAYOUT_STATE })
+  }
+
+  syncAppLayouts(pkg) {
+    this.update(state => ({
       ...state,
       layouts: [...pkg.layouts],
     }))
   }
 
-  const select = layoutId => {
+  select(layoutId) {
     // Check this layout exists
-    const state = get(store)
+    const state = get(this.store)
     const componentState = get(componentStore)
     const layout = state.layouts.find(layout => layout._id === layoutId)
     if (!layout) {
@@ -42,7 +53,7 @@ export const createLayoutStore = () => {
     }
 
     // Select new layout
-    store.update(state => {
+    this.update(state => {
       state.selectedLayoutId = layout._id
       return state
     })
@@ -50,7 +61,7 @@ export const createLayoutStore = () => {
     componentStore.select(layout.props?._id)
   }
 
-  const deleteLayout = async layout => {
+  async deleteLayout(layout) {
     if (!layout?._id) {
       return
     }
@@ -58,25 +69,13 @@ export const createLayoutStore = () => {
       layoutId: layout._id,
       layoutRev: layout._rev,
     })
-    store.update(state => {
+    this.update(state => {
       state.layouts = state.layouts.filter(x => x._id !== layout._id)
       return state
     })
   }
-
-  return {
-    subscribe: store.subscribe,
-    syncAppLayouts,
-    select,
-    delete: deleteLayout,
-    reset,
-  }
 }
 
-export const layoutStore = createLayoutStore()
+export const layoutStore = new LayoutStore()
 
-export const selectedLayout = derived(layoutStore, $layoutStore => {
-  return $layoutStore.layouts?.find(
-    layout => layout._id === $layoutStore.selectedLayoutId
-  )
-})
+export const selectedLayout = layoutStore.selectedLayout

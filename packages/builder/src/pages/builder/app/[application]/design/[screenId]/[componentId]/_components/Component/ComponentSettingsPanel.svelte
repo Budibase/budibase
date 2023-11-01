@@ -20,7 +20,7 @@
 
   const onUpdateName = async value => {
     try {
-      await store.actions.components.updateSetting("_instanceName", value)
+      await componentStore.updateSetting("_instanceName", value)
     } catch (error) {
       notifications.error("Error updating component name")
     }

@@ -1,3 +1,4 @@
+import { layoutStore } from "./layouts.js"
 import { appStore } from "./app.js"
 import {
   componentStore,
@@ -14,7 +15,6 @@ import {
 } from "./screens.js"
 import { builderStore, screensHeight } from "./builder.js"
 import { previewStore } from "./preview.js"
-import { layoutStore } from "./layouts.js"
 import {
   automationStore,
   selectedAutomation,
@@ -25,6 +25,7 @@ import { deploymentStore } from "./deployments.js"
 import { database } from "./database.js"
 
 export {
+  layoutStore,
   database,
   appStore,
   componentStore,
@@ -40,7 +41,6 @@ export {
   automationHistoryStore,
   currentAsset,
   sortedScreens,
-  layoutStore,
   userStore,
   isOnlyUser,
   screensHeight,

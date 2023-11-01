@@ -1,4 +1,4 @@
-import { writable, get, derived } from "svelte/store"
+import { get, derived } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { API } from "api"
 import { Helpers } from "@budibase/bbui"
@@ -23,26 +23,93 @@ import {
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
+import BudiStore from "../BudiStore"
 
-const INITIAL_COMPONENTS_STATE = {
+export const INITIAL_COMPONENTS_STATE = {
   components: [],
   customComponents: [],
   selectedComponentId: null,
   componentToPaste: null,
 }
 
-export const createComponentStore = () => {
-  const store = writable({
-    ...INITIAL_COMPONENTS_STATE,
-  })
+export class ComponentStore extends BudiStore {
+  constructor() {
+    super(INITIAL_COMPONENTS_STATE)
 
-  const reset = () => {
-    store.set({ ...INITIAL_COMPONENTS_STATE })
+    this.reset = this.reset.bind(this)
+    this.refreshDefinitions = this.refreshDefinitions.bind(this)
+    this.getDefinition = this.getDefinition.bind(this)
+    this.getDefaultDatasource = this.getDefaultDatasource.bind(this)
+    this.enrichEmptySettings = this.enrichEmptySettings.bind(this)
+    this.createInstance = this.createInstance.bind(this)
+    this.create = this.create.bind(this)
+    this.patch = this.patch.bind(this)
+    this.delete = this.delete.bind(this)
+    this.copy = this.copy.bind(this)
+    this.paste = this.paste.bind(this)
+    this.select = this.select.bind(this)
+    this.getPrevious = this.getPrevious.bind(this)
+    this.getNext = this.getNext.bind(this)
+    this.selectPrevious = this.selectPrevious.bind(this)
+    this.selectNext = this.selectNext.bind(this)
+    this.moveUp = this.moveUp.bind(this)
+    this.moveDown = this.moveDown.bind(this)
+    this.updateStyle = this.updateStyle.bind(this)
+    this.updateStyles = this.updateStyles.bind(this)
+    this.updateCustomStyle = this.updateCustomStyle.bind(this)
+    this.updateConditions = this.updateConditions.bind(this)
+    this.requestEjectBlock = this.requestEjectBlock.bind(this)
+    this.handleEjectBlock = this.handleEjectBlock.bind(this)
+    this.updateSetting = this.updateSetting.bind(this)
+    this.updateComponentSetting = this.updateComponentSetting.bind(this)
+    this.addParent = this.addParent.bind(this)
+
+    this.selected = derived(
+      [this.store, selectedScreen],
+      ([$store, $selectedScreen]) => {
+        if (
+          $selectedScreen &&
+          $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
+        ) {
+          return $selectedScreen?.props
+        }
+        if (!$selectedScreen || !$store.selectedComponentId) {
+          return null
+        }
+        return findComponent($selectedScreen?.props, $store.selectedComponentId)
+      }
+    )
+
+    this.selectedComponentPath = derived(
+      [this.store, selectedScreen],
+      ([$store, $selectedScreen]) => {
+        return findComponentPath(
+          $selectedScreen?.props,
+          $store.selectedComponentId
+        ).map(component => component._id)
+      }
+    )
+
+    this.subscribe(state => {
+      console.log("debug ", state)
+    })
   }
 
-  const refreshDefinitions = async appId => {
+  /**
+   * Reset the component store to default values
+   */
+  reset() {
+    this.store.set({ ...INITIAL_COMPONENTS_STATE })
+  }
+
+  /**
+   *
+   * @param {string} appId
+   * @returns
+   */
+  async refreshDefinitions(appId) {
     if (!appId) {
-      appId = get(store).appId
+      appId = get(this.store).appId
     }
 
     // Fetch definitions and filter out custom component definitions so we
@@ -53,7 +120,7 @@ export const createComponentStore = () => {
     )
 
     // Update store
-    store.update(state => ({
+    this.update(state => ({
       ...state,
       components,
       customComponents,
@@ -65,14 +132,25 @@ export const createComponentStore = () => {
     return components
   }
 
-  const getDefinition = componentName => {
+  /**
+   *
+   * @param {string} componentName
+   * @example
+   * '@budibase/standard-components/container'
+   * @returns {object}
+   */
+  getDefinition(componentName) {
     if (!componentName) {
       return null
     }
-    return get(store).components[componentName]
+    return get(this.store).components[componentName]
   }
 
-  const getDefaultDatasource = () => {
+  /**
+   *
+   * @returns {object}
+   */
+  getDefaultDatasource() {
     // Ignore users table
     const validTables = get(tables).list.filter(x => x._id !== "ta_users")
 
@@ -102,11 +180,17 @@ export const createComponentStore = () => {
     return validTables.find(table => table.type === DB_TYPE_EXTERNAL)
   }
 
-  const enrichEmptySettings = (component, opts) => {
+  /**
+   *
+   * @param {object} component
+   * @param {object} opts
+   * @returns
+   */
+  enrichEmptySettings(component, opts) {
     if (!component?._component) {
       return
     }
-    const defaultDS = getDefaultDatasource()
+    const defaultDS = this.getDefaultDatasource()
     const settings = getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
     const treeId = parent?._id || component._id
@@ -198,8 +282,15 @@ export const createComponentStore = () => {
     })
   }
 
-  const createInstance = (componentName, presetProps, parent) => {
-    const definition = getDefinition(componentName)
+  /**
+   *
+   * @param {string} componentName
+   * @param {object} presetProps
+   * @param {object} parent
+   * @returns
+   */
+  createInstance(componentName, presetProps, parent) {
+    const definition = this.getDefinition(componentName)
     if (!definition) {
       return null
     }
@@ -218,7 +309,7 @@ export const createComponentStore = () => {
     }
 
     // Enrich empty settings
-    enrichEmptySettings(instance, {
+    this.enrichEmptySettings(instance, {
       parent,
       screen: get(selectedScreen),
       useDefaultValues: true,
@@ -247,9 +338,21 @@ export const createComponentStore = () => {
     }
   }
 
-  const create = async (componentName, presetProps, parent, index) => {
-    const state = get(store)
-    const componentInstance = createInstance(componentName, presetProps, parent)
+  /**
+   *
+   * @param {string} componentName
+   * @param {object} presetProps
+   * @param {object} parent
+   * @param {number} index
+   * @returns
+   */
+  async create(componentName, presetProps, parent, index) {
+    const state = get(this.store)
+    const componentInstance = this.createInstance(
+      componentName,
+      presetProps,
+      parent
+    )
     if (!componentInstance) {
       return
     }
@@ -286,7 +389,7 @@ export const createComponentStore = () => {
         let parentComponent
         if (currentComponent) {
           // Use selected component as parent if one is selected
-          const definition = getDefinition(currentComponent._component)
+          const definition = this.getDefinition(currentComponent._component)
           if (definition?.hasChildren) {
             // Use selected component if it allows children
             parentComponent = currentComponent
@@ -314,7 +417,7 @@ export const createComponentStore = () => {
     }
 
     // Select new component
-    store.update(state => {
+    this.update(state => {
       state.selectedComponentId = componentInstance._id
       return state
     })
@@ -327,10 +430,17 @@ export const createComponentStore = () => {
     return componentInstance
   }
 
-  const patch = async (patchFn, componentId, screenId) => {
+  /**
+   *
+   * @param {function} patchFn
+   * @param {string} componentId
+   * @param {string} screenId
+   * @returns
+   */
+  async patch(patchFn, componentId, screenId) {
     // Use selected component by default
     if (!componentId || !screenId) {
-      const state = get(store)
+      const state = get(this.store)
       componentId = componentId || state.selectedComponentId
 
       const screenState = get(screenStore)
@@ -350,18 +460,23 @@ export const createComponentStore = () => {
     await screenStore.patch(patchScreen, screenId)
   }
 
-  const deleteComponent = async component => {
+  /**
+   *
+   * @param {object} component
+   * @returns
+   */
+  async delete(component) {
     if (!component) {
       return
     }
 
     // Determine the next component to select after deletion
-    const state = get(store)
+    const state = get(this.store)
     let nextSelectedComponentId
     if (state.selectedComponentId === component._id) {
-      nextSelectedComponentId = getNext()
+      nextSelectedComponentId = this.getNext()
       if (!nextSelectedComponentId) {
-        nextSelectedComponentId = getPrevious()
+        nextSelectedComponentId = this.getPrevious()
       }
     }
 
@@ -385,16 +500,16 @@ export const createComponentStore = () => {
 
     // Update selected component if required
     if (nextSelectedComponentId) {
-      store.update(state => {
+      this.update(state => {
         state.selectedComponentId = nextSelectedComponentId
         return state
       })
     }
   }
 
-  const copy = (component, cut = false, selectParent = true) => {
+  copy(component, cut = false, selectParent = true) {
     // Update store with copied component
-    store.update(state => {
+    this.update(state => {
       state.componentToPaste = cloneDeep(component)
       state.componentToPaste.isCut = cut
       return state
@@ -405,7 +520,7 @@ export const createComponentStore = () => {
       const screen = get(selectedScreen)
       const parent = findComponentParent(screen?.props, component._id)
       if (parent) {
-        store.update(state => {
+        this.update(state => {
           state.selectedComponentId = parent._id
           return state
         })
@@ -413,15 +528,26 @@ export const createComponentStore = () => {
     }
   }
 
-  const select = componentId => {
-    store.update(state => {
+  /**
+   *
+   * @param {string} componentId
+   */
+  select(componentId) {
+    this.update(state => {
       state.selectedComponentId = componentId
       return state
     })
   }
 
-  const paste = async (targetComponent, mode, targetScreen) => {
-    const state = get(store)
+  /**
+   *
+   * @param {object} targetComponent
+   * @param {string} mode
+   * @param {object} targetScreen
+   * @returns
+   */
+  async paste(targetComponent, mode, targetScreen) {
+    const state = get(this.store)
     if (!state.componentToPaste) {
       return
     }
@@ -430,7 +556,7 @@ export const createComponentStore = () => {
     // Remove copied component if cutting, regardless if pasting works
     let componentToPaste = cloneDeep(state.componentToPaste)
     if (componentToPaste.isCut) {
-      store.update(state => {
+      this.update(state => {
         delete state.componentToPaste
         return state
       })
@@ -465,7 +591,7 @@ export const createComponentStore = () => {
 
       // Check inside is valid
       if (mode === "inside") {
-        const definition = getDefinition(targetComponent._component)
+        const definition = this.getDefinition(targetComponent._component)
         if (!definition.hasChildren) {
           mode = "below"
         }
@@ -495,15 +621,15 @@ export const createComponentStore = () => {
     await screenStore.patch(patch, targetScreenId)
 
     // Select the new component
-    store.update(state => {
+    this.update(state => {
       state.selectedScreenId = targetScreenId
       state.selectedComponentId = newComponentId
       return state
     })
   }
 
-  const getPrevious = () => {
-    const state = get(store)
+  getPrevious() {
+    const state = get(this.store)
     const componentId = state.selectedComponentId
     const screen = get(selectedScreen)
     const parent = findComponentParent(screen.props, componentId)
@@ -542,8 +668,8 @@ export const createComponentStore = () => {
     return parent._id
   }
 
-  const getNext = () => {
-    const state = get(store)
+  getNext() {
+    const state = get(this.store)
     const component = get(selectedComponent)
     const componentId = component?._id
     const screen = get(selectedScreen)
@@ -593,27 +719,27 @@ export const createComponentStore = () => {
     }
   }
 
-  const selectPrevious = () => {
-    const previousId = getPrevious()
+  selectPrevious() {
+    const previousId = this.getPrevious()
     if (previousId) {
-      store.update(state => {
+      this.update(state => {
         state.selectedComponentId = previousId
         return state
       })
     }
   }
 
-  const selectNext = () => {
-    const nextId = getNext()
+  selectNext() {
+    const nextId = this.getNext()
     if (nextId) {
-      store.update(state => {
+      this.update(state => {
         state.selectedComponentId = nextId
         return state
       })
     }
   }
 
-  const moveUp = async component => {
+  async moveUp(component) {
     await screenStore.patch(screen => {
       const componentId = component?._id
       const parent = findComponentParent(screen.props, componentId)
@@ -635,7 +761,7 @@ export const createComponentStore = () => {
         // If sibling before us accepts children, move to last child of
         // sibling
         const previousSibling = parent._children[index - 1]
-        const definition = getDefinition(previousSibling._component)
+        const definition = this.getDefinition(previousSibling._component)
         if (definition.hasChildren) {
           previousSibling._children.push(originalComponent)
         }
@@ -658,7 +784,7 @@ export const createComponentStore = () => {
     })
   }
 
-  const moveDown = async component => {
+  async moveDown(component) {
     await screenStore.patch(screen => {
       const componentId = component?._id
       const parent = findComponentParent(screen.props, componentId)
@@ -687,7 +813,7 @@ export const createComponentStore = () => {
       if (index < parent._children.length) {
         // If the next sibling has children, become the first child
         const nextSibling = parent._children[index]
-        const definition = getDefinition(nextSibling._component)
+        const definition = this.getDefinition(nextSibling._component)
         if (definition.hasChildren) {
           nextSibling._children.splice(0, 0, originalComponent)
         }
@@ -709,8 +835,8 @@ export const createComponentStore = () => {
     })
   }
 
-  const updateStyle = async (name, value) => {
-    await patch(component => {
+  async updateStyle(name, value) {
+    await this.patch(component => {
       if (value == null || value === "") {
         delete component._styles.normal[name]
       } else {
@@ -719,33 +845,33 @@ export const createComponentStore = () => {
     })
   }
 
-  const updateStyles = async (styles, id) => {
+  async updateStyles(styles, id) {
     const patchFn = component => {
       component._styles.normal = {
         ...component._styles.normal,
         ...styles,
       }
     }
-    await patch(patchFn, id)
+    await this.patch(patchFn, id)
   }
 
-  const updateCustomStyle = async style => {
-    await patch(component => {
+  async updateCustomStyle(style) {
+    await this.patch(component => {
       component._styles.custom = style
     })
   }
 
-  const updateConditions = async conditions => {
-    await patch(component => {
+  async updateConditions(conditions) {
+    await this.patch(component => {
       component._conditions = conditions
     })
   }
 
-  const updateSetting = async (name, value) => {
-    await patch(updateComponentSetting(name, value))
+  async updateSetting(name, value) {
+    await this.patch(this.updateComponentSetting(name, value))
   }
 
-  const updateComponentSetting = (name, value) => {
+  updateComponentSetting(name, value) {
     return component => {
       if (!name || !component) {
         return false
@@ -783,11 +909,11 @@ export const createComponentStore = () => {
     }
   }
 
-  const requestEjectBlock = componentId => {
+  requestEjectBlock(componentId) {
     previewStore.sendEvent("eject-block", componentId)
   }
 
-  const handleEjectBlock = async (componentId, ejectedDefinition) => {
+  async handleEjectBlock(componentId, ejectedDefinition) {
     let nextSelectedComponentId
 
     await screenStore.patch(screen => {
@@ -827,20 +953,20 @@ export const createComponentStore = () => {
 
     // Select new root component
     if (nextSelectedComponentId) {
-      store.update(state => {
+      this.update(state => {
         state.selectedComponentId = nextSelectedComponentId
         return state
       })
     }
   }
 
-  const addParent = async (componentId, parentType) => {
+  async addParent(componentId, parentType) {
     if (!componentId || !parentType) {
       return
     }
 
     // Create new parent instance
-    const newParentDefinition = createInstance(parentType, null, parent)
+    const newParentDefinition = this.createInstance(parentType, null, parent)
     if (!newParentDefinition) {
       return
     }
@@ -868,71 +994,15 @@ export const createComponentStore = () => {
     })
 
     // Select the new parent
-    store.update(state => {
+    this.update(state => {
       state.selectedComponentId = newParentDefinition._id
       return state
     })
   }
-  return {
-    subscribe: store.subscribe,
-    reset,
-    update: store.update,
-    refreshDefinitions,
-    getDefinition,
-    getDefaultDatasource,
-    enrichEmptySettings,
-    createInstance,
-    create,
-    patch,
-    delete: deleteComponent,
-    copy,
-    paste,
-    select,
-    getPrevious,
-    getNext,
-    selectPrevious,
-    selectNext,
-    moveUp,
-    moveDown,
-    updateStyle,
-    updateStyles,
-    updateCustomStyle,
-    updateConditions,
-    requestEjectBlock,
-    handleEjectBlock,
-    updateSetting,
-    updateComponentSetting,
-    addParent,
-  }
 }
 
-export const componentStore = createComponentStore()
+export const componentStore = new ComponentStore()
 
-export const selectedComponent = derived(
-  [componentStore, selectedScreen],
-  ([$componentStore, $selectedScreen]) => {
-    if (
-      $selectedScreen &&
-      $componentStore.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
-    ) {
-      return $selectedScreen?.props
-    }
-    if (!$selectedScreen || !$componentStore.selectedComponentId) {
-      return null
-    }
-    return findComponent(
-      $selectedScreen?.props,
-      $componentStore.selectedComponentId
-    )
-  }
-)
+export const selectedComponent = componentStore.selected
 
-export const selectedComponentPath = derived(
-  [componentStore, selectedScreen],
-  ([$componentStore, $selectedScreen]) => {
-    return findComponentPath(
-      $selectedScreen?.props,
-      $componentStore.selectedComponentId
-    ).map(component => component._id)
-  }
-)
+export const selectedComponentPath = componentStore.selectedComponentPath

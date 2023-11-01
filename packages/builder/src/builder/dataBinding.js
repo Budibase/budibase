@@ -11,6 +11,7 @@ import {
   componentStore,
   screenStore,
   appStore,
+  layoutStore,
 } from "stores/frontend"
 import {
   queries as queriesStores,
@@ -1048,7 +1049,7 @@ export const getAllStateVariables = () => {
 export const getAllAssets = () => {
   // Get all component containing assets
   let allAssets = []
-  allAssets = allAssets.concat(get(appStore).layouts || [])
+  allAssets = allAssets.concat(get(layoutStore).layouts || [])
   allAssets = allAssets.concat(get(screenStore).screens || [])
 
   return allAssets

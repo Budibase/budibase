@@ -91,20 +91,13 @@
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
-        await builderStore.update(state => ({
-          ...state,
-          onboarding: true,
-          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-        }))
+        builderStore.startBuilderOnboarding()
       } else {
         // Feature tour date
         const release_date = new Date("2023-03-01T00:00:00.000Z")
         const onboarded = new Date($auth.user?.onboardedAt)
         if (onboarded < release_date) {
-          await builderStore.update(state => ({
-            ...state,
-            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
-          }))
+          builderStore.startTour(TOUR_KEYS.FEATURE_ONBOARDING)
         }
       }
     }
