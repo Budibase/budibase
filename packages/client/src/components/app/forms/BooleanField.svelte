@@ -6,6 +6,7 @@
   export let label
   export let text
   export let disabled = false
+  export let readonly = false
   export let size
   export let validation
   export let defaultValue
@@ -49,6 +50,7 @@
     <CoreCheckbox
       value={fieldState.value}
       disabled={fieldState.disabled}
+      {readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       {size}

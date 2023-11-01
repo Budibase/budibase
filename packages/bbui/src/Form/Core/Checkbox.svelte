@@ -8,6 +8,7 @@
   export let id = null
   export let text = null
   export let disabled = false
+  export let readonly = false
   export let size
   export let indeterminate = false
 
@@ -29,6 +30,11 @@
     checked={value}
     {disabled}
     on:change={onChange}
+    on:click={e => {
+      if (readonly) {
+        e.preventDefault()
+      }
+    }}
     type="checkbox"
     class="spectrum-Checkbox-input"
     {id}
