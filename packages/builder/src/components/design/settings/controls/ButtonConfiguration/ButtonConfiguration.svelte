@@ -19,7 +19,7 @@
     componentBindings: componentBindings || [],
     bindings,
     removeButton,
-    canRemove: buttonCount > 1,
+    canRemove: true,
   }
 
   const sanitizeValue = val => {
@@ -86,11 +86,11 @@
       focus={focusItem}
       draggable={buttonCount > 1}
     />
-
-    <div class="list-footer" on:click={addButton}>
-      <div class="add-button">Add button</div>
-    </div>
   {/if}
+
+  <div class="list-footer" on:click={addButton} class:empty={!buttonCount}>
+    <div class="add-button">Add button</div>
+  </div>
 </div>
 
 <style>
@@ -119,6 +119,9 @@
     border: 1px solid
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
     cursor: pointer;
+  }
+  .list-footer.empty {
+    border-radius: 4px;
   }
 
   .add-button {
