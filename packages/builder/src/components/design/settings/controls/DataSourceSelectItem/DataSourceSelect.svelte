@@ -30,7 +30,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import DataSourceSelect from "components/design/settings/controls/DataSourceSelectItem/SelectItem.svelte"
+  import DataSourceCategory from "components/design/settings/controls/DataSourceSelectItem/DataSourceCategory.svelte"
   import { API } from "api"
 
   export let value = {}
@@ -278,14 +278,14 @@
 </div>
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
-    <DataSourceSelect
+    <DataSourceCategory
       heading="Tables"
       dataSet={tables}
       {value}
       onSelect={handleSelected}
     />
     {#if views?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="Views"
         dataSet={views}
@@ -294,7 +294,7 @@
       />
     {/if}
     {#if queries?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="Queries"
         dataSet={queries}
@@ -303,7 +303,7 @@
       />
     {/if}
     {#if links?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="Links"
         dataSet={links}
@@ -312,7 +312,7 @@
       />
     {/if}
     {#if fields?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="Fields"
         dataSet={fields}
@@ -321,7 +321,7 @@
       />
     {/if}
     {#if jsonArrays?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="JSON Arrays"
         dataSet={jsonArrays}
@@ -330,7 +330,7 @@
       />
     {/if}
     {#if showDataProviders && dataProviders?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={true}
         heading="Data Providers"
         dataSet={dataProviders}
@@ -338,7 +338,7 @@
         onSelect={handleSelected}
       />
     {/if}
-    <DataSourceSelect
+    <DataSourceCategory
       dividerState={true}
       heading="Other"
       dataSet={[custom]}
@@ -346,7 +346,7 @@
       onSelect={handleSelected}
     />
     {#if otherSources?.length}
-      <DataSourceSelect
+      <DataSourceCategory
         dividerState={false}
         dataSet={otherSources}
         {value}
