@@ -348,7 +348,6 @@
     {#if otherSources?.length}
       <DataSourceSelect
         dividerState={false}
-        heading=""
         dataSet={otherSources}
         {value}
         onSelect={handleSelected}

@@ -11,7 +11,7 @@
 {#if dividerState}
   <Divider />
 {/if}
-{#if heading.length > 0}
+{#if heading}
   <div class="title">
     <Heading size="XS">{heading}</Heading>
   </div>
@@ -26,11 +26,6 @@
       aria-selected="true"
       tabindex="0"
       on:click={() => onSelect(data)}
-      on:keydown={e => {
-        if (e.key === "Enter" || e.key === "Space") {
-          onSelect(data)
-        }
-      }}
     >
       <span class="spectrum-Menu-itemLabel">
         {data.label}
