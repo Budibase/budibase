@@ -75,7 +75,6 @@ const environment = {
   },
   isTest: coreEnv.isTest,
   isJest: coreEnv.isJest,
-
   isDev: coreEnv.isDev,
   isProd: () => {
     return !coreEnv.isDev()
