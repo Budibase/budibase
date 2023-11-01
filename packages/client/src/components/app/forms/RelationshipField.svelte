@@ -184,6 +184,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
@@ -201,7 +202,7 @@
       on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
-      {readonly}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}

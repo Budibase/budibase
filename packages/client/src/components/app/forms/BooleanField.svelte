@@ -40,6 +40,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={isTruthy(defaultValue)}
   type="boolean"
@@ -50,7 +51,7 @@
     <CoreCheckbox
       value={fieldState.value}
       disabled={fieldState.disabled}
-      {readonly}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       {size}

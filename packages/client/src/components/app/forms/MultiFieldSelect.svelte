@@ -56,6 +56,7 @@
   {field}
   {label}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={expandedDefaultValue}
   type="array"
@@ -72,7 +73,7 @@
         getOptionValue={flatOptions ? x => x : x => x.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
-        {readonly}
+        readonly={fieldState.readonly}
         on:change={handleChange}
         {placeholder}
         {options}
@@ -83,7 +84,7 @@
         value={fieldState.value || []}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
-        {readonly}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         {options}
         {direction}
