@@ -3,6 +3,7 @@ const mockS3 = {
   deleteObject: jest.fn().mockReturnThis(),
   deleteObjects: jest.fn().mockReturnThis(),
   createBucket: jest.fn().mockReturnThis(),
+  getObject: jest.fn().mockReturnThis(),
   listObject: jest.fn().mockReturnThis(),
   getSignedUrl: jest.fn((operation: string, params: any) => {
     return `http://s3.example.com/${params.Bucket}/${params.Key}`

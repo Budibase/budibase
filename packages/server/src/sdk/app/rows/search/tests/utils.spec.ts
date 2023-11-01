@@ -3,14 +3,19 @@ import { db as dbCore } from "@budibase/backend-core"
 import {
   FieldType,
   FieldTypeSubtypes,
-  Table,
+  INTERNAL_TABLE_SOURCE_ID,
   SearchParams,
+  Table,
+  TableSourceType,
 } from "@budibase/types"
 
 const tableId = "ta_a"
 const tableWithUserCol: Table = {
+  type: "table",
   _id: tableId,
   name: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   schema: {
     user: {
       name: "user",
@@ -21,8 +26,11 @@ const tableWithUserCol: Table = {
 }
 
 const tableWithUsersCol: Table = {
+  type: "table",
   _id: tableId,
   name: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   schema: {
     user: {
       name: "user",

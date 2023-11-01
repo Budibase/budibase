@@ -19,12 +19,17 @@ import {
   FieldType,
   SourceName,
   Table,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
 } from "@budibase/types"
+const { BUILTIN_ROLE_IDS } = roles
 
 export function basicTable(): Table {
   return {
     name: "TestTable",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     schema: {
       name: {
         type: FieldType.STRING,
@@ -322,8 +327,22 @@ export function basicUser(role: string) {
   }
 }
 
-export function basicScreen() {
-  return createHomeScreen()
+export function basicScreen(route: string = "/") {
+  return createHomeScreen({
+    roleId: BUILTIN_ROLE_IDS.BASIC,
+    route,
+  })
+}
+
+export function powerScreen(route: string = "/") {
+  return createHomeScreen({
+    roleId: BUILTIN_ROLE_IDS.POWER,
+    route,
+  })
+}
+
+export function customScreen(config: { roleId: string; route: string }) {
+  return createHomeScreen(config)
 }
 
 export function basicLayout() {

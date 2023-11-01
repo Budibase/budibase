@@ -12,6 +12,7 @@
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
 
+  let mode
   let pendingScreen
 
   // Modal refs
@@ -100,14 +101,15 @@
   }
 
   // Handler for NewScreenModal
-  export const show = mode => {
+  export const show = newMode => {
+    mode = newMode
     selectedTemplates = null
     blankScreenUrl = null
     screenMode = mode
     pendingScreen = null
     screenAccessRole = Roles.BASIC
 
-    if (mode === "table") {
+    if (mode === "table" || mode === "grid") {
       datasourceModal.show()
     } else if (mode === "blank") {
       let templates = getTemplates($tables.list)
@@ -123,6 +125,7 @@
 
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ templates }) => {
+    console.log(templates)
     selectedTemplates = templates
     screenAccessRoleModal.show()
   }
@@ -177,6 +180,7 @@
 
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
+    {mode}
     onConfirm={confirmScreenDatasources}
     initialScreens={!selectedTemplates ? [] : [...selectedTemplates]}
   />

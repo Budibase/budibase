@@ -2,6 +2,7 @@
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { DB_TYPE_EXTERNAL } from "constants/backend"
 
   export let datasource
 
@@ -16,9 +17,10 @@
   function buildDefaultTable(tableName, datasourceId) {
     return {
       name: tableName,
-      type: "external",
+      type: "table",
       primary: ["id"],
       sourceId: datasourceId,
+      sourceType: DB_TYPE_EXTERNAL,
       schema: {
         id: {
           autocolumn: true,

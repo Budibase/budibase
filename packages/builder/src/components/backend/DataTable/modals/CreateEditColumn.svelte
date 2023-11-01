@@ -26,6 +26,7 @@
     ALLOWABLE_NUMBER_TYPES,
     SWITCHABLE_TYPES,
     PrettyRelationshipDefinitions,
+    DB_TYPE_EXTERNAL,
   } from "constants/backend"
   import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -254,10 +255,11 @@
     !uneditable &&
     editableColumn?.type !== AUTO_TYPE &&
     !editableColumn.autocolumn
-  $: external = table.type === "external"
+  $: externalTable = table.sourceType === DB_TYPE_EXTERNAL
   // in the case of internal tables the sourceId will just be undefined
   $: tableOptions = $tables.list.filter(
-    opt => opt.type === table.type && table.sourceId === opt.sourceId
+    opt =>
+      opt.sourceType === table.sourceType && table.sourceId === opt.sourceId
   )
   $: typeEnabled =
     !originalName ||
@@ -409,7 +411,7 @@
       editableColumn.type === FieldType.BB_REFERENCE &&
       editableColumn.subtype === FieldSubtype.USERS
 
-    if (!external) {
+    if (!externalTable) {
       return [
         FIELDS.STRING,
         FIELDS.BARCODEQR,
@@ -441,7 +443,7 @@
         isUsers ? FIELDS.USERS : FIELDS.USER,
       ]
       // no-sql or a spreadsheet
-      if (!external || table.sql) {
+      if (!externalTable || table.sql) {
         fields = [...fields, FIELDS.LINK, FIELDS.ARRAY]
       }
       return fields
@@ -486,7 +488,7 @@
       })
     }
     const newError = {}
-    if (!external && fieldInfo.name?.startsWith("_")) {
+    if (!externalTable && fieldInfo.name?.startsWith("_")) {
       newError.name = `Column name cannot start with an underscore.`
     } else if (fieldInfo.name && !fieldInfo.name.match(ValidColumnNameRegex)) {
       newError.name = `Illegal character; must be alpha-numeric.`
@@ -498,7 +500,7 @@
       newError.name = `Column name already in use.`
     }
 
-    if (fieldInfo.type == "auto" && !fieldInfo.subtype) {
+    if (fieldInfo.type === "auto" && !fieldInfo.subtype) {
       newError.subtype = `Auto Column requires a type`
     }
 
@@ -777,7 +779,8 @@
   disabled={deleteColName !== originalName}
 >
   <p>
-    Are you sure you wish to delete the column <b>{originalName}?</b>
+    Are you sure you wish to delete the column
+    <b on:click={() => (deleteColName = originalName)}>{originalName}?</b>
     Your data will be deleted and this action cannot be undone - enter the column
     name to confirm.
   </p>
@@ -809,5 +812,12 @@
   .row {
     gap: 8px;
     display: flex;
+  }
+  b {
+    transition: color 130ms ease-out;
+  }
+  b:hover {
+    cursor: pointer;
+    color: var(--spectrum-global-color-gray-900);
   }
 </style>
