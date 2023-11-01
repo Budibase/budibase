@@ -140,4 +140,13 @@ export const buildTableEndpoints = API => ({
       },
     })
   },
+  migrateColumn: async ({ tableId, oldColumn, newColumn }) => {
+    return await API.post({
+      url: `/api/tables/${tableId}/migrate`,
+      body: {
+        oldColumn,
+        newColumn,
+      },
+    })
+  },
 })

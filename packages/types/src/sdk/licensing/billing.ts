@@ -5,10 +5,17 @@ export interface Customer {
   currency: string | null | undefined
 }
 
+export interface SubscriptionItems {
+  user: number | undefined
+  creator: number | undefined
+}
+
 export interface Subscription {
   amount: number
+  amounts: SubscriptionItems | undefined
   currency: string
   quantity: number
+  quantities: SubscriptionItems | undefined
   duration: PriceDuration
   cancelAt: number | null | undefined
   currentPeriodStart: number
