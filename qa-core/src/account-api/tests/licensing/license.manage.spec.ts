@@ -1,6 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Hosting, PlanType } from "@budibase/types"
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 describe("license management", () => {
   const config = new TestConfiguration()
@@ -53,7 +54,6 @@ describe("license management", () => {
     expect(checkoutSessionUrl).toContain("checkout.stripe.com")
 
     // Create stripe customer
-    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
     const customer = await stripe.customers.create({
       email: createAccountRequest.email,
     })
