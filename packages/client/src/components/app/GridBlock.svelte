@@ -31,7 +31,7 @@
 
   $: columnWhitelist = columns?.map(col => col.name)
   $: schemaOverrides = getSchemaOverrides(columns)
-  $: parsedButtons = parseButtons(buttons)
+  $: enrichedButtons = enrichButtons(buttons)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -44,7 +44,7 @@
     return overrides
   }
 
-  const parseButtons = buttons => {
+  const enrichButtons = buttons => {
     if (!buttons?.length) {
       return null
     }
@@ -52,8 +52,9 @@
       size: "M",
       text: settings.text,
       type: settings.type,
-      onClick: async () => {
-        return await enrichButtonActions(settings.onClick, get(context))()
+      onClick: async row => {
+        const fn = enrichButtonActions(settings.onClick, get(context))
+        return await fn({ row })
       },
     }))
   }
@@ -82,7 +83,7 @@
     showControls={false}
     notifySuccess={notificationStore.actions.success}
     notifyError={notificationStore.actions.error}
-    buttons={parsedButtons}
+    buttons={enrichedButtons}
     on:rowclick={e => onRowClick?.({ row: e.detail })}
   />
 </div>
