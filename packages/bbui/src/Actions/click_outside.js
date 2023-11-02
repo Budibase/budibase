@@ -1,8 +1,4 @@
-const ignoredClasses = [
-  ".flatpickr-calendar",
-  ".spectrum-Popover",
-  ".download-js-link",
-]
+const ignoredClasses = [".flatpickr-calendar", ".download-js-link"]
 let clickHandlers = []
 
 /**
@@ -25,7 +21,14 @@ const handleClick = event => {
       return
     }
 
-    // Ignore clicks for modals, unless the handler is registered from a modal
+    // Ignore clicks for popovers, unless the handler is registered from one
+    const sourceInPopover = handler.anchor.closest(".spectrum-Popover") != null
+    const clickInPopover = event.target.closest(".spectrum-Popover") != null
+    if (clickInPopover && !sourceInPopover) {
+      return
+    }
+
+    // Ignore clicks for modals, unless the handler is registered from one
     const sourceInModal = handler.anchor.closest(".spectrum-Underlay") != null
     const clickInModal = event.target.closest(".spectrum-Underlay") != null
     if (clickInModal && !sourceInModal) {

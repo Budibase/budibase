@@ -6,6 +6,7 @@
   import Popover from "../../Popover/Popover.svelte"
   import dayjs from "dayjs"
   import { createEventDispatcher } from "svelte"
+  import Select from "../Select.svelte"
 
   export let id = null
   export let disabled = false
@@ -30,22 +31,40 @@
     "Saturday",
     "Sunday",
   ]
+  const MonthsOfYear = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ]
 
   let isOpen = false
   let anchor
   let calendar
   let today = dayjs()
-  let activeMonth
+  let calendarDate
 
   $: parsedValue = parseValue(value)
   $: displayValue = getDisplayValue(parsedValue)
-  $: activeMonth = dayjs(parsedValue || today).startOf("month")
-  $: mondays = getMondays(activeMonth)
+  $: calendarDate = dayjs(parsedValue || today).startOf("month")
+  $: mondays = getMondays(calendarDate)
 
   const clearDateOnBackspace = event => {
+    // Ignore if we're typing a value
+    if (document.activeElement?.tagName.toLowerCase() === "input") {
+      return
+    }
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
       handleChange(null)
-      calendar.hide()
+      calendar?.hide()
     }
   }
 
@@ -129,6 +148,17 @@
 
     dispatch("change", newValue)
   }
+
+  const handleYearChange = e => {
+    let year = parseInt(e.target.value)
+    if (isNaN(year)) {
+      year = calendarDate.year()
+    } else {
+      year = Math.max(0, Math.min(9999, year))
+    }
+    e.target.value = year
+    calendarDate = calendarDate.year(year)
+  }
 </script>
 
 <div
@@ -200,13 +230,29 @@
         aria-live="assertive"
         aria-atomic="true"
       >
-        {activeMonth.format("MMMM YYYY")}
+        <div class="month-selector">
+          <Select
+            placeholder={null}
+            options={MonthsOfYear.map((m, idx) => ({ label: m, value: idx }))}
+            value={calendarDate.month()}
+            on:change={e => (calendarDate = calendarDate.month(e.detail))}
+            autoWidth
+          />
+        </div>
+        <input
+          class="year-selector"
+          on:change={handleYearChange}
+          type="number"
+          value={calendarDate.year()}
+          min="0"
+          max="9999"
+        />
       </div>
       <button
         aria-label="Previous"
         title="Previous"
         class="spectrum-ActionButton spectrum-ActionButton--quiet spectrum-Calendar-prevMonth"
-        on:click={() => (activeMonth = activeMonth.subtract(1, "month"))}
+        on:click={() => (calendarDate = calendarDate.subtract(1, "month"))}
       >
         <svg
           class="spectrum-Icon spectrum-UIIcon-ChevronLeft100"
@@ -220,7 +266,7 @@
         aria-label="Next"
         title="Next"
         class="spectrum-ActionButton spectrum-ActionButton--quiet spectrum-Calendar-nextMonth"
-        on:click={() => (activeMonth = activeMonth.add(1, "month"))}
+        on:click={() => (calendarDate = calendarDate.add(1, "month"))}
       >
         <svg
           class="spectrum-Icon spectrum-UIIcon-ChevronRight100"
@@ -254,7 +300,7 @@
             <tr>
               {#each [0, 1, 2, 3, 4, 5, 6] as dayOffset}
                 {@const date = monday.add(dayOffset, "days")}
-                {@const outsideMonth = date.month() !== activeMonth.month()}
+                {@const outsideMonth = date.month() !== calendarDate.month()}
                 <td
                   class="spectrum-Calendar-tableCell"
                   aria-disabled="true"
@@ -296,9 +342,6 @@
   .spectrum-Datepicker .spectrum-Textfield {
     width: 100%;
   }
-  :global(.flatpickr-calendar) {
-    font-family: var(--font-sans);
-  }
   .is-disabled {
     pointer-events: none !important;
   }
@@ -309,5 +352,41 @@
   }
   .is-outsideMonth {
     pointer-events: none;
+  }
+  .spectrum-Calendar-title {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+  }
+  .spectrum-Calendar-header button {
+    border-radius: 4px;
+  }
+
+  .month-selector :global(.spectrum-Picker),
+  .year-selector {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--spectrum-alias-text-color);
+    padding: 4px 6px;
+    border-radius: 4px;
+    transition: background 130ms ease-out;
+    font-size: var(--spectrum-calendar-title-text-size);
+    font-weight: bold;
+    font-family: var(--font-sans);
+  }
+  .month-selector :global(.spectrum-Picker:hover),
+  .year-selector:hover {
+    background: var(--spectrum-global-color-gray-200);
+  }
+  .month-selector :global(.spectrum-Picker-label) {
+    font-size: var(--spectrum-calendar-title-text-size);
+    font-weight: bold;
+    color: var(--spectrum-alias-text-color);
+  }
+  .year-selector {
+    -webkit-font-smoothing: antialiased;
+    margin-right: -20px;
   }
 </style>
