@@ -7,6 +7,7 @@ import {
   isBBReferenceField,
   isRelationshipField,
   LinkDocument,
+  LinkInfo,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
@@ -118,6 +119,22 @@ function getColumnMigrator(
   throw new BadRequestError(`Unknown migration type`)
 }
 
+function pickUserTableLinkSide(link: LinkDocument): LinkInfo {
+  if (link.doc1.tableId === InternalTable.USER_METADATA) {
+    return link.doc1
+  } else {
+    return link.doc2
+  }
+}
+
+function pickOtherTableLinkSide(link: LinkDocument): LinkInfo {
+  if (link.doc1.tableId === InternalTable.USER_METADATA) {
+    return link.doc2
+  } else {
+    return link.doc1
+  }
+}
+
 abstract class UserColumnMigrator implements ColumnMigrator {
   constructor(
     protected table: Table,
@@ -125,7 +142,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
     protected newColumn: BBReferenceFieldMetadata
   ) {}
 
-  abstract updateRow(row: Row, link: LinkDocument): void
+  abstract updateRow(row: Row, linkInfo: LinkInfo): void
 
   async doMigration(): Promise<MigrationResult> {
     let oldTable = cloneDeep(this.table)
@@ -137,15 +154,17 @@ abstract class UserColumnMigrator implements ColumnMigrator {
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {
+      const userSide = pickUserTableLinkSide(link)
+      const otherSide = pickOtherTableLinkSide(link)
       if (
-        link.doc1.tableId !== this.table._id ||
-        link.doc1.fieldName !== this.oldColumn.name ||
-        link.doc2.tableId !== InternalTable.USER_METADATA
+        otherSide.tableId !== this.table._id ||
+        otherSide.fieldName !== this.oldColumn.name ||
+        userSide.tableId !== InternalTable.USER_METADATA
       ) {
         continue
       }
 
-      let row = rowsById[link.doc1.rowId]
+      let row = rowsById[otherSide.rowId]
       if (!row) {
         // This can happen if the row has been deleted but the link hasn't,
         // which was a state that was found during the initial testing of this
@@ -153,7 +172,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
         continue
       }
 
-      this.updateRow(row, link)
+      this.updateRow(row, userSide)
     }
 
     let db = context.getAppDB()
@@ -175,20 +194,20 @@ abstract class UserColumnMigrator implements ColumnMigrator {
 }
 
 class SingleUserColumnMigrator extends UserColumnMigrator {
-  updateRow(row: Row, link: LinkDocument): void {
+  updateRow(row: Row, linkInfo: LinkInfo): void {
     row[this.newColumn.name] = dbCore.getGlobalIDFromUserMetadataID(
-      link.doc2.rowId
+      linkInfo.rowId
     )
   }
 }
 
 class MultiUserColumnMigrator extends UserColumnMigrator {
-  updateRow(row: Row, link: LinkDocument): void {
+  updateRow(row: Row, linkInfo: LinkInfo): void {
     if (!row[this.newColumn.name]) {
       row[this.newColumn.name] = []
     }
     row[this.newColumn.name].push(
-      dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
+      dbCore.getGlobalIDFromUserMetadataID(linkInfo.rowId)
     )
   }
 }
