@@ -3,6 +3,7 @@ import {
   BBReferenceFieldMetadata,
   FieldSchema,
   FieldSubtype,
+  InnerLink,
   InternalTable,
   isBBReferenceField,
   isRelationshipField,
@@ -125,7 +126,26 @@ abstract class UserColumnMigrator implements ColumnMigrator {
     protected newColumn: BBReferenceFieldMetadata
   ) {}
 
-  abstract updateRow(row: Row, link: LinkDocument): void
+  abstract updateRow(row: Row, userLink: InnerLink): void
+
+  getUserLink(link: LinkDocument) {
+    const { doc1, doc2 } = link
+    if (
+      doc1.tableId === InternalTable.USER_METADATA &&
+      doc2.tableId === this.table._id &&
+      doc2.fieldName === this.oldColumn.name
+    ) {
+      return [doc1, doc2]
+    }
+    if (
+      doc2.tableId === InternalTable.USER_METADATA &&
+      doc1.tableId === this.table._id &&
+      doc1.fieldName === this.oldColumn.name
+    ) {
+      return [doc2, doc1]
+    }
+    return [null, null]
+  }
 
   async doMigration(): Promise<MigrationResult> {
     let oldTable = cloneDeep(this.table)
@@ -137,15 +157,12 @@ abstract class UserColumnMigrator implements ColumnMigrator {
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {
-      if (
-        link.doc1.tableId !== this.table._id ||
-        link.doc1.fieldName !== this.oldColumn.name ||
-        link.doc2.tableId !== InternalTable.USER_METADATA
-      ) {
+      const [userLink, otherLink] = this.getUserLink(link)
+      if (!userLink || !otherLink) {
         continue
       }
 
-      let row = rowsById[link.doc1.rowId]
+      let row = rowsById[otherLink.rowId]
       if (!row) {
         // This can happen if the row has been deleted but the link hasn't,
         // which was a state that was found during the initial testing of this
@@ -153,7 +170,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
         continue
       }
 
-      this.updateRow(row, link)
+      this.updateRow(row, userLink)
     }
 
     let db = context.getAppDB()
@@ -175,20 +192,20 @@ abstract class UserColumnMigrator implements ColumnMigrator {
 }
 
 class SingleUserColumnMigrator extends UserColumnMigrator {
-  updateRow(row: Row, link: LinkDocument): void {
+  updateRow(row: Row, userLink: InnerLink): void {
     row[this.newColumn.name] = dbCore.getGlobalIDFromUserMetadataID(
-      link.doc2.rowId
+      userLink.rowId
     )
   }
 }
 
 class MultiUserColumnMigrator extends UserColumnMigrator {
-  updateRow(row: Row, link: LinkDocument): void {
+  updateRow(row: Row, userLink: InnerLink): void {
     if (!row[this.newColumn.name]) {
       row[this.newColumn.name] = []
     }
     row[this.newColumn.name].push(
-      dbCore.getGlobalIDFromUserMetadataID(link.doc2.rowId)
+      dbCore.getGlobalIDFromUserMetadataID(userLink.rowId)
     )
   }
 }

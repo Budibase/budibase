@@ -1,17 +1,14 @@
 import { Document } from "../document"
 
+export interface InnerLink {
+  rowId: string
+  fieldName: string
+  tableId: string
+}
 export interface LinkDocument extends Document {
   type: string
-  doc1: {
-    rowId: string
-    fieldName: string
-    tableId: string
-  }
-  doc2: {
-    rowId: string
-    fieldName: string
-    tableId: string
-  }
+  doc1: InnerLink
+  doc2: InnerLink
 }
 
 export interface LinkDocumentValue {
