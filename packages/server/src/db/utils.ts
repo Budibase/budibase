@@ -5,6 +5,7 @@ import {
   FieldSchema,
   RelationshipFieldMetadata,
   VirtualDocumentType,
+  INTERNAL_TABLE_SOURCE_ID,
 } from "@budibase/types"
 import { FieldTypes } from "../constants"
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -18,7 +19,7 @@ export const enum AppStatus {
 }
 
 export const BudibaseInternalDB = {
-  _id: "bb_internal",
+  _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
   source: "BUDIBASE",

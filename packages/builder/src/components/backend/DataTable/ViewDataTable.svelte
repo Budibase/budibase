@@ -17,9 +17,9 @@
   let hideAutocolumns = true
   let data = []
   let loading = false
-  let type = "internal"
 
   $: name = view.name
+  $: schema = view.schema
   $: calculation = view.calculation
 
   $: supportedFormats = Object.values(ROW_EXPORT_FORMATS).filter(key => {
@@ -61,11 +61,10 @@
 
 <Table
   title={decodeURI(name)}
-  schema={view.schema}
+  {schema}
   tableId={view.tableId}
   {data}
   {loading}
-  {type}
   rowCount={10}
   allowEditing={false}
   bind:hideAutocolumns
