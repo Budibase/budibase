@@ -165,11 +165,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Get the current budibase release version
-        id: version
-        run: |
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
       - uses: peter-evans/repository-dispatch@v2
         with:
@@ -178,6 +173,6 @@ jobs:
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
           client-payload: |-
             {
-              "PAYLOAD_VERSION": "${{ github.sha }}",
+              "PAYLOAD_VERSION": "${{ github.ref_name }}",
               "REF_NAME": "${{ github.ref_name}}"
             }
