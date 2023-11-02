@@ -30,7 +30,7 @@
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import DataSourceCategory from "components/design/settings/controls/DataSourceSelectItem/DataSourceCategory.svelte"
+  import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
 
   export let value = {}
@@ -376,7 +376,6 @@
   .dropdown {
     padding: var(--spacing-m) 0;
     z-index: 99999999;
-    overflow-y: scroll;
   }
 
   .icon {

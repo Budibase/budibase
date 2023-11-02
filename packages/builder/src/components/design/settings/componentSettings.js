@@ -1,5 +1,5 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
-import DataSourceSelect from "./controls/DataSourceSelectItem/DataSourceSelect.svelte"
+import DataSourceSelect from "./controls/DataSourceSelect/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
 import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor.svelte"
