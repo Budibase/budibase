@@ -10,6 +10,8 @@
     Notification,
     Body,
     Search,
+    DatePicker,
+    BBDatePicker,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -202,9 +204,38 @@
       notifications.error("Error getting init info")
     }
   })
+
+  let foo = "2023-11-14T15:00:00"
 </script>
 
 <Page>
+  <div>
+    <h1>Date only</h1>
+    <div style="width: 240px;">
+      <BBDatePicker
+        enableTime={false}
+        value={foo}
+        on:change={e => (foo = e.detail)}
+      />
+    </div>
+    <h1>Date time</h1>
+    <div style="width: 240px;">
+      <BBDatePicker enableTime value={foo} on:change={e => (foo = e.detail)} />
+    </div>
+    <h1>Date time no timezone</h1>
+    <div style="width: 240px;">
+      <BBDatePicker
+        enableTime
+        ignoreTimezones
+        value={foo}
+        on:change={e => (foo = e.detail)}
+      />
+    </div>
+    <br />
+    <br />
+    <br />
+  </div>
+
   <Layout noPadding gap="L">
     {#each Object.keys(automationErrors || {}) as appId}
       <Notification
