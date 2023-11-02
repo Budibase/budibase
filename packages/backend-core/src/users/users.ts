@@ -14,12 +14,13 @@ import {
 } from "../db"
 import {
   BulkDocsResponse,
-  ContextUser,
   SearchQuery,
   SearchQueryOperators,
   SearchUsersRequest,
   User,
+  ContextUser,
   DatabaseQueryOpts,
+  CouchFindOptions,
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
@@ -140,7 +141,7 @@ export const getGlobalUserByEmail = async (
 
 export const searchGlobalUsersByApp = async (
   appId: any,
-  opts: any,
+  opts: DatabaseQueryOpts,
   getOpts?: GetOpts
 ) => {
   if (typeof appId !== "string") {
@@ -166,7 +167,10 @@ export const searchGlobalUsersByApp = async (
   Return any user who potentially has access to the application
   Admins, developers and app users with the explicitly role.
 */
-export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
+export const searchGlobalUsersByAppAccess = async (
+  appId: any,
+  opts?: { limit?: number }
+) => {
   const roleSelector = `roles.${appId}`
 
   let orQuery: any[] = [
@@ -187,7 +191,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
     orQuery.push(roleCheck)
   }
 
-  let searchOptions = {
+  let searchOptions: CouchFindOptions = {
     selector: {
       $or: orQuery,
       _id: {
@@ -198,7 +202,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
   }
 
   const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
-  return resp?.rows
+  return resp.rows
 }
 
 export const getGlobalUserByAppPage = (appId: string, user: User) => {
@@ -245,7 +249,8 @@ export const paginatedUsers = async ({
   limit,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
-  const pageLimit = limit ? limit + 1 : PAGE_LIMIT + 1
+  const pageSize = limit ?? PAGE_LIMIT
+  const pageLimit = pageSize + 1
   // get one extra document, to have the next page
   const opts: DatabaseQueryOpts = {
     include_docs: true,
@@ -272,7 +277,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, pageLimit, {
+  return pagination(userList, pageSize, {
     paginate: true,
     property,
     getKey,
