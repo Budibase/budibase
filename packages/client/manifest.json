@@ -5483,16 +5483,16 @@
     },
     "settings": [
       {
-        "type": "select",
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "radio",
         "label": "Type",
         "key": "actionType",
         "options": ["Create", "Update", "View"],
         "defaultValue": "Create"
-      },
-      {
-        "type": "table",
-        "label": "Data",
-        "key": "dataSource"
       },
       {
         "type": "text",
@@ -5524,10 +5524,34 @@
           },
           {
             "type": "text",
-            "label": "Empty text",
+            "label": "No rows found",
             "key": "noRowsMessage",
             "defaultValue": "We couldn't find a row to display",
             "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Fields",
+        "settings": [
+          {
+            "type": "fieldConfiguration",
+            "key": "fields",
+            "nested": true,
+            "resetOn": "dataSource",
+            "selectAllFields": true
+          },
+          {
+            "type": "boolean",
+            "label": "Disabled",
+            "key": "disabled",
+            "defaultValue": false,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "View",
+              "invert": true
+            }
           }
         ]
       },
@@ -5573,30 +5597,6 @@
             "type": "boolean",
             "label": "Hide notifications",
             "key": "notificationOverride",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          }
-        ]
-      },
-      {
-        "section": true,
-        "name": "Fields",
-        "settings": [
-          {
-            "type": "fieldConfiguration",
-            "key": "fields",
-            "nested": true,
-            "resetOn": "dataSource",
-            "selectAllFields": true
-          },
-          {
-            "type": "boolean",
-            "label": "Disabled",
-            "key": "disabled",
             "defaultValue": false,
             "dependsOn": {
               "setting": "actionType",
