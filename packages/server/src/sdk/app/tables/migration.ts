@@ -119,22 +119,6 @@ function getColumnMigrator(
   throw new BadRequestError(`Unknown migration type`)
 }
 
-function pickUserTableLinkSide(link: LinkDocument): LinkInfo {
-  if (link.doc1.tableId === InternalTable.USER_METADATA) {
-    return link.doc1
-  } else {
-    return link.doc2
-  }
-}
-
-function pickOtherTableLinkSide(link: LinkDocument): LinkInfo {
-  if (link.doc1.tableId === InternalTable.USER_METADATA) {
-    return link.doc2
-  } else {
-    return link.doc1
-  }
-}
-
 abstract class UserColumnMigrator implements ColumnMigrator {
   constructor(
     protected table: Table,
@@ -143,6 +127,22 @@ abstract class UserColumnMigrator implements ColumnMigrator {
   ) {}
 
   abstract updateRow(row: Row, linkInfo: LinkInfo): void
+
+  pickUserTableLinkSide(link: LinkDocument): LinkInfo {
+    if (link.doc1.tableId === InternalTable.USER_METADATA) {
+      return link.doc1
+    } else {
+      return link.doc2
+    }
+  }
+
+  pickOtherTableLinkSide(link: LinkDocument): LinkInfo {
+    if (link.doc1.tableId === InternalTable.USER_METADATA) {
+      return link.doc2
+    } else {
+      return link.doc1
+    }
+  }
 
   async doMigration(): Promise<MigrationResult> {
     let oldTable = cloneDeep(this.table)
@@ -154,8 +154,8 @@ abstract class UserColumnMigrator implements ColumnMigrator {
 
     let links = await sdk.links.fetchWithDocument(this.table._id!)
     for (let link of links) {
-      const userSide = pickUserTableLinkSide(link)
-      const otherSide = pickOtherTableLinkSide(link)
+      const userSide = this.pickUserTableLinkSide(link)
+      const otherSide = this.pickOtherTableLinkSide(link)
       if (
         otherSide.tableId !== this.table._id ||
         otherSide.fieldName !== this.oldColumn.name ||
