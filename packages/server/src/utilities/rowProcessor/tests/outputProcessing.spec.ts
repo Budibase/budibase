@@ -2,7 +2,9 @@ import {
   FieldSubtype,
   FieldType,
   FieldTypeSubtypes,
+  INTERNAL_TABLE_SOURCE_ID,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import { outputProcessing } from ".."
 import { generator, structures } from "@budibase/backend-core/tests"
@@ -26,6 +28,8 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -71,6 +75,8 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,
@@ -108,6 +114,8 @@ describe("rowProcessor - outputProcessing", () => {
       _id: generator.guid(),
       name: "TestTable",
       type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
       schema: {
         name: {
           type: FieldType.STRING,
