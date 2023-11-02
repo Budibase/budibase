@@ -1,4 +1,12 @@
-import { AutoFieldSubTypes, FieldTypes } from "../../constants"
+import {
+  AutoFieldSubTypes,
+  FieldTypes,
+  DEFAULT_BB_DATASOURCE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_JOBS_TABLE_ID,
+} from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
 import LinkDocument from "../linkedRows/LinkDocument"
@@ -15,12 +23,6 @@ import {
   TableSchema,
   TableSourceType,
 } from "@budibase/types"
-
-export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 
 const defaultDatasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,

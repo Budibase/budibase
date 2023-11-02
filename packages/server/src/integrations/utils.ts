@@ -7,10 +7,12 @@ import {
   TableSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { InvalidColumns, NoEmptyFilterStrings } from "../constants"
+import {
+  InvalidColumns,
+  NoEmptyFilterStrings,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "../constants"
 import { helpers } from "@budibase/shared-core"
-import * as external from "../api/controllers/table/external"
-import * as internal from "../api/controllers/table/internal"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -96,7 +98,8 @@ export function isInternalTableID(tableId: string) {
 export function isExternalTable(table: Table) {
   if (
     table?.sourceId &&
-    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR)
+    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR) &&
+    table?.sourceId !== DEFAULT_BB_DATASOURCE_ID
   ) {
     return true
   } else if (table?.sourceType === TableSourceType.EXTERNAL) {
