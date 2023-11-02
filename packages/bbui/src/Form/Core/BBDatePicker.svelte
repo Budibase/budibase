@@ -69,6 +69,7 @@
   }
 
   const onOpen = () => {
+    calendarDate = dayjs(parsedValue || today).startOf("month")
     isOpen = true
     if (useKeyboardShortcuts) {
       document.addEventListener("keyup", clearDateOnBackspace)
@@ -307,13 +308,13 @@
                   aria-selected="false"
                   aria-invalid="false"
                   title={date.format("dddd, MMMM D, YYYY")}
-                  on:click={outsideMonth ? null : handleChange(date)}
+                  on:click={() => handleChange(date)}
                 >
                   <span
                     role="presentation"
                     class="spectrum-Calendar-date"
                     class:is-outsideMonth={outsideMonth}
-                    class:is-today={date.isSame(today, "day")}
+                    class:is-today={!outsideMonth && date.isSame(today, "day")}
                     class:is-selected={date.isSame(parsedValue, "day")}
                   >
                     {date.date()}
@@ -350,9 +351,6 @@
   .spectrum-Calendar {
     padding: 8px;
   }
-  .is-outsideMonth {
-    pointer-events: none;
-  }
   .spectrum-Calendar-title {
     display: flex;
     justify-content: center;
@@ -361,6 +359,10 @@
   }
   .spectrum-Calendar-header button {
     border-radius: 4px;
+  }
+  .spectrum-Calendar-date.is-outsideMonth {
+    visibility: visible;
+    color: var(--spectrum-global-color-gray-400);
   }
 
   .month-selector :global(.spectrum-Picker),
@@ -377,6 +379,7 @@
     font-family: var(--font-sans);
   }
   .month-selector :global(.spectrum-Picker:hover),
+  .month-selector :global(.spectrum-Picker.is-open),
   .year-selector:hover {
     background: var(--spectrum-global-color-gray-200);
   }
