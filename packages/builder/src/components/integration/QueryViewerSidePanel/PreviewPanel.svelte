@@ -23,7 +23,7 @@
 </script>
 
 <div class="table">
-  <Table {schema} data={rowsCopy} type="external" allowEditing={false} />
+  <Table {schema} data={rowsCopy} allowEditing={false} />
 </div>
 
 <style>
