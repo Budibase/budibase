@@ -19,6 +19,7 @@ import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
 import sdk from "../sdk"
+import googlecloud from "./googlecloud"
 
 const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,
@@ -37,6 +38,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: undefined,
+  [SourceName.GOOGLE_CLOUD]: googlecloud.schema,
 }
 
 const INTEGRATIONS: Record<SourceName, any> = {
@@ -56,6 +58,7 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.ORACLE]: undefined,
+  [SourceName.GOOGLE_CLOUD]: googlecloud.integration,
 }
 
 // optionally add oracle integration if the oracle binary can be installed

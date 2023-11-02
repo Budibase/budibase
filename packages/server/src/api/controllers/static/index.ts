@@ -25,6 +25,7 @@ import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import { App, Ctx, ProcessAttachmentResponse, Upload } from "@budibase/types"
+import { Storage } from "@google-cloud/storage"
 
 const send = require("koa-send")
 
@@ -266,9 +267,14 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
   const awsRegion = (datasource?.config?.region || "eu-west-1") as string
   if (datasource?.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
+    
+    // Ensure we aren't using a custom endpoint
+    if (datasource?.config?.endpoint) {
+      ctx.throw(400, "S3 datasources with custom endpoints are not supported")
+    }
+
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
-      return
     }
     try {
       const s3 = new AWS.S3({
@@ -281,6 +287,37 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
       publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+    } catch (error: any) {
+      ctx.throw(400, error)
+    }
+  } else if (datasource?.source === "GOOGLE_CLOUD") {
+    const { bucket, key } = ctx.request.body || {}
+
+    const parsedKey = datasource?.config?.privateKey
+      .split(String.raw`\n`)
+      .join("\n")
+
+    publicUrl = `https://storage.cloud.google.com/${bucket}/${key}`
+
+    try {
+      const storage = new Storage({
+        projectId: datasource?.config?.projectId,
+        scopes: "https://www.googleapis.com/auth/cloud-platform",
+        credentials: {
+          client_email: datasource?.config?.clientEmail,
+          private_key: parsedKey,
+        },
+      })
+      // 15 minute default duration.
+      const [url] = await storage
+        .bucket(bucket)
+        .file(key)
+        .getSignedUrl({
+          version: "v4",
+          action: "write",
+          expires: Date.now() + 15 * 60 * 1000,
+        })
+      signedUrl = url
     } catch (error: any) {
       ctx.throw(400, error)
     }

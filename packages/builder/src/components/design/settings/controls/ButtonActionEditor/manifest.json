@@ -124,6 +124,17 @@
       ]
     },
     {
+      "name": "Upload File to GoogleCloud",
+      "type": "data",
+      "component": "GoogleCloudUpload",
+      "context": [
+        {
+          "label": "File URL",
+          "value": "publicUrl"
+        }
+      ]
+    },
+    {
       "name": "Export Data",
       "type": "data",
       "component": "ExportData"

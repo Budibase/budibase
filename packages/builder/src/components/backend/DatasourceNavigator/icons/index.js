@@ -16,6 +16,7 @@ import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Custom from "./Custom.svelte"
+import GoogleCloudStorage from "./GoogleCloudStorage.svelte"
 import { integrations } from "stores/backend"
 import { get } from "svelte/store"
 
@@ -38,6 +39,7 @@ const ICONS = {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
+  GOOGLE_CLOUD: GoogleCloudStorage
 }
 
 export default ICONS

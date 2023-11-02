@@ -3973,6 +3973,66 @@
       }
     ]
   },
+  "googlecloudupload": {
+    "name": "Google Cloud Storage File Upload",
+    "icon": "UploadToCloud",
+    "styles": ["size"],
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 200
+    },
+    "settings": [
+      {
+        "type": "field/gcs",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "dataSource/googleCloudStorage",
+        "label": "Google Cloud Storage",
+        "key": "datasourceId"
+      },
+      {
+        "type": "text", 
+        "label": "Bucket",
+        "key": "bucket"
+      },
+      {
+        "type": "text",
+        "label": "File name",
+        "key": "key"
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "validation/attachment",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "dataprovider": {
     "name": "Data Provider",
     "icon": "Data",

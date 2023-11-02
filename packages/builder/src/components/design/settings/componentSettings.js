@@ -1,6 +1,7 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
+import GoogleCloudStorageDataSourceSelect from "./controls/GoogleCloudStorageDataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
 import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./controls/TableSelect.svelte"
@@ -32,6 +33,7 @@ const componentMap = {
   radio: RadioGroup,
   dataSource: DataSourceSelect,
   "dataSource/s3": S3DataSourceSelect,
+  "dataSource/googleCloudStorage": GoogleCloudStorageDataSourceSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,
@@ -63,6 +65,7 @@ const componentMap = {
   "field/datetime": FormFieldSelect,
   "field/attachment": FormFieldSelect,
   "field/s3": Input,
+  "field/gcs": Input,
   "field/link": FormFieldSelect,
   "field/array": FormFieldSelect,
   "field/json": FormFieldSelect,

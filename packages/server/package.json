@@ -53,6 +53,7 @@
     "@bull-board/koa": "3.9.4",
     "@elastic/elasticsearch": "7.10.0",
     "@google-cloud/firestore": "6.8.0",
+    "@google-cloud/storage": "^7.5.0",
     "@koa/router": "8.0.8",
     "@socket.io/redis-adapter": "^8.2.1",
     "airtable": "0.10.1",
