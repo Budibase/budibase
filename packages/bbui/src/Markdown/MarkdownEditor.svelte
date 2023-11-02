@@ -45,7 +45,7 @@
   const debouncedUpdate = debounce(update, 250)
 </script>
 
-{#key (height, readonly)}
+{#key height}
   <SpectrumMDE
     bind:mde
     scroll={true}
