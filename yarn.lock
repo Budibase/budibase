@@ -4808,6 +4808,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/buttongroup/-/buttongroup-3.0.2.tgz#fd3387973ca3131609e32112de42a1c0400a48d8"
   integrity sha512-Wu7B4GJ/SAeVHz9SUGAkeIH8pLaZh4t+w2ykSKOPQIRuK2jCBoudkEClVxviNVwqekccf5XLFXg9GpYF1a3Uaw==
 
+"@spectrum-css/calendar@3.0.2":
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/calendar/-/calendar-3.0.2.tgz#42030f481fd3f21abc78329a08ade9b2e89d98af"
+  integrity sha512-Wr15PK5m+ReB86dNUgCQEJJBPFIpU1Xkt3ipDT5H1W+d0to6kWChA9L9lhNmoUaJ1HKLhEDgIZ1cmxLPGyMdQA==
+
 "@spectrum-css/card@^3.0.3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@spectrum-css/card/-/card-3.0.3.tgz#56b2e2da6b80c1583228baa279de7407383bfb6b"
