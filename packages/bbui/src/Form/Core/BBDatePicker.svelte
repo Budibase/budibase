@@ -7,6 +7,8 @@
   import dayjs from "dayjs"
   import { createEventDispatcher } from "svelte"
   import Select from "../Select.svelte"
+  import Icon from "../../Icon/Icon.svelte"
+  import ActionButton from "../../ActionButton/ActionButton.svelte"
 
   export let id = null
   export let disabled = false
@@ -150,16 +152,50 @@
     dispatch("change", newValue)
   }
 
-  const handleYearChange = e => {
-    let year = parseInt(e.target.value)
-    if (isNaN(year)) {
-      year = calendarDate.year()
-    } else {
-      year = Math.max(0, Math.min(9999, year))
-    }
-    e.target.value = year
-    calendarDate = calendarDate.year(year)
+  const handleMinuteChange = e => {
+    handleChange(parsedValue.minute(parseInt(e.target.value)))
   }
+
+  const handleHourChange = e => {
+    handleChange(parsedValue.hour(parseInt(e.target.value)))
+  }
+
+  const handleDateChange = date => {
+    // Select this date at midnight if no current date
+    if (!parsedValue) {
+      handleChange(date)
+    }
+    // Otherwise persist selected time
+    else {
+      handleChange(
+        parsedValue.year(date.year()).month(date.month()).date(date.date())
+      )
+    }
+  }
+
+  const handleCalendarYearChange = e => {
+    calendarDate = calendarDate.year(parseInt(e.target.value))
+  }
+
+  const cleanNumber = ({ max, pad, fallback }) => {
+    return e => {
+      if (e.target.value) {
+        const value = parseInt(e.target.value)
+        if (isNaN(value)) {
+          e.target.value = fallback
+        } else {
+          e.target.value = Math.min(max, value).toString().padStart(pad, "0")
+        }
+      } else {
+        e.target.value = fallback
+      }
+    }
+  }
+
+  // Sanitization utils
+  const cleanYear = cleanNumber({ max: 9999, pad: 0, fallback: today.year() })
+  const cleanHour = cleanNumber({ max: 23, pad: 2, fallback: "00" })
+  const cleanMinute = cleanNumber({ max: 59, pad: 2, fallback: "00" })
 </script>
 
 <div
@@ -233,20 +269,22 @@
       >
         <div class="month-selector">
           <Select
+            autoWidth
             placeholder={null}
             options={MonthsOfYear.map((m, idx) => ({ label: m, value: idx }))}
             value={calendarDate.month()}
             on:change={e => (calendarDate = calendarDate.month(e.detail))}
-            autoWidth
           />
         </div>
         <input
-          class="year-selector"
-          on:change={handleYearChange}
+          class="custom-num-input"
           type="number"
           value={calendarDate.year()}
           min="0"
           max="9999"
+          onclick="this.select()"
+          on:change={handleCalendarYearChange}
+          on:input={cleanYear}
         />
       </div>
       <button
@@ -308,7 +346,7 @@
                   aria-selected="false"
                   aria-invalid="false"
                   title={date.format("dddd, MMMM D, YYYY")}
-                  on:click={() => handleChange(date)}
+                  on:click={() => handleDateChange(date)}
                 >
                   <span
                     role="presentation"
@@ -327,9 +365,35 @@
       </table>
     </div>
   </div>
+  {#if parsedValue && enableTime}
+    <div class="time-picker">
+      <input
+        class="custom-num-input"
+        type="number"
+        value={parsedValue.hour().toString().padStart(2, "0")}
+        min="0"
+        max="23"
+        onclick="this.select()"
+        on:input={cleanHour}
+        on:change={handleHourChange}
+      />
+      <span>:</span>
+      <input
+        class="custom-num-input"
+        type="number"
+        value={parsedValue.minute().toString().padStart(2, "0")}
+        min="0"
+        max="59"
+        onclick="this.select()"
+        on:input={cleanMinute}
+        on:change={handleMinuteChange}
+      />
+    </div>
+  {/if}
 </Popover>
 
 <style>
+  /* Date label overrides */
   .spectrum-Textfield-input {
     pointer-events: none;
   }
@@ -347,15 +411,15 @@
     pointer-events: none !important;
   }
 
-  /* Calendar */
+  /* Calendar overrides */
   .spectrum-Calendar {
     padding: 8px;
   }
   .spectrum-Calendar-title {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 4px;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex: 1 1 auto;
   }
   .spectrum-Calendar-header button {
     border-radius: 4px;
@@ -364,9 +428,24 @@
     visibility: visible;
     color: var(--spectrum-global-color-gray-400);
   }
+  .spectrum-Calendar-date.is-today:before {
+    border-color: var(--spectrum-global-color-gray-400);
+  }
+  .spectrum-Calendar-date.is-today {
+    border-color: var(--spectrum-global-color-gray-400);
+  }
+  .spectrum-Calendar-date.is-selected:not(.is-range-selection) {
+    background: var(--spectrum-global-color-blue-400);
+  }
+  .spectrum-Calendar-nextMonth,
+  .spectrum-Calendar-prevMonth {
+    order: 1;
+    padding: 4px 6px;
+  }
 
+  /* Month and year selector */
   .month-selector :global(.spectrum-Picker),
-  .year-selector {
+  .custom-num-input {
     background: none;
     border: none;
     outline: none;
@@ -374,13 +453,14 @@
     padding: 4px 6px;
     border-radius: 4px;
     transition: background 130ms ease-out;
-    font-size: var(--spectrum-calendar-title-text-size);
+    font-size: 18px;
     font-weight: bold;
     font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
   }
   .month-selector :global(.spectrum-Picker:hover),
   .month-selector :global(.spectrum-Picker.is-open),
-  .year-selector:hover {
+  .custom-num-input:hover {
     background: var(--spectrum-global-color-gray-200);
   }
   .month-selector :global(.spectrum-Picker-label) {
@@ -388,8 +468,26 @@
     font-weight: bold;
     color: var(--spectrum-alias-text-color);
   }
-  .year-selector {
-    -webkit-font-smoothing: antialiased;
-    margin-right: -20px;
+
+  /* Time picker */
+  .time-picker {
+    margin-top: 4px;
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
+    padding: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .time-picker span {
+    font-weight: bold;
+    font-size: 18px;
+    z-index: -1;
+    color: var(--spectrum-global-color-gray-700);
+  }
+  .time-picker .custom-num-input:first-child {
+    margin-right: -16px;
+  }
+  .time-picker .custom-num-input:last-child {
+    margin-left: 8px;
   }
 </style>
