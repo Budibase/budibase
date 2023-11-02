@@ -5,6 +5,7 @@
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { TableNames } from "constants"
 
   const dispatch = createEventDispatcher()
 
@@ -97,7 +98,6 @@
   // Ensure any nullish tableId values get set to empty string so
   // that the select works
   $: if (value?.tableId == null) value = { tableId: "" }
-  $: console.log($tables.list)
 </script>
 
 <div class="schema-fields">
@@ -106,7 +106,7 @@
     <Select
       on:change={onChangeTable}
       value={value.tableId}
-      options={$tables.list.filter(table => table._id !== "ta_users")}
+      options={$tables.list.filter(table => table._id !== TableNames.USERS)}
       getOptionLabel={table => table.name}
       getOptionValue={table => table._id}
     />
