@@ -7,6 +7,7 @@ import {
   SaveTableRequest,
   SaveTableResponse,
   Table,
+  TableSourceType,
   UserCtx,
 } from "@budibase/types"
 import sdk from "../../../sdk"
@@ -16,10 +17,11 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   let tableToSave: Table & {
     _rename?: RenameColumn
   } = {
-    type: "table",
     _id: generateTableID(),
-    views: {},
     ...rest,
+    type: "table",
+    sourceType: TableSourceType.INTERNAL,
+    views: {},
   }
   const renaming = tableToSave._rename
   delete tableToSave._rename
