@@ -58,11 +58,18 @@
   }
 
   const getAutomationNameError = name => {
+    for (const [key, value] of Object.entries(stepNames)) {
+      if (name === value && key !== block.id) {
+        return "This name already exists, please enter a unique name"
+      }
+    }
+
     if (name !== block.name && name?.length > 0) {
       let invalidRoleName = !validRegex.test(name)
       if (invalidRoleName) {
         return "Please enter a role name consisting of only alphanumeric symbols and underscores"
       }
+
       return null
     }
   }
