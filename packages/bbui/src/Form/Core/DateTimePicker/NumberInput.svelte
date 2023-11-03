@@ -34,6 +34,7 @@
     font-weight: bold;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    box-sizing: content-box;
   }
   input:focus,
   input:hover {
