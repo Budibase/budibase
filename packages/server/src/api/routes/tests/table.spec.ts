@@ -492,6 +492,67 @@ describe("/tables", () => {
       }
     })
 
+    it("should succeed when the row is created from the other side of the relationship", async () => {
+      // We found a bug just after releasing this feature where if the row was created from the
+      // users table, not the table linking to it, the migration would succeed but lose the data.
+      // This happened because the order of the documents in the link was reversed.
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.MANY_TO_ONE,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      let testRow = await config.api.row.save(table._id!, {})
+
+      await Promise.all(
+        users.map(u =>
+          config.api.row.patch(InternalTable.USER_METADATA, {
+            tableId: InternalTable.USER_METADATA,
+            _rev: u._rev!,
+            _id: u._id!,
+            test: [testRow],
+          })
+        )
+      )
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const resp = await config.api.row.get(table._id!, testRow._id!)
+      const migratedRow = resp.body as Row
+
+      expect(migratedRow["user column"]).toBeDefined()
+      expect(migratedRow["user relationship"]).not.toBeDefined()
+      expect(migratedRow["user column"]).toHaveLength(3)
+      expect(migratedRow["user column"].map((u: Row) => u._id)).toEqual(
+        expect.arrayContaining(users.map(u => u._id))
+      )
+    })
+
     it("should successfully migrate a many-to-many user relationship to a users column", async () => {
       const table = await config.api.table.create({
         name: "table",
