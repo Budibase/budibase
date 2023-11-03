@@ -1,4 +1,5 @@
 import env from "../environment"
+import * as Redis from "ioredis"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000
@@ -74,28 +75,29 @@ export function getRedisOptions() {
   }
   const [host, port] = url.split(":")
 
-  let redisProtocolUrl
-
-  // fully qualified redis URL
-  if (/rediss?:\/\//.test(env.REDIS_URL)) {
-    redisProtocolUrl = env.REDIS_URL
-  }
-
-  const opts: any = {
+  let redisOpts: Redis.RedisOptions = {
     connectTimeout: CONNECT_TIMEOUT_MS,
+    port: parseInt(port),
+    host,
+    password,
   }
+  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
   if (env.REDIS_CLUSTERED) {
-    opts.redisOptions = {}
-    opts.redisOptions.tls = {}
-    opts.redisOptions.password = password
-    opts.slotsRefreshTimeout = SLOT_REFRESH_MS
-    opts.dnsLookup = (address: string, callback: any) => callback(null, address)
-  } else {
-    opts.host = host
-    opts.port = port
-    opts.password = password
+    opts = {
+      connectTimeout: CONNECT_TIMEOUT_MS,
+      redisOptions: {
+        ...redisOpts,
+        tls: {},
+      },
+      slotsRefreshTimeout: SLOT_REFRESH_MS,
+      dnsLookup: (address: string, callback: any) => callback(null, address),
+    } as Redis.ClusterOptions
   }
-  return { opts, host, port: parseInt(port), redisProtocolUrl }
+  return {
+    opts,
+    host,
+    port: parseInt(port),
+  }
 }
 
 export function addDbPrefix(db: string, key: string) {
