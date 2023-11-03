@@ -68,6 +68,7 @@
       "jsonfield",
       "relationshipfield",
       "datetimefield",
+      "newdatetimefield",
       "multifieldselect",
       "s3upload",
       "codescanner",
