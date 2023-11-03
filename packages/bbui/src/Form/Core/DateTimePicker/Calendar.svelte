@@ -1,5 +1,4 @@
 <script>
-  import "@spectrum-css/calendar/dist/index-vars.css"
   import { cleanInput } from "./utils"
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
@@ -175,6 +174,7 @@
   /* Calendar overrides */
   .spectrum-Calendar {
     padding: 8px;
+    width: auto;
   }
   .spectrum-Calendar-title {
     display: flex;
@@ -198,9 +198,23 @@
   .spectrum-Calendar-date.is-selected:not(.is-range-selection) {
     background: var(--spectrum-global-color-blue-400);
   }
+  .spectrum-Calendar tr {
+    height: 40px;
+  }
+  .spectrum-Calendar-tableCell {
+    height: 32px;
+    width: 32px;
+    padding: 4px;
+  }
   .spectrum-Calendar-nextMonth,
   .spectrum-Calendar-prevMonth {
     order: 1;
     padding: 4px 6px;
+  }
+  .spectrum-Calendar-date {
+    color: var(--spectrum-alias-text-color);
+  }
+  .spectrum-Calendar-date.is-selected {
+    color: white;
   }
 </style>

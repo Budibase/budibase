@@ -4798,22 +4798,17 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.1.tgz#6db8c3e851baecd0f1c2d88fef37d49d01c6e643"
   integrity sha512-YXrBtjIYisk4Vaxnp0RiE4gdElQX04P2mc4Pi2GlQ27dJKlHmufYcF+kAqGdtiyK5yjdN/vKRcC8y13aA4rusA==
 
-"@spectrum-css/button@^3.0.3":
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/button/-/button-3.0.3.tgz#2df1efaab6c7e0b3b06cb4b59e1eae59c7f1fc84"
-  integrity sha512-6CnLPqqtaU/PcSSIGeGRi0iFIIxIUByYLKFO6zn5NEUc12KQ28dJ4PLwB6WBa0L8vRoAGlnWWH2ZZweTijbXgg==
-
 "@spectrum-css/buttongroup@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/buttongroup/-/buttongroup-3.0.2.tgz#fd3387973ca3131609e32112de42a1c0400a48d8"
   integrity sha512-Wu7B4GJ/SAeVHz9SUGAkeIH8pLaZh4t+w2ykSKOPQIRuK2jCBoudkEClVxviNVwqekccf5XLFXg9GpYF1a3Uaw==
 
-"@spectrum-css/calendar@3.0.2":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/calendar/-/calendar-3.0.2.tgz#42030f481fd3f21abc78329a08ade9b2e89d98af"
-  integrity sha512-Wr15PK5m+ReB86dNUgCQEJJBPFIpU1Xkt3ipDT5H1W+d0to6kWChA9L9lhNmoUaJ1HKLhEDgIZ1cmxLPGyMdQA==
+"@spectrum-css/calendar@3.2.7":
+  version "3.2.7"
+  resolved "https://registry.yarnpkg.com/@spectrum-css/calendar/-/calendar-3.2.7.tgz#10fd44176b6afbdf5baf29ce16728baa98b0d844"
+  integrity sha512-e2BGyuXzP+VOv0q855EIgrR+ne7e/EP8AMMuSAWazgq2fPZ4CoJIeLYP3tnniKnj2dlb3Gr1LH+6MPlUXS74RA==
 
-"@spectrum-css/card@^3.0.3":
+"@spectrum-css/card@3.0.3":
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/@spectrum-css/card/-/card-3.0.3.tgz#56b2e2da6b80c1583228baa279de7407383bfb6b"
   integrity sha512-+oKLUI2a0QmQP9EzySeq/G4FpUkkdaDNbuEbqCj2IkPMc/2v/nwzsPhh1fj2UIghGAiiUwXfPpzax1e8fyhQUg==
@@ -4834,13 +4829,6 @@
   integrity sha512-Zy4Rn40w8UtzMh3wx/U9+CepSCpm1aOCGftHgWDub0XZuVTzh0c1WwyzTuLCx2Hf21z5VRGNiDh8bGEEzSbtNA==
   dependencies:
     "@spectrum-css/vars" "^3.0.2"
-
-"@spectrum-css/divider@^1.0.3":
-  version "1.0.27"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/divider/-/divider-1.0.27.tgz#435bf738a65b4eb15c899edf5c536bea22f2d679"
-  integrity sha512-hWKPHOEo9lkOGN5zecpVVwVxE3x0SJHQJKDNx1g0xs/P/AthAboK+L1c9Rq29czNfcQ2kUjumi4igzQzcqABMQ==
-  dependencies:
-    "@spectrum-css/vars" "^8.0.0"
 
 "@spectrum-css/dropzone@3.0.2":
   version "3.0.2"
@@ -4886,11 +4874,6 @@
   version "3.1.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/link/-/link-3.1.1.tgz#cb526a2e10b50ef5a7ae29cca7272e2610d597eb"
   integrity sha512-Bi88lRhTY7g6nM/ryW1yY4Cji211ZYNtRxkxbV7n2lPvwMAAQtyx0qVD3ru4kTGj/FFVvmPR3XiOE10K13HSNA==
-
-"@spectrum-css/link@^3.1.3":
-  version "3.1.23"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/link/-/link-3.1.23.tgz#9d9ff64c41366edbfdb19d04a5deec88bf2ea8fd"
-  integrity sha512-CAJQGnGTrTtR4tF1L94ou9Y+c4vnx9d5rWhb3AMzKb2Focqz02xSkTyaCCH7OM/3CwD8TCLOMANon8LcRpGAjA==
 
 "@spectrum-css/menu@3.0.1":
   version "3.0.1"
@@ -4979,11 +4962,6 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/tabs/-/tabs-3.2.12.tgz#9b08f23d5aa881b3441af7757800c7173e5685ff"
   integrity sha512-rPFUW9SSW4+3/UJ3UrtY2/l3sQvlqB1fqxHLPDjgykvbfrnMejcCTNV4ZrFNHXpE/6+kGnk+yVViSPtWGwJzkA==
 
-"@spectrum-css/tag@^3.1.4":
-  version "3.3.15"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/tag/-/tag-3.3.15.tgz#971184fd8cb977b85a529f808313851863123278"
-  integrity sha512-pF6Wh61Z7hmAy20twIlpjdDuivYj6UPtWIzK7giyJKr/qcn20BjVN2ChIeFB1N+vBamJdLsuQOewv4AJ3+LZ2Q==
-
 "@spectrum-css/tags@3.0.2":
   version "3.0.2"
   resolved "https://registry.yarnpkg.com/@spectrum-css/tags/-/tags-3.0.2.tgz#5bf35fb79c97cd9344de485bd4626ad5b9f07757"
@@ -5014,11 +4992,6 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.1.tgz#957dafd9b18c314fa37a88b549042ba2175f5b3f"
   integrity sha512-XyR68K2rIZX3u4j7HhMLOqLVHDJZcapp3XUqgYMzMWccBFleA0qPxKpfRWqVIA5DzTMSIw0wEcZPYKWFZ2e6dA==
 
-"@spectrum-css/typography@^3.0.2":
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/typography/-/typography-3.0.2.tgz#ea3ca0a60e18064527819d48c8c4364cab4fcd38"
-  integrity sha512-5ZOLmQe0edzsDMyhghUd4hBb5uxGsFrxzf+WasfcUw9klSfTsRZ09n1BsaaWbgrLjlMQ+EEHS46v5VNo0Ms2CA==
-
 "@spectrum-css/underlay@2.0.9":
   version "2.0.9"
   resolved "https://registry.yarnpkg.com/@spectrum-css/underlay/-/underlay-2.0.9.tgz#fc10f971d1325cc844b727e6260f7217844060e8"
@@ -5038,11 +5011,6 @@
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-4.3.1.tgz#d333fa41909f691c8750b5c15ad9ba029df2248e"
   integrity sha512-rX6Iasu9BsFMVgEN0vGRPm9dmSxva+IK/uqQAa9HM0lliwqUiFrJxrFXHHpiAgNuux/U4srEJwbSpGzfF+CegQ==
-
-"@spectrum-css/vars@^8.0.0":
-  version "8.0.4"
-  resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-8.0.4.tgz#dcf115551f240b25ba629a3b6c4d3eb1429bee15"
-  integrity sha512-3jYj5HYxbVfkR4jLV9l+L3g6jS4R09m0lV+gupqnXWpwcThlP0EOjkCkevu195imoS4pZ/i2iLpd98l4qcTc2Q==
 
 "@sveltejs/vite-plugin-svelte@1.0.1":
   version "1.0.1"

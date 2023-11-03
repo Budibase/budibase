@@ -1,4 +1,7 @@
 <script>
+  import "@spectrum-css/calendar/dist/index-vars.css"
+  import "@spectrum-css/inputgroup/dist/index-vars.css"
+  import "@spectrum-css/textfield/dist/index-vars.css"
   import Popover from "../../../Popover/Popover.svelte"
   import dayjs from "dayjs"
   import { createEventDispatcher } from "svelte"
