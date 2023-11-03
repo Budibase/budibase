@@ -35,11 +35,6 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
-  const getFeatures = () => {
-    // We don't support any features
-    return {}
-  }
-
   return {
     nonPlus: {
       actions: {
@@ -50,7 +45,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }
