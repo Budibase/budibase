@@ -31,10 +31,6 @@ import destroyable from "server-destroy"
 import { initPro } from "./initPro"
 import { handleScimBody } from "./middleware/handleScimBody"
 
-// configure events to use the pro audit log write
-// can't integrate directly into backend-core due to cyclic issues
-events.processors.init(proSdk.auditLogs.write)
-
 if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
   console.warn(
     "Warning: ENABLE_SSO_MAINTENANCE_MODE is set. It is recommended this flag is disabled if maintenance is not in progress"
@@ -93,6 +89,9 @@ export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await initPro()
   await redis.init()
+  // configure events to use the pro audit log write
+  // can't integrate directly into backend-core due to cyclic issues
+  await events.processors.init(proSdk.auditLogs.write)
 })
 
 process.on("uncaughtException", err => {
