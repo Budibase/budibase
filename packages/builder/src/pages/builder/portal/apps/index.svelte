@@ -11,7 +11,7 @@
     Body,
     Search,
     DatePicker,
-    BBDatePicker,
+    DateTimePicker,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -212,7 +212,7 @@
   <div>
     <h1>Date only</h1>
     <div style="width: 240px;">
-      <BBDatePicker
+      <DateTimePicker
         enableTime={false}
         value={foo}
         on:change={e => (foo = e.detail)}
@@ -220,16 +220,24 @@
     </div>
     <h1>Date time</h1>
     <div style="width: 240px;">
-      <BBDatePicker enableTime value={foo} on:change={e => (foo = e.detail)} />
+      <DateTimePicker
+        enableTime
+        value={foo}
+        on:change={e => (foo = e.detail)}
+      />
     </div>
     <h1>Date time no timezone</h1>
     <div style="width: 240px;">
-      <BBDatePicker
+      <DateTimePicker
         enableTime
         ignoreTimezones
         value={foo}
         on:change={e => (foo = e.detail)}
       />
+    </div>
+    <h1>Time only</h1>
+    <div style="width: 240px;">
+      <DateTimePicker timeOnly value={foo} on:change={e => (foo = e.detail)} />
     </div>
     <br />
     <br />
