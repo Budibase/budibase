@@ -1,6 +1,4 @@
 <script>
-  import "@spectrum-css/inputgroup/dist/index-vars.css"
-  import "@spectrum-css/textfield/dist/index-vars.css"
   import Icon from "../../../Icon/Icon.svelte"
 
   export let anchor
@@ -14,16 +12,16 @@
   export let enableTime
   export let timeOnly
 
-  $: displayValue = getDisplayValue(value)
+  $: displayValue = getDisplayValue(value, enableTime, timeOnly)
 
-  const getDisplayValue = value => {
+  const getDisplayValue = (value, enableTime, timeOnly) => {
     if (!value?.isValid()) {
       return ""
     }
-    if (!enableTime) {
-      return value.format("MMMM D YYYY")
-    } else if (timeOnly) {
+    if (timeOnly) {
       return value.format("HH:mm")
+    } else if (!enableTime) {
+      return value.format("MMMM D YYYY")
     } else {
       return value.format("MMMM D YYYY, HH:mm")
     }
