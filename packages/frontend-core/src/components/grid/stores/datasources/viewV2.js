@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 
@@ -46,10 +45,6 @@ export const createActions = context => {
     )
   }
 
-  const getFeatures = () => {
-    return new ViewV2Fetch({ API }).determineFeatureFlags()
-  }
-
   return {
     viewV2: {
       actions: {
@@ -60,7 +55,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }
