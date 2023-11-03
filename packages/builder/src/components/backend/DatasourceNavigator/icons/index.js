@@ -39,7 +39,7 @@ const ICONS = {
   REDIS: Redis,
   SNOWFLAKE: Snowflake,
   CUSTOM: Custom,
-  GOOGLE_CLOUD: GoogleCloudStorage
+  GOOGLE_CLOUD: GoogleCloudStorage,
 }
 
 export default ICONS

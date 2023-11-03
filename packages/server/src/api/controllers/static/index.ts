@@ -267,7 +267,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
   const awsRegion = (datasource?.config?.region || "eu-west-1") as string
   if (datasource?.source === "S3") {
     const { bucket, key } = ctx.request.body || {}
-    
+
     // Ensure we aren't using a custom endpoint
     if (datasource?.config?.endpoint) {
       ctx.throw(400, "S3 datasources with custom endpoints are not supported")

@@ -55,11 +55,7 @@ const SCHEMA: Integration = {
           display: "Location",
           default: "US",
           config: {
-            options: [
-              "ASIA",
-              "EU",
-              "US"
-            ],
+            options: ["ASIA", "EU", "US"],
           },
         },
         storageClass: {
@@ -68,19 +64,14 @@ const SCHEMA: Integration = {
           display: "Storage Class",
           default: "STANDARD",
           config: {
-            options: [
-              "STANDARD",
-              "NEARLINE", 
-              "COLDLINE",
-              "ARCHIVE"	
-            ]
-          }
+            options: ["STANDARD", "NEARLINE", "COLDLINE", "ARCHIVE"],
+          },
         },
         allowPublicAccess: {
           type: DatasourceFieldType.BOOLEAN,
           display: "Allow Public Access",
-          default: false
-        }
+          default: false,
+        },
       },
     },
     read: {
@@ -113,15 +104,15 @@ class GoogleCloudIntegration implements IntegrationBase {
   private storage: any
 
   constructor(config: GoogleCloudConfig) {
-    ;(this.config = config),
-      (this.storage = new Storage({
-        projectId: this.config.projectId,
-        scopes: "https://www.googleapis.com/auth/cloud-platform",
-        credentials: {
-          client_email: this.config.clientEmail,
-          private_key: this.config.privateKey.split(String.raw`\n`).join("\n"),
-        },
-      }))
+    this.config = config
+    this.storage = new Storage({
+      projectId: this.config.projectId,
+      scopes: "https://www.googleapis.com/auth/cloud-platform",
+      credentials: {
+        client_email: this.config.clientEmail,
+        private_key: this.config.privateKey.split(String.raw`\n`).join("\n"),
+      },
+    })
   }
 
   async testConnection() {
@@ -153,19 +144,23 @@ class GoogleCloudIntegration implements IntegrationBase {
   }
 
   async delete(query: { bucket: string; delete: string }) {
-    return await this.storage.bucket(query.bucket).file(query.delete).delete();
+    return await this.storage.bucket(query.bucket).file(query.delete).delete()
   }
 
-  
-  async create(query: { bucket: string, location: string, storageClass: string, allowPublicAccess: boolean}) {
+  async create(query: {
+    bucket: string
+    location: string
+    storageClass: string
+    allowPublicAccess: boolean
+  }) {
     let [newBucket] = await this.storage.createBucket(query.bucket, {
       // http://g.co/cloud/storage/docs/locations#location-mr
       // ASIA, EU, US
       location: query.location,
       // https://cloud.google.com/storage/docs/storage-classes
       [query.storageClass]: true,
-    });
-    if(query.allowPublicAccess === true && newBucket){
+    })
+    if (query.allowPublicAccess === true && newBucket) {
       await this.storage.bucket(query.bucket).makePublic()
     }
     return newBucket
