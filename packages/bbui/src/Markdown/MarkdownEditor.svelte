@@ -20,7 +20,9 @@
   // control
   $: checkValue(value)
   $: mde?.codemirror.on("change", debouncedUpdate)
-  $: mde?.codemirror.setOption("readOnly", readonly)
+  $: if (readonly || disabled) {
+    mde?.togglePreview()
+  }
 
   const checkValue = val => {
     if (mde && val !== latestValue) {
