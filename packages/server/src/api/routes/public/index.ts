@@ -39,7 +39,7 @@ function getApiLimitPerSecond(): number {
 
 let rateLimitStore: any = null
 if (!env.isTest()) {
-  const { password, host, port } = redis.utils.getRedisOptions()
+  const { password, host, port } = redis.utils.getRedisConnectionDetails()
   let options: KoaRateLimitOptions = {
     socket: {
       host: host,

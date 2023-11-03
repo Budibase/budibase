@@ -59,7 +59,7 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisOptions() {
+export function getRedisConnectionDetails() {
   let password = env.REDIS_PASSWORD
   let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
@@ -75,9 +75,18 @@ export function getRedisOptions() {
   }
   const [host, port] = url.split(":")
 
+  return {
+    host,
+    password,
+    port: parseInt(port),
+  }
+}
+
+export function getRedisOptions() {
+  const { host, password, port } = getRedisConnectionDetails()
   let redisOpts: Redis.RedisOptions = {
     connectTimeout: CONNECT_TIMEOUT_MS,
-    port: parseInt(port),
+    port: port,
     host,
     password,
   }
@@ -93,12 +102,7 @@ export function getRedisOptions() {
       dnsLookup: (address: string, callback: any) => callback(null, address),
     } as Redis.ClusterOptions
   }
-  return {
-    opts,
-    host,
-    password,
-    port: parseInt(port),
-  }
+  return opts
 }
 
 export function addDbPrefix(db: string, key: string) {
