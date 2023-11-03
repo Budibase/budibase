@@ -5,7 +5,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import "@spectrum-css/picker/dist/index-vars.css"
   import { createEventDispatcher } from "svelte"
-  import { uuid } from "../../helpers"
+  import { uuid } from "../../../helpers"
 
   export let id = null
   export let disabled = false

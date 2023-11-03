@@ -1,6 +1,6 @@
 <script>
   import Field from "./Field.svelte"
-  import DatePicker from "./Core/DatePicker.svelte"
+  import DatePicker from "./Core/DatePicker/DatePicker.svelte"
   import { createEventDispatcher } from "svelte"
 
   export let value = null

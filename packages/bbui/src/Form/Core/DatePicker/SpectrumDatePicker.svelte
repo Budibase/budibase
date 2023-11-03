@@ -7,7 +7,7 @@
   import { createEventDispatcher } from "svelte"
   import TimePicker from "./TimePicker.svelte"
   import Calendar from "./Calendar.svelte"
-  import DateTimeInput from "./DateTimeField.svelte"
+  import DateTimeInput from "./DateInput.svelte"
   import ActionButton from "../../../ActionButton/ActionButton.svelte"
 
   export let id = null
