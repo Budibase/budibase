@@ -43,6 +43,11 @@ export default class DataFetch {
 
       // Pagination config
       paginate: true,
+
+      // Client side feature customisation
+      clientSideSearching: true,
+      clientSideSorting: true,
+      clientSideLimiting: true,
     }
 
     // State of the fetch
@@ -208,24 +213,32 @@ export default class DataFetch {
    * Fetches some filtered, sorted and paginated data
    */
   async getPage() {
-    const { sortColumn, sortOrder, sortType, limit } = this.options
+    const {
+      sortColumn,
+      sortOrder,
+      sortType,
+      limit,
+      clientSideSearching,
+      clientSideSorting,
+      clientSideLimiting,
+    } = this.options
     const { query } = get(this.store)
 
     // Get the actual data
     let { rows, info, hasNextPage, cursor, error } = await this.getData()
 
     // If we don't support searching, do a client search
-    if (!this.features.supportsSearch) {
+    if (!this.features.supportsSearch && clientSideSearching) {
       rows = runLuceneQuery(rows, query)
     }
 
     // If we don't support sorting, do a client-side sort
-    if (!this.features.supportsSort) {
+    if (!this.features.supportsSort && clientSideSorting) {
       rows = luceneSort(rows, sortColumn, sortOrder, sortType)
     }
 
     // If we don't support pagination, do a client-side limit
-    if (!this.features.supportsPagination) {
+    if (!this.features.supportsPagination && clientSideLimiting) {
       rows = luceneLimit(rows, limit)
     }
 
