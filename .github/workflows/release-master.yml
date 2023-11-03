@@ -169,7 +169,7 @@ jobs:
       - uses: peter-evans/repository-dispatch@v2
         with:
           repository: budibase/budibase-deploys
-          event: budicloud-qa-deploy
+          event-type: budicloud-qa-deploy
           github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
           client-payload: |-
             {
