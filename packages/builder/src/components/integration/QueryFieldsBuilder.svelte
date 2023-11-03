@@ -1,5 +1,5 @@
 <script>
-  import { Label, Layout, Input } from "@budibase/bbui"
+  import { Label, Layout, Input, Select, Toggle } from "@budibase/bbui"
   import Editor from "./QueryEditor.svelte"
   import KeyValueBuilder from "./KeyValueBuilder.svelte"
   import { capitalise } from "helpers"
@@ -45,6 +45,20 @@
             value={fields[field]}
           />
         </div>
+      {:else if schema.fields[field]?.type === "select"}
+        <Select
+          options={schema.fields[field].config.options}
+          value={fields[field]}
+          on:change={({ detail }) => (fields[field] = detail)}
+          label={schema.fields[field].display}
+        />
+      {:else if schema.fields[field]?.type === "boolean"}
+        <Toggle
+          value={fields[field]}
+          on:change={({ detail }) => (fields[field] = detail)}
+          label={schema.fields[field].display}
+          text={"The contents of the entire bucket will be available online. Please make sure this is the intended behaviour"}
+        />
       {:else}
         <div class="horizontal">
           <Label small>{getDisplayName(field)}</Label>
