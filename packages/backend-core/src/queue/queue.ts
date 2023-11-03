@@ -26,7 +26,7 @@ export function createQueue<T>(
   jobQueue: JobQueue,
   opts: { removeStalledCb?: StalledFn } = {}
 ): BullQueue.Queue<T> {
-  const { opts: redisOpts } = getRedisOptions()
+  const redisOpts = getRedisOptions()
   const queueConfig: QueueOptions = {
     redis: redisOpts,
     settings: {
