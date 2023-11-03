@@ -61,6 +61,10 @@
     onChange(base.year(date.year()).month(date.month()).date(date.date()))
   }
 
+  export const setDate = date => {
+    calendarDate = date
+  }
+
   const cleanYear = cleanInput({ max: 9999, pad: 0, fallback: now.year() })
 </script>
 
@@ -85,6 +89,7 @@
         value={calendarDate.year()}
         min={0}
         max={9999}
+        width={64}
         on:change={handleCalendarYearChange}
         on:input={cleanYear}
       />
@@ -173,6 +178,9 @@
   .spectrum-Calendar {
     width: auto;
   }
+  .spectrum-Calendar-header {
+    width: auto;
+  }
   .spectrum-Calendar-title {
     display: flex;
     justify-content: flex-start;
@@ -196,12 +204,11 @@
     background: var(--spectrum-global-color-blue-400);
   }
   .spectrum-Calendar tr {
+    box-sizing: content-box;
     height: 40px;
   }
   .spectrum-Calendar-tableCell {
-    height: 32px;
-    width: 32px;
-    padding: 4px;
+    box-sizing: content-box;
   }
   .spectrum-Calendar-nextMonth,
   .spectrum-Calendar-prevMonth {

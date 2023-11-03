@@ -25,6 +25,7 @@
   let isOpen = false
   let anchor
   let popover
+  let calendar
 
   $: parsedValue = parseValue(value)
   $: showCalendar = !timeOnly
@@ -107,6 +108,12 @@
 
     dispatch("change", newValue)
   }
+
+  const setToNow = () => {
+    const now = dayjs()
+    calendar?.setDate(now)
+    handleChange(now)
+  }
 </script>
 
 <DateTimeInput
@@ -133,7 +140,11 @@
   {#if isOpen}
     <div class="date-time-popover">
       {#if showCalendar}
-        <Calendar value={parsedValue} onChange={handleChange} />
+        <Calendar
+          value={parsedValue}
+          onChange={handleChange}
+          bind:this={calendar}
+        />
       {/if}
       <div class="footer" class:spaced={showCalendar}>
         {#if showTime}
@@ -147,7 +158,7 @@
           >
             Clear
           </ActionButton>
-          <ActionButton size="S" on:click={() => handleChange(dayjs())}>
+          <ActionButton size="S" on:click={setToNow}>
             {showTime ? "Now" : "Today"}
           </ActionButton>
         </div>
@@ -164,7 +175,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 32px;
+    gap: 60px;
   }
   .footer.spaced {
     padding-top: 14px;
@@ -175,6 +186,5 @@
     display: flex;
     justify-content: flex-end;
     gap: 6px;
-    margin-right: 4px;
   }
 </style>
