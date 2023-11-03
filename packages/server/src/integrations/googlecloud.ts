@@ -12,17 +12,6 @@ interface GoogleCloudConfig {
   projectId: string
   privateKey: string
   clientEmail: string
-
-  auth: OAuthClientConfig
-  continueSetupId?: string
-}
-
-// Move google oauth to util, if they are applicable.
-// Interfaces taken from Sheets i
-interface OAuthClientConfig {
-  appId: string
-  accessToken: string
-  refreshToken: string
 }
 
 const SCHEMA: Integration = {
