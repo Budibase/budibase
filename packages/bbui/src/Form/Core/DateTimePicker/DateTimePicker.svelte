@@ -14,8 +14,6 @@
   export let placeholder = null
   export let timeOnly = false
   export let ignoreTimezones = false
-  export let range = false
-  export let flatpickr
   export let useKeyboardShortcuts = true
 
   const dispatch = createEventDispatcher()
