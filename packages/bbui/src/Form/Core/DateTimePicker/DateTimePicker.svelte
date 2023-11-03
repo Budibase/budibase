@@ -8,6 +8,7 @@
   import TimePicker from "./TimePicker.svelte"
   import Calendar from "./Calendar.svelte"
   import DateTimeInput from "./DateTimeField.svelte"
+  import ActionButton from "../../../ActionButton/ActionButton.svelte"
 
   export let id = null
   export let disabled = false
@@ -125,47 +126,46 @@
       {#if showCalendar}
         <Calendar value={parsedValue} onChange={handleChange} />
       {/if}
-      {#if showCalendar && showTime}
-        <hr />
-      {/if}
-      {#if showTime}
-        <TimePicker value={parsedValue} onChange={handleChange} />
-      {/if}
+      <div class="footer" class:spaced={showCalendar}>
+        {#if showTime}
+          <TimePicker value={parsedValue} onChange={handleChange} />
+        {/if}
+        <div class="actions">
+          <ActionButton
+            disabled={!value}
+            size="S"
+            on:click={() => handleChange(null)}
+          >
+            Clear
+          </ActionButton>
+          <ActionButton size="S" on:click={() => handleChange(dayjs())}>
+            {showTime ? "Now" : "Today"}
+          </ActionButton>
+        </div>
+      </div>
     </div>
   {/if}
 </Popover>
 
 <style>
-  hr {
-    margin: 4px 0 0 0;
-    height: 0;
-    border: none;
-    border-top: 1px solid var(--spectrum-global-color-gray-200);
+  .date-time-popover {
+    padding: 8px;
   }
-
-  /* Style inputs */
-  .date-time-popover :global(.spectrum-Picker),
-  .date-time-popover :global(input[type="number"]) {
-    background: none;
-    border: none;
-    outline: none;
-    color: var(--spectrum-alias-text-color);
-    padding: 4px 6px;
-    border-radius: 4px;
-    transition: background 130ms ease-out;
-    font-size: 18px;
-    font-weight: bold;
-    font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 32px;
   }
-  .date-time-popover :global(.spectrum-Picker:hover),
-  .date-time-popover :global(.spectrum-Picker.is-open),
-  .date-time-popover :global(input[type="number"]:hover) {
-    background: var(--spectrum-global-color-gray-200);
+  .footer.spaced {
+    padding-top: 14px;
   }
-  .date-time-popover :global(.spectrum-Picker-label) {
-    font-size: var(--spectrum-calendar-title-text-size);
-    font-weight: bold;
-    color: var(--spectrum-alias-text-color);
+  .actions {
+    padding: 4px 0;
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-right: 4px;
   }
 </style>

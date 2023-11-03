@@ -1,6 +1,7 @@
 <script>
   import { cleanInput } from "./utils"
   import dayjs from "dayjs"
+  import NumberInput from "./NumberInput.svelte"
 
   export let value
   export let onChange
@@ -22,22 +23,22 @@
 </script>
 
 <div class="time-picker">
-  <input
-    type="number"
+  <NumberInput
+    hideArrows
     value={displayValue.hour().toString().padStart(2, "0")}
-    min="0"
-    max="23"
-    onclick="this.select()"
+    min={0}
+    max={23}
+    width={20}
     on:input={cleanHour}
     on:change={handleHourChange}
   />
   <span>:</span>
-  <input
-    type="number"
+  <NumberInput
+    hideArrows
     value={displayValue.minute().toString().padStart(2, "0")}
-    min="0"
-    max="59"
-    onclick="this.select()"
+    min={0}
+    max={59}
+    width={20}
     on:input={cleanMinute}
     on:change={handleMinuteChange}
   />
@@ -45,7 +46,6 @@
 
 <style>
   .time-picker {
-    padding: 12px;
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -54,12 +54,6 @@
     font-weight: bold;
     font-size: 18px;
     z-index: -1;
-    color: var(--spectrum-global-color-gray-700);
-  }
-  .time-picker input:first-child {
-    margin-right: -16px;
-  }
-  .time-picker input:last-child {
-    margin-left: 8px;
+    margin-bottom: 1px;
   }
 </style>

@@ -2,6 +2,7 @@
   import { cleanInput } from "./utils"
   import Select from "../../Select.svelte"
   import dayjs from "dayjs"
+  import NumberInput from "./NumberInput.svelte"
 
   export let value
   export let onChange
@@ -80,13 +81,10 @@
           on:change={e => (calendarDate = calendarDate.month(e.detail))}
         />
       </div>
-      <input
-        class="custom-num-input"
-        type="number"
+      <NumberInput
         value={calendarDate.year()}
-        min="0"
-        max="9999"
-        onclick="this.select()"
+        min={0}
+        max={9999}
         on:change={handleCalendarYearChange}
         on:input={cleanYear}
       />
@@ -173,7 +171,6 @@
 <style>
   /* Calendar overrides */
   .spectrum-Calendar {
-    padding: 8px;
     width: auto;
   }
   .spectrum-Calendar-title {
@@ -209,12 +206,27 @@
   .spectrum-Calendar-nextMonth,
   .spectrum-Calendar-prevMonth {
     order: 1;
-    padding: 4px 6px;
+    padding: 4px;
   }
   .spectrum-Calendar-date {
     color: var(--spectrum-alias-text-color);
   }
   .spectrum-Calendar-date.is-selected {
     color: white;
+  }
+
+  /* Style select */
+  .month-selector :global(.spectrum-Picker) {
+    background: none;
+    border: none;
+    padding: 4px 6px;
+  }
+  .month-selector :global(.spectrum-Picker:hover),
+  .month-selector :global(.spectrum-Picker.is-open) {
+    background: var(--spectrum-global-color-gray-200);
+  }
+  .month-selector :global(.spectrum-Picker-label) {
+    font-size: 18px;
+    font-weight: bold;
   }
 </style>
