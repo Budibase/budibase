@@ -43,7 +43,7 @@ export enum Databases {
 export enum SelectableDatabase {
   DEFAULT = 0,
   SOCKET_IO = 1,
-  UNUSED_1 = 2,
+  RATE_LIMITING = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
   UNUSED_4 = 5,
@@ -96,6 +96,7 @@ export function getRedisOptions() {
   return {
     opts,
     host,
+    password,
     port: parseInt(port),
   }
 }
