@@ -56,8 +56,17 @@
   }
 
   const parseValue = value => {
-    // Sanity check that we have a valid value
-    const parsedDate = dayjs(value)
+    let parsedDate
+
+    // Attempt to parse as a time-only string if required
+    if (typeof value === "string" && timeOnly) {
+      parsedDate = dayjs(`0-${value}`)
+    }
+
+    // Attempt to parse as normal if required
+    if (!parsedDate?.isValid()) {
+      parsedDate = dayjs(value)
+    }
     if (!parsedDate?.isValid()) {
       return null
     }
