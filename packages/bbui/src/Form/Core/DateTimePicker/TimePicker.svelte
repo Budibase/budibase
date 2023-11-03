@@ -6,9 +6,7 @@
   export let value
   export let onChange
 
-  const now = dayjs()
-
-  $: displayValue = value || now
+  $: displayValue = value || dayjs()
 
   const handleHourChange = e => {
     onChange(displayValue.hour(parseInt(e.target.value)))

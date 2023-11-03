@@ -34,7 +34,7 @@
   const now = dayjs()
   let calendarDate
 
-  $: calendarDate = dayjs(value || now).startOf("month")
+  $: calendarDate = dayjs(value || dayjs()).startOf("month")
   $: mondays = getMondays(calendarDate)
 
   const getMondays = monthStart => {
