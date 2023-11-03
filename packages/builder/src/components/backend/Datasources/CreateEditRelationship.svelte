@@ -30,15 +30,15 @@
       part2: PrettyRelationshipDefinitions.MANY,
     },
     [RelationshipType.MANY_TO_ONE]: {
-      part1: PrettyRelationshipDefinitions.ONE,
-      part2: PrettyRelationshipDefinitions.MANY,
+      part1: PrettyRelationshipDefinitions.MANY,
+      part2: PrettyRelationshipDefinitions.ONE,
     },
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
 
-  let relationshipPart1 = PrettyRelationshipDefinitions.MANY
-  let relationshipPart2 = PrettyRelationshipDefinitions.ONE
+  let relationshipPart1 = PrettyRelationshipDefinitions.ONE
+  let relationshipPart2 = PrettyRelationshipDefinitions.MANY
 
   let originalFromColumnName = toRelationship.name,
     originalToColumnName = fromRelationship.name
