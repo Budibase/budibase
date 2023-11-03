@@ -39,11 +39,13 @@ export default function positionDropdown(element, opts) {
       styles = customUpdate(anchorBounds, elementBounds, styles)
     } else {
       // Determine vertical styles
+      const topSpace = anchorBounds.top
+      const bottomSpace = window.innerHeight - anchorBounds.bottom
       if (align === "right-outside") {
         styles.top = anchorBounds.top
       } else if (
-        window.innerHeight - anchorBounds.bottom <
-        (maxHeight || 100)
+        window.innerHeight - anchorBounds.bottom < (maxHeight || 100) &&
+        topSpace - bottomSpace > 100
       ) {
         styles.top = anchorBounds.top - elementBounds.height - offset
         styles.maxHeight = maxHeight || 240

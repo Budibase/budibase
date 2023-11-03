@@ -4,7 +4,7 @@
   import "@spectrum-css/textfield/dist/index-vars.css"
   import Popover from "../../../Popover/Popover.svelte"
   import dayjs from "dayjs"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import TimePicker from "./TimePicker.svelte"
   import Calendar from "./Calendar.svelte"
   import DateTimeInput from "./DateInput.svelte"
@@ -19,6 +19,9 @@
   export let timeOnly = false
   export let ignoreTimezones = false
   export let useKeyboardShortcuts = true
+  export let appendTo = null
+  export let api = null
+  export let align = "left"
 
   const dispatch = createEventDispatcher()
 
@@ -114,6 +117,13 @@
     calendar?.setDate(now)
     handleChange(now)
   }
+
+  onMount(() => {
+    api = {
+      open: () => popover?.show(),
+      close: () => popover?.hide(),
+    }
+  })
 </script>
 
 <DateTimeInput
@@ -132,9 +142,14 @@
 
 <Popover
   bind:this={popover}
+  on:open
+  on:close
   on:open={onOpen}
   on:close={onClose}
   {anchor}
+  portalTarget={appendTo}
+  maxHeight={374}
+  maxWidth={296}
   align="left"
 >
   {#if isOpen}

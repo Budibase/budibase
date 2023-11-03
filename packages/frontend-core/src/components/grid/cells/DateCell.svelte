@@ -10,7 +10,7 @@
   export let readonly = false
   export let api
 
-  let flatpickr
+  let datePickerAPI
   let isOpen
 
   // Adding the 0- will turn a string like 00:00:00 into a valid ISO
@@ -41,7 +41,7 @@
   // Ensure we close flatpickr when unselected
   $: {
     if (!focused) {
-      flatpickr?.close()
+      datePickerAPI?.close()
     }
   }
 
@@ -52,8 +52,8 @@
   onMount(() => {
     api = {
       onKeyDown,
-      focus: () => flatpickr?.open(),
-      blur: () => flatpickr?.close(),
+      focus: () => datePickerAPI?.open(),
+      blur: () => datePickerAPI?.close(),
       isActive: () => isOpen,
     }
   })
@@ -75,12 +75,10 @@
     <CoreDatePicker
       {value}
       on:change={e => onChange(e.detail)}
-      appendTo={document.documentElement}
       enableTime={!dateOnly}
       {timeOnly}
-      time24hr
       ignoreTimezones={schema.ignoreTimezones}
-      bind:flatpickr
+      bind:api={datePickerAPI}
       on:open={() => (isOpen = true)}
       on:close={() => (isOpen = false)}
       useKeyboardShortcuts={false}
@@ -109,9 +107,6 @@
   .picker {
     position: absolute;
     opacity: 0;
-  }
-  .picker :global(.flatpickr) {
-    min-width: 0;
   }
   .picker :global(.spectrum-Textfield-input) {
     width: 100%;
