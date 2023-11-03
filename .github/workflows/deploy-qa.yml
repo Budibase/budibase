@@ -17,6 +17,6 @@ jobs:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
           client-payload: |-
             {
-              "PAYLOAD_VERSION": "${{ github.sha }}",
+              "VERSION": "${{ github.sha }}",
               "REF_NAME": "${{ github.ref_name}}"
             }
