@@ -57,8 +57,8 @@
       --spectrum-global-color-gray-600: rgb(144,144,144);
       --spectrum-global-color-gray-900: rgb(255,255,255);
       --spectrum-global-color-gray-800: rgb(227,227,227);
-      --spectrum-global-color-static-blue-600: rgb(20,115,230);
-      --spectrum-global-color-static-blue-hover: rgb(	18, 103, 207);
+      --bb-indigo: #6E56FF;
+      --bb-indigo-light: #9F8FFF;
     }
 
     html, body {
@@ -90,15 +90,8 @@
     .info {
       display: flex;
       flex-direction: column;
-      align-items: left;
+      align-items: flex-start;
     }
-
-    @media only screen and (max-width: 600px) {
-      .info {
-        align-items: center;
-      }
-    }
-
     .status {
       color: var(--spectrum-global-color-gray-600)
     }
@@ -113,13 +106,14 @@
     .buttons {
       display: flex;
       flex-direction: row;
+      justify-content: flex-start;
       margin-top: 15px;
     }
     .homeButton {
-      background-color: var(--spectrum-global-color-static-blue-600);
+      background-color: var(--bb-indigo);
     }
     .homeButton:hover {
-      background-color: var(--spectrum-global-color-static-blue-hover);
+      background-color: var(--bb-indigo-light);
     }
     .statusButton {
       background-color: transparent;
@@ -127,20 +121,30 @@
       border: none;
     }
     .hero {
-      height: 160px;
-      width: 160px;
-      margin-right: 80px;
+      height: 60px;
+      margin: 10px 40px 10px 0;
+    }
+    .hero img {
+      height: 100%;
     }
     .content {
       display: flex;
       flex-direction: row;
-      align-items: flex-end;
+      align-items: center;
       justify-content: center;
+      padding: 0 40px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    h3 {
+      margin-top: 0;
     }
 
     @media only screen and (max-width: 600px) {
       .content {
         flex-direction: column;
+        align-items: flex-start;
       }
     }
   </style>
@@ -152,16 +156,15 @@
     <div class="main">
       <div class="content">
         <div class="hero">
-          <img src="https://raw.githubusercontent.com/Budibase/budibase/master/packages/builder/assets/bb-space-man.svg" alt="Budibase Logo">
+          <img src="https://res.cloudinary.com/daog6scxm/image/upload/v1696515725/Branding/Assets/Symbol/RGB/Full%20Colour/Budibase_Symbol_RGB_FullColour_cbqvha_1_z5cwq2.svg" alt="Budibase Logo">
         </div>
         <div class="info">
           <div>
-            <h4 id="status" class="status"></h4>
+            <h4 id="status" class="status">&nbsp;</h4>
             <h1 class="title">
               Houston we have a problem!
             </h1>
-            <h3 id="message" class="message">
-            </h3>
+            <h3 id="message" class="message">&nbsp;</h3>
           </div>
           <div class="buttons">
             <button class="homeButton" onclick=goHome()>Return home</button> 

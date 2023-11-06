@@ -2,6 +2,15 @@
   --background: #ffffff;
   --ink: #000000;
 
+  /* Brand colours */
+  --bb-coral: #FF4E4E;
+  --bb-coral-light: #F97777;
+  --bb-indigo: #6E56FF;
+  --bb-indigo-light: #9F8FFF;
+  --bb-lime: #ECFFB5;
+  --bb-forest-green: #053835;
+  --bb-beige: #F6EFEA;
+
   --grey-1: #fafafa;
   --grey-2: #f5f5f5;
   --grey-3: #eeeeee;
