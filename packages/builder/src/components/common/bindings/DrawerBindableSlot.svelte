@@ -206,12 +206,12 @@
   .text-area-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
     border-bottom-right-radius: 0px !important;
-    top: 26px !important;
+    top: 1px !important;
   }
   .json-slot-icon {
     border-bottom: 1px solid var(--spectrum-alias-border-color);
     border-bottom-right-radius: 0px !important;
-    top: 23px !important;
+    top: 1px !important;
     right: 0px !important;
   }
 

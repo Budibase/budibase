@@ -60,6 +60,7 @@
 <ModalContent
   title="Add test data"
   confirmText="Test"
+  size="M"
   showConfirmButton={true}
   disabled={isError}
   onConfirm={testAutomation}
