@@ -23,7 +23,9 @@
     </div>
   </ModalContent>
 </Modal>
-<Button primary on:click={show}>Edit Code</Button>
+<div class="center">
+  <Button primary on:click={show}>Edit Code</Button>
+</div>
 
 <style>
   .container :global(section > header) {
@@ -32,5 +34,10 @@
   }
   .container :global(textarea) {
     min-height: 60px;
+  }
+
+  .center {
+    display: flex;
+    justify-content: center;
   }
 </style>
