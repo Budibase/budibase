@@ -47,7 +47,7 @@ export const TYPE_TRANSFORM_MAP: any = {
   },
   [FieldTypes.STRING]: {
     "": "",
-    [null]: "",
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.BARCODEQR]: {

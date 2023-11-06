@@ -111,25 +111,25 @@ export function processAutoColumn(
 
 /**
  * This will coerce a value to the correct types based on the type transform map
- * @param row The value to coerce
+ * @param value The value to coerce
  * @param type The type fo coerce to
  * @returns The coerced value
  */
-export function coerce(row: any, type: string) {
+export function coerce(value: any, type: string) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
-    return row
+    return value
   }
   // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
+  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(value)) {
     // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type][row]
+    return TYPE_TRANSFORM_MAP[type][value]
   } else if (TYPE_TRANSFORM_MAP[type].parse) {
     // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type].parse(row)
+    return TYPE_TRANSFORM_MAP[type].parse(value)
   }
 
-  return row
+  return value
 }
 
 /**
@@ -148,7 +148,6 @@ export async function inputProcessing(
   opts?: AutoColumnProcessingOpts
 ) {
   let clonedRow = cloneDeep(row)
-
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
