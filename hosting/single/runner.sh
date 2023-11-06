@@ -77,7 +77,7 @@ mkdir -p ${DATA_DIR}/minio
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
 /bbcouch-runner.sh &
-minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
+/minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     # Add monthly cron job to renew certbot certificate

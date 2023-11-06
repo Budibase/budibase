@@ -49,7 +49,12 @@ describe.each([
   let table: Table
   let tableId: string
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    if (dsProvider) {
+      await dsProvider.stopContainer()
+    }
+    setup.afterAll()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -521,20 +526,17 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await config.api.row.patch(table._id!, {
+      const row = await config.api.row.patch(table._id!, {
         _id: existing._id!,
         _rev: existing._rev!,
         tableId: table._id!,
         name: "Updated Name",
       })
 
-      expect((res as any).res.statusMessage).toEqual(
-        `${table.name} updated successfully.`
-      )
-      expect(res.body.name).toEqual("Updated Name")
-      expect(res.body.description).toEqual(existing.description)
+      expect(row.name).toEqual("Updated Name")
+      expect(row.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(res.body._id, table._id!)
+      const savedRow = await loadRow(row._id!, table._id!)
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
