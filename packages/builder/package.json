@@ -90,7 +90,7 @@
     "@testing-library/svelte": "^3.2.2",
     "babel-jest": "^29.6.2",
     "identity-obj-proxy": "^3.0.0",
-    "jest": "29.6.2",
+    "jest": "29.7.0",
     "jsdom": "^21.1.1",
     "ncp": "^2.0.0",
     "svelte": "^3.49.0",
