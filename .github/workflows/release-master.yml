@@ -165,17 +165,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Get the current budibase release version
-        id: version
-        run: |
-          release_version=$(cat lerna.json | jq -r '.version')
-          echo "RELEASE_VERSION=$release_version" >> $GITHUB_ENV
 
-      - uses: passeidireto/trigger-external-workflow-action@main
-        env:
-          PAYLOAD_VERSION: ${{ env.RELEASE_VERSION }}
-          REF_NAME: ${{ github.ref_name}}
+      - uses: peter-evans/repository-dispatch@v2
         with:
           repository: budibase/budibase-deploys
-          event: budicloud-qa-deploy
-          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
+          event-type: budicloud-qa-deploy
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          client-payload: |-
+            {
+              "VERSION": "${{ github.ref_name }}",
+              "REF_NAME": "${{ github.ref_name}}"
+            }
