@@ -3,7 +3,6 @@ import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore } from "stores/builder/history"
-import { selectedAutomation } from "stores/builder"
 import { notifications } from "@budibase/bbui"
 
 const initialAutomationState = {
