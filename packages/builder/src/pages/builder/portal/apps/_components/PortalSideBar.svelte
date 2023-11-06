@@ -9,12 +9,18 @@
   let searchString
   let searching = false
 
-  $: filteredApps = $apps.filter(app => {
-    return (
-      !searchString ||
-      app.name.toLowerCase().includes(searchString.toLowerCase())
-    )
-  })
+  $: filteredApps = $apps
+    .filter(app => {
+      return (
+        !searchString ||
+        app.name.toLowerCase().includes(searchString.toLowerCase())
+      )
+    })
+    .sort((a, b) => {
+      const lowerA = a.name.toLowerCase()
+      const lowerB = b.name.toLowerCase()
+      return lowerA > lowerB ? 1 : -1
+    })
 
   const startSearching = async () => {
     searching = true
