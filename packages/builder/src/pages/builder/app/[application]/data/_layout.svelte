@@ -3,7 +3,6 @@
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
-  import BetaButton from "./_components/BetaButton.svelte"
   import { datasources } from "stores/backend"
 
   $: {
@@ -30,7 +29,6 @@
   <div class="content">
     <slot />
   </div>
-  <BetaButton />
 </div>
 
 <style>
