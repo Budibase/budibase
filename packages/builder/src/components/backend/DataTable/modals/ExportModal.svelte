@@ -17,6 +17,8 @@
   export let selectedRows = []
   export let formats
 
+  $: appliedFilters = filters?.filter(filter => !filter.onEmptyFilter)
+
   const FORMATS = [
     {
       name: "CSV",
@@ -46,8 +48,12 @@
     exportFormat = Array.isArray(options) ? options[0]?.key : []
   }
 
-  $: luceneFilter = LuceneUtils.buildLuceneQuery(filters)
-  $: exportOpDisplay = buildExportOpDisplay(sorting, filterDisplay, filters)
+  $: luceneFilter = LuceneUtils.buildLuceneQuery(appliedFilters)
+  $: exportOpDisplay = buildExportOpDisplay(
+    sorting,
+    filterDisplay,
+    appliedFilters
+  )
 
   const buildFilterLookup = () => {
     return Object.keys(Constants.OperatorOptions).reduce((acc, key) => {
@@ -59,10 +65,10 @@
   filterLookup = buildFilterLookup()
 
   const filterDisplay = () => {
-    if (!filters) {
+    if (!appliedFilters) {
       return []
     }
-    return filters.map(filter => {
+    return appliedFilters.map(filter => {
       let newFieldName = filter.field + ""
       const parts = newFieldName.split(":")
       parts.shift()
@@ -77,7 +83,7 @@
 
   const buildExportOpDisplay = (sorting, filterDisplay) => {
     let filterDisplayConfig = filterDisplay()
-    if (sorting) {
+    if (sorting?.sortColumn) {
       filterDisplayConfig = [
         ...filterDisplayConfig,
         {
@@ -132,7 +138,7 @@
         format: exportFormat,
       })
       downloadWithBlob(data, `export.${exportFormat}`)
-    } else if (filters || sorting) {
+    } else if (appliedFilters || sorting) {
       let response
       try {
         response = await API.exportRows({
@@ -163,16 +169,16 @@
   title="Export Data"
   confirmText="Export"
   onConfirm={exportRows}
-  size={filters?.length || sorting ? "M" : "S"}
+  size={appliedFilters?.length || sorting ? "M" : "S"}
 >
   {#if selectedRows?.length}
     <Body size="S">
       <strong>{selectedRows?.length}</strong>
       {`row${selectedRows?.length > 1 ? "s" : ""} will be exported`}
     </Body>
-  {:else if filters || (sorting?.sortOrder && sorting?.sortColumn)}
+  {:else if appliedFilters?.length || (sorting?.sortOrder && sorting?.sortColumn)}
     <Body size="S">
-      {#if !filters}
+      {#if !appliedFilters}
         Exporting <strong>all</strong> rows
       {:else}
         Filters applied
@@ -183,9 +189,9 @@
       <Table
         schema={displaySchema}
         data={exportOpDisplay}
-        {filters}
+        {appliedFilters}
         loading={false}
-        rowCount={filters?.length + 1}
+        rowCount={appliedFilters?.length + 1}
         disableSorting={true}
         allowSelectRows={false}
         allowEditRows={false}
