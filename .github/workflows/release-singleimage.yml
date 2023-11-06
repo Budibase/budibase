@@ -4,7 +4,6 @@ on:
   workflow_dispatch:
 
 env:
-  CI: true
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   REGISTRY_URL: registry.hub.docker.com
 jobs:
