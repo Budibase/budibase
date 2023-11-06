@@ -91,7 +91,6 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    gap: var(--spacing-l);
     overflow: auto;
   }
   .centered {
