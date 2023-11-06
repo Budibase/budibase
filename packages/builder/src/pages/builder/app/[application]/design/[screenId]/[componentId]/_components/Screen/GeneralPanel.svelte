@@ -10,7 +10,7 @@
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, screenStore } from "stores/frontend"
+  import { selectedScreen, screenStore } from "stores/builder"
   import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builder/dataBinding"

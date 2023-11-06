@@ -1,7 +1,7 @@
 <script>
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
 
   export let name
   export let properties

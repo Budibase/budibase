@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { API } from "api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
   import { capitalise } from "../../helpers"

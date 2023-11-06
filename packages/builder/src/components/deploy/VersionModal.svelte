@@ -7,7 +7,7 @@
     Button,
     StatusLight,
   } from "@budibase/bbui"
-  import { appStore, initialise } from "stores/frontend"
+  import { appStore, initialise } from "stores/builder"
   import { API } from "api"
 
   export function show() {

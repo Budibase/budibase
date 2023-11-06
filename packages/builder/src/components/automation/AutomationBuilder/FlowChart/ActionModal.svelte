@@ -9,7 +9,7 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/frontend"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"

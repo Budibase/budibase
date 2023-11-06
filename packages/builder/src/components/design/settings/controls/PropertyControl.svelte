@@ -4,7 +4,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builder/dataBinding"
-  import { builderStore } from "stores/frontend"
+  import { builderStore } from "stores/builder"
   import { onDestroy } from "svelte"
 
   export let label = ""

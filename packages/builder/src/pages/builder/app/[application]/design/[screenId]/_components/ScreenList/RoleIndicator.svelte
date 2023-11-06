@@ -1,7 +1,7 @@
 <script>
   import { RoleUtils } from "@budibase/frontend-core"
   import { Tooltip, StatusLight } from "@budibase/bbui"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
 
   export let roleId

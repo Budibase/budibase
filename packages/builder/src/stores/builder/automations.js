@@ -2,7 +2,7 @@ import { writable, get, derived } from "svelte/store"
 import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { createHistoryStore } from "stores/frontend/history"
+import { createHistoryStore } from "stores/builder/history"
 
 const initialAutomationState = {
   automations: [],

@@ -1,5 +1,5 @@
 <script>
-  import { screenStore, componentStore } from "stores/frontend"
+  import { screenStore, componentStore } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ActionMenu,
@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
-  import { makeComponentUnique } from "stores/frontend/components/utils"
+  import { makeComponentUnique } from "stores/builder/components/utils"
 
   export let screenId
 

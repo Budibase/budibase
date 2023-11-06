@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset } from "stores/frontend"
-  import { findAllMatchingComponents } from "stores/frontend/components/utils"
+  import { currentAsset } from "stores/builder"
+  import { findAllMatchingComponents } from "stores/builder/components/utils"
 
   export let parameters
 

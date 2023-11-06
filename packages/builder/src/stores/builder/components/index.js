@@ -14,9 +14,9 @@ import {
   makeComponentUnique,
 } from "../components/utils"
 import { getComponentFieldOptions } from "helpers/formFields"
-import { tables } from "stores/backend"
+import { tables } from "stores/builder"
 import { selectedScreen } from "../screens"
-import { screenStore, appStore, previewStore } from "stores/frontend"
+import { screenStore, appStore, previewStore } from "stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "builder/dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
@@ -89,10 +89,6 @@ export class ComponentStore extends BudiStore {
         ).map(component => component._id)
       }
     )
-
-    this.subscribe(state => {
-      console.log("debug ", state)
-    })
   }
 
   /**

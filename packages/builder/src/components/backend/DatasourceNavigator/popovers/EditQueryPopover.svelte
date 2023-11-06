@@ -2,7 +2,7 @@
   import { goto } from "@roxi/routify"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { datasources, queries } from "stores/backend"
+  import { datasources, queries } from "stores/builder"
 
   export let query
 

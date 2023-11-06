@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { builderStore } from "stores/frontend"
+import { builderStore } from "stores/builder"
 import { auth } from "stores/portal"
 import analytics from "analytics"
 import { OnboardingData, OnboardingDesign, OnboardingPublish } from "./steps"

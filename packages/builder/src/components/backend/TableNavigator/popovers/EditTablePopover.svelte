@@ -1,8 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/backend"
-  import { screenStore } from "stores/frontend"
+  import { tables, datasources, screenStore } from "stores/builder"
   import {
     ActionMenu,
     Icon,

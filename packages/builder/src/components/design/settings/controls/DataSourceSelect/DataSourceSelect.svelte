@@ -18,14 +18,16 @@
     notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { currentAsset, componentStore } from "stores/frontend"
   import {
     tables as tablesStore,
     queries as queriesStore,
     viewsV2 as viewsV2Store,
     views as viewsStore,
-  } from "stores/backend"
-  import { datasources, integrations } from "stores/backend"
+    currentAsset,
+    componentStore,
+    datasources,
+    integrations,
+  } from "stores/builder"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"

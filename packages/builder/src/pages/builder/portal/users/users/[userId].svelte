@@ -19,7 +19,7 @@
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
   import { users, auth, groups, apps, licensing, features } from "stores/portal"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"

@@ -1,6 +1,6 @@
 <script>
   import { Input, Modal, notifications, ModalContent } from "@budibase/bbui"
-  import { appStore, initialise } from "stores/frontend"
+  import { appStore, initialise } from "stores/builder"
   import { API } from "api"
 
   export let onComplete = () => {}

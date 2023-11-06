@@ -1,5 +1,5 @@
 <script>
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { Select, Checkbox } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"

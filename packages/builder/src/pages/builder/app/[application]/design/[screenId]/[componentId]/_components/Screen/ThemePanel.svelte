@@ -7,7 +7,7 @@
     Icon,
     Body,
   } from "@budibase/bbui"
-  import { themeStore, appStore } from "stores/frontend"
+  import { themeStore, appStore } from "stores/builder"
   import { DefaultAppTheme } from "constants"
   import AppThemeSelect from "./AppThemeSelect.svelte"
   import ButtonRoundnessSelect from "./ButtonRoundnessSelect.svelte"

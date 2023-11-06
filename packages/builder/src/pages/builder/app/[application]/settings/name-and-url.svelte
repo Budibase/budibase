@@ -10,7 +10,7 @@
     Icon,
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
-  import { appStore, initialise } from "stores/frontend"
+  import { appStore, initialise } from "stores/builder"
   import { apps } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import { API } from "api"

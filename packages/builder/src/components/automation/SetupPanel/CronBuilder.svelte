@@ -1,7 +1,7 @@
 <script>
   import { Button, Select, Input, Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { flags } from "stores/backend"
+  import { flags } from "stores/builder"
   const dispatch = createEventDispatcher()
 
   export let value

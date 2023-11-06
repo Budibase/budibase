@@ -1,11 +1,10 @@
 <script>
-  import { currentAsset } from "stores/frontend"
-  import { findClosestMatchingComponent } from "stores/frontend/components/utils"
+  import { findClosestMatchingComponent } from "stores/builder/components/utils"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builder/dataBinding"
-  import { tables } from "stores/backend"
+  import { tables, currentAsset } from "stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 
   export let componentInstance

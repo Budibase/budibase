@@ -16,7 +16,7 @@
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
   import { sdk } from "@budibase/shared-core"
-  import { automationStore, initialise } from "stores/frontend"
+  import { automationStore, initialise } from "stores/builder"
   import { API } from "api"
   import { onMount } from "svelte"
   import { apps, auth, admin, licensing, environment } from "stores/portal"

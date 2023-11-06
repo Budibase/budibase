@@ -5,7 +5,7 @@
   import { cloneDeep } from "lodash/fp"
   import { runtimeToReadableBinding } from "builder/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
 
   export let item
   export let componentBindings

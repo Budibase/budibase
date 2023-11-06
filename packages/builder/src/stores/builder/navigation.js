@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { API } from "api"
-import { appStore } from "stores/frontend"
+import { appStore } from "stores/builder"
 import BudiStore from "./BudiStore"
 
 export const INITIAL_NAVIGATION_STATE = {

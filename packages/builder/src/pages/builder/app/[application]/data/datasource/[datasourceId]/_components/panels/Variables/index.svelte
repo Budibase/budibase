@@ -4,7 +4,7 @@
   import ViewDynamicVariables from "./ViewDynamicVariables.svelte"
   import { getEnvironmentBindings } from "builder/dataBinding"
   import { licensing } from "stores/portal"
-  import { queries } from "stores/backend"
+  import { queries } from "stores/builder"
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "../SaveDatasourceButton.svelte"
   import Panel from "../Panel.svelte"

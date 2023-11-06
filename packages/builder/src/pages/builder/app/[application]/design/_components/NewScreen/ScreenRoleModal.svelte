@@ -1,9 +1,9 @@
 <script>
   import { Select, ModalContent } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { get } from "svelte/store"
-  import { screenStore } from "stores/frontend"
+  import { screenStore } from "stores/builder"
   import { onMount } from "svelte"
 
   export let onConfirm

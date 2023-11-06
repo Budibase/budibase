@@ -14,7 +14,7 @@
     Table,
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin } from "stores/portal"
-  import { appStore } from "stores/frontend"
+  import { appStore } from "stores/builder"
   import { createPaginationStore } from "helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"

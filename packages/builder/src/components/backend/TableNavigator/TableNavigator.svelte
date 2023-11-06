@@ -1,12 +1,16 @@
 <script>
-  import { tables, views, viewsV2 } from "stores/backend"
+  import {
+    tables,
+    views,
+    viewsV2,
+    userSelectedResourceMap,
+    database,
+  } from "stores/builder"
   import { TableNames } from "constants"
   import EditTablePopover from "./popovers/EditTablePopover.svelte"
   import EditViewPopover from "./popovers/EditViewPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { goto, isActive } from "@roxi/routify"
-  import { userSelectedResourceMap } from "stores/frontend"
-  import { database } from "stores/frontend/database"
 
   export let sourceId
   export let selectTable

@@ -1,14 +1,13 @@
 <script>
   import {
-    initialise as initFrontend,
-    reset as resetFrontend,
+    initialise,
+    reset,
     appStore,
     builderStore,
     previewStore,
     userStore,
     deploymentStore,
-  } from "stores/frontend"
-  import { initialise as initBackend } from "stores/backend"
+  } from "stores/builder"
   import { auth, apps } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
@@ -48,11 +47,10 @@
 
   async function getPackage() {
     try {
-      resetFrontend()
+      reset()
 
       const pkg = await API.fetchAppPackage(application)
-      await initFrontend(pkg)
-      await initBackend()
+      await initialise(pkg)
 
       await apps.load()
       await deploymentStore.load()
@@ -120,7 +118,7 @@
   onDestroy(() => {
     // Run async on a slight delay to let other cleanup logic run without
     // being confused by the store wiping
-    setTimeout(resetFrontend, 10)
+    setTimeout(reset, 10)
   })
 </script>
 

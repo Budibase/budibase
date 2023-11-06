@@ -1,6 +1,6 @@
 import * as ActionComponents from "./actions"
 import { get } from "svelte/store"
-import { appStore } from "stores/frontend"
+import { appStore } from "stores/builder"
 // @ts-ignore
 import ActionDefinitions from "./manifest.json"
 

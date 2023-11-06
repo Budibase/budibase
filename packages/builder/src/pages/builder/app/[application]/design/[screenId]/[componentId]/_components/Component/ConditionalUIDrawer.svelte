@@ -13,10 +13,10 @@
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
-  import { selectedComponent } from "stores/frontend"
+  import { selectedComponent } from "stores/builder"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import { getComponentSettings } from "stores/frontend/components/utils"
+  import { getComponentSettings } from "stores/builder/components/utils"
 
   export let conditions = []
   export let bindings = []

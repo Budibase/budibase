@@ -4,8 +4,7 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builder/dataBinding"
-  import { currentAsset } from "stores/frontend"
-  import { tables } from "stores/backend"
+  import { currentAsset, tables } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { getFields } from "helpers/searchFields"
 

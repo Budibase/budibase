@@ -6,7 +6,7 @@
     getSchemaForDatasource,
   } from "builder/dataBinding"
   import FilterDrawer from "./FilterDrawer.svelte"
-  import { currentAsset } from "stores/frontend"
+  import { currentAsset } from "stores/builder"
 
   const dispatch = createEventDispatcher()
 

@@ -4,8 +4,8 @@
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/frontend"
-  import { findComponent } from "stores/frontend/components/utils"
+  } from "stores/builder"
+  import { findComponent } from "stores/builder/components/utils"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

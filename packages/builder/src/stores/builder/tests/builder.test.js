@@ -1,6 +1,6 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get } from "svelte/store"
-import { INITIAL_BUILDER_STATE, BuilderStore } from "stores/frontend/builder"
+import { INITIAL_BUILDER_STATE, BuilderStore } from "stores/builder/builder"
 import { createBuilderWebsocket } from "../websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 
@@ -197,12 +197,10 @@ describe("Builder store", () => {
     const fakeNode = { name: "node" }
     ctx.test.builderStore.registerTourNode("sampleKey", fakeNode)
 
-    const registeredNodes = ctx.test.store.tourNodes
-
-    expect(registeredNodes).not.toBeNull()
-    expect(Object.keys(registeredNodes).length).toBe(1)
+    expect(ctx.test.store.tourNodes).not.toBeNull()
+    expect(Object.keys(ctx.test.store.tourNodes).length).toBe(1)
 
     ctx.test.builderStore.destroyTourNode("sampleKey")
-    expect(registeredNodes).toBe({})
+    expect(ctx.test.store.tourNodes).toStrictEqual({})
   })
 })

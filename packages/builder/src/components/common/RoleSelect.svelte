@@ -1,6 +1,6 @@
 <script>
   import { Select, FancySelect } from "@budibase/bbui"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { licensing } from "stores/portal"
 
   import { Constants, RoleUtils } from "@budibase/frontend-core"

@@ -1,7 +1,7 @@
 <script>
   import { StatusLight } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { Constants } from "@budibase/frontend-core"
   import { capitalise } from "helpers"
 

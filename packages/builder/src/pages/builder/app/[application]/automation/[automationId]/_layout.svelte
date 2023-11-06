@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "stores/frontend"
+  import { automationStore } from "stores/builder"
   import { params } from "@roxi/routify"
 
   if ($params.automation) {

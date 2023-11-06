@@ -5,7 +5,7 @@
     sortedScreens,
     userSelectedResourceMap,
     screensHeight,
-  } from "stores/frontend"
+  } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"

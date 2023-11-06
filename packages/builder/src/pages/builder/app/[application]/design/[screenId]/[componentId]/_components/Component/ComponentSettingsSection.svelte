@@ -1,7 +1,7 @@
 <script>
   import { helpers } from "@budibase/shared-core"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"

@@ -2,8 +2,8 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import { get, writable } from "svelte/store"
 import { API } from "api"
 import { Constants } from "@budibase/frontend-core"
-import { componentStore, appStore } from "stores/frontend"
-import { INITIAL_SCREENS_STATE, ScreenStore } from "stores/frontend/screens"
+import { componentStore, appStore } from "stores/builder"
+import { INITIAL_SCREENS_STATE, ScreenStore } from "stores/builder/screens"
 import {
   getScreenFixture,
   getComponentFixture,
@@ -15,9 +15,10 @@ import {
 
 const COMP_PREFIX = "@budibase/standard-components"
 
-vi.mock("stores/frontend", async () => {
+vi.mock("stores/builder", async () => {
   const mockAppStore = writable()
   const mockComponentStore = writable()
+  const mockLayoutStore = writable()
 
   const componentStore = {
     getDefinition: vi.fn(),
@@ -40,10 +41,14 @@ vi.mock("stores/frontend", async () => {
     componentStore,
     appStore,
     navigationStore,
+    layoutStore: {
+      update: mockLayoutStore.update,
+      subscribe: mockComponentStore.subscribe,
+    },
   }
 })
 
-vi.mock("stores/frontend/components/utils", () => {
+vi.mock("stores/builder/components/utils", () => {
   return {
     findAllMatchingComponents: vi.fn().mockImplementation(() => {
       return []

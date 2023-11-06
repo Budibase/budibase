@@ -1,7 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables } from "stores/backend"
-  import { roles } from "stores/backend"
+  import { tables, roles } from "stores/builder"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"

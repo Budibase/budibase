@@ -1,5 +1,5 @@
 <script>
-  import { automationStore, selectedAutomation } from "stores/frontend"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import {
     Icon,
     Divider,
@@ -21,7 +21,7 @@
     TriggerStepID,
     Features,
   } from "constants/backend/automations"
-  import { permissions } from "stores/backend"
+  import { permissions } from "stores/builder"
 
   export let block
   export let testDataModal

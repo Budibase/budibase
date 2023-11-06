@@ -4,7 +4,7 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builder/dataBinding"
-  import { currentAsset } from "stores/frontend"
+  import { currentAsset } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { canBeSortColumn } from "@budibase/shared-core"
 

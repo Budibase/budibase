@@ -9,7 +9,7 @@
     Detail,
     Body,
   } from "@budibase/bbui"
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { Helpers } from "@budibase/bbui"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"

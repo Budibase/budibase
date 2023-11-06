@@ -1,6 +1,6 @@
 <script>
   import { Icon, notifications } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "stores/frontend"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import WebhookDisplay from "./WebhookDisplay.svelte"
   import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"

@@ -1,7 +1,6 @@
 <script>
   import TableDataTable from "components/backend/DataTable/TableDataTable.svelte"
-  import { tables } from "stores/backend"
-  import { database } from "stores/frontend/database"
+  import { tables, database } from "stores/builder"
   import { Banner } from "@budibase/bbui"
 
   const verifyAutocolumns = table => {

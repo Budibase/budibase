@@ -1,5 +1,5 @@
 <script>
-  import { layoutStore } from "stores/frontend"
+  import { layoutStore } from "stores/builder"
   import { Select } from "@budibase/bbui"
 
   export let value

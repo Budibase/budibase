@@ -1,6 +1,6 @@
 <script>
   import { Layout, Heading, Body, Divider, Button } from "@budibase/bbui"
-  import { isOnlyUser, appStore } from "stores/frontend"
+  import { isOnlyUser, appStore } from "stores/builder"
   import VersionModal from "components/deploy/VersionModal.svelte"
 
   let versionModal
