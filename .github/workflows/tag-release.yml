@@ -46,7 +46,7 @@ jobs:
           ./versionCommit.sh $BUMP_TYPE
 
 
-          new_version=$(./scripts/getCurrentVersion.sh)
+          new_version=$(./getCurrentVersion.sh)
           echo "version=$new_version" >> $GITHUB_OUTPUT
 
   trigger-release:

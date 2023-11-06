@@ -3599,6 +3599,22 @@
         }
       },
       {
+        "type": "select",
+        "label": "Preferred camera",
+        "key": "preferredCamera",
+        "defaultValue": "environment",
+        "options": [
+          {
+            "label": "Front",
+            "value": "user"
+          },
+          {
+            "label": "Back",
+            "value": "environment"
+          }
+        ]
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
