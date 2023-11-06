@@ -36,7 +36,7 @@ class InMemoryQueue {
    * @param opts This is not used by the in memory queue as there is no real use
    * case when in memory, but is the same API as Bull
    */
-  constructor(name: string, opts?: any) {
+  constructor(name: string, opts = null) {
     this._name = name
     this._opts = opts
     this._messages = []
