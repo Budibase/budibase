@@ -8,7 +8,7 @@
   export let type = "text"
   export let disabled = false
   export let validation
-  export let defaultValue = ""
+  export let defaultValue
   export let align
   export let onChange
 
