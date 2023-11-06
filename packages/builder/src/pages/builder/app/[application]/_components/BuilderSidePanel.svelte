@@ -14,7 +14,7 @@
     Button,
     FancySelect,
   } from "@budibase/bbui"
-  import { builderStore, appStore } from "stores/frontend"
+  import { builderStore, appStore } from "stores/builder"
   import { groups, licensing, apps, users, auth, admin } from "stores/portal"
   import {
     fetchData,
@@ -28,7 +28,7 @@
   import RoleSelect from "components/common/RoleSelect.svelte"
   import UpgradeModal from "components/common/users/UpgradeModal.svelte"
   import { emailValidator } from "helpers/validation"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { fly } from "svelte/transition"
 
   let query = null

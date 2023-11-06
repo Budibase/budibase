@@ -10,7 +10,7 @@
     navigationStore,
     selectedScreen,
     currentAsset,
-  } from "stores/frontend"
+  } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -24,7 +24,7 @@
   import {
     findComponent,
     findComponentPath,
-  } from "stores/frontend/components/utils"
+  } from "stores/builder/components/utils"
   import { isActive, goto } from "@roxi/routify"
 
   let iframe

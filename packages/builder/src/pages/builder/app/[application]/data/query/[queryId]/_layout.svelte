@@ -1,9 +1,9 @@
 <script>
-  import { queries } from "stores/backend"
+  import { queries } from "stores/builder"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { builderStore } from "stores/frontend"
+  import { builderStore } from "stores/builder"
 
   $: queryId = $queries.selectedQueryId
   $: builderStore.selectResource(queryId)

@@ -8,10 +8,10 @@
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/frontend"
+  } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
-  import { findComponentPath } from "stores/frontend/components/utils"
+  import { findComponentPath } from "stores/builder/components/utils"
 
   let searchString
   let searchRef

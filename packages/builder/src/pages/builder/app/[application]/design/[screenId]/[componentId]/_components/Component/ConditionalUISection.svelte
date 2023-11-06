@@ -6,7 +6,7 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
   import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
 
   export let componentInstance

@@ -1,8 +1,8 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
-  import { currentAsset, componentStore } from "stores/frontend"
-  import { findComponentPath } from "stores/frontend/components/utils"
+  import { currentAsset, componentStore } from "stores/builder"
+  import { findComponentPath } from "stores/builder/components/utils"
 
   export let value
 

@@ -1,5 +1,5 @@
 <script>
-  import { screenStore } from "stores/frontend"
+  import { screenStore } from "stores/builder"
   import { onMount } from "svelte"
   import { Label, Checkbox, Select } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"

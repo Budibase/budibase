@@ -1,7 +1,6 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import { currentAsset, componentStore } from "stores/frontend"
-  import { tables, viewsV2 } from "stores/backend"
+  import { currentAsset, componentStore, tables, viewsV2 } from "stores/builder"
   import {
     getContextProviderComponents,
     getSchemaForDatasourcePlus,

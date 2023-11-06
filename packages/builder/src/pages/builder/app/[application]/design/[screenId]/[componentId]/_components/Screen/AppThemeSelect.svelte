@@ -1,6 +1,6 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { themeStore, appStore } from "stores/frontend"
+  import { themeStore, appStore } from "stores/builder"
   import { Constants } from "@budibase/frontend-core"
 
   const onChangeTheme = async theme => {

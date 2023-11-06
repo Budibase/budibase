@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable, get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import BudiStore from "./BudiStore"
@@ -18,6 +18,9 @@ export const INITIAL_BUILDER_STATE = {
 export class BuilderStore extends BudiStore {
   constructor() {
     super({ ...INITIAL_BUILDER_STATE })
+
+    this.destroyTourNode = this.destroyTourNode.bind(this)
+
     this.websocket
   }
 
@@ -99,13 +102,13 @@ export class BuilderStore extends BudiStore {
   }
 
   destroyTourNode(tourStepKey) {
-    if (this.tourNodes[tourStepKey]) {
+    const store = get(this.store)
+    if (store.tourNodes?.[tourStepKey]) {
+      const nodes = { ...store.tourNodes }
+      delete nodes[tourStepKey]
       this.update(state => ({
         ...state,
-        tourNodes: {
-          [tourStepKey]: _,
-          ...this.tourNodes,
-        },
+        tourNodes: nodes,
       }))
     }
   }

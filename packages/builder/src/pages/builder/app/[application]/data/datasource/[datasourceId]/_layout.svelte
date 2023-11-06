@@ -1,10 +1,9 @@
 <script>
   import { params } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources, builderStore } from "stores/builder"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { builderStore } from "stores/frontend"
 
   $: datasourceId = $datasources.selectedDatasourceId
   $: builderStore.selectResource(datasourceId)

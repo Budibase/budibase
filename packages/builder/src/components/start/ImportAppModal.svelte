@@ -9,7 +9,7 @@
     Body,
   } from "@budibase/bbui"
   import { API } from "api"
-  import { initialise } from "stores/frontend"
+  import { initialise } from "stores/builder"
 
   export let app
 

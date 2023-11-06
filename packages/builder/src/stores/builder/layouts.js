@@ -1,5 +1,5 @@
 import { derived, get } from "svelte/store"
-import { componentStore } from "stores/frontend"
+import { componentStore } from "stores/builder"
 import BudiStore from "./BudiStore"
 import { API } from "api"
 

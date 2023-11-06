@@ -1,6 +1,6 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset, componentStore } from "stores/frontend"
+  import { currentAsset, componentStore } from "stores/builder"
   import { getActionProviderComponents } from "builder/dataBinding"
 
   export let parameters

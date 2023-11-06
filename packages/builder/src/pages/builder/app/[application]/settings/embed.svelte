@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
   import { apps } from "stores/portal"
-  import { appStore } from "stores/frontend"
+  import { appStore } from "stores/builder"
 
   $: filteredApps = $apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}

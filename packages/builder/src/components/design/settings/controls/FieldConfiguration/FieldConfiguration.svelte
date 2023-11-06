@@ -8,7 +8,7 @@
   } from "builder/dataBinding"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { selectedScreen, currentAsset, componentStore } from "stores/frontend"
+  import { selectedScreen, currentAsset, componentStore } from "stores/builder"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 

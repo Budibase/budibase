@@ -1,7 +1,7 @@
 <script>
   import { ActionButton, notifications } from "@budibase/bbui"
   import CreateEditRelationshipModal from "../../Datasources/CreateEditRelationshipModal.svelte"
-  import { datasources } from "../../../../stores/backend"
+  import { datasources } from "stores/builder"
   import { createEventDispatcher } from "svelte"
 
   export let table

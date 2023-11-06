@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries } from "stores/builder"
   import {
     Icon,
     Select,

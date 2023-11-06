@@ -3,7 +3,7 @@
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
   import { Helpers } from "@budibase/bbui"
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
 
   export let componentBindings
   export let bindings

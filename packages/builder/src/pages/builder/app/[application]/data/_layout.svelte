@@ -4,7 +4,7 @@
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
   import BetaButton from "./_components/BetaButton.svelte"
-  import { datasources } from "stores/backend"
+  import { datasources } from "stores/builder"
 
   $: {
     // If we ever don't have any data other than the users table, prompt the

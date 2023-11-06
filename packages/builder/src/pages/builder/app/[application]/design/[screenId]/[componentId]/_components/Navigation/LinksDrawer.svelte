@@ -10,7 +10,7 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
-  import { screenStore } from "stores/frontend"
+  import { screenStore } from "stores/builder"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
 
   export let links = []

@@ -2,7 +2,7 @@
   import { ModalContent, Input } from "@budibase/bbui"
   import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
   import { get } from "svelte/store"
-  import { screenStore } from "stores/frontend"
+  import { screenStore } from "stores/builder"
 
   export let onConfirm
   export let onCancel

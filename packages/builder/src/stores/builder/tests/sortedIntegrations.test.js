@@ -1,15 +1,15 @@
 import { it, expect, describe, beforeEach, vi } from "vitest"
-import { createSortedIntegrationsStore } from "./sortedIntegrations"
+import { createSortedIntegrationsStore } from "stores/builder/sortedIntegrations"
 import { DatasourceTypes } from "constants/backend"
 
 import { derived } from "svelte/store"
-import { integrations } from "stores/backend/integrations"
+import { integrations } from "stores/builder/integrations"
 
 vi.mock("svelte/store", () => ({
   derived: vi.fn(() => {}),
 }))
 
-vi.mock("stores/backend/integrations", () => ({ integrations: vi.fn() }))
+vi.mock("stores/builder/integrations", () => ({ integrations: vi.fn() }))
 
 const inputA = {
   nonRelationalA: {

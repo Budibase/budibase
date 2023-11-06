@@ -7,7 +7,7 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builder/dataBinding"
-  import { currentAsset } from "stores/frontend"
+  import { currentAsset } from "stores/builder"
   import { getFields } from "helpers/searchFields"
 
   export let componentInstance

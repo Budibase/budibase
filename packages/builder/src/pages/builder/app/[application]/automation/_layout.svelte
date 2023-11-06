@@ -11,7 +11,7 @@
     builderStore,
     automationStore,
     selectedAutomation,
-  } from "stores/frontend"
+  } from "stores/builder"
 
   $: automationId = $selectedAutomation?._id
   $: builderStore.selectResource(automationId)

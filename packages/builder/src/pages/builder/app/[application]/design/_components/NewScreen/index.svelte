@@ -5,7 +5,7 @@
   import tableImage from "./table.png"
   import gridImage from "./grid.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { screenStore } from "stores/frontend"
+  import { screenStore } from "stores/builder"
 
   export let onClose = null
 

@@ -86,17 +86,13 @@ export const generateFakeRoutes = screens => {
   }
 }
 
-// Context
-// export const screenStoreFixture = test.extend({
-//   screamStore: createScreenStore(),
-// })
-
 export const generateAppPackage = ({
   plugins = 0,
   version = "1.0.0",
   upgradableVersion,
   revertableVersion,
   appValidation = true,
+  disableUserMetadata = true,
   name = "Test app",
   url = "/test-app",
 }) => {
@@ -107,8 +103,10 @@ export const generateAppPackage = ({
     .map(() => getPluginFixture())
 
   const features = {}
-  if (appValidation) {
-    features["componentValidation"] = true
+  features["componentValidation"] = appValidation
+
+  if (disableUserMetadata) {
+    features["disableUserMetadata"] = false
   }
 
   return {

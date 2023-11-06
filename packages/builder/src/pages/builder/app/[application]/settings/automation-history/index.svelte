@@ -12,7 +12,7 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore, appStore } from "stores/frontend"
+  import { automationStore, appStore } from "stores/builder"
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"

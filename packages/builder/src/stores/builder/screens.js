@@ -2,15 +2,15 @@ import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
-import { findAllMatchingComponents } from "stores/frontend/components/utils"
+import { findAllMatchingComponents } from "stores/builder/components/utils"
 import {
   layoutStore,
   appStore,
   componentStore,
   navigationStore,
   selectedComponent,
-} from "stores/frontend"
-import { createHistoryStore } from "stores/frontend/history"
+} from "stores/builder"
+import { createHistoryStore } from "stores/builder/history"
 import { API } from "api"
 import BudiStore from "./BudiStore"
 
@@ -37,7 +37,7 @@ export class ScreenStore extends BudiStore {
     this.syncScreenData = this.syncScreenData.bind(this)
     this.updateSetting = this.updateSetting.bind(this)
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
-    this.removeCustomLayout = this.removeCustomLayout(this)
+    this.removeCustomLayout = this.removeCustomLayout.bind(this)
 
     this.selected = derived(this.store, $store => {
       return get(this.store).screens.find(

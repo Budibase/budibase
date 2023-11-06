@@ -1,7 +1,7 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { createEventDispatcher, onMount } from "svelte"
-  import { tables as tablesStore, viewsV2 } from "stores/backend"
+  import { tables as tablesStore, viewsV2 } from "stores/builder"
 
   export let value
 

@@ -6,7 +6,7 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { selectedScreen, componentStore } from "stores/frontend"
+  import { selectedScreen, componentStore } from "stores/builder"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import {
     getBindableProperties,

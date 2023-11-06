@@ -5,7 +5,7 @@
   import { notifications } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "api"
-  import { database } from "stores/frontend/database"
+  import { database } from "stores/builder"
   import { auth, admin } from "stores/portal"
 
   let name = "My first app"

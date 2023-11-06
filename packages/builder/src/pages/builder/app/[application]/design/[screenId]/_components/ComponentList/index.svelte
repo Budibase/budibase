@@ -6,7 +6,7 @@
     screenStore,
     componentStore,
     userSelectedResourceMap,
-  } from "stores/frontend"
+  } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore } from "./dndStore.js"

@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
   import { apps } from "stores/portal"
-  import { appStore } from "stores/frontend"
+  import { appStore } from "stores/builder"
   import ExportAppModal from "components/start/ExportAppModal.svelte"
   import ImportAppModal from "components/start/ImportAppModal.svelte"
 

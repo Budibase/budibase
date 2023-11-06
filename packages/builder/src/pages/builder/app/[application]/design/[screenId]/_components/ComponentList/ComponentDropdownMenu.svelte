@@ -1,5 +1,5 @@
 <script>
-  import { componentStore } from "stores/frontend"
+  import { componentStore } from "stores/builder"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let component

@@ -1,5 +1,5 @@
 <script>
-  import { views, viewsV2 } from "stores/backend"
+  import { views, viewsV2 } from "stores/builder"
   import { cloneDeep } from "lodash/fp"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {

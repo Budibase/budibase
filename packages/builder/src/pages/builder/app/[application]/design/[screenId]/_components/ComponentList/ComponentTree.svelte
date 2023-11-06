@@ -8,11 +8,11 @@
     userSelectedResourceMap,
     selectedComponent,
     selectedComponentPath,
-  } from "stores/frontend"
+  } from "stores/builder"
   import {
     findComponentPath,
     getComponentText,
-  } from "stores/frontend/components/utils"
+  } from "stores/builder/components/utils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
 

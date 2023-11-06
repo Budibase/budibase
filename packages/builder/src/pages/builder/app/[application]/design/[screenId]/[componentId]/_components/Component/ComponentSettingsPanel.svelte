@@ -4,13 +4,13 @@
     selectedScreen,
     componentStore,
     selectedComponent,
-  } from "stores/frontend"
+  } from "stores/builder"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
   import { notifications } from "@budibase/bbui"
-  import { getComponentText } from "stores/frontend/components/utils"
+  import { getComponentText } from "stores/builder/components/utils"
   import {
     getBindableProperties,
     getComponentBindableProperties,

@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "stores/frontend"
+  import { automationStore } from "stores/builder"
   import { notifications } from "@budibase/bbui"
   import { Icon, Input, ModalContent, Modal } from "@budibase/bbui"
 

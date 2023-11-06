@@ -1,7 +1,7 @@
 <script>
   import GeneralPanel from "./GeneralPanel.svelte"
   import ThemePanel from "./ThemePanel.svelte"
-  import { selectedScreen } from "stores/frontend"
+  import { selectedScreen } from "stores/builder"
   import Panel from "components/design/Panel.svelte"
   import { capitalise } from "helpers"
   import { ActionButton, Layout } from "@budibase/bbui"

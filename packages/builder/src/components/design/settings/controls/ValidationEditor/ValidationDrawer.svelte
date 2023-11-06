@@ -10,8 +10,8 @@
     Input,
     DatePicker,
   } from "@budibase/bbui"
-  import { currentAsset, selectedComponent } from "stores/frontend"
-  import { findClosestMatchingComponent } from "stores/frontend/components/utils"
+  import { currentAsset, selectedComponent } from "stores/builder"
+  import { findClosestMatchingComponent } from "stores/builder/components/utils"
   import { getSchemaForDatasource } from "builder/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"

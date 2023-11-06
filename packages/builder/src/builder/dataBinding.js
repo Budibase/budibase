@@ -5,19 +5,17 @@ import {
   findComponent,
   findComponentPath,
   getComponentSettings,
-} from "stores/frontend/components/utils"
+} from "stores/builder/components/utils"
 import {
   currentAsset,
   componentStore,
   screenStore,
   appStore,
   layoutStore,
-} from "stores/frontend"
-import {
   queries as queriesStores,
   tables as tablesStore,
   roles as rolesStore,
-} from "stores/backend"
+} from "stores/builder"
 import {
   makePropSafe,
   isJSBinding,

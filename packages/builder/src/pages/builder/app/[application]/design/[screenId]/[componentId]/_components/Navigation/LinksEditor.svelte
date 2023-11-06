@@ -2,7 +2,7 @@
   import { Button, Drawer } from "@budibase/bbui"
   import NavigationLinksDrawer from "./LinksDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { navigationStore } from "stores/frontend"
+  import { navigationStore } from "stores/builder"
 
   let drawer
   let links

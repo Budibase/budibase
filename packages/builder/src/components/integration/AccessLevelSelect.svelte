@@ -1,6 +1,6 @@
 <script>
   import { Label, notifications, Select } from "@budibase/bbui"
-  import { permissions, roles } from "stores/backend"
+  import { permissions, roles } from "stores/builder"
   import { Constants } from "@budibase/frontend-core"
 
   export let query

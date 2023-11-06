@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "stores/frontend"
+  import { automationStore } from "stores/builder"
   import { Icon, Body, Detail, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"

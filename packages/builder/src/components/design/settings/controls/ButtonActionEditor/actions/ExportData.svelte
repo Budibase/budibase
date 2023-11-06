@@ -3,8 +3,8 @@
   import {
     findAllMatchingComponents,
     findComponent,
-  } from "stores/frontend/components/utils"
-  import { currentAsset } from "stores/frontend"
+  } from "stores/builder/components/utils"
+  import { currentAsset } from "stores/builder"
   import { onMount } from "svelte"
   import {
     getDatasourceForProvider,

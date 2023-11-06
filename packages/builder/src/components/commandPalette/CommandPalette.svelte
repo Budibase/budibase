@@ -15,9 +15,12 @@
     builderStore,
     sortedScreens,
     appStore,
-  } from "stores/frontend"
+    datasources,
+    queries,
+    tables,
+    views,
+  } from "stores/builder"
   import { themeStore } from "stores/portal"
-  import { datasources, queries, tables, views } from "stores/backend"
   import { getContext } from "svelte"
   import { Constants } from "@budibase/frontend-core"
 

@@ -3,9 +3,9 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { appStore } from "./stores/frontend"
+import { appStore } from "stores/builder"
 import { get } from "svelte/store"
-import { auth } from "./stores/portal"
+import { auth } from "stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {

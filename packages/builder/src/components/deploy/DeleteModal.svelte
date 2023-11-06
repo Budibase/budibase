@@ -3,7 +3,7 @@
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { apps } from "stores/portal"
-  import { appStore } from "stores/frontend"
+  import { appStore } from "stores/builder"
   import { API } from "api"
 
   export const show = () => {

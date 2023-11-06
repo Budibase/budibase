@@ -4,8 +4,8 @@ import { API } from "api"
 import {
   INITIAL_NAVIGATION_STATE,
   NavigationStore,
-} from "stores/frontend/navigation"
-import { appStore } from "stores/frontend"
+} from "stores/builder/navigation"
+import { appStore } from "stores/builder"
 
 vi.mock("api", () => {
   return {
@@ -15,7 +15,7 @@ vi.mock("api", () => {
   }
 })
 
-vi.mock("stores/frontend", async () => {
+vi.mock("stores/builder", async () => {
   const mockAppStore = writable()
   const appStore = {
     subscribe: mockAppStore.subscribe,

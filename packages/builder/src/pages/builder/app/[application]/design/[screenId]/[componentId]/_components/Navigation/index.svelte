@@ -21,7 +21,7 @@
     selectedScreen,
     screenStore,
     navigationStore,
-  } from "stores/frontend"
+  } from "stores/builder"
   import { DefaultAppTheme } from "constants"
 
   const updateShowNavigation = async e => {
