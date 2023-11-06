@@ -1,16 +1,24 @@
-import { events, context } from "@budibase/backend-core"
+import { context, events } from "@budibase/backend-core"
 import {
-  FieldType,
-  SaveTableRequest,
-  RelationshipType,
-  Table,
-  ViewCalculation,
   AutoFieldSubTypes,
+  FieldSubtype,
+  FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
+  InternalTable,
+  RelationshipType,
+  Row,
+  SaveTableRequest,
+  Table,
+  TableSourceType,
+  User,
+  ViewCalculation,
 } from "@budibase/types"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
-const { basicTable } = setup.structures
 import sdk from "../../../sdk"
+import uuid from "uuid"
+
+const { basicTable } = setup.structures
 
 describe("/tables", () => {
   let request = setup.getRequest()
@@ -239,7 +247,8 @@ describe("/tables", () => {
         .expect(200)
       const fetchedTable = res.body[0]
       expect(fetchedTable.name).toEqual(testTable.name)
-      expect(fetchedTable.type).toEqual("internal")
+      expect(fetchedTable.type).toEqual("table")
+      expect(fetchedTable.sourceType).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -414,6 +423,344 @@ describe("/tables", () => {
         config,
         method: "DELETE",
         url: `/api/tables/${testTable._id}/${testTable._rev}`,
+      })
+    })
+  })
+
+  describe("migrate", () => {
+    let users: User[]
+    beforeAll(async () => {
+      users = await Promise.all([
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
+        config.createUser({ email: `${uuid.v4()}@example.com` }),
+      ])
+    })
+
+    it("should successfully migrate a one-to-many user relationship to a user column", async () => {
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.ONE_TO_MANY,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      const rows = await Promise.all(
+        users.map(u =>
+          config.api.row.save(table._id!, { "user relationship": [u] })
+        )
+      )
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USER,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const migratedRows = await config.api.row.fetch(table._id!)
+
+      rows.sort((a, b) => a._id!.localeCompare(b._id!))
+      migratedRows.sort((a, b) => a._id!.localeCompare(b._id!))
+
+      for (const [i, row] of rows.entries()) {
+        const migratedRow = migratedRows[i]
+        expect(migratedRow["user column"]).toBeDefined()
+        expect(migratedRow["user relationship"]).not.toBeDefined()
+        expect(row["user relationship"][0]._id).toEqual(
+          migratedRow["user column"][0]._id
+        )
+      }
+    })
+
+    it("should succeed when the row is created from the other side of the relationship", async () => {
+      // We found a bug just after releasing this feature where if the row was created from the
+      // users table, not the table linking to it, the migration would succeed but lose the data.
+      // This happened because the order of the documents in the link was reversed.
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.MANY_TO_ONE,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      let testRow = await config.api.row.save(table._id!, {})
+
+      await Promise.all(
+        users.map(u =>
+          config.api.row.patch(InternalTable.USER_METADATA, {
+            tableId: InternalTable.USER_METADATA,
+            _rev: u._rev!,
+            _id: u._id!,
+            test: [testRow],
+          })
+        )
+      )
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const resp = await config.api.row.get(table._id!, testRow._id!)
+      const migratedRow = resp.body as Row
+
+      expect(migratedRow["user column"]).toBeDefined()
+      expect(migratedRow["user relationship"]).not.toBeDefined()
+      expect(migratedRow["user column"]).toHaveLength(3)
+      expect(migratedRow["user column"].map((u: Row) => u._id)).toEqual(
+        expect.arrayContaining(users.map(u => u._id))
+      )
+    })
+
+    it("should successfully migrate a many-to-many user relationship to a users column", async () => {
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.MANY_TO_MANY,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      const row1 = await config.api.row.save(table._id!, {
+        "user relationship": [users[0], users[1]],
+      })
+
+      const row2 = await config.api.row.save(table._id!, {
+        "user relationship": [users[1], users[2]],
+      })
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
+        .body as Row
+      expect(row1Migrated["user relationship"]).not.toBeDefined()
+      expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
+        expect.arrayContaining([users[0]._id, users[1]._id])
+      )
+
+      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
+        .body as Row
+      expect(row2Migrated["user relationship"]).not.toBeDefined()
+      expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual(
+        expect.arrayContaining([users[1]._id, users[2]._id])
+      )
+    })
+
+    it("should successfully migrate a many-to-one user relationship to a users column", async () => {
+      const table = await config.api.table.create({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          "user relationship": {
+            type: FieldType.LINK,
+            fieldName: "test",
+            name: "user relationship",
+            constraints: {
+              type: "array",
+              presence: false,
+            },
+            relationshipType: RelationshipType.MANY_TO_ONE,
+            tableId: InternalTable.USER_METADATA,
+          },
+        },
+      })
+
+      const row1 = await config.api.row.save(table._id!, {
+        "user relationship": [users[0], users[1]],
+      })
+
+      const row2 = await config.api.row.save(table._id!, {
+        "user relationship": [users[2]],
+      })
+
+      await config.api.table.migrate(table._id!, {
+        oldColumn: table.schema["user relationship"],
+        newColumn: {
+          name: "user column",
+          type: FieldType.BB_REFERENCE,
+          subtype: FieldSubtype.USERS,
+        },
+      })
+
+      const migratedTable = await config.api.table.get(table._id!)
+      expect(migratedTable.schema["user column"]).toBeDefined()
+      expect(migratedTable.schema["user relationship"]).not.toBeDefined()
+
+      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
+        .body as Row
+      expect(row1Migrated["user relationship"]).not.toBeDefined()
+      expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
+        expect.arrayContaining([users[0]._id, users[1]._id])
+      )
+
+      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
+        .body as Row
+      expect(row2Migrated["user relationship"]).not.toBeDefined()
+      expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual([
+        users[2]._id,
+      ])
+    })
+
+    describe("unhappy paths", () => {
+      let table: Table
+      beforeAll(async () => {
+        table = await config.api.table.create({
+          name: "table",
+          type: "table",
+          sourceId: INTERNAL_TABLE_SOURCE_ID,
+          sourceType: TableSourceType.INTERNAL,
+          schema: {
+            "user relationship": {
+              type: FieldType.LINK,
+              fieldName: "test",
+              name: "user relationship",
+              constraints: {
+                type: "array",
+                presence: false,
+              },
+              relationshipType: RelationshipType.MANY_TO_ONE,
+              tableId: InternalTable.USER_METADATA,
+            },
+            num: {
+              type: FieldType.NUMBER,
+              name: "num",
+              constraints: {
+                type: "number",
+                presence: false,
+              },
+            },
+          },
+        })
+      })
+
+      it("should fail if the new column name is blank", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the new column name is a reserved name", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "_id",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the new column name is the same as an existing column", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: table.schema["user relationship"],
+            newColumn: {
+              name: "num",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
+      })
+
+      it("should fail if the old column name isn't a column in the table", async () => {
+        await config.api.table.migrate(
+          table._id!,
+          {
+            oldColumn: {
+              name: "not a column",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+            newColumn: {
+              name: "new column",
+              type: FieldType.BB_REFERENCE,
+              subtype: FieldSubtype.USERS,
+            },
+          },
+          { expectStatus: 400 }
+        )
       })
     })
   })

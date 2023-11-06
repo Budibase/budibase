@@ -18,6 +18,7 @@
   export let direction = "vertical"
   export let onChange
   export let sort = true
+  export let span
 
   let fieldState
   let fieldApi
@@ -47,6 +48,7 @@
   {disabled}
   {validation}
   {defaultValue}
+  {span}
   type="options"
   bind:fieldState
   bind:fieldApi

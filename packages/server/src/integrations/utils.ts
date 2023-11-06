@@ -4,10 +4,14 @@ import {
   SearchFilters,
   Datasource,
   FieldType,
-  ExternalTable,
+  TableSourceType,
 } from "@budibase/types"
 import { DocumentType, SEPARATOR } from "../db/utils"
-import { InvalidColumns, NoEmptyFilterStrings } from "../constants"
+import {
+  InvalidColumns,
+  NoEmptyFilterStrings,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "../constants"
 import { helpers } from "@budibase/shared-core"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
@@ -83,8 +87,27 @@ export enum SqlClient {
   ORACLE = "oracledb",
 }
 
-export function isExternalTable(tableId: string) {
+export function isExternalTableID(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)
+}
+
+export function isInternalTableID(tableId: string) {
+  return !isExternalTableID(tableId)
+}
+
+export function isExternalTable(table: Table) {
+  if (
+    table?.sourceId &&
+    table.sourceId.includes(DocumentType.DATASOURCE + SEPARATOR) &&
+    table?.sourceId !== DEFAULT_BB_DATASOURCE_ID
+  ) {
+    return true
+  } else if (table?.sourceType === TableSourceType.EXTERNAL) {
+    return true
+  } else if (table?._id && isExternalTableID(table._id)) {
+    return true
+  }
+  return false
 }
 
 export function buildExternalTableId(datasourceId: string, tableName: string) {
@@ -301,9 +324,9 @@ function copyExistingPropsOver(
  * @param entities The old list of tables, if there was any to look for definitions in.
  */
 export function finaliseExternalTables(
-  tables: Record<string, ExternalTable>,
-  entities: Record<string, ExternalTable>
-): Record<string, ExternalTable> {
+  tables: Record<string, Table>,
+  entities: Record<string, Table>
+): Record<string, Table> {
   let finalTables: Record<string, Table> = {}
   const tableIds = Object.values(tables).map(table => table._id!)
   for (let [name, table] of Object.entries(tables)) {
@@ -316,7 +339,7 @@ export function finaliseExternalTables(
 }
 
 export function checkExternalTables(
-  tables: Record<string, ExternalTable>
+  tables: Record<string, Table>
 ): Record<string, string> {
   const invalidColumns = Object.values(InvalidColumns) as string[]
   const errors: Record<string, string> = {}

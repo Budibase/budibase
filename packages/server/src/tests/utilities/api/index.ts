@@ -7,6 +7,8 @@ import { DatasourceAPI } from "./datasource"
 import { LegacyViewAPI } from "./legacyView"
 import { ScreenAPI } from "./screen"
 import { ApplicationAPI } from "./application"
+import { BackupAPI } from "./backup"
+import { AttachmentAPI } from "./attachment"
 
 export default class API {
   table: TableAPI
@@ -17,6 +19,8 @@ export default class API {
   datasource: DatasourceAPI
   screen: ScreenAPI
   application: ApplicationAPI
+  backup: BackupAPI
+  attachment: AttachmentAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -27,5 +31,7 @@ export default class API {
     this.datasource = new DatasourceAPI(config)
     this.screen = new ScreenAPI(config)
     this.application = new ApplicationAPI(config)
+    this.backup = new BackupAPI(config)
+    this.attachment = new AttachmentAPI(config)
   }
 }
