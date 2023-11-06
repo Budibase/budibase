@@ -258,7 +258,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process formulas after the complex types had been processed
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+  enriched = processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(
