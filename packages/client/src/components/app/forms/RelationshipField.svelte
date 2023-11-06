@@ -138,7 +138,9 @@
       typeof value === "object" ? value._id : value
     )
     // Make sure field state is valid
-    fieldApi.setValue(values)
+    if (values?.length > 0) {
+      fieldApi.setValue(values)
+    }
     return values
   }
 
