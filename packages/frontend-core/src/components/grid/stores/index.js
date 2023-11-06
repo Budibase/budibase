@@ -19,6 +19,7 @@ import * as Datasource from "./datasource"
 import * as Table from "./datasources/table"
 import * as ViewV2 from "./datasources/viewV2"
 import * as NonPlus from "./datasources/nonPlus"
+import * as Cache from "./cache"
 
 const DependencyOrderedStores = [
   Sort,
@@ -42,6 +43,7 @@ const DependencyOrderedStores = [
   Clipboard,
   Config,
   Notifications,
+  Cache,
 ]
 
 export const attachStores = context => {
