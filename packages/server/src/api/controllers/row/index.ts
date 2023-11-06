@@ -254,7 +254,7 @@ export const exportRows = async (
 
   const format = ctx.query.format
 
-  const { rows, columns, query } = ctx.request.body
+  const { rows, columns, query, sort, sortOrder } = ctx.request.body
   if (typeof format !== "string" || !exporters.isFormat(format)) {
     ctx.throw(
       400,
@@ -272,6 +272,8 @@ export const exportRows = async (
         rowIds: rows,
         columns,
         query,
+        sort,
+        sortOrder,
       })
       ctx.attachment(fileName)
       return apiFileReturn(content)
