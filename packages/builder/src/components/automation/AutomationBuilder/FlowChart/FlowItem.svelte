@@ -17,7 +17,7 @@
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
-  import { permissions } from "stores/backend"
+  import { permissions } from "stores/builder"
 
   export let block
   export let testDataModal
