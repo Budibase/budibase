@@ -30,7 +30,6 @@ export * as timers from "./timers"
 export { default as env } from "./environment"
 export * as blacklist from "./blacklist"
 export * as docUpdates from "./docUpdates"
-export * from "./utils/Duration"
 export { SearchParams } from "./db"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
