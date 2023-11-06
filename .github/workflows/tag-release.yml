@@ -58,8 +58,8 @@ jobs:
       - uses: peter-evans/repository-dispatch@v2
         with:
           repository: budibase/budibase-deploys
-          event: release-prod
-          github_pat: ${{ secrets.GH_ACCESS_TOKEN }}
+          event-type: release-prod
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
           client-payload: |-
             {
               "TAG": "${{ needs.tag-release.outputs.version }}"
