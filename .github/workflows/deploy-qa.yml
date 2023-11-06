@@ -20,3 +20,18 @@ jobs:
               "VERSION": "${{ github.sha }}",
               "REF_NAME": "${{ github.ref_name}}"
             }
+
+  trigger-deploy-account-portal-qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v2
+        with:
+          repository: budibase/budibase-deploys
+          event-type: accountportal-qa-deploy
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          client-payload: |-
+            {
+              "IMAGE_VERSION": "${{ env.PAYLOAD_IMAGE_VERSION}}"
+            }
+        env:
+          PAYLOAD_IMAGE_VERSION: ${{ github.sha }}
