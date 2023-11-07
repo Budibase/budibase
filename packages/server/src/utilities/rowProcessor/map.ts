@@ -71,6 +71,11 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
     parse: n => parseFloat(n),
   },
+  [FieldTypes.BIGINT]: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
+  },
   [FieldTypes.DATETIME]: {
     "": null,
     [undefined]: undefined,
