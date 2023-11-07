@@ -45,6 +45,7 @@
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
   const USER_TYPE = FIELDS.USER.type
+  const USERS_TYPE = FIELDS.USERS.type
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -146,6 +147,8 @@
       editableColumn.tableId = relationshipTableIdSecondary
     } else if (editableColumn.subtype === USER_TYPE) {
       editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
+    } else if (editableColumn.subtype === USERS_TYPE) {
+      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
   }
   const initialiseField = (field, savingColumn) => {
