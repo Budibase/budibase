@@ -21,7 +21,7 @@
   let focus = false
 
   const updateValue = newValue => {
-    if (readonly || (!value && !newValue)) {
+    if (readonly) {
       return
     }
     if (type === "number") {
@@ -96,7 +96,7 @@
     {disabled}
     {readonly}
     {id}
-    {value}
+    value={value ?? ""}
     placeholder={placeholder ?? ""}
     on:click
     on:blur

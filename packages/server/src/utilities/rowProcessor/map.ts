@@ -46,7 +46,7 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: parseArrayString,
   },
   [FieldTypes.STRING]: {
-    "": "",
+    "": null,
     [null]: null,
     [undefined]: undefined,
   },
