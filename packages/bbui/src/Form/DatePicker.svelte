@@ -7,6 +7,7 @@
   export let label = null
   export let labelPosition = "above"
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let enableTime = true
   export let timeOnly = false
@@ -33,6 +34,7 @@
   <DatePicker
     {error}
     {disabled}
+    {readonly}
     {value}
     {placeholder}
     {enableTime}
