@@ -53,12 +53,12 @@ export async function getViews() {
     }
   } else {
     const views = (
-      await db.allDocs(
+      await db.allDocs<any>(
         getMemoryViewParams({
           include_docs: true,
         })
       )
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
     for (let viewDoc of views) {
       response.push({
         name: viewDoc.name,
