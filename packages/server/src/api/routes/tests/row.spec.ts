@@ -424,7 +424,7 @@ describe.each([
         const saved = (await loadRow(id, table._id!)).body
 
         expect(saved.stringUndefined).toBe(undefined)
-        expect(saved.stringNull).toBe("")
+        expect(saved.stringNull).toBe(null)
         expect(saved.stringString).toBe("i am a string")
         expect(saved.numberEmptyString).toBe(null)
         expect(saved.numberNull).toBe(null)
