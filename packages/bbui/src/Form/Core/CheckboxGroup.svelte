@@ -35,17 +35,13 @@
         title={getOptionLabel(option)}
         class="spectrum-Checkbox spectrum-FieldGroup-item"
         class:is-invalid={!!error}
+        class:readonly
       >
         <label
           class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
         >
           <input
             on:change={onChange}
-            on:click={e => {
-              if (readonly) {
-                e.preventDefault()
-              }
-            }}
             type="checkbox"
             class="spectrum-Checkbox-input"
             value={optionValue}
@@ -71,5 +67,8 @@
 <style>
   .spectrum-Checkbox-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

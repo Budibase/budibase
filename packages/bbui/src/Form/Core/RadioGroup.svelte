@@ -41,14 +41,10 @@
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
         class:is-invalid={!!error}
+        class:readonly
       >
         <input
           on:change={onChange}
-          on:click={e => {
-            if (readonly) {
-              e.preventDefault()
-            }
-          }}
           bind:group={value}
           value={getOptionValue(option)}
           type="radio"
@@ -67,5 +63,8 @@
 <style>
   .spectrum-Radio-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>
