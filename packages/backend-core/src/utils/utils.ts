@@ -237,3 +237,17 @@ export function timeout(timeMs: number) {
 export function isAudited(event: Event) {
   return !!AuditedEventFriendlyName[event]
 }
+
+export function hasCircularStructure(json: any) {
+  if (typeof json !== "object") {
+    return false
+  }
+  try {
+    JSON.stringify(json)
+  } catch (err) {
+    if (err instanceof Error && err?.message.includes("circular structure")) {
+      return true
+    }
+  }
+  return false
+}
