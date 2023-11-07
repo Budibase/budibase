@@ -28,7 +28,6 @@
     componentBindings: componentBindings || [],
     bindings: allBindings,
     removeButton,
-    canRemove: true,
     nested,
   }
 
