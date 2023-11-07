@@ -4,11 +4,11 @@ import { BUILTIN_ACTION_DEFINITIONS, getAction } from "../../actions"
 import emitter from "../../../events/index"
 import env from "../../../environment"
 
-let config: any
+let config: TestConfig
 
-export function getConfig() {
+export function getConfig(): TestConfig {
   if (!config) {
-    config = new TestConfig(false)
+    config = new TestConfig(true)
   }
   return config
 }
