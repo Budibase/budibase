@@ -4,10 +4,13 @@
   import { createEventDispatcher } from "svelte"
   import { store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
+  import { getEventContextBindings } from "builderStore/dataBinding"
 
+  export let componentInstance
   export let componentBindings
   export let bindings
   export let value
+  export let key
 
   const dispatch = createEventDispatcher()
 
@@ -15,9 +18,14 @@
 
   $: buttonList = sanitizeValue(value) || []
   $: buttonCount = buttonList.length
+  $: eventContextBindings = getEventContextBindings({
+    componentInstance,
+    settingKey: key,
+  })
+  $: allBindings = [...bindings, ...eventContextBindings]
   $: itemProps = {
     componentBindings: componentBindings || [],
-    bindings,
+    bindings: allBindings,
     removeButton,
     canRemove: true,
   }
