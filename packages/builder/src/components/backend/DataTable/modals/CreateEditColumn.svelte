@@ -289,10 +289,12 @@
     if (saveColumn.type !== LINK_TYPE) {
       delete saveColumn.fieldName
     }
-    if (saveColumn.subtype === USER_TYPE) {
-      saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
-    } else if (saveColumn.subtype === USERS_TYPE) {
-      saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
+    if (isUsersColumn(saveColumn)) {
+      if (saveColumn.subtype === USER_TYPE) {
+        saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
+      } else if (saveColumn.subtype === USERS_TYPE) {
+        saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
+      }
     }
 
     try {
