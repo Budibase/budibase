@@ -10,6 +10,7 @@ import {
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
+  FormulaTypes,
   INTERNAL_TABLE_SOURCE_ID,
   MonthlyQuotaName,
   PermissionLevel,
@@ -1996,6 +1997,52 @@ describe.each([
               bookmark: null,
             }),
       })
+    })
+  })
+
+  describe("Formula fields", () => {
+    let relationshipTable: Table, tableId: string, relatedRow: Row
+
+    beforeAll(async () => {
+      const otherTableId = config.table!._id!
+      const cfg = generateTableConfig()
+      relationshipTable = await config.createLinkedTable(
+        RelationshipType.ONE_TO_MANY,
+        ["links"],
+        {
+          ...cfg,
+          schema: {
+            ...cfg.schema,
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: "{{ links.0.name }}",
+              formulaType: FormulaTypes.DYNAMIC,
+            },
+          },
+        }
+      )
+
+      tableId = relationshipTable._id!
+
+      relatedRow = await config.api.row.save(otherTableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+      })
+      await config.api.row.save(tableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+        tableId,
+        links: [relatedRow._id],
+      })
+    })
+
+    it("should be able to search for rows containing formulas", async () => {
+      const { rows } = await config.api.row.search(tableId)
+      expect(rows.length).toBe(1)
+      expect(rows[0].links.length).toBe(1)
+      const row = rows[0]
+      expect(row.formula).toBe(relatedRow.name)
     })
   })
 })
