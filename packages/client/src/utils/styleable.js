@@ -40,6 +40,7 @@ export const styleable = (node, styles = {}) => {
 
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
+    const { isBlock } = newStyles
     const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
@@ -76,6 +77,9 @@ export const styleable = (node, styles = {}) => {
     // Handler to start editing a component (if applicable) when double
     // clicking in the builder preview
     editComponent = event => {
+      if (isBlock) {
+        return
+      }
       if (newStyles.interactive && newStyles.editable) {
         builderStore.actions.setEditMode(true)
       }
