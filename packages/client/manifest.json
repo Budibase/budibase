@@ -6348,6 +6348,7 @@
             "type": "buttonConfiguration",
             "key": "buttons",
             "nested": true,
+            "max": 3,
             "context": [
               {
                 "label": "Clicked row",
