@@ -11,6 +11,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let autocomplete = true
   export let defaultValue
@@ -186,6 +187,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
@@ -204,6 +206,7 @@
       on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
