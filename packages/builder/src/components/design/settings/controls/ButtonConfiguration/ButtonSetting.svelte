@@ -17,7 +17,7 @@
 
   // If this is a nested setting (for example inside a grid or form block) then
   // we need to mark all the settings of the actual buttons as nested too, to
-  // allow up to reference context provided by the block
+  // allow us to reference context provided by the block
   const updatedNestedFlags = settings => {
     if (!nested) {
       return settings
