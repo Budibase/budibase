@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build": "tsc && rollup -c",
-    "dev:builder": "tsc && rollup -cw",
+    "dev": "tsc && rollup -cw",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },

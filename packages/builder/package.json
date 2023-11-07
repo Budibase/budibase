@@ -6,7 +6,7 @@
   "scripts": {
     "build": "routify -b && vite build --emptyOutDir",
     "start": "routify -c rollup",
-    "dev:builder": "routify -c dev:vite",
+    "dev": "routify -c dev:vite",
     "dev:vite": "vite --host 0.0.0.0",
     "rollup": "rollup -c -w",
     "test": "vitest run",
@@ -114,7 +114,7 @@
           }
         ]
       },
-      "dev:builder": {
+      "dev": {
         "dependsOn": [
           {
             "projects": [
