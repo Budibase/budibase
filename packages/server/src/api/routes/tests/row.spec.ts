@@ -563,6 +563,56 @@ describe.each([
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
     })
+
+    it("should not overwrite links if those links are not set", async () => {
+      let linkField: FieldSchema = {
+        type: FieldType.LINK,
+        name: "",
+        fieldName: "",
+        constraints: {
+          type: "array",
+          presence: false,
+        },
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        tableId: InternalTable.USER_METADATA,
+      }
+
+      let table = await config.api.table.create({
+        name: "TestTable",
+        type: "table",
+        sourceType: TableSourceType.INTERNAL,
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        schema: {
+          user1: { ...linkField, name: "user1", fieldName: "user1" },
+          user2: { ...linkField, name: "user2", fieldName: "user2" },
+        },
+      })
+
+      let user1 = await config.createUser()
+      let user2 = await config.createUser()
+
+      let row = await config.api.row.save(table._id!, {
+        user1: [{ _id: user1._id }],
+        user2: [{ _id: user2._id }],
+      })
+
+      let getResp = await config.api.row.get(table._id!, row._id!)
+      expect(getResp.body.user1[0]._id).toEqual(user1._id)
+      expect(getResp.body.user2[0]._id).toEqual(user2._id)
+
+      let patchResp = await config.api.row.patch(table._id!, {
+        _id: row._id!,
+        _rev: row._rev!,
+        tableId: table._id!,
+        user1: [{ _id: user2._id }],
+      })
+      expect(patchResp.user1[0]._id).toEqual(user2._id)
+      expect(patchResp.user2[0]._id).toEqual(user2._id)
+
+      getResp = await config.api.row.get(table._id!, row._id!)
+      expect(getResp.body.user1[0]._id).toEqual(user2._id)
+      expect(getResp.body.user2[0]._id).toEqual(user2._id)
+    })
   })
 
   describe("destroy", () => {
