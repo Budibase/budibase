@@ -1,4 +1,4 @@
-import { it, expect, describe } from "vitest"
+import { it, expect, describe, vi } from "vitest"
 import { render, screen } from "@testing-library/svelte"
 import "@testing-library/jest-dom"
 
