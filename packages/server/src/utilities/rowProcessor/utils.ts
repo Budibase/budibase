@@ -49,7 +49,7 @@ export function processFormulas<T extends Row | Row[]>(
   table: Table,
   inputRows: T,
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
-): Promise<T> {
+): T {
   const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
   if (rows)
     for (let [column, schema] of Object.entries(table.schema)) {
