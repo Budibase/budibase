@@ -8,7 +8,8 @@
   } from "@budibase/bbui"
   import download from "downloadjs"
   import { API } from "api"
-  import { Constants, LuceneUtils } from "@budibase/frontend-core"
+  import { LuceneUtils } from "@budibase/frontend-core"
+  import { utils } from "@budibase/shared-core"
   import { ROW_EXPORT_FORMATS } from "constants/backend"
 
   export let view
@@ -16,8 +17,6 @@
   export let sorting
   export let selectedRows = []
   export let formats
-
-  $: appliedFilters = filters?.filter(filter => !filter.onEmptyFilter)
 
   const FORMATS = [
     {
@@ -33,6 +32,8 @@
       key: ROW_EXPORT_FORMATS.JSON_WITH_SCHEMA,
     },
   ]
+
+  $: appliedFilters = filters?.filter(filter => !filter.onEmptyFilter)
 
   $: options = FORMATS.filter(format => {
     if (formats && !formats.includes(format.key)) {
@@ -55,14 +56,7 @@
     appliedFilters
   )
 
-  const buildFilterLookup = () => {
-    return Object.keys(Constants.OperatorOptions).reduce((acc, key) => {
-      const op = Constants.OperatorOptions[key]
-      acc[op.value] = op.label
-      return acc
-    }, {})
-  }
-  filterLookup = buildFilterLookup()
+  filterLookup = utils.filterValueToLabel()
 
   const filterDisplay = () => {
     if (!appliedFilters) {
@@ -173,19 +167,23 @@
 >
   {#if selectedRows?.length}
     <Body size="S">
-      <strong>{selectedRows?.length}</strong>
-      {`row${selectedRows?.length > 1 ? "s" : ""} will be exported`}
+      <span data-testid="exporting-n-rows">
+        <strong>{selectedRows?.length}</strong>
+        {`row${selectedRows?.length > 1 ? "s" : ""} will be exported`}
+      </span>
     </Body>
   {:else if appliedFilters?.length || (sorting?.sortOrder && sorting?.sortColumn)}
     <Body size="S">
       {#if !appliedFilters}
-        Exporting <strong>all</strong> rows
+        <span data-testid="exporting-rows">
+          Exporting <strong>all</strong> rows
+        </span>
       {:else}
-        Filters applied
+        <span data-testid="filters-applied">Filters applied</span>
       {/if}
     </Body>
 
-    <div class="table-wrap">
+    <div class="table-wrap" data-testid="export-config-table">
       <Table
         schema={displaySchema}
         data={exportOpDisplay}
@@ -202,18 +200,21 @@
     </div>
   {:else}
     <Body size="S">
-      Exporting <strong>all</strong> rows
+      <span data-testid="export-all-rows">
+        Exporting <strong>all</strong> rows
+      </span>
     </Body>
   {/if}
-
-  <Select
-    label="Format"
-    bind:value={exportFormat}
-    {options}
-    placeholder={null}
-    getOptionLabel={x => x.name}
-    getOptionValue={x => x.key}
-  />
+  <span data-testid="format-select">
+    <Select
+      label="Format"
+      bind:value={exportFormat}
+      {options}
+      placeholder={null}
+      getOptionLabel={x => x.name}
+      getOptionValue={x => x.key}
+    />
+  </span>
 </ModalContent>
 
 <style>
