@@ -51,18 +51,18 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
   },
   [FieldTypes.BARCODEQR]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.FORMULA]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.LONGFORM]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.NUMBER]: {
