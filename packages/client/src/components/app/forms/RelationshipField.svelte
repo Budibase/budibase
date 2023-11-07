@@ -18,6 +18,7 @@
   export let filter
   export let datasourceType = "table"
   export let primaryDisplay
+  export let span
 
   let fieldState
   let fieldApi
@@ -137,7 +138,9 @@
       typeof value === "object" ? value._id : value
     )
     // Make sure field state is valid
-    fieldApi.setValue(values)
+    if (values?.length > 0) {
+      fieldApi.setValue(values)
+    }
     return values
   }
 
@@ -186,6 +189,7 @@
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
+  {span}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
