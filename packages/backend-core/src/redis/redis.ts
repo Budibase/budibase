@@ -16,6 +16,7 @@ import {
   getRedisOptions,
   SEPARATOR,
   SelectableDatabase,
+  getRedisConnectionDetails,
 } from "./utils"
 import * as timers from "../timers"
 
@@ -91,12 +92,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
+  const { host, port } = getRedisConnectionDetails()
+  const opts = getRedisOptions()
 
   if (CLUSTERED) {
     client = new RedisCore.Cluster([{ host, port }], opts)
-  } else if (redisProtocolUrl) {
-    client = new RedisCore(redisProtocolUrl)
   } else {
     client = new RedisCore(opts)
   }
