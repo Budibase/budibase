@@ -44,8 +44,8 @@
   const NUMBER_TYPE = FIELDS.NUMBER.type
   const JSON_TYPE = FIELDS.JSON.type
   const DATE_TYPE = FIELDS.DATETIME.type
-  const USER_TYPE = FIELDS.USER.type
-  const USERS_TYPE = FIELDS.USERS.type
+  const USER_TYPE = FIELDS.USER.subtype
+  const USERS_TYPE = FIELDS.USERS.subtype
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
@@ -290,10 +290,11 @@
       delete saveColumn.fieldName
     }
     if (saveColumn.subtype === USER_TYPE) {
-      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
+      saveColumn.relationshipType = RelationshipType.ONE_TO_MANY
     } else if (saveColumn.subtype === USERS_TYPE) {
-      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
+      saveColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
+
     try {
       await tables.saveField({
         originalName,
@@ -304,7 +305,7 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (saveColumn.type === LINK_TYPE) {
+      if (saveColumn.type === LINK_TYPE || saveColumn.subtype === USER_TYPE) {
         // Fetching the new tables
         tables.fetch()
         // Fetching the new relationships
