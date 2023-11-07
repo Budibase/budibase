@@ -6,6 +6,7 @@
 
   export let dataSource
   export let disabled = false
+  export let readonly = false
   export let initialValues
   export let size
   export let schema
@@ -148,6 +149,7 @@
       type,
       defaultValue = null,
       fieldDisabled = false,
+      fieldReadOnly = false,
       validationRules,
       step = 1
     ) => {
@@ -205,6 +207,7 @@
           error: initialError,
           disabled:
             disabled || fieldDisabled || (isAutoColumn && !editAutoColumns),
+          readonly: readonly || fieldReadOnly,
           defaultValue,
           validator,
           lastUpdate: Date.now(),
