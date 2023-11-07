@@ -11,6 +11,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let autocomplete = true
   export let defaultValue
@@ -18,6 +19,7 @@
   export let filter
   export let datasourceType = "table"
   export let primaryDisplay
+  export let span
 
   let fieldState
   let fieldApi
@@ -137,7 +139,9 @@
       typeof value === "object" ? value._id : value
     )
     // Make sure field state is valid
-    fieldApi.setValue(values)
+    if (values?.length > 0) {
+      fieldApi.setValue(values)
+    }
     return values
   }
 
@@ -183,9 +187,11 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
+  {span}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
@@ -200,6 +206,7 @@
       on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
