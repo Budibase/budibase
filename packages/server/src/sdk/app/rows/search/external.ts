@@ -186,6 +186,7 @@ export async function fetch(tableId: string): Promise<Row[]> {
   const table = await sdk.tables.getTable(tableId)
   return await outputProcessing<Row[]>(table, response, {
     preserveLinks: true,
+    squash: true,
   })
 }
 
