@@ -271,5 +271,5 @@ export async function getExternalDatasources(): Promise<Datasource[]> {
     })
   )
 
-  return externalDatasources.rows.map(r => r.doc)
+  return externalDatasources.rows.map(r => r.doc!)
 }

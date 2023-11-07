@@ -1,4 +1,4 @@
-import TestConfig from "../../../../tests/utilities/TestConfiguration"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import env from "../../../../environment"
 import supertest from "supertest"
 export * as structures from "../../../../tests/utilities/structures"
@@ -46,10 +46,10 @@ export function delay(ms: number) {
 }
 
 let request: supertest.SuperTest<supertest.Test> | undefined | null,
-  config: TestConfig | null
+  config: TestConfiguration | null
 
 export function beforeAll() {
-  config = new TestConfig()
+  config = new TestConfiguration()
   request = config.getRequest()
 }
 

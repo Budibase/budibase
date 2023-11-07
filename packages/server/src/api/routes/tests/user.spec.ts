@@ -1,7 +1,6 @@
-const { roles, utils } = require("@budibase/backend-core")
-const { checkPermissionsEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-const { BUILTIN_ROLE_IDS } = roles
+import { roles, utils } from "@budibase/backend-core"
+import { checkPermissionsEndpoint } from "./utilities/TestFunctions"
+import * as setup from "./utilities"
 
 jest.setTimeout(30000)
 
@@ -36,8 +35,12 @@ describe("/users", () => {
         .expect(200)
 
       expect(res.body.length).toBe(3)
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidx`)).toBeDefined()
-      expect(res.body.find(u => u._id === `ro_ta_users_us_uuidy`)).toBeDefined()
+      expect(
+        res.body.find((u: any) => u._id === `ro_ta_users_us_uuidx`)
+      ).toBeDefined()
+      expect(
+        res.body.find((u: any) => u._id === `ro_ta_users_us_uuidy`)
+      ).toBeDefined()
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -47,16 +50,18 @@ describe("/users", () => {
         request,
         method: "GET",
         url: `/api/users/metadata`,
-        passRole: BUILTIN_ROLE_IDS.ADMIN,
-        failRole: BUILTIN_ROLE_IDS.PUBLIC,
+        passRole: roles.BUILTIN_ROLE_IDS.ADMIN,
+        failRole: roles.BUILTIN_ROLE_IDS.PUBLIC,
       })
     })
   })
 
   describe("update", () => {
     it("should be able to update the user", async () => {
-      const user = await config.createUser({ id: `us_update${utils.newid()}` })
-      user.roleId = BUILTIN_ROLE_IDS.BASIC
+      const user: any = await config.createUser({
+        id: `us_update${utils.newid()}`,
+      })
+      user.roleId = roles.BUILTIN_ROLE_IDS.BASIC
       delete user._rev
       const res = await request
         .put(`/api/users/metadata`)
@@ -74,14 +79,18 @@ describe("/users", () => {
       const res1 = await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
-        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .send({ ...user, roleId: roles.BUILTIN_ROLE_IDS.BASIC })
         .expect(200)
         .expect("Content-Type", /json/)
 
       const res = await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
-        .send({ ...user, _rev: res1.body.rev, roleId: BUILTIN_ROLE_IDS.POWER })
+        .send({
+          ...user,
+          _rev: res1.body.rev,
+          roleId: roles.BUILTIN_ROLE_IDS.POWER,
+        })
         .expect(200)
         .expect("Content-Type", /json/)
 
@@ -95,14 +104,14 @@ describe("/users", () => {
       await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
-        .send({ ...user, roleId: BUILTIN_ROLE_IDS.BASIC })
+        .send({ ...user, roleId: roles.BUILTIN_ROLE_IDS.BASIC })
         .expect(200)
         .expect("Content-Type", /json/)
 
       await request
         .put(`/api/users/metadata`)
         .set(config.defaultHeaders())
-        .send({ ...user, roleId: BUILTIN_ROLE_IDS.POWER })
+        .send({ ...user, roleId: roles.BUILTIN_ROLE_IDS.POWER })
         .expect(409)
         .expect("Content-Type", /json/)
     })
@@ -129,7 +138,7 @@ describe("/users", () => {
         .expect(200)
         .expect("Content-Type", /json/)
       expect(res.body._id).toEqual(user._id)
-      expect(res.body.roleId).toEqual(BUILTIN_ROLE_IDS.ADMIN)
+      expect(res.body.roleId).toEqual(roles.BUILTIN_ROLE_IDS.ADMIN)
       expect(res.body.tableId).toBeDefined()
     })
   })

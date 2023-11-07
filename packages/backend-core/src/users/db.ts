@@ -16,7 +16,6 @@ import {
   BulkUserDeleted,
   isSSOAccount,
   isSSOUser,
-  RowResponse,
   SaveUserOpts,
   User,
   UserStatus,
@@ -417,11 +416,9 @@ export class UserDB {
       include_docs: true,
       keys: userIds,
     })
-    const usersToDelete: User[] = allDocsResponse.rows.map(
-      (user: RowResponse<User>) => {
-        return user.doc
-      }
-    )
+    const usersToDelete = allDocsResponse.rows.map(user => {
+      return user.doc!
+    })
 
     // Delete from DB
     const toDelete = usersToDelete.map(user => ({

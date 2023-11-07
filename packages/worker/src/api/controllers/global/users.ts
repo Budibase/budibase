@@ -70,9 +70,9 @@ const bulkCreate = async (users: User[], groupIds: string[]) => {
 }
 
 export const bulkUpdate = async (
-  ctx: Ctx<BulkUserRequest, BulkUserResponse>
+  ctx: UserCtx<BulkUserRequest, BulkUserResponse>
 ) => {
-  const currentUserId = ctx.user._id
+  const currentUserId = ctx.user._id!
   const input = ctx.request.body
   let created, deleted
   try {
