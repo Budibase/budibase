@@ -6346,7 +6346,14 @@
         "settings": [
           {
             "type": "buttonConfiguration",
-            "key": "buttons"
+            "key": "buttons",
+            "nested": true,
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
           }
         ]
       }
