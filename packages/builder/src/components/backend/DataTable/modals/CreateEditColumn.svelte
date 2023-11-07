@@ -305,7 +305,7 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (saveColumn.type === LINK_TYPE || saveColumn.subtype === USER_TYPE) {
+      if (saveColumn.type === LINK_TYPE) {
         // Fetching the new tables
         tables.fetch()
         // Fetching the new relationships
