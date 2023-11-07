@@ -145,10 +145,6 @@
       )?.[0]
       // Set the tableId based on the selected table
       editableColumn.tableId = relationshipTableIdSecondary
-    } else if (editableColumn.subtype === USER_TYPE) {
-      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
-    } else if (editableColumn.subtype === USERS_TYPE) {
-      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
   }
   const initialiseField = (field, savingColumn) => {
@@ -292,6 +288,11 @@
     }
     if (saveColumn.type !== LINK_TYPE) {
       delete saveColumn.fieldName
+    }
+    if (saveColumn.subtype === USER_TYPE) {
+      editableColumn.relationshipType = RelationshipType.ONE_TO_MANY
+    } else if (saveColumn.subtype === USERS_TYPE) {
+      editableColumn.relationshipType = RelationshipType.MANY_TO_MANY
     }
     try {
       await tables.saveField({
