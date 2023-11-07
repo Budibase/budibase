@@ -2590,6 +2590,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "text",
         "label": "Initial form step",
         "key": "initialFormStep",
@@ -2739,6 +2750,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
@@ -2857,6 +2879,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/number",
@@ -3166,6 +3199,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "select",
         "label": "Options source",
         "key": "optionsSource",
@@ -3318,6 +3362,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -3523,6 +3578,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "validation/boolean",
         "label": "Validation",
         "key": "validation"
@@ -3629,6 +3695,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/string",
@@ -3739,6 +3816,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/datetime",
@@ -4087,7 +4175,7 @@
       },
       {
         "type": "boolean",
-        "label": "Disabled",
+        "label": "Read only",
         "key": "disabled",
         "defaultValue": false
       },
@@ -4194,6 +4282,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "select",
         "label": "Layout",
         "key": "span",
@@ -4273,6 +4372,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -5923,12 +6033,7 @@
             "type": "boolean",
             "label": "Disabled",
             "key": "disabled",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "defaultValue": false
           }
         ]
       },

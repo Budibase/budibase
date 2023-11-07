@@ -102,6 +102,7 @@ export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
   subtype: FieldSubtype.USER | FieldSubtype.USERS
+  relationshipType?: RelationshipType
 }
 
 export interface FieldConstraints {
