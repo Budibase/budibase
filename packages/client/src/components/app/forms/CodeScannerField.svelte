@@ -6,6 +6,7 @@
   export let label
   export let type = "barcodeqr"
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue = ""
   export let onChange
@@ -14,6 +15,7 @@
   export let beepOnScan
   export let beepFrequency
   export let customFrequency
+  export let preferredCamera
 
   let fieldState
   let fieldApi
@@ -32,6 +34,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   {type}
@@ -42,12 +45,13 @@
     <CodeScanner
       value={fieldState.value}
       on:change={handleUpdate}
-      disabled={fieldState.disabled}
+      disabled={fieldState.disabled || fieldState.readonly}
       {allowManualEntry}
       scanButtonText={scanText}
       {beepOnScan}
       {beepFrequency}
       {customFrequency}
+      {preferredCamera}
     />
   {/if}
 </Field>

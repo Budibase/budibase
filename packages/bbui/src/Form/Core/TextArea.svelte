@@ -5,6 +5,7 @@
   export let value = ""
   export let placeholder = null
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let id = null
   export let height = null
@@ -61,6 +62,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align}` : ""}
     {disabled}
+    {readonly}
     {id}
     on:focus={() => (focus = true)}
     on:blur={onChange}

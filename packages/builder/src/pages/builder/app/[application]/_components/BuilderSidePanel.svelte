@@ -112,9 +112,9 @@
     }
     await usersFetch.update({
       query: {
-        appId: query || !filterByAppAccess ? null : prodAppId,
-        email: query,
+        string: { email: query },
       },
+      appId: query || !filterByAppAccess ? null : prodAppId,
       limit: 50,
       paginate: query || !filterByAppAccess ? null : false,
     })
