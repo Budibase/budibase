@@ -9,6 +9,7 @@
     hoveredRowId,
     props,
     width,
+    rows,
     focusedRow,
     selectedRows,
     visibleColumns,
@@ -26,6 +27,12 @@
   )
   $: end = columnsWidth - 1 - $scroll.left
   $: left = Math.min($width - $buttonColumnWidth, end)
+
+  const handleClick = async (button, row) => {
+    await button.onClick?.(row)
+    // Refresh the row in case it changed
+    await rows.actions.refreshRow(row._id)
+  }
 
   onMount(() => {
     const observer = new ResizeObserver(entries => {
@@ -81,7 +88,7 @@
                   secondary={button.type === "secondary"}
                   warning={button.type === "warning"}
                   overBackground={button.type === "overBackground"}
-                  on:click={() => button.onClick?.(row)}
+                  on:click={() => handleClick(button, row)}
                 >
                   {button.text || "Button"}
                 </Button>

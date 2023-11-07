@@ -53,7 +53,11 @@
       text: settings.text,
       type: settings.type,
       onClick: async row => {
-        const fn = enrichButtonActions(settings.onClick, get(context))
+        // We add a fake context binding in here, which allows us to pretend
+        // that the grid provides a "schema" binding - that lets us use the
+        // clicked row in things like save row actions
+        const enrichedContext = { ...get(context), [$component.id]: row }
+        const fn = enrichButtonActions(settings.onClick, enrichedContext)
         return await fn?.({ row })
       },
     }))

@@ -11,6 +11,7 @@
   export let bindings
   export let value
   export let key
+  export let nested
 
   const dispatch = createEventDispatcher()
 
@@ -28,6 +29,7 @@
     bindings: allBindings,
     removeButton,
     canRemove: true,
+    nested,
   }
 
   const sanitizeValue = val => {

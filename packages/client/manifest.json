@@ -6357,7 +6357,10 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
