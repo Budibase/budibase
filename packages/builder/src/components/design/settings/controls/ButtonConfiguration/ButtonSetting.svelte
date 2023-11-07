@@ -9,7 +9,6 @@
   export let bindings
   export let anchor
   export let removeButton
-  export let canRemove
   export let nested
 
   $: readableText = isJSBinding(item.text)
@@ -47,7 +46,6 @@
   </div>
   <div class="list-item-right">
     <Icon
-      disabled={!canRemove}
       size="S"
       name="Close"
       hoverable
