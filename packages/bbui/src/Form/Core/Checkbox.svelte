@@ -25,16 +25,12 @@
   class:is-invalid={!!error}
   class:checked={value}
   class:is-indeterminate={indeterminate}
+  class:readonly
 >
   <input
     checked={value}
     {disabled}
     on:change={onChange}
-    on:click={e => {
-      if (readonly) {
-        e.preventDefault()
-      }
-    }}
     type="checkbox"
     class="spectrum-Checkbox-input"
     {id}
@@ -73,5 +69,8 @@
   }
   .spectrum-Checkbox-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>
