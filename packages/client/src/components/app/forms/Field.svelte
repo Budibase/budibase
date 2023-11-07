@@ -10,6 +10,7 @@
   export let defaultValue
   export let type
   export let disabled = false
+  export let readonly = false
   export let validation
   export let span = 6
 
@@ -29,6 +30,7 @@
     type,
     defaultValue,
     disabled,
+    readonly,
     validation,
     formStep
   )
@@ -76,6 +78,7 @@
       contenteditable={$component.editing}
       on:blur={$component.editing ? updateLabel : null}
       class:hidden={!label}
+      class:readonly
       for={fieldState?.fieldId}
       class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
     >
@@ -135,5 +138,8 @@
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>
