@@ -14,6 +14,7 @@ import {
   dndIsDragging,
   confirmationStore,
   roleStore,
+  stateStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -25,6 +26,7 @@ import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
+import { processStringSync } from "@budibase/string-templates"
 
 export default {
   API,
@@ -44,6 +46,7 @@ export default {
   currentRole,
   confirmationStore,
   roleStore,
+  stateStore,
 
   // Utils
   styleable,
@@ -52,6 +55,7 @@ export default {
   fetchDatasourceSchema,
   getAPIKey,
   enrichButtonActions,
+  processStringSync,
 
   // Components
   Provider,
