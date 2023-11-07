@@ -7,6 +7,7 @@
   export let placeholder
   export let type = "text"
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue = ""
   export let align
@@ -28,6 +29,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   {span}
@@ -41,6 +43,7 @@
       value={fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       {placeholder}
