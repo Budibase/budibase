@@ -84,7 +84,7 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, rowIds, columns, query } = options
+  const { tableId, format, rowIds, columns, query, sort, sortOrder } = options
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
@@ -99,7 +99,12 @@ export async function exportRows(
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search({ tableId, query })
+    let searchResponse = await search({
+      tableId,
+      query,
+      sort,
+      sortOrder,
+    })
     result = searchResponse.rows
   }
 
