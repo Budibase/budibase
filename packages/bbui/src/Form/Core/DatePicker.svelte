@@ -9,6 +9,7 @@
 
   export let id = null
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let enableTime = true
   export let value = null
@@ -186,7 +187,7 @@
   >
     <div
       id={flatpickrId}
-      class:is-disabled={disabled}
+      class:is-disabled={disabled || readonly}
       class:is-invalid={!!error}
       class="flatpickr spectrum-InputGroup spectrum-Datepicker"
       class:is-focused={open}
@@ -211,6 +212,7 @@
         {/if}
         <input
           {disabled}
+          {readonly}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"

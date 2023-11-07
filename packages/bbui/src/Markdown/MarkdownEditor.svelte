@@ -8,6 +8,7 @@
   export let id = null
   export let fullScreenOffset = 0
   export let disabled = false
+  export let readonly = false
   export let easyMDEOptions
 
   const dispatch = createEventDispatcher()
@@ -19,6 +20,9 @@
   // control
   $: checkValue(value)
   $: mde?.codemirror.on("change", debouncedUpdate)
+  $: if (readonly || disabled) {
+    mde?.togglePreview()
+  }
 
   const checkValue = val => {
     if (mde && val !== latestValue) {
@@ -54,6 +58,7 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
+      toolbar: disabled || readonly ? false : undefined,
       ...easyMDEOptions,
     }}
   />
