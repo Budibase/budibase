@@ -15,6 +15,16 @@ import env from "../../../environment"
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
 import { middleware, redis } from "@budibase/backend-core"
+import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
+
+interface KoaRateLimitOptions {
+  socket: {
+    host: string
+    port: number
+  }
+  password?: string
+  database?: number
+}
 
 const PREFIX = "/api/public/v1"
 // allow a lot more requests when in test
@@ -29,32 +39,21 @@ function getApiLimitPerSecond(): number {
 
 let rateLimitStore: any = null
 if (!env.isTest()) {
-  const REDIS_OPTS = redis.utils.getRedisOptions()
-  let options
-  if (REDIS_OPTS.redisProtocolUrl) {
-    // fully qualified redis URL
-    options = {
-      url: REDIS_OPTS.redisProtocolUrl,
-    }
-  } else {
-    options = {
-      socket: {
-        host: REDIS_OPTS.host,
-        port: REDIS_OPTS.port,
-      },
-    }
+  const { password, host, port } = redis.utils.getRedisConnectionDetails()
+  let options: KoaRateLimitOptions = {
+    socket: {
+      host: host,
+      port: port,
+    },
+  }
 
-    if (REDIS_OPTS.opts?.password || REDIS_OPTS.opts.redisOptions?.password) {
-      // @ts-ignore
-      options.password =
-        REDIS_OPTS.opts.password || REDIS_OPTS.opts.redisOptions.password
-    }
+  if (password) {
+    options.password = password
+  }
 
-    if (!env.REDIS_CLUSTERED) {
-      // @ts-ignore
-      // Can't set direct redis db in clustered env
-      options.database = 1
-    }
+  if (!env.REDIS_CLUSTERED) {
+    // Can't set direct redis db in clustered env
+    options.database = SelectableDatabase.RATE_LIMITING
   }
   rateLimitStore = new Stores.Redis(options)
   RateLimit.defaultOptions({
