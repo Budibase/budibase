@@ -30,12 +30,12 @@ export async function destroy(ctx: BBContext) {
     layoutRev = ctx.params.layoutRev
 
   const layoutsUsedByScreens = (
-    await db.allDocs(
+    await db.allDocs<any>(
       getScreenParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map(element => element.doc.layoutId)
+  ).rows.map(element => element.doc!.layoutId)
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }
