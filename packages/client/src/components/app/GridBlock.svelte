@@ -54,7 +54,7 @@
       type: settings.type,
       onClick: async row => {
         const fn = enrichButtonActions(settings.onClick, get(context))
-        return await fn({ row })
+        return await fn?.({ row })
       },
     }))
   }
