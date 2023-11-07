@@ -29,7 +29,7 @@
   $: left = Math.min($width - $buttonColumnWidth, end)
 
   const handleClick = async (button, row) => {
-    await button.onClick?.(row)
+    await button.onClick?.(rows.actions.cleanRow(row))
     // Refresh the row in case it changed
     await rows.actions.refreshRow(row._id)
   }
