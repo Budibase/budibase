@@ -12,6 +12,7 @@
   export let value
   export let key
   export let nested
+  export let max
 
   const dispatch = createEventDispatcher()
 
@@ -30,6 +31,7 @@
     removeButton,
     nested,
   }
+  $: canAddButtons = max == null || buttonList.length < max
 
   const sanitizeValue = val => {
     return val?.map(button => {
@@ -97,7 +99,12 @@
     />
   {/if}
 
-  <div class="list-footer" on:click={addButton} class:empty={!buttonCount}>
+  <div
+    class="list-footer"
+    class:disabled={!canAddButtons}
+    on:click={addButton}
+    class:empty={!buttonCount}
+  >
     <div class="add-button">Add button</div>
   </div>
 </div>
@@ -132,15 +139,18 @@
   .list-footer.empty {
     border-radius: 4px;
   }
-
-  .add-button {
-    margin: var(--spacing-s);
+  .list-footer.disabled {
+    color: var(--spectrum-global-color-gray-500);
+    pointer-events: none;
   }
-
   .list-footer:hover {
     background-color: var(
       --spectrum-table-row-background-color-hover,
       var(--spectrum-alias-highlight-hover)
     );
+  }
+
+  .add-button {
+    margin: var(--spacing-s);
   }
 </style>
