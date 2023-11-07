@@ -18,6 +18,7 @@
   export let onChange
   export let optionsType = "select"
   export let direction = "vertical"
+  export let span
 
   let fieldState
   let fieldApi
@@ -58,6 +59,7 @@
   {disabled}
   {readonly}
   {validation}
+  {span}
   defaultValue={expandedDefaultValue}
   type="array"
   bind:fieldState

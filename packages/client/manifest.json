@@ -2798,6 +2798,35 @@
             "barTitle": "Justify text"
           }
         ]
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -2866,6 +2895,35 @@
         "type": "validation/number",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -2918,6 +2976,35 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -2975,6 +3062,35 @@
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3154,6 +3270,35 @@
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3327,6 +3472,35 @@
         "type": "validation/array",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3418,6 +3592,35 @@
         "type": "validation/boolean",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3508,6 +3711,35 @@
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3600,6 +3832,35 @@
         "type": "validation/datetime",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3687,6 +3948,22 @@
         }
       },
       {
+        "type": "select",
+        "label": "Preferred camera",
+        "key": "preferredCamera",
+        "defaultValue": "environment",
+        "options": [
+          {
+            "label": "Front",
+            "value": "user"
+          },
+          {
+            "label": "Back",
+            "value": "environment"
+          }
+        ]
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3701,6 +3978,35 @@
         "type": "validation/string",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3877,6 +4183,35 @@
         "type": "validation/attachment",
         "label": "Validation",
         "key": "validation"
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -3956,6 +4291,35 @@
           "value": true,
           "invert": true
         }
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -4019,6 +4383,35 @@
           "value": true,
           "invert": true
         }
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   },
@@ -5698,23 +6091,6 @@
       {
         "tag": "style",
         "type": "select",
-        "label": "Align labels",
-        "key": "labelPosition",
-        "defaultValue": "left",
-        "options": [
-          {
-            "label": "Left",
-            "value": "left"
-          },
-          {
-            "label": "Above",
-            "value": "above"
-          }
-        ]
-      },
-      {
-        "tag": "style",
-        "type": "select",
         "label": "Size",
         "key": "size",
         "options": [
@@ -6026,6 +6402,35 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "select",
+        "label": "Layout",
+        "key": "span",
+        "defaultValue": 6,
+        "hidden": true,
+        "showInBar": true,
+        "barStyle": "buttons",
+        "options": [
+          {
+            "label": "1 column",
+            "value": 6,
+            "barIcon": "Stop",
+            "barTitle": "1 column"
+          },
+          {
+            "label": "2 columns",
+            "value": 3,
+            "barIcon": "ColumnTwoA",
+            "barTitle": "2 columns"
+          },
+          {
+            "label": "3 columns",
+            "value": 2,
+            "barIcon": "ViewColumn",
+            "barTitle": "3 columns"
+          }
+        ]
       }
     ]
   }

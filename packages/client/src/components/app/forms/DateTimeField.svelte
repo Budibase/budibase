@@ -14,6 +14,7 @@
   export let validation
   export let defaultValue
   export let onChange
+  export let span
 
   let fieldState
   let fieldApi
@@ -33,6 +34,7 @@
   {readonly}
   {validation}
   {defaultValue}
+  {span}
   type="datetime"
   bind:fieldState
   bind:fieldApi
