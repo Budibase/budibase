@@ -48,7 +48,7 @@ export async function getAllInternalTables(db?: Database): Promise<Table[]> {
   if (!db) {
     db = context.getAppDB()
   }
-  const internalTables = await db.allDocs<Table[]>(
+  const internalTables = await db.allDocs<Table>(
     getTableParams(null, {
       include_docs: true,
     })
@@ -124,7 +124,7 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   }
   if (internalTableIds.length) {
     const db = context.getAppDB()
-    const internalTableDocs = await db.allDocs<Table[]>(
+    const internalTableDocs = await db.allDocs<Table>(
       getMultiIDParams(internalTableIds)
     )
     tables = tables.concat(internalTableDocs.rows.map(row => row.doc!))

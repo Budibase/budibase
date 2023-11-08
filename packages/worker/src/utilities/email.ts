@@ -99,8 +99,6 @@ async function buildEmail(
   if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
   }
-  base = base.contents
-  body = body.contents
 
   let name = user ? user.name : undefined
   if (user && !name && user.firstName) {
@@ -114,15 +112,10 @@ async function buildEmail(
     user: user || {},
   }
 
-  // Prepend the core template
-  const fullBody = core + body
-
-  body = await processString(fullBody, context)
-
   // this should now be the core email HTML
-  return processString(base, {
+  return processString(base.contents, {
     ...context,
-    body,
+    body: await processString(core + body?.contents, context),
   })
 }
 
