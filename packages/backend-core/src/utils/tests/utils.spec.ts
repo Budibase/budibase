@@ -188,4 +188,17 @@ describe("utils", () => {
       expectResult(false)
     })
   })
+
+  describe("hasCircularStructure", () => {
+    it("should detect a circular structure", () => {
+      const a: any = { b: "b" }
+      const b = { a }
+      a.b = b
+      expect(utils.hasCircularStructure(b)).toBe(true)
+    })
+
+    it("should allow none circular structures", () => {
+      expect(utils.hasCircularStructure({ a: "b" })).toBe(false)
+    })
+  })
 })

@@ -80,7 +80,10 @@ export async function search(options: SearchParams) {
       rows = rows.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing(table, rows, { preserveLinks: true })
+    rows = await outputProcessing(table, rows, {
+      preserveLinks: true,
+      squash: true,
+    })
 
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
@@ -185,6 +188,7 @@ export async function fetch(tableId: string): Promise<Row[]> {
   const table = await sdk.tables.getTable(tableId)
   return await outputProcessing<Row[]>(table, response, {
     preserveLinks: true,
+    squash: true,
   })
 }
 
