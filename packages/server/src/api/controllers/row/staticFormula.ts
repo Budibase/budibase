@@ -86,12 +86,12 @@ export async function updateAllFormulasInTable(table: Table) {
   const db = context.getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
-    await db.allDocs(
+    await db.allDocs<Row>(
       getRowParams(table._id, null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
