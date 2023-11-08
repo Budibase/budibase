@@ -91,7 +91,7 @@ export async function updateAllFormulasInTable(table: Table) {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc as Row)
+  ).rows.map(row => row.doc!)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
