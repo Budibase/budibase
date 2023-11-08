@@ -13,13 +13,13 @@
   export let idx
   export let addLooping
   export let deleteStep
-
+  export let enableNaming = true
   let validRegex = /^[A-Za-z0-9_\s]+$/
   let typing = false
 
   const dispatch = createEventDispatcher()
 
-  $: stepNames = $selectedAutomation.definition.stepNames
+  $: stepNames = $selectedAutomation?.definition.stepNames
   $: automationName = stepNames?.[block.id] || block?.name || ""
   $: automationNameError = getAutomationNameError(automationName)
   $: status = updateStatus(testResult, isTrigger)
@@ -32,7 +32,7 @@
       )?.[0]
     }
   }
-  $: loopBlock = $selectedAutomation.definition.steps.find(
+  $: loopBlock = $selectedAutomation?.definition.steps.find(
     x => x.blockToLoop === block?.id
   )
 
@@ -126,24 +126,33 @@
             <Body size="XS"><b>Step {idx}</b></Body>
           </div>
         {/if}
-        <input
-          placeholder="Enter some text"
-          name="name"
-          autocomplete="off"
-          value={automationName}
-          on:input={e => {
-            automationName = e.target.value.trim()
-          }}
-          on:click={startTyping}
-          on:blur={async () => {
-            typing = false
-            if (automationNameError) {
-              automationName = stepNames[block.id] || block?.name
-            } else {
-              await saveName()
-            }
-          }}
-        />
+
+        {#if enableNaming}
+          <input
+            class="input-text"
+            disabled={!enableNaming}
+            placeholder="Enter some text"
+            name="name"
+            autocomplete="off"
+            value={automationName}
+            on:input={e => {
+              automationName = e.target.value.trim()
+            }}
+            on:click={startTyping}
+            on:blur={async () => {
+              typing = false
+              if (automationNameError) {
+                automationName = stepNames[block.id] || block?.name
+              } else {
+                await saveName()
+              }
+            }}
+          />
+        {:else}
+          <div class="input-text">
+            {automationName}
+          </div>
+        {/if}
       </div>
     </div>
     <div class="blockTitle">
@@ -178,9 +187,11 @@
               <Icon on:click={addLooping} hoverable name="RotateCW" />
             </AbsTooltip>
           {/if}
-          <AbsTooltip type="negative" text="Delete step">
-            <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
-          </AbsTooltip>
+          {#if !isHeaderTrigger}
+            <AbsTooltip type="negative" text="Delete step">
+              <Icon on:click={deleteStep} hoverable name="DeleteOutline" />
+            </AbsTooltip>
+          {/if}
         {/if}
         {#if !showTestStatus}
           <Icon
@@ -244,16 +255,19 @@
     display: none;
   }
   input {
-    font-family: var(--font-sans);
     color: var(--ink);
     background-color: transparent;
     border: 1px solid transparent;
-    font-size: var(--spectrum-alias-font-size-default);
     width: 230px;
     box-sizing: border-box;
     overflow: hidden;
-    text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .input-text {
+    font-size: var(--spectrum-alias-font-size-default);
+    font-family: var(--font-sans);
+    text-overflow: ellipsis;
   }
 
   input:focus {
