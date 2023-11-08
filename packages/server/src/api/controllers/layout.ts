@@ -1,7 +1,7 @@
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { generateLayoutID, getScreenParams } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
-import { BBContext } from "@budibase/types"
+import { BBContext, Layout } from "@budibase/types"
 
 export async function save(ctx: BBContext) {
   const db = context.getAppDB()
@@ -30,12 +30,12 @@ export async function destroy(ctx: BBContext) {
     layoutRev = ctx.params.layoutRev
 
   const layoutsUsedByScreens = (
-    await db.allDocs(
+    await db.allDocs<Layout>(
       getScreenParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map(element => element.doc.layoutId)
+  ).rows.map(element => element.doc!.layoutId)
   if (layoutsUsedByScreens.includes(layoutId)) {
     ctx.throw(400, "Cannot delete a layout that's being used by a screen")
   }
