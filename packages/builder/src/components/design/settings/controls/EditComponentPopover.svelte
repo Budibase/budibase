@@ -11,6 +11,7 @@
   export let componentBindings
   export let bindings
   export let parseSettings
+  export let disabled
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
@@ -90,6 +91,7 @@
       open = true
     }
   }}
+  {disabled}
 />
 
 <Popover
