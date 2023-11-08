@@ -41,8 +41,8 @@
 </div>
 
 {#if parameters.length}
-  <div class="schema-fields">
-    {#each parameters as field}
+  {#each parameters as field}
+    <div class="schema-fields">
       <Label>{field.name}</Label>
       <div class="field-width">
         <DrawerBindableInput
@@ -56,8 +56,8 @@
           updateOnChange={false}
         />
       </div>
-    {/each}
-  </div>
+    </div>
+  {/each}
 {/if}
 
 <style>

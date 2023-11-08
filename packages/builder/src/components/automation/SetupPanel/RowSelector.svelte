@@ -114,33 +114,12 @@
 </div>
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
-    <div class="schema-fields">
-      <Label>{field}</Label>
-      <div class="field-width">
-        {#if !schema.autocolumn && schema.type !== "attachment"}
-          {#if isTestModal}
-            <RowSelectorTypes
-              {isTestModal}
-              {field}
-              {schema}
-              bindings={parsedBindings}
-              {value}
-              {onChange}
-            />
-          {:else}
-            <DrawerBindableSlot
-              fillWidth
-              title={value.title}
-              panel={AutomationBindingPanel}
-              type={schema.type}
-              {schema}
-              value={value[field]}
-              on:change={e => onChange(e, field)}
-              {bindings}
-              allowJS={true}
-              updateOnChange={false}
-              drawerLeft="260px"
-            >
+    {#if !schema.autocolumn}
+      {#if schema.type !== "attachment"}
+        <div class="schema-fields">
+          <Label>{field}</Label>
+          <div class="field-width">
+            {#if isTestModal}
               <RowSelectorTypes
                 {isTestModal}
                 {field}
@@ -149,22 +128,45 @@
                 {value}
                 {onChange}
               />
-            </DrawerBindableSlot>
-          {/if}
-        {/if}
+            {:else}
+              <DrawerBindableSlot
+                fillWidth
+                title={value.title}
+                panel={AutomationBindingPanel}
+                type={schema.type}
+                {schema}
+                value={value[field]}
+                on:change={e => onChange(e, field)}
+                {bindings}
+                allowJS={true}
+                updateOnChange={false}
+                drawerLeft="260px"
+              >
+                <RowSelectorTypes
+                  {isTestModal}
+                  {field}
+                  {schema}
+                  bindings={parsedBindings}
+                  {value}
+                  {onChange}
+                />
+              </DrawerBindableSlot>
+            {/if}
 
-        {#if isUpdateRow && schema.type === "link"}
-          <div class="checkbox-field">
-            <Checkbox
-              value={meta.fields?.[field]?.clearRelationships}
-              text={"Clear relationships if empty?"}
-              size={"S"}
-              on:change={e => onChangeSetting(e, field)}
-            />
+            {#if isUpdateRow && schema.type === "link"}
+              <div class="checkbox-field">
+                <Checkbox
+                  value={meta.fields?.[field]?.clearRelationships}
+                  text={"Clear relationships if empty?"}
+                  size={"S"}
+                  on:change={e => onChangeSetting(e, field)}
+                />
+              </div>
+            {/if}
           </div>
-        {/if}
-      </div>
-    </div>
+        </div>
+      {/if}
+    {/if}
   {/each}
 {/if}
 
