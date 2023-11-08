@@ -67,6 +67,7 @@
     linkedRows={value[field]}
     {schema}
     on:change={e => onChange(e, field)}
+    useLabel={false}
   />
 {:else if schema.type === "string" || schema.type === "number"}
   <svelte:component
