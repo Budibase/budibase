@@ -2709,7 +2709,7 @@
     },
     "settings": [
       {
-        "type": "text",
+        "type": "plainText",
         "label": "Label",
         "key": "label"
       }
@@ -6348,14 +6348,10 @@
         "name": "Columns",
         "settings": [
           {
-            "type": "fieldConfiguration",
+            "type": "columns/grid",
             "key": "columns",
             "nested": true,
-            "resetOn": "dataSource",
-            "selectAllFields": true,
-            "includeAutoColumns": true,
-            "preventDraggingPrimaryColumn": true,
-            "forcedComponent": "labelfield"
+            "resetOn": "dataSource"
           }
         ]
       }

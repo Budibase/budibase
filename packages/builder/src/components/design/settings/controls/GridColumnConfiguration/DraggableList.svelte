@@ -4,13 +4,15 @@
   import { generate } from "shortid"
   import { setContext } from "svelte"
   import { writable, get } from "svelte/store"
-  import DragHandle from "./drag-handle.svelte"
+  import DragHandle from "./DragHandle.svelte"
+  import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
 
   export let items = []
   export let hideHandle = false
   export let listType
   export let listTypeProps = {}
   export let listItemKey
+  export let stickyItem
   export let noDrag = false
   export let focus
 
@@ -37,6 +39,7 @@
 
   let anchors = {}
   let draggableItems = []
+  let stickyAnchor
 
   const buildDraggable = items => {
     const draggableItems = items
@@ -48,7 +51,7 @@
       })
       .filter(item => item.id)
 
-    return draggableItems
+    return draggableItems.filter(item => item.item.field !== stickyItem.field)
   }
 
   $: if (items) {
@@ -65,20 +68,38 @@
       return acc
     }, [])
 
+    update = update.concat(stickyItem)
+
     return update
   }
 
   const handleFinalize = e => {
     updateRowOrder(e)
-    const foo = serialiseUpdate()
-    console.log(foo)
-    dispatch("change", foo)
+    dispatch("change", serialiseUpdate())
   }
 
   const onItemChanged = e => {
     dispatch("itemChange", e.detail)
   }
 </script>
+
+<div class="sticky-item">
+  <div bind:this={stickyAnchor} class="sticky-item-inner">
+    <div class="left-content">
+      <div class:hideHandle={true} class="handle">
+        <DragHandle />
+      </div>
+    </div>
+    <div class="right-content">
+      <PrimaryColumnFieldSetting
+        anchor={stickyAnchor}
+        item={stickyItem}
+        {...listTypeProps}
+        on:change={onItemChanged}
+      />
+    </div>
+  </div>
+</div>
 
 <ul
   class="list-wrap"
@@ -119,6 +140,38 @@
 </ul>
 
 <style>
+  .sticky-item {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    border-radius: 4px;
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    margin-bottom: 10px;
+  }
+
+  .sticky-item-inner {
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    transition: background-color ease-in-out 130ms;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    padding-left: var(--spacing-s);
+    padding-right: var(--spacing-s);
+    box-sizing: border-box;
+    border-radius: 4px;
+    border-bottom: 0;
+  }
+
   .list-wrap {
     list-style-type: none;
     margin: 0;

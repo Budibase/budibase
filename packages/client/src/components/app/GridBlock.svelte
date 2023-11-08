@@ -17,6 +17,10 @@
   export let columns = null
   export let onRowClick = null
 
+  $: {
+    console.log(JSON.parse(JSON.stringify(columns)))
+  }
+
   const component = getContext("component")
   const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 

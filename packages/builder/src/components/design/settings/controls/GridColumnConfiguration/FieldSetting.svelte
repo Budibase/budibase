@@ -1,23 +1,18 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Icon } from "@budibase/bbui"
-  import { store } from "builderStore"
-  import { runtimeToReadableBinding } from "builderStore/dataBinding"
-  import { isJSBinding } from "@budibase/string-templates"
+  import { Toggle, Icon } from "@budibase/bbui"
+  import { createEventDispatcher } from "svelte"
+  import { cloneDeep } from "lodash/fp"
 
   export let item
-  export let componentBindings
-  export let bindings
   export let anchor
-  export let hideToggle = false
 
-  const getReadableText = () => {
-    if (item.label) {
-      return isJSBinding(item.label)
-        ? "(JavaScript function)"
-        : runtimeToReadableBinding([...bindings, componentBindings], item.label)
+  const dispatch = createEventDispatcher()
+  const onToggle = item => {
+    return e => {
+      item.active = e.detail
+      dispatch("change", { ...cloneDeep(item), active: e.detail })
     }
-    return item.field
   }
 
   const parseSettings = settings => {
@@ -27,9 +22,6 @@
         return { ...setting, nested: true }
       })
   }
-
-  $: readableText = getReadableText(item)
-  $: componentDef = store.actions.components.getDefinition(item._component)
 </script>
 
 <div class="list-item-body">
@@ -37,23 +29,18 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
-      {bindings}
       {parseSettings}
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name={componentDef.icon} />
+        <Icon name="Text" />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>
-    <div class="field-label">{readableText}</div>
+    <div class="field-label">{item.field}</div>
   </div>
-  <div
-    title="The leftmost column is dictated by your datasource's primary column, which can be changed in the data section"
-    class="list-item-right"
-  >
-    <Icon name={"Info"} />
+  <div class="list-item-right">
+    <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
   </div>
 </div>
 
@@ -70,9 +57,8 @@
     gap: var(--spacing-m);
     min-width: 0;
   }
-  .list-item-right :global(svg) {
-    color: var(--grey-5);
-    padding: 7px 5px 7px 0;
+  .list-item-right :global(div.spectrum-Switch) {
+    margin: 0px;
   }
   .list-item-body {
     justify-content: space-between;

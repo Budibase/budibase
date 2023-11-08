@@ -3,15 +3,12 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-    getBindableProperties,
-    getComponentBindableProperties,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
-  import DraggableList from "../DraggableList/DraggableList.svelte"
+  import DraggableList from "./DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store, selectedScreen } from "builderStore"
+  import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
-  import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
   export let value
@@ -24,17 +21,7 @@
   let options
   let sanitisedValue
   let unconfigured
-
-  $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
-  $: actionType = componentInstance.actionType
-  let componentBindings = []
-
-  $: if (actionType) {
-    componentBindings = getComponentBindableProperties(
-      $selectedScreen,
-      componentInstance._id
-    )
-  }
+  let primaryDisplayColumn
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: resourceId = datasource?.resourceId || datasource?.tableId
@@ -47,12 +34,19 @@
   const updateState = value => {
     schema = getSchema($currentAsset, datasource)
     options = Object.keys(schema || {})
-    sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
+    sanitisedValue = getValidColumns(value, options)
     updateSanitsedFields(sanitisedValue)
     unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
     fieldList = [...sanitisedFields, ...unconfigured]
       .map(buildPseudoInstance)
       .filter(x => x != null)
+    const primaryDisplayColumnName = getPrimaryDisplayColumnName(
+      $currentAsset,
+      datasource
+    )
+    primaryDisplayColumn = fieldList.find(
+      field => field.field === primaryDisplayColumnName
+    )
 
     if (resourceId !== previousResourceId) {
       if (previousResourceId !== null) {
@@ -76,16 +70,14 @@
       delete schemaClone[val.field]
     })
 
-    return Object.keys(schemaClone)
-      .filter(key => !schemaClone[key].autocolumn)
-      .map(key => {
-        const col = schemaClone[key]
-        let toggleOn = !value
-        return {
-          field: key,
-          active: typeof col.active != "boolean" ? toggleOn : col.active,
-        }
-      })
+    return Object.keys(schemaClone).map(key => {
+      const col = schemaClone[key]
+      let toggleOn = !value
+      return {
+        field: key,
+        active: typeof col.active != "boolean" ? toggleOn : col.active,
+      }
+    })
   }
 
   const getSchema = (asset, datasource) => {
@@ -98,6 +90,10 @@
     }
 
     return schema
+  }
+
+  const getPrimaryDisplayColumnName = (asset, datasource) => {
+    return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay
   }
 
   const updateSanitsedFields = value => {
@@ -118,11 +114,8 @@
     if (instance._component) {
       return instance
     }
-    const type = getComponentForField(instance.field, schema)
-    if (!type) {
-      return null
-    }
-    instance._component = `@budibase/standard-components/${type}`
+
+    instance._component = "@budibase/standard-components/labelfield"
 
     const pseudoComponentInstance = store.actions.components.createInstance(
       instance._component,
@@ -161,24 +154,11 @@
   }
 </script>
 
-<div class="field-configuration">
-  {#if fieldList?.length}
-    <DraggableList
-      on:change={listUpdated}
-      on:itemChange={processItemUpdate}
-      items={fieldList}
-      listItemKey={"_id"}
-      listType={FieldSetting}
-      listTypeProps={{
-        componentBindings,
-        bindings,
-      }}
-    />
-  {/if}
-</div>
-
-<style>
-  .field-configuration :global(.spectrum-ActionButton) {
-    width: 100%;
-  }
-</style>
+<DraggableList
+  stickyItem={primaryDisplayColumn}
+  on:change={listUpdated}
+  on:itemChange={processItemUpdate}
+  items={fieldList}
+  listItemKey={"_id"}
+  listType={FieldSetting}
+/>
