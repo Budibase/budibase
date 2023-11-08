@@ -413,15 +413,13 @@ export class UserDB {
     }
 
     // Get users and delete
-    const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
+    const allDocsResponse = await db.allDocs<User>({
       include_docs: true,
       keys: userIds,
     })
-    const usersToDelete: User[] = allDocsResponse.rows.map(
-      (user: RowResponse<User>) => {
-        return user.doc
-      }
-    )
+    const usersToDelete = allDocsResponse.rows.map(user => {
+      return user.doc!
+    })
 
     // Delete from DB
     const toDelete = usersToDelete.map(user => ({

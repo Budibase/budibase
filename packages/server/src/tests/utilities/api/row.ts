@@ -6,6 +6,7 @@ import {
   ExportRowsRequest,
   BulkImportRequest,
   BulkImportResponse,
+  SearchRowResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -154,7 +155,7 @@ export class RowAPI extends TestAPI {
   search = async (
     sourceId: string,
     { expectStatus } = { expectStatus: 200 }
-  ): Promise<Row[]> => {
+  ): Promise<SearchRowResponse> => {
     const request = this.request
       .post(`/api/${sourceId}/search`)
       .set(this.config.defaultHeaders())
