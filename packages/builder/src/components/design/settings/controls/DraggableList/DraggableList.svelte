@@ -7,11 +7,11 @@
   import DragHandle from "./drag-handle.svelte"
 
   export let items = []
-  export let hideHandle = false
+  export let showHandle = true
   export let listType
   export let listTypeProps = {}
   export let listItemKey
-  export let noDrag = false
+  export let draggable = true
   export let focus
 
   let store = writable({
@@ -39,7 +39,7 @@
   let draggableItems = []
 
   const buildDraggable = items => {
-    const draggableItems = items
+    return items
       .map(item => {
         return {
           id: listItemKey ? item[listItemKey] : generate(),
@@ -47,8 +47,6 @@
         }
       })
       .filter(item => item.id)
-
-    return draggableItems
   }
 
   $: if (items) {
@@ -60,19 +58,15 @@
   }
 
   const serialiseUpdate = () => {
-    let update = draggableItems.reduce((acc, ele) => {
+    return draggableItems.reduce((acc, ele) => {
       acc.push(ele.item)
       return acc
     }, [])
-
-    return update
   }
 
   const handleFinalize = e => {
     updateRowOrder(e)
-    const foo = serialiseUpdate()
-    console.log(foo)
-    dispatch("change", foo)
+    dispatch("change", serialiseUpdate())
   }
 
   const onItemChanged = e => {
@@ -86,7 +80,7 @@
     items: draggableItems,
     flipDurationMs,
     dropTargetStyle: { outline: "none" },
-    dragDisabled: noDrag,
+    dragDisabled: !draggable,
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
@@ -98,12 +92,13 @@
       }}
       bind:this={anchors[draggable.id]}
       class:highlighted={draggable.id === $store.selected}
-      class:noDrag
     >
       <div class="left-content">
-        <div class:hideHandle class="handle">
-          <DragHandle />
-        </div>
+        {#if showHandle}
+          <div class="handle">
+            <DragHandle />
+          </div>
+        {/if}
       </div>
       <div class="right-content">
         <svelte:component
@@ -177,17 +172,5 @@
     margin-left: 2px;
     width: var(--spectrum-global-dimension-size-65);
     height: 100%;
-  }
-
-  .hideHandle {
-    opacity: 0;
-  }
-
-  .noDrag:hover {
-    cursor: default !important;
-    background-color: var(
-      --spectrum-table-background-color,
-      var(--spectrum-global-color-gray-50)
-    ) !important;
   }
 </style>

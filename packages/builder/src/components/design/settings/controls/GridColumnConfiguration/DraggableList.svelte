@@ -101,7 +101,7 @@
   use:dndzone={{
     items: draggableItems,
     flipDurationMs,
-    dropTargetStyle: { outline: "none" }
+    dropTargetStyle: { outline: "none" },
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
