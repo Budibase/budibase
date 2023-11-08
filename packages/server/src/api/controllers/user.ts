@@ -1,10 +1,10 @@
 import { generateUserFlagID, InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
-import { Ctx, UserCtx } from "@budibase/types"
+import { Ctx, FetchUserMetadataResponse, UserCtx } from "@budibase/types"
 import sdk from "../../sdk"
 
-export async function fetchMetadata(ctx: Ctx) {
+export async function fetchMetadata(ctx: Ctx<null, FetchUserMetadataResponse>) {
   ctx.body = await sdk.users.fetchMetadata()
 }
 
@@ -44,7 +44,7 @@ export async function destroyMetadata(ctx: UserCtx) {
 }
 
 export async function findMetadata(ctx: UserCtx) {
-  ctx.body = await getFullUser(ctx, ctx.params.id)
+  ctx.body = await getFullUser(ctx.params.id)
 }
 
 export async function setFlag(ctx: UserCtx) {
