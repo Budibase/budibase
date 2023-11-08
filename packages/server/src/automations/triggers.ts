@@ -20,10 +20,10 @@ const JOB_OPTS = {
 
 async function getAllAutomations() {
   const db = context.getAppDB()
-  let automations = await db.allDocs(
+  let automations = await db.allDocs<Automation>(
     getAutomationParams(null, { include_docs: true })
   )
-  return automations.rows.map(row => row.doc)
+  return automations.rows.map(row => row.doc!)
 }
 
 async function queueRelevantRowAutomations(
@@ -45,19 +45,19 @@ async function queueRelevantRowAutomations(
 
     for (let automation of automations) {
       let automationDef = automation.definition
-      let automationTrigger = automationDef ? automationDef.trigger : {}
+      let automationTrigger = automationDef?.trigger
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
       if (
         !env.ALLOW_DEV_AUTOMATIONS &&
         isDevAppID(event.appId) &&
-        !(await checkTestFlag(automation._id))
+        !(await checkTestFlag(automation._id!))
       ) {
         continue
       }
       if (
-        automationTrigger.inputs &&
+        automationTrigger?.inputs &&
         automationTrigger.inputs.tableId === event.row.tableId
       ) {
         await automationQueue.add({ automation, event }, JOB_OPTS)

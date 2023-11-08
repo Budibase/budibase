@@ -3,7 +3,11 @@ import { db as dbCore, context, logging, roles } from "@budibase/backend-core"
 import { User, ContextUser, UserGroup } from "@budibase/types"
 import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
-import { getGlobalUsers, processUser } from "../../../utilities/global"
+import {
+  getGlobalUsers,
+  getRawGlobalUsers,
+  processUser,
+} from "../../../utilities/global"
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
 
 type DeletedUser = { _id: string; deleted: boolean }
@@ -77,9 +81,7 @@ async function syncUsersToApp(
 
 export async function syncUsersToAllApps(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
-  const users = (await getGlobalUsers(userIds, {
-    noProcessing: true,
-  })) as User[]
+  const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
   const finalUsers: (User | DeletedUser)[] = []
   for (let userId of userIds) {

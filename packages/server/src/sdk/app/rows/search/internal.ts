@@ -185,8 +185,8 @@ export async function fetchView(
       group: !!group,
     })
   } else {
-    const tableId = viewInfo.meta.tableId
-    const data = await fetchRaw(tableId)
+    const tableId = viewInfo.meta!.tableId
+    const data = await fetchRaw(tableId!)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
@@ -200,7 +200,7 @@ export async function fetchView(
     response.rows = response.rows.map(row => row.doc)
     let table: Table
     try {
-      table = await sdk.tables.getTable(viewInfo.meta.tableId)
+      table = await sdk.tables.getTable(viewInfo.meta!.tableId)
     } catch (err) {
       throw new Error("Unable to retrieve view table.")
     }
