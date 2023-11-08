@@ -2,8 +2,8 @@
 
 echo ${TARGETBUILD} > /buildtarget.txt
 if [[ "${TARGETBUILD}" = "aas" ]]; then
-    # Azure AppService uses /home for persisent data & SSH on port 2222
-    DATA_DIR=/home
+    # Azure AppService uses /home for persistent data & SSH on port 2222
+    DATA_DIR="${DATA_DIR:-/home}"
     WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
     mkdir -p $DATA_DIR/{search,minio,couch}
     mkdir -p $DATA_DIR/couch/{dbs,views}
