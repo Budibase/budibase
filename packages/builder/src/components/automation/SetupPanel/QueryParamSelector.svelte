@@ -27,7 +27,7 @@
   $: if (value?.queryId == null) value = { queryId: "" }
 </script>
 
-<div class="schema-fields">
+<div class="schema-field">
   <Label>Query</Label>
   <div class="field-width">
     <Select
@@ -42,7 +42,7 @@
 
 {#if parameters.length}
   {#each parameters as field}
-    <div class="schema-fields">
+    <div class="schema-field">
       <Label>{field.name}</Label>
       <div class="field-width">
         <DrawerBindableInput
@@ -65,7 +65,7 @@
     width: 320px;
   }
 
-  .schema-fields {
+  .schema-field {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -76,7 +76,7 @@
     margin-bottom: 10px;
   }
 
-  .schema-fields :global(label) {
+  .schema-field :global(label) {
     text-transform: capitalize;
   }
 </style>
