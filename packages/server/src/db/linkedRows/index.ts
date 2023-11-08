@@ -2,7 +2,6 @@ import LinkController from "./LinkController"
 import {
   IncludeDocs,
   getLinkDocuments,
-  createLinkView,
   getUniqueByProp,
   getRelatedTableForField,
   getLinkedTableIDs,
