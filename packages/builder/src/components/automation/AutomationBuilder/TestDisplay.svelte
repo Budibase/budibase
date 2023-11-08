@@ -48,6 +48,7 @@
     <div class="block" style={width ? `width: ${width}` : ""}>
       {#if block.stepId !== ActionStepID.LOOP}
         <FlowItemHeader
+          enableNaming={false}
           open={!!openBlocks[block.id]}
           on:toggle={() => (openBlocks[block.id] = !openBlocks[block.id])}
           isTrigger={idx === 0}
