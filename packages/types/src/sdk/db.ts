@@ -1,5 +1,5 @@
 import Nano from "@budibase/nano"
-import { AllDocsResponse, AnyDocument, Document } from "../"
+import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
 import { Writable } from "stream"
 
 export enum SearchIndex {
@@ -18,6 +18,37 @@ export type PouchOptions = {
 export enum SortOption {
   ASCENDING = "asc",
   DESCENDING = "desc",
+}
+
+export type IndexAnalyzer = {
+  name: string
+  default?: string
+  fields?: Record<string, string>
+}
+
+export type DBView = {
+  name?: string
+  map: string
+  reduce?: string
+  meta?: ViewTemplateOpts
+  groupBy?: string
+}
+
+export interface DesignDocument extends Document {
+  // we use this static reference for all design documents
+  _id: "_design/database"
+  language?: string
+  // CouchDB views
+  views?: {
+    [viewName: string]: DBView
+  }
+  // Lucene indexes
+  indexes?: {
+    [indexName: string]: {
+      index: string
+      analyzer?: string | IndexAnalyzer
+    }
+  }
 }
 
 export type CouchFindOptions = {
