@@ -101,12 +101,12 @@ export async function updateAllFormulasInTable(table: Table) {
   for (let row of rows) {
     // find the enriched row, if found process the formulas
     const enrichedRow = enrichedRows.find(
-      (enriched: any) => enriched._id === row._id
+      (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
       const processed = processFormulas(table, cloneDeep(row), {
         dynamic: false,
-        contextRows: enrichedRow,
+        contextRows: [enrichedRow],
       })
       // values have changed, need to add to bulk docs to update
       if (!isEqual(processed, row)) {
@@ -139,7 +139,7 @@ export async function finaliseRow(
   // use enriched row to generate formulas for saving, specifically only use as context
   row = processFormulas(table, row, {
     dynamic: false,
-    contextRows: enrichedRow,
+    contextRows: [enrichedRow],
   })
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
@@ -163,7 +163,9 @@ export async function finaliseRow(
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
-  enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
+  enrichedRow = processFormulas(table, enrichedRow, {
+    dynamic: false,
+  })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
     await updateRelatedFormula(table, enrichedRow)
