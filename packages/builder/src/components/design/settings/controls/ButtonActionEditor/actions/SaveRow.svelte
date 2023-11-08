@@ -2,29 +2,19 @@
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables, viewsV2 } from "stores/backend"
-  import {
-    getContextProviderComponents,
-    getSchemaForDatasourcePlus,
-  } from "builderStore/dataBinding"
+  import { getSchemaForDatasourcePlus } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
+  import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 
   export let parameters
   export let bindings = []
   export let nested
 
-  $: formComponents = getContextProviderComponents(
-    $currentAsset,
-    $store.selectedComponentId,
-    "form",
-    { includeSelf: nested }
-  )
-  $: schemaComponents = getContextProviderComponents(
-    $currentAsset,
-    $store.selectedComponentId,
-    "schema",
-    { includeSelf: nested }
-  )
-  $: providerOptions = getProviderOptions(formComponents, schemaComponents)
+  $: providerOptions = getDatasourceLikeProviders({
+    asset: $currentAsset,
+    componentId: $store.selectedComponentId,
+    nested,
+  })
   $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list.map(table => ({
     label: table.name,
@@ -35,40 +25,6 @@
     resourceId: view.id,
   }))
   $: options = [...(tableOptions || []), ...(viewOptions || [])]
-
-  // Gets a context definition of a certain type from a component definition
-  const extractComponentContext = (component, contextType) => {
-    const def = store.actions.components.getDefinition(component?._component)
-    if (!def) {
-      return null
-    }
-    const contexts = Array.isArray(def.context) ? def.context : [def.context]
-    return contexts.find(context => context?.type === contextType)
-  }
-
-  // Gets options for valid context keys which provide valid data to submit
-  const getProviderOptions = (formComponents, schemaComponents) => {
-    const formContexts = formComponents.map(component => ({
-      component,
-      context: extractComponentContext(component, "form"),
-    }))
-    const schemaContexts = schemaComponents.map(component => ({
-      component,
-      context: extractComponentContext(component, "schema"),
-    }))
-    const allContexts = formContexts.concat(schemaContexts)
-
-    return allContexts.map(({ component, context }) => {
-      let runtimeBinding = component._id
-      if (context.suffix) {
-        runtimeBinding += `-${context.suffix}`
-      }
-      return {
-        label: component._instanceName,
-        value: runtimeBinding,
-      }
-    })
-  }
 
   const getSchemaFields = resourceId => {
     const { schema } = getSchemaForDatasourcePlus(resourceId)
