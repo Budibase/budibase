@@ -32,6 +32,7 @@ import {
   structures,
 } from "@budibase/backend-core/tests"
 import _ from "lodash"
+import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -68,7 +69,7 @@ describe.each([
 
   const generateTableConfig: () => SaveTableRequest = () => {
     return {
-      name: generator.word(),
+      name: uuid.v4(),
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
@@ -481,7 +482,7 @@ describe.each([
       })
 
       const createViewResponse = await config.createView({
-        name: generator.word(),
+        name: uuid.v4(),
         schema: {
           Country: {
             visible: true,
@@ -816,7 +817,8 @@ describe.each([
             RelationshipType.ONE_TO_MANY,
             ["link"],
             {
-              name: generator.word(),
+              // Making sure that the combined table name + column name is within postgres limits
+              name: uuid.v4().replace(/-/g, "").substring(0, 16),
               type: "table",
               primary: ["id"],
               primaryDisplay: "id",
@@ -949,7 +951,7 @@ describe.each([
   describe("view 2.0", () => {
     async function userTable(): Promise<Table> {
       return {
-        name: `users_${generator.word()}`,
+        name: `users_${uuid.v4()}`,
         sourceId: INTERNAL_TABLE_SOURCE_ID,
         sourceType: TableSourceType.INTERNAL,
         type: "table",
@@ -1133,7 +1135,7 @@ describe.each([
       const viewSchema = { age: { visible: true }, name: { visible: true } }
       async function userTable(): Promise<Table> {
         return {
-          name: `users_${generator.word()}`,
+          name: `users_${uuid.v4()}`,
           sourceId: INTERNAL_TABLE_SOURCE_ID,
           sourceType: TableSourceType.INTERNAL,
           type: "table",
@@ -1630,7 +1632,7 @@ describe.each([
       }),
       (tableId: string) =>
         config.api.row.save(tableId, {
-          name: generator.word(),
+          name: uuid.v4(),
           description: generator.paragraph(),
           tableId,
         }),
