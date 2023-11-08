@@ -7,7 +7,7 @@
 
   export let schema
   export let linkedRows = []
-
+  export let useLabel = true
   const dispatch = createEventDispatcher()
 
   let rows = []
@@ -51,7 +51,7 @@
       linkedIds = e.detail ? [e.detail] : []
       dispatch("change", linkedIds)
     }}
-    {label}
+    label={useLabel ? label : null}
     sort
   />
 {:else}
