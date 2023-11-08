@@ -98,17 +98,17 @@ function updateContext(updates: ContextMap): ContextMap {
   return context
 }
 
-async function newContext(updates: ContextMap, task: any) {
+async function newContext<T>(updates: ContextMap, task: () => T) {
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
   return Context.run(context, task)
 }
 
-export async function doInAutomationContext(params: {
+export async function doInAutomationContext<T>(params: {
   appId: string
   automationId: string
-  task: any
-}): Promise<any> {
+  task: () => T
+}): Promise<T> {
   const tenantId = getTenantIDFromAppID(params.appId)
   return newContext(
     {
@@ -144,10 +144,10 @@ export async function doInTenant<T>(
   return newContext(updates, task)
 }
 
-export async function doInAppContext(
+export async function doInAppContext<T>(
   appId: string | null,
-  task: any
-): Promise<any> {
+  task: () => T
+): Promise<T> {
   if (!appId && !env.isTest()) {
     throw new Error("appId is required")
   }
@@ -165,10 +165,10 @@ export async function doInAppContext(
   return newContext(updates, task)
 }
 
-export async function doInIdentityContext(
+export async function doInIdentityContext<T>(
   identity: IdentityContext,
-  task: any
-): Promise<any> {
+  task: () => T
+): Promise<T> {
   if (!identity) {
     throw new Error("identity is required")
   }

@@ -1,7 +1,7 @@
 import { directCouchQuery, DatabaseImpl } from "./couch"
-import { CouchFindOptions, Database } from "@budibase/types"
+import { CouchFindOptions, Database, DatabaseOpts } from "@budibase/types"
 
-export function getDB(dbName: string, opts?: any): Database {
+export function getDB(dbName: string, opts?: DatabaseOpts): Database {
   return new DatabaseImpl(dbName, opts)
 }
 
@@ -11,7 +11,7 @@ export function getDB(dbName: string, opts?: any): Database {
 export async function doWithDB<T>(
   dbName: string,
   cb: (db: Database) => Promise<T>,
-  opts = {}
+  opts?: DatabaseOpts
 ) {
   const db = getDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
