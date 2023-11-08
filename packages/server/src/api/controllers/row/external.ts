@@ -76,6 +76,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     relationships: true,
   })
   const enrichedRow = await outputProcessing(table, row, {
+    squash: true,
     preserveLinks: true,
   })
   return {
@@ -119,7 +120,10 @@ export async function save(ctx: UserCtx) {
     })
     return {
       ...response,
-      row: await outputProcessing(table, row, { preserveLinks: true }),
+      row: await outputProcessing(table, row, {
+        preserveLinks: true,
+        squash: true,
+      }),
     }
   } else {
     return response
@@ -140,7 +144,7 @@ export async function find(ctx: UserCtx): Promise<Row> {
   const table = await sdk.tables.getTable(tableId)
   // Preserving links, as the outputProcessing does not support external rows yet and we don't need it in this use case
   return await outputProcessing(table, row, {
-    squash: false,
+    squash: true,
     preserveLinks: true,
   })
 }
@@ -207,7 +211,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
     // don't support composite keys right now
     const linkedIds = links.map((link: Row) => breakRowIdField(link._id!)[0])
     const primaryLink = linkedTable.primary?.[0] as string
-    row[fieldName] = await handleRequest(Operation.READ, linkedTableId!, {
+    const relatedRows = await handleRequest(Operation.READ, linkedTableId!, {
       tables,
       filters: {
         oneOf: {
@@ -215,6 +219,10 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
         },
       },
       includeSqlRelationships: IncludeRelationship.INCLUDE,
+    })
+    row[fieldName] = await outputProcessing(linkedTable, relatedRows, {
+      squash: true,
+      preserveLinks: true,
     })
   }
   return row
