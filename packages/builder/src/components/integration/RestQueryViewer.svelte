@@ -373,6 +373,9 @@
   }
 
   const urlChanged = evt => {
+    if (evt.target.value === url) {
+      return
+    }
     breakQs = {}
     const qs = evt.target.value.split("?")[1]
     if (qs && qs.length > 0) {
