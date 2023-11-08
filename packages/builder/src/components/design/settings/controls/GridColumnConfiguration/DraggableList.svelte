@@ -6,15 +6,11 @@
   import { writable, get } from "svelte/store"
   import DragHandle from "./DragHandle.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
+  import FieldSetting from "./FieldSetting.svelte"
 
   export let items = []
-  export let hideHandle = false
-  export let listType
-  export let listTypeProps = {}
   export let listItemKey
   export let stickyItem
-  export let noDrag = false
-  export let focus
 
   let store = writable({
     selected: null,
@@ -86,7 +82,7 @@
 <div class="sticky-item">
   <div bind:this={stickyAnchor} class="sticky-item-inner">
     <div class="left-content">
-      <div class:hideHandle={true} class="handle">
+      <div class="handle hideHandle">
         <DragHandle />
       </div>
     </div>
@@ -94,7 +90,6 @@
       <PrimaryColumnFieldSetting
         anchor={stickyAnchor}
         item={stickyItem}
-        {...listTypeProps}
         on:change={onItemChanged}
       />
     </div>
@@ -106,8 +101,7 @@
   use:dndzone={{
     items: draggableItems,
     flipDurationMs,
-    dropTargetStyle: { outline: "none" },
-    dragDisabled: noDrag,
+    dropTargetStyle: { outline: "none" }
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
@@ -119,19 +113,16 @@
       }}
       bind:this={anchors[draggable.id]}
       class:highlighted={draggable.id === $store.selected}
-      class:noDrag
     >
       <div class="left-content">
-        <div class:hideHandle class="handle">
+        <div class="handle">
           <DragHandle />
         </div>
       </div>
       <div class="right-content">
-        <svelte:component
-          this={listType}
+        <FieldSetting
           anchor={anchors[draggable.item._id]}
           item={draggable.item}
-          {...listTypeProps}
           on:change={onItemChanged}
         />
       </div>
@@ -234,13 +225,5 @@
 
   .hideHandle {
     opacity: 0;
-  }
-
-  .noDrag:hover {
-    cursor: default !important;
-    background-color: var(
-      --spectrum-table-background-color,
-      var(--spectrum-global-color-gray-50)
-    ) !important;
   }
 </style>

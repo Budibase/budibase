@@ -8,7 +8,6 @@
   import DraggableList from "./DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import { store } from "builderStore"
-  import FieldSetting from "./FieldSetting.svelte"
 
   export let componentInstance
   export let value
@@ -160,5 +159,4 @@
   on:itemChange={processItemUpdate}
   items={fieldList}
   listItemKey={"_id"}
-  listType={FieldSetting}
 />
