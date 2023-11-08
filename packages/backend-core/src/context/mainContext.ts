@@ -276,6 +276,9 @@ export function getAuditLogsDB(): Database {
  */
 export function getAppDB(opts?: any): Database {
   const appId = getAppId()
+  if (!appId) {
+    throw new Error("Unable to retrieve app DB - no app ID.")
+  }
   return getDB(appId, opts)
 }
 
