@@ -2,7 +2,6 @@ import * as linkRows from "../../../db/linkedRows"
 import {
   generateRowID,
   getMultiIDParams,
-  getTableIDFromRowID,
   InternalTables,
 } from "../../../db/utils"
 import * as userController from "../user"
@@ -89,7 +88,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row as any
-    await userController.updateMetadata(ctx)
+    await userController.updateMetadata(ctx as any)
     return { row: ctx.body as Row, table }
   }
 

@@ -1,11 +1,13 @@
 import { InternalTables } from "../db/utils"
 import { getGlobalUser } from "./global"
 import { context, roles } from "@budibase/backend-core"
-import { UserCtx } from "@budibase/types"
+import { ContextUserMetadata, UserCtx, UserMetadata } from "@budibase/types"
 
-export async function getFullUser(ctx: UserCtx, userId: string) {
+export async function getFullUser(
+  userId: string
+): Promise<ContextUserMetadata> {
   const global = await getGlobalUser(userId)
-  let metadata: any = {}
+  let metadata: UserMetadata | undefined = undefined
 
   // always prefer the user metadata _id and _rev
   delete global._id
@@ -14,11 +16,11 @@ export async function getFullUser(ctx: UserCtx, userId: string) {
   try {
     // this will throw an error if the db doesn't exist, or there is no appId
     const db = context.getAppDB()
-    metadata = await db.get(userId)
+    metadata = await db.get<UserMetadata>(userId)
+    delete metadata.csrfToken
   } catch (err) {
     // it is fine if there is no user metadata yet
   }
-  delete metadata.csrfToken
   return {
     ...metadata,
     ...global,
