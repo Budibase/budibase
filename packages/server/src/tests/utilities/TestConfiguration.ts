@@ -264,7 +264,7 @@ class TestConfiguration {
     admin = false,
     email = this.defaultUserValues.email,
     roles,
-  }: any = {}) {
+  }: any = {}): Promise<User> {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
