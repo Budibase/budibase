@@ -2013,6 +2013,8 @@ describe.each([
         ["links"],
         {
           ...cfg,
+          // needs to be a short name
+          name: "b",
           schema: {
             ...cfg.schema,
             formula: {
