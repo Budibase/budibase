@@ -81,7 +81,7 @@ async function syncUsersToApp(
 
 export async function syncUsersToAllApps(userIds: string[]) {
   // list of users, if one has been deleted it will be undefined in array
-  const users = (await getRawGlobalUsers(userIds)) as User[]
+  const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
   const finalUsers: (User | DeletedUser)[] = []
   for (let userId of userIds) {
