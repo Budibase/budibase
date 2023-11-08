@@ -1,5 +1,6 @@
 import { SearchFilters, SearchParams } from "../../../sdk"
 import { Row } from "../../../documents"
+import { SortOrder } from "../../../api"
 import { ReadStream } from "fs"
 
 export interface SaveRowRequest extends Row {}
@@ -34,6 +35,8 @@ export interface ExportRowsRequest {
   rows: string[]
   columns?: string[]
   query?: SearchFilters
+  sort?: string
+  sortOrder?: SortOrder
 }
 
 export type ExportRowsResponse = ReadStream
