@@ -12,12 +12,14 @@ import {
   Database,
   DatabaseQueryOpts,
   Document,
+  DesignDocument,
+  DBView,
 } from "@budibase/types"
 import env from "../environment"
 
 const DESIGN_DB = "_design/database"
 
-function DesignDoc() {
+function DesignDoc(): DesignDocument {
   return {
     _id: DESIGN_DB,
     // view collation information, read before writing any complex views:
@@ -26,20 +28,14 @@ function DesignDoc() {
   }
 }
 
-interface DesignDocument {
-  views: any
-}
-
 async function removeDeprecated(db: Database, viewName: ViewName) {
-  // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
   }
   try {
     const designDoc = await db.get<DesignDocument>(DESIGN_DB)
-    // @ts-ignore
     for (let deprecatedNames of DeprecatedViews[viewName]) {
-      delete designDoc.views[deprecatedNames]
+      delete designDoc.views?.[deprecatedNames]
     }
     await db.put(designDoc)
   } catch (err) {
@@ -48,18 +44,18 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
 }
 
 export async function createView(
-  db: any,
+  db: Database,
   viewJs: string,
   viewName: string
 ): Promise<void> {
   let designDoc
   try {
-    designDoc = (await db.get(DESIGN_DB)) as DesignDocument
+    designDoc = await db.get<DesignDocument>(DESIGN_DB)
   } catch (err) {
     // no design doc, make one
     designDoc = DesignDoc()
   }
-  const view = {
+  const view: DBView = {
     map: viewJs,
   }
   designDoc.views = {
