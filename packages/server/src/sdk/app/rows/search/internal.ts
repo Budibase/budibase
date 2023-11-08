@@ -84,7 +84,7 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, rowIds, columns, query } = options
+  const { tableId, format, rowIds, columns, query, sort, sortOrder } = options
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
@@ -99,7 +99,12 @@ export async function exportRows(
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search({ tableId, query })
+    let searchResponse = await search({
+      tableId,
+      query,
+      sort,
+      sortOrder,
+    })
     result = searchResponse.rows
   }
 
@@ -180,8 +185,8 @@ export async function fetchView(
       group: !!group,
     })
   } else {
-    const tableId = viewInfo.meta.tableId
-    const data = await fetchRaw(tableId)
+    const tableId = viewInfo.meta!.tableId
+    const data = await fetchRaw(tableId!)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
@@ -195,7 +200,7 @@ export async function fetchView(
     response.rows = response.rows.map(row => row.doc)
     let table: Table
     try {
-      table = await sdk.tables.getTable(viewInfo.meta.tableId)
+      table = await sdk.tables.getTable(viewInfo.meta!.tableId)
     } catch (err) {
       throw new Error("Unable to retrieve view table.")
     }

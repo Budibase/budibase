@@ -114,10 +114,10 @@
 </div>
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
-    <div class="schema-fields">
-      <Label>{field}</Label>
-      <div class="field-width">
-        {#if !schema.autocolumn && schema.type !== "attachment"}
+    {#if !schema.autocolumn && schema.type !== "attachment"}
+      <div class="schema-fields">
+        <Label>{field}</Label>
+        <div class="field-width">
           {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}
@@ -151,20 +151,20 @@
               />
             </DrawerBindableSlot>
           {/if}
-        {/if}
 
-        {#if isUpdateRow && schema.type === "link"}
-          <div class="checkbox-field">
-            <Checkbox
-              value={meta.fields?.[field]?.clearRelationships}
-              text={"Clear relationships if empty?"}
-              size={"S"}
-              on:change={e => onChangeSetting(e, field)}
-            />
-          </div>
-        {/if}
+          {#if isUpdateRow && schema.type === "link"}
+            <div class="checkbox-field">
+              <Checkbox
+                value={meta.fields?.[field]?.clearRelationships}
+                text={"Clear relationships if empty?"}
+                size={"S"}
+                on:change={e => onChangeSetting(e, field)}
+              />
+            </div>
+          {/if}
+        </div>
       </div>
-    </div>
+    {/if}
   {/each}
 {/if}
 

@@ -923,7 +923,6 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })
@@ -932,7 +931,6 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })
