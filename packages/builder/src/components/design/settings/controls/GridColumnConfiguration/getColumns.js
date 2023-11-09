@@ -39,25 +39,25 @@ const removeInvalidAddMissing = (columns = [], defaultColumns, primaryDisplayCol
 
 const getDefault = (schema = {}) => {
   return Object.values(schema)
-    .toSorted((a, b) => (a.order || -1) - (b.order || -1))
     .map(column => ({
       label: column.name,
       field: column.name,
-      active: column.visible
-    })
-  );
+      active: column.visible,
+      order: column.visible ? (column.order ?? - 1) : Number.MAX_SAFE_INTEGER
+    }))
+    .toSorted((a, b) => a.order - b.order)
 }
 
-const toColumns = (draggableList) => {
-  return draggableList.map(entry => ({
+const toGridFormat = (draggableListColumns) => {
+  return draggableListColumns.map(entry => ({
     label: entry.label,
     field: entry.field,
     active: entry.active
   }));
 }
 
-const toDraggableList = (columns, createComponent, schema) => {
-  return columns.map(column => {
+const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
+  return gridFormatColumns.map(column => {
 
     return createComponent(
       "@budibase/standard-components/labelfield",
@@ -82,7 +82,7 @@ const getColumns = ({
 }) => {
 
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema), primaryDisplayColumnName);
-  const draggableList = toDraggableList(validatedColumns, createComponent, schema);
+  const draggableList = toDraggableListFormat(validatedColumns, createComponent, schema);
   const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
   const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
 
@@ -90,14 +90,14 @@ const getColumns = ({
     primary,
     sortable,
     updateSortable: (newDraggableList) => {
-      onChange(toColumns(newDraggableList.concat(primary)));
+      onChange(toGridFormat(newDraggableList.concat(primary)));
     },
     update: (newEntry) => {
       const newDraggableList = draggableList.map(entry => {
         return newEntry.field === entry.field ? newEntry : entry;
       });
 
-      onChange(toColumns(newDraggableList));
+      onChange(toGridFormat(newDraggableList));
     }
   };
 };
