@@ -48,10 +48,7 @@ export class DatabaseImpl implements Database {
 
   private readonly couchInfo = getCouchInfo()
 
-  constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
-    if (dbName == null) {
-      throw new Error("Database name cannot be undefined.")
-    }
+  constructor(dbName: string, opts?: DatabaseOpts, connection?: string) {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
