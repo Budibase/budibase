@@ -123,7 +123,10 @@ export interface Database {
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
   get<T extends Document>(id?: string): Promise<T>
-  getMultiple<T extends Document>(ids: string[]): Promise<T[]>
+  getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { failIfMissing?: boolean }
+  ): Promise<T[]>
   remove(
     id: string | Document,
     rev?: string
