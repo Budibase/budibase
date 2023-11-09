@@ -10,6 +10,7 @@ export interface SaveUserResponse {
 export interface UserDetails {
   _id: string
   email: string
+  password?: string
 }
 
 export interface BulkUserRequest {
