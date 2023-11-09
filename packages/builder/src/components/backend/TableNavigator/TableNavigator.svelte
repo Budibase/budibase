@@ -7,12 +7,18 @@
   import { goto, isActive } from "@roxi/routify"
   import { userSelectedResourceMap } from "builderStore"
 
+  export let searchTerm
   export let sourceId
   export let selectTable
 
   $: sortedTables = $tables.list
     .filter(
       table => table.sourceId === sourceId && table._id !== TableNames.USERS
+    )
+    .filter(
+      table =>
+        !searchTerm ||
+        table.name.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1
     )
     .sort(alphabetical)
 
