@@ -8,6 +8,7 @@ import {
   LinkDocumentValue,
   Table,
 } from "@budibase/types"
+import sdk from "../../sdk"
 
 export { createLinkView } from "../views/staticViews"
 
@@ -110,12 +111,11 @@ export function getLinkedTableIDs(table: Table): string[] {
 }
 
 export async function getLinkedTable(id: string, tables: Table[]) {
-  const db = context.getAppDB()
   let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
     return linkedTable
   }
-  linkedTable = await db.get(id)
+  linkedTable = await sdk.tables.getTable(id)
   if (linkedTable) {
     tables.push(linkedTable)
   }
