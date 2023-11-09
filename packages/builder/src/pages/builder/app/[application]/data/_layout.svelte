@@ -1,5 +1,5 @@
 <script>
-  import { Button, Layout } from "@budibase/bbui"
+  import { Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"

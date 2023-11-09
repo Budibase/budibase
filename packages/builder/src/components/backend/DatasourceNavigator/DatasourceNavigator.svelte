@@ -206,7 +206,7 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} {selectTable} />
+        <TableNavigator sourceId={datasource._id} {selectTable} {searchTerm} />
         {#each $queries.list.filter(query => query.datasourceId === datasource._id && (!searchTerm || query.name
                 ?.toLowerCase()
                 ?.indexOf(searchTerm.toLowerCase()) > -1)) as query}
