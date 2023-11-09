@@ -17,6 +17,7 @@ import {
   Ctx,
   InviteUserRequest,
   InviteUsersRequest,
+  InviteUsersResponse,
   MigrationType,
   SaveUserResponse,
   SearchUsersRequest,
@@ -250,7 +251,9 @@ export const tenantUserLookup = async (ctx: any) => {
 /* 
   Encapsulate the app user onboarding flows here.
 */
-export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
+export const onboardUsers = async (
+  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
+) => {
   if (await isEmailConfigured()) {
     await inviteMultiple(ctx)
     return
@@ -272,10 +275,10 @@ export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
     }
   })
 
-  let resp = await userSdk.db.bulkCreate(users, [])
-  resp.successful.forEach(user => {
+  let resp = await userSdk.db.bulkCreate(users)
+  for (const user of resp.successful) {
     user.password = createdPasswords[user.email]
-  })
+  }
   ctx.body = { ...resp, created: true }
 }
 
