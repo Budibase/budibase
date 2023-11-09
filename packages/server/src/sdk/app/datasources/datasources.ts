@@ -51,12 +51,12 @@ export async function fetch(opts?: {
 
   // Get external datasources
   const datasources = (
-    await db.allDocs(
+    await db.allDocs<Datasource>(
       getDatasourceParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
 
   const allDatasources: Datasource[] = await sdk.datasources.removeSecrets([
     bbInternalDb,
@@ -271,5 +271,5 @@ export async function getExternalDatasources(): Promise<Datasource[]> {
     })
   )
 
-  return externalDatasources.rows.map(r => r.doc)
+  return externalDatasources.rows.map(r => r.doc!)
 }

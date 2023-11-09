@@ -23,7 +23,6 @@ import {
   breakRowIdField,
   convertRowId,
   generateRowIdField,
-  getPrimaryDisplay,
   isRowId,
   isSQL,
 } from "../../../integrations/utils"
@@ -237,7 +236,7 @@ function basicProcessing({
   thisRow._id = generateIdForRow(row, table, isLinked)
   thisRow.tableId = table._id
   thisRow._rev = "rev"
-  return processFormulas(table, thisRow)
+  return thisRow
 }
 
 function fixArrayTypes(row: Row, table: Table) {
@@ -392,7 +391,7 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow, manyRelationships }
   }
 
-  squashRelationshipColumns(
+  processRelationshipFields(
     table: Table,
     row: Row,
     relationships: RelationshipsJson[]
@@ -402,7 +401,6 @@ export class ExternalRequest<T extends Operation> {
       if (!linkedTable || !row[relationship.column]) {
         continue
       }
-      const display = linkedTable.primaryDisplay
       for (let key of Object.keys(row[relationship.column])) {
         let relatedRow: Row = row[relationship.column][key]
         // add this row as context for the relationship
@@ -411,15 +409,10 @@ export class ExternalRequest<T extends Operation> {
             relatedRow[col.name] = [row]
           }
         }
+        // process additional types
+        relatedRow = processDates(table, relatedRow)
         relatedRow = processFormulas(linkedTable, relatedRow)
-        let relatedDisplay
-        if (display) {
-          relatedDisplay = getPrimaryDisplay(relatedRow[display])
-        }
-        row[relationship.column][key] = {
-          primaryDisplay: relatedDisplay || "Invalid display column",
-          _id: relatedRow._id,
-        }
+        row[relationship.column][key] = relatedRow
       }
     }
     return row
@@ -521,14 +514,14 @@ export class ExternalRequest<T extends Operation> {
       )
     }
 
-    // Process some additional data types
-    let finalRowArray = Object.values(finalRows)
-    finalRowArray = processDates(table, finalRowArray)
-    finalRowArray = processFormulas(table, finalRowArray) as Row[]
-
-    return finalRowArray.map((row: Row) =>
-      this.squashRelationshipColumns(table, row, relationships)
+    // make sure all related rows are correct
+    let finalRowArray = Object.values(finalRows).map(row =>
+      this.processRelationshipFields(table, row, relationships)
     )
+
+    // process some additional types
+    finalRowArray = processDates(table, finalRowArray)
+    return finalRowArray
   }
 
   /**
@@ -663,7 +656,7 @@ export class ExternalRequest<T extends Operation> {
         linkPrimary,
         linkSecondary,
       }: {
-        row: { [key: string]: any }
+        row: Row
         linkPrimary: string
         linkSecondary?: string
       }) {

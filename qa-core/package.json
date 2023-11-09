@@ -20,7 +20,7 @@
     "test:self:ci": "yarn run test --testPathIgnorePatterns=\\.integration\\. \\.cloud\\. \\.licensing\\.",
     "serve:test:self:ci": "start-server-and-test dev:built http://localhost:4001/health test:self:ci",
     "serve": "start-server-and-test dev:built http://localhost:4001/health",
-    "dev:built": "cd ../ && yarn dev:built"
+    "dev:built": "cd ../ && DISABLE_RATE_LIMITING=1 yarn dev:built"
   },
   "devDependencies": {
     "@budibase/types": "^2.3.17",
