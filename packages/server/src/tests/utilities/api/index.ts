@@ -9,6 +9,7 @@ import { ScreenAPI } from "./screen"
 import { ApplicationAPI } from "./application"
 import { BackupAPI } from "./backup"
 import { AttachmentAPI } from "./attachment"
+import { UserAPI } from "./user"
 
 export default class API {
   table: TableAPI
@@ -21,6 +22,7 @@ export default class API {
   application: ApplicationAPI
   backup: BackupAPI
   attachment: AttachmentAPI
+  user: UserAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -33,5 +35,6 @@ export default class API {
     this.application = new ApplicationAPI(config)
     this.backup = new BackupAPI(config)
     this.attachment = new AttachmentAPI(config)
+    this.user = new UserAPI(config)
   }
 }

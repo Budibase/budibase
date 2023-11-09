@@ -2,16 +2,15 @@ import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
-import { context, db as dbCore, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import {
-  AutoColumnFieldMetadata,
-  FieldSubtype,
-  Row,
-  RowAttachment,
-  Table,
-} from "@budibase/types"
+import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,
@@ -233,6 +232,11 @@ export async function outputProcessing<T extends Row[] | Row>(
       })
     : safeRows
 
+  // make sure squash is enabled if needed
+  if (!opts.squash && utils.hasCircularStructure(rows)) {
+    opts.squash = true
+  }
+
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
@@ -258,7 +262,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process formulas after the complex types had been processed
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+  enriched = processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(
