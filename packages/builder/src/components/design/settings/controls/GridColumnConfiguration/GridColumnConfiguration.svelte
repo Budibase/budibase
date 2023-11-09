@@ -163,11 +163,6 @@
 {#if primaryDisplayColumn}
   <div class="sticky-item">
     <div bind:this={primaryDisplayColumnAnchor} class="sticky-item-inner">
-      <div class="left-content">
-        <div class="handle hideHandle">
-          <DragHandle />
-        </div>
-      </div>
       <div class="right-content">
         <PrimaryColumnFieldSetting
           anchor={primaryDisplayColumnAnchor}
@@ -190,6 +185,7 @@
   .right-content {
     flex: 1;
     min-width: 0;
+    margin-left: 17.5px;
   }
  .sticky-item {
     list-style-type: none;
@@ -220,19 +216,5 @@
     box-sizing: border-box;
     border-radius: 4px;
     border-bottom: 0;
-  }
-  .handle {
-    display: flex;
-    height: var(--spectrum-global-dimension-size-150);
-  }
-  .handle :global(svg) {
-    fill: var(--spectrum-global-color-gray-500);
-    margin-right: var(--spacing-m);
-    margin-left: 2px;
-    width: var(--spectrum-global-dimension-size-65);
-    height: 100%;
-  }
-  .hideHandle {
-    opacity: 0;
   }
 </style>
