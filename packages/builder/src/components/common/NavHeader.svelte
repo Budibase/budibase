@@ -1,6 +1,7 @@
 <script>
   import { tick } from "svelte"
   import { Icon, Body } from "@budibase/bbui"
+  import { keyUtils } from "helpers/keyUtils"
 
   export let title
   export let placeholder
@@ -50,11 +51,21 @@
   <div class="title" class:hide={search}>
     <Body size="S">{title}</Body>
   </div>
-  <div on:click={openSearch} class="searchButton" class:hide={search}>
+  <div
+    on:click={openSearch}
+    on:keydown={keyUtils.handleEnter(openSearch)}
+    class="searchButton"
+    class:hide={search}
+  >
     <Icon size="S" name="Search" />
   </div>
 
-  <div on:click={handleAddButton} class="addButton" class:rotate={search}>
+  <div
+    on:click={handleAddButton}
+    on:keydown={keyUtils.handleEnter(handleAddButton)}
+    class="addButton"
+    class:rotate={search}
+  >
     <Icon name="Add" />
   </div>
 </div>
