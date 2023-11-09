@@ -3,7 +3,7 @@ import {
   deleteInviteCode,
   getInviteCodes,
   updateInviteCode,
-} from "../../../utilities/redis"
+} from "@budibase/backend-core/src/redis/invite"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
