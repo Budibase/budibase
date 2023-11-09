@@ -1,5 +1,6 @@
 import { getContextProviderComponents } from "builderStore/dataBinding"
 import { store } from "builderStore"
+import { capitalise } from "helpers"
 
 // Generates bindings for all components that provider "datasource like"
 // contexts. This includes "form" contexts and "schema" contexts. This is used
@@ -42,10 +43,12 @@ export const getDatasourceLikeProviders = ({ asset, componentId, nested }) => {
     const existing = formContexts.find(x => x.component._id === id)
     if (existing) {
       if (existing.context.suffix) {
-        existing.readableSuffix = ` (${existing.context.suffix})`
+        const suffix = capitalise(existing.context.suffix)
+        existing.readableSuffix = ` - ${suffix}`
       }
       if (schemaContext.context.suffix) {
-        schemaContext.readableSuffix = ` (${schemaContext.context.suffix})`
+        const suffix = capitalise(schemaContext.context.suffix)
+        schemaContext.readableSuffix = ` - ${suffix}`
       }
     }
   })
