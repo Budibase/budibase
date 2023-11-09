@@ -2,9 +2,10 @@
   import "@spectrum-css/inputgroup/dist/index-vars.css"
   import "@spectrum-css/popover/dist/index-vars.css"
   import "@spectrum-css/menu/dist/index-vars.css"
-  import { fly } from "svelte/transition"
   import { createEventDispatcher } from "svelte"
-  import clickOutside from "../../Actions/click_outside"
+
+  import Picker from "./Picker.svelte"
+  import { Constants } from "@budibase/frontend-core"
 
   export let inputValue
   export let dropdownValue
@@ -16,10 +17,11 @@
   export let updateOnChange = true
   export let error = null
   export let options = []
+  export let isOptionEnabled = () => true
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
-
-  export let isOptionSelected = () => false
+  export let getOptionSubtitle = option => extractProperty(option, "subtitle")
+  export let getOptionColour = () => null
 
   const dispatch = createEventDispatcher()
   let open = false
@@ -83,16 +85,9 @@
     }
   }
 
-  const onClick = () => {
-    dispatch("click")
-    if (readonly) {
-      return
-    }
-    open = true
-  }
-
   const onPick = newValue => {
     dispatch("pick", newValue)
+    pickerValue = newValue
     open = false
   }
 
@@ -103,21 +98,25 @@
     return value
   }
 
-  const handleOutsideClick = event => {
-    if (open) {
-      event.stopPropagation()
-      open = false
-    }
-  }
+  let wrapper
+  let picker = null
+  let pickerValue = "appUser" // should be a constant
+
+  // options={sdk.users.isAdmin($auth.user)
+  //               ? Constants.BudibaseRoleOptionsNew
+  //               : Constants.BudibaseRoleOptionsNew.filter(
+  //                   option => option.value !== Constants.BudibaseRoles.Admin
+  //                 )}
 </script>
 
 <div
   class="spectrum-InputGroup"
   class:is-invalid={!!error}
   class:is-disabled={disabled}
+  bind:this={wrapper}
 >
   <div
-    class="spectrum-Textfield spectrum-InputGroup-textfield"
+    class="spectrum-Textfield spectrum-InputGroup-textfield "
     class:is-invalid={!!error}
     class:is-disabled={disabled}
     class:is-focused={focus}
@@ -151,8 +150,8 @@
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>
-  <div style="width: 30%">
-    <button
+  <div style="width: 40%">
+    <!-- <button
       {id}
       class="spectrum-Picker spectrum-Picker--sizeM override-borders"
       {disabled}
@@ -172,8 +171,34 @@
       >
         <use xlink:href="#spectrum-css-icon-Chevron100" />
       </svg>
-    </button>
-    {#if open}
+    </button> -->
+    <Picker
+      bind:picker
+      bind:open
+      onlyPopover={true}
+      customAnchor={wrapper}
+      {disabled}
+      options={Constants.BudibaseRoleOptionsNew}
+      {getOptionLabel}
+      {getOptionValue}
+      {getOptionSubtitle}
+      {getOptionColour}
+      {isOptionEnabled}
+      onSelectOption={onPick}
+      {fieldText}
+      isOptionSelected={option => option === pickerValue}
+    />
+    <!-- <Select
+      {disabled}
+      value={pickerValue}
+      options={Constants.BudibaseRoleOptionsNew}
+      on:change={selected => {
+        console.log("selected ", selected)
+        //pickerValue = selected
+      }}
+      placeholder={null}
+    /> -->
+    <!-- {#if open}
       <div
         use:clickOutside={handleOutsideClick}
         transition:fly|local={{ y: -20, duration: 200 }}
@@ -203,7 +228,7 @@
           {/each}
         </ul>
       </div>
-    {/if}
+    {/if} -->
   </div>
 </div>
 

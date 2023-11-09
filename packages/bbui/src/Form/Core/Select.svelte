@@ -11,6 +11,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let getOptionSubtitle = option => extractProperty(option, "subtitle")
   export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let isOptionEnabled
@@ -33,6 +34,13 @@
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
+
+  const extractProperty = (value, property) => {
+    if (value && typeof value === "object") {
+      return value[property]
+    }
+    return value
+  }
 
   const getFieldAttribute = (getAttribute, value, options) => {
     // Wait for options to load if there is a value but no options
@@ -84,6 +92,7 @@
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
+  {getOptionSubtitle}
   {useOptionIconImage}
   {getOptionColour}
   {isOptionEnabled}

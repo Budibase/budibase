@@ -297,8 +297,9 @@
             <Select
               disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
-              options={Constants.BudibaseRoleOptions}
+              options={Constants.BudibaseRoleOptionsNew}
               on:change={updateUserRole}
+              placeholder={null}
             />
           </div>
         {/if}
