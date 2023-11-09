@@ -130,7 +130,9 @@ export async function getTables(tableIds: string[]): Promise<Table[]> {
   }
   if (internalTableIds.length) {
     const db = context.getAppDB()
-    const internalTables = await db.getMultiple<Table>(internalTableIds)
+    const internalTables = await db.getMultiple<Table>(internalTableIds, {
+      allowMissing: true,
+    })
     tables = tables.concat(internalTables)
   }
   return processTables(tables)

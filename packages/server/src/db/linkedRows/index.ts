@@ -79,7 +79,7 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
-  let dbRows = await db.getMultiple<Row>(uniqueRowIds)
+  let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
   // convert the unique db rows back to a full list of linked rows
   const linked = linkedRowIds
     .map(id => dbRows.find(row => row && row._id === id))

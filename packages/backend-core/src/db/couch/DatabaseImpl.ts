@@ -119,7 +119,7 @@ export class DatabaseImpl implements Database {
 
   async getMultiple<T extends Document>(
     ids: string[],
-    opts?: { failIfMissing?: boolean }
+    opts?: { allowMissing?: boolean }
   ): Promise<T[]> {
     // get unique
     ids = [...new Set(ids)]
@@ -129,8 +129,9 @@ export class DatabaseImpl implements Database {
     })
     const NOT_FOUND = "not_found"
     const rows = response.rows.filter(row => row.error !== NOT_FOUND)
+    const someMissing = rows.length !== response.rows.length
     // some were filtered out - means some missing
-    if (opts?.failIfMissing && rows.length !== response.rows.length) {
+    if (!opts?.allowMissing && someMissing) {
       const missing = response.rows.filter(row => row.error === NOT_FOUND)
       const missingIds = missing.map(row => row.key).join(", ")
       throw new Error(`Unable to get documents: ${missingIds}`)

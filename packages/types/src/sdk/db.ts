@@ -125,7 +125,7 @@ export interface Database {
   get<T extends Document>(id?: string): Promise<T>
   getMultiple<T extends Document>(
     ids: string[],
-    opts?: { failIfMissing?: boolean }
+    opts?: { allowMissing?: boolean }
   ): Promise<T[]>
   remove(
     id: string | Document,

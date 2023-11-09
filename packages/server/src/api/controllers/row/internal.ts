@@ -237,7 +237,8 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
 
   // look up the actual rows based on the ids
   let linkedRows = await db.getMultiple<Row>(
-    linkVals.map(linkVal => linkVal.id)
+    linkVals.map(linkVal => linkVal.id),
+    { allowMissing: true }
   )
 
   // get the linked tables
