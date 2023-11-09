@@ -39,23 +39,13 @@
     {placeholder}
   />
 
-  <div
-    on:click={closeSearch}
-    on:keydown={closeSearch}
-    class="closeButton"
-    class:hide={!search}
-  >
+  <div on:click={closeSearch} class="closeButton" class:hide={!search}>
     <Icon name="Add" />
   </div>
   <div class="title" class:hide={search}>
     <Body size="S">{title}</Body>
   </div>
-  <div
-    on:click={openSearch}
-    on:keydown={openSearch}
-    class="searchButton"
-    class:hide={search}
-  >
+  <div on:click={openSearch} class="searchButton" class:hide={search}>
     <Icon size="S" name="Search" />
   </div>
 </div>
