@@ -5,9 +5,14 @@
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
-  import DraggableList from "./DraggableList.svelte"
+  import DraggableList from "../DraggableList/DraggableList.svelte"
+  import DragHandle from "../DraggableList/drag-handle.svelte"
   import { createEventDispatcher } from "svelte"
   import { store } from "builderStore"
+  import FieldSetting from "./FieldSetting.svelte"
+  import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
+
+
 
   export let componentInstance
   export let value
@@ -21,6 +26,7 @@
   let sanitisedValue
   let unconfigured
   let primaryDisplayColumn
+  let primaryDisplayColumnAnchor
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: resourceId = datasource?.resourceId || datasource?.tableId
@@ -153,10 +159,80 @@
   }
 </script>
 
+
+{#if primaryDisplayColumn}
+  <div class="sticky-item">
+    <div bind:this={primaryDisplayColumnAnchor} class="sticky-item-inner">
+      <div class="left-content">
+        <div class="handle hideHandle">
+          <DragHandle />
+        </div>
+      </div>
+      <div class="right-content">
+        <PrimaryColumnFieldSetting
+          anchor={primaryDisplayColumnAnchor}
+          item={primaryDisplayColumn}
+          on:change={processItemUpdate}
+        />
+      </div>
+    </div>
+  </div>
+{/if}
 <DraggableList
-  stickyItem={primaryDisplayColumn}
   on:change={listUpdated}
   on:itemChange={processItemUpdate}
   items={fieldList}
   listItemKey={"_id"}
+  listType={FieldSetting}
 />
+
+<style>
+  .right-content {
+    flex: 1;
+    min-width: 0;
+  }
+ .sticky-item {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    border-radius: 4px;
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    margin-bottom: 10px;
+  }
+  .sticky-item-inner {
+    background-color: var(
+      --spectrum-table-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    transition: background-color ease-in-out 130ms;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid
+      var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
+    padding-left: var(--spacing-s);
+    padding-right: var(--spacing-s);
+    box-sizing: border-box;
+    border-radius: 4px;
+    border-bottom: 0;
+  }
+  .handle {
+    display: flex;
+    height: var(--spectrum-global-dimension-size-150);
+  }
+  .handle :global(svg) {
+    fill: var(--spectrum-global-color-gray-500);
+    margin-right: var(--spacing-m);
+    margin-left: 2px;
+    width: var(--spectrum-global-dimension-size-65);
+    height: 100%;
+  }
+  .hideHandle {
+    opacity: 0;
+  }
+</style>

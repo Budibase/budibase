@@ -1,9 +1,25 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
-
+  import { setContext } from "svelte"
+  import { writable } from "svelte/store"
+  
   export let item
   export let anchor
+
+  let store = writable({
+    selected: null,
+    actions: {
+      select: id => {
+        store.update(state => ({
+          ...state,
+          selected: id,
+        }))
+      },
+    },
+  })
+
+  setContext("draggable", store)
 
   const parseSettings = settings => {
     return settings
