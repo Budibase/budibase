@@ -25,6 +25,14 @@
       closeSearch()
     }
   }
+
+  const handleAddButton = () => {
+    if (search) {
+      closeSearch()
+    } else {
+      alert("todo")
+    }
+  }
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
@@ -39,14 +47,15 @@
     {placeholder}
   />
 
-  <div on:click={closeSearch} class="closeButton" class:hide={!search}>
-    <Icon name="Add" />
-  </div>
   <div class="title" class:hide={search}>
     <Body size="S">{title}</Body>
   </div>
   <div on:click={openSearch} class="searchButton" class:hide={search}>
     <Icon size="S" name="Search" />
+  </div>
+
+  <div on:click={handleAddButton} class="addButton" class:rotate={search}>
+    <Icon name="Add" />
   </div>
 </div>
 
@@ -68,6 +77,7 @@
     justify-content: space-between;
     border-bottom: 2px solid transparent;
     transition: border-bottom 130ms ease-out;
+    gap: var(--spacing-l);
   }
 
   .searchBox {
@@ -110,15 +120,18 @@
     display: none !important;
   }
 
-  .closeButton {
+  .addButton {
     display: flex;
-    transform: rotate(45deg);
+    transition: transform 300ms ease-out;
     color: var(--grey-7);
     cursor: pointer;
-    transition: transform 300ms ease-out;
   }
 
-  .closeButton:hover {
+  .addButton:hover {
     color: var(--ink);
+  }
+
+  .rotate {
+    transform: rotate(45deg);
   }
 </style>
