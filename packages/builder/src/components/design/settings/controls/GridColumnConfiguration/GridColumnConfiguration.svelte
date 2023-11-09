@@ -10,9 +10,11 @@
   import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
+  import getColumnsStore from "./getColumnsStore.js"
 
-  export let componentInstance
   export let value
+  export let componentInstance
+  let primaryDisplayColumnAnchor
 
   const dispatch = createEventDispatcher()
 
@@ -20,181 +22,25 @@
     dispatch("change", newValues)
   }
 
-  let sanitisedFields
-  let fieldList
-  let schema
-  let cachedValue
-  let options
-  let sanitisedValue
-  let unconfigured
-  let primaryDisplayColumn
-  let primaryDisplayColumnAnchor
-
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: resourceId = datasource?.resourceId || datasource?.tableId
-  let previousResourceId = null
-
-  $: if (!isEqual(value, cachedValue)) {
-    cachedValue = cloneDeep(value)
-  }
-  // parses columns to fix older formats
-  const getParsedColumns = (columns) => {
-    // If the first element has an active key all elements should be in the new format
-    if (columns?.length && columns[0]?.active !== undefined) {
-      return columns;
-    }
-
-    return columns?.map(column => ({
-      label: column.displayName,
-      field: column.name,
-      active: true
-    }));
-  }
-
-  const updateState = value => {
-    value = getParsedColumns(value)
-    schema = getSchema($currentAsset, datasource)
-    options = Object.keys(schema || {})
-    sanitisedValue = getValidColumns(value, options)
-    updateSanitsedFields(sanitisedValue)
-    unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
-    fieldList = [...sanitisedFields, ...unconfigured]
-      .map(buildPseudoInstance)
-      .filter(x => x != null)
-
-    // Default ordering of columns to that of the datasource's grid positions
-    if (value === undefined) {
-      console.log('sorting');
-      fieldList = fieldList.toSorted((a, b) => a.dataSectionOrder - b.dataSectionOrder);
-    }
-
-    const primaryDisplayColumnName = getPrimaryDisplayColumnName(
-      $currentAsset,
-      datasource
-    )
-    primaryDisplayColumn = fieldList.find(
-      field => field.field === primaryDisplayColumnName
-    )
-
-    // Default all columns to selected
-    if (resourceId !== previousResourceId) {
-      if (previousResourceId !== null) {
-        dispatch("change", undefined)
-      }
-
-      previousResourceId = resourceId
-    }
-  }
-
-  $: updateState(cachedValue, resourceId)
-
-  // Builds unused ones only
-  const buildUnconfiguredOptions = (schema, selected) => {
-    if (!schema) {
-      return []
-    }
-    let schemaClone = cloneDeep(schema)
-    selected.forEach(val => {
-      delete schemaClone[val.field]
-    })
-
-    return Object.keys(schemaClone).map(key => {
-      const col = schemaClone[key]
-      let toggleOn = !value
-      return {
-        field: key,
-        active: typeof col.active != "boolean" ? toggleOn : col.active,
-      }
-    })
-  }
-
-  const getSchema = (asset, datasource) => {
-    const schema = getSchemaForDatasource(asset, datasource).schema
-
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
-    }
-
-    return schema
-  }
-
-  const getPrimaryDisplayColumnName = (asset, datasource) => {
-    return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay
-  }
-
-  const updateSanitsedFields = value => {
-    sanitisedFields = cloneDeep(value)
-  }
-
-  const getValidColumns = (columns, options) => {
-    if (!Array.isArray(columns) || !columns.length) {
-      return []
-    }
-
-    return columns.filter(column => {
-      return options.includes(column.field)
-    })
-  }
-
-  const buildPseudoInstance = instance => {
-    if (instance._component) {
-      return instance
-    }
-
-    instance._component = "@budibase/standard-components/labelfield"
-
-    const pseudoComponentInstance = store.actions.components.createInstance(
-      instance._component,
-      {
-        _instanceName: instance.field,
-        field: instance.field,
-        label: instance.field,
-        placeholder: instance.field,
-        dataSectionOrder: schema[instance.field].order ?? -1
-      },
-      {}
-    )
-
-    return { ...instance, ...pseudoComponentInstance }
-  }
+  $: columnsStore = getColumnsStore(value, componentInstance, handleChange);
 
   const processItemUpdate = e => {
-    const updatedField = e.detail
-    const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
-
-    let parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
-      return pSetting.field === updatedField?.field
-    })
-
-    if (parentFieldIdx == -1) {
-      parentFieldsUpdated.push(updatedField)
-    } else {
-      parentFieldsUpdated[parentFieldIdx] = updatedField
-    }
-
-    dispatch("change", getValidColumns(parentFieldsUpdated, options))
+    columnsStore.update([e.detail]);
   }
 
   const listUpdated = e => {
-    const parsedColumns = getValidColumns(e.detail, options)
-    if (primaryDisplayColumn) {
-      parsedColumns.push(primaryDisplayColumn);
-    }
-
-    dispatch("change", parsedColumns)
+    columnsStore.update(e.detail);
   }
 </script>
 
 
-{#if primaryDisplayColumn}
+{#if $columnsStore.primary}
   <div class="sticky-item">
     <div bind:this={primaryDisplayColumnAnchor} class="sticky-item-inner">
       <div class="right-content">
         <PrimaryColumnFieldSetting
           anchor={primaryDisplayColumnAnchor}
-          item={primaryDisplayColumn}
+          item={$columnsStore.primary}
           on:change={processItemUpdate}
         />
       </div>
@@ -204,7 +50,7 @@
 <DraggableList
   on:change={listUpdated}
   on:itemChange={processItemUpdate}
-  items={fieldList.filter(field => field.field !== primaryDisplayColumn?.field)}
+  items={$columnsStore.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}
 />

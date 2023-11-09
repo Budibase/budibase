@@ -41,15 +41,15 @@ const getDefault = (schema = {}) => {
   return Object.values(schema)
     .toSorted((a, b) => a.order - b.order)
     .map(column => ({
-      label: column.label,
-      field: column.field,
+      label: column.name,
+      field: column.name,
       active: !column.autoColumn && column.visible
     })
   );
 }
 
-const toColumns = (draggableList, primaryDisplayDraggableEntry) => {
-  return draggableList.concat(primaryDisplayDraggableEntry).map(entry => ({
+const toColumns = (draggableList) => {
+  return draggableList.map(entry => ({
     label: entry.label,
     field: entry.field,
     active: entry.active
@@ -76,7 +76,7 @@ const getPrimaryDisplayColumnName = (asset, datasource) => {
   return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay
 }
 
-const getColumnsStore = (columns, componentInstance) => {
+const getColumnsStore = (columns, componentInstance, onChange) => {
   const datasource = getDatasourceForProvider(get(currentAsset), componentInstance)
   const schema = getSchema(get(currentAsset), datasource)
   const primaryDisplayColumnName = getPrimaryDisplayColumnName(
@@ -87,10 +87,22 @@ const getColumnsStore = (columns, componentInstance) => {
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema));
   const draggableList = toDraggableList(validatedColumns);
 
-  return readable({
+  const store = readable({
     primary: draggableList.find(entry => entry.field === primaryDisplayColumnName),
     sortable: draggableList.filter(entry => entry.field !== primaryDisplayColumnName)
   });
+
+  return {
+    ...store,
+    update: (newDraggableList) => {
+      const mergedDraggableList = draggableList.map(entry => {
+        const newEntry = newDraggableList.find(newEntry => newEntry.field === entry.field)
+        return newEntry ?? entry;
+      });
+
+      onChange(toColumns(mergedDraggableList));
+    }
+  };
 };
 
 export default getColumnsStore;
