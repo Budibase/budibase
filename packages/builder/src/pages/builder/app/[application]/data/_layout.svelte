@@ -4,7 +4,7 @@
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
   import { datasources } from "stores/backend"
-  import SearchBox from "components/common/SearchBox.svelte"
+  import NavHeader from "components/common/NavHeader.svelte"
 
   let searchValue
 
@@ -23,7 +23,7 @@
   {#if !$isActive("./new")}
     <Panel borderRight>
       <span class="panel-title-content" slot="panel-title-content">
-        <SearchBox
+        <NavHeader
           title="Sources"
           placeholder="Search for sources"
           bind:value={searchValue}
