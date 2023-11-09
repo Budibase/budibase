@@ -48,10 +48,7 @@ export class DatabaseImpl implements Database {
 
   private readonly couchInfo = getCouchInfo()
 
-  constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
-    if (dbName == null) {
-      throw new Error("Database name cannot be undefined.")
-    }
+  constructor(dbName: string, opts?: DatabaseOpts, connection?: string) {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
@@ -175,12 +172,14 @@ export class DatabaseImpl implements Database {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
+  async allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
 
-  async query<T>(
+  async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {

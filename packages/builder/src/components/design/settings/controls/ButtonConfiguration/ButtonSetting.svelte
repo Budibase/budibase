@@ -17,18 +17,24 @@
 
   // If this is a nested setting (for example inside a grid or form block) then
   // we need to mark all the settings of the actual buttons as nested too, to
-  // allow us to reference context provided by the block
+  // allow us to reference context provided by the block.
+  // We will need to update this in future if the normal button component
+  // gets broken into multiple settings sections, as we assume a flat array.
   const updatedNestedFlags = settings => {
-    if (!nested) {
+    if (!nested || !settings?.length) {
       return settings
     }
-    // Buttons do not currently have any sections, so this works.
-    // We will need to update this in future if the normal button component
-    // gets broken into multiple settings sections
-    return settings?.map(setting => ({
+    let newSettings = settings.map(setting => ({
       ...setting,
       nested: true,
     }))
+    // We need to prevent bindings for the button names because of how grid
+    // blocks work. This is an edge case but unavoidable.
+    let name = newSettings.find(x => x.key === "text")
+    if (name) {
+      name.disableBindings = true
+    }
+    return newSettings
   }
 </script>
 
