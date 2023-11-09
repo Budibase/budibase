@@ -75,7 +75,7 @@
         ...datasource,
         selected,
         containsSelected,
-        open: selected || open || containsSelected || onlySource,
+        open: open || onlySource,
       }
     })
   }
