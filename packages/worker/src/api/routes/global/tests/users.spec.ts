@@ -59,6 +59,8 @@ describe("/api/global/users", () => {
       const email = structures.users.newEmail()
       await config.api.users.sendUserInvite(sendMailMock, email)
 
+      jest.clearAllMocks()
+
       const { code, res } = await config.api.users.sendUserInvite(
         sendMailMock,
         email,
