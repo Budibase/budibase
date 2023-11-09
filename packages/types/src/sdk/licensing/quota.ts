@@ -61,7 +61,7 @@ export type PlanQuotas = { [key in PlanType]: Quotas | undefined }
 export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
   [MonthlyQuotaName.AUTOMATIONS]: Quota
-  [MonthlyQuotaName.DAY_PASSES]: Quota
+  [MonthlyQuotaName.DAY_PASSES]?: Quota
 }
 
 export type StaticQuotas = {
