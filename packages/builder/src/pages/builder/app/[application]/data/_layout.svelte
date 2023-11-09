@@ -27,10 +27,10 @@
           title="Sources"
           placeholder="Search for sources"
           bind:value={searchValue}
+          onAdd={() => $goto("./new")}
         />
       </span>
       <Layout paddingX="L" paddingY="XL" gap="S">
-        <Button cta on:click={() => $goto("./new")}>Add source</Button>
         <DatasourceNavigator searchTerm={searchValue} />
       </Layout>
     </Panel>
