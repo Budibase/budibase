@@ -108,7 +108,6 @@
   .searchButton {
     color: var(--grey-7);
     cursor: pointer;
-    margin-right: 10px;
     opacity: 1;
   }
   .searchButton:hover {
