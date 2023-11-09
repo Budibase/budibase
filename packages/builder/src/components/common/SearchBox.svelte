@@ -1,7 +1,6 @@
 <script>
   import { tick } from "svelte"
   import { Icon, Body } from "@budibase/bbui"
-  import { screensHeight } from "builderStore"
 
   export let title
   export let placeholder
@@ -9,8 +8,6 @@
   let searchValue
   let searchInput
   let search = false
-
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
   const openSearch = async () => {
     search = true
@@ -40,6 +37,10 @@
     class="input"
     {placeholder}
   />
+
+  <div on:click={closeSearch} on:keydown={closeSearch} class="closeButton">
+    <Icon name="Add" />
+  </div>
   <div class="title" class:hide={search}>
     <Body size="S">{title}</Body>
   </div>
@@ -90,7 +91,8 @@
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
   }
-  .search input {
+  .search input,
+  .search .closeButton {
     display: block;
   }
 
@@ -124,7 +126,15 @@
   }
 
   .closeButton {
+    display: none;
     transform: rotate(45deg);
+    color: var(--grey-7);
+    cursor: pointer;
+    transition: transform 300ms ease-out;
+  }
+
+  .closeButton:hover {
+    color: var(--ink);
   }
 
   .icon {
