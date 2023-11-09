@@ -33,15 +33,9 @@
     $queries,
     $views,
     $viewsV2,
-    openDataSources
+    openDataSources,
+    searchTerm
   )
-  $: openDataSource = enrichedDataSources.find(x => x.open)
-  $: {
-    // Ensure the open datasource is always actually open
-    if (openDataSource) {
-      openNode(openDataSource)
-    }
-  }
 
   const enrichDatasources = (
     datasources,
@@ -51,11 +45,13 @@
     queries,
     views,
     viewsV2,
-    openDataSources
+    openDataSources,
+    searchTerm
   ) => {
     if (!datasources?.list?.length) {
       return []
     }
+    const onlySource = datasources.list.length === 1
     return datasources.list.map(datasource => {
       const selected =
         isActive("./datasource") &&
@@ -70,12 +66,11 @@
         views,
         viewsV2
       )
-      const onlySource = datasources.list.length === 1
       return {
         ...datasource,
         selected,
         containsSelected,
-        open: open || onlySource,
+        open: open || onlySource || !!searchTerm,
       }
     })
   }
@@ -210,7 +205,7 @@
         {/if}
       </NavItem>
 
-      {#if datasource.open || searchTerm}
+      {#if datasource.open}
         <TableNavigator sourceId={datasource._id} {selectTable} />
         {#each $queries.list.filter(query => query.datasourceId === datasource._id && (!searchTerm || query.name
                 ?.toLowerCase()
