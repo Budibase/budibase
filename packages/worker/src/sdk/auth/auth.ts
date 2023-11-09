@@ -73,7 +73,7 @@ export const reset = async (email: string) => {
  * Perform the user password update if the provided reset code is valid.
  */
 export const resetUpdate = async (resetCode: string, password: string) => {
-  const { userId } = await redis.checkResetPasswordCode(resetCode)
+  const { userId } = await redis.getResetPasswordCode(resetCode)
 
   let user = await userSdk.db.getUser(userId)
   user.password = password
