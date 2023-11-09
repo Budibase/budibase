@@ -38,14 +38,17 @@ const removeInvalidAddMissing = (columns = [], defaultColumns, primaryDisplayCol
 }
 
 const getDefault = (schema = {}) => {
-  return Object.values(schema)
+  const defaultValues = Object.values(schema)
     .map(column => ({
       label: column.name,
       field: column.name,
       active: column.visible,
       order: column.visible ? (column.order ?? - 1) : Number.MAX_SAFE_INTEGER
     }))
-    .toSorted((a, b) => a.order - b.order)
+
+    defaultValues.sort((a, b) => a.order - b.order)
+
+  return defaultValues;
 }
 
 const toGridFormat = (draggableListColumns) => {
@@ -80,7 +83,6 @@ const getColumns = ({
   onChange,
   createComponent
 }) => {
-
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema), primaryDisplayColumnName);
   const draggableList = toDraggableListFormat(validatedColumns, createComponent, schema);
   const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
