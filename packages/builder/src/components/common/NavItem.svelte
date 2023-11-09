@@ -189,6 +189,7 @@
     flex: 0 0 20px;
     pointer-events: all;
     order: 0;
+    transition: transform 100ms linear;
   }
   .icon.arrow.absolute {
     position: absolute;
