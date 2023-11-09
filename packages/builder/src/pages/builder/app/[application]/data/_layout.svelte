@@ -6,6 +6,8 @@
   import { datasources } from "stores/backend"
   import SearchBox from "components/common/SearchBox.svelte"
 
+  let searchValue
+
   $: {
     // If we ever don't have any data other than the users table, prompt the
     // user to add some
@@ -21,11 +23,15 @@
   {#if !$isActive("./new")}
     <Panel borderRight>
       <span class="panel-title-content" slot="panel-title-content">
-        <SearchBox title="Sources" placeholder="Search for sources" />
+        <SearchBox
+          title="Sources"
+          placeholder="Search for sources"
+          bind:value={searchValue}
+        />
       </span>
       <Layout paddingX="L" paddingY="XL" gap="S">
         <Button cta on:click={() => $goto("./new")}>Add source</Button>
-        <DatasourceNavigator />
+        <DatasourceNavigator searchTerm={searchValue} />
       </Layout>
     </Panel>
   {/if}

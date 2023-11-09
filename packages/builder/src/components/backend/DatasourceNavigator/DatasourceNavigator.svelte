@@ -22,6 +22,7 @@
   import { TableNames } from "constants"
   import { userSelectedResourceMap } from "builderStore"
 
+  export let searchTerm
   let openDataSources = []
 
   $: enrichedDataSources = enrichDatasources(
@@ -209,9 +210,11 @@
         {/if}
       </NavItem>
 
-      {#if datasource.open}
+      {#if datasource.open || searchTerm}
         <TableNavigator sourceId={datasource._id} {selectTable} />
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+        {#each $queries.list.filter(query => query.datasourceId === datasource._id && (!searchTerm || query.name
+                ?.toLowerCase()
+                ?.indexOf(searchTerm.toLowerCase()) > -1)) as query}
           <NavItem
             indentLevel={1}
             icon="SQLQuery"
