@@ -1,9 +1,5 @@
 import * as linkRows from "../../../db/linkedRows"
-import {
-  generateRowID,
-  getMultiIDParams,
-  InternalTables,
-} from "../../../db/utils"
+import { generateRowID, InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
   cleanupAttachments,
@@ -240,8 +236,9 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const linkVals = links as LinkDocumentValue[]
 
   // look up the actual rows based on the ids
-  const params = getMultiIDParams(linkVals.map(linkVal => linkVal.id))
-  let linkedRows = (await db.allDocs<Row>(params)).rows.map(row => row.doc!)
+  let linkedRows = await db.getMultiple<Row>(
+    linkVals.map(linkVal => linkVal.id)
+  )
 
   // get the linked tables
   const linkTableIds = getLinkedTableIDs(table as Table)
