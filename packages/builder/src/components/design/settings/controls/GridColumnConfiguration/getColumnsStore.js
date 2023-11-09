@@ -1,21 +1,24 @@
-import { readable, get } from "svelte/store"
+import { get } from "svelte/store"
 import {
   getDatasourceForProvider,
   getSchemaForDatasource,
 } from "builderStore/dataBinding"
 import { store, currentAsset } from "builderStore"
 
-const modernize = (columns = []) => {
-  // If the first element has an active key all elements should be in the new format
-  if (columns[0] && columns[0].active !== undefined) {
-    return columns;
+const modernize = (columns) => {
+  if (!columns) {
+    return []
+  }
+  // If the first element has no active key then it's safe to assume all elements are in the old format
+  if (columns?.[0] && columns[0].active === undefined) {
+    return columns.map(column => ({
+      label: column.displayName,
+      field: column.name,
+      active: true
+    }));
   }
 
-  columns.forEach(column => ({
-    label: column.displayName,
-    field: column.name,
-    active: true
-  }));
+  return columns;
 }
 
 const getSchema = (asset, datasource) => {
@@ -31,10 +34,13 @@ const getSchema = (asset, datasource) => {
 }
 
 const removeInvalidAddMissing = (columns = [], defaultColumns) => {
-  return defaultColumns.map(defaultColumn => {
-    const column = columns.find(column => column.field === defaultColumn.field)
-    return column ?? defaultColumn;
-  });
+  const defaultColumnNames = defaultColumns.map(column => column.field);
+  const columnNames = columns.map(column => column.field);
+
+  const columnsWithoutInvalid = columns.filter(column => defaultColumnNames.includes(column.field));
+  const missingFields = defaultColumns.filter(defaultColumn => !columnNames.includes(defaultColumn.field))
+
+  return [...columnsWithoutInvalid, ...missingFields];
 }
 
 const getDefault = (schema = {}) => {
@@ -65,7 +71,7 @@ const toDraggableList = (columns) => {
         _instanceName: column.field,
         active: column.active,
         field: column.field,
-        label: column.field
+        label: column.label
       },
       {}
     )
@@ -86,21 +92,21 @@ const getColumnsStore = (columns, componentInstance, onChange) => {
 
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema));
   const draggableList = toDraggableList(validatedColumns);
-
-  const store = readable({
-    primary: draggableList.find(entry => entry.field === primaryDisplayColumnName),
-    sortable: draggableList.filter(entry => entry.field !== primaryDisplayColumnName)
-  });
+  const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
+  const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
 
   return {
-    ...store,
-    update: (newDraggableList) => {
-      const mergedDraggableList = draggableList.map(entry => {
-        const newEntry = newDraggableList.find(newEntry => newEntry.field === entry.field)
-        return newEntry ?? entry;
+    primary,
+    sortable,
+    updateSortable: (newDraggableList) => {
+      onChange(toColumns(newDraggableList.concat(primary)));
+    },
+    update: (newEntry) => {
+      const newDraggableList = draggableList.map(entry => {
+        return newEntry.field === entry.field ? newEntry : entry;
       });
 
-      onChange(toColumns(mergedDraggableList));
+      onChange(toColumns(newDraggableList));
     }
   };
 };

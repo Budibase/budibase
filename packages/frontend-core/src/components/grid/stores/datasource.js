@@ -60,8 +60,7 @@ export const deriveStores = context => {
         $columnWhitelist.forEach((columnKey, idx) => {
           const enrichedColumn = enrichedSchema[columnKey]
           if (enrichedColumn) {
-            sortedColumns[columnKey] = enrichedColumn
-            sortedColumns[columnKey].order = idx
+            sortedColumns[columnKey] = { ...enrichedColumn, order: idx, visible: true }
           }
         })
 

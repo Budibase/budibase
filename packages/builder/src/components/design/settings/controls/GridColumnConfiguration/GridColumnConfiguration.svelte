@@ -10,47 +10,56 @@
   import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
-  import getColumnsStore from "./getColumnsStore.js"
+  import getColumns from "./getColumnsStore.js"
+  import getDatasourceId from "./getDatasourceId.js"
 
   export let value
   export let componentInstance
-  let primaryDisplayColumnAnchor
 
   const dispatch = createEventDispatcher()
+  let primaryDisplayColumnAnchor
 
   const handleChange = (newValues) => {
     dispatch("change", newValues)
   }
 
-  $: columnsStore = getColumnsStore(value, componentInstance, handleChange);
+  $: columns = getColumns(value, componentInstance, handleChange);
+  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: datasourceId = datasource?.resourceId || datasource?.tableId;
+  let previousDatasourceId = null;
 
-  const processItemUpdate = e => {
-    columnsStore.update([e.detail]);
+  const handleDatasourceIdChange = (datasourceId) => {
+    if (datasourceId !== previousDatasourceId) {
+      if (previousDatasourceId !== null) {
+        console.log('resetting');
+        handleChange(undefined);
+      }
+
+      previousDatasourceId = datasourceId;
+    }
   }
 
-  const listUpdated = e => {
-    columnsStore.update(e.detail);
-  }
+  $: handleDatasourceIdChange(datasourceId);
 </script>
 
 
-{#if $columnsStore.primary}
+{#if columns.primary}
   <div class="sticky-item">
     <div bind:this={primaryDisplayColumnAnchor} class="sticky-item-inner">
       <div class="right-content">
         <PrimaryColumnFieldSetting
           anchor={primaryDisplayColumnAnchor}
-          item={$columnsStore.primary}
-          on:change={processItemUpdate}
+          item={columns.primary}
+          on:change={(e) => columns.update(e.detail)}
         />
       </div>
     </div>
   </div>
 {/if}
 <DraggableList
-  on:change={listUpdated}
-  on:itemChange={processItemUpdate}
-  items={$columnsStore.sortable}
+  on:change={(e) => columns.updateSortable(e.detail)}
+  on:itemChange={(e) => columns.update(e.detail)}
+  items={columns.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}
 />
