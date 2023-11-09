@@ -284,16 +284,6 @@ export function generatePluginID(name: string) {
 }
 
 /**
- * This can be used with the db.allDocs to get a list of IDs
- */
-export function getMultiIDParams(ids: string[]) {
-  return {
-    keys: ids,
-    include_docs: true,
-  }
-}
-
-/**
  * Generates a new view ID.
  * @returns The new view ID which the view doc can be stored under.
  */

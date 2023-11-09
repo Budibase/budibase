@@ -8,7 +8,7 @@ import {
   getLinkedTable,
 } from "./linkUtils"
 import flatten from "lodash/flatten"
-import { getMultiIDParams, USER_METDATA_PREFIX } from "../utils"
+import { USER_METDATA_PREFIX } from "../utils"
 import partition from "lodash/partition"
 import { getGlobalUsersFromMetadata } from "../../utilities/global"
 import { processFormulas } from "../../utilities/rowProcessor"
@@ -79,9 +79,7 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
-  let dbRows = (await db.allDocs<Row>(getMultiIDParams(uniqueRowIds))).rows.map(
-    row => row.doc!
-  )
+  let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
   // convert the unique db rows back to a full list of linked rows
   const linked = linkedRowIds
     .map(id => dbRows.find(row => row && row._id === id))
