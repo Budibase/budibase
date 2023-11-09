@@ -179,6 +179,7 @@
               highlighted={$store.highlightedSettingKey === setting.key}
               propertyFocus={$store.propertyFocus === setting.key}
               info={setting.info}
+              disableBindings={setting.disableBindings}
               props={{
                 // Generic settings
                 placeholder: setting.placeholder || null,
