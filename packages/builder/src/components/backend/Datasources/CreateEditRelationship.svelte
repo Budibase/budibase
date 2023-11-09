@@ -92,7 +92,6 @@
   $: isManyToOne =
     relationshipType === RelationshipType.MANY_TO_ONE ||
     relationshipType === RelationshipType.ONE_TO_MANY
-  $: console.log(relationshipType)
   function getTable(id) {
     return plusTables.find(table => table._id === id)
   }
