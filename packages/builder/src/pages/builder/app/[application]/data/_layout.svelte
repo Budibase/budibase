@@ -21,7 +21,7 @@
   {#if !$isActive("./new")}
     <Panel borderRight>
       <span class="panel-title-content" slot="panel-title-content">
-        <SearchBox title="Sources" placeholder="search for sources" />
+        <SearchBox title="Sources" placeholder="Search for sources" />
       </span>
       <Layout paddingX="L" paddingY="XL" gap="S">
         <Button cta on:click={() => $goto("./new")}>Add source</Button>

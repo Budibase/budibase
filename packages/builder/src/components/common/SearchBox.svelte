@@ -34,11 +34,17 @@
     readonly={!search}
     bind:value={searchValue}
     bind:this={searchInput}
-    class="input"
+    class="searchBox"
+    class:hide={!search}
     {placeholder}
   />
 
-  <div on:click={closeSearch} on:keydown={closeSearch} class="closeButton">
+  <div
+    on:click={closeSearch}
+    on:keydown={closeSearch}
+    class="closeButton"
+    class:hide={!search}
+  >
     <Icon name="Add" />
   </div>
   <div class="title" class:hide={search}>
@@ -74,26 +80,19 @@
     transition: border-bottom 130ms ease-out;
   }
 
-  .input {
+  .searchBox {
     font-family: var(--font-sans);
-    position: absolute;
     color: var(--ink);
     background-color: transparent;
     border: none;
     font-size: var(--spectrum-alias-font-size-default);
-    width: 260px;
-    box-sizing: border-box;
-    display: none;
+    display: flex;
   }
-  .input:focus {
+  .searchBox:focus {
     outline: none;
   }
-  .input::placeholder {
+  .searchBox::placeholder {
     color: var(--spectrum-global-color-gray-600);
-  }
-  .search input,
-  .search .closeButton {
-    display: block;
   }
 
   .title {
@@ -105,10 +104,6 @@
     opacity: 1;
     z-index: 1;
   }
-  /* 
-  :global(.nav-item) {
-    padding-right: 8px !important;
-  } */
 
   .searchButton {
     color: var(--grey-7);
@@ -123,10 +118,11 @@
   .hide {
     opacity: 0;
     pointer-events: none;
+    display: none !important;
   }
 
   .closeButton {
-    display: none;
+    display: flex;
     transform: rotate(45deg);
     color: var(--grey-7);
     cursor: pointer;
@@ -135,38 +131,5 @@
 
   .closeButton:hover {
     color: var(--ink);
-  }
-
-  .icon {
-    margin-left: 4px;
-    margin-right: 4px;
-  }
-
-  .no-results {
-    color: var(--spectrum-global-color-gray-600);
-  }
-
-  .divider {
-    position: absolute;
-    bottom: 0;
-    transform: translateY(50%);
-    height: 16px;
-    width: 100%;
-  }
-  .divider:after {
-    content: "";
-    position: absolute;
-    background: var(--spectrum-global-color-gray-200);
-    height: 2px;
-    width: 100%;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: background 130ms ease-out;
-  }
-  .divider:hover {
-    cursor: row-resize;
-  }
-  .divider:hover:after {
-    background: var(--spectrum-global-color-gray-300);
   }
 </style>
