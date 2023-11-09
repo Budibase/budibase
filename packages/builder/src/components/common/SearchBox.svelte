@@ -17,7 +17,7 @@
 
   const closeSearch = async () => {
     search = false
-    searchValue = ""
+    value = ""
   }
 
   const onKeyDown = e => {
