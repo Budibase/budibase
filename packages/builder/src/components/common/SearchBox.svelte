@@ -4,8 +4,8 @@
 
   export let title
   export let placeholder
+  export let value
 
-  let searchValue
   let searchInput
   let search = false
 
@@ -32,7 +32,7 @@
 <div class="header" class:search>
   <input
     readonly={!search}
-    bind:value={searchValue}
+    bind:value
     bind:this={searchInput}
     class="searchBox"
     class:hide={!search}
