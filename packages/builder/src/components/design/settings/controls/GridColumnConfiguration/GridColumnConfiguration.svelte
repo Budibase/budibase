@@ -6,7 +6,6 @@
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
   import DraggableList from "../DraggableList/DraggableList.svelte"
-  import DragHandle from "../DraggableList/drag-handle.svelte"
   import { createEventDispatcher } from "svelte"
   import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
@@ -36,11 +35,11 @@
   // parses columns to fix older formats
   const getParsedColumns = (columns) => {
     // If the first element has an active key all elements should be in the new format
-    if (columns.length && columns[0]?.active !== undefined) {
+    if (columns?.length && columns[0]?.active !== undefined) {
       return columns;
     }
 
-    return columns.map(column => ({
+    return columns?.map(column => ({
       label: column.displayName,
       field: column.name,
       active: true
@@ -57,6 +56,13 @@
     fieldList = [...sanitisedFields, ...unconfigured]
       .map(buildPseudoInstance)
       .filter(x => x != null)
+
+    // Default ordering of columns to that of the datasource's grid positions
+    if (value === undefined) {
+      console.log('sorting');
+      fieldList = fieldList.toSorted((a, b) => a.dataSectionOrder - b.dataSectionOrder);
+    }
+
     const primaryDisplayColumnName = getPrimaryDisplayColumnName(
       $currentAsset,
       datasource
@@ -65,10 +71,10 @@
       field => field.field === primaryDisplayColumnName
     )
 
+    // Default all columns to selected
     if (resourceId !== previousResourceId) {
       if (previousResourceId !== null) {
-        fieldList = fieldList.map(fl => ({ ...fl, active: true }))
-        dispatch("change", fieldList)
+        dispatch("change", undefined)
       }
 
       previousResourceId = resourceId
@@ -141,6 +147,7 @@
         field: instance.field,
         label: instance.field,
         placeholder: instance.field,
+        dataSectionOrder: schema[instance.field].order ?? -1
       },
       {}
     )

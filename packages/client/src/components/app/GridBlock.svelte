@@ -20,11 +20,11 @@
   // parses columns to fix older formats
   const getParsedColumns = (columns) => {
     // If the first element has an active key all elements should be in the new format
-    if (columns.length && columns[0]?.active !== undefined) {
+    if (columns?.length && columns[0]?.active !== undefined) {
       return columns;
     }
 
-    return columns.map(column => ({
+    return columns?.map(column => ({
       label: column.displayName,
       field: column.name,
       active: true
