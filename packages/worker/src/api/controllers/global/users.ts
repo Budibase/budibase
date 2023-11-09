@@ -251,58 +251,32 @@ export const tenantUserLookup = async (ctx: any) => {
   Encapsulate the app user onboarding flows here.
 */
 export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
-  const request = ctx.request.body
-  const isBulkCreate = "create" in request
-
-  const emailConfigured = await isEmailConfigured()
-
-  let onboardingResponse
-
-  if (isBulkCreate) {
-    // @ts-ignore
-    const { users, groups, roles } = request.create
-    const assignUsers = users.map((user: User) => (user.roles = roles))
-    onboardingResponse = await userSdk.db.bulkCreate(assignUsers, groups)
-    ctx.body = onboardingResponse
-  } else if (emailConfigured) {
-    onboardingResponse = await inviteMultiple(ctx)
-  } else if (!emailConfigured) {
-    const inviteRequest = ctx.request.body
-
-    let createdPasswords: any = {}
-
-    const users: User[] = inviteRequest.map(invite => {
-      let password = Math.random().toString(36).substring(2, 22)
-
-      // Temp password to be passed to the user.
-      createdPasswords[invite.email] = password
-
-      return {
-        email: invite.email,
-        password,
-        forceResetPassword: true,
-        roles: invite.userInfo.apps,
-        admin: invite.userInfo.admin,
-        builder: invite.userInfo.builder,
-        tenantId: tenancy.getTenantId(),
-      }
-    })
-    let bulkCreateReponse = await userSdk.db.bulkCreate(users, [])
-
-    // Apply temporary credentials
-    ctx.body = {
-      ...bulkCreateReponse,
-      successful: bulkCreateReponse?.successful.map(user => {
-        return {
-          ...user,
-          password: createdPasswords[user.email],
-        }
-      }),
-      created: true,
-    }
-  } else {
-    ctx.throw(400, "User onboarding failed")
+  if (await isEmailConfigured()) {
+    await inviteMultiple(ctx)
+    return
   }
+
+  let createdPasswords: Record<string, string> = {}
+  const users: User[] = ctx.request.body.map(invite => {
+    let password = Math.random().toString(36).substring(2, 22)
+    createdPasswords[invite.email] = password
+
+    return {
+      email: invite.email,
+      password,
+      forceResetPassword: true,
+      roles: invite.userInfo.apps,
+      admin: invite.userInfo.admin,
+      builder: invite.userInfo.builder,
+      tenantId: tenancy.getTenantId(),
+    }
+  })
+
+  let resp = await userSdk.db.bulkCreate(users, [])
+  resp.successful.forEach(user => {
+    user.password = createdPasswords[user.email]
+  })
+  ctx.body = { ...resp, created: true }
 }
 
 export const invite = async (ctx: Ctx<InviteUserRequest>) => {
@@ -329,8 +303,7 @@ export const invite = async (ctx: Ctx<InviteUserRequest>) => {
 }
 
 export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
-  const request = ctx.request.body
-  ctx.body = await userSdk.invite(request)
+  ctx.body = await userSdk.invite(ctx.request.body)
 }
 
 export const checkInvite = async (ctx: any) => {
