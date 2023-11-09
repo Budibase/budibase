@@ -96,7 +96,7 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
   let globalUsers: User[]
   if (userIds) {
-    globalUsers = await db.getMultiple<User>(userIds)
+    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
   } else {
     globalUsers = (
       await db.allDocs<User>(
