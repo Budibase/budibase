@@ -66,11 +66,27 @@
         views,
         viewsV2
       )
+
+      const dsTables = tables.list.filter(
+        table =>
+          table.sourceId === datasource._id &&
+          table._id !== TableNames.USERS &&
+          (!searchTerm ||
+            table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
+      )
+      const dsQueries = queries.list.filter(
+        query =>
+          query.datasourceId === datasource._id &&
+          (!searchTerm ||
+            query.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
+      )
       return {
         ...datasource,
         selected,
         containsSelected,
         open: open || onlySource || !!searchTerm,
+        queries: dsQueries,
+        tables: dsTables,
       }
     })
   }
@@ -206,10 +222,8 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} {selectTable} {searchTerm} />
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id && (!searchTerm || query.name
-                ?.toLowerCase()
-                ?.indexOf(searchTerm.toLowerCase()) > -1)) as query}
+        <TableNavigator tables={datasource.tables} {selectTable} />
+        {#each datasource.queries as query}
           <NavItem
             indentLevel={1}
             icon="SQLQuery"
