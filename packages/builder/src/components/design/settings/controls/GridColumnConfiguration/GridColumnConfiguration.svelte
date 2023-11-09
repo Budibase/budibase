@@ -12,8 +12,6 @@
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
 
-
-
   export let componentInstance
   export let value
 
@@ -35,8 +33,22 @@
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
   }
+  // parses columns to fix older formats
+  const getParsedColumns = (columns) => {
+    // If the first element has an active key all elements should be in the new format
+    if (columns.length && columns[0]?.active !== undefined) {
+      return columns;
+    }
+
+    return columns.map(column => ({
+      label: column.displayName,
+      field: column.name,
+      active: true
+    }));
+  }
 
   const updateState = value => {
+    value = getParsedColumns(value)
     schema = getSchema($currentAsset, datasource)
     options = Object.keys(schema || {})
     sanitisedValue = getValidColumns(value, options)
@@ -155,6 +167,10 @@
 
   const listUpdated = e => {
     const parsedColumns = getValidColumns(e.detail, options)
+    if (primaryDisplayColumn) {
+      parsedColumns.push(primaryDisplayColumn);
+    }
+
     dispatch("change", parsedColumns)
   }
 </script>
@@ -176,7 +192,7 @@
 <DraggableList
   on:change={listUpdated}
   on:itemChange={processItemUpdate}
-  items={fieldList}
+  items={fieldList.filter(field => field.field !== primaryDisplayColumn?.field)}
   listItemKey={"_id"}
   listType={FieldSetting}
 />
