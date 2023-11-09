@@ -43,7 +43,7 @@
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>
-    <div class="field-label">{item.field}</div>
+    <div class="field-label">{item.label || item.field}</div>
   </div>
   <div
     title="The leftmost column is dictated by your datasource's primary column, which can be changed in the data section"

@@ -1,10 +1,3 @@
-import { get } from "svelte/store"
-import {
-  getDatasourceForProvider,
-  getSchemaForDatasource,
-} from "builderStore/dataBinding"
-import { store, currentAsset } from "builderStore"
-
 const modernize = (columns) => {
   if (!columns) {
     return []
@@ -19,18 +12,6 @@ const modernize = (columns) => {
   }
 
   return columns;
-}
-
-const getSchema = (asset, datasource) => {
-  const schema = getSchemaForDatasource(asset, datasource).schema
-
-  // Don't show ID and rev in tables
-  if (schema) {
-    delete schema._id
-    delete schema._rev
-  }
-
-  return schema
 }
 
 const removeInvalidAddMissing = (columns = [], defaultColumns) => {
@@ -62,10 +43,10 @@ const toColumns = (draggableList) => {
   }));
 }
 
-const toDraggableList = (columns) => {
+const toDraggableList = (columns, createComponent) => {
   return columns.map(column => {
 
-    return store.actions.components.createInstance(
+    return createComponent(
       "@budibase/standard-components/labelfield",
       {
         _instanceName: column.field,
@@ -78,20 +59,16 @@ const toDraggableList = (columns) => {
   });
 }
 
-const getPrimaryDisplayColumnName = (asset, datasource) => {
-  return getSchemaForDatasource(asset, datasource)?.table?.primaryDisplay
-}
-
-const getColumnsStore = (columns, componentInstance, onChange) => {
-  const datasource = getDatasourceForProvider(get(currentAsset), componentInstance)
-  const schema = getSchema(get(currentAsset), datasource)
-  const primaryDisplayColumnName = getPrimaryDisplayColumnName(
-    get(currentAsset),
-    datasource
-  )
+const getColumnsStore = ({
+  columns, 
+  schema,
+  primaryDisplayColumnName,
+  onChange,
+  createComponent
+}) => {
 
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema));
-  const draggableList = toDraggableList(validatedColumns);
+  const draggableList = toDraggableList(validatedColumns, createComponent);
   const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
   const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
 

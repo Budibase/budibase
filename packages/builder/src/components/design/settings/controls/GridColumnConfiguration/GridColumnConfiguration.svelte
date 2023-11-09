@@ -11,7 +11,6 @@
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumnsStore.js"
-  import getDatasourceId from "./getDatasourceId.js"
 
   export let value
   export let componentInstance
@@ -23,10 +22,17 @@
     dispatch("change", newValues)
   }
 
-  $: columns = getColumns(value, componentInstance, handleChange);
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: datasourceId = datasource?.resourceId || datasource?.tableId;
-  let previousDatasourceId = null;
+  const getSchema = (asset, datasource) => {
+    const schema = getSchemaForDatasource(asset, datasource).schema
+
+    // Don't show ID and rev in tables
+    if (schema) {
+      delete schema._id
+      delete schema._rev
+    }
+
+    return schema
+  }
 
   const handleDatasourceIdChange = (datasourceId) => {
     if (datasourceId !== previousDatasourceId) {
@@ -39,7 +45,22 @@
     }
   }
 
+  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: primaryDisplayColumnName = getSchemaForDatasource($currentAsset, datasource)?.table?.primaryDisplay
+  $: schema = getSchema(currentAsset, datasource)
+  $: columns = getColumns({
+    columns: value,  
+    schema,
+    primaryDisplayColumnName,
+    onChange: handleChange,
+    createComponent: store.actions.components.createInstance
+  });
+
+  $: datasourceId = datasource?.resourceId || datasource?.tableId;
+  let previousDatasourceId = null;
   $: handleDatasourceIdChange(datasourceId);
+
+
 </script>
 
 
