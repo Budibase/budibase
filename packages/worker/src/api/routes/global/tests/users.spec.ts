@@ -120,6 +120,23 @@ describe("/api/global/users", () => {
       expect(sendMailMock).toHaveBeenCalledTimes(0)
       expect(events.user.invited).toBeCalledTimes(0)
     })
+
+    it("should not be able to generate an invitation for user that has already been invited", async () => {
+      const email = structures.users.newEmail()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      jest.clearAllMocks()
+
+      const request = [{ email: email, userInfo: {} }]
+      const res = await config.api.users.sendMultiUserInvite(request)
+
+      const body = res.body as InviteUsersResponse
+      expect(body.successful.length).toBe(0)
+      expect(body.unsuccessful.length).toBe(1)
+      expect(body.unsuccessful[0].reason).toBe("Unavailable")
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(events.user.invited).toBeCalledTimes(0)
+    })
   })
 
   describe("POST /api/global/users/bulk", () => {
