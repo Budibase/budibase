@@ -26,11 +26,11 @@ const removeInvalidAddMissing = (columns = [], defaultColumns) => {
 
 const getDefault = (schema = {}) => {
   return Object.values(schema)
-    .toSorted((a, b) => a.order - b.order)
+    .toSorted((a, b) => (a.order || -1) - (b.order || -1))
     .map(column => ({
       label: column.name,
       field: column.name,
-      active: !column.autoColumn && column.visible
+      active: column.visible
     })
   );
 }
@@ -43,7 +43,7 @@ const toColumns = (draggableList) => {
   }));
 }
 
-const toDraggableList = (columns, createComponent) => {
+const toDraggableList = (columns, createComponent, schema) => {
   return columns.map(column => {
 
     return createComponent(
@@ -52,14 +52,15 @@ const toDraggableList = (columns, createComponent) => {
         _instanceName: column.field,
         active: column.active,
         field: column.field,
-        label: column.label
+        label: column.label,
+        columnType: schema[column.field].type
       },
       {}
     )
   });
 }
 
-const getColumnsStore = ({
+const getColumns = ({
   columns, 
   schema,
   primaryDisplayColumnName,
@@ -68,7 +69,7 @@ const getColumnsStore = ({
 }) => {
 
   const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema));
-  const draggableList = toDraggableList(validatedColumns, createComponent);
+  const draggableList = toDraggableList(validatedColumns, createComponent, schema);
   const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
   const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
 
@@ -88,4 +89,4 @@ const getColumnsStore = ({
   };
 };
 
-export default getColumnsStore;
+export default getColumns;

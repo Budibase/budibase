@@ -1,5 +1,4 @@
 <script>
-  import { cloneDeep, isEqual } from "lodash/fp"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
@@ -10,7 +9,7 @@
   import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
-  import getColumns from "./getColumnsStore.js"
+  import getColumns from "./getColumns.js"
 
   export let value
   export let componentInstance
