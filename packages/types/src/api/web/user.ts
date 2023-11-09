@@ -50,6 +50,7 @@ export type InviteUsersRequest = InviteUserRequest[]
 export interface InviteUsersResponse {
   successful: { email: string }[]
   unsuccessful: { email: string; reason: string }[]
+  created?: boolean
 }
 
 export interface SearchUsersRequest {
