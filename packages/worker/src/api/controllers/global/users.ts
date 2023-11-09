@@ -349,14 +349,12 @@ export const checkInvite = async (ctx: any) => {
 }
 
 export const getUserInvites = async (ctx: any) => {
-  let invites
   try {
     // Restricted to the currently authenticated tenant
-    invites = await getInviteCodes()
+    ctx.body = await getInviteCodes()
   } catch (e) {
     ctx.throw(400, "There was a problem fetching invites")
   }
-  ctx.body = invites
 }
 
 export const updateInvite = async (ctx: any) => {

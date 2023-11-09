@@ -66,7 +66,11 @@ async function writeCode(db: RedisDBName, value: Invite | PasswordReset) {
   return code
 }
 
-async function updateCode(db: RedisDBName, code: string, value: any) {
+async function updateCode(
+  db: RedisDBName,
+  code: string,
+  value: Invite | PasswordReset
+) {
   const client = getClient(db)
   await client.store(code, value, getExpirySecondsForDB(db))
 }

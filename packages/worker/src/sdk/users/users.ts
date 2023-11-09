@@ -1,5 +1,9 @@
 import { events, tenancy, users as usersCore } from "@budibase/backend-core"
-import { InviteUsersRequest, InviteUsersResponse } from "@budibase/types"
+import {
+  InviteUserRequest,
+  InviteUsersRequest,
+  InviteUsersResponse,
+} from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
 import { getInviteCodes } from "../..//utilities/redis"
@@ -15,12 +19,17 @@ export async function invite(
   const matchedEmails = await usersCore.searchExistingEmails(
     users.map(u => u.email)
   )
-  const existingInvites = await getInviteCodes()
-  const newUsers = []
+  const invitedEmails = (await getInviteCodes()).map(invite => invite.email)
+  const newUsers: InviteUserRequest[] = []
 
   // separate duplicates from new users
   for (let user of users) {
-    if (matchedEmails.includes(user.email)) {
+    if (
+      matchedEmails.includes(user.email) ||
+      invitedEmails.includes(user.email)
+    ) {
+      // This "Unavailable" is load bearing. The tests and frontend both check for it
+      // specifically
       response.unsuccessful.push({ email: user.email, reason: "Unavailable" })
     } else {
       newUsers.push(user)
