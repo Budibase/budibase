@@ -16,12 +16,28 @@
   export let fixedRowHeight = null
   export let columns = null
   export let onRowClick = null
+  
+  // parses columns to fix older formats
+  const getParsedColumns = (columns) => {
+    // If the first element has an active key all elements should be in the new format
+    if (columns.length && columns[0]?.active !== undefined) {
+      return columns;
+    }
+
+    return columns.map(column => ({
+      label: column.displayName,
+      field: column.name,
+      active: true
+    }));
+  }
+
+  $: parsedColumns = getParsedColumns(columns);
 
   const component = getContext("component")
   const { styleable, API, builderStore, notificationStore } = getContext("sdk")
 
-  $: columnWhitelist = columns?.filter(col => col.active)?.map(col => col.field)
-  $: schemaOverrides = getSchemaOverrides(columns)
+  $: columnWhitelist = parsedColumns?.filter(col => col.active)?.map(col => col.field)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
