@@ -6,6 +6,7 @@
   export let title
   export let placeholder
   export let value
+  export let onAdd
 
   let searchInput
   let search = false
@@ -31,7 +32,7 @@
     if (search) {
       closeSearch()
     } else {
-      alert("todo")
+      onAdd()
     }
   }
 </script>
