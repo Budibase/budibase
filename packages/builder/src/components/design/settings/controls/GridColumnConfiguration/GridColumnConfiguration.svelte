@@ -15,6 +15,11 @@
   export let value
 
   const dispatch = createEventDispatcher()
+
+  const handleChange = (newValues) => {
+    dispatch("change", newValues)
+  }
+
   let sanitisedFields
   let fieldList
   let schema
