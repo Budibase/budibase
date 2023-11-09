@@ -14,14 +14,27 @@ const modernize = (columns) => {
   return columns;
 }
 
-const removeInvalidAddMissing = (columns = [], defaultColumns) => {
+const removeInvalidAddMissing = (columns = [], defaultColumns, primaryDisplayColumnName) => {
   const defaultColumnNames = defaultColumns.map(column => column.field);
   const columnNames = columns.map(column => column.field);
 
-  const columnsWithoutInvalid = columns.filter(column => defaultColumnNames.includes(column.field));
-  const missingFields = defaultColumns.filter(defaultColumn => !columnNames.includes(defaultColumn.field))
+  const validColumns = columns.filter(column => defaultColumnNames.includes(column.field));
+  let missingColumns = defaultColumns.filter(defaultColumn => !columnNames.includes(defaultColumn.field))
 
-  return [...columnsWithoutInvalid, ...missingFields];
+  // If the user already has fields selected, any appended missing fields should be disabled by default
+  if (validColumns.length) {
+    missingColumns = missingColumns.map(field => ({ ...field, active: false }));
+  }
+
+  const combinedColumns = [...validColumns, ...missingColumns];
+
+  // Ensure the primary display column is always visible
+  const primaryDisplayIndex = combinedColumns.findIndex(column => column.field === primaryDisplayColumnName);
+  if (primaryDisplayIndex) {
+    combinedColumns[primaryDisplayIndex].active = true;
+  }
+
+  return combinedColumns
 }
 
 const getDefault = (schema = {}) => {
@@ -68,7 +81,7 @@ const getColumns = ({
   createComponent
 }) => {
 
-  const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema));
+  const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema), primaryDisplayColumnName);
   const draggableList = toDraggableList(validatedColumns, createComponent, schema);
   const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
   const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
