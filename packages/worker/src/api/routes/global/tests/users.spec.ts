@@ -1,10 +1,11 @@
 import { InviteUsersResponse, User } from "@budibase/types"
 
-jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
-const sendMailMock = mocks.email.mock()
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
 import * as userSdk from "../../../../sdk/users"
+
+jest.mock("nodemailer")
+const sendMailMock = mocks.email.mock()
 
 const accounts = jest.mocked(_accounts)
 
@@ -45,6 +46,22 @@ describe("/api/global/users", () => {
       const { code, res } = await config.api.users.sendUserInvite(
         sendMailMock,
         config.user!.email,
+        400
+      )
+
+      expect(res.body.message).toBe(`Unavailable`)
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(code).toBeUndefined()
+      expect(events.user.invited).toBeCalledTimes(0)
+    })
+
+    it("should not invite the same user twice", async () => {
+      const email = structures.users.newEmail()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      const { code, res } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email,
         400
       )
 

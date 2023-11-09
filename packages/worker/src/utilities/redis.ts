@@ -1,60 +1,24 @@
 import { redis, utils, tenancy } from "@budibase/backend-core"
 import env from "../environment"
 
-function getExpirySecondsForDB(db: string) {
-  switch (db) {
-    case redis.utils.Databases.PW_RESETS:
-      // a hour
-      return 3600
-    case redis.utils.Databases.INVITATIONS:
-      // a week
-      return 604800
-  }
+interface Invite {
+  email: string
+  info: any
 }
 
-let pwResetClient: any, invitationClient: any
-
-function getClient(db: string) {
-  switch (db) {
-    case redis.utils.Databases.PW_RESETS:
-      return pwResetClient
-    case redis.utils.Databases.INVITATIONS:
-      return invitationClient
-  }
+interface InviteWithCode extends Invite {
+  code: string
 }
 
-async function writeACode(db: string, value: any) {
-  const client = await getClient(db)
-  const code = utils.newid()
-  await client.store(code, value, getExpirySecondsForDB(db))
-  return code
+interface PasswordReset {
+  userId: string
+  info: any
 }
 
-async function updateACode(db: string, code: string, value: any) {
-  const client = await getClient(db)
-  await client.store(code, value, getExpirySecondsForDB(db))
-}
-
-/**
- * Given an invite code and invite body, allow the update an existing/valid invite in redis
- * @param inviteCode The invite code for an invite in redis
- * @param value The body of the updated user invitation
- */
-export async function updateInviteCode(inviteCode: string, value: string) {
-  await updateACode(redis.utils.Databases.INVITATIONS, inviteCode, value)
-}
-
-async function getACode(db: string, code: string, deleteCode = true) {
-  const client = await getClient(db)
-  const value = await client.get(code)
-  if (!value) {
-    throw new Error("Invalid code.")
-  }
-  if (deleteCode) {
-    await client.delete(code)
-  }
-  return value
-}
+type RedisDBName =
+  | redis.utils.Databases.PW_RESETS
+  | redis.utils.Databases.INVITATIONS
+let pwResetClient: redis.Client, invitationClient: redis.Client
 
 export async function init() {
   pwResetClient = new redis.Client(redis.utils.Databases.PW_RESETS)
@@ -63,15 +27,71 @@ export async function init() {
   await invitationClient.init()
 }
 
-/**
- * make sure redis connection is closed.
- */
 export async function shutdown() {
   if (pwResetClient) await pwResetClient.finish()
   if (invitationClient) await invitationClient.finish()
   // shutdown core clients
   await redis.clients.shutdown()
   console.log("Redis shutdown")
+}
+
+function getExpirySecondsForDB(db: RedisDBName) {
+  switch (db) {
+    case redis.utils.Databases.PW_RESETS:
+      // a hour
+      return 3600
+    case redis.utils.Databases.INVITATIONS:
+      // a week
+      return 604800
+    default:
+      throw new Error(`Unknown redis database: ${db}`)
+  }
+}
+
+function getClient(db: RedisDBName): redis.Client {
+  switch (db) {
+    case redis.utils.Databases.PW_RESETS:
+      return pwResetClient
+    case redis.utils.Databases.INVITATIONS:
+      return invitationClient
+    default:
+      throw new Error(`Unknown redis database: ${db}`)
+  }
+}
+
+async function writeCode(db: RedisDBName, value: Invite | PasswordReset) {
+  const client = getClient(db)
+  const code = utils.newid()
+  await client.store(code, value, getExpirySecondsForDB(db))
+  return code
+}
+
+async function updateCode(db: RedisDBName, code: string, value: any) {
+  const client = getClient(db)
+  await client.store(code, value, getExpirySecondsForDB(db))
+}
+
+/**
+ * Given an invite code and invite body, allow the update an existing/valid invite in redis
+ * @param inviteCode The invite code for an invite in redis
+ * @param value The body of the updated user invitation
+ */
+export async function updateInviteCode(code: string, value: Invite) {
+  await updateCode(redis.utils.Databases.INVITATIONS, code, value)
+}
+
+async function deleteCode(db: RedisDBName, code: string) {
+  const client = getClient(db)
+  await client.delete(code)
+}
+
+async function getCode(db: RedisDBName, code: string) {
+  const client = getClient(db)
+  const value = await client.get(code)
+  if (!value) {
+    throw new Error(`Could not find code: ${code}`)
+  }
+  return value
 }
 
 /**
@@ -81,22 +101,20 @@ export async function shutdown() {
  * @param info Info about the user/the reset process.
  * @return returns the code that was stored to redis.
  */
-export async function getResetPasswordCode(userId: string, info: any) {
-  return writeACode(redis.utils.Databases.PW_RESETS, { userId, info })
+export async function createResetPasswordCode(userId: string, info: any) {
+  return writeCode(redis.utils.Databases.PW_RESETS, { userId, info })
 }
 
 /**
- * Given a reset code this will lookup to redis, check if the code is valid and delete if required.
+ * Given a reset code this will lookup to redis, check if the code is valid.
  * @param resetCode The code provided via the email link.
- * @param deleteCode If the code is used/finished with this will delete it - defaults to true.
  * @return returns the user ID if it is found
  */
-export async function checkResetPasswordCode(
-  resetCode: string,
-  deleteCode = true
-) {
+export async function getResetPasswordCode(
+  code: string
+): Promise<PasswordReset> {
   try {
-    return getACode(redis.utils.Databases.PW_RESETS, resetCode, deleteCode)
+    return getCode(redis.utils.Databases.PW_RESETS, code)
   } catch (err) {
     throw "Provided information is not valid, cannot reset password - please try again."
   }
@@ -108,35 +126,35 @@ export async function checkResetPasswordCode(
  * @param info Information to be carried along with the invitation.
  * @return returns the code that was stored to redis.
  */
-export async function getInviteCode(email: string, info: any) {
-  return writeACode(redis.utils.Databases.INVITATIONS, { email, info })
+export async function createInviteCode(email: string, info: any) {
+  return writeCode(redis.utils.Databases.INVITATIONS, { email, info })
 }
 
 /**
  * Checks that the provided invite code is valid - will return the email address of user that was invited.
  * @param inviteCode the invite code that was provided as part of the link.
- * @param deleteCode whether or not the code should be deleted after retrieval - defaults to true.
  * @return If the code is valid then an email address will be returned.
  */
-export async function checkInviteCode(
-  inviteCode: string,
-  deleteCode: boolean = true
-) {
+export async function getInviteCode(code: string): Promise<Invite> {
   try {
-    return getACode(redis.utils.Databases.INVITATIONS, inviteCode, deleteCode)
+    return getCode(redis.utils.Databases.INVITATIONS, code)
   } catch (err) {
     throw "Invitation is not valid or has expired, please request a new one."
   }
 }
 
+export async function deleteInviteCode(code: string) {
+  return deleteCode(redis.utils.Databases.INVITATIONS, code)
+}
+
 /** 
   Get all currently available user invitations for the current tenant.
 **/
-export async function getInviteCodes() {
-  const client = await getClient(redis.utils.Databases.INVITATIONS)
-  const invites: any[] = await client.scan()
+export async function getInviteCodes(): Promise<InviteWithCode[]> {
+  const client = getClient(redis.utils.Databases.INVITATIONS)
+  const invites: { key: string; value: Invite }[] = await client.scan()
 
-  const results = invites.map(invite => {
+  const results: InviteWithCode[] = invites.map(invite => {
     return {
       ...invite.value,
       code: invite.key,

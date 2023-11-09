@@ -2,6 +2,7 @@ import { events, tenancy, users as usersCore } from "@budibase/backend-core"
 import { InviteUsersRequest, InviteUsersResponse } from "@budibase/types"
 import { sendEmail } from "../../utilities/email"
 import { EmailTemplatePurpose } from "../../constants"
+import { getInviteCodes } from "../..//utilities/redis"
 
 export async function invite(
   users: InviteUsersRequest
@@ -14,6 +15,7 @@ export async function invite(
   const matchedEmails = await usersCore.searchExistingEmails(
     users.map(u => u.email)
   )
+  const existingInvites = await getInviteCodes()
   const newUsers = []
 
   // separate duplicates from new users

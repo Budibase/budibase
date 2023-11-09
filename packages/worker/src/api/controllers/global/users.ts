@@ -1,5 +1,6 @@
 import {
-  checkInviteCode,
+  getInviteCode,
+  deleteInviteCode,
   getInviteCodes,
   updateInviteCode,
 } from "../../../utilities/redis"
@@ -336,10 +337,11 @@ export const checkInvite = async (ctx: any) => {
   const { code } = ctx.params
   let invite
   try {
-    invite = await checkInviteCode(code, false)
+    invite = await getInviteCode(code)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
+    return
   }
   ctx.body = {
     email: invite.email,
@@ -365,12 +367,10 @@ export const updateInvite = async (ctx: any) => {
 
   let invite
   try {
-    invite = await checkInviteCode(code, false)
-    if (!invite) {
-      throw new Error("The invite could not be retrieved")
-    }
+    invite = await getInviteCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
+    return
   }
 
   let updated = {
@@ -405,7 +405,8 @@ export const inviteAccept = async (
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
-    const { email, info }: any = await checkInviteCode(inviteCode)
+    const { email, info }: any = await getInviteCode(inviteCode)
+    await deleteInviteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
       let request: any = {
         firstName,
