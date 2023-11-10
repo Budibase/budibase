@@ -17,7 +17,7 @@ import {
   env as coreEnv,
   timers,
 } from "@budibase/backend-core"
-db.init()
+
 import Koa from "koa"
 import koaBody from "koa-body"
 import http from "http"
@@ -85,6 +85,7 @@ const shutdown = () => {
 
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
+  await db.init()
   await initPro()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues

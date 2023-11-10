@@ -7,7 +7,6 @@ mocks.licenses.init(mocks.pro)
 mocks.licenses.useUnlimited()
 
 import * as dbConfig from "../db"
-dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 const supertest = require("supertest")
@@ -109,6 +108,7 @@ class TestConfiguration {
   // SETUP / TEARDOWN
 
   async beforeAll() {
+    await dbConfig.init()
     try {
       await this.createDefaultUser()
       await this.createSession(this.user!)
