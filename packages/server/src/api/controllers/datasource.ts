@@ -337,7 +337,7 @@ export async function destroy(ctx: UserCtx) {
   if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {
-    const queries = await db.allDocs(getQueryParams(datasourceId, null))
+    const queries = await db.allDocs(getQueryParams(datasourceId))
     await db.bulkDocs(
       queries.rows.map((row: any) => ({
         _id: row.id,

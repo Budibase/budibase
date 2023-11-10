@@ -6,6 +6,7 @@ import {
   RelationshipFieldMetadata,
   VirtualDocumentType,
   INTERNAL_TABLE_SOURCE_ID,
+  DatabaseQueryOpts,
 } from "@budibase/types"
 import { FieldTypes } from "../constants"
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -229,7 +230,10 @@ export function getAutomationMetadataParams(otherProps: any = {}) {
 /**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
-export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
+export function getQueryParams(
+  datasourceId?: Optional,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   if (datasourceId == null) {
     return getDocParams(DocumentType.QUERY, null, otherProps)
   }
@@ -256,7 +260,7 @@ export function generateMetadataID(type: string, entityId: string) {
 export function getMetadataParams(
   type: string,
   entityId?: Optional,
-  otherProps: any = {}
+  otherProps: Partial<DatabaseQueryOpts> = {}
 ) {
   let docId = `${type}${SEPARATOR}`
   if (entityId != null) {
@@ -269,22 +273,14 @@ export function generateMemoryViewID(viewName: string) {
   return `${DocumentType.MEM_VIEW}${SEPARATOR}${viewName}`
 }
 
-export function getMemoryViewParams(otherProps: any = {}) {
+export function getMemoryViewParams(
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
 export function generatePluginID(name: string) {
   return `${DocumentType.PLUGIN}${SEPARATOR}${name}`
-}
-
-/**
- * This can be used with the db.allDocs to get a list of IDs
- */
-export function getMultiIDParams(ids: string[]) {
-  return {
-    keys: ids,
-    include_docs: true,
-  }
 }
 
 /**
