@@ -2,38 +2,38 @@ import { it, expect, describe, beforeEach, vi } from "vitest"
 import getColumns from "./getColumns"
 
 describe("getColumns", () => {
-  beforeEach((ctx) => {
+  beforeEach(ctx => {
     ctx.schema = {
-      "one": { name: "one", visible: false, order: 0, type: "foo" },
-      "two": { name: "two", visible: true, order: 1, type: "foo" },
-      "three": { name: "three", visible: true, order: 2, type: "foo" },
-      "four": { name: "four", visible: false, order: 3, type: "foo" }
+      one: { name: "one", visible: false, order: 0, type: "foo" },
+      two: { name: "two", visible: true, order: 1, type: "foo" },
+      three: { name: "three", visible: true, order: 2, type: "foo" },
+      four: { name: "four", visible: false, order: 3, type: "foo" },
     }
 
     ctx.primaryDisplayColumnName = "four"
-    ctx.onChange = vi.fn();
+    ctx.onChange = vi.fn()
     ctx.createComponent = (componentName, props) => {
-      return { componentName, ...props };
+      return { componentName, ...props }
     }
-  });
+  })
 
   describe("using the old grid column format", () => {
-    beforeEach((ctx) => {
+    beforeEach(ctx => {
       const oldGridFormatColumns = [
         { displayName: "three label", name: "three" },
         { displayName: "two label", name: "two" },
-      ];
+      ]
 
       ctx.columns = getColumns({
-        columns: oldGridFormatColumns, 
+        columns: oldGridFormatColumns,
         schema: ctx.schema,
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
-        createComponent: ctx.createComponent
+        createComponent: ctx.createComponent,
       })
-    });
+    })
 
-    it("returns the selected and unselected fields in the modern format, respecting the original order", (ctx) => {
+    it("returns the selected and unselected fields in the modern format, respecting the original order", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
           _instanceName: "three",
@@ -61,31 +61,29 @@ describe("getColumns", () => {
         },
       ])
 
-      expect(ctx.columns.primary).toEqual(
-        {
-          _instanceName: "four",
-          active: true,
-          columnType: "foo",
-          componentName: "@budibase/standard-components/labelfield",
-          field: "four",
-          label: "four",
-        }
-      )
+      expect(ctx.columns.primary).toEqual({
+        _instanceName: "four",
+        active: true,
+        columnType: "foo",
+        componentName: "@budibase/standard-components/labelfield",
+        field: "four",
+        label: "four",
+      })
     })
   })
 
   describe("default columns", () => {
-    beforeEach((ctx) => {
+    beforeEach(ctx => {
       ctx.columns = getColumns({
-        columns: undefined, 
+        columns: undefined,
         schema: ctx.schema,
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
-        createComponent: ctx.createComponent
+        createComponent: ctx.createComponent,
       })
-    });
+    })
 
-    it("returns all columns, with non-hidden columns automatically selected", (ctx) => {
+    it("returns all columns, with non-hidden columns automatically selected", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
           _instanceName: "two",
@@ -113,39 +111,37 @@ describe("getColumns", () => {
         },
       ])
 
-      expect(ctx.columns.primary).toEqual(
-        {
-          _instanceName: "four",
-          active: true,
-          columnType: "foo",
-          componentName: "@budibase/standard-components/labelfield",
-          field: "four",
-          label: "four",
-        }
-      )
+      expect(ctx.columns.primary).toEqual({
+        _instanceName: "four",
+        active: true,
+        columnType: "foo",
+        componentName: "@budibase/standard-components/labelfield",
+        field: "four",
+        label: "four",
+      })
     })
 
-    it("Unselected columns should be placed at the end", (ctx) => {
+    it("Unselected columns should be placed at the end", ctx => {
       expect(ctx.columns.sortable[2].field).toEqual("one")
-    });
+    })
   })
 
   describe("missing columns", () => {
-    beforeEach((ctx) => {
+    beforeEach(ctx => {
       const gridFormatColumns = [
         { label: "three label", field: "three", active: true },
-      ];
+      ]
 
       ctx.columns = getColumns({
-        columns: gridFormatColumns, 
+        columns: gridFormatColumns,
         schema: ctx.schema,
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
-        createComponent: ctx.createComponent
+        createComponent: ctx.createComponent,
       })
-    });
+    })
 
-    it("returns all columns, including those missing from the initial data", (ctx) => {
+    it("returns all columns, including those missing from the initial data", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
           _instanceName: "three",
@@ -173,36 +169,34 @@ describe("getColumns", () => {
         },
       ])
 
-      expect(ctx.columns.primary).toEqual(
-        {
-          _instanceName: "four",
-          active: true,
-          columnType: "foo",
-          componentName: "@budibase/standard-components/labelfield",
-          field: "four",
-          label: "four",
-        }
-      )
+      expect(ctx.columns.primary).toEqual({
+        _instanceName: "four",
+        active: true,
+        columnType: "foo",
+        componentName: "@budibase/standard-components/labelfield",
+        field: "four",
+        label: "four",
+      })
     })
   })
 
   describe("invalid columns", () => {
-    beforeEach((ctx) => {
+    beforeEach(ctx => {
       const gridFormatColumns = [
         { label: "three label", field: "three", active: true },
         { label: "some nonsense", field: "some nonsense", active: true },
-      ];
+      ]
 
       ctx.columns = getColumns({
-        columns: gridFormatColumns, 
+        columns: gridFormatColumns,
         schema: ctx.schema,
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
-        createComponent: ctx.createComponent
+        createComponent: ctx.createComponent,
       })
-    });
+    })
 
-    it("returns all valid columns, including those missing from the initial data", (ctx) => {
+    it("returns all valid columns, including those missing from the initial data", ctx => {
       expect(ctx.columns.sortable).toEqual([
         {
           _instanceName: "three",
@@ -230,71 +224,69 @@ describe("getColumns", () => {
         },
       ])
 
-      expect(ctx.columns.primary).toEqual(
-        {
-          _instanceName: "four",
-          active: true,
-          columnType: "foo",
-          componentName: "@budibase/standard-components/labelfield",
-          field: "four",
-          label: "four",
-        }
-      )
+      expect(ctx.columns.primary).toEqual({
+        _instanceName: "four",
+        active: true,
+        columnType: "foo",
+        componentName: "@budibase/standard-components/labelfield",
+        field: "four",
+        label: "four",
+      })
     })
   })
 
   describe("methods", () => {
-    beforeEach((ctx) => {
+    beforeEach(ctx => {
       const { update, updateSortable } = getColumns({
-        columns: [], 
+        columns: [],
         schema: ctx.schema,
         primaryDisplayColumnName: ctx.primaryDisplayColumnName,
         onChange: ctx.onChange,
-        createComponent: ctx.createComponent
+        createComponent: ctx.createComponent,
       })
 
-      ctx.update = update;
-      ctx.updateSortable = updateSortable;
-    });
+      ctx.update = update
+      ctx.updateSortable = updateSortable
+    })
 
     describe("update", () => {
-      beforeEach((ctx) => {
+      beforeEach(ctx => {
         ctx.update({
           field: "one",
           label: "a new label",
-          active: true
-        });
-      });
+          active: true,
+        })
+      })
 
-      it("calls the callback with the updated columns", (ctx) => {
-        expect(ctx.onChange).toHaveBeenCalledTimes(1);
+      it("calls the callback with the updated columns", ctx => {
+        expect(ctx.onChange).toHaveBeenCalledTimes(1)
         expect(ctx.onChange).toHaveBeenCalledWith([
           {
             field: "two",
             label: "two",
-            active: true
+            active: true,
           },
           {
             field: "three",
             label: "three",
-            active: true
+            active: true,
           },
           {
             field: "one",
             label: "a new label",
-            active: true
+            active: true,
           },
           {
             field: "four",
             label: "four",
-            active: true
-          }
-        ]);
-      });
+            active: true,
+          },
+        ])
+      })
     })
 
     describe("updateSortable", () => {
-      beforeEach((ctx) => {
+      beforeEach(ctx => {
         ctx.updateSortable([
           {
             _instanceName: "three",
@@ -320,34 +312,34 @@ describe("getColumns", () => {
             field: "two",
             label: "two",
           },
-        ]);
-      });
+        ])
+      })
 
-      it("calls the callback with the updated columns", (ctx) => {
-        expect(ctx.onChange).toHaveBeenCalledTimes(1);
+      it("calls the callback with the updated columns", ctx => {
+        expect(ctx.onChange).toHaveBeenCalledTimes(1)
         expect(ctx.onChange).toHaveBeenCalledWith([
           {
             field: "three",
             label: "three",
-            active: true
+            active: true,
           },
           {
             field: "one",
             label: "one",
-            active: true
+            active: true,
           },
           {
             field: "two",
             label: "two",
-            active: false
+            active: false,
           },
           {
             field: "four",
             label: "four",
-            active: true
-          }
-        ]);
-      });
+            active: true,
+          },
+        ])
+      })
     })
   })
 })

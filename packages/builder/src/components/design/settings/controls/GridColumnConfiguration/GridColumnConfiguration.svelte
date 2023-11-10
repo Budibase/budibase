@@ -17,7 +17,7 @@
   const dispatch = createEventDispatcher()
   let primaryDisplayColumnAnchor
 
-  const handleChange = (newValues) => {
+  const handleChange = newValues => {
     dispatch("change", newValues)
   }
 
@@ -33,35 +33,35 @@
     return schema
   }
 
-  const handleDatasourceIdChange = (datasourceId) => {
+  const handleDatasourceIdChange = datasourceId => {
     if (datasourceId !== previousDatasourceId) {
       if (previousDatasourceId !== null) {
-        console.log('resetting');
-        handleChange(undefined);
+        console.log("resetting")
+        handleChange(undefined)
       }
 
-      previousDatasourceId = datasourceId;
+      previousDatasourceId = datasourceId
     }
   }
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: primaryDisplayColumnName = getSchemaForDatasource($currentAsset, datasource)?.table?.primaryDisplay
+  $: primaryDisplayColumnName = getSchemaForDatasource(
+    $currentAsset,
+    datasource
+  )?.table?.primaryDisplay
   $: schema = getSchema(currentAsset, datasource)
   $: columns = getColumns({
-    columns: value,  
+    columns: value,
     schema,
     primaryDisplayColumnName,
     onChange: handleChange,
-    createComponent: store.actions.components.createInstance
-  });
+    createComponent: store.actions.components.createInstance,
+  })
 
-  $: datasourceId = datasource?.resourceId || datasource?.tableId;
-  let previousDatasourceId = null;
-  $: handleDatasourceIdChange(datasourceId);
-
-
+  $: datasourceId = datasource?.resourceId || datasource?.tableId
+  let previousDatasourceId = null
+  $: handleDatasourceIdChange(datasourceId)
 </script>
-
 
 {#if columns.primary}
   <div class="sticky-item">
@@ -70,15 +70,15 @@
         <PrimaryColumnFieldSetting
           anchor={primaryDisplayColumnAnchor}
           item={columns.primary}
-          on:change={(e) => columns.update(e.detail)}
+          on:change={e => columns.update(e.detail)}
         />
       </div>
     </div>
   </div>
 {/if}
 <DraggableList
-  on:change={(e) => columns.updateSortable(e.detail)}
-  on:itemChange={(e) => columns.update(e.detail)}
+  on:change={e => columns.updateSortable(e.detail)}
+  on:itemChange={e => columns.update(e.detail)}
   items={columns.sortable}
   listItemKey={"_id"}
   listType={FieldSetting}
@@ -90,7 +90,7 @@
     min-width: 0;
     margin-left: 17.5px;
   }
- .sticky-item {
+  .sticky-item {
     list-style-type: none;
     margin: 0;
     padding: 0;

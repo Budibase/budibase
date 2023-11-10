@@ -1,4 +1,4 @@
-const modernize = (columns) => {
+const modernize = columns => {
   if (!columns) {
     return []
   }
@@ -7,61 +7,69 @@ const modernize = (columns) => {
     return columns.map(column => ({
       label: column.displayName,
       field: column.name,
-      active: true
-    }));
+      active: true,
+    }))
   }
 
-  return columns;
+  return columns
 }
 
-const removeInvalidAddMissing = (columns = [], defaultColumns, primaryDisplayColumnName) => {
-  const defaultColumnNames = defaultColumns.map(column => column.field);
-  const columnNames = columns.map(column => column.field);
+const removeInvalidAddMissing = (
+  columns = [],
+  defaultColumns,
+  primaryDisplayColumnName
+) => {
+  const defaultColumnNames = defaultColumns.map(column => column.field)
+  const columnNames = columns.map(column => column.field)
 
-  const validColumns = columns.filter(column => defaultColumnNames.includes(column.field));
-  let missingColumns = defaultColumns.filter(defaultColumn => !columnNames.includes(defaultColumn.field))
+  const validColumns = columns.filter(column =>
+    defaultColumnNames.includes(column.field)
+  )
+  let missingColumns = defaultColumns.filter(
+    defaultColumn => !columnNames.includes(defaultColumn.field)
+  )
 
   // If the user already has fields selected, any appended missing fields should be disabled by default
   if (validColumns.length) {
-    missingColumns = missingColumns.map(field => ({ ...field, active: false }));
+    missingColumns = missingColumns.map(field => ({ ...field, active: false }))
   }
 
-  const combinedColumns = [...validColumns, ...missingColumns];
+  const combinedColumns = [...validColumns, ...missingColumns]
 
   // Ensure the primary display column is always visible
-  const primaryDisplayIndex = combinedColumns.findIndex(column => column.field === primaryDisplayColumnName);
+  const primaryDisplayIndex = combinedColumns.findIndex(
+    column => column.field === primaryDisplayColumnName
+  )
   if (primaryDisplayIndex) {
-    combinedColumns[primaryDisplayIndex].active = true;
+    combinedColumns[primaryDisplayIndex].active = true
   }
 
   return combinedColumns
 }
 
 const getDefault = (schema = {}) => {
-  const defaultValues = Object.values(schema)
-    .map(column => ({
-      label: column.name,
-      field: column.name,
-      active: column.visible,
-      order: column.visible ? (column.order ?? - 1) : Number.MAX_SAFE_INTEGER
-    }))
+  const defaultValues = Object.values(schema).map(column => ({
+    label: column.name,
+    field: column.name,
+    active: column.visible,
+    order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
+  }))
 
-    defaultValues.sort((a, b) => a.order - b.order)
+  defaultValues.sort((a, b) => a.order - b.order)
 
-  return defaultValues;
+  return defaultValues
 }
 
-const toGridFormat = (draggableListColumns) => {
+const toGridFormat = draggableListColumns => {
   return draggableListColumns.map(entry => ({
     label: entry.label,
     field: entry.field,
-    active: entry.active
-  }));
+    active: entry.active,
+  }))
 }
 
 const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
   return gridFormatColumns.map(column => {
-
     return createComponent(
       "@budibase/standard-components/labelfield",
       {
@@ -69,39 +77,51 @@ const toDraggableListFormat = (gridFormatColumns, createComponent, schema) => {
         active: column.active,
         field: column.field,
         label: column.label,
-        columnType: schema[column.field].type
+        columnType: schema[column.field].type,
       },
       {}
     )
-  });
+  })
 }
 
 const getColumns = ({
-  columns, 
+  columns,
   schema,
   primaryDisplayColumnName,
   onChange,
-  createComponent
+  createComponent,
 }) => {
-  const validatedColumns = removeInvalidAddMissing(modernize(columns), getDefault(schema), primaryDisplayColumnName);
-  const draggableList = toDraggableListFormat(validatedColumns, createComponent, schema);
-  const primary = draggableList.find(entry => entry.field === primaryDisplayColumnName);
-  const sortable = draggableList.filter(entry => entry.field !== primaryDisplayColumnName);
+  const validatedColumns = removeInvalidAddMissing(
+    modernize(columns),
+    getDefault(schema),
+    primaryDisplayColumnName
+  )
+  const draggableList = toDraggableListFormat(
+    validatedColumns,
+    createComponent,
+    schema
+  )
+  const primary = draggableList.find(
+    entry => entry.field === primaryDisplayColumnName
+  )
+  const sortable = draggableList.filter(
+    entry => entry.field !== primaryDisplayColumnName
+  )
 
   return {
     primary,
     sortable,
-    updateSortable: (newDraggableList) => {
-      onChange(toGridFormat(newDraggableList.concat(primary)));
+    updateSortable: newDraggableList => {
+      onChange(toGridFormat(newDraggableList.concat(primary)))
     },
-    update: (newEntry) => {
+    update: newEntry => {
       const newDraggableList = draggableList.map(entry => {
-        return newEntry.field === entry.field ? newEntry : entry;
-      });
+        return newEntry.field === entry.field ? newEntry : entry
+      })
 
-      onChange(toGridFormat(newDraggableList));
-    }
-  };
-};
+      onChange(toGridFormat(newDraggableList))
+    },
+  }
+}
 
-export default getColumns;
+export default getColumns

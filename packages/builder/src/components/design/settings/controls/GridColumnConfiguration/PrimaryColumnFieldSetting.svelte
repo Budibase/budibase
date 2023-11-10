@@ -3,7 +3,7 @@
   import { Icon } from "@budibase/bbui"
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
-  
+
   export let item
   export let anchor
 

@@ -26,8 +26,10 @@
   }
 
   const getIcon = () => {
-    const component = `@budibase/standard-components/${FieldTypeToComponentMap[item.columnType]}`
-    const foo = store.actions.components.getDefinition(component);
+    const component = `@budibase/standard-components/${
+      FieldTypeToComponentMap[item.columnType]
+    }`
+    const foo = store.actions.components.getDefinition(component)
     return foo?.icon
   }
 </script>
