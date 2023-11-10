@@ -112,7 +112,7 @@
         onlyOneSource: onlySource,
       })
 
-      const show = dsQueries.length || dsTables.length
+      const show = !searchTerm || dsQueries.length || dsTables.length
       return {
         ...datasource,
         selected,
