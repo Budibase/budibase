@@ -38,7 +38,6 @@
 
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: resourceId = datasource?.resourceId || datasource?.tableId
-  let previousResourceId = null
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
@@ -53,15 +52,6 @@
     fieldList = [...sanitisedFields, ...unconfigured]
       .map(buildPseudoInstance)
       .filter(x => x != null)
-
-    if (resourceId !== previousResourceId) {
-      if (previousResourceId !== null) {
-        fieldList = fieldList.map(fl => ({ ...fl, active: true }))
-        dispatch("change", fieldList)
-      }
-
-      previousResourceId = resourceId
-    }
   }
 
   $: updateState(cachedValue, resourceId)
