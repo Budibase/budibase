@@ -23,7 +23,7 @@
   import { userSelectedResourceMap } from "builderStore"
 
   export let searchTerm
-  let openDataSources = []
+  let dataSourcesVisibility = {}
 
   $: enrichedDataSources = enrichDatasources(
     $datasources,
@@ -33,9 +33,26 @@
     $queries,
     $views,
     $viewsV2,
-    openDataSources,
+    dataSourcesVisibility,
     searchTerm
   )
+
+  const showDatasourceOpen = ({
+    selected,
+    containsSelected,
+    dataSourceVisibility,
+    searchTerm,
+  }) => {
+    if (searchTerm) {
+      return true
+    }
+
+    if (dataSourceVisibility !== undefined) {
+      return dataSourceVisibility
+    }
+
+    return selected || containsSelected
+  }
 
   const enrichDatasources = (
     datasources,
@@ -45,7 +62,7 @@
     queries,
     views,
     viewsV2,
-    openDataSources,
+    dataSourcesVisibility,
     searchTerm
   ) => {
     if (!datasources?.list?.length) {
@@ -56,7 +73,6 @@
       const selected =
         isActive("./datasource") &&
         datasources.selectedDatasourceId === datasource._id
-      const open = openDataSources.includes(datasource._id)
       const containsSelected = containsActiveEntity(
         datasource,
         params,
@@ -80,11 +96,18 @@
           (!searchTerm ||
             query.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
       )
+
+      const open = showDatasourceOpen({
+        selected,
+        containsSelected,
+        dataSourceVisibility: dataSourcesVisibility[datasource._id],
+        searchTerm,
+      })
       return {
         ...datasource,
         selected,
         containsSelected,
-        open: containsSelected || open || onlySource || !!searchTerm,
+        open,
         queries: dsQueries,
         tables: dsTables,
       }
@@ -103,23 +126,13 @@
     }
   }
 
-  function closeNode(datasource) {
-    openDataSources = openDataSources.filter(id => datasource._id !== id)
-  }
-
   function openNode(datasource) {
-    if (!openDataSources.includes(datasource._id)) {
-      openDataSources = [...openDataSources, datasource._id]
-    }
+    dataSourcesVisibility[datasource._id] = true
   }
 
   function toggleNode(datasource) {
-    const isOpen = openDataSources.includes(datasource._id)
-    if (isOpen) {
-      closeNode(datasource)
-    } else {
-      openNode(datasource)
-    }
+    dataSourcesVisibility[datasource._id] =
+      !dataSourcesVisibility[datasource._id]
   }
 
   const containsActiveEntity = (
