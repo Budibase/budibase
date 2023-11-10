@@ -53,7 +53,7 @@
           selected={isViewActive(view, $isActive, $views, $viewsV2)}
           on:click={() => {
             if (view.version === 2) {
-              $goto(`./view/v2/${view.id}`)
+              $goto(`./view/v2/${encodeURIComponent(view.id)}`)
             } else {
               $goto(`./view/v1/${encodeURIComponent(name)}`)
             }
