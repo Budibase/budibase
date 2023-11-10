@@ -10,6 +10,7 @@ import {
   DatabaseDeleteIndexOpts,
   Document,
   isDocument,
+  RowResponse,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
@@ -127,12 +128,19 @@ export class DatabaseImpl implements Database {
       keys: ids,
       include_docs: true,
     })
-    const NOT_FOUND = "not_found"
-    const rows = response.rows.filter(row => row.error !== NOT_FOUND)
+    const rowUnavailable = (row: RowResponse<T>) => {
+      // row is deleted - key lookup can return this
+      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+        return true
+      }
+      return row.error === "not_found"
+    }
+
+    const rows = response.rows.filter(row => !rowUnavailable(row))
     const someMissing = rows.length !== response.rows.length
     // some were filtered out - means some missing
     if (!opts?.allowMissing && someMissing) {
-      const missing = response.rows.filter(row => row.error === NOT_FOUND)
+      const missing = response.rows.filter(row => rowUnavailable(row))
       const missingIds = missing.map(row => row.key).join(", ")
       throw new Error(`Unable to get documents: ${missingIds}`)
     }
