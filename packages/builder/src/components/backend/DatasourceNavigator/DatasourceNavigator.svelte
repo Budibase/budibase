@@ -111,6 +111,8 @@
         searchTerm,
         onlyOneSource: onlySource,
       })
+
+      const show = dsQueries.length || dsTables.length
       return {
         ...datasource,
         selected,
@@ -118,6 +120,7 @@
         open,
         queries: dsQueries,
         tables: dsTables,
+        show,
       }
     })
   }
@@ -218,7 +221,7 @@
       on:click={() => selectTable(TableNames.USERS)}
       selectedBy={$userSelectedResourceMap[TableNames.USERS]}
     />
-    {#each enrichedDataSources as datasource}
+    {#each enrichedDataSources.filter(ds => ds.show) as datasource}
       <NavItem
         border
         text={datasource.name}
