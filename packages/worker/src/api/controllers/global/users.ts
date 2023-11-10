@@ -308,7 +308,7 @@ export const checkInvite = async (ctx: any) => {
   const { code } = ctx.params
   let invite
   try {
-    invite = await redis.getInviteCode(code)
+    invite = await redis.invite.getCode(code)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
@@ -322,7 +322,7 @@ export const checkInvite = async (ctx: any) => {
 export const getUserInvites = async (ctx: any) => {
   try {
     // Restricted to the currently authenticated tenant
-    ctx.body = await redis.getInviteCodes()
+    ctx.body = await redis.invite.getInviteCodes()
   } catch (e) {
     ctx.throw(400, "There was a problem fetching invites")
   }
@@ -336,7 +336,7 @@ export const updateInvite = async (ctx: any) => {
 
   let invite
   try {
-    invite = await redis.getInviteCode(code)
+    invite = await redis.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
     return
@@ -364,7 +364,7 @@ export const updateInvite = async (ctx: any) => {
     }
   }
 
-  await redis.updateInviteCode(code, updated)
+  await redis.invite.updateCode(code, updated)
   ctx.body = { ...invite }
 }
 
@@ -374,8 +374,8 @@ export const inviteAccept = async (
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
-    const { email, info }: any = await redis.getInviteCode(inviteCode)
-    await redis.deleteInviteCode(inviteCode)
+    const { email, info }: any = await redis.invite.getCode(inviteCode)
+    await redis.invite.deleteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
       let request: any = {
         firstName,
