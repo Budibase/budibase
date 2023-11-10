@@ -4,7 +4,7 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { createResetPasswordCode } from "@budibase/backend-core/src/redis/passwordReset"
-import { createInviteCode } from "@budibase/backend-core/src/redis/invite"
+import { redis } from "@budibase/backend-core"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
 import { configs } from "@budibase/backend-core"
 import ical from "ical-generator"
@@ -64,7 +64,7 @@ async function getLinkCode(
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
       return createResetPasswordCode(user._id!, info)
     case EmailTemplatePurpose.INVITATION:
-      return createInviteCode(email, info)
+      return redis.createInviteCode(email, info)
     default:
       return null
   }
