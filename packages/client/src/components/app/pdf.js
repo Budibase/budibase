@@ -1,6 +1,6 @@
 import html2pdf from "html2pdf.js"
 
-// Orientation options for generated PDF's
+// Orientation options for generated PDFs
 export const Orientations = {
   PORTRAIT: "portrait",
   LANDSCAPE: "landscape",
@@ -16,7 +16,8 @@ function manipulatePageSize(pageSize, factor) {
   pageSize.inner.px.height *= factor
 }
 
-// Converts an HTML string or an array of HTML pages into a PDF document and downloads it
+// Converts an HTML string or an array of HTML pages into a PDF document and
+// downloads it
 export function htmlToPdf(pages = [], opts = {}) {
   const defaultOpts = {
     fileName: "file.pdf",
@@ -147,8 +148,6 @@ export function htmlToPdf(pages = [], opts = {}) {
     })
 
     // Save PDF
-    worker.save().then(() => {
-      resolve()
-    })
+    worker.save().then(resolve)
   })
 }
