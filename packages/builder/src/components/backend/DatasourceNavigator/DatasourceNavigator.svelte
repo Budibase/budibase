@@ -209,18 +209,25 @@
     const viewV2Table = options.find(x => x._id === viewsV2.selected?.tableId)
     return viewV2Table != null
   }
+
+  const appUsersTableName = "App users"
+  $: showAppUsersTable =
+    !searchTerm ||
+    appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
 </script>
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    <NavItem
-      icon="UserGroup"
-      text="App users"
-      selected={$isActive("./table/:tableId") &&
-        $tables.selected?._id === TableNames.USERS}
-      on:click={() => selectTable(TableNames.USERS)}
-      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
-    />
+    {#if showAppUsersTable}
+      <NavItem
+        icon="UserGroup"
+        text={appUsersTableName}
+        selected={$isActive("./table/:tableId") &&
+          $tables.selected?._id === TableNames.USERS}
+        on:click={() => selectTable(TableNames.USERS)}
+        selectedBy={$userSelectedResourceMap[TableNames.USERS]}
+      />
+    {/if}
     {#each enrichedDataSources.filter(ds => ds.show) as datasource}
       <NavItem
         border
