@@ -1,7 +1,7 @@
 import * as core from "@budibase/backend-core"
 import env from "../environment"
 
-export function init() {
+export async function init() {
   const dbConfig: any = {
     replication: true,
     find: true,
@@ -12,5 +12,5 @@ export function init() {
     dbConfig.allDbs = true
   }
 
-  core.init({ db: dbConfig })
+  await core.init({ db: dbConfig })
 }
