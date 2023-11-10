@@ -42,6 +42,7 @@
     containsSelected,
     dataSourceVisibility,
     searchTerm,
+    onlyOneSource,
   }) => {
     if (searchTerm) {
       return true
@@ -49,6 +50,10 @@
 
     if (dataSourceVisibility !== undefined) {
       return dataSourceVisibility
+    }
+
+    if (onlyOneSource) {
+      return true
     }
 
     return selected || containsSelected
@@ -102,6 +107,7 @@
         containsSelected,
         dataSourceVisibility: dataSourcesVisibility[datasource._id],
         searchTerm,
+        onlyOneSource: onlySource,
       })
       return {
         ...datasource,
@@ -131,8 +137,7 @@
   }
 
   function toggleNode(datasource) {
-    dataSourcesVisibility[datasource._id] =
-      !dataSourcesVisibility[datasource._id]
+    dataSourcesVisibility[datasource._id] = !datasource.open
   }
 
   const containsActiveEntity = (
