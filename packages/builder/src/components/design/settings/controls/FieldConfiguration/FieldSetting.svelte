@@ -11,7 +11,6 @@
   export let componentBindings
   export let bindings
   export let anchor
-  export let updating //or disabled
 
   const dispatch = createEventDispatcher()
   const onToggle = item => {
@@ -50,7 +49,6 @@
       {bindings}
       {parseSettings}
       on:change
-      disabled={updating}
     >
       <div slot="header" class="type-icon">
         <Icon name={componentDef.icon} />
@@ -60,13 +58,7 @@
     <div class="field-label">{readableText}</div>
   </div>
   <div class="list-item-right">
-    <Toggle
-      on:change={onToggle(item)}
-      text=""
-      value={item.active}
-      thin
-      disabled={updating}
-    />
+    <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
   </div>
 </div>
 

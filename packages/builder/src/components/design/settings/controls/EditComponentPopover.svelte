@@ -91,7 +91,6 @@
       open = true
     }
   }}
-  {disabled}
 />
 
 <Popover
