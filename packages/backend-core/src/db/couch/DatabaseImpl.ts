@@ -109,12 +109,34 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  async get<T>(id?: string): Promise<T | any> {
+  async get<T extends Document>(id?: string): Promise<T> {
     const db = await this.checkSetup()
     if (!id) {
       throw new Error("Unable to get doc without a valid _id.")
     }
     return this.updateOutput(() => db.get(id))
+  }
+
+  async getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]> {
+    // get unique
+    ids = [...new Set(ids)]
+    const response = await this.allDocs<T>({
+      keys: ids,
+      include_docs: true,
+    })
+    const NOT_FOUND = "not_found"
+    const rows = response.rows.filter(row => row.error !== NOT_FOUND)
+    const someMissing = rows.length !== response.rows.length
+    // some were filtered out - means some missing
+    if (!opts?.allowMissing && someMissing) {
+      const missing = response.rows.filter(row => row.error === NOT_FOUND)
+      const missingIds = missing.map(row => row.key).join(", ")
+      throw new Error(`Unable to get documents: ${missingIds}`)
+    }
+    return rows.map(row => row.doc!)
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
