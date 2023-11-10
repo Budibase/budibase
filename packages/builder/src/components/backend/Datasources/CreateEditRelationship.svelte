@@ -33,7 +33,7 @@
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
     },
-    [RelationshipType.MANY_TO_ONE]: {
+    [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.ONE,
       part2: PrettyRelationshipDefinitions.MANY,
     },
