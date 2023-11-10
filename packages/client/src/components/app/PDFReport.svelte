@@ -75,6 +75,7 @@
     align-items: stretch;
     width: 595.28pt;
     gap: var(--spacing-xl);
+    align-self: center;
   }
   .title {
     display: flex;
