@@ -4,5 +4,6 @@ export { default as Client } from "./redis"
 export * as utils from "./utils"
 export * as clients from "./init"
 export * as locks from "./redlockImpl"
-export * as invite from "./invite"
-export * as passwordReset from "./passwordReset"
+
+export * from "./invite"
+export * from "./passwordReset"

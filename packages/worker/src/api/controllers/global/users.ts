@@ -1,9 +1,4 @@
-import {
-  getInviteCode,
-  deleteInviteCode,
-  getInviteCodes,
-  updateInviteCode,
-} from "@budibase/backend-core/src/redis/invite"
+import { redis } from "@budibase/backend-core"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
@@ -313,7 +308,7 @@ export const checkInvite = async (ctx: any) => {
   const { code } = ctx.params
   let invite
   try {
-    invite = await getInviteCode(code)
+    invite = await redis.getInviteCode(code)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
@@ -327,7 +322,7 @@ export const checkInvite = async (ctx: any) => {
 export const getUserInvites = async (ctx: any) => {
   try {
     // Restricted to the currently authenticated tenant
-    ctx.body = await getInviteCodes()
+    ctx.body = await redis.getInviteCodes()
   } catch (e) {
     ctx.throw(400, "There was a problem fetching invites")
   }
@@ -341,7 +336,7 @@ export const updateInvite = async (ctx: any) => {
 
   let invite
   try {
-    invite = await getInviteCode(code)
+    invite = await redis.getInviteCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
     return
@@ -369,7 +364,7 @@ export const updateInvite = async (ctx: any) => {
     }
   }
 
-  await updateInviteCode(code, updated)
+  await redis.updateInviteCode(code, updated)
   ctx.body = { ...invite }
 }
 
@@ -379,8 +374,8 @@ export const inviteAccept = async (
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
-    const { email, info }: any = await getInviteCode(inviteCode)
-    await deleteInviteCode(inviteCode)
+    const { email, info }: any = await redis.getInviteCode(inviteCode)
+    await redis.deleteInviteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
       let request: any = {
         firstName,
