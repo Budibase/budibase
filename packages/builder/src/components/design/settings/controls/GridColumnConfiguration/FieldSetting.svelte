@@ -29,8 +29,7 @@
     const component = `@budibase/standard-components/${
       FieldTypeToComponentMap[item.columnType]
     }`
-    const foo = store.actions.components.getDefinition(component)
-    return foo?.icon
+    return store.actions.components.getDefinition(component).icon
   }
 </script>
 

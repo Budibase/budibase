@@ -3,15 +3,17 @@
   import { Icon } from "@budibase/bbui"
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
+  import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
+  import { store } from "builderStore"
 
   export let item
   export let anchor
 
-  let store = writable({
+  let draggableStore = writable({
     selected: null,
     actions: {
       select: id => {
-        store.update(state => ({
+        draggableStore.update(state => ({
           ...state,
           selected: id,
         }))
@@ -19,7 +21,7 @@
     },
   })
 
-  setContext("draggable", store)
+  setContext("draggable", draggableStore)
 
   const parseSettings = settings => {
     return settings
@@ -27,6 +29,13 @@
       .map(setting => {
         return { ...setting, nested: true }
       })
+  }
+
+  const getIcon = () => {
+    const component = `@budibase/standard-components/${
+      FieldTypeToComponentMap[item.columnType]
+    }`
+    return store.actions.components.getDefinition(component).icon
   }
 </script>
 
@@ -39,7 +48,7 @@
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name="Text" />
+        <Icon name={getIcon()} />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>

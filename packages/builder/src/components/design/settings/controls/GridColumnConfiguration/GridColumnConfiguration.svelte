@@ -36,7 +36,6 @@
   const handleDatasourceIdChange = datasourceId => {
     if (datasourceId !== previousDatasourceId) {
       if (previousDatasourceId !== null) {
-        console.log("resetting")
         handleChange(undefined)
       }
 
