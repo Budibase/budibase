@@ -23,7 +23,7 @@
   import { userSelectedResourceMap } from "builderStore"
 
   export let searchTerm
-  let dataSourcesVisibility = {}
+  let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
     $datasources,
@@ -33,23 +33,25 @@
     $queries,
     $views,
     $viewsV2,
-    dataSourcesVisibility,
+    toggledDatasources,
     searchTerm
   )
 
   const showDatasourceOpen = ({
     selected,
     containsSelected,
-    dataSourceVisibility,
+    dsToggledStatus,
     searchTerm,
     onlyOneSource,
   }) => {
+    // We want to display all the ds expanded while filtering ds
     if (searchTerm) {
       return true
     }
 
-    if (dataSourceVisibility !== undefined) {
-      return dataSourceVisibility
+    // If the toggle status has been a value
+    if (dsToggledStatus !== undefined) {
+      return dsToggledStatus
     }
 
     if (onlyOneSource) {
@@ -67,7 +69,7 @@
     queries,
     views,
     viewsV2,
-    dataSourcesVisibility,
+    toggledDatasources,
     searchTerm
   ) => {
     if (!datasources?.list?.length) {
@@ -105,7 +107,7 @@
       const open = showDatasourceOpen({
         selected,
         containsSelected,
-        dataSourceVisibility: dataSourcesVisibility[datasource._id],
+        dsToggledStatus: toggledDatasources[datasource._id],
         searchTerm,
         onlyOneSource: onlySource,
       })
@@ -133,11 +135,11 @@
   }
 
   function openNode(datasource) {
-    dataSourcesVisibility[datasource._id] = true
+    toggledDatasources[datasource._id] = true
   }
 
   function toggleNode(datasource) {
-    dataSourcesVisibility[datasource._id] = !datasource.open
+    toggledDatasources[datasource._id] = !datasource.open
   }
 
   const containsActiveEntity = (
