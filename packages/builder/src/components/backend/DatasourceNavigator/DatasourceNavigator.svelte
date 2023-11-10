@@ -84,7 +84,7 @@
         ...datasource,
         selected,
         containsSelected,
-        open: open || onlySource || !!searchTerm,
+        open: containsSelected || open || onlySource || !!searchTerm,
         queries: dsQueries,
         tables: dsTables,
       }
