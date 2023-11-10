@@ -37,6 +37,7 @@ export { SearchParams } from "./db"
 // circular dependencies
 import * as context from "./context"
 import * as _tenancy from "./tenancy"
+import * as redis from "./redis"
 export const tenancy = {
   ..._tenancy,
   ...context,
@@ -50,6 +51,8 @@ export * from "./constants"
 
 // expose package init function
 import * as db from "./db"
-export const init = (opts: any = {}) => {
+
+export const init = async (opts: any = {}) => {
   db.init(opts.db)
+  await redis.init()
 }
