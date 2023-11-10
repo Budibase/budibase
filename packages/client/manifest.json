@@ -6446,9 +6446,9 @@
         "key": "fileName"
       },
       {
-        "type": "number",
-        "label": "Pages",
-        "key": "pageCount"
+        "type": "boolean",
+        "label": "Landscape",
+        "key": "landscape"
       },
       {
         "type": "boolean",

@@ -1,7 +1,7 @@
 <script>
   import { getContext } from "svelte"
   import { Button, Heading } from "@budibase/bbui"
-  import { htmlToPdf } from "./pdf"
+  import { htmlToPdf, Orientations } from "./pdf"
 
   const component = getContext("component")
   const { styleable } = getContext("sdk")
@@ -10,6 +10,7 @@
   export let pageCount = 1
   export let footer = false
   export let margin = 60
+  export let landscape = false
 
   let rendering = false
   let progress = 1
@@ -25,6 +26,7 @@
       await htmlToPdf(pages, {
         fileName: safeName,
         margin,
+        orientation: landscape ? Orientations.LANDSCAPE : Orientations.PORTRAIT,
         progressCallback: page => {
           progress = page
         },
@@ -37,7 +39,7 @@
   }
 </script>
 
-<div class="container" use:styleable={$component.styles}>
+<div class="container" class:landscape use:styleable={$component.styles}>
   <div class="title">
     <Heading size="M">{safeName}</Heading>
     <Button disabled={rendering} cta on:click={generatePDF}>
@@ -77,6 +79,9 @@
     gap: var(--spacing-xl);
     align-self: center;
   }
+  .container.landscape {
+    width: 841.89pt;
+  }
   .title {
     display: flex;
     flex-direction: row;
@@ -96,6 +101,10 @@
     flex-direction: column;
     margin: 0 auto;
     position: relative;
+  }
+  .container.landscape .page {
+    width: 841.89pt;
+    height: 595.28pt;
   }
   .pageContent {
     overflow: hidden;
