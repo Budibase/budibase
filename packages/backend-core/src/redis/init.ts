@@ -7,7 +7,9 @@ let userClient: Client,
   cacheClient: Client,
   writethroughClient: Client,
   lockClient: Client,
-  socketClient: Client
+  socketClient: Client,
+  inviteClient: Client,
+  passwordResetClient: Client
 
 async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
@@ -20,6 +22,8 @@ async function init() {
     utils.Databases.SOCKET_IO,
     utils.SelectableDatabase.SOCKET_IO
   ).init()
+  inviteClient = await new Client(utils.Databases.INVITATIONS).init()
+  passwordResetClient = await new Client(utils.Databases.PW_RESETS).init()
 }
 
 export async function shutdown() {
@@ -30,6 +34,8 @@ export async function shutdown() {
   if (writethroughClient) await writethroughClient.finish()
   if (lockClient) await lockClient.finish()
   if (socketClient) await socketClient.finish()
+  if (inviteClient) await inviteClient.finish()
+  if (passwordResetClient) await passwordResetClient.finish()
 }
 
 process.on("exit", async () => {
@@ -83,4 +89,18 @@ export async function getSocketClient() {
     await init()
   }
   return socketClient
+}
+
+export async function getInviteClient() {
+  if (!inviteClient) {
+    await init()
+  }
+  return inviteClient
+}
+
+export async function getPasswordResetClient() {
+  if (!passwordResetClient) {
+    await init()
+  }
+  return passwordResetClient
 }

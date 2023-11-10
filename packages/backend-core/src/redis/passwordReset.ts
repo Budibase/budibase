@@ -1,20 +1,11 @@
-import { redis, utils } from "../"
+import { utils } from "../"
+import { getPasswordResetClient } from "./init"
 
 const TTL_SECONDS = 60 * 60
 
 interface PasswordReset {
   userId: string
   info: any
-}
-
-let client: redis.Client
-
-async function getClient(): Promise<redis.Client> {
-  if (!client) {
-    client = new redis.Client(redis.utils.Databases.PW_RESETS)
-    await client.init()
-  }
-  return client
 }
 
 /**
@@ -28,7 +19,7 @@ export async function createResetPasswordCode(
   userId: string,
   info: any
 ): Promise<string> {
-  const client = await getClient()
+  const client = await getPasswordResetClient()
   const code = utils.newid()
   await client.store(code, { userId, info }, TTL_SECONDS)
   return code
@@ -42,7 +33,7 @@ export async function createResetPasswordCode(
 export async function getResetPasswordCode(
   code: string
 ): Promise<PasswordReset> {
-  const client = await getClient()
+  const client = await getPasswordResetClient()
   const value = (await client.get(code)) as PasswordReset | undefined
   if (!value) {
     throw "Provided information is not valid, cannot reset password - please try again."
