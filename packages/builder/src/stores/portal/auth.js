@@ -2,6 +2,7 @@ import { derived, writable, get } from "svelte/store"
 import { API } from "api"
 import { admin } from "stores/portal"
 import analytics from "analytics"
+import { sdk } from "@budibase/shared-core"
 
 export function createAuthStore() {
   const auth = writable({
@@ -13,24 +14,6 @@ export function createAuthStore() {
     postLogout: false,
   })
   const store = derived(auth, $store => {
-    let initials = null
-    let isAdmin = false
-    let isBuilder = false
-    if ($store.user) {
-      const user = $store.user
-      if (user.firstName) {
-        initials = user.firstName[0]
-        if (user.lastName) {
-          initials += user.lastName[0]
-        }
-      } else if (user.email) {
-        initials = user.email[0]
-      } else {
-        initials = "Unknown"
-      }
-      isAdmin = !!user.admin?.global
-      isBuilder = !!user.builder?.global
-    }
     return {
       user: $store.user,
       accountPortalAccess: $store.accountPortalAccess,
@@ -38,9 +21,7 @@ export function createAuthStore() {
       tenantSet: $store.tenantSet,
       loaded: $store.loaded,
       postLogout: $store.postLogout,
-      initials,
-      isAdmin,
-      isBuilder,
+      isSSO: !!$store.user?.provider,
     }
   })
 
@@ -68,8 +49,8 @@ export function createAuthStore() {
               name: user.account?.name,
               user_id: user._id,
               tenant: user.tenantId,
-              admin: user?.admin?.global,
-              builder: user?.builder?.global,
+              admin: sdk.users.isAdmin(user),
+              builder: sdk.users.isBuilder(user),
               "Company size": user.account?.size,
               "Job role": user.account?.profession,
             },
@@ -161,9 +142,14 @@ export function createAuthStore() {
       await setInitInfo({})
     },
     updateSelf: async fields => {
-      const newUser = { ...get(auth).user, ...fields }
-      await API.updateSelf(newUser)
-      setUser(newUser)
+      await API.updateSelf({ ...fields })
+      // Refetch to enrich after update.
+      try {
+        const user = await API.fetchBuilderSelf()
+        setUser(user)
+      } catch (error) {
+        setUser(null)
+      }
     },
     forgotPassword: async email => {
       const tenantId = get(store).tenantId

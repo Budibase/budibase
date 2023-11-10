@@ -141,6 +141,29 @@ const buildPaymentFailedBanner = () => {
   }
 }
 
+const buildUsersAboveLimitBanner = EXPIRY_KEY => {
+  const userLicensing = get(licensing)
+  return {
+    key: EXPIRY_KEY,
+    type: BANNER_TYPES.NEGATIVE,
+    onChange: () => {
+      defaultCacheFn(EXPIRY_KEY)
+    },
+    criteria: () => {
+      return userLicensing.errUserLimit
+    },
+    message: "Your Budibase account is de-activated. Upgrade your plan",
+    ...{
+      extraButtonText: "View plans",
+      extraButtonAction: () => {
+        defaultCacheFn(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER)
+        window.location.href = "https://budibase.com/pricing/"
+      },
+    },
+    showCloseButton: true,
+  }
+}
+
 export const getBanners = () => {
   return [
     buildPaymentFailedBanner(),
@@ -163,6 +186,7 @@ export const getBanners = () => {
       ExpiringKeys.LICENSING_QUERIES_WARNING_BANNER,
       90
     ),
+    buildUsersAboveLimitBanner(ExpiringKeys.LICENSING_USERS_ABOVE_LIMIT_BANNER),
   ].filter(licensingBanner => {
     return (
       !temporalStore.actions.getExpiring(licensingBanner.key) &&

@@ -2,15 +2,8 @@ const yaml = require("js-yaml")
 const fs = require("fs")
 const path = require("path")
 
-const UpgradeTypes = {
-	MAJOR: "major",
-	MINOR: "minor",
-	PATCH: "patch"
-}
-
 const CHART_PATH = path.join(__dirname, "../", "charts", "budibase", "Chart.yaml")
 const UPGRADE_VERSION = process.env.BUDIBASE_RELEASE_VERSION
-const UPGRADE_TYPE = process.env.HELM_CHART_UPGRADE_TYPE || UpgradeTypes.PATCH
 
 if (!UPGRADE_VERSION) {
 	throw new Error("BUDIBASE_RELEASE_VERSION env var must be set.")

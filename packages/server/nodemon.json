@@ -1,6 +1,13 @@
 {
-  "watch": ["src", "../backend-core", "../../../budibase-pro/packages/pro"],
+  "watch": [
+    "src",
+    "../backend-core",
+    "../pro",
+    "../types",
+    "../shared-core",
+    "../string-templates"
+  ],
   "ext": "js,ts,json",
-  "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js", "../backend-core/dist/**/*"],
-  "exec": "ts-node src/index.ts"
+  "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js", "../*/dist/**/*"],
+  "exec": "yarn build && node ./dist/index.js"
 }

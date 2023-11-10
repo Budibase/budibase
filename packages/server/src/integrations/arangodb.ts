@@ -3,9 +3,11 @@ import {
   DatasourceFieldType,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
-const { Database, aql } = require("arangojs")
+import { Database, aql } from "arangojs"
 
 interface ArangodbConfig {
   url: string
@@ -21,6 +23,9 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "ArangoDB is a scalable open-source multi-model database natively supporting graph, document and search. All supported data models & access patterns can be combined in queries allowing for maximal flexibility. ",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     url: {
       type: DatasourceFieldType.STRING,
@@ -58,7 +63,7 @@ const SCHEMA: Integration = {
 
 class ArangoDBIntegration implements IntegrationBase {
   private config: ArangodbConfig
-  private client: any
+  private client
 
   constructor(config: ArangodbConfig) {
     const newConfig = {
@@ -72,6 +77,19 @@ class ArangoDBIntegration implements IntegrationBase {
 
     this.config = config
     this.client = new Database(newConfig)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.client.get()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
   }
 
   async read(query: { sql: any }) {

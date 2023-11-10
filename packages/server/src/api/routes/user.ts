@@ -33,11 +33,6 @@ router
     controller.destroyMetadata
   )
   .post(
-    "/api/users/metadata/sync/:id",
-    authorized(PermissionType.USER, PermissionLevel.WRITE),
-    controller.syncUser
-  )
-  .post(
     "/api/users/flags",
     authorized(PermissionType.USER, PermissionLevel.WRITE),
     controller.setFlag
@@ -48,4 +43,4 @@ router
     controller.getFlags
   )
 
-export = router
+export default router

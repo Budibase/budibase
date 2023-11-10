@@ -9,7 +9,6 @@
 
 <ActionButton
   icon="Filter"
-  size="S"
   quiet
   on:click={modal.show}
   active={view.filters?.length}

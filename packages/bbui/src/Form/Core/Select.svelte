@@ -11,6 +11,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let isOptionEnabled
   export let readonly = false
@@ -18,8 +19,17 @@
   export let autoWidth = false
   export let autocomplete = false
   export let sort = false
+  export let align
+  export let footer = null
+  export let open = false
+  export let tag = null
+  export let customPopoverOffsetBelow
+  export let customPopoverMaxHeight
+  export let searchTerm = null
+  export let loading
+
   const dispatch = createEventDispatcher()
-  let open = false
+
   $: fieldText = getFieldText(value, options, placeholder)
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
@@ -36,8 +46,12 @@
   }
 
   const getFieldText = (value, options, placeholder) => {
-    // Always use placeholder if no value
     if (value == null || value === "") {
+      // Explicit false means use no placeholder and allow an empty fields
+      if (placeholder === false) {
+        return ""
+      }
+      // Otherwise we use the placeholder if possible
       return placeholder || "Choose an option"
     }
 
@@ -53,6 +67,8 @@
 <Picker
   on:click
   bind:open
+  bind:searchTerm
+  on:loadMore
   {quiet}
   {id}
   {error}
@@ -63,15 +79,22 @@
   {fieldColour}
   {options}
   {autoWidth}
+  {align}
+  {footer}
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
+  {useOptionIconImage}
   {getOptionColour}
   {isOptionEnabled}
   {autocomplete}
   {sort}
+  {tag}
+  {customPopoverOffsetBelow}
+  {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
-  placeholderOption={placeholder}
+  placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
   onSelectOption={selectOption}
+  {loading}
 />

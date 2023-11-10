@@ -8,7 +8,9 @@
   export let id = null
   export let text = null
   export let disabled = false
+  export let readonly = false
   export let size
+  export let indeterminate = false
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
@@ -22,6 +24,8 @@
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
   class:is-invalid={!!error}
   class:checked={value}
+  class:is-indeterminate={indeterminate}
+  class:readonly
 >
   <input
     checked={value}
@@ -65,5 +69,8 @@
   }
   .spectrum-Checkbox-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

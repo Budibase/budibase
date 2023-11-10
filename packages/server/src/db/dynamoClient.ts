@@ -1,4 +1,4 @@
-import { merge } from "lodash"
+import merge from "lodash/merge"
 import env from "../environment"
 
 export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
@@ -140,7 +140,7 @@ export function init(endpoint: string) {
   docClient = new AWS.DynamoDB.DocumentClient(docClientParams)
 }
 
-if (!env.isProd()) {
+if (!env.isProd() && !env.isJest()) {
   env._set("AWS_ACCESS_KEY_ID", "KEY_ID")
   env._set("AWS_SECRET_ACCESS_KEY", "SECRET_KEY")
   init("http://localhost:8333")

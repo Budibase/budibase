@@ -3,24 +3,24 @@ import { API } from "api"
 import { auth } from "stores/portal"
 import { banner } from "@budibase/bbui"
 
-export function createAdminStore() {
-  const DEFAULT_CONFIG = {
-    loaded: false,
-    multiTenancy: false,
-    cloud: false,
-    isDev: false,
-    disableAccountPortal: false,
-    accountPortalUrl: "",
-    importComplete: false,
-    onboardingProgress: 0,
-    checklist: {
-      apps: { checked: false },
-      smtp: { checked: false },
-      adminUser: { checked: false },
-      sso: { checked: false },
-    },
-  }
+export const DEFAULT_CONFIG = {
+  loaded: false,
+  multiTenancy: false,
+  cloud: false,
+  isDev: false,
+  disableAccountPortal: false,
+  accountPortalUrl: "",
+  importComplete: false,
+  checklist: {
+    apps: { checked: false },
+    smtp: { checked: false },
+    adminUser: { checked: false },
+    sso: { checked: false },
+  },
+  offlineMode: false,
+}
 
+export function createAdminStore() {
   const admin = writable(DEFAULT_CONFIG)
 
   async function init() {
@@ -38,14 +38,6 @@ export function createAdminStore() {
     })
   }
 
-  async function checkImportComplete() {
-    const result = await API.checkImportComplete()
-    admin.update(store => {
-      store.importComplete = result ? result.imported : false
-      return store
-    })
-  }
-
   async function getEnvironment() {
     const environment = await API.getEnvironment()
     admin.update(store => {
@@ -54,6 +46,8 @@ export function createAdminStore() {
       store.disableAccountPortal = environment.disableAccountPortal
       store.accountPortalUrl = environment.accountPortalUrl
       store.isDev = environment.isDev
+      store.baseUrl = environment.baseUrl
+      store.offlineMode = environment.offlineMode
       return store
     })
   }
@@ -76,13 +70,8 @@ export function createAdminStore() {
   async function getChecklist() {
     const tenantId = get(auth).tenantId
     const checklist = await API.getChecklist(tenantId)
-    const totalSteps = Object.keys(checklist).length
-    const completedSteps = Object.values(checklist).filter(
-      x => x?.checked
-    ).length
     admin.update(store => {
       store.checklist = checklist
-      store.onboardingProgress = (completedSteps / totalSteps) * 100
       return store
     })
   }
@@ -97,7 +86,6 @@ export function createAdminStore() {
   return {
     subscribe: admin.subscribe,
     init,
-    checkImportComplete,
     unload,
     getChecklist,
   }

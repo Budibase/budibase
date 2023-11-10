@@ -1,20 +1,26 @@
 import newid from "./newid"
 import { db as dbCore } from "@budibase/backend-core"
+import {
+  DocumentType,
+  FieldSchema,
+  RelationshipFieldMetadata,
+  VirtualDocumentType,
+  INTERNAL_TABLE_SOURCE_ID,
+  DatabaseQueryOpts,
+} from "@budibase/types"
+import { FieldTypes } from "../constants"
+export { DocumentType, VirtualDocumentType } from "@budibase/types"
 
 type Optional = string | null
 
-export const AppStatus = {
-  DEV: "development",
-  ALL: "all",
-  DEPLOYED: "published",
-}
-
-export const SearchIndexes = {
-  ROWS: "rows",
+export const enum AppStatus {
+  DEV = "development",
+  ALL = "all",
+  DEPLOYED = "published",
 }
 
 export const BudibaseInternalDB = {
-  _id: "bb_internal",
+  _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
   source: "BUDIBASE",
@@ -23,7 +29,6 @@ export const BudibaseInternalDB = {
 
 export const SEPARATOR = dbCore.SEPARATOR
 export const StaticDatabases = dbCore.StaticDatabases
-export const DocumentType = dbCore.DocumentType
 export const APP_PREFIX = dbCore.APP_PREFIX
 export const APP_DEV_PREFIX = dbCore.APP_DEV_PREFIX
 export const isDevAppID = dbCore.isDevAppID
@@ -31,6 +36,7 @@ export const isProdAppID = dbCore.isProdAppID
 export const USER_METDATA_PREFIX = `${DocumentType.ROW}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const LINK_USER_METADATA_PREFIX = `${DocumentType.LINK}${SEPARATOR}${dbCore.InternalTable.USER_METADATA}${SEPARATOR}`
 export const TABLE_ROW_PREFIX = `${DocumentType.ROW}${SEPARATOR}${DocumentType.TABLE}`
+export const AUTOMATION_LOG_PREFIX = `${DocumentType.AUTOMATION_LOG}${SEPARATOR}`
 export const ViewName = dbCore.ViewName
 export const InternalTables = dbCore.InternalTable
 export const UNICODE_MAX = dbCore.UNICODE_MAX
@@ -56,7 +62,7 @@ export function getTableParams(tableId?: Optional, otherProps = {}) {
 
 /**
  * Generates a new table ID.
- * @returns {string} The new table ID which the table doc can be stored under.
+ * @returns The new table ID which the table doc can be stored under.
  */
 export function generateTableID() {
   return `${DocumentType.TABLE}${SEPARATOR}${newid()}`
@@ -64,8 +70,8 @@ export function generateTableID() {
 
 /**
  * Given a row ID this will find the table ID within it (only works for internal tables).
- * @param {string} rowId The ID of the row.
- * @returns {string} The table ID.
+ * @param rowId The ID of the row.
+ * @returns The table ID.
  */
 export function getTableIDFromRowID(rowId: string) {
   const components = rowId
@@ -86,7 +92,7 @@ export function getAutomationParams(
 
 /**
  * Generates a new automation ID.
- * @returns {string} The new automation ID which the automation doc can be stored under.
+ * @returns The new automation ID which the automation doc can be stored under.
  */
 export function generateAutomationID() {
   return `${DocumentType.AUTOMATION}${SEPARATOR}${newid()}`
@@ -95,13 +101,13 @@ export function generateAutomationID() {
 /**
  * Generates a new link doc ID. This is currently not usable with the alldocs call,
  * instead a view is built to make walking to tree easier.
- * @param {string} tableId1 The ID of the linker table.
- * @param {string} tableId2 The ID of the linked table.
- * @param {string} rowId1 The ID of the linker row.
- * @param {string} rowId2 The ID of the linked row.
- * @param {string} fieldName1 The name of the field in the linker row.
- * @param {string} fieldName2 the name of the field in the linked row.
- * @returns {string} The new link doc ID which the automation doc can be stored under.
+ * @param tableId1 The ID of the linker table.
+ * @param tableId2 The ID of the linked table.
+ * @param rowId1 The ID of the linker row.
+ * @param rowId2 The ID of the linked row.
+ * @param fieldName1 The name of the field in the linker row.
+ * @param fieldName2 the name of the field in the linked row.
+ * @returns The new link doc ID which the automation doc can be stored under.
  */
 export function generateLinkID(
   tableId1: string,
@@ -126,7 +132,7 @@ export function getLinkParams(otherProps: any = {}) {
 
 /**
  * Generates a new layout ID.
- * @returns {string} The new layout ID which the layout doc can be stored under.
+ * @returns The new layout ID which the layout doc can be stored under.
  */
 export function generateLayoutID(id?: string) {
   return `${DocumentType.LAYOUT}${SEPARATOR}${id || newid()}`
@@ -141,7 +147,7 @@ export function getLayoutParams(layoutId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new screen ID.
- * @returns {string} The new screen ID which the screen doc can be stored under.
+ * @returns The new screen ID which the screen doc can be stored under.
  */
 export function generateScreenID() {
   return `${DocumentType.SCREEN}${SEPARATOR}${newid()}`
@@ -156,7 +162,7 @@ export function getScreenParams(screenId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new webhook ID.
- * @returns {string} The new webhook ID which the webhook doc can be stored under.
+ * @returns The new webhook ID which the webhook doc can be stored under.
  */
 export function generateWebhookID() {
   return `${DocumentType.WEBHOOK}${SEPARATOR}${newid()}`
@@ -171,7 +177,7 @@ export function getWebhookParams(webhookId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new datasource ID.
- * @returns {string} The new datasource ID which the webhook doc can be stored under.
+ * @returns The new datasource ID which the webhook doc can be stored under.
  */
 export function generateDatasourceID({ plus = false } = {}) {
   return `${
@@ -189,9 +195,16 @@ export function getDatasourceParams(
   return getDocParams(DocumentType.DATASOURCE, datasourceId, otherProps)
 }
 
+export function getDatasourcePlusParams(
+  datasourceId?: Optional,
+  otherProps?: { include_docs: boolean }
+) {
+  return getDocParams(DocumentType.DATASOURCE_PLUS, datasourceId, otherProps)
+}
+
 /**
  * Generates a new query ID.
- * @returns {string} The new query ID which the query doc can be stored under.
+ * @returns The new query ID which the query doc can be stored under.
  */
 export function generateQueryID(datasourceId: string) {
   return `${
@@ -217,7 +230,10 @@ export function getAutomationMetadataParams(otherProps: any = {}) {
 /**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
-export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
+export function getQueryParams(
+  datasourceId?: Optional,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   if (datasourceId == null) {
     return getDocParams(DocumentType.QUERY, null, otherProps)
   }
@@ -231,7 +247,7 @@ export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
 
 /**
  * Generates a new flag document ID.
- * @returns {string} The ID of the flag document that was generated.
+ * @returns The ID of the flag document that was generated.
  */
 export function generateUserFlagID(userId: string) {
   return `${DocumentType.USER_FLAG}${SEPARATOR}${userId}`
@@ -244,7 +260,7 @@ export function generateMetadataID(type: string, entityId: string) {
 export function getMetadataParams(
   type: string,
   entityId?: Optional,
-  otherProps: any = {}
+  otherProps: Partial<DatabaseQueryOpts> = {}
 ) {
   let docId = `${type}${SEPARATOR}`
   if (entityId != null) {
@@ -257,7 +273,9 @@ export function generateMemoryViewID(viewName: string) {
   return `${DocumentType.MEM_VIEW}${SEPARATOR}${viewName}`
 }
 
-export function getMemoryViewParams(otherProps: any = {}) {
+export function getMemoryViewParams(
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
@@ -266,11 +284,35 @@ export function generatePluginID(name: string) {
 }
 
 /**
- * This can be used with the db.allDocs to get a list of IDs
+ * Generates a new view ID.
+ * @returns The new view ID which the view doc can be stored under.
  */
-export function getMultiIDParams(ids: string[]) {
-  return {
-    keys: ids,
-    include_docs: true,
+export function generateViewID(tableId: string) {
+  return `${
+    VirtualDocumentType.VIEW
+  }${SEPARATOR}${tableId}${SEPARATOR}${newid()}`
+}
+
+export function isViewID(viewId: string) {
+  return viewId?.split(SEPARATOR)[0] === VirtualDocumentType.VIEW
+}
+
+export function extractViewInfoFromID(viewId: string) {
+  if (!isViewID(viewId)) {
+    throw new Error("Unable to extract table ID, is not a view ID")
   }
+  const split = viewId.split(SEPARATOR)
+  split.shift()
+  viewId = split.join(SEPARATOR)
+  const regex = new RegExp(`^(?<tableId>.+)${SEPARATOR}([^${SEPARATOR}]+)$`)
+  const res = regex.exec(viewId)
+  return {
+    tableId: res!.groups!["tableId"],
+  }
+}
+
+export function isRelationshipColumn(
+  column: FieldSchema
+): column is RelationshipFieldMetadata {
+  return column.type === FieldTypes.LINK
 }

@@ -18,7 +18,7 @@ export function tableValidator() {
     schema: Joi.object().required(),
     name: Joi.string().required(),
     views: Joi.object(),
-    dataImport: Joi.object(),
+    rows: Joi.array(),
   }).unknown(true))
 }
 
@@ -134,7 +134,7 @@ export function roleValidator() {
   return auth.joiValidator.body(Joi.object({
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
-    name: Joi.string().required(),
+    name: Joi.string().regex(/^[a-zA-Z0-9_]*$/).required(),
     // this is the base permission ID (for now a built in)
     permissionId: Joi.string().valid(...Object.values(permissions.BuiltinPermissionID)).required(),
     permissions: Joi.object()

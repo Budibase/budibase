@@ -16,4 +16,4 @@ router
     migrationsController.fetchDefinitions
   )
 
-export = router
+export default router

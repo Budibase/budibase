@@ -4,8 +4,9 @@ import { checkSlashesInUrl } from "../../utilities"
 import { request } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
 import { DocumentType } from "../../db/utils"
-import { context } from "@budibase/backend-core"
+import { context, env as envCore } from "@budibase/backend-core"
 import { events, db as dbCore, cache } from "@budibase/backend-core"
+import { App } from "@budibase/types"
 
 async function redirect(ctx: any, method: string, path: string = "global") {
   const { devPath } = ctx.params
@@ -81,7 +82,7 @@ export async function revert(ctx: any) {
     if (!exists) {
       throw new Error("App must be deployed to be reverted.")
     }
-    const deploymentDoc = await db.get(DocumentType.DEPLOYMENTS)
+    const deploymentDoc = await db.get<any>(DocumentType.DEPLOYMENTS)
     if (
       !deploymentDoc.history ||
       Object.keys(deploymentDoc.history).length === 0
@@ -104,7 +105,7 @@ export async function revert(ctx: any) {
 
     // update appID in reverted app to be dev version again
     const db = context.getAppDB()
-    const appDoc = await db.get(DocumentType.APP_METADATA)
+    const appDoc = await db.get<App>(DocumentType.APP_METADATA)
     appDoc.appId = appId
     appDoc.instance._id = appId
     await db.put(appDoc)
@@ -121,7 +122,7 @@ export async function revert(ctx: any) {
 }
 
 export async function getBudibaseVersion(ctx: any) {
-  const version = require("../../../package.json").version
+  const version = envCore.VERSION
   ctx.body = {
     version,
   }

@@ -34,4 +34,4 @@ router
   .get("/api/global/workspaces", controller.fetch)
   .get("/api/global/workspaces/:id", controller.find)
 
-export = router
+export default router

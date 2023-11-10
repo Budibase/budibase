@@ -6,13 +6,13 @@ import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
+import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
+import { SourceName } from "@budibase/types"
 
-const { isSQL } = require("../integrations/utils")
-const {
-  enrichQueryFields,
-  interpolateSQL,
-} = require("../integrations/queries/sql")
+import { isSQL } from "../integrations/utils"
+import { interpolateSQL } from "../integrations/queries/sql"
+import { Query } from "@budibase/types"
 
 class QueryRunner {
   datasource: any
@@ -29,6 +29,7 @@ class QueryRunner {
   hasRerun: boolean
   hasRefreshedOAuth: boolean
   hasDynamicVariables: boolean
+  schema: any
 
   constructor(input: QueryEvent, flags = { noRecursiveQuery: false }) {
     this.datasource = input.datasource
@@ -38,6 +39,7 @@ class QueryRunner {
     this.pagination = input.pagination
     this.transformer = input.transformer
     this.queryId = input.queryId
+    this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -52,7 +54,7 @@ class QueryRunner {
   }
 
   async execute(): Promise<any> {
-    let { datasource, fields, queryVerb, transformer } = this
+    let { datasource, fields, queryVerb, transformer, schema } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -62,25 +64,32 @@ class QueryRunner {
     }
 
     if (datasourceClone.config.authConfigs) {
-      datasourceClone.config.authConfigs =
-        datasourceClone.config.authConfigs.map((config: any) => {
-          return enrichQueryFields(config, this.ctx)
-        })
+      const updatedConfigs = []
+      for (let config of datasourceClone.config.authConfigs) {
+        updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
+      }
+      datasourceClone.config.authConfigs = updatedConfigs
     }
 
     const integration = new Integration(datasourceClone.config)
+
+    // define the type casting from the schema
+    integration.defineTypeCastingFromSchema?.(schema)
 
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
 
     // Enrich the parameters with the addition context items.
     // 'user' is now a reserved variable key in mapping parameters
-    const enrichedParameters = enrichQueryFields(parameters, this.ctx)
+    const enrichedParameters = await sdk.queries.enrichContext(
+      parameters,
+      this.ctx
+    )
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
     if (datasourceClone.config.defaultHeaders) {
-      datasourceClone.config.defaultHeaders = enrichQueryFields(
+      datasourceClone.config.defaultHeaders = await sdk.queries.enrichContext(
         datasourceClone.config.defaultHeaders,
         enrichedContext
       )
@@ -89,9 +98,9 @@ class QueryRunner {
     let query
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = interpolateSQL(fieldsClone, enrichedParameters, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
     } else {
-      query = enrichQueryFields(fieldsClone, enrichedContext)
+      query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
 
     // Add pagination values for REST queries
@@ -165,8 +174,10 @@ class QueryRunner {
 
   async runAnotherQuery(queryId: string, parameters: any) {
     const db = context.getAppDB()
-    const query = await db.get(queryId)
-    const datasource = await db.get(query.datasourceId)
+    const query = await db.get<Query>(queryId)
+    const datasource = await sdk.datasources.get(query.datasourceId, {
+      enriched: true,
+    })
     return new QueryRunner(
       {
         datasource,
@@ -280,13 +291,22 @@ class QueryRunner {
 }
 
 export function execute(input: QueryEvent, callback: WorkerCallback) {
-  context.doInAppContext(input.appId!, async () => {
+  const run = async () => {
     const Runner = new QueryRunner(input)
     try {
       const response = await Runner.execute()
       callback(null, response)
     } catch (err) {
       callback(err)
+    }
+  }
+  context.doInAppContext(input.appId!, async () => {
+    if (input.environmentVariables) {
+      return context.doInEnvironmentContext(input.environmentVariables, () => {
+        return run()
+      })
+    } else {
+      return run()
     }
   })
 }

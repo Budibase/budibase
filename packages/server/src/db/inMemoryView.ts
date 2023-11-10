@@ -1,5 +1,5 @@
 import newid from "./newid"
-import { Row, View, Document } from "@budibase/types"
+import { Row, Document, DBView } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly
@@ -7,7 +7,7 @@ import { db as dbCore } from "@budibase/backend-core"
 const Pouch = dbCore.getPouch({ inMemory: true })
 
 export async function runView(
-  view: View,
+  view: DBView,
   calculation: string,
   group: boolean,
   data: Row[]
@@ -25,6 +25,7 @@ export async function runView(
       }))
     )
     let fn = (doc: Document, emit: any) => emit(doc._id)
+    // BUDI-7060 -> indirect eval call appears to cause issues in cloud
     eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
     const queryFns: any = {
       meta: view.meta,

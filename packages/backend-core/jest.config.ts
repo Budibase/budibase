@@ -1,21 +1,35 @@
 import { Config } from "@jest/types"
 
+const baseConfig: Config.InitialProjectOptions = {
+  preset: "@trendyol/jest-testcontainers",
+  setupFiles: ["./tests/jestEnv.ts"],
+  setupFilesAfterEnv: ["./tests/jestSetup.ts"],
+  transform: {
+    "^.+\\.ts?$": "@swc/jest",
+  },
+  moduleNameMapper: {
+    "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
+  },
+}
+
 const config: Config.InitialOptions = {
-  preset: "ts-jest",
-  testEnvironment: "node",
-  setupFiles: ["./tests/jestSetup.ts"],
+  projects: [
+    {
+      ...baseConfig,
+      displayName: "sequential test",
+      testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
+      runner: "jest-serial-runner",
+    },
+    {
+      ...baseConfig,
+      testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
+    },
+  ],
   collectCoverageFrom: ["src/**/*.{js,ts}"],
   coverageReporters: ["lcov", "json", "clover"],
 }
 
-if (!process.env.CI) {
-  // use sources when not in CI
-  config.moduleNameMapper = {
-    "@budibase/types": "<rootDir>/../types/src",
-    "^axios.*$": "<rootDir>/node_modules/axios/lib/axios.js",
-  }
-} else {
-  console.log("Running tests with compiled dependency sources")
-}
+process.env.DISABLE_PINO_LOGGER = "1"
 
 export default config

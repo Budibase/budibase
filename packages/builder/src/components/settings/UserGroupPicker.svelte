@@ -18,7 +18,7 @@
     return list.map(item => {
       return {
         ...item,
-        selected: selected.find(x => x === item._id) != null,
+        selected: selected?.find(x => x === item._id) != null,
       }
     })
   }

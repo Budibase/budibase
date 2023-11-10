@@ -2,31 +2,29 @@ import sanitizeUrl from "./utils/sanitizeUrl"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
 
-export default function (tables) {
-  return tables.map(table => {
+export default function (datasources, mode = "table") {
+  if (!Array.isArray(datasources)) {
+    return []
+  }
+  return datasources.map(datasource => {
     return {
-      name: `${table.name} - List`,
-      create: () => createScreen(table),
+      name: `${datasource.label} - List`,
+      create: () => createScreen(datasource, mode),
       id: ROW_LIST_TEMPLATE,
-      table: table._id,
+      resourceId: datasource.resourceId,
     }
   })
 }
 
 export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
-export const rowListUrl = table => sanitizeUrl(`/${table.name}`)
+export const rowListUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
-const generateTableBlock = table => {
+const generateTableBlock = datasource => {
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
-      title: table.name,
-      dataSource: {
-        label: table.name,
-        name: table._id,
-        tableId: table._id,
-        type: "table",
-      },
+      title: datasource.label,
+      dataSource: datasource,
       sortOrder: "Ascending",
       size: "spectrum--medium",
       paginate: true,
@@ -35,15 +33,31 @@ const generateTableBlock = table => {
       showTitleButton: true,
       titleButtonText: "Create row",
       titleButtonClickBehaviour: "new",
+      sidePanelSaveLabel: "Save",
+      sidePanelDeleteLabel: "Delete",
     })
-    .instanceName(`${table.name} - Table block`)
+    .instanceName(`${datasource.label} - Table block`)
   return tableBlock
 }
 
-const createScreen = table => {
+const generateGridBlock = datasource => {
+  const gridBlock = new Component("@budibase/standard-components/gridblock")
+  gridBlock
+    .customProps({
+      table: datasource,
+    })
+    .instanceName(`${datasource.label} - Grid block`)
+  return gridBlock
+}
+
+const createScreen = (datasource, mode) => {
   return new Screen()
-    .route(rowListUrl(table))
-    .instanceName(`${table.name} - List`)
-    .addChild(generateTableBlock(table))
+    .route(rowListUrl(datasource))
+    .instanceName(`${datasource.label} - List`)
+    .addChild(
+      mode === "table"
+        ? generateTableBlock(datasource)
+        : generateGridBlock(datasource)
+    )
     .json()
 }

@@ -1,13 +1,22 @@
 import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
-import { attachmentsRelativeURL } from "../index"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
-import { context, db as dbCore, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { Row, Table, ContextUser } from "@budibase/types"
-const { cloneDeep } = require("lodash/fp")
+import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import { cloneDeep } from "lodash/fp"
+import {
+  processInputBBReferences,
+  processOutputBBReferences,
+} from "./bbReferenceProcessor"
+import { isExternalTableID } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -35,26 +44,26 @@ function getRemovedAttachmentKeys(
     return oldKeys
   }
   const newKeys = row[attachmentKey].map((attachment: any) => attachment.key)
-  return oldKeys.filter((key: any) => newKeys.indexOf(key) === -1)
+  return oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
 }
 
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
  * time now and the current logged in user making the request.
- * @param {Object} user The user to be used for an appId as well as the createdBy and createdAt fields.
- * @param {Object} table The table which is to be used for the schema, as well as handling auto IDs incrementing.
- * @param {Object} row The row which is to be updated with information for the auto columns.
- * @param {Object} opts specific options for function to carry out optional features.
- * @returns {{row: Object, table: Object}} The updated row and table, the table may need to be updated
+ * @param userId The user to be used for an appId as well as the createdBy and createdAt fields.
+ * @param table The table which is to be used for the schema, as well as handling auto IDs incrementing.
+ * @param row The row which is to be updated with information for the auto columns.
+ * @param opts specific options for function to carry out optional features.
+ * @returns The updated row and table, the table may need to be updated
  * for automatic ID purposes.
  */
 export function processAutoColumn(
-  user: ContextUser | null,
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !user || !user.userId
+  let noUser = !userId
   let isUserTable = table._id === InternalTables.USER_METADATA
   let now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
@@ -71,8 +80,8 @@ export function processAutoColumn(
     }
     switch (schema.subtype) {
       case AutoFieldSubTypes.CREATED_BY:
-        if (creating && shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (creating && shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.CREATED_AT:
@@ -81,8 +90,8 @@ export function processAutoColumn(
         }
         break
       case AutoFieldSubTypes.UPDATED_BY:
-        if (shouldUpdateUserFields && user) {
-          row[key] = [user.userId]
+        if (shouldUpdateUserFields && userId) {
+          row[key] = [userId]
         }
         break
       case AutoFieldSubTypes.UPDATED_AT:
@@ -101,11 +110,11 @@ export function processAutoColumn(
 
 /**
  * This will coerce a value to the correct types based on the type transform map
- * @param {object} row The value to coerce
- * @param {object} type The type fo coerce to
- * @returns {object} The coerced value
+ * @param row The value to coerce
+ * @param type The type fo coerce to
+ * @returns The coerced value
  */
-export function coerce(row: any, type: any) {
+export function coerce(row: any, type: string) {
   // no coercion specified for type, skip it
   if (!TYPE_TRANSFORM_MAP[type]) {
     return row
@@ -125,21 +134,20 @@ export function coerce(row: any, type: any) {
 /**
  * Given an input route this function will apply all the necessary pre-processing to it, such as coercion
  * of column values or adding auto-column values.
- * @param {object} user the user which is performing the input.
- * @param {object} row the row which is being created/updated.
- * @param {object} table the table which the row is being saved to.
- * @param {object} opts some input processing options (like disabling auto-column relationships).
- * @returns {object} the row which has been prepared to be written to the DB.
+ * @param user the user which is performing the input.
+ * @param row the row which is being created/updated.
+ * @param table the table which the row is being saved to.
+ * @param opts some input processing options (like disabling auto-column relationships).
+ * @returns the row which has been prepared to be written to the DB.
  */
-export function inputProcessing(
-  user: ContextUser,
+export async function inputProcessing(
+  userId: string | null | undefined,
   table: Table,
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
   let clonedRow = cloneDeep(row)
-  // need to copy the table so it can be differenced on way out
-  const copiedTable = cloneDeep(table)
+
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
   for (let [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
@@ -158,6 +166,23 @@ export function inputProcessing(
     else {
       clonedRow[key] = coerce(value, field.type)
     }
+
+    // remove any attachment urls, they are generated on read
+    if (field.type === FieldTypes.ATTACHMENT) {
+      const attachments = clonedRow[key]
+      if (attachments?.length) {
+        attachments.forEach((attachment: RowAttachment) => {
+          delete attachment.url
+        })
+      }
+    }
+
+    if (field.type === FieldTypes.BB_REFERENCE && value) {
+      clonedRow[key] = await processInputBBReferences(
+        value,
+        field.subtype as FieldSubtype
+      )
+    }
   }
 
   if (!clonedRow._id || !clonedRow._rev) {
@@ -166,62 +191,107 @@ export function inputProcessing(
   }
 
   // handle auto columns - this returns an object like {table, row}
-  return processAutoColumn(user, copiedTable, clonedRow, opts)
+  return processAutoColumn(userId, table, clonedRow, opts)
 }
 
 /**
  * This function enriches the input rows with anything they are supposed to contain, for example
  * link records or attachment links.
- * @param {object} table the table from which these rows came from originally, this is used to determine
+ * @param table the table from which these rows came from originally, this is used to determine
  * the schema of the rows and then enrich.
- * @param {object[]|object} rows the rows which are to be enriched.
- * @param {object} opts used to set some options for the output, such as disabling relationship squashing.
- * @returns {object[]|object} the enriched rows will be returned.
+ * @param rows the rows which are to be enriched.
+ * @param opts used to set some options for the output, such as disabling relationship squashing.
+ * @returns the enriched rows will be returned.
  */
-export async function outputProcessing(
+export async function outputProcessing<T extends Row[] | Row>(
   table: Table,
-  rows: Row[] | Row,
-  opts = { squash: true }
-) {
+  rows: T,
+  opts: {
+    squash?: boolean
+    preserveLinks?: boolean
+    fromRow?: Row
+    skipBBReferences?: boolean
+  } = {
+    squash: true,
+    preserveLinks: false,
+    skipBBReferences: false,
+  }
+): Promise<T> {
+  let safeRows: Row[]
   let wasArray = true
   if (!(rows instanceof Array)) {
-    rows = [rows]
+    safeRows = [rows]
     wasArray = false
+  } else {
+    safeRows = rows
   }
   // attach any linked row information
-  let enriched = await linkRows.attachFullLinkedDocs(table, rows as Row[])
+  let enriched = !opts.preserveLinks
+    ? await linkRows.attachFullLinkedDocs(table, safeRows, {
+        fromRow: opts?.fromRow,
+      })
+    : safeRows
 
-  // process formulas
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+  // make sure squash is enabled if needed
+  if (!opts.squash && utils.hasCircularStructure(rows)) {
+    opts.squash = true
+  }
 
-  // update the attachments URL depending on hosting
+  // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
-        row[property].forEach((attachment: any) => {
-          attachment.url = attachmentsRelativeURL(attachment.key)
+        row[property].forEach((attachment: RowAttachment) => {
+          attachment.url ??= objectStore.getAppFileUrl(attachment.key)
         })
+      }
+    } else if (
+      !opts.skipBBReferences &&
+      column.type == FieldTypes.BB_REFERENCE
+    ) {
+      for (let row of enriched) {
+        row[property] = await processOutputBBReferences(
+          row[property],
+          column.subtype as FieldSubtype
+        )
       }
     }
   }
+
+  // process formulas after the complex types had been processed
+  enriched = processFormulas(table, enriched, { dynamic: true })
+
   if (opts.squash) {
-    enriched = await linkRows.squashLinksToPrimaryDisplay(table, enriched)
+    enriched = (await linkRows.squashLinksToPrimaryDisplay(
+      table,
+      enriched
+    )) as Row[]
   }
-  return wasArray ? enriched : enriched[0]
+  // remove null properties to match internal API
+  if (isExternalTableID(table._id!)) {
+    for (let row of enriched) {
+      for (let key of Object.keys(row)) {
+        if (row[key] === null) {
+          delete row[key]
+        }
+      }
+    }
+  }
+  return (wasArray ? enriched : enriched[0]) as T
 }
 
 /**
  * Clean up any attachments that were attached to a row.
- * @param {object} table The table from which a row is being removed.
- * @param {any} row optional - the row being removed.
- * @param {any} rows optional - if multiple rows being deleted can do this in bulk.
- * @param {any} oldRow optional - if updating a row this will determine the difference.
- * @param {any} oldTable optional - if updating a table, can supply the old table to look for
+ * @param table The table from which a row is being removed.
+ * @param row optional - the row being removed.
+ * @param rows optional - if multiple rows being deleted can do this in bulk.
+ * @param oldRow optional - if updating a row this will determine the difference.
+ * @param oldTable optional - if updating a table, can supply the old table to look for
  * deleted attachment columns.
- * @return {Promise<void>} When all attachments have been removed this will return.
+ * @return When all attachments have been removed this will return.
  */
 export async function cleanupAttachments(
   table: Table,
@@ -265,6 +335,6 @@ export async function cleanupAttachments(
     }
   }
   if (files.length > 0) {
-    return objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
+    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
   }
 }

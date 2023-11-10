@@ -1,4 +1,10 @@
-import { DatasourceFieldType, Integration, QueryType } from "@budibase/types"
+import {
+  ConnectionInfo,
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  QueryType,
+} from "@budibase/types"
 import Redis from "ioredis"
 
 interface RedisConfig {
@@ -6,31 +12,42 @@ interface RedisConfig {
   port: number
   username: string
   password?: string
+  db?: number
 }
 
 const SCHEMA: Integration = {
   docs: "https://redis.io/docs/",
-  description: "",
+  description:
+    "Redis is a caching tool, providing powerful key-value store capabilities.",
   friendlyName: "Redis",
   type: "Non-relational",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     host: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
       default: "localhost",
     },
     port: {
-      type: "number",
+      type: DatasourceFieldType.NUMBER,
       required: true,
       default: 6379,
     },
     username: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: false,
     },
     password: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: false,
+    },
+    db: {
+      type: DatasourceFieldType.NUMBER,
+      required: false,
+      display: "DB",
+      default: 0,
     },
   },
   query: {
@@ -79,7 +96,7 @@ const SCHEMA: Integration = {
 
 class RedisIntegration {
   private readonly config: RedisConfig
-  private client: any
+  private client
 
   constructor(config: RedisConfig) {
     this.config = config
@@ -88,11 +105,27 @@ class RedisIntegration {
       port: this.config.port,
       username: this.config.username,
       password: this.config.password,
+      db: this.config.db,
     })
   }
 
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      await this.client.ping()
+      response.connected = true
+    } catch (e: any) {
+      response.error = e.message as string
+    } finally {
+      await this.disconnect()
+    }
+    return response
+  }
+
   async disconnect() {
-    return this.client.disconnect()
+    return this.client.quit()
   }
 
   async redisContext(query: Function) {
@@ -132,10 +165,22 @@ class RedisIntegration {
       // commands split line by line
       const commands = query.json.trim().split("\n")
       let pipelineCommands = []
+      let tokenised
 
       // process each command separately
       for (let command of commands) {
-        const tokenised = command.trim().split(" ")
+        const valueToken = command.trim().match(/".*"/)
+        if (valueToken?.[0]) {
+          tokenised = [
+            ...command
+              .substring(0, command.indexOf(valueToken[0]) - 1)
+              .trim()
+              .split(" "),
+            valueToken?.[0],
+          ]
+        } else {
+          tokenised = command.trim().split(" ")
+        }
         // Pipeline only accepts lower case commands
         tokenised[0] = tokenised[0].toLowerCase()
         pipelineCommands.push(tokenised)
@@ -144,7 +189,13 @@ class RedisIntegration {
       const pipeline = this.client.pipeline(pipelineCommands)
       const result = await pipeline.exec()
 
-      return result.map((output: string | string[]) => output[1])
+      return result?.map((output: any) => {
+        if (typeof output === "string") {
+          return output
+        } else if (Array.isArray(output)) {
+          return output[1]
+        }
+      })
     })
   }
 }

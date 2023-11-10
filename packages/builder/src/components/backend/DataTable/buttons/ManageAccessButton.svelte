@@ -4,23 +4,20 @@
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
 
   export let resourceId
+  export let disabled = false
 
   let modal
   let resourcePermissions
 
-  async function openDropdown() {
-    resourcePermissions = await permissions.forResource(resourceId)
+  async function openModal() {
+    resourcePermissions = await permissions.forResourceDetailed(resourceId)
     modal.show()
   }
 </script>
 
-<ActionButton icon="LockClosed" size="S" quiet on:click={openDropdown}>
-  Manage access
+<ActionButton icon="LockClosed" quiet on:click={openModal} {disabled}>
+  Access
 </ActionButton>
 <Modal bind:this={modal}>
-  <ManageAccessModal
-    {resourceId}
-    levels={$permissions}
-    permissions={resourcePermissions}
-  />
+  <ManageAccessModal {resourceId} permissions={resourcePermissions} />
 </Modal>

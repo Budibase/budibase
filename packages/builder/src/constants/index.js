@@ -34,8 +34,6 @@ export const UNEDITABLE_USER_FIELDS = [
   "lastName",
 ]
 
-export const UNSORTABLE_TYPES = ["formula", "attachment", "array", "link"]
-
 export const LAYOUT_NAMES = {
   MASTER: {
     PRIVATE: "layout_private_master",
@@ -46,7 +44,7 @@ export const LAYOUT_NAMES = {
 // one or more word characters and whitespace
 export const APP_NAME_REGEX = /^[\w\s]+$/
 // zero or more non-whitespace characters
-export const APP_URL_REGEX = /^\S*$/
+export const APP_URL_REGEX = /^[0-9a-zA-Z-_]+$/
 
 export const DefaultAppTheme = {
   primaryColor: "var(--spectrum-global-color-blue-600)",
@@ -61,4 +59,14 @@ export const PluginSource = {
   NPM: "NPM",
   GITHUB: "Github",
   FILE: "File Upload",
+}
+
+export const OnboardingType = {
+  EMAIL: "email",
+  PASSWORD: "password",
+}
+
+export const PlanModel = {
+  PER_USER: "perUser",
+  DAY_PASS: "dayPass",
 }

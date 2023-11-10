@@ -23,30 +23,55 @@
   // Create a fake component instance so that we can use the core Component
   // to render this part of the block, taking advantage of binding enrichment
   $: id = `${block.id}-${context ?? rand}`
+  $: parentId = $component?.id
+  $: inBuilder = $builderStore.inBuilder
   $: instance = {
-    _blockElementHasChildren: $$slots?.default ?? false,
-    _component: `@budibase/standard-components/${type}`,
+    ...props,
+    _component: getComponent(type),
     _id: id,
-    _instanceName: name || type[0].toUpperCase() + type.slice(1),
+    _instanceName: getInstanceName(name, type),
+    _containsSlot: containsSlot,
     _styles: {
       ...styles,
       normal: styles?.normal || {},
     },
-    _containsSlot: containsSlot,
-    ...props,
   }
 
   // Register this block component if we're inside the builder so it can be
   // ejected later
   $: {
-    if ($builderStore.inBuilder) {
-      block.registerComponent(id, order ?? 0, $component?.id, instance)
+    if (inBuilder) {
+      block.registerComponent(id, parentId, order ?? 0, instance)
     }
   }
 
+  const getComponent = type => {
+    if (!type) {
+      return null
+    }
+    if (type.startsWith("plugin/")) {
+      return type
+    } else {
+      return `@budibase/standard-components/${type}`
+    }
+  }
+
+  const getInstanceName = (name, type) => {
+    if (name) {
+      return name
+    }
+    if (!type) {
+      return "New component"
+    }
+    if (type.startsWith("plugin/")) {
+      type = type.split("plugin/")[1]
+    }
+    return type[0].toUpperCase() + type.slice(1)
+  }
+
   onDestroy(() => {
-    if ($builderStore.inBuilder) {
-      block.unregisterComponent(order ?? 0, $component?.id)
+    if (inBuilder) {
+      block.unregisterComponent(id, parentId)
     }
   })
 </script>

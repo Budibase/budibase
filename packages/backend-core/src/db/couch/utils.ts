@@ -9,6 +9,20 @@ export async function directCouchCall(
 ) {
   let { url, cookie } = getCouchInfo()
   const couchUrl = `${url}/${path}`
+  return await directCouchUrlCall({ url: couchUrl, cookie, method, body })
+}
+
+export async function directCouchUrlCall({
+  url,
+  cookie,
+  method,
+  body,
+}: {
+  url: string
+  cookie: string
+  method: string
+  body?: any
+}) {
   const params: any = {
     method: method,
     headers: {
@@ -19,7 +33,7 @@ export async function directCouchCall(
     params.body = JSON.stringify(body)
     params.headers["Content-Type"] = "application/json"
   }
-  return await fetch(checkSlashesInUrl(encodeURI(couchUrl)), params)
+  return await fetch(checkSlashesInUrl(encodeURI(url)), params)
 }
 
 export async function directCouchQuery(

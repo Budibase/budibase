@@ -1,10 +1,8 @@
 import Router from "@koa/router"
-import { errors, auth } from "@budibase/backend-core"
+import { auth, middleware, env as envCore } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
-import pkg from "../../package.json"
-import env from "../environment"
 import { middleware as pro } from "@budibase/pro"
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -12,7 +10,9 @@ const compress = require("koa-compress")
 export const router: Router = new Router()
 
 router.get("/health", ctx => (ctx.status = 200))
-router.get("/version", ctx => (ctx.body = pkg.version))
+router.get("/version", ctx => (ctx.body = envCore.VERSION))
+
+router.use(middleware.errorHandling)
 
 router
   .use(
@@ -27,13 +27,6 @@ router
       br: false,
     })
   )
-  .use(async (ctx, next) => {
-    ctx.config = {
-      jwtSecret: env.JWT_SECRET,
-      useAppRootPath: true,
-    }
-    await next()
-  })
   // re-direct before any middlewares occur
   .redirect("/", "/builder")
   .use(
@@ -53,27 +46,6 @@ router
   // @ts-ignore
   .use(currentApp)
   .use(auth.auditLog)
-
-// error handling middleware
-router.use(async (ctx, next) => {
-  try {
-    await next()
-  } catch (err: any) {
-    ctx.status = err.status || err.statusCode || 500
-    const error = errors.getPublicError(err)
-    ctx.body = {
-      message: err.message,
-      status: ctx.status,
-      validationErrors: err.validation,
-      error,
-    }
-    ctx.log.error(err)
-    // unauthorised errors don't provide a useful trace
-    if (!env.isTest()) {
-      console.trace(err)
-    }
-  }
-})
 
 // authenticated routes
 for (let route of mainRoutes) {

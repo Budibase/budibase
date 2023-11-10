@@ -1,5 +1,5 @@
 const setup = require("./utilities")
-const { basicScreen } = setup.structures
+const { basicScreen, powerScreen } = setup.structures
 const { checkBuilderEndpoint, runInProd } = require("./utilities/TestFunctions")
 const { roles } = require("@budibase/backend-core")
 const { BUILTIN_ROLE_IDS } = roles
@@ -9,24 +9,18 @@ const route = "/test"
 // there are checks which are disabled in test env,
 // these checks need to be enabled for this test
 
-
 describe("/routing", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let screen, screen2
+  let basic, power
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
-    screen = basicScreen()
-    screen.routing.route = route
-    screen = await config.createScreen(screen)
-    screen2 = basicScreen()
-    screen2.routing.roleId = BUILTIN_ROLE_IDS.POWER
-    screen2.routing.route = route
-    screen2 = await config.createScreen(screen2)
-    await config.deploy()
+    basic = await config.createScreen(basicScreen(route))
+    power = await config.createScreen(powerScreen(route))
+    await config.publish()
   })
 
   describe("fetch", () => {
@@ -62,8 +56,8 @@ describe("/routing", () => {
       expect(res.body.routes[route]).toEqual({
         subpaths: {
           [route]: {
-            screenId: screen._id,
-            roleId: screen.routing.roleId
+            screenId: basic._id,
+            roleId: basic.routing.roleId
           }
         }
       })
@@ -81,8 +75,8 @@ describe("/routing", () => {
       expect(res.body.routes[route]).toEqual({
         subpaths: {
           [route]: {
-            screenId: screen2._id,
-            roleId: screen2.routing.roleId
+            screenId: power._id,
+            roleId: power.routing.roleId
           }
         }
       })
@@ -102,8 +96,8 @@ describe("/routing", () => {
       expect(res.body.routes).toBeDefined()
       expect(res.body.routes[route].subpaths[route]).toBeDefined()
       const subpath = res.body.routes[route].subpaths[route]
-      expect(subpath.screens[screen2.routing.roleId]).toEqual(screen2._id)
-      expect(subpath.screens[screen.routing.roleId]).toEqual(screen._id)
+      expect(subpath.screens[power.routing.roleId]).toEqual(power._id)
+      expect(subpath.screens[basic.routing.roleId]).toEqual(basic._id)
     })
 
     it("make sure it is a builder only endpoint", async () => {

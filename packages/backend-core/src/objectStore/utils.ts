@@ -14,13 +14,16 @@ export const ObjectStoreBuckets = {
   APPS: env.APPS_BUCKET_NAME,
   TEMPLATES: env.TEMPLATES_BUCKET_NAME,
   GLOBAL: env.GLOBAL_BUCKET_NAME,
-  GLOBAL_CLOUD: env.GLOBAL_CLOUD_BUCKET_NAME,
   PLUGINS: env.PLUGIN_BUCKET_NAME,
 }
 
 const bbTmp = join(tmpdir(), ".budibase")
-if (!fs.existsSync(bbTmp)) {
+try {
   fs.mkdirSync(bbTmp)
+} catch (e: any) {
+  if (e.code !== "EEXIST") {
+    throw e
+  }
 }
 
 export function budibaseTempDir() {

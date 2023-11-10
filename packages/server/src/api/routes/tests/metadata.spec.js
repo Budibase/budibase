@@ -9,7 +9,7 @@ describe("/metadata", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     automation = await config.createAutomation()
   })

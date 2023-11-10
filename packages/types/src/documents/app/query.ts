@@ -6,7 +6,7 @@ export interface Query extends Document {
   parameters: QueryParameter[]
   fields: RestQueryFields | any
   transformer: string | null
-  schema: any
+  schema: Record<string, { name?: string; type: string }>
   readable: boolean
   queryVerb: string
 }
@@ -41,4 +41,11 @@ export interface PaginationConfig {
 export interface PaginationValues {
   page: string | number | null
   limit: number | null
+}
+
+export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
+  parameters: {}
+  flags?: {
+    urlName?: boolean
+  }
 }

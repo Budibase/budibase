@@ -10,7 +10,7 @@ describe("/screens", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
     screen = await config.createScreen()
   })

@@ -29,13 +29,18 @@ export const styleable = (node, styles = {}) => {
 
     let baseStyles = {}
     if (newStyles.empty) {
-      baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"
       baseStyles.padding = "var(--spacing-l)"
       baseStyles.overflow = "hidden"
+      if (newStyles.selected) {
+        baseStyles.border = "2px solid transparent"
+      } else {
+        baseStyles.border = "2px dashed var(--spectrum-global-color-gray-400)"
+      }
     }
 
     const componentId = newStyles.id
     const customStyles = newStyles.custom || ""
+    const { isBlock } = newStyles
     const normalStyles = { ...baseStyles, ...newStyles.normal }
     const hoverStyles = {
       ...normalStyles,
@@ -72,6 +77,9 @@ export const styleable = (node, styles = {}) => {
     // Handler to start editing a component (if applicable) when double
     // clicking in the builder preview
     editComponent = event => {
+      if (isBlock) {
+        return
+      }
       if (newStyles.interactive && newStyles.editable) {
         builderStore.actions.setEditMode(true)
       }

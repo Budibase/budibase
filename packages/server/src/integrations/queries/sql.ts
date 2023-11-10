@@ -1,55 +1,10 @@
-import { findHBSBlocks, processStringSync } from "@budibase/string-templates"
+import { findHBSBlocks } from "@budibase/string-templates"
 import { DatasourcePlus } from "@budibase/types"
+import sdk from "../../sdk"
 
 const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
 
-export function enrichQueryFields(
-  fields: { [key: string]: any },
-  parameters = {}
-) {
-  const enrichedQuery: { [key: string]: any } = Array.isArray(fields) ? [] : {}
-  if (!fields || !parameters) {
-    return enrichedQuery
-  }
-  // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
-    if (fields[key] == null) {
-      continue
-    }
-    if (typeof fields[key] === "object") {
-      // enrich nested fields object
-      enrichedQuery[key] = enrichQueryFields(fields[key], parameters)
-    } else if (typeof fields[key] === "string") {
-      // enrich string value as normal
-      enrichedQuery[key] = processStringSync(fields[key], parameters, {
-        noEscaping: true,
-        noHelpers: true,
-        escapeNewlines: true,
-      })
-    } else {
-      enrichedQuery[key] = fields[key]
-    }
-  }
-  if (
-    enrichedQuery.json ||
-    enrichedQuery.customData ||
-    enrichedQuery.requestBody
-  ) {
-    try {
-      enrichedQuery.json = JSON.parse(
-        enrichedQuery.json ||
-          enrichedQuery.customData ||
-          enrichedQuery.requestBody
-      )
-    } catch (err) {
-      // no json found, ignore
-    }
-    delete enrichedQuery.customData
-  }
-  return enrichedQuery
-}
-
-export function interpolateSQL(
+export async function interpolateSQL(
   fields: { [key: string]: any },
   parameters: { [key: string]: any },
   integration: DatasourcePlus
@@ -90,7 +45,7 @@ export function interpolateSQL(
     else if (listRegexMatch) {
       arrays.push(binding)
       // determine the length of the array
-      const value = enrichQueryFields([binding], parameters)[0]
+      const value = (await sdk.queries.enrichContext([binding], parameters))[0]
         .split(",")
         .map((val: string) => val.trim())
       // build a string like ($1, $2, $3)
@@ -109,7 +64,7 @@ export function interpolateSQL(
   }
   // replicate the knex structure
   fields.sql = sql
-  fields.bindings = enrichQueryFields(variables, parameters)
+  fields.bindings = await sdk.queries.enrichContext(variables, parameters)
   // check for arrays in the data
   let updated: string[] = []
   for (let i = 0; i < variables.length; i++) {

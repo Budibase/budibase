@@ -2,8 +2,9 @@ import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
 import { roles, tenancy, context } from "@budibase/backend-core"
-import { TENANT_ID } from "../../../../tests/utilities/structures"
-import * as env from "../../../../environment"
+import env from "../../../../environment"
+import { db } from "@budibase/backend-core"
+import Nano from "@budibase/nano"
 
 class Request {
   appId: any
@@ -30,15 +31,21 @@ export const getAllTableRows = async (config: any) => {
   return req.body
 }
 
-export const clearAllApps = async (tenantId = TENANT_ID) => {
+export const clearAllApps = async (
+  tenantId: string,
+  exceptions: Array<string> = []
+) => {
   await tenancy.doInTenant(tenantId, async () => {
-    const req: any = { query: { status: AppStatus.DEV }, user: { tenantId } }
+    const req: any = {
+      query: { status: AppStatus.DEV },
+      user: { tenantId, builder: { global: true } },
+    }
     await appController.fetch(req)
     const apps = req.body
     if (!apps || apps.length <= 0) {
       return
     }
-    for (let app of apps) {
+    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
       const { appId } = app
       const req = new Request(null, { appId })
       await runRequest(appId, appController.destroy, req)
@@ -53,6 +60,24 @@ export const clearAllAutomations = async (config: any) => {
       await config.deleteAutomation(auto)
     })
   }
+}
+
+export const wipeDb = async () => {
+  const couchInfo = db.getCouchInfo()
+  const nano = Nano({
+    url: couchInfo.url,
+    requestDefaults: {
+      headers: {
+        Authorization: couchInfo.cookie,
+      },
+    },
+    parseUrl: false,
+  })
+  let dbs
+  do {
+    dbs = await nano.db.list()
+    await Promise.all(dbs.map(x => nano.db.destroy(x)))
+  } while (dbs.length)
 }
 
 export const createRequest = (

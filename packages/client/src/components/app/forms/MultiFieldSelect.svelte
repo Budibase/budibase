@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue
   export let optionsSource = "schema"
@@ -17,6 +18,7 @@
   export let onChange
   export let optionsType = "select"
   export let direction = "vertical"
+  export let span
 
   let fieldState
   let fieldApi
@@ -38,7 +40,7 @@
       return []
     }
     if (Array.isArray(values)) {
-      return values
+      return values.slice()
     }
     return values.split(",").map(value => value.trim())
   }
@@ -55,7 +57,9 @@
   {field}
   {label}
   {disabled}
+  {readonly}
   {validation}
+  {span}
   defaultValue={expandedDefaultValue}
   type="array"
   bind:fieldState
@@ -71,6 +75,7 @@
         getOptionValue={flatOptions ? x => x : x => x.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         on:change={handleChange}
         {placeholder}
         {options}
@@ -81,6 +86,7 @@
         value={fieldState.value || []}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         {options}
         {direction}

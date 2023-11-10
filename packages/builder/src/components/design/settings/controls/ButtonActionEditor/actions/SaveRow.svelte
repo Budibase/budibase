@@ -1,10 +1,10 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
-  import { tables } from "stores/backend"
+  import { tables, viewsV2 } from "stores/backend"
   import {
     getContextProviderComponents,
-    getSchemaForTable,
+    getSchemaForDatasourcePlus,
   } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
 
@@ -24,8 +24,16 @@
     "schema"
   )
   $: providerOptions = getProviderOptions(formComponents, schemaComponents)
-  $: schemaFields = getSchemaFields($currentAsset, parameters?.tableId)
-  $: tableOptions = $tables.list || []
+  $: schemaFields = getSchemaFields(parameters?.tableId)
+  $: tableOptions = $tables.list.map(table => ({
+    label: table.name,
+    resourceId: table._id,
+  }))
+  $: viewOptions = $viewsV2.list.map(view => ({
+    label: view.name,
+    resourceId: view.id,
+  }))
+  $: options = [...(tableOptions || []), ...(viewOptions || [])]
 
   // Gets a context definition of a certain type from a component definition
   const extractComponentContext = (component, contextType) => {
@@ -61,8 +69,8 @@
     })
   }
 
-  const getSchemaFields = (asset, tableId) => {
-    const { schema } = getSchemaForTable(tableId)
+  const getSchemaFields = resourceId => {
+    const { schema } = getSchemaForDatasourcePlus(resourceId)
     return Object.values(schema || {})
   }
 
@@ -89,9 +97,9 @@
     <Label small>Table</Label>
     <Select
       bind:value={parameters.tableId}
-      options={tableOptions}
-      getOptionLabel={option => option.name}
-      getOptionValue={option => option._id}
+      {options}
+      getOptionLabel={option => option.label}
+      getOptionValue={option => option.resourceId}
     />
 
     <Label small />

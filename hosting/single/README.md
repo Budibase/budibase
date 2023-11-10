@@ -58,7 +58,6 @@ Node setup:
 ```
 node ./hosting/scripts/setup.js
 yarn
-yarn bootstrap
 yarn build
 ```
 #### Build Image

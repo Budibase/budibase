@@ -3,6 +3,8 @@ import {
   Integration,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 import { Firestore, WhereFilterOp } from "@google-cloud/firestore"
 
@@ -18,6 +20,9 @@ const SCHEMA: Integration = {
   type: "Non-relational",
   description:
     "Cloud Firestore is a flexible, scalable database for mobile, web, and server development from Firebase and Google Cloud.",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     email: {
       type: DatasourceFieldType.STRING,
@@ -97,6 +102,18 @@ class FirebaseIntegration implements IntegrationBase {
         private_key: config.privateKey?.replace(/\\n/g, "\n"),
       },
     })
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.client.listCollections()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   async create(query: { json: object; extra: { [key: string]: string } }) {

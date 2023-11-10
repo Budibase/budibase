@@ -16,6 +16,7 @@
     themeStore,
     appStore,
     devToolsStore,
+    devToolsEnabled,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -34,20 +35,20 @@
   import KeyboardManager from "components/preview/KeyboardManager.svelte"
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
+  import FreeFooter from "components/FreeFooter.svelte"
+  import licensing from "../licensing"
 
   // Provide contexts
   setContext("sdk", SDK)
-  setContext("component", writable({}))
+  setContext("component", writable({ id: null, ancestors: [] }))
   setContext("context", createContextStore())
 
   let dataLoaded = false
   let permissionError = false
+  let embedNoScreens = false
 
   // Determine if we should show devtools or not
-  $: showDevTools =
-    !$builderStore.inBuilder &&
-    $devToolsStore.enabled &&
-    !$routeStore.queryParams?.peek
+  $: showDevTools = $devToolsEnabled && !$routeStore.queryParams?.peek
 
   // Handle no matching route
   $: {
@@ -67,6 +68,8 @@
         // If the user is logged in but has no screens, they don't have
         // permission to use the app
         permissionError = true
+      } else if ($appStore.embedded) {
+        embedNoScreens = true
       } else {
         // If they have no screens and are not logged in, it probably means
         // they should log in to gain access
@@ -85,7 +88,9 @@
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {
-      builderStore.actions.analyticsPing({ source: "app" })
+      builderStore.actions.analyticsPing({
+        embedded: !!$appStore.embedded,
+      })
     }
   })
 </script>
@@ -93,7 +98,7 @@
 <svelte:head>
   {#if $builderStore.usedPlugins?.length}
     {#each $builderStore.usedPlugins as plugin (plugin.hash)}
-      <script src={`${plugin.jsUrl}?r=${plugin.hash || ""}`}></script>
+      <script src={`${plugin.jsUrl}`}></script>
     {/each}
   {/if}
 </svelte:head>
@@ -104,6 +109,7 @@
     lang="en"
     dir="ltr"
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
+    class:builder={$builderStore.inBuilder}
   >
     <DeviceBindingsProvider>
       <UserBindingsProvider>
@@ -135,6 +141,7 @@
                     {#if permissionError}
                       <div class="error">
                         <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                           {@html ErrorSVG}
                           <Heading size="L">
                             You don't have permission to use this app
@@ -147,6 +154,7 @@
                     {:else if !$screenStore.activeLayout}
                       <div class="error">
                         <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
                           {@html ErrorSVG}
                           <Heading size="L">
                             Something went wrong rendering your app
@@ -154,6 +162,16 @@
                           <Body size="S">
                             Get in touch with support if this issue persists
                           </Body>
+                        </Layout>
+                      </div>
+                    {:else if embedNoScreens}
+                      <div class="error">
+                        <Layout justifyItems="center" gap="S">
+                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                          {@html ErrorSVG}
+                          <Heading size="L">
+                            This Budibase app is not publicly accessible
+                          </Heading>
                         </Layout>
                       </div>
                     {:else}
@@ -186,6 +204,10 @@
                       <DevTools />
                     {/if}
                   </div>
+
+                  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
+                    <FreeFooter />
+                  {/if}
                 </div>
 
                 <!-- Preview and dev tools utilities  -->
@@ -216,11 +238,13 @@
     overflow: hidden;
     height: 100%;
     width: 100%;
-    background: transparent;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+  }
+  #spectrum-root.builder {
+    background: transparent;
   }
 
   #clip-root {

@@ -74,6 +74,18 @@ export const buildConfigEndpoints = API => ({
   },
 
   /**
+   * Updates the company favicon for the environment.
+   * @param data the favicon form data
+   */
+  uploadFavicon: async data => {
+    return await API.post({
+      url: "/api/global/configs/upload/settings/faviconUrl",
+      body: data,
+      json: false,
+    })
+  },
+
+  /**
    * Uploads a logo for an OIDC provider.
    * @param name the name of the OIDC provider
    * @param data the logo form data to upload

@@ -21,4 +21,5 @@ export interface Screen extends Document {
   width?: string
   routing: ScreenRouting
   props: ScreenProps
+  name?: string
 }

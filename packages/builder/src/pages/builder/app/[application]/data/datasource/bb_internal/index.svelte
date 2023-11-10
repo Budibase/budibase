@@ -4,13 +4,24 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { tables, datasources } from "stores/backend"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
+  import { BUDIBASE_INTERNAL_DB_ID, DB_TYPE_EXTERNAL } from "constants/backend"
+  import { TableNames } from "constants"
+  import { store } from "builderStore"
 
   let modal
 
+  $: store.actions.websocket.selectResource(BUDIBASE_INTERNAL_DB_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
-      table.type !== "external" && $datasources.selected === table.sourceId
+      table.sourceType !== DB_TYPE_EXTERNAL &&
+      table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+      table._id !== TableNames.USERS
   )
+
+  onMount(() => {
+    datasources.select(BUDIBASE_INTERNAL_DB_ID)
+  })
 </script>
 
 <Modal bind:this={modal}>
@@ -26,7 +37,7 @@
       </header>
       <Body size="M">
         Budibase internal tables are part of your app, so the data will be
-        stored in your apps context.
+        stored in your app's context.
       </Body>
     </Layout>
     <Divider />
@@ -73,7 +84,7 @@
     background: var(--background);
     border: var(--border-dark);
     display: grid;
-    grid-template-columns: 2fr 0.75fr 20px;
+    grid-template-columns: 1fr auto;
     align-items: center;
     padding: var(--spacing-m);
     gap: var(--layout-xs);

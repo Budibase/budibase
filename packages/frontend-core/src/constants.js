@@ -1,56 +1,8 @@
 /**
  * Operator options for lucene queries
  */
-export const OperatorOptions = {
-  Equals: {
-    value: "equal",
-    label: "Equals",
-  },
-  NotEquals: {
-    value: "notEqual",
-    label: "Not equals",
-  },
-  Empty: {
-    value: "empty",
-    label: "Is empty",
-  },
-  NotEmpty: {
-    value: "notEmpty",
-    label: "Is not empty",
-  },
-  StartsWith: {
-    value: "string",
-    label: "Starts with",
-  },
-  Like: {
-    value: "fuzzy",
-    label: "Like",
-  },
-  MoreThan: {
-    value: "rangeLow",
-    label: "More than",
-  },
-  LessThan: {
-    value: "rangeHigh",
-    label: "Less than",
-  },
-  Contains: {
-    value: "contains",
-    label: "Contains",
-  },
-  NotContains: {
-    value: "notContains",
-    label: "Does not contain",
-  },
-  In: {
-    value: "oneOf",
-    label: "Is in",
-  },
-  ContainsAny: {
-    value: "containsAny",
-    label: "Has any",
-  },
-}
+export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
+export { Feature as Features } from "@budibase/types"
 
 // Cookie names
 export const Cookies = {
@@ -71,10 +23,27 @@ export const BudibaseRoles = {
   Admin: "admin",
 }
 
-export const BudibaseRoleOptions = [
-  { label: "App User", value: BudibaseRoles.AppUser },
+export const BudibaseRoleOptionsOld = [
   { label: "Developer", value: BudibaseRoles.Developer },
+  { label: "Member", value: BudibaseRoles.AppUser },
   { label: "Admin", value: BudibaseRoles.Admin },
+]
+export const BudibaseRoleOptions = [
+  { label: "Member", value: BudibaseRoles.AppUser },
+  { label: "Admin", value: BudibaseRoles.Admin },
+]
+
+export const BudibaseRoleOptionsNew = [
+  {
+    label: "Admin",
+    value: "admin",
+    subtitle: "Has full access to all apps and settings in your account",
+  },
+  {
+    label: "Member",
+    value: "appUser",
+    subtitle: "Can only view apps they have access to",
+  },
 ]
 
 export const BuilderRoleDescriptions = [
@@ -82,11 +51,6 @@ export const BuilderRoleDescriptions = [
     value: BudibaseRoles.AppUser,
     icon: "User",
     label: "App user - Only has access to published apps",
-  },
-  {
-    value: BudibaseRoles.Developer,
-    icon: "Hammer",
-    label: "Developer - Access to the app builder",
   },
   {
     value: BudibaseRoles.Admin,
@@ -111,11 +75,6 @@ export const PlanType = {
  */
 export const ApiVersion = "1"
 
-export const Features = {
-  USER_GROUPS: "userGroups",
-  BACKUPS: "appBackups",
-}
-
 // Role IDs
 export const Roles = {
   ADMIN: "ADMIN",
@@ -123,27 +82,7 @@ export const Roles = {
   BASIC: "BASIC",
   PUBLIC: "PUBLIC",
   BUILDER: "BUILDER",
-}
-/**
- * Maximum minimum range for SQL number values
- */
-export const SqlNumberTypeRangeMap = {
-  integer: {
-    max: 2147483647,
-    min: -2147483648,
-  },
-  int: {
-    max: 2147483647,
-    min: -2147483648,
-  },
-  smallint: {
-    max: 32767,
-    min: -32768,
-  },
-  mediumint: {
-    max: 8388607,
-    min: -8388608,
-  },
+  CREATOR: "CREATOR",
 }
 
 export const Themes = [
@@ -174,3 +113,7 @@ export const Themes = [
     base: "darkest",
   },
 ]
+
+export const EventPublishType = {
+  ENV_VAR_UPGRADE_PANEL_OPENED: "environment_variable_upgrade_panel_opened",
+}

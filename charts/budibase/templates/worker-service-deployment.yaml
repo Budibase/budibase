@@ -4,16 +4,18 @@ metadata:
   annotations:
     kompose.cmd: kompose convert
     kompose.version: 1.21.0 (992df58d8)
-{{ if .Values.globals.logAnnotations }}
-{{ toYaml .Values.globals.logAnnotations | indent 4 }}
+{{ if .Values.services.worker.deploymentAnnotations }}
+{{- toYaml .Values.services.worker.deploymentAnnotations | indent 4 -}}
 {{ end }}
   creationTimestamp: null
   labels:
     io.kompose.service: worker-service
+{{ if .Values.services.worker.deploymentLabels }}
+{{- toYaml .Values.services.worker.deploymentLabels | indent 4 -}}
+{{ end }}
   name: worker-service
 spec:
   replicas: {{ .Values.services.worker.replicaCount }}
-
   selector:
     matchLabels:
       io.kompose.service: worker-service
@@ -24,9 +26,15 @@ spec:
       annotations:
         kompose.cmd: kompose convert
         kompose.version: 1.21.0 (992df58d8)
+{{ if .Values.services.worker.templateAnnotations }}
+{{- toYaml .Values.services.worker.templateAnnotations | indent 8 -}}
+{{ end }}
       creationTimestamp: null
       labels:
         io.kompose.service: worker-service
+{{ if .Values.services.worker.templateLabels }}
+{{- toYaml .Values.services.worker.templateLabels | indent 8 -}}
+{{ end }}
     spec:
       containers:
       - env:
@@ -54,20 +62,30 @@ spec:
           {{ else }}
           value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
           {{ end }}
+        - name: API_ENCRYPTION_KEY
+          value: {{ .Values.globals.apiEncryptionKey | quote }}
+        - name: HTTP_LOGGING
+          value: {{ .Values.services.worker.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: internalApiKey
+        - name: INTERNAL_API_KEY_FALLBACK
+          value: {{ .Values.globals.internalApiKeyFallback | quote }}
         - name: JWT_SECRET
           valueFrom:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: jwtSecret
+        - name: JWT_SECRET_FALLBACK
+          value: {{ .Values.globals.jwtSecretFallback | quote }}
         {{ if .Values.services.objectStore.region }}
         - name: AWS_REGION
           value: {{ .Values.services.objectStore.region }}
         {{ end }}
+        - name: MINIO_ENABLED
+          value: {{ .Values.services.objectStore.minio | quote }}
         - name: MINIO_ACCESS_KEY
           valueFrom:
             secretKeyRef:
@@ -80,11 +98,17 @@ spec:
               key: objectStoreSecret
         - name: MINIO_URL
           value: {{ .Values.services.objectStore.url }}
+        - name: CLOUDFRONT_CDN
+          value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
+        - name: CLOUDFRONT_PUBLIC_KEY_ID
+          value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
+        - name: CLOUDFRONT_PRIVATE_KEY_64
+          value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.appsBucketName | quote }}
-        - name: GLOBAL_CLOUD_BUCKET_NAME
+        - name: GLOBAL_BUCKET_NAME
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
@@ -92,8 +116,10 @@ spec:
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
+        - name: OFFLINE_MODE
+          value: {{ .Values.globals.offlineMode | quote }}
         - name: LOG_LEVEL
-          value: {{ default "info" .Values.services.worker.logLevel | quote }}
+          value: {{ .Values.services.worker.logLevel | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password | quote }}
         - name: REDIS_URL
@@ -104,8 +130,6 @@ spec:
           {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
-        - name: SENTRY_DSN
-          value: {{ .Values.globals.sentryDSN }}
         - name: ENABLE_ANALYTICS
           value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN
@@ -138,33 +162,52 @@ spec:
           value: {{ .Values.globals.google.secret | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
-        {{ if .Values.globals.elasticApmEnabled }}
-        - name: ELASTIC_APM_ENABLED
-          value: {{ .Values.globals.elasticApmEnabled | quote }}
+        - name: ENCRYPTION_KEY
+          value: {{ .Values.globals.bbEncryptionKey | quote }}
+        {{ if .Values.globals.datadogApmEnabled }}
+        - name: DD_LOGS_INJECTION
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_ENABLED
+          value: {{ .Values.globals.datadogApmEnabled | quote }}
+        - name: DD_APM_DD_URL
+          value: https://trace.agent.datadoghq.eu
         {{ end }}
-        {{ if .Values.globals.elasticApmSecretToken }}
-        - name: ELASTIC_APM_SECRET_TOKEN
-          value: {{ .Values.globals.elasticApmSecretToken | quote }}
+        {{ if .Values.globals.globalAgentHttpProxy }}
+        - name: GLOBAL_AGENT_HTTP_PROXY
+          value: {{ .Values.globals.globalAgentHttpProxy | quote }}
         {{ end }}
-        {{ if .Values.globals.elasticApmServerUrl }}
-        - name: ELASTIC_APM_SERVER_URL
-          value: {{ .Values.globals.elasticApmServerUrl | quote }}
+        {{ if .Values.globals.globalAgentHttpsProxy }}
+        - name: GLOBAL_AGENT_HTTPS_PROXY
+          value: {{ .Values.globals.globalAgentHttpsProxy | quote }}
         {{ end }}
-        - name: CDN_URL
-          value: {{ .Values.globals.cdnUrl }}
+        {{ if .Values.globals.globalAgentNoProxy }}
+        - name: GLOBAL_AGENT_NO_PROXY
+          value: {{ .Values.globals.globalAgentNoProxy | quote }}
+        {{ end }}
         {{ if .Values.services.tlsRejectUnauthorized }}
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-
-        image: budibase/worker:{{ .Values.globals.appVersion }}
+        image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
+        {{- if .Values.services.worker.startupProbe }}
+        {{- with .Values.services.worker.startupProbe }}
+        startupProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.worker.livenessProbe }}
+        {{- with .Values.services.worker.livenessProbe }}
         livenessProbe:
-          httpGet:
-            path: /health
-            port: {{ .Values.services.worker.port }}
-          initialDelaySeconds: 5
-          periodSeconds: 5
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.services.worker.readinessProbe }}
+        {{- with .Values.services.worker.readinessProbe }}
+        readinessProbe:
+            {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- end }}
         name: bbworker
         ports:
         - containerPort: {{ .Values.services.worker.port }}
@@ -180,6 +223,9 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      {{ if .Values.schedulerName }}
+      schedulerName: {{ .Values.schedulerName | quote }}
+      {{ end }}     
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}

@@ -1,7 +1,11 @@
-const email = require("./email")
-import { mocks as coreMocks } from "@budibase/backend-core/tests"
+import * as email from "./email"
+import { mocks } from "@budibase/backend-core/tests"
 
-export = {
+import * as _pro from "@budibase/pro"
+const pro = jest.mocked(_pro, { shallow: false })
+
+export default {
   email,
-  ...coreMocks,
+  pro,
+  ...mocks,
 }

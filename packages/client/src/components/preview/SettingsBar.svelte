@@ -15,17 +15,22 @@
   let self
   let measured = false
 
+  $: id = $builderStore.selectedComponentId
+  $: instance = componentStore.actions.getComponentInstance(id)
+  $: state = $instance?.state
   $: definition = $componentStore.selectedComponentDefinition
   $: showBar =
-    definition?.showSettingsBar !== false && !$dndIsDragging && definition
+    definition?.showSettingsBar !== false &&
+    !$dndIsDragging &&
+    definition &&
+    !$state?.errorState
   $: {
     if (!showBar) {
       measured = false
     }
   }
   $: settings = getBarSettings(definition)
-  $: isScreen =
-    $builderStore.selectedComponentId === $builderStore.screen?.props?._id
+  $: isRoot = id === $builderStore.screen?.props?._id
 
   const getBarSettings = definition => {
     let allSettings = []
@@ -155,11 +160,11 @@
       {:else if setting.type === "color"}
         <SettingsColorPicker prop={setting.key} />
       {/if}
-      {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isScreen)}
+      {#if setting.barSeparator !== false && (settings.length != idx + 1 || !isRoot)}
         <div class="divider" />
       {/if}
     {/each}
-    {#if !isScreen}
+    {#if !isRoot}
       <SettingsButton
         icon="Duplicate"
         on:click={() => {

@@ -30,8 +30,8 @@ export function createBackupsStore() {
     return API.deleteBackup({ appId, backupId })
   }
 
-  async function createManualBackup(appId, name) {
-    return API.createManualBackup(appId, name)
+  async function createManualBackup(appId) {
+    return API.createManualBackup(appId)
   }
 
   async function updateBackup({ appId, backupId, name }) {

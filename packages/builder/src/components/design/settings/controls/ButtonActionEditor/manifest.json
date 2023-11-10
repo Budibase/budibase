@@ -24,8 +24,20 @@
     },
     {
       "name": "Delete Row",
+      "displayName": "Delete Rows",
       "type": "data",
       "component": "DeleteRow"
+    },
+    {
+      "name": "Fetch Row",
+      "type": "data",
+      "component": "FetchRow",
+      "context": [
+        {
+          "label": "Fetched row",
+          "value": "row"
+        }
+      ]
     },
     {
       "name": "Navigate To",
@@ -46,12 +58,23 @@
     {
       "name": "Trigger Automation",
       "type": "application",
-      "component": "TriggerAutomation"
+      "component": "TriggerAutomation",
+      "context": [
+        {
+          "label": "Automation Result",
+          "value": "result"
+        }
+      ]
     },
     {
       "name": "Update Field Value",
       "type": "form",
       "component": "UpdateFieldValue"
+    },
+    {
+      "name": "Scroll To Field",
+      "type": "form",
+      "component": "ScrollTo"
     },
     {
       "name": "Validate Form",
@@ -116,6 +139,11 @@
       "type": "application",
       "component": "ShowNotification",
       "dependsOnFeature": "showNotificationAction"
+    },
+    {
+      "name": "Prompt User",
+      "type": "application",
+      "component": "PromptUser"
     },
     {
       "name": "Open Side Panel",

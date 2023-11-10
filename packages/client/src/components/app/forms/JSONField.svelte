@@ -7,6 +7,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let defaultValue = ""
   export let onChange
 
@@ -48,6 +49,7 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   type="json"
@@ -60,6 +62,7 @@
         value={serialiseValue(fieldState.value)}
         on:change={handleChange}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}
@@ -72,9 +75,11 @@
   :global(.spectrum-Form-itemField .spectrum-Textfield--multiline) {
     min-height: calc(var(--height) - 24px);
   }
-  :global(.spectrum-Form--labelsAbove
-      .spectrum-Form-itemField
-      .spectrum-Textfield--multiline) {
+  :global(
+      .spectrum-Form--labelsAbove
+        .spectrum-Form-itemField
+        .spectrum-Textfield--multiline
+    ) {
     min-height: calc(var(--height) - 24px);
   }
 </style>

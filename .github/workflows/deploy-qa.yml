@@ -1,0 +1,22 @@
+name: Deploy QA
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  trigger-deploy-to-qa-env:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v2
+        with:
+          repository: budibase/budibase-deploys
+          event-type: budicloud-qa-deploy
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          client-payload: |-
+            {
+              "VERSION": "${{ github.sha }}",
+              "REF_NAME": "${{ github.ref_name}}"
+            }

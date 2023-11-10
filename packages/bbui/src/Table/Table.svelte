@@ -21,6 +21,8 @@
    * template: a HBS or JS binding to use as the value
    * background: the background color
    * color: the text color
+   * borderLeft: show a left border
+   * borderRight: show a right border
    */
   export let data = []
   export let schema = {}
@@ -31,6 +33,7 @@
   export let allowSelectRows
   export let allowEditRows = true
   export let allowEditColumns = true
+  export let allowClickRows = true
   export let selectedRows = []
   export let customRenderers = []
   export let disableSorting = false
@@ -103,6 +106,13 @@
           name: fieldName,
         }
       }
+
+      // Delete numeric only widths as these are grid widths and should be
+      // ignored
+      const width = fixedSchema[fieldName].width
+      if (width != null && `${width}`.trim().match(/^[0-9]+$/)) {
+        delete fixedSchema[fieldName].width
+      }
     })
     return fixedSchema
   }
@@ -140,7 +150,7 @@
     }
     fields?.forEach(field => {
       const fieldSchema = schema[field]
-      if (fieldSchema.width) {
+      if (fieldSchema.width && typeof fieldSchema.width === "string") {
         style += ` ${fieldSchema.width}`
       } else {
         style += " minmax(auto, 1fr)"
@@ -201,12 +211,18 @@
     })
     return columns
       .sort((a, b) => {
+        if (a.divider) {
+          return a
+        }
+        if (b.divider) {
+          return b
+        }
         const orderA = a.order || Number.MAX_SAFE_INTEGER
         const orderB = b.order || Number.MAX_SAFE_INTEGER
         const nameA = getDisplayName(a)
         const nameB = getDisplayName(b)
         if (orderA !== orderB) {
-          return orderA < orderB ? orderA : orderB
+          return orderA < orderB ? a : b
         }
         return nameA < nameB ? a : b
       })
@@ -270,6 +286,17 @@
       if (schema[field].align === "Right") {
         styles[field] += "justify-content: flex-end; text-align: right;"
       }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-left: 1px solid var(--spectrum-global-color-gray-200);"
+      }
+      if (schema[field].borderLeft) {
+        styles[field] +=
+          "border-right: 1px solid var(--spectrum-global-color-gray-200);"
+      }
+      if (schema[field].minWidth) {
+        styles[field] += `min-width: ${schema[field].minWidth};`
+      }
     })
     return styles
   }
@@ -290,7 +317,11 @@
         </slot>
       </div>
     {:else}
-      <div class="spectrum-Table" style={`${heightStyle}${gridStyle}`}>
+      <div
+        class="spectrum-Table"
+        class:no-scroll={!rowCount}
+        style={`${heightStyle}${gridStyle}`}
+      >
         {#if fields.length}
           <div class="spectrum-Table-head">
             {#if showEditColumn}
@@ -355,8 +386,8 @@
           </div>
         {/if}
         {#if sortedRows?.length}
-          {#each sortedRows as row, idx}
-            <div class="spectrum-Table-row">
+          {#each sortedRows as row}
+            <div class="spectrum-Table-row" class:clickable={allowClickRows}>
               {#if showEditColumn}
                 <div
                   class:noBorderCheckbox={!showHeaderBorder}
@@ -433,10 +464,10 @@
   /* Wrapper */
   .wrapper {
     position: relative;
-    z-index: 0;
     --table-bg: var(--spectrum-global-color-gray-50);
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
+    overflow: auto;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
@@ -459,6 +490,9 @@
     border-radius: 0;
     display: grid;
     overflow: auto;
+  }
+  .spectrum-Table.no-scroll {
+    overflow: visible;
   }
 
   /* Header */
@@ -546,12 +580,13 @@
   /* Table rows */
   .spectrum-Table-row {
     display: contents;
+    cursor: auto;
   }
-  .spectrum-Table-row:hover .spectrum-Table-cell {
-    /*background-color: var(--hover-bg) !important;*/
+  .spectrum-Table-row.clickable {
+    cursor: pointer;
   }
-  .spectrum-Table-row:hover .spectrum-Table-cell:after {
-    background-color: var(--spectrum-alias-highlight-hover);
+  .spectrum-Table-row.clickable:hover .spectrum-Table-cell {
+    background-color: var(--spectrum-global-color-gray-100);
   }
   .wrapper--quiet .spectrum-Table-row {
     border-left: none;
@@ -584,23 +619,12 @@
     border-bottom: 1px solid var(--spectrum-alias-border-color-mid);
     background-color: var(--table-bg);
     z-index: auto;
+    transition: background-color 130ms ease-out;
   }
   .spectrum-Table-cell--edit {
     position: sticky;
     left: 0;
     z-index: 2;
-  }
-  .spectrum-Table-cell:after {
-    content: "";
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background-color: transparent;
-    top: 0;
-    left: 0;
-    pointer-events: none;
-    transition: background-color
-      var(--spectrum-global-animation-duration-100, 0.13s) ease-in-out;
   }
 
   /* Placeholder  */

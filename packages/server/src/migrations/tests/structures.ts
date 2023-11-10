@@ -20,6 +20,7 @@ export const oidc = (conf?: OIDCConfig): OIDCConfig => {
           name: "Active Directory",
           uuid: utils.newid(),
           activated: true,
+          scopes: [],
           ...conf,
         },
       ],

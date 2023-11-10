@@ -1,6 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import {
+    keepOpen,
     ModalContent,
     notifications,
     Body,
@@ -64,17 +65,15 @@
       // reload
       await datasources.fetch()
       await queries.fetch()
-      await datasources.select(datasourceId)
 
       if (navigateDatasource) {
         $goto(`./datasource/${datasourceId}`)
       }
 
       notifications.success(`Imported successfully.`)
-      return true
     } catch (error) {
       notifications.error("Error importing queries")
-      return false
+      return keepOpen
     }
   }
 </script>

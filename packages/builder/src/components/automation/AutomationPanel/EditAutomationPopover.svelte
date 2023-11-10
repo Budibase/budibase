@@ -1,5 +1,4 @@
 <script>
-  import { goto } from "@roxi/routify"
   import { automationStore } from "builderStore"
   import { ActionMenu, MenuItem, notifications, Icon } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -14,7 +13,6 @@
     try {
       await automationStore.actions.delete(automation)
       notifications.success("Automation deleted successfully")
-      $goto("../automate")
     } catch (error) {
       notifications.error("Error deleting automation")
     }
@@ -24,7 +22,6 @@
     try {
       await automationStore.actions.duplicate(automation)
       notifications.success("Automation has been duplicated successfully")
-      $goto(`./${$automationStore.selectedAutomation.automation._id}`)
     } catch (error) {
       notifications.error("Error duplicating automation")
     }
@@ -35,7 +32,12 @@
   <div slot="control" class="icon">
     <Icon s hoverable name="MoreSmallList" />
   </div>
-  <MenuItem icon="Duplicate" on:click={duplicateAutomation}>Duplicate</MenuItem>
+  <MenuItem
+    icon="Duplicate"
+    on:click={duplicateAutomation}
+    disabled={automation.definition.trigger.name === "Webhook"}
+    >Duplicate</MenuItem
+  >
   <MenuItem icon="Edit" on:click={updateAutomationDialog.show}>Edit</MenuItem>
   <MenuItem icon="Delete" on:click={confirmDeleteDialog.show}>Delete</MenuItem>
 </ActionMenu>

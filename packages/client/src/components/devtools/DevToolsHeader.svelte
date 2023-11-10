@@ -1,75 +1,116 @@
 <script>
-  import { Heading, Button, Select } from "@budibase/bbui"
-  import { devToolsStore } from "../../stores"
-  import { getContext } from "svelte"
+  import { Heading, Select, ActionButton } from "@budibase/bbui"
+  import { devToolsStore, appStore, roleStore } from "../../stores"
+  import { getContext, onMount } from "svelte"
 
   const context = getContext("context")
+  const SELF_ROLE = "self"
 
-  $: previewOptions = [
-    {
+  let staticRoleList
+
+  $: previewOptions = buildRoleList(staticRoleList)
+
+  function buildRoleList(roleIds) {
+    const list = []
+    list.push({
       label: "View as yourself",
-      value: "self",
-    },
-    {
-      label: "View as public user",
-      value: "PUBLIC",
-    },
-    {
-      label: "View as basic user",
-      value: "BASIC",
-    },
-    {
-      label: "View as power user",
-      value: "POWER",
-    },
-    {
-      label: "View as admin user",
-      value: "ADMIN",
-    },
-  ]
+      value: SELF_ROLE,
+    })
+    if (!roleIds) {
+      return list
+    }
+    for (let roleId of roleIds) {
+      list.push({
+        label: `View as ${roleId.toLowerCase()} user`,
+        value: roleId,
+      })
+    }
+    return list
+  }
+
+  onMount(async () => {
+    // make sure correct before starting
+    await devToolsStore.actions.changeRole(SELF_ROLE)
+    staticRoleList = await roleStore.actions.fetchAccessibleRoles()
+  })
 </script>
 
 <div class="dev-preview-header" class:mobile={$context.device.mobile}>
-  <Heading size="XS">Budibase App Preview</Heading>
+  <Heading size="XS">Preview</Heading>
   <Select
     quiet
     options={previewOptions}
-    value={$devToolsStore.role || "self"}
+    value={$devToolsStore.role || SELF_ROLE}
     placeholder={null}
     autoWidth
     on:change={e => devToolsStore.actions.changeRole(e.detail)}
   />
   {#if !$context.device.mobile}
-    <Button
+    <ActionButton
       quiet
-      overBackground
       icon="Code"
       on:click={() => devToolsStore.actions.setVisible(!$devToolsStore.visible)}
     >
-      {$devToolsStore.visible ? "Close" : "Open"} DevTools
-    </Button>
+      DevTools
+    </ActionButton>
+  {/if}
+  {#if window.parent.isBuilder}
+    <ActionButton
+      quiet
+      icon="LinkOut"
+      on:click={() => {
+        window.parent.closePreview?.()
+        window.open(`/${$appStore.appId}`, "_blank")
+      }}
+    >
+      Fullscreen
+    </ActionButton>
+    <ActionButton
+      quiet
+      icon="Close"
+      on:click={() => window.parent.closePreview?.()}
+    >
+      Close
+    </ActionButton>
   {/if}
 </div>
 
 <style>
   .dev-preview-header {
-    flex: 0 0 50px;
-    height: 50px;
-    display: grid;
-    align-items: center;
-    background-color: var(--spectrum-global-color-blue-400);
+    flex: 0 0 60px;
+    background-color: black;
     padding: 0 var(--spacing-xl);
-    grid-template-columns: 1fr auto auto;
-    grid-gap: var(--spacing-xl);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xl);
+  }
+  .dev-preview-header :global(.spectrum-Heading) {
+    flex: 1 1 auto;
   }
   .dev-preview-header.mobile {
-    flex: 0 0 50px;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr auto auto;
   }
   .dev-preview-header :global(.spectrum-Heading),
   .dev-preview-header :global(.spectrum-Picker-menuIcon),
-  .dev-preview-header :global(.spectrum-Picker-label) {
-    color: white !important;
+  .dev-preview-header :global(.spectrum-Icon),
+  .dev-preview-header :global(.spectrum-Picker-label),
+  .dev-preview-header :global(.spectrum-ActionButton) {
+    font-weight: 600;
+    color: white;
+  }
+  .dev-preview-header :global(.spectrum-Picker) {
+    padding-left: 8px;
+    padding-right: 8px;
+    transition: background 130ms ease-out;
+    border-radius: 4px;
+  }
+  .dev-preview-header :global(.spectrum-ActionButton:hover),
+  .dev-preview-header :global(.spectrum-Picker:hover),
+  .dev-preview-header :global(.spectrum-Picker.is-open) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .dev-preview-header :global(.spectrum-ActionButton:active) {
+    background: rgba(255, 255, 255, 0.2);
   }
   @media print {
     .dev-preview-header {

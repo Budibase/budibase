@@ -11,9 +11,9 @@
   export let readonly = false
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let align
   export let autofocus = false
+  export let autocomplete = null
 
   const dispatch = createEventDispatcher()
 
@@ -62,6 +62,13 @@
     }
   }
 
+  const getInputMode = type => {
+    if (type === "bigint") {
+      return "numeric"
+    }
+    return type === "number" ? "decimal" : "text"
+  }
+
   onMount(() => {
     focus = autofocus
     if (focus) field.focus()
@@ -89,9 +96,8 @@
     {disabled}
     {readonly}
     {id}
-    data-cy={dataCy}
-    value={value || ""}
-    placeholder={placeholder || ""}
+    value={value ?? ""}
+    placeholder={placeholder ?? ""}
     on:click
     on:blur
     on:focus
@@ -104,16 +110,13 @@
     {type}
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align};` : ""}
-    inputmode={type === "number" ? "decimal" : "text"}
+    inputmode={getInputMode(type)}
+    {autocomplete}
   />
 </div>
 
 <style>
   .spectrum-Textfield {
     width: 100%;
-  }
-  input:disabled {
-    color: var(--spectrum-global-color-gray-600) !important;
-    -webkit-text-fill-color: var(--spectrum-global-color-gray-600) !important;
   }
 </style>

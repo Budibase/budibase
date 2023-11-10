@@ -4,12 +4,12 @@ const linkUtils = require("../linkedRows/linkUtils")
 const { context } = require("@budibase/backend-core")
 
 describe("test link functionality", () => {
-  const config = new TestConfig(false)
+  const config = new TestConfig()
   let appId
 
   describe("getLinkedTable", () => {
     let table
-    beforeEach(async () => {
+    beforeAll(async () => {
       const app = await config.init()
       appId = app.appId
       table = await config.createTable()

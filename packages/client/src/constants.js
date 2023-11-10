@@ -1,24 +1,4 @@
-export const FieldTypes = {
-  STRING: "string",
-  BARCODEQR: "barcodeqr",
-  LONGFORM: "longform",
-  OPTIONS: "options",
-  NUMBER: "number",
-  BOOLEAN: "boolean",
-  ARRAY: "array",
-  DATETIME: "datetime",
-  ATTACHMENT: "attachment",
-  LINK: "link",
-  FORMULA: "formula",
-  JSON: "json",
-}
-
-export const UnsortableTypes = [
-  FieldTypes.FORMULA,
-  FieldTypes.ATTACHMENT,
-  FieldTypes.ARRAY,
-  FieldTypes.LINK,
-]
+export { FieldType as FieldTypes } from "@budibase/types"
 
 export const ActionTypes = {
   ValidateForm: "ValidateForm",
@@ -29,6 +9,7 @@ export const ActionTypes = {
   SetDataProviderSorting: "SetDataProviderSorting",
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
+  ScrollTo: "ScrollTo",
 }
 
 export const DNDPlaceholderID = "dnd-placeholder"

@@ -10,13 +10,15 @@ import * as structures from "../../tests/utilities/structures"
 import { MIGRATIONS } from "../"
 import * as helpers from "./helpers"
 
-const { mocks } = require("@budibase/backend-core/tests")
-const timestamp = mocks.date.MOCK_DATE.toISOString()
+import tk from "timekeeper"
+import { View } from "@budibase/types"
+const timestamp = new Date().toISOString()
+tk.freeze(timestamp)
 
 const clearMigrations = async () => {
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]
   for (const db of dbs) {
-    const doc = await db.get(DocumentType.MIGRATIONS)
+    const doc = await db.get<any>(DocumentType.MIGRATIONS)
     const newDoc = { _id: doc._id, _rev: doc._rev }
     await db.put(newDoc)
   }
@@ -49,9 +51,11 @@ describe("migrations", () => {
         await config.createRole()
         await config.createRole()
         await config.createTable()
-        await config.createView()
+        await config.createLegacyView()
         await config.createTable()
-        await config.createView(structures.view(config.table._id))
+        await config.createLegacyView(
+          structures.view(config.table!._id!) as View
+        )
         await config.createScreen()
         await config.createScreen()
 
@@ -92,24 +96,16 @@ describe("migrations", () => {
       await clearMigrations()
       const appId = config.prodAppId
       const roles = { [appId]: "role_12345" }
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        true,
-        roles
-      ) // admin only
-      await config.createUser(
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        false,
-        false,
-        roles
-      ) // non admin non builder
+      await config.createUser({
+        builder: false,
+        admin: true,
+        roles,
+      }) // admin only
+      await config.createUser({
+        builder: false,
+        admin: false,
+        roles,
+      }) // non admin non builder
       await config.createTable()
       await config.createRow()
       await config.createRow()

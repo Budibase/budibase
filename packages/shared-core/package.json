@@ -1,0 +1,47 @@
+{
+  "name": "@budibase/shared-core",
+  "version": "0.0.0",
+  "description": "Shared data utils",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "author": "Budibase",
+  "license": "GPL-3.0",
+  "scripts": {
+    "prebuild": "rimraf dist/",
+    "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly --paths null",
+    "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
+    "dev:builder": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null"
+  },
+  "dependencies": {
+    "@budibase/types": "0.0.0"
+  },
+  "devDependencies": {
+    "rimraf": "3.0.2",
+    "typescript": "5.2.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev:builder": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/types"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
+  }
+}

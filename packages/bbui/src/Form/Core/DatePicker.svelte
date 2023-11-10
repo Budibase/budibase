@@ -9,6 +9,7 @@
 
   export let id = null
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let enableTime = true
   export let value = null
@@ -18,10 +19,14 @@
   export let ignoreTimezones = false
   export let time24hr = false
   export let range = false
+  export let flatpickr
+  export let useKeyboardShortcuts = true
+
   const dispatch = createEventDispatcher()
   const flatpickrId = `${uuid()}-wrapper`
+
   let open = false
-  let flatpickr, flatpickrOptions
+  let flatpickrOptions
 
   // Another classic flatpickr issue. Errors were randomly being thrown due to
   // flatpickr internal code. Making sure that "destroy" is a valid function
@@ -59,12 +64,15 @@
         dispatch("change", timestamp.toISOString())
       }
     },
+    onOpen: () => dispatch("open"),
+    onClose: () => dispatch("close"),
   }
 
   $: redrawOptions = {
     timeOnly,
     enableTime,
     time24hr,
+    disabled,
   }
 
   const handleChange = event => {
@@ -76,13 +84,6 @@
     }
     // If time only set date component to 2000-01-01
     if (timeOnly) {
-      // Classic flackpickr causing issues.
-      // When selecting a value for the first time for a "time only" field,
-      // the time is always offset by 1 hour for some reason (regardless of time
-      // zone) so we need to correct it.
-      if (!value && newValue) {
-        newValue = new Date(dates[0].getTime() + 60 * 60 * 1000).toISOString()
-      }
       newValue = `2000-01-01T${newValue.split("T")[1]}`
     }
 
@@ -113,19 +114,23 @@
 
   const clearDateOnBackspace = event => {
     if (["Backspace", "Clear", "Delete"].includes(event.key)) {
-      dispatch("change", null)
+      dispatch("change", "")
       flatpickr.close()
     }
   }
 
   const onOpen = () => {
     open = true
-    document.addEventListener("keyup", clearDateOnBackspace)
+    if (useKeyboardShortcuts) {
+      document.addEventListener("keyup", clearDateOnBackspace)
+    }
   }
 
   const onClose = () => {
     open = false
-    document.removeEventListener("keyup", clearDateOnBackspace)
+    if (useKeyboardShortcuts) {
+      document.removeEventListener("keyup", clearDateOnBackspace)
+    }
 
     // Manually blur all input fields since flatpickr creates a second
     // duplicate input field.
@@ -182,7 +187,7 @@
   >
     <div
       id={flatpickrId}
-      class:is-disabled={disabled}
+      class:is-disabled={disabled || readonly}
       class:is-invalid={!!error}
       class="flatpickr spectrum-InputGroup spectrum-Datepicker"
       class:is-focused={open}
@@ -207,6 +212,7 @@
         {/if}
         <input
           {disabled}
+          {readonly}
           data-input
           type="text"
           class="spectrum-Textfield-input spectrum-InputGroup-input"
@@ -264,7 +270,7 @@
     max-height: 100%;
   }
   :global(.flatpickr-calendar) {
-    font-family: "Source Sans Pro", sans-serif;
+    font-family: var(--font-sans);
   }
   .is-disabled {
     pointer-events: none !important;

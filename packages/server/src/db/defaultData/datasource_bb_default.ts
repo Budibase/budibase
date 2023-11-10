@@ -1,7 +1,11 @@
 import {
-  FieldTypes,
   AutoFieldSubTypes,
-  RelationshipTypes,
+  FieldTypes,
+  DEFAULT_BB_DATASOURCE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
+  DEFAULT_EMPLOYEE_TABLE_ID,
+  DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_JOBS_TABLE_ID,
 } from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
@@ -11,13 +15,14 @@ import { employeeImport } from "./employeeImport"
 import { jobsImport } from "./jobsImport"
 import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
-import { Table, Row } from "@budibase/types"
-
-export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
-export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
-export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
-export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
-export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
+import {
+  FieldType,
+  RelationshipType,
+  Row,
+  Table,
+  TableSchema,
+  TableSourceType,
+} from "@budibase/types"
 
 const defaultDatasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,
@@ -32,21 +37,25 @@ export const DEFAULT_BB_DATASOURCE = defaultDatasource
 function syncLastIds(table: Table, rowCount: number) {
   Object.keys(table.schema).forEach(key => {
     const entry = table.schema[key]
-    if (entry.autocolumn && entry.subtype == "autoID") {
+    if (
+      entry.autocolumn &&
+      entry.type === FieldType.NUMBER &&
+      entry.subtype == AutoFieldSubTypes.AUTO_ID
+    ) {
       entry.lastID = rowCount
     }
   })
 }
 
-function tableImport(table: Table, data: Row) {
+async function tableImport(table: Table, data: Row[]) {
   const cloneTable = cloneDeep(table)
-  const rowDocs = importToRows(data, cloneTable)
+  const rowDocs = await importToRows(data, cloneTable)
   syncLastIds(cloneTable, rowDocs.length)
   return { rows: rowDocs, table: cloneTable }
 }
 
 // AUTO COLUMNS
-const AUTO_COLUMNS = {
+const AUTO_COLUMNS: TableSchema = {
   "Created At": {
     name: "Created At",
     type: FieldTypes.DATETIME,
@@ -83,9 +92,10 @@ const AUTO_COLUMNS = {
 
 export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
   _id: DEFAULT_INVENTORY_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Item Name",
   name: "Inventory",
   schema: {
@@ -190,12 +200,13 @@ export const DEFAULT_INVENTORY_TABLE_SCHEMA: Table = {
   },
 }
 
-export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
+export const DEFAULT_EMPLOYEE_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EMPLOYEE_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   name: "Employees",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "First Name",
   schema: {
     "First Name": {
@@ -287,7 +298,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
       sortable: false,
     },
     "Badge Photo": {
-      type: "attachment",
+      type: FieldTypes.ATTACHMENT,
       constraints: {
         type: FieldTypes.ARRAY,
         presence: false,
@@ -303,7 +314,7 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
       },
       fieldName: "Assigned",
       name: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       tableId: DEFAULT_JOBS_TABLE_ID,
     },
     "Start Date": {
@@ -340,9 +351,10 @@ export const DEFAULT_EMPLOYEE_TABLE_SCHEMA = {
 
 export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
   _id: DEFAULT_JOBS_TABLE_ID,
-  type: "internal",
+  type: "table",
   name: "Jobs",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Job ID",
   schema: {
     "Job ID": {
@@ -462,11 +474,11 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       type: FieldTypes.LINK,
       tableId: DEFAULT_EMPLOYEE_TABLE_ID,
       fieldName: "Jobs",
-      relationshipType: RelationshipTypes.MANY_TO_MANY,
+      relationshipType: RelationshipType.MANY_TO_MANY,
       // sortable: true,
     },
     "Works End": {
-      type: "datetime",
+      type: FieldTypes.DATETIME,
       constraints: {
         type: "string",
         length: {},
@@ -480,7 +492,7 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
       ignoreTimezones: true,
     },
     "Updated Price": {
-      type: "number",
+      type: FieldTypes.NUMBER,
       constraints: {
         type: "number",
         presence: false,
@@ -497,10 +509,11 @@ export const DEFAULT_JOBS_TABLE_SCHEMA: Table = {
 
 export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   _id: DEFAULT_EXPENSES_TABLE_ID,
-  type: "internal",
+  type: "table",
   views: {},
   name: "Expenses",
   sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   primaryDisplay: "Expense ID",
   schema: {
     "Expense ID": {
@@ -605,20 +618,20 @@ export const DEFAULT_EXPENSES_TABLE_SCHEMA: Table = {
   },
 }
 
-export function buildDefaultDocs() {
-  const inventoryData = tableImport(
+export async function buildDefaultDocs() {
+  const inventoryData = await tableImport(
     DEFAULT_INVENTORY_TABLE_SCHEMA,
     inventoryImport
   )
 
-  const employeeData = tableImport(
+  const employeeData = await tableImport(
     DEFAULT_EMPLOYEE_TABLE_SCHEMA,
     employeeImport
   )
 
-  const jobData = tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
+  const jobData = await tableImport(DEFAULT_JOBS_TABLE_SCHEMA, jobsImport)
 
-  const expensesData = tableImport(
+  const expensesData = await tableImport(
     DEFAULT_EXPENSES_TABLE_SCHEMA,
     expensesImport
   )

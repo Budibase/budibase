@@ -53,6 +53,23 @@ export const buildGroupsEndpoints = API => {
     },
 
     /**
+     * Gets a group users by the group id
+     */
+    getGroupUsers: async ({ id, bookmark, emailSearch }) => {
+      let url = `/api/global/groups/${id}/users?`
+      if (bookmark) {
+        url += `bookmark=${bookmark}&`
+      }
+      if (emailSearch) {
+        url += `emailSearch=${emailSearch}&`
+      }
+
+      return await API.get({
+        url,
+      })
+    },
+
+    /**
      * Adds users to a group
      * @param groupId The group to update
      * @param userIds The user IDs to be added
@@ -86,6 +103,28 @@ export const buildGroupsEndpoints = API => {
      */
     removeAppsFromGroup: async (groupId, appArray) => {
       return updateGroupResource(groupId, "apps", "remove", appArray)
+    },
+
+    /**
+     * Add app builder to group
+     * @param groupId The group to update
+     * @param appId The app id where the builder will be added
+     */
+    addGroupAppBuilder: async ({ groupId, appId }) => {
+      return await API.post({
+        url: `/api/global/groups/${groupId}/app/${appId}/builder`,
+      })
+    },
+
+    /**
+     * Remove app builder from group
+     * @param groupId The group to update
+     * @param appId The app id where the builder will be removed
+     */
+    removeGroupAppBuilder: async ({ groupId, appId }) => {
+      return await API.delete({
+        url: `/api/global/groups/${groupId}/app/${appId}/builder`,
+      })
     },
   }
 }

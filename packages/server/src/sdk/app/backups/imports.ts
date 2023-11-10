@@ -1,17 +1,16 @@
-import { db as dbCore, objectStore } from "@budibase/backend-core"
-import { Database } from "@budibase/types"
+import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
+import { Database, Row } from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { downloadTemplate } from "../../../utilities/fileSystem"
-import { FieldTypes, ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
 import {
   Automation,
   AutomationTriggerStepId,
-  CouchFindOptions,
   RowAttachment,
 } from "@budibase/types"
 const uuid = require("uuid/v4")
@@ -21,62 +20,50 @@ type TemplateType = {
   file?: {
     type: string
     path: string
+    password?: string
   }
   key?: string
 }
 
-async function updateAttachmentColumns(prodAppId: string, db: Database) {
+function rewriteAttachmentUrl(appId: string, attachment: RowAttachment) {
+  // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
+  const urlParts = attachment.key.split("/")
+  // remove the app ID
+  urlParts.shift()
+  // add new app ID
+  urlParts.unshift(appId)
+  const key = urlParts.join("/")
+  return {
+    ...attachment,
+    key,
+    url: "", // calculated on retrieval using key
+  }
+}
+
+export async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
+  let updatedRows: Row[] = []
   for (let table of tables) {
-    const attachmentCols: string[] = []
-    for (let [key, column] of Object.entries(table.schema)) {
-      if (column.type === FieldTypes.ATTACHMENT) {
-        attachmentCols.push(key)
-      }
-    }
-    // no attachment columns, nothing to do
-    if (attachmentCols.length === 0) {
-      continue
-    }
-    // use the CouchDB Mango query API to lookup rows that have attachments
-    const params: CouchFindOptions = {
-      selector: {
-        _id: {
-          $regex: `^${TABLE_ROW_PREFIX}`,
-        },
-      },
-    }
-    attachmentCols.forEach(col => (params.selector[col] = { $exists: true }))
-    const { rows } = await dbCore.directCouchFind(db.name, params)
-    for (let row of rows) {
-      for (let column of attachmentCols) {
-        if (!Array.isArray(row[column])) {
-          continue
-        }
-        row[column] = row[column].map((attachment: RowAttachment) => {
-          // URL looks like: /prod-budi-app-assets/appId/attachments/file.csv
-          const urlParts = attachment.url.split("/")
-          // drop the first empty element
-          urlParts.shift()
-          // get the prefix
-          const prefix = urlParts.shift()
-          // remove the app ID
-          urlParts.shift()
-          // add new app ID
-          urlParts.unshift(prodAppId)
-          const key = urlParts.join("/")
-          return {
-            ...attachment,
-            key,
-            url: `/${prefix}/${key}`,
+    const { rows, columns } = await sdk.rows.getRowsWithAttachments(
+      db.name,
+      table
+    )
+    updatedRows = updatedRows.concat(
+      rows.map(row => {
+        for (let column of columns) {
+          if (Array.isArray(row[column])) {
+            row[column] = row[column].map((attachment: RowAttachment) =>
+              rewriteAttachmentUrl(prodAppId, attachment)
+            )
           }
-        })
-      }
-    }
-    // write back the updated attachments
-    await db.bulkDocs(rows)
+        }
+        return row
+      })
+    )
   }
+  // write back the updated attachments
+  await db.bulkDocs(updatedRows)
 }
 
 async function updateAutomations(prodAppId: string, db: Database) {
@@ -109,8 +96,8 @@ async function updateAutomations(prodAppId: string, db: Database) {
 
 /**
  * This function manages temporary template files which are stored by Koa.
- * @param {Object} template The template object retrieved from the Koa context object.
- * @returns {Object} Returns a fs read stream which can be loaded into the database.
+ * @param template The template object retrieved from the Koa context object.
+ * @returns Returns a fs read stream which can be loaded into the database.
  */
 async function getTemplateStream(template: TemplateType) {
   if (template.file && template.file.type !== "text/plain") {
@@ -137,6 +124,22 @@ export function untarFile(file: { path: string }) {
   return tmpPath
 }
 
+async function decryptFiles(path: string, password: string) {
+  try {
+    for (let file of fs.readdirSync(path)) {
+      const inputPath = join(path, file)
+      const outputPath = inputPath.replace(/\.enc$/, "")
+      await encryption.decryptFile(inputPath, outputPath, password)
+      fs.rmSync(inputPath)
+    }
+  } catch (err: any) {
+    if (err.message === "incorrect header check") {
+      throw new Error("File cannot be imported")
+    }
+    throw err
+  }
+}
+
 export function getGlobalDBFile(tmpPath: string) {
   return fs.readFileSync(join(tmpPath, GLOBAL_DB_EXPORT_FILE), "utf8")
 }
@@ -148,7 +151,8 @@ export function getListOfAppsInMulti(tmpPath: string) {
 export async function importApp(
   appId: string,
   db: Database,
-  template: TemplateType
+  template: TemplateType,
+  opts: { importObjStoreContents: boolean } = { importObjStoreContents: true }
 ) {
   let prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
@@ -157,9 +161,12 @@ export async function importApp(
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
     const tmpPath = isTar ? untarFile(template.file) : template.file.path
+    if (isTar && template.file.password) {
+      await decryptFiles(tmpPath, template.file.password)
+    }
     const contents = fs.readdirSync(tmpPath)
     // have to handle object import
-    if (contents.length) {
+    if (contents.length && opts.importObjStoreContents) {
       let promises = []
       let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
       for (let filename of contents) {

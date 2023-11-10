@@ -44,7 +44,7 @@
 {#if $routeStore.routerLoaded}
   {#key screenDefinition?._id}
     <Provider key="url" data={params}>
-      <Component isScreen instance={screenDefinition} />
+      <Component isRoot instance={screenDefinition} />
     </Provider>
   {/key}
 {/if}

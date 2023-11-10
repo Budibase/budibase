@@ -1,6 +1,8 @@
 import { writable } from "svelte/store"
 import { API } from "api"
 import { update } from "lodash"
+import { licensing } from "."
+import { sdk } from "@budibase/shared-core"
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -26,14 +28,34 @@ export function createUsersStore() {
     return await API.getUsers()
   }
 
+  // One or more users.
+  async function onboard(payload) {
+    return await API.onboardUsers(payload)
+  }
+
   async function invite(payload) {
     return API.inviteUsers(payload)
   }
-  async function acceptInvite(inviteCode, password) {
+
+  async function acceptInvite(inviteCode, password, firstName, lastName) {
     return API.acceptInvite({
       inviteCode,
       password,
+      firstName,
+      lastName: !lastName?.trim() ? undefined : lastName,
     })
+  }
+
+  async function fetchInvite(inviteCode) {
+    return API.getUserInvite(inviteCode)
+  }
+
+  async function getInvites() {
+    return API.getUserInvites()
+  }
+
+  async function updateInvite(invite) {
+    return API.updateUserInvite(invite)
   }
 
   async function create(data) {
@@ -90,8 +112,27 @@ export function createUsersStore() {
     return await API.saveUser(user)
   }
 
-  const getUserRole = ({ admin, builder }) =>
-    admin?.global ? "admin" : builder?.global ? "developer" : "appUser"
+  async function addAppBuilder(userId, appId) {
+    return await API.addAppBuilder({ userId, appId })
+  }
+
+  async function removeAppBuilder(userId, appId) {
+    return await API.removeAppBuilder({ userId, appId })
+  }
+
+  const getUserRole = user =>
+    sdk.users.isAdmin(user)
+      ? "admin"
+      : sdk.users.isBuilder(user)
+      ? "developer"
+      : "appUser"
+  const refreshUsage =
+    fn =>
+    async (...args) => {
+      const response = await fn(...args)
+      await licensing.setQuotaUsage()
+      return response
+    }
 
   return {
     subscribe,
@@ -100,12 +141,19 @@ export function createUsersStore() {
     getUserRole,
     fetch,
     invite,
-    acceptInvite,
-    create,
-    save,
-    bulkDelete,
+    onboard,
+    fetchInvite,
+    getInvites,
+    updateInvite,
     getUserCountByApp,
-    delete: del,
+    addAppBuilder,
+    removeAppBuilder,
+    // any operation that adds or deletes users
+    acceptInvite,
+    create: refreshUsage(create),
+    save: refreshUsage(save),
+    bulkDelete: refreshUsage(bulkDelete),
+    delete: refreshUsage(del),
   }
 }
 

@@ -1,7 +1,11 @@
-import { transform } from "../../../utilities/csvParser"
+import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
-import { isEqual } from "lodash"
-import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
+import isEqual from "lodash/isEqual"
+import {
+  AutoFieldSubTypes,
+  FieldTypes,
+  GOOGLE_SHEETS_PRIMARY_KEY,
+} from "../../../constants"
 import {
   inputProcessing,
   cleanupAttachments,
@@ -16,10 +20,23 @@ import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
-import { Database } from "@budibase/types"
+import {
+  ContextUser,
+  Datasource,
+  Row,
+  SourceName,
+  Table,
+  Database,
+  RenameColumn,
+  NumberFieldMetadata,
+  FieldSchema,
+  View,
+  RelationshipFieldMetadata,
+  FieldType,
+} from "@budibase/types"
 
-export async function clearColumns(table: any, columnNames: any) {
-  const db: Database = context.getAppDB()
+export async function clearColumns(table: Table, columnNames: string[]) {
+  const db = context.getAppDB()
   const rows = await db.allDocs(
     getRowParams(table._id, null, {
       include_docs: true,
@@ -33,10 +50,13 @@ export async function clearColumns(table: any, columnNames: any) {
   )) as { id: string; _rev?: string }[]
 }
 
-export async function checkForColumnUpdates(oldTable: any, updatedTable: any) {
+export async function checkForColumnUpdates(
+  updatedTable: Table,
+  oldTable?: Table,
+  columnRename?: RenameColumn
+) {
   const db = context.getAppDB()
   let updatedRows = []
-  const rename = updatedTable._rename
   let deletedColumns: any = []
   if (oldTable && oldTable.schema && updatedTable.schema) {
     deletedColumns = Object.keys(oldTable.schema).filter(
@@ -44,7 +64,7 @@ export async function checkForColumnUpdates(oldTable: any, updatedTable: any) {
     )
   }
   // check for renaming of columns or deleted columns
-  if (rename || deletedColumns.length !== 0) {
+  if (columnRename || deletedColumns.length !== 0) {
     // Update all rows
     const rows = await db.allDocs(
       getRowParams(updatedTable._id, null, {
@@ -54,9 +74,9 @@ export async function checkForColumnUpdates(oldTable: any, updatedTable: any) {
     const rawRows = rows.rows.map(({ doc }: any) => doc)
     updatedRows = rawRows.map((row: any) => {
       row = cloneDeep(row)
-      if (rename) {
-        row[rename.updated] = row[rename.old]
-        delete row[rename.old]
+      if (columnRename) {
+        row[columnRename.updated] = row[columnRename.old]
+        delete row[columnRename.old]
       } else if (deletedColumns.length !== 0) {
         deletedColumns.forEach((colName: any) => delete row[colName])
       }
@@ -66,14 +86,13 @@ export async function checkForColumnUpdates(oldTable: any, updatedTable: any) {
     // cleanup any attachments from object storage for deleted attachment columns
     await cleanupAttachments(updatedTable, { oldTable, rows: rawRows })
     // Update views
-    await checkForViewUpdates(updatedTable, rename, deletedColumns)
-    delete updatedTable._rename
+    await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
   return { rows: updatedRows, table: updatedTable }
 }
 
 // makes sure the passed in table isn't going to reset the auto ID
-export function makeSureTableUpToDate(table: any, tableToSave: any) {
+export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
   if (!table) {
     return tableToSave
   }
@@ -89,37 +108,49 @@ export function makeSureTableUpToDate(table: any, tableToSave: any) {
       column.subtype === AutoFieldSubTypes.AUTO_ID &&
       tableToSave.schema[field]
     ) {
-      tableToSave.schema[field].lastID = column.lastID
+      const tableCol = tableToSave.schema[field] as NumberFieldMetadata
+      tableCol.lastID = column.lastID
     }
   }
   return tableToSave
 }
 
-export function importToRows(data: any, table: any, user: any = {}) {
+export async function importToRows(
+  data: Row[],
+  table: Table,
+  user?: ContextUser
+) {
+  let originalTable = table
   let finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
-    row._id = generateRowID(table._id)
+    row._id = generateRowID(table._id!)
     row.tableId = table._id
-    const processed: any = inputProcessing(user, table, row, {
+
+    // We use a reference to table here and update it after input processing,
+    // so that we can auto increment auto IDs in imported data properly
+    const processed = await inputProcessing(user?._id, table, row, {
       noAutoRelationships: true,
     })
-    table = processed.table
     row = processed.row
+    table = processed.table
 
-    let fieldName: any
-    let schema: any
-    for ([fieldName, schema] of Object.entries(table.schema)) {
-      // check whether the options need to be updated for inclusion as part of the data import
+    // However here we must reference the original table, as we want to mutate
+    // the real schema of the table passed in, not the clone used for
+    // incrementing auto IDs
+    for (const [fieldName, schema] of Object.entries(originalTable.schema)) {
+      const rowVal = Array.isArray(row[fieldName])
+        ? row[fieldName]
+        : [row[fieldName]]
       if (
-        schema.type === FieldTypes.OPTIONS &&
-        (!schema.constraints.inclusion ||
-          schema.constraints.inclusion.indexOf(row[fieldName]) === -1)
+        (schema.type === FieldTypes.OPTIONS ||
+          schema.type === FieldTypes.ARRAY) &&
+        row[fieldName]
       ) {
-        schema.constraints.inclusion = [
-          ...schema.constraints.inclusion,
-          row[fieldName],
-        ]
+        let merged = [...schema.constraints!.inclusion!, ...rowVal]
+        let superSet = new Set(merged)
+        schema.constraints!.inclusion = Array.from(superSet)
+        schema.constraints!.inclusion.sort()
       }
     }
 
@@ -128,28 +159,59 @@ export function importToRows(data: any, table: any, user: any = {}) {
   return finalData
 }
 
-export async function handleDataImport(user: any, table: any, dataImport: any) {
-  if (!dataImport || !dataImport.csvString) {
+export async function handleDataImport(
+  table: Table,
+  opts?: { identifierFields?: string[]; user?: ContextUser; importRows?: Row[] }
+) {
+  const schema = table.schema
+  const identifierFields = opts?.identifierFields || []
+  const user = opts?.user
+  const importRows = opts?.importRows
+
+  if (!importRows || !isRows(importRows) || !isSchema(schema)) {
     return table
   }
 
   const db = context.getAppDB()
-  // Populate the table with rows imported from CSV in a bulk update
-  const data = await transform({
-    ...dataImport,
-    existingTable: table,
-  })
+  const data = parse(importRows, schema)
 
-  let finalData: any = importToRows(data, table, user)
+  let finalData: any = await importToRows(data, table, user)
+
+  //Set IDs of finalData to match existing row if an update is expected
+  if (identifierFields.length > 0) {
+    const allDocs = await db.allDocs(
+      getRowParams(table._id, null, {
+        include_docs: true,
+      })
+    )
+    allDocs.rows
+      .map(existingRow => existingRow.doc)
+      .forEach((doc: any) => {
+        finalData.forEach((finalItem: any) => {
+          let match = true
+          for (const field of identifierFields) {
+            if (finalItem[field] !== doc[field]) {
+              match = false
+              break
+            }
+          }
+          if (match) {
+            finalItem._id = doc._id
+            finalItem._rev = doc._rev
+          }
+        })
+      })
+  }
 
   await quotas.addRows(finalData.length, () => db.bulkDocs(finalData), {
     tableId: table._id,
   })
-  await events.rows.imported(table, "csv", finalData.length)
+
+  await events.rows.imported(table, finalData.length)
   return table
 }
 
-export async function handleSearchIndexes(table: any) {
+export async function handleSearchIndexes(table: Table) {
   const db = context.getAppDB()
   // create relevant search indexes
   if (table.indexes && table.indexes.length > 0) {
@@ -193,13 +255,13 @@ export async function handleSearchIndexes(table: any) {
   return table
 }
 
-export function checkStaticTables(table: any) {
+export function checkStaticTables(table: Table) {
   // check user schema has all required elements
   if (table._id === InternalTables.USER_METADATA) {
     for (let [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
       // check if the schema exists on the table to be created/updated
       if (table.schema[key] == null) {
-        table.schema[key] = schema
+        table.schema[key] = schema as FieldSchema
       }
     }
   }
@@ -207,23 +269,31 @@ export function checkStaticTables(table: any) {
 }
 
 class TableSaveFunctions {
-  db: any
-  user: any
-  oldTable: any
-  dataImport: any
-  rows: any
+  db: Database
+  user?: ContextUser
+  oldTable?: Table
+  importRows?: Row[]
+  rows: Row[]
 
-  constructor({ user, oldTable, dataImport }: any) {
+  constructor({
+    user,
+    oldTable,
+    importRows,
+  }: {
+    user?: ContextUser
+    oldTable?: Table
+    importRows?: Row[]
+  }) {
     this.db = context.getAppDB()
     this.user = user
     this.oldTable = oldTable
-    this.dataImport = dataImport
+    this.importRows = importRows
     // any rows that need updated
     this.rows = []
   }
 
   // before anything is done
-  async before(table: any) {
+  async before(table: Table) {
     if (this.oldTable) {
       table = makeSureTableUpToDate(this.oldTable, table)
     }
@@ -232,16 +302,23 @@ class TableSaveFunctions {
   }
 
   // when confirmed valid
-  async mid(table: any) {
-    let response = await checkForColumnUpdates(this.oldTable, table)
+  async mid(table: Table, columnRename?: RenameColumn) {
+    let response = await checkForColumnUpdates(
+      table,
+      this.oldTable,
+      columnRename
+    )
     this.rows = this.rows.concat(response.rows)
     return table
   }
 
   // after saving
-  async after(table: any) {
+  async after(table: Table) {
     table = await handleSearchIndexes(table)
-    table = await handleDataImport(this.user, table, this.dataImport)
+    table = await handleDataImport(table, {
+      importRows: this.importRows,
+      user: this.user,
+    })
     return table
   }
 
@@ -251,63 +328,67 @@ class TableSaveFunctions {
 }
 
 export async function checkForViewUpdates(
-  table: any,
-  rename: any,
-  deletedColumns: any
+  table: Table,
+  deletedColumns: string[],
+  columnRename?: RenameColumn
 ) {
   const views = await getViews()
-  const tableViews = views.filter(view => view.meta.tableId === table._id)
+  const tableViews = views.filter(view => view.meta?.tableId === table._id)
 
   // Check each table view to see if impacted by this table action
   for (let view of tableViews) {
     let needsUpdated = false
+    const viewMetadata = view.meta as any
+    if (!viewMetadata) {
+      continue
+    }
 
     // First check for renames, otherwise check for deletions
-    if (rename) {
+    if (columnRename) {
       // Update calculation field if required
-      if (view.meta.field === rename.old) {
-        view.meta.field = rename.updated
+      if (viewMetadata.field === columnRename.old) {
+        viewMetadata.field = columnRename.updated
         needsUpdated = true
       }
 
       // Update group by field if required
-      if (view.meta.groupBy === rename.old) {
-        view.meta.groupBy = rename.updated
+      if (viewMetadata.groupBy === columnRename.old) {
+        viewMetadata.groupBy = columnRename.updated
         needsUpdated = true
       }
 
       // Update filters if required
-      if (view.meta.filters) {
-        view.meta.filters.forEach((filter: any) => {
-          if (filter.key === rename.old) {
-            filter.key = rename.updated
+      if (viewMetadata.filters) {
+        viewMetadata.filters.forEach((filter: any) => {
+          if (filter.key === columnRename.old) {
+            filter.key = columnRename.updated
             needsUpdated = true
           }
         })
       }
     } else if (deletedColumns) {
-      deletedColumns.forEach((column: any) => {
+      deletedColumns.forEach((column: string) => {
         // Remove calculation statement if required
-        if (view.meta.field === column) {
-          delete view.meta.field
-          delete view.meta.calculation
-          delete view.meta.groupBy
+        if (viewMetadata.field === column) {
+          delete viewMetadata.field
+          delete viewMetadata.calculation
+          delete viewMetadata.groupBy
           needsUpdated = true
         }
 
         // Remove group by field if required
-        if (view.meta.groupBy === column) {
-          delete view.meta.groupBy
+        if (viewMetadata.groupBy === column) {
+          delete viewMetadata.groupBy
           needsUpdated = true
         }
 
         // Remove filters referencing deleted field if required
-        if (view.meta.filters && view.meta.filters.length) {
-          const initialLength = view.meta.filters.length
-          view.meta.filters = view.meta.filters.filter((filter: any) => {
+        if (viewMetadata.filters && viewMetadata.filters.length) {
+          const initialLength = viewMetadata.filters.length
+          viewMetadata.filters = viewMetadata.filters.filter((filter: any) => {
             return filter.key !== column
           })
-          if (initialLength !== view.meta.filters.length) {
+          if (initialLength !== viewMetadata.filters.length) {
             needsUpdated = true
           }
         }
@@ -316,29 +397,41 @@ export async function checkForViewUpdates(
 
     // Update view if required
     if (needsUpdated) {
-      const newViewTemplate = viewTemplate(view.meta)
-      await saveView(null, view.name, newViewTemplate)
-      if (!newViewTemplate.meta.schema) {
-        newViewTemplate.meta.schema = table.schema
+      const groupByField: any = Object.values(table.schema).find(
+        (field: any) => field.name == view.groupBy
+      )
+      const newViewTemplate = viewTemplate(
+        viewMetadata,
+        groupByField?.type === FieldTypes.ARRAY
+      )
+      const viewName = view.name!
+      await saveView(null, viewName, newViewTemplate)
+      if (!newViewTemplate.meta?.schema) {
+        newViewTemplate.meta!.schema = table.schema
       }
-      table.views[view.name] = newViewTemplate.meta
+      if (table.views?.[viewName]) {
+        table.views[viewName] = newViewTemplate.meta as View
+      }
     }
   }
 }
 
-export function generateForeignKey(column: any, relatedTable: any) {
+export function generateForeignKey(
+  column: RelationshipFieldMetadata,
+  relatedTable: Table
+) {
   return `fk_${relatedTable.name}_${column.fieldName}`
 }
 
 export function generateJunctionTableName(
-  column: any,
-  table: any,
-  relatedTable: any
+  column: RelationshipFieldMetadata,
+  table: Table,
+  relatedTable: Table
 ) {
   return `jt_${table.name}_${relatedTable.name}_${column.name}_${column.fieldName}`
 }
 
-export function foreignKeyStructure(keyName: any, meta?: any) {
+export function foreignKeyStructure(keyName: string, meta?: any) {
   const structure: any = {
     type: FieldTypes.NUMBER,
     constraints: {},
@@ -350,7 +443,7 @@ export function foreignKeyStructure(keyName: any, meta?: any) {
   return structure
 }
 
-export function areSwitchableTypes(type1: any, type2: any) {
+export function areSwitchableTypes(type1: FieldType, type2: FieldType) {
   if (
     SwitchableTypes.indexOf(type1) === -1 &&
     SwitchableTypes.indexOf(type2) === -1
@@ -367,23 +460,33 @@ export function areSwitchableTypes(type1: any, type2: any) {
   return false
 }
 
-export function hasTypeChanged(table: any, oldTable: any) {
+export function hasTypeChanged(table: Table, oldTable: Table | undefined) {
   if (!oldTable) {
     return false
   }
-  let key: any
-  let field: any
-  for ([key, field] of Object.entries(oldTable.schema)) {
-    const oldType = field.type
+  for (let [key, field] of Object.entries(oldTable.schema)) {
     if (!table.schema[key]) {
       continue
     }
+    const oldType = field.type
     const newType = table.schema[key].type
     if (oldType !== newType && !areSwitchableTypes(oldType, newType)) {
       return true
     }
   }
   return false
+}
+
+// used for external tables, some of them will have static schemas that need
+// to be hard set
+export function setStaticSchemas(datasource: Datasource, table: Table) {
+  // GSheets is a specific case - only ever has a static primary key
+  if (table && datasource.source === SourceName.GOOGLE_SHEETS) {
+    table.primary = [GOOGLE_SHEETS_PRIMARY_KEY]
+    // if there is an id column, remove it, should never exist in GSheets
+    delete table.schema?.id
+  }
+  return table
 }
 
 const _TableSaveFunctions = TableSaveFunctions

@@ -1,6 +1,6 @@
 import { getRoutingInfo } from "../../utilities/routing"
 import { roles } from "@budibase/backend-core"
-import { BBContext } from "@budibase/types"
+import { UserCtx } from "@budibase/types"
 
 const URL_SEPARATOR = "/"
 
@@ -40,7 +40,7 @@ class Routing {
 
 /**
  * Gets the full routing structure by querying the routing view and processing the result into the tree.
- * @returns {Promise<object>} The routing structure, this is the full structure designed for use in the builder,
+ * @returns The routing structure, this is the full structure designed for use in the builder,
  * if the client routing is required then the updateRoutingStructureForUserRole should be used.
  */
 async function getRoutingStructure() {
@@ -56,16 +56,14 @@ async function getRoutingStructure() {
   return { routes: routing.json }
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   ctx.body = await getRoutingStructure()
 }
 
-export async function clientFetch(ctx: BBContext) {
+export async function clientFetch(ctx: UserCtx) {
   const routing = await getRoutingStructure()
   let roleId = ctx.user?.role?._id
-  const roleIds = (await roles.getUserRoleHierarchy(roleId, {
-    idOnly: true,
-  })) as string[]
+  const roleIds = await roles.getUserRoleIdHierarchy(roleId)
   for (let topLevel of Object.values(routing.routes) as any) {
     for (let subpathKey of Object.keys(topLevel.subpaths)) {
       let found = false

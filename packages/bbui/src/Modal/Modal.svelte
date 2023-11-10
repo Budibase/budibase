@@ -1,13 +1,15 @@
 <script>
   import "@spectrum-css/modal/dist/index-vars.css"
   import "@spectrum-css/underlay/dist/index-vars.css"
-  import { createEventDispatcher, setContext, tick } from "svelte"
+  import { createEventDispatcher, setContext, tick, onMount } from "svelte"
   import { fade, fly } from "svelte/transition"
   import Portal from "svelte-portal"
   import Context from "../context"
 
   export let fixed = false
   export let inline = false
+  export let disableCancel = false
+  export let autoFocus = true
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -29,8 +31,16 @@
     visible = false
   }
 
+  export function toggle() {
+    if (visible) {
+      hide()
+    } else {
+      show()
+    }
+  }
+
   export function cancel() {
-    if (!visible) {
+    if (!visible || disableCancel) {
       return
     }
     dispatch("cancel")
@@ -44,6 +54,9 @@
   }
 
   async function focusModal(node) {
+    if (!autoFocus) {
+      return
+    }
     await tick()
 
     // Try to focus first input
@@ -61,10 +74,15 @@
     }
   }
 
-  setContext(Context.Modal, { show, hide, cancel })
-</script>
+  setContext(Context.Modal, { show, hide, toggle, cancel })
 
-<svelte:window on:keydown={handleKey} />
+  onMount(() => {
+    document.addEventListener("keydown", handleKey)
+    return () => {
+      document.removeEventListener("keydown", handleKey)
+    }
+  })
+</script>
 
 {#if inline}
   {#if visible}

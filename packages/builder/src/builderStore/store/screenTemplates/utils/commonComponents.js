@@ -4,6 +4,7 @@ import { getSchemaForDatasource } from "../../../dataBinding"
 const fieldTypeToComponentMap = {
   string: "stringfield",
   number: "numberfield",
+  bigint: "bigintfield",
   options: "optionsfield",
   array: "multifieldselect",
   boolean: "booleanfield",

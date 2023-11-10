@@ -1,4 +1,17 @@
-import { objectStore, roles, constants } from "@budibase/backend-core"
+import { constants, objectStore, roles } from "@budibase/backend-core"
+import {
+  FieldType as FieldTypes,
+  INTERNAL_TABLE_SOURCE_ID,
+  Table,
+  TableSourceType,
+} from "@budibase/types"
+
+export {
+  FieldType as FieldTypes,
+  RelationshipType,
+  AutoFieldSubTypes,
+  FormulaTypes,
+} from "@budibase/types"
 
 export enum FilterTypes {
   STRING = "string",
@@ -22,48 +35,20 @@ export const NoEmptyFilterStrings = [
   FilterTypes.NOT_CONTAINS,
 ]
 
-export enum FieldTypes {
-  STRING = "string",
-  BARCODEQR = "barcodeqr",
-  LONGFORM = "longform",
-  OPTIONS = "options",
-  NUMBER = "number",
-  BOOLEAN = "boolean",
-  ARRAY = "array",
-  DATETIME = "datetime",
-  ATTACHMENT = "attachment",
-  LINK = "link",
-  FORMULA = "formula",
-  AUTO = "auto",
-  JSON = "json",
-  INTERNAL = "internal",
-}
-
 export const CanSwitchTypes = [
-  [exports.FieldTypes.JSON, exports.FieldTypes.ARRAY],
+  [FieldTypes.JSON, FieldTypes.ARRAY],
   [
-    exports.FieldTypes.STRING,
-    exports.FieldTypes.OPTIONS,
-    exports.FieldTypes.LONGFORM,
-    exports.FieldTypes.BARCODEQR,
+    FieldTypes.STRING,
+    FieldTypes.OPTIONS,
+    FieldTypes.LONGFORM,
+    FieldTypes.BARCODEQR,
   ],
-  [exports.FieldTypes.BOOLEAN, exports.FieldTypes.NUMBER],
+  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
 ]
 
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
   prev ? prev.concat(current) : current
 )
-
-export enum RelationshipTypes {
-  ONE_TO_MANY = "one-to-many",
-  MANY_TO_ONE = "many-to-one",
-  MANY_TO_MANY = "many-to-many",
-}
-
-export enum FormulaTypes {
-  STATIC = "static",
-  DYNAMIC = "dynamic",
-}
 
 export enum AuthTypes {
   APP = "app",
@@ -91,74 +76,63 @@ export enum SortDirection {
   DESCENDING = "DESCENDING",
 }
 
-export const USERS_TABLE_SCHEMA = {
+export const USERS_TABLE_SCHEMA: Table = {
   _id: "ta_users",
   type: "table",
+  sourceId: INTERNAL_TABLE_SOURCE_ID,
+  sourceType: TableSourceType.INTERNAL,
   views: {},
   name: "Users",
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         email: true,
         length: {
           maximum: "",
         },
         presence: true,
       },
-      fieldName: "email",
       name: "email",
     },
     firstName: {
       name: "firstName",
-      fieldName: "firstName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
-      fieldName: "lastName",
-      type: exports.FieldTypes.STRING,
+      type: FieldTypes.STRING,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
       },
     },
     roleId: {
-      fieldName: "roleId",
       name: "roleId",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
     },
     status: {
-      fieldName: "status",
       name: "status",
-      type: exports.FieldTypes.OPTIONS,
+      type: FieldTypes.OPTIONS,
       constraints: {
-        type: exports.FieldTypes.STRING,
+        type: FieldTypes.STRING,
         presence: false,
         inclusion: Object.values(constants.UserStatus),
       },
     },
   },
   primaryDisplay: "email",
-}
-
-export enum AutoFieldSubTypes {
-  CREATED_BY = "createdBy",
-  CREATED_AT = "createdAt",
-  UPDATED_BY = "updatedBy",
-  UPDATED_AT = "updatedAt",
-  AUTO_ID = "autoID",
 }
 
 export enum AutoFieldDefaultNames {
@@ -188,11 +162,6 @@ export enum InvalidColumns {
   TABLE_ID = "tableId",
 }
 
-export enum BuildSchemaErrors {
-  NO_KEY = "no_key",
-  INVALID_COLUMN = "invalid_column",
-}
-
 export enum AutomationErrors {
   INCORRECT_TYPE = "INCORRECT_TYPE",
   MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",
@@ -202,3 +171,9 @@ export enum AutomationErrors {
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
 export const MAX_AUTOMATION_RECURRING_ERRORS = 5
+export const GOOGLE_SHEETS_PRIMARY_KEY = "rowNumber"
+export const DEFAULT_JOBS_TABLE_ID = "ta_bb_jobs"
+export const DEFAULT_INVENTORY_TABLE_ID = "ta_bb_inventory"
+export const DEFAULT_EXPENSES_TABLE_ID = "ta_bb_expenses"
+export const DEFAULT_EMPLOYEE_TABLE_ID = "ta_bb_employee"
+export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"

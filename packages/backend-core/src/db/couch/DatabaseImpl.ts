@@ -1,4 +1,4 @@
-import Nano from "nano"
+import Nano from "@budibase/nano"
 import {
   AllDocsResponse,
   AnyDocument,
@@ -10,23 +10,52 @@ import {
   DatabaseDeleteIndexOpts,
   Document,
   isDocument,
+  RowResponse,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
-import { directCouchCall } from "./utils"
+import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
+import { newid } from "../../docIds/newid"
+
+function buildNano(couchInfo: { url: string; cookie: string }) {
+  return Nano({
+    url: couchInfo.url,
+    requestDefaults: {
+      headers: {
+        Authorization: couchInfo.cookie,
+      },
+    },
+    parseUrl: false,
+  })
+}
+
+export function DatabaseWithConnection(
+  dbName: string,
+  connection: string,
+  opts?: DatabaseOpts
+) {
+  if (!connection) {
+    throw new Error("Must provide connection details")
+  }
+  return new DatabaseImpl(dbName, opts, connection)
+}
 
 export class DatabaseImpl implements Database {
   public readonly name: string
   private static nano: Nano.ServerScope
+  private readonly instanceNano?: Nano.ServerScope
   private readonly pouchOpts: DatabaseOpts
 
-  constructor(dbName?: string, opts?: DatabaseOpts) {
-    if (dbName == null) {
-      throw new Error("Database name cannot be undefined.")
-    }
+  private readonly couchInfo = getCouchInfo()
+
+  constructor(dbName: string, opts?: DatabaseOpts, connection?: string) {
     this.name = dbName
     this.pouchOpts = opts || {}
+    if (connection) {
+      this.couchInfo = getCouchInfo(connection)
+      this.instanceNano = buildNano(this.couchInfo)
+    }
     if (!DatabaseImpl.nano) {
       DatabaseImpl.init()
     }
@@ -34,20 +63,20 @@ export class DatabaseImpl implements Database {
 
   static init() {
     const couchInfo = getCouchInfo()
-    DatabaseImpl.nano = Nano({
-      url: couchInfo.url,
-      requestDefaults: {
-        headers: {
-          Authorization: couchInfo.cookie,
-        },
-      },
-      parseUrl: false,
-    })
+    DatabaseImpl.nano = buildNano(couchInfo)
   }
 
   async exists() {
-    let response = await directCouchCall(`/${this.name}`, "HEAD")
+    const response = await directCouchUrlCall({
+      url: `${this.couchInfo.url}/${this.name}`,
+      method: "HEAD",
+      cookie: this.couchInfo.cookie,
+    })
     return response.status === 200
+  }
+
+  private nano() {
+    return this.instanceNano || DatabaseImpl.nano
   }
 
   async checkSetup() {
@@ -58,9 +87,16 @@ export class DatabaseImpl implements Database {
       throw new Error("DB does not exist")
     }
     if (!exists) {
-      await DatabaseImpl.nano.db.create(this.name)
+      try {
+        await this.nano().db.create(this.name)
+      } catch (err: any) {
+        // Handling race conditions
+        if (err.statusCode !== 412) {
+          throw err
+        }
+      }
     }
-    return DatabaseImpl.nano.db.use(this.name)
+    return this.nano().db.use(this.name)
   }
 
   private async updateOutput(fnc: any) {
@@ -74,12 +110,41 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  async get<T>(id?: string): Promise<T | any> {
+  async get<T extends Document>(id?: string): Promise<T> {
     const db = await this.checkSetup()
     if (!id) {
       throw new Error("Unable to get doc without a valid _id.")
     }
     return this.updateOutput(() => db.get(id))
+  }
+
+  async getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]> {
+    // get unique
+    ids = [...new Set(ids)]
+    const response = await this.allDocs<T>({
+      keys: ids,
+      include_docs: true,
+    })
+    const rowUnavailable = (row: RowResponse<T>) => {
+      // row is deleted - key lookup can return this
+      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+        return true
+      }
+      return row.error === "not_found"
+    }
+
+    const rows = response.rows.filter(row => !rowUnavailable(row))
+    const someMissing = rows.length !== response.rows.length
+    // some were filtered out - means some missing
+    if (!opts?.allowMissing && someMissing) {
+      const missing = response.rows.filter(row => rowUnavailable(row))
+      const missingIds = missing.map(row => row.key).join(", ")
+      throw new Error(`Unable to get documents: ${missingIds}`)
+    }
+    return rows.map(row => row.doc!)
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
@@ -99,6 +164,13 @@ export class DatabaseImpl implements Database {
       throw new Error("Unable to remove doc without a valid _id and _rev.")
     }
     return this.updateOutput(() => db.destroy(_id, _rev))
+  }
+
+  async post(document: AnyDocument, opts?: DatabasePutOpts) {
+    if (!document._id) {
+      document._id = newid()
+    }
+    return this.put(document, opts)
   }
 
   async put(document: AnyDocument, opts?: DatabasePutOpts) {
@@ -130,12 +202,14 @@ export class DatabaseImpl implements Database {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
+  async allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
 
-  async query<T>(
+  async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
@@ -146,7 +220,7 @@ export class DatabaseImpl implements Database {
 
   async destroy() {
     try {
-      await DatabaseImpl.nano.db.destroy(this.name)
+      return await this.nano().db.destroy(this.name)
     } catch (err: any) {
       // didn't exist, don't worry
       if (err.statusCode === 404) {

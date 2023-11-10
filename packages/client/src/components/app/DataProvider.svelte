@@ -1,7 +1,6 @@
 <script>
-  import { writable } from "svelte/store"
-  import { setContext, getContext } from "svelte"
-  import { Pagination } from "@budibase/bbui"
+  import { getContext } from "svelte"
+  import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
   export let dataSource
@@ -10,8 +9,6 @@
   export let sortOrder
   export let limit
   export let paginate
-
-  const loading = writable(false)
 
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
@@ -22,7 +19,7 @@
   $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
 
-  // Keep our data fetch instance up to date
+  // Fetch data and refresh when needed
   $: fetch = createFetch(dataSource)
   $: fetch.update({
     query,
@@ -31,6 +28,9 @@
     limit,
     paginate,
   })
+
+  // Sanitize schema to remove hidden fields
+  $: schema = sanitizeSchema($fetch.schema)
 
   // Build our action context
   $: actions = [
@@ -69,7 +69,7 @@
     rows: $fetch.rows,
     info: $fetch.info,
     datasource: dataSource || {},
-    schema: $fetch.schema,
+    schema,
     rowsLength: $fetch.rows.length,
 
     // Undocumented properties. These aren't supposed to be used in builder
@@ -80,12 +80,9 @@
       sortColumn: $fetch.sortColumn,
       sortOrder: $fetch.sortOrder,
     },
-    limit: limit,
+    limit,
+    primaryDisplay: $fetch.definition?.primaryDisplay,
   }
-
-  const parentLoading = getContext("loading")
-  setContext("loading", loading)
-  $: loading.set($parentLoading || !$fetch.loaded)
 
   const createFetch = datasource => {
     return fetchData({
@@ -99,6 +96,19 @@
         paginate,
       },
     })
+  }
+
+  const sanitizeSchema = schema => {
+    if (!schema) {
+      return schema
+    }
+    let cloned = { ...schema }
+    Object.entries(cloned).forEach(([field, fieldSchema]) => {
+      if (fieldSchema.visible === false) {
+        delete cloned[field]
+      }
+    })
+    return cloned
   }
 
   const addQueryExtension = (key, extension) => {
@@ -134,17 +144,23 @@
 
 <div use:styleable={$component.styles} class="container">
   <Provider {actions} data={dataContext}>
-    <slot />
-    {#if paginate && $fetch.supportsPagination}
-      <div class="pagination">
-        <Pagination
-          page={$fetch.pageNumber + 1}
-          hasPrevPage={$fetch.hasPrevPage}
-          hasNextPage={$fetch.hasNextPage}
-          goToPrevPage={fetch.prevPage}
-          goToNextPage={fetch.nextPage}
-        />
+    {#if !$fetch.loaded}
+      <div class="loading">
+        <ProgressCircle />
       </div>
+    {:else}
+      <slot />
+      {#if paginate && $fetch.supportsPagination}
+        <div class="pagination">
+          <Pagination
+            page={$fetch.pageNumber + 1}
+            hasPrevPage={$fetch.hasPrevPage}
+            hasNextPage={$fetch.hasNextPage}
+            goToPrevPage={fetch.prevPage}
+            goToNextPage={fetch.nextPage}
+          />
+        </div>
+      {/if}
     {/if}
   </Provider>
 </div>
@@ -155,6 +171,13 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
+  }
+  .loading {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
   }
   .pagination {
     display: flex;

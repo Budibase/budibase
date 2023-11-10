@@ -7,8 +7,10 @@ import {
 import { FieldTypes, FormulaTypes } from "../../../constants"
 import { context } from "@budibase/backend-core"
 import { Table, Row } from "@budibase/types"
-const { isEqual } = require("lodash")
-const { cloneDeep } = require("lodash/fp")
+import * as linkRows from "../../../db/linkedRows"
+import sdk from "../../../sdk"
+import isEqual from "lodash/isEqual"
+import { cloneDeep } from "lodash/fp"
 
 /**
  * This function runs through a list of enriched rows, looks at the rows which
@@ -16,7 +18,10 @@ const { cloneDeep } = require("lodash/fp")
  * updated.
  * NOTE: this will only for affect static formulas.
  */
-export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
+export async function updateRelatedFormula(
+  table: Table,
+  enrichedRows: Row[] | Row
+) {
   const db = context.getAppDB()
   // no formula to update, we're done
   if (!table.relatedFormula) {
@@ -35,7 +40,13 @@ export async function updateRelatedFormula(table: Table, enrichedRows: Row[]) {
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
         }
-        relatedRows[relatedTableId] = relatedRows[relatedTableId].concat(field)
+        // filter down to the rows which are not already included in related
+        const currentIds = relatedRows[relatedTableId].map(row => row._id)
+        const uniqueRelatedRows = field.filter(
+          (row: Row) => !currentIds.includes(row._id)
+        )
+        relatedRows[relatedTableId] =
+          relatedRows[relatedTableId].concat(uniqueRelatedRows)
       }
     }
     for (let tableId of table.relatedFormula) {
@@ -75,12 +86,12 @@ export async function updateAllFormulasInTable(table: Table) {
   const db = context.getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
   let rows = (
-    await db.allDocs(
+    await db.allDocs<Row>(
       getRowParams(table._id, null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
   let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
@@ -90,12 +101,12 @@ export async function updateAllFormulasInTable(table: Table) {
   for (let row of rows) {
     // find the enriched row, if found process the formulas
     const enrichedRow = enrichedRows.find(
-      (enriched: any) => enriched._id === row._id
+      (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
       const processed = processFormulas(table, cloneDeep(row), {
         dynamic: false,
-        contextRows: enrichedRow,
+        contextRows: [enrichedRow],
       })
       // values have changed, need to add to bulk docs to update
       if (!isEqual(processed, row)) {
@@ -128,7 +139,7 @@ export async function finaliseRow(
   // use enriched row to generate formulas for saving, specifically only use as context
   row = processFormulas(table, row, {
     dynamic: false,
-    contextRows: enrichedRow,
+    contextRows: [enrichedRow],
   })
   // don't worry about rev, tables handle rev/lastID updates
   // if another row has been written since processing this will
@@ -138,7 +149,7 @@ export async function finaliseRow(
       await db.put(table)
     } catch (err: any) {
       if (err.status === 409) {
-        const updatedTable = await db.get(table._id)
+        const updatedTable = await sdk.tables.getTable(table._id!)
         let response = processAutoColumn(null, updatedTable, row, {
           reprocessing: true,
         })
@@ -152,10 +163,16 @@ export async function finaliseRow(
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
-  enrichedRow = await processFormulas(table, enrichedRow, { dynamic: false })
+  enrichedRow = processFormulas(table, enrichedRow, {
+    dynamic: false,
+  })
   // this updates the related formulas in other rows based on the relations to this row
   if (updateFormula) {
-    await exports.updateRelatedFormula(table, enrichedRow)
+    await updateRelatedFormula(table, enrichedRow)
   }
-  return { row: enrichedRow, table }
+  const squashed = await linkRows.squashLinksToPrimaryDisplay(
+    table,
+    enrichedRow
+  )
+  return { row: enrichedRow, squashed, table }
 }

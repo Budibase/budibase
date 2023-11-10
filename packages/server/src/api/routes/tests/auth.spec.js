@@ -7,7 +7,7 @@ describe("/authenticate", () => {
 
   afterAll(setup.afterAll)
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     await config.init()
   })
 
@@ -18,7 +18,7 @@ describe("/authenticate", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      expect(res.body._id).toEqual(generateUserMetadataID("us_uuid1"))
+      expect(res.body._id).toEqual(generateUserMetadataID(config.user._id))
     })
   })
 })

@@ -7,21 +7,22 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${BUDIBASE_ENVIRONMENT}" ]] && export BUDIBASE_ENVIRONMENT=PRODUCTION
 [[ -z "${CLUSTER_PORT}" ]] && export CLUSTER_PORT=80
 [[ -z "${DEPLOYMENT_ENVIRONMENT}" ]] && export DEPLOYMENT_ENVIRONMENT=docker
-[[ -z "${MINIO_URL}" ]] && export MINIO_URL=http://localhost:9000
+[[ -z "${MINIO_URL}" ]] && export MINIO_URL=http://127.0.0.1:9000
 [[ -z "${NODE_ENV}" ]] && export NODE_ENV=production
 [[ -z "${POSTHOG_TOKEN}" ]] && export POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
-[[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS"
+[[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
 [[ -z "${ACCOUNT_PORTAL_URL}" ]] && export ACCOUNT_PORTAL_URL=https://account.budibase.app
-[[ -z "${REDIS_URL}" ]] && export REDIS_URL=localhost:6379
+[[ -z "${REDIS_URL}" ]] && export REDIS_URL=127.0.0.1:6379
 [[ -z "${SELF_HOSTED}" ]] && export SELF_HOSTED=1
 [[ -z "${WORKER_PORT}" ]] && export WORKER_PORT=4002
-[[ -z "${WORKER_URL}" ]] && export WORKER_URL=http://localhost:4002
-[[ -z "${APPS_URL}" ]] && export APPS_URL=http://localhost:4001
+[[ -z "${WORKER_URL}" ]] && export WORKER_URL=http://127.0.0.1:4002
+[[ -z "${APPS_URL}" ]] && export APPS_URL=http://127.0.0.1:4001
+[[ -z "${SERVER_TOP_LEVEL_PATH}" ]] && export SERVER_TOP_LEVEL_PATH=/app
 #  export CUSTOM_DOMAIN=budi001.custom.com
 
 # Azure App Service customisations
 if [[ "${TARGETBUILD}" = "aas" ]]; then
-    DATA_DIR=/home
+    DATA_DIR="${DATA_DIR:-/home}"
     WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
     /etc/init.d/ssh start
 else
@@ -50,7 +51,7 @@ do
     fi
 done
 if [[ -z "${COUCH_DB_URL}" ]]; then
-    export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@localhost:5984
+    export COUCH_DB_URL=http://$COUCHDB_USER:$COUCHDB_PASSWORD@127.0.0.1:5984
 fi
 if [ ! -f "${DATA_DIR}/.env" ]; then
     touch ${DATA_DIR}/.env
@@ -72,14 +73,11 @@ for LINE in $(cat ${DATA_DIR}/.env); do export $LINE; done
 ln -s ${DATA_DIR}/.env /app/.env
 ln -s ${DATA_DIR}/.env /worker/.env
 # make these directories in runner, incase of mount
-mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/minio
-mkdir -p ${DATA_DIR}/search
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
-/opt/clouseau/bin/clouseau > /dev/stdout 2>&1 &
-/minio/minio server ${DATA_DIR}/minio > /dev/stdout 2>&1 &
-/docker-entrypoint.sh /opt/couchdb/bin/couchdb &
+/bbcouch-runner.sh &
+/minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     # Add monthly cron job to renew certbot certificate
@@ -90,15 +88,14 @@ if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     /etc/init.d/nginx restart
 fi
 
+# wait for backend services to start
+sleep 10
+
 pushd app
 pm2 start -l /dev/stdout --name app "yarn run:docker"
 popd
 pushd worker
 pm2 start -l /dev/stdout --name worker "yarn run:docker"
 popd
-sleep 10
-echo "curl to couchdb endpoints"
-curl -X PUT ${COUCH_DB_URL}/_users
-curl -X PUT ${COUCH_DB_URL}/_replicator
 echo "end of runner.sh, sleeping ..."
 sleep infinity

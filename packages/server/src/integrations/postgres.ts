@@ -1,3 +1,4 @@
+import fs from "fs"
 import {
   Integration,
   DatasourceFieldType,
@@ -6,6 +7,11 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
+  SourceName,
+  Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -13,12 +19,16 @@ import {
   convertSqlType,
   finaliseExternalTables,
   SqlClient,
+  checkExternalTables,
 } from "./utils"
 import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
 import { escapeDangerousCharacters } from "../utilities"
 
-const { Client, types } = require("pg")
+import { Client, ClientConfig, types } from "pg"
+import { getReadableErrorMessage } from "./base/errorMapping"
+import { exec } from "child_process"
+import { storeTempFile } from "../utilities/fileSystem"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -40,6 +50,8 @@ interface PostgresConfig {
   schema: string
   ssl?: boolean
   ca?: string
+  clientKey?: string
+  clientCert?: string
   rejectUnauthorized?: boolean
 }
 
@@ -50,6 +62,11 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "PostgreSQL, also known as Postgres, is a free and open-source relational database management system emphasizing extensibility and SQL compliance.",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+    [DatasourceFeature.EXPORT_SCHEMA]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -92,6 +109,19 @@ const SCHEMA: Integration = {
       required: false,
     },
     ca: {
+      display: "Server CA",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientKey: {
+      display: "Client key",
+      type: DatasourceFieldType.LONGFORM,
+      default: false,
+      required: false,
+    },
+    clientCert: {
+      display: "Client cert",
       type: DatasourceFieldType.LONGFORM,
       default: false,
       required: false,
@@ -114,40 +144,58 @@ const SCHEMA: Integration = {
 }
 
 class PostgresIntegration extends Sql implements DatasourcePlus {
-  private readonly client: any
+  private readonly client: Client
   private readonly config: PostgresConfig
   private index: number = 1
   private open: boolean
-  public tables: Record<string, Table> = {}
-  public schemaErrors: Record<string, string> = {}
 
   COLUMNS_SQL!: string
 
-  PRIMARY_KEYS_SQL = `
-  select tc.table_schema, tc.table_name, kc.column_name as primary_key 
-  from information_schema.table_constraints tc
-  join 
-    information_schema.key_column_usage kc on kc.table_name = tc.table_name 
-    and kc.table_schema = tc.table_schema 
-    and kc.constraint_name = tc.constraint_name
-  where tc.constraint_type = 'PRIMARY KEY';
+  PRIMARY_KEYS_SQL = () => `
+  SELECT pg_namespace.nspname table_schema
+     , pg_class.relname table_name
+     , pg_attribute.attname primary_key
+  FROM pg_class
+  JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
+  JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
+  JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
+  WHERE pg_namespace.nspname = '${this.config.schema}';
   `
 
   constructor(config: PostgresConfig) {
     super(SqlClient.POSTGRES)
     this.config = config
 
-    let newConfig = {
+    let newConfig: ClientConfig = {
       ...this.config,
       ssl: this.config.ssl
         ? {
             rejectUnauthorized: this.config.rejectUnauthorized,
             ca: this.config.ca,
+            key: this.config.clientKey,
+            cert: this.config.clientCert,
           }
         : undefined,
     }
     this.client = new Client(newConfig)
     this.open = false
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+
+    try {
+      await this.openConnection()
+      response.connected = true
+    } catch (e: any) {
+      console.log(e)
+      response.error = e.message as string
+    } finally {
+      await this.closeConnection()
+    }
+    return response
   }
 
   getBindingIdentifier(): string {
@@ -163,7 +211,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    this.client.query(`SET search_path TO ${this.config.schema}`)
+    await this.client.query(`SET search_path TO "${this.config.schema}"`)
     this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
     this.open = true
   }
@@ -201,10 +249,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     }
     try {
       return await client.query(query.sql, query.bindings || [])
-    } catch (err) {
+    } catch (err: any) {
       await this.closeConnection()
-      // @ts-ignore
-      throw new Error(err)
+      let readableMessage = getReadableErrorMessage(
+        SourceName.POSTGRES,
+        err.code
+      )
+      if (readableMessage) {
+        throw new Error(readableMessage)
+      } else {
+        throw new Error(err.message as string)
+      }
     } finally {
       if (close) {
         await this.closeConnection()
@@ -214,14 +269,19 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   /**
    * Fetches the tables from the postgres table and assigns them to the datasource.
-   * @param {*} datasourceId - datasourceId to fetch
+   * @param datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, Table>
+  ): Promise<Schema> {
     let tableKeys: { [key: string]: string[] } = {}
     await this.openConnection()
     try {
-      const primaryKeysResponse = await this.client.query(this.PRIMARY_KEYS_SQL)
+      const primaryKeysResponse = await this.client.query(
+        this.PRIMARY_KEYS_SQL()
+      )
       for (let table of primaryKeysResponse.rows) {
         const tableName = table.table_name
         if (!tableKeys[tableName]) {
@@ -250,10 +310,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         // table key doesn't exist yet
         if (!tables[tableName] || !tables[tableName].schema) {
           tables[tableName] = {
+            type: "table",
             _id: buildExternalTableId(datasourceId, tableName),
             primary: tableKeys[tableName] || [],
             name: tableName,
             schema: {},
+            sourceId: datasourceId,
+            sourceType: TableSourceType.EXTERNAL,
           }
         }
 
@@ -262,15 +325,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.identity_start ||
           column.identity_increment
         )
-        const constraints = {
-          presence: column.is_nullable === "NO",
-        }
-        const hasDefault =
+        const hasDefault = column.column_default != null
+        const hasNextVal =
           typeof column.column_default === "string" &&
           column.column_default.startsWith("nextval")
         const isGenerated =
           column.is_generated && column.is_generated !== "NEVER"
-        const isAuto: boolean = hasDefault || identity || isGenerated
+        const isAuto: boolean = hasNextVal || identity || isGenerated
+        const required = column.is_nullable === "NO"
+        const constraints = {
+          presence: required && !hasDefault && !isGenerated,
+        }
         tables[tableName].schema[columnName] = {
           autocolumn: isAuto,
           name: columnName,
@@ -280,12 +345,24 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         }
       }
 
-      const final = finaliseExternalTables(tables, entities)
-      this.tables = final.tables
-      this.schemaErrors = final.errors
+      let finalizedTables = finaliseExternalTables(tables, entities)
+      let errors = checkExternalTables(finalizedTables)
+      return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
       throw new Error(err)
+    } finally {
+      await this.closeConnection()
+    }
+  }
+
+  async getTableNames() {
+    try {
+      await this.openConnection()
+      const columnsResponse: { rows: PostgresColumn[] } =
+        await this.client.query(this.COLUMNS_SQL)
+      const names = columnsResponse.rows.map(row => row.table_name)
+      return [...new Set(names)]
     } finally {
       await this.closeConnection()
     }
@@ -325,6 +402,59 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const response = await this.internalQuery(input)
       return response.rows.length ? response.rows : [{ [operation]: true }]
     }
+  }
+
+  async getExternalSchema() {
+    const dumpCommandParts = [
+      `user=${this.config.user}`,
+      `host=${this.config.host}`,
+      `port=${this.config.port}`,
+      `dbname=${this.config.database}`,
+    ]
+
+    if (this.config.ssl) {
+      dumpCommandParts.push("sslmode=verify-ca")
+      if (this.config.ca) {
+        const caFilePath = storeTempFile(this.config.ca)
+        fs.chmodSync(caFilePath, "0600")
+        dumpCommandParts.push(`sslrootcert=${caFilePath}`)
+      }
+
+      if (this.config.clientCert) {
+        const clientCertFilePath = storeTempFile(this.config.clientCert)
+        fs.chmodSync(clientCertFilePath, "0600")
+        dumpCommandParts.push(`sslcert=${clientCertFilePath}`)
+      }
+
+      if (this.config.clientKey) {
+        const clientKeyFilePath = storeTempFile(this.config.clientKey)
+        fs.chmodSync(clientKeyFilePath, "0600")
+        dumpCommandParts.push(`sslkey=${clientKeyFilePath}`)
+      }
+    }
+
+    const dumpCommand = `PGPASSWORD="${
+      this.config.password
+    }" pg_dump --schema-only "${dumpCommandParts.join(" ")}"`
+
+    return new Promise<string>((res, rej) => {
+      exec(dumpCommand, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error generating dump: ${error.message}`)
+          rej(error.message)
+          return
+        }
+
+        if (stderr) {
+          console.error(`pg_dump error: ${stderr}`)
+          rej(stderr)
+          return
+        }
+
+        res(stdout)
+        console.log("SQL dump generated successfully!")
+      })
+    })
   }
 }
 

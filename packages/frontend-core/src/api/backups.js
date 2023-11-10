@@ -21,10 +21,9 @@ export const buildBackupsEndpoints = API => ({
     })
   },
 
-  createManualBackup: async ({ appId, name }) => {
+  createManualBackup: async ({ appId }) => {
     return await API.post({
       url: `/api/apps/${appId}/backups`,
-      body: { name },
     })
   },
 

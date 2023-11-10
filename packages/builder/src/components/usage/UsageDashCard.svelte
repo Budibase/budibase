@@ -47,7 +47,7 @@
     <div class="header-actions">
       {#if secondaryDefined}
         <div>
-          <Button newStyles secondary on:click={secondaryAction}
+          <Button secondary on:click={secondaryAction}
             >{secondaryActionText}</Button
           >
         </div>

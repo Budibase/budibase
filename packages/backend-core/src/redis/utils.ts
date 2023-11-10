@@ -1,9 +1,8 @@
 import env from "../environment"
+import * as Redis from "ioredis"
 
 const SLOT_REFRESH_MS = 2000
 const CONNECT_TIMEOUT_MS = 10000
-const REDIS_URL = !env.REDIS_URL ? "localhost:6379" : env.REDIS_URL
-const REDIS_PASSWORD = !env.REDIS_PASSWORD ? "budibase" : env.REDIS_PASSWORD
 export const SEPARATOR = "-"
 
 /**
@@ -29,6 +28,7 @@ export enum Databases {
   GENERIC_CACHE = "data_cache",
   WRITE_THROUGH = "writeThrough",
   LOCKS = "locks",
+  SOCKET_IO = "socket_io",
 }
 
 /**
@@ -42,8 +42,8 @@ export enum Databases {
  */
 export enum SelectableDatabase {
   DEFAULT = 0,
-  WRITE_THROUGH = 1,
-  UNUSED_1 = 2,
+  SOCKET_IO = 1,
+  RATE_LIMITING = 2,
   UNUSED_2 = 3,
   UNUSED_3 = 4,
   UNUSED_4 = 5,
@@ -59,9 +59,9 @@ export enum SelectableDatabase {
   UNUSED_14 = 15,
 }
 
-export function getRedisOptions(clustered = false) {
-  let password = REDIS_PASSWORD
-  let url: string[] | string = REDIS_URL.split("//")
+export function getRedisConnectionDetails() {
+  let password = env.REDIS_PASSWORD
+  let url: string[] | string = env.REDIS_URL.split("//")
   // get rid of the protocol
   url = url.length > 1 ? url[1] : url[0]
   // check for a password etc
@@ -75,28 +75,34 @@ export function getRedisOptions(clustered = false) {
   }
   const [host, port] = url.split(":")
 
-  let redisProtocolUrl
-
-  // fully qualified redis URL
-  if (/rediss?:\/\//.test(REDIS_URL)) {
-    redisProtocolUrl = REDIS_URL
+  return {
+    host,
+    password,
+    port: parseInt(port),
   }
+}
 
-  const opts: any = {
+export function getRedisOptions() {
+  const { host, password, port } = getRedisConnectionDetails()
+  let redisOpts: Redis.RedisOptions = {
     connectTimeout: CONNECT_TIMEOUT_MS,
+    port: port,
+    host,
+    password,
   }
-  if (clustered) {
-    opts.redisOptions = {}
-    opts.redisOptions.tls = {}
-    opts.redisOptions.password = password
-    opts.slotsRefreshTimeout = SLOT_REFRESH_MS
-    opts.dnsLookup = (address: string, callback: any) => callback(null, address)
-  } else {
-    opts.host = host
-    opts.port = port
-    opts.password = password
+  let opts: Redis.ClusterOptions | Redis.RedisOptions = redisOpts
+  if (env.REDIS_CLUSTERED) {
+    opts = {
+      connectTimeout: CONNECT_TIMEOUT_MS,
+      redisOptions: {
+        ...redisOpts,
+        tls: {},
+      },
+      slotsRefreshTimeout: SLOT_REFRESH_MS,
+      dnsLookup: (address: string, callback: any) => callback(null, address),
+    } as Redis.ClusterOptions
   }
-  return { opts, host, port, redisProtocolUrl }
+  return opts
 }
 
 export function addDbPrefix(db: string, key: string) {

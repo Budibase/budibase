@@ -18,6 +18,8 @@ export const createDataSourceStore = () => {
     // Extract table ID
     if (dataSource.type === "table" || dataSource.type === "view") {
       dataSourceId = dataSource.tableId
+    } else if (dataSource.type === "viewV2") {
+      dataSourceId = dataSource.id
     }
 
     // Only one side of the relationship is required as a trigger, as it will
@@ -79,7 +81,7 @@ export const createDataSourceStore = () => {
 
     // Fetch related table IDs from table schema
     let schema
-    if (options.invalidateRelationships) {
+    if (options.invalidateRelationships && !dataSourceId?.includes("view_")) {
       try {
         const definition = await API.fetchTableDefinition(dataSourceId)
         schema = definition?.schema

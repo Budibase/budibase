@@ -1,4 +1,7 @@
 import {
+  AutomationCustomIOType,
+  AutomationIOType,
+  AutomationStepType,
   AutomationTriggerSchema,
   AutomationTriggerStepId,
 } from "@budibase/types"
@@ -15,13 +18,13 @@ export const definition: AutomationTriggerSchema = {
     inputs: {
       properties: {
         schemaUrl: {
-          type: "string",
-          customType: "webhookUrl",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.WEBHOOK_URL,
           title: "Schema URL",
         },
         triggerUrl: {
-          type: "string",
-          customType: "webhookUrl",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.WEBHOOK_URL,
           title: "Trigger URL",
         },
       },
@@ -30,12 +33,12 @@ export const definition: AutomationTriggerSchema = {
     outputs: {
       properties: {
         body: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "Body of the request which hit the webhook",
         },
       },
       required: ["body"],
     },
   },
-  type: "TRIGGER",
+  type: AutomationStepType.TRIGGER,
 }

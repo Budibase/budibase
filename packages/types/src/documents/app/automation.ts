@@ -1,5 +1,34 @@
 import { Document } from "../document"
 import { EventEmitter } from "events"
+import { User } from "../global"
+
+export enum AutomationIOType {
+  OBJECT = "object",
+  STRING = "string",
+  BOOLEAN = "boolean",
+  NUMBER = "number",
+  ARRAY = "array",
+  JSON = "json",
+  DATE = "date",
+}
+
+export enum AutomationCustomIOType {
+  TABLE = "table",
+  ROW = "row",
+  ROWS = "rows",
+  WIDE = "wide",
+  QUERY = "query",
+  QUERY_PARAMS = "queryParams",
+  QUERY_LIMIT = "queryLimit",
+  LOOP_OPTION = "loopOption",
+  ITEM = "item",
+  CODE = "code",
+  FILTERS = "filters",
+  COLUMN = "column",
+  TRIGGER_SCHEMA = "triggerSchema",
+  CRON = "cron",
+  WEBHOOK_URL = "webhookUrl",
+}
 
 export enum AutomationTriggerStepId {
   ROW_SAVED = "ROW_SAVED",
@@ -8,6 +37,12 @@ export enum AutomationTriggerStepId {
   WEBHOOK = "WEBHOOK",
   APP = "APP",
   CRON = "CRON",
+}
+
+export enum AutomationStepType {
+  LOGIC = "LOGIC",
+  ACTION = "ACTION",
+  TRIGGER = "TRIGGER",
 }
 
 export enum AutomationActionStepId {
@@ -24,6 +59,8 @@ export enum AutomationActionStepId {
   FILTER = "FILTER",
   QUERY_ROWS = "QUERY_ROWS",
   LOOP = "LOOP",
+  COLLECT = "COLLECT",
+  OPENAI = "OPENAI",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
@@ -31,37 +68,97 @@ export enum AutomationActionStepId {
   integromat = "integromat",
 }
 
+export interface EmailInvite {
+  startTime: Date
+  endTime: Date
+  summary: string
+  location?: string
+  url?: string
+}
+
+export interface SendEmailOpts {
+  // workspaceId If finer grain controls being used then this will lookup config for workspace.
+  workspaceId?: string
+  // user If sending to an existing user the object can be provided, this is used in the context.
+  user: User
+  // from If sending from an address that is not what is configured in the SMTP config.
+  from?: string
+  // contents If sending a custom email then can supply contents which will be added to it.
+  contents?: string
+  // subject A custom subject can be specified if the config one is not desired.
+  subject?: string
+  // info Pass in a structure of information to be stored alongside the invitation.
+  info?: any
+  cc?: boolean
+  bcc?: boolean
+  automation?: boolean
+  invite?: EmailInvite
+}
+
+export const AutomationStepIdArray = [
+  ...Object.values(AutomationActionStepId),
+  ...Object.values(AutomationTriggerStepId),
+]
+
 export interface Automation extends Document {
   definition: {
     steps: AutomationStep[]
     trigger: AutomationTrigger
   }
+  screenId?: string
+  uiTree?: any
   appId: string
   live?: boolean
   name: string
+  internal?: boolean
+  type?: string
+}
+
+interface BaseIOStructure {
+  type?: AutomationIOType
+  customType?: AutomationCustomIOType
+  title?: string
+  description?: string
+  dependsOn?: string
+  enum?: string[]
+  pretty?: string[]
+  properties?: {
+    [key: string]: BaseIOStructure
+  }
+  required?: string[]
+}
+
+interface InputOutputBlock {
+  properties: {
+    [key: string]: BaseIOStructure
+  }
+  required?: string[]
 }
 
 export interface AutomationStepSchema {
   name: string
+  stepTitle?: string
   tagline: string
   icon: string
   description: string
-  type: string
+  type: AutomationStepType
   internal?: boolean
   deprecated?: boolean
   stepId: AutomationTriggerStepId | AutomationActionStepId
+  blockToLoop?: string
   inputs: {
     [key: string]: any
   }
   schema: {
-    inputs: {
-      [key: string]: any
-    }
-    outputs: {
-      [key: string]: any
-    }
-    required?: string[]
+    inputs: InputOutputBlock
+    outputs: InputOutputBlock
   }
+  custom?: boolean
+  features?: Partial<Record<AutomationFeature, boolean>>
+}
+
+export enum AutomationFeature {
+  LOOPING = "LOOPING",
 }
 
 export interface AutomationStep extends AutomationStepSchema {
@@ -75,6 +172,10 @@ export interface AutomationTriggerSchema extends AutomationStepSchema {
 
 export interface AutomationTrigger extends AutomationTriggerSchema {
   id: string
+}
+
+export enum AutomationStepStatus {
+  NO_ITERATIONS = "no_iterations",
 }
 
 export enum AutomationStatus {
@@ -116,4 +217,9 @@ export type AutomationStepInput = {
   emitter: EventEmitter
   appId: string
   apiKey?: string
+}
+
+export interface AutomationMetadata extends Document {
+  errorCount?: number
+  automationChainCount?: number
 }

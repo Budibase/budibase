@@ -14,11 +14,26 @@ import { deleteEntityMetadata } from "../../utilities"
 import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events } from "@budibase/backend-core"
-import { automations } from "@budibase/pro"
-import { Automation, BBContext } from "@budibase/types"
+import { automations, features } from "@budibase/pro"
+import {
+  App,
+  Automation,
+  AutomationActionStepId,
+  AutomationResults,
+  BBContext,
+} from "@budibase/types"
+import { getActionDefinitions as actionDefs } from "../../automations/actions"
+import sdk from "../../sdk"
+import { db as dbCore } from "@budibase/backend-core"
+import { builderSocket } from "../../websockets"
 
-const ACTION_DEFS = removeDeprecated(actions.ACTION_DEFINITIONS)
-const TRIGGER_DEFS = removeDeprecated(triggers.TRIGGER_DEFINITIONS)
+async function getActionDefinitions() {
+  return removeDeprecated(await actionDefs())
+}
+
+function getTriggerDefinitions() {
+  return removeDeprecated(triggers.TRIGGER_DEFINITIONS)
+}
 
 /*************************
  *                       *
@@ -65,10 +80,14 @@ export async function create(ctx: BBContext) {
 
   // call through to update if already exists
   if (automation._id && automation._rev) {
-    return update(ctx)
+    await update(ctx)
+    return
   }
 
-  automation._id = generateAutomationID()
+  // Respect existing IDs if recreating a deleted automation
+  if (!automation._id) {
+    automation._id = generateAutomationID()
+  }
 
   automation.type = "automation"
   automation = cleanAutomationInputs(automation)
@@ -90,6 +109,7 @@ export async function create(ctx: BBContext) {
       ...response,
     },
   }
+  builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
 export function getNewSteps(oldAutomation: Automation, automation: Automation) {
@@ -126,7 +146,14 @@ export async function update(ctx: BBContext) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
-  const oldAutomation = await db.get(automation._id)
+
+  // Call through to create if it doesn't exist
+  if (!automation._id || !automation._rev) {
+    await create(ctx)
+    return
+  }
+
+  const oldAutomation = await db.get<Automation>(automation._id)
   automation = cleanAutomationInputs(automation)
   automation = await checkForWebhooks({
     oldAuto: oldAutomation,
@@ -163,6 +190,7 @@ export async function update(ctx: BBContext) {
       _id: response.id,
     },
   }
+  builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
 export async function fetch(ctx: BBContext) {
@@ -183,7 +211,7 @@ export async function find(ctx: BBContext) {
 export async function destroy(ctx: BBContext) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
-  const oldAutomation = await db.get(automationId)
+  const oldAutomation = await db.get<Automation>(automationId)
   await checkForWebhooks({
     oldAuto: oldAutomation,
   })
@@ -191,6 +219,7 @@ export async function destroy(ctx: BBContext) {
   await cleanupAutomationMetadata(automationId)
   ctx.body = await db.remove(automationId, ctx.params.rev)
   await events.automation.deleted(oldAutomation)
+  builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
 export async function logSearch(ctx: BBContext) {
@@ -201,7 +230,7 @@ export async function clearLogError(ctx: BBContext) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
-    const metadata = await db.get(DocumentType.APP_METADATA)
+    const metadata = await db.get<App>(DocumentType.APP_METADATA)
     if (!automationId) {
       delete metadata.automationErrors
     } else if (
@@ -217,17 +246,17 @@ export async function clearLogError(ctx: BBContext) {
 }
 
 export async function getActionList(ctx: BBContext) {
-  ctx.body = ACTION_DEFS
+  ctx.body = await getActionDefinitions()
 }
 
 export async function getTriggerList(ctx: BBContext) {
-  ctx.body = TRIGGER_DEFS
+  ctx.body = getTriggerDefinitions()
 }
 
 export async function getDefinitionList(ctx: BBContext) {
   ctx.body = {
-    trigger: TRIGGER_DEFS,
-    action: ACTION_DEFS,
+    trigger: getTriggerDefinitions(),
+    action: await getActionDefinitions(),
   }
 }
 
@@ -239,14 +268,35 @@ export async function getDefinitionList(ctx: BBContext) {
 
 export async function trigger(ctx: BBContext) {
   const db = context.getAppDB()
-  let automation = await db.get(ctx.params.id)
-  await triggers.externalTrigger(automation, {
-    ...ctx.request.body,
-    appId: ctx.appId,
-  })
-  ctx.body = {
-    message: `Automation ${automation._id} has been triggered.`,
-    automation,
+  let automation = await db.get<Automation>(ctx.params.id)
+
+  let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
+  if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
+    const response: AutomationResults = await triggers.externalTrigger(
+      automation,
+      {
+        fields: ctx.request.body.fields,
+        timeout: ctx.request.body.timeout * 1000 || 120000,
+      },
+      { getResponses: true }
+    )
+
+    let collectedValue = response.steps.find(
+      step => step.stepId === AutomationActionStepId.COLLECT
+    )
+    ctx.body = collectedValue?.outputs
+  } else {
+    if (ctx.appId && !dbCore.isProdAppID(ctx.appId)) {
+      ctx.throw(400, "Only apps in production support this endpoint")
+    }
+    await triggers.externalTrigger(automation, {
+      ...ctx.request.body,
+      appId: ctx.appId,
+    })
+    ctx.body = {
+      message: `Automation ${automation._id} has been triggered.`,
+      automation,
+    }
   }
 }
 
@@ -263,8 +313,8 @@ function prepareTestInput(input: any) {
 
 export async function test(ctx: BBContext) {
   const db = context.getAppDB()
-  let automation = await db.get(ctx.params.id)
-  await setTestFlag(automation._id)
+  let automation = await db.get<Automation>(ctx.params.id)
+  await setTestFlag(automation._id!)
   const testInput = prepareTestInput(ctx.request.body)
   const response = await triggers.externalTrigger(
     automation,
@@ -279,7 +329,7 @@ export async function test(ctx: BBContext) {
     ...ctx.request.body,
     occurredAt: new Date().getTime(),
   })
-  await clearTestFlag(automation._id)
+  await clearTestFlag(automation._id!)
   ctx.body = response
   await events.automation.tested(automation)
 }

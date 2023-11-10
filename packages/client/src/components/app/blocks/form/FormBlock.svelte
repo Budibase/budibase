@@ -10,19 +10,69 @@
   export let size
   export let disabled
   export let fields
-  export let labelPosition
   export let title
-  export let showSaveButton
+  export let description
   export let showDeleteButton
+  export let showSaveButton
+  export let saveButtonLabel
+  export let deleteButtonLabel
   export let rowId
   export let actionUrl
+  export let noRowsMessage
+  export let notificationOverride
+
+  // Accommodate old config to ensure delete button does not reappear
+  $: deleteLabel = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
+  $: saveLabel = showSaveButton === false ? "" : saveButtonLabel?.trim()
 
   const { fetchDatasourceSchema } = getContext("sdk")
+
+  const convertOldFieldFormat = fields => {
+    if (!fields) {
+      return []
+    }
+    return fields.map(field => {
+      if (typeof field === "string") {
+        // existed but was a string
+        return {
+          name: field,
+          active: true,
+        }
+      } else {
+        // existed but had no state
+        return {
+          ...field,
+          active: typeof field?.active != "boolean" ? true : field?.active,
+        }
+      }
+    })
+  }
+
+  const getDefaultFields = (fields, schema) => {
+    if (!schema) {
+      return []
+    }
+    let defaultFields = []
+
+    if (!fields || fields.length === 0) {
+      Object.values(schema)
+        .filter(field => !field.autocolumn)
+        .forEach(field => {
+          defaultFields.push({
+            name: field.name,
+            active: true,
+          })
+        })
+    }
+    return [...fields, ...defaultFields].filter(field => field.active)
+  }
 
   let schema
   let providerId
   let repeaterId
 
+  $: formattedFields = convertOldFieldFormat(fields)
+  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
   $: filter = [
@@ -45,15 +95,15 @@
     actionType,
     size,
     disabled,
-    fields,
-    labelPosition,
+    fields: fieldsOrDefault,
     title,
-    showSaveButton,
-    showDeleteButton,
+    description,
+    saveButtonLabel: saveLabel,
+    deleteButtonLabel: deleteLabel,
     schema,
     repeaterId,
+    notificationOverride,
   }
-
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }
@@ -89,7 +139,7 @@
         bind:id={repeaterId}
         props={{
           dataProvider,
-          noRowsMessage: "We couldn't find a row to display",
+          noRowsMessage: noRowsMessage || "We couldn't find a row to display",
           direction: "column",
           hAlign: "center",
         }}

@@ -53,9 +53,9 @@ const createBuilderStore = () => {
     notifyLoaded: () => {
       eventStore.actions.dispatchEvent("preview-loaded")
     },
-    analyticsPing: async () => {
+    analyticsPing: async ({ embedded }) => {
       try {
-        await API.analyticsPing({ source: "app" })
+        await API.analyticsPing({ source: "app", embedded })
       } catch (error) {
         // Do nothing
       }
@@ -79,9 +79,6 @@ const createBuilderStore = () => {
         return
       }
       store.update(state => ({ ...state, editMode: enabled }))
-    },
-    clickNav: () => {
-      eventStore.actions.dispatchEvent("click-nav")
     },
     requestAddComponent: () => {
       eventStore.actions.dispatchEvent("request-add-component")
@@ -108,6 +105,12 @@ const createBuilderStore = () => {
 
       // Notify the builder so we can reload component definitions
       eventStore.actions.dispatchEvent("reload-plugin")
+    },
+    addParentComponent: (componentId, parentType) => {
+      eventStore.actions.dispatchEvent("add-parent-component", {
+        componentId,
+        parentType,
+      })
     },
   }
   return {

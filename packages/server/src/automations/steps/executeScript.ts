@@ -3,8 +3,12 @@ import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
   AutomationActionStepId,
-  AutomationStepSchema,
+  AutomationCustomIOType,
+  AutomationFeature,
+  AutomationIOType,
   AutomationStepInput,
+  AutomationStepSchema,
+  AutomationStepType,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -12,16 +16,19 @@ export const definition: AutomationStepSchema = {
   tagline: "Execute JavaScript Code",
   icon: "Code",
   description: "Run a piece of JavaScript code in your automation",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
   stepId: AutomationActionStepId.EXECUTE_SCRIPT,
   inputs: {},
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   schema: {
     inputs: {
       properties: {
         code: {
-          type: "string",
-          customType: "code",
+          type: AutomationIOType.STRING,
+          customType: AutomationCustomIOType.CODE,
           title: "Code",
         },
       },
@@ -30,16 +37,16 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         value: {
-          type: "string",
+          type: AutomationIOType.STRING,
           description: "The result of the return statement",
         },
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the action was successful",
         },
       },
+      required: ["success"],
     },
-    required: ["success"],
   },
 }
 

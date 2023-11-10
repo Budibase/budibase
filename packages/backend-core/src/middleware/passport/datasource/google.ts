@@ -1,10 +1,11 @@
-import * as google from "../google"
-import { Cookie, Config } from "../../../constants"
-import { clearCookie, getCookie } from "../../../utils"
-import { getScopedConfig, getPlatformUrl, doWithDB } from "../../../db"
-import environment from "../../../environment"
-import { getGlobalDB } from "../../../tenancy"
-import { BBContext, Database, SSOProfile } from "@budibase/types"
+import * as google from "../sso/google"
+import { Cookie } from "../../../constants"
+import * as configs from "../../../configs"
+import * as cache from "../../../cache"
+import * as utils from "../../../utils"
+import { UserCtx, SSOProfile } from "@budibase/types"
+import { ssoSaveUserNoOp } from "../sso/sso"
+
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
 
 type Passport = {
@@ -12,34 +13,32 @@ type Passport = {
 }
 
 async function fetchGoogleCreds() {
-  // try and get the config from the tenant
-  const db = getGlobalDB()
-  const googleConfig = await getScopedConfig(db, {
-    type: Config.GOOGLE,
-  })
-  // or fall back to env variables
-  return (
-    googleConfig || {
-      clientID: environment.GOOGLE_CLIENT_ID,
-      clientSecret: environment.GOOGLE_CLIENT_SECRET,
-    }
-  )
+  let config = await configs.getGoogleDatasourceConfig()
+
+  if (!config) {
+    throw new Error("No google configuration found")
+  }
+  return config
 }
 
 export async function preAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
   const googleConfig = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl({ tenantAware: false })
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const strategy = await google.strategyFactory(googleConfig, callbackUrl)
+  const strategy = await google.strategyFactory(
+    googleConfig,
+    callbackUrl,
+    ssoSaveUserNoOp
+  )
 
-  if (!ctx.query.appId || !ctx.query.datasourceId) {
-    ctx.throw(400, "appId and datasourceId query params not present.")
+  if (!ctx.query.appId) {
+    ctx.throw(400, "appId query param not present.")
   }
 
   return passport.authenticate(strategy, {
@@ -51,15 +50,15 @@ export async function preAuth(
 
 export async function postAuth(
   passport: Passport,
-  ctx: BBContext,
+  ctx: UserCtx,
   next: Function
 ) {
   // get the relevant config
   const config = await fetchGoogleCreds()
-  const platformUrl = await getPlatformUrl({ tenantAware: false })
+  const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = utils.getCookie(ctx, Cookie.DatasourceAuth)
 
   return passport.authenticate(
     new GoogleStrategy(
@@ -71,27 +70,26 @@ export async function postAuth(
       (
         accessToken: string,
         refreshToken: string,
-        profile: SSOProfile,
+        _profile: SSOProfile,
         done: Function
       ) => {
-        clearCookie(ctx, Cookie.DatasourceAuth)
+        utils.clearCookie(ctx, Cookie.DatasourceAuth)
         done(null, { accessToken, refreshToken })
       }
     ),
     { successRedirect: "/", failureRedirect: "/error" },
     async (err: any, tokens: string[]) => {
-      // update the DB for the datasource with all the user info
-      await doWithDB(authStateCookie.appId, async (db: Database) => {
-        const datasource = await db.get(authStateCookie.datasourceId)
-        if (!datasource.config) {
-          datasource.config = {}
+      const baseUrl = `/builder/app/${authStateCookie.appId}/data`
+
+      const id = utils.newid()
+      await cache.store(
+        `datasource:creation:${authStateCookie.appId}:google:${id}`,
+        {
+          tokens,
         }
-        datasource.config.auth = { type: "google", ...tokens }
-        await db.put(datasource)
-        ctx.redirect(
-          `/builder/app/${authStateCookie.appId}/data/datasource/${authStateCookie.datasourceId}`
-        )
-      })
+      )
+
+      ctx.redirect(`${baseUrl}/new?continue_google_setup=${id}`)
     }
   )(ctx, next)
 }

@@ -7,7 +7,7 @@ import {
   PluginInitEvent,
 } from "@budibase/types"
 
-export async function init(plugin: Plugin) {
+async function init(plugin: Plugin) {
   const properties: PluginInitEvent = {
     type: plugin.schema.type,
     name: plugin.name,
@@ -17,7 +17,7 @@ export async function init(plugin: Plugin) {
   await publishEvent(Event.PLUGIN_INIT, properties)
 }
 
-export async function imported(plugin: Plugin) {
+async function imported(plugin: Plugin) {
   const properties: PluginImportedEvent = {
     pluginId: plugin._id as string,
     type: plugin.schema.type,
@@ -29,7 +29,7 @@ export async function imported(plugin: Plugin) {
   await publishEvent(Event.PLUGIN_IMPORTED, properties)
 }
 
-export async function deleted(plugin: Plugin) {
+async function deleted(plugin: Plugin) {
   const properties: PluginDeletedEvent = {
     pluginId: plugin._id as string,
     type: plugin.schema.type,
@@ -38,4 +38,10 @@ export async function deleted(plugin: Plugin) {
     version: plugin.version,
   }
   await publishEvent(Event.PLUGIN_DELETED, properties)
+}
+
+export default {
+  init,
+  imported,
+  deleted,
 }

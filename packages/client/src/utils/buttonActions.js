@@ -42,7 +42,7 @@ const saveRowHandler = async (action, context) => {
     }
 
     // Refresh related datasources
-    await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+    await dataSourceStore.actions.invalidateDataSource(tableId, {
       invalidateRelationships: true,
     })
 
@@ -75,7 +75,7 @@ const duplicateRowHandler = async (action, context) => {
       }
 
       // Refresh related datasources
-      await dataSourceStore.actions.invalidateDataSource(row.tableId, {
+      await dataSourceStore.actions.invalidateDataSource(tableId, {
         invalidateRelationships: true,
       })
 
@@ -87,13 +87,62 @@ const duplicateRowHandler = async (action, context) => {
   }
 }
 
-const deleteRowHandler = async action => {
-  const { tableId, revId, rowId, notificationOverride } = action.parameters
+const fetchRowHandler = async action => {
+  const { tableId, rowId } = action.parameters
+
   if (tableId && rowId) {
     try {
-      await API.deleteRow({ tableId, rowId, revId })
+      const row = await API.fetchRow({ tableId, rowId })
+
+      return { row }
+    } catch (error) {
+      return false
+    }
+  }
+}
+
+const deleteRowHandler = async action => {
+  const { tableId, rowId: rowConfig, notificationOverride } = action.parameters
+  if (tableId && rowConfig) {
+    try {
+      let requestConfig
+
+      let parsedRowConfig = []
+      if (typeof rowConfig === "string") {
+        try {
+          parsedRowConfig = JSON.parse(rowConfig)
+        } catch (e) {
+          parsedRowConfig = rowConfig
+            .split(",")
+            .map(id => id.trim())
+            .filter(id => id)
+        }
+      } else {
+        parsedRowConfig = rowConfig
+      }
+
+      if (
+        typeof parsedRowConfig === "object" &&
+        parsedRowConfig.constructor === Object
+      ) {
+        requestConfig = [parsedRowConfig]
+      } else if (Array.isArray(parsedRowConfig)) {
+        requestConfig = parsedRowConfig
+      } else if (Number.isInteger(parsedRowConfig)) {
+        requestConfig = [String(parsedRowConfig)]
+      }
+
+      if (!requestConfig && !parsedRowConfig) {
+        notificationStore.actions.warning("No valid rows were supplied")
+        return false
+      }
+
+      const resp = await API.deleteRows({ tableId, rows: requestConfig })
+
       if (!notificationOverride) {
-        notificationStore.actions.success("Row deleted")
+        notificationStore.actions.success(
+          resp?.length == 1 ? "Row deleted" : `${resp.length} Rows deleted`
+        )
       }
 
       // Refresh related datasources
@@ -101,20 +150,32 @@ const deleteRowHandler = async action => {
         invalidateRelationships: true,
       })
     } catch (error) {
-      // Abort next actions
-      return false
+      console.error(error)
+      notificationStore.actions.error(
+        "An error occurred while executing the query"
+      )
     }
   }
 }
 
 const triggerAutomationHandler = async action => {
-  const { fields, notificationOverride } = action.parameters
+  const { fields, notificationOverride, timeout } = action.parameters
   if (fields) {
     try {
-      await API.triggerAutomation({
+      const result = await API.triggerAutomation({
         automationId: action.parameters.automationId,
         fields,
+        timeout,
       })
+
+      // Value will exist if automation is synchronous, so return it.
+      if (result.value) {
+        if (!notificationOverride) {
+          notificationStore.actions.success("Automation ran successfully")
+        }
+        return { result }
+      }
+
       if (!notificationOverride) {
         notificationStore.actions.success("Automation triggered")
       }
@@ -124,10 +185,20 @@ const triggerAutomationHandler = async action => {
     }
   }
 }
-
 const navigationHandler = action => {
-  const { url, peek } = action.parameters
-  routeStore.actions.navigate(url, peek)
+  const { url, peek, externalNewTab } = action.parameters
+  routeStore.actions.navigate(url, peek, externalNewTab)
+}
+
+const scrollHandler = async (action, context) => {
+  return await executeActionHandler(
+    context,
+    action.parameters.componentId,
+    ActionTypes.ScrollTo,
+    {
+      field: action.parameters.field,
+    }
+  )
 }
 
 const queryExecutionHandler = async action => {
@@ -327,6 +398,8 @@ const showNotificationHandler = action => {
   notificationStore.actions[type]?.(message, autoDismiss)
 }
 
+const promptUserHandler = () => {}
+
 const OpenSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
@@ -339,10 +412,12 @@ const CloseSidePanelHandler = () => {
 }
 
 const handlerMap = {
+  ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
+  ["Scroll To Field"]: scrollHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
   ["Validate Form"]: validateFormHandler,
@@ -357,6 +432,7 @@ const handlerMap = {
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
+  ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: OpenSidePanelHandler,
   ["Close Side Panel"]: CloseSidePanelHandler,
 }
@@ -366,6 +442,7 @@ const confirmTextMap = {
   ["Save Row"]: "Are you sure you want to save this row?",
   ["Execute Query"]: "Are you sure you want to execute this query?",
   ["Trigger Automation"]: "Are you sure you want to trigger this automation?",
+  ["Prompt User"]: "Are you sure you want to continue?",
 }
 
 /**
@@ -417,8 +494,12 @@ export const enrichButtonActions = (actions, context) => {
           return new Promise(resolve => {
             const defaultText = confirmTextMap[action["##eventHandlerType"]]
             const confirmText = action.parameters?.confirmText || defaultText
+
+            const defaultTitleText = action["##eventHandlerType"]
+            const customTitleText =
+              action.parameters?.customTitleText || defaultTitleText
             confirmationStore.actions.showConfirmation(
-              action["##eventHandlerType"],
+              customTitleText,
               confirmText,
               async () => {
                 // When confirmed, execute this action immediately,
@@ -429,12 +510,12 @@ export const enrichButtonActions = (actions, context) => {
                   buttonContext.push(result)
                   const newContext = { ...context, actions: buttonContext }
 
-                  // Enrich and call the next button action
+                  // Enrich and call the next button action if there is more than one action remaining
                   const next = enrichButtonActions(
                     actions.slice(i + 1),
                     newContext
                   )
-                  resolve(await next())
+                  resolve(typeof next === "function" ? await next() : true)
                 } else {
                   resolve(false)
                 }

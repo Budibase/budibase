@@ -4,8 +4,9 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
 
   export let panel = ClientBindingPanel
@@ -17,6 +18,7 @@
   export let disabled = false
   export let fillWidth
   export let allowJS = true
+  export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
 
@@ -34,6 +36,10 @@
     onBlur()
     bindingDrawer.hide()
   }
+
+  setContext("binding-drawer-actions", {
+    save: saveBinding,
+  })
 
   const onChange = value => {
     currentVal = readableToRuntimeBinding(bindings, value)
@@ -57,12 +63,25 @@
     {updateOnChange}
   />
   {#if !disabled}
-    <div class="icon" on:click={bindingDrawer.show}>
+    <div
+      class="icon"
+      on:click={() => {
+        bindingDrawer.show()
+      }}
+    >
       <Icon size="S" name="FlashOn" />
     </div>
   {/if}
 </div>
-<Drawer {fillWidth} bind:this={bindingDrawer} {title} left={drawerLeft}>
+<Drawer
+  on:drawerHide
+  on:drawerShow
+  {fillWidth}
+  bind:this={bindingDrawer}
+  {title}
+  left={drawerLeft}
+  headless
+>
   <svelte:fragment slot="description">
     Add the objects on the left to enrich your text.
   </svelte:fragment>
@@ -77,6 +96,7 @@
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
+    {allowHelpers}
   />
 </Drawer>
 

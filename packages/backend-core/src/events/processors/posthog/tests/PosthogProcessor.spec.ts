@@ -1,4 +1,4 @@
-import "../../../../../tests"
+import { testEnv } from "../../../../../tests/extra"
 import PosthogProcessor from "../PosthogProcessor"
 import { Event, IdentityType, Hosting } from "@budibase/types"
 const tk = require("timekeeper")
@@ -16,6 +16,10 @@ const newIdentity = () => {
 }
 
 describe("PosthogProcessor", () => {
+  beforeAll(() => {
+    testEnv.singleTenant()
+  })
+
   beforeEach(async () => {
     jest.clearAllMocks()
     await cache.bustCache(
@@ -43,6 +47,25 @@ describe("PosthogProcessor", () => {
 
       await processor.processEvent(Event.AUTH_SSO_UPDATED, identity, properties)
       expect(processor.posthog.capture).toHaveBeenCalledTimes(0)
+    })
+
+    it("removes audited information", async () => {
+      const processor = new PosthogProcessor("test")
+
+      const identity = newIdentity()
+      const properties = {
+        email: "test",
+        audited: {
+          name: "test",
+        },
+      }
+
+      await processor.processEvent(Event.USER_CREATED, identity, properties)
+      expect(processor.posthog.capture).toHaveBeenCalled()
+      // @ts-ignore
+      const call = processor.posthog.capture.mock.calls[0][0]
+      expect(call.properties.audited).toBeUndefined()
+      expect(call.properties.email).toBeUndefined()
     })
 
     describe("rate limiting", () => {

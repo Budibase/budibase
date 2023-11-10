@@ -5,6 +5,7 @@ import {
   encodeJSBinding,
   findHBSBlocks,
 } from "@budibase/string-templates"
+import { capitalise } from "helpers"
 
 /**
  * Recursively searches for a specific component ID
@@ -163,7 +164,12 @@ export const getComponentSettings = componentType => {
     def.settings
       ?.filter(setting => setting.section)
       .forEach(section => {
-        settings = settings.concat(section.settings || [])
+        settings = settings.concat(
+          (section.settings || []).map(setting => ({
+            ...setting,
+            section: section.name,
+          }))
+        )
       })
   }
   componentSettingCache[componentType] = settings
@@ -229,4 +235,14 @@ export const makeComponentUnique = component => {
 
   // Recurse on all children
   return JSON.parse(definition)
+}
+
+export const getComponentText = component => {
+  if (component?._instanceName) {
+    return component._instanceName
+  }
+  const type =
+    component._component.replace("@budibase/standard-components/", "") ||
+    "component"
+  return capitalise(type)
 }

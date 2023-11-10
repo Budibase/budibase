@@ -1,11 +1,11 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, rows } from "stores/backend"
+  import { tables } from "stores/backend"
   import { roles } from "stores/backend"
   import { notifications } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-  import { ModalContent, Select, Link } from "@budibase/bbui"
+  import { keepOpen, ModalContent, Select, Link } from "@budibase/bbui"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
@@ -51,14 +51,13 @@
       errors = [...errors, { message: "Role is required" }]
     }
     if (errors.length) {
-      return false
+      return keepOpen
     }
 
     try {
-      await API.saveRow({ ...row, tableId: table._id })
+      const res = await API.saveRow({ ...row, tableId: table._id })
       notifications.success("User saved successfully")
-      rows.save()
-      dispatch("updaterows")
+      dispatch("updaterows", res.id)
     } catch (error) {
       if (error.handled) {
         const response = error.json
@@ -80,8 +79,8 @@
       } else {
         notifications.error("Error saving user")
       }
-      // Prevent closing the modal on errors
-      return false
+
+      return keepOpen
     }
   }
 </script>
@@ -96,9 +95,9 @@
   {#if !creating}
     <div>
       A user's email, role, first and last names cannot be changed from within
-      the app builder. Please go to the <Link
-        on:click={$goto("/builder/portal/manage/users")}>user portal</Link
-      > to do this.
+      the app builder. Please go to the
+      <Link on:click={$goto("/builder/portal/users/users")}>user portal</Link>
+      to do this.
     </div>
   {/if}
   <RowFieldControl
@@ -120,7 +119,6 @@
        selection is always undefined -->
   <Select
     label="Role"
-    data-cy="roleId-select"
     bind:value={row.roleId}
     options={$roles}
     getOptionLabel={role => role.name}

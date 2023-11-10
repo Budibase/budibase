@@ -24,7 +24,7 @@ export function addJSBinding(value, caretPos, binding, { helper } = {}) {
   if (!helper) {
     binding = `$("${binding}")`
   } else {
-    binding = `helper.${binding}()`
+    binding = `helpers.${binding}()`
   }
   if (caretPos.start) {
     value =

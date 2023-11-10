@@ -3,52 +3,100 @@
     Body,
     Button,
     Combobox,
-    Multiselect,
     DatePicker,
     DrawerContent,
     Icon,
     Input,
-    Layout,
-    Select,
     Label,
+    Layout,
+    Multiselect,
+    Select,
   } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { generate } from "shortid"
-  import { LuceneUtils, Constants } from "@budibase/frontend-core"
+  import { Constants, LuceneUtils } from "@budibase/frontend-core"
   import { getFields } from "helpers/searchFields"
+  import { FieldType } from "@budibase/types"
   import { createEventDispatcher, onMount } from "svelte"
-
-  const dispatch = createEventDispatcher()
-  const { OperatorOptions } = Constants
-  const { getValidOperatorsForType } = LuceneUtils
+  import FilterUsers from "./FilterUsers.svelte"
 
   export let schemaFields
   export let filters = []
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-  export let allOr = false
   export let fillWidth = false
-  export let tableId
+  export let datasource
 
-  $: dispatch("change", filters)
-  $: enrichedSchemaFields = getFields(
-    schemaFields || [],
-    { allowLinks: true },
-    tableId
-  )
+  const dispatch = createEventDispatcher()
+  const { OperatorOptions } = Constants
+  const KeyedFieldRegex = /\d[0-9]*:/g
+  const behaviourOptions = [
+    { value: "and", label: "Match all filters" },
+    { value: "or", label: "Match any filter" },
+  ]
+  const onEmptyOptions = [
+    { value: "all", label: "Return all table rows" },
+    { value: "none", label: "Return no rows" },
+  ]
+
+  let rawFilters
+  let matchAny = false
+  let onEmptyFilter = "all"
+
+  $: parseFilters(filters)
+  $: dispatch("change", enrichFilters(rawFilters, matchAny, onEmptyFilter))
+  $: enrichedSchemaFields = getFields(schemaFields || [], { allowLinks: true })
   $: fieldOptions = enrichedSchemaFields.map(field => field.name) || []
   $: valueTypeOptions = allowBindings ? ["Value", "Binding"] : ["Value"]
 
-  let behaviourValue
-  const behaviourOptions = [
-    { value: "and", label: "Match all of the following filters" },
-    { value: "or", label: "Match any of the following filters" },
-  ]
+  // Remove field key prefixes and determine which behaviours to use
+  const parseFilters = filters => {
+    matchAny = filters?.find(filter => filter.operator === "allOr") != null
+    onEmptyFilter =
+      filters?.find(filter => filter.onEmptyFilter)?.onEmptyFilter ?? "all"
+    rawFilters = (filters || [])
+      .filter(filter => filter.operator !== "allOr" && !filter.onEmptyFilter)
+      .map(filter => {
+        const { field } = filter
+        let newFilter = { ...filter }
+        delete newFilter.allOr
+        if (typeof field === "string" && field.match(KeyedFieldRegex) != null) {
+          const parts = field.split(":")
+          parts.shift()
+          newFilter.field = parts.join(":")
+        }
+        return newFilter
+      })
+  }
+
+  onMount(() => {
+    parseFilters(filters)
+    rawFilters.forEach(filter => {
+      filter.type =
+        schemaFields.find(field => field.name === filter.field)?.type ||
+        filter.type
+    })
+  })
+
+  // Add field key prefixes and a special metadata filter object to indicate
+  // how to handle filter behaviour
+  const enrichFilters = (rawFilters, matchAny, onEmptyFilter) => {
+    let count = 1
+    return rawFilters
+      .filter(filter => filter.field)
+      .map(filter => ({
+        ...filter,
+        field: `${count++}:${filter.field}`,
+      }))
+      .concat(matchAny ? [{ operator: "allOr" }] : [])
+      .concat([{ onEmptyFilter }])
+  }
+
   const addFilter = () => {
-    filters = [
-      ...filters,
+    rawFilters = [
+      ...rawFilters,
       {
         id: generate(),
         field: null,
@@ -60,31 +108,32 @@
   }
 
   const removeFilter = id => {
-    filters = filters.filter(field => field.id !== id)
+    rawFilters = rawFilters.filter(field => field.id !== id)
   }
 
   const duplicateFilter = id => {
-    const existingFilter = filters.find(filter => filter.id === id)
+    const existingFilter = rawFilters.find(filter => filter.id === id)
     const duplicate = { ...existingFilter, id: generate() }
-    filters = [...filters, duplicate]
+    rawFilters = [...rawFilters, duplicate]
   }
 
   const getSchema = filter => {
-    return schemaFields.find(field => field.name === filter.field)
+    return enrichedSchemaFields.find(field => field.name === filter.field)
   }
 
-  const santizeTypes = filter => {
+  const sanitizeTypes = filter => {
     // Update type based on field
     const fieldSchema = enrichedSchemaFields.find(x => x.name === filter.field)
     filter.type = fieldSchema?.type
+    filter.subtype = fieldSchema?.subtype
 
     // Update external type based on field
     filter.externalType = getSchema(filter)?.externalType
   }
 
-  const santizeOperator = filter => {
+  const sanitizeOperator = filter => {
     // Ensure a valid operator is selected
-    const operators = getValidOperatorsForType(filter.type).map(x => x.value)
+    const operators = getValidOperatorsForType(filter).map(x => x.value)
     if (!operators.includes(filter.operator)) {
       filter.operator = operators[0] ?? OperatorOptions.Equals.value
     }
@@ -97,7 +146,7 @@
     filter.noValue = noValueOptions.includes(filter.operator)
   }
 
-  const santizeValue = filter => {
+  const sanitizeValue = (filter, previousType) => {
     // Check if the operator allows a value at all
     if (filter.noValue) {
       filter.value = null
@@ -111,22 +160,29 @@
       }
     } else if (filter.type === "array" && filter.valueType === "Value") {
       filter.value = []
+    } else if (
+      previousType !== filter.type &&
+      (previousType === FieldType.BB_REFERENCE ||
+        filter.type === FieldType.BB_REFERENCE)
+    ) {
+      filter.value = filter.type === "array" ? [] : null
     }
   }
 
   const onFieldChange = filter => {
-    santizeTypes(filter)
-    santizeOperator(filter)
-    santizeValue(filter)
+    const previousType = filter.type
+    sanitizeTypes(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter, previousType)
   }
 
   const onOperatorChange = filter => {
-    santizeOperator(filter)
-    santizeValue(filter)
+    sanitizeOperator(filter)
+    sanitizeValue(filter, filter.type)
   }
 
   const onValueTypeChange = filter => {
-    santizeValue(filter)
+    sanitizeValue(filter)
   }
 
   const getFieldOptions = field => {
@@ -134,40 +190,53 @@
     return schema?.constraints?.inclusion || []
   }
 
-  onMount(() => {
-    behaviourValue = allOr ? "or" : "and"
-  })
+  const getValidOperatorsForType = filter => {
+    if (!filter?.field) {
+      return []
+    }
+
+    return LuceneUtils.getValidOperatorsForType(
+      { type: filter.type, subtype: filter.subtype },
+      filter.field,
+      datasource
+    )
+  }
 </script>
 
 <DrawerContent>
   <div class="container">
     <Layout noPadding>
-      <Body size="S">
-        {#if !filters?.length}
-          Add your first filter expression.
-        {:else}
-          Results are filtered to only those which match all of the following
-          constraints.
-        {/if}
-      </Body>
-      {#if filters?.length}
+      {#if !rawFilters?.length}
+        <Body size="S">Add your first filter expression.</Body>
+      {:else}
         <div class="fields">
           <Select
             label="Behaviour"
-            value={behaviourValue}
+            value={matchAny ? "or" : "and"}
             options={behaviourOptions}
             getOptionLabel={opt => opt.label}
             getOptionValue={opt => opt.value}
-            on:change={e => (allOr = e.detail === "or")}
+            on:change={e => (matchAny = e.detail === "or")}
             placeholder={null}
           />
+          {#if datasource?.type === "table"}
+            <Select
+              label="When filter empty"
+              value={onEmptyFilter}
+              options={onEmptyOptions}
+              getOptionLabel={opt => opt.label}
+              getOptionValue={opt => opt.value}
+              on:change={e => (onEmptyFilter = e.detail)}
+              placeholder={null}
+            />
+          {/if}
         </div>
         <div>
           <div class="filter-label">
             <Label>Filters</Label>
           </div>
           <div class="fields">
-            {#each filters as filter, idx}
+            {#each rawFilters as filter}
               <Select
                 bind:value={filter.field}
                 options={fieldOptions}
@@ -176,7 +245,7 @@
               />
               <Select
                 disabled={!filter.field}
-                options={getValidOperatorsForType(filter.type)}
+                options={getValidOperatorsForType(filter)}
                 bind:value={filter.operator}
                 on:change={() => onOperatorChange(filter)}
                 placeholder={null}
@@ -199,7 +268,7 @@
                   on:change={event => (filter.value = event.detail)}
                   {fillWidth}
                 />
-              {:else if ["string", "longform", "number", "formula"].includes(filter.type)}
+              {:else if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />
               {:else if filter.type === "array" || (filter.type === "options" && filter.operator === "oneOf")}
                 <Multiselect
@@ -225,9 +294,18 @@
               {:else if filter.type === "datetime"}
                 <DatePicker
                   disabled={filter.noValue}
-                  enableTime={!getSchema(filter).dateOnly}
-                  timeOnly={getSchema(filter).timeOnly}
+                  enableTime={!getSchema(filter)?.dateOnly}
+                  timeOnly={getSchema(filter)?.timeOnly}
                   bind:value={filter.value}
+                />
+              {:else if filter.type === FieldType.BB_REFERENCE}
+                <FilterUsers
+                  bind:value={filter.value}
+                  multiselect={[
+                    OperatorOptions.In.value,
+                    OperatorOptions.ContainsAny.value,
+                  ].includes(filter.operator)}
+                  disabled={filter.noValue}
                 />
               {:else}
                 <DrawerBindableInput disabled />
@@ -269,7 +347,7 @@
     column-gap: var(--spacing-l);
     row-gap: var(--spacing-s);
     align-items: center;
-    grid-template-columns: 1fr 150px 120px 1fr 16px 16px;
+    grid-template-columns: minmax(150px, 1fr) 170px 120px minmax(150px, 1fr) 16px 16px;
   }
 
   .filter-label {

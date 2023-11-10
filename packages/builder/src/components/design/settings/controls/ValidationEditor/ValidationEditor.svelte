@@ -5,20 +5,32 @@
 
   export let value = []
   export let bindings = []
-  export let componentDefinition
+  export let componentInstance
   export let type
-
+  const dispatch = createEventDispatcher()
   let drawer
 
-  const dispatch = createEventDispatcher()
+  $: text = getText(value)
+
   const save = () => {
     dispatch("change", value)
     drawer.hide()
   }
+
+  const getText = rules => {
+    if (!rules?.length) {
+      return "No rules set"
+    } else {
+      return `${rules.length} rule${rules.length === 1 ? "" : "s"} set`
+    }
+  }
 </script>
 
-<ActionButton on:click={drawer.show}>Configure validation</ActionButton>
-<Drawer bind:this={drawer} title="Validation Rules">
+<div class="validation-editor">
+  <ActionButton on:click={drawer.show}>{text}</ActionButton>
+</div>
+
+<Drawer bind:this={drawer} title="Validation Rules" on:drawerHide on:drawerShow>
   <svelte:fragment slot="description">
     Configure validation rules for this field.
   </svelte:fragment>
@@ -28,6 +40,12 @@
     bind:rules={value}
     {type}
     {bindings}
-    {componentDefinition}
+    fieldName={componentInstance?.field}
   />
 </Drawer>
+
+<style>
+  .validation-editor :global(.spectrum-ActionButton) {
+    width: 100%;
+  }
+</style>

@@ -4,8 +4,9 @@ import {
   InviteUsersRequest,
   User,
   CreateAdminUserRequest,
+  SearchQuery,
 } from "@budibase/types"
-import * as structures from "../structures"
+import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI, TestAPIOpts } from "./base"
@@ -26,8 +27,8 @@ export class UserAPI extends TestAPI {
         email,
       })
       .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
       .expect(status)
+      .expect("Content-Type", /json/)
 
     if (status !== 200) {
       return { code: undefined, res }
@@ -48,6 +49,7 @@ export class UserAPI extends TestAPI {
       .send({
         password: "newpassword",
         inviteCode: code,
+        firstName: "Ted",
       })
       .expect("Content-Type", /json/)
       .expect(200)
@@ -99,7 +101,7 @@ export class UserAPI extends TestAPI {
       request = {
         email: structures.email(),
         password: generator.string(),
-        tenantId: structures.uuid(),
+        tenantId: structures.tenant.id(),
       }
     }
     const res = await this.request
@@ -132,11 +134,46 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
+  searchUsers = (
+    { query }: { query?: SearchQuery },
+    opts?: { status?: number; noHeaders?: boolean }
+  ) => {
+    const req = this.request
+      .post("/api/global/users/search")
+      .send({ query })
+      .expect("Content-Type", /json/)
+      .expect(opts?.status ? opts.status : 200)
+    if (!opts?.noHeaders) {
+      req.set(this.config.defaultHeaders())
+    }
+    return req
+  }
+
   getUser = (userId: string, opts?: TestAPIOpts) => {
     return this.request
       .get(`/api/global/users/${userId}`)
       .set(opts?.headers ? opts.headers : this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(opts?.status ? opts.status : 200)
+  }
+
+  grantBuilderToApp = (
+    userId: string,
+    appId: string,
+    statusCode: number = 200
+  ) => {
+    return this.request
+      .post(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(statusCode)
+  }
+
+  revokeBuilderFromApp = (userId: string, appId: string) => {
+    return this.request
+      .delete(`/api/global/users/${userId}/app/${appId}/builder`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
   }
 }

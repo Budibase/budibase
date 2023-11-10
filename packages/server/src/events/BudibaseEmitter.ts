@@ -26,4 +26,4 @@ class BudibaseEmitter extends EventEmitter {
   }
 }
 
-export = BudibaseEmitter
+export default BudibaseEmitter

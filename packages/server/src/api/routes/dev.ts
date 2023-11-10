@@ -35,4 +35,4 @@ router
     controller.revert
   )
 
-export = router
+export default router

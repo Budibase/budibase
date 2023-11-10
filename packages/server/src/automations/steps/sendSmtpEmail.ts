@@ -4,6 +4,9 @@ import {
   AutomationActionStepId,
   AutomationStepSchema,
   AutomationStepInput,
+  AutomationStepType,
+  AutomationIOType,
+  AutomationFeature,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -11,36 +14,68 @@ export const definition: AutomationStepSchema = {
   tagline: "Send SMTP email to {{inputs.to}}",
   icon: "Email",
   name: "Send Email (SMTP)",
-  type: "ACTION",
+  type: AutomationStepType.ACTION,
   internal: true,
+  features: {
+    [AutomationFeature.LOOPING]: true,
+  },
   stepId: AutomationActionStepId.SEND_EMAIL_SMTP,
   inputs: {},
   schema: {
     inputs: {
       properties: {
         to: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Send To",
         },
         from: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Send From",
         },
         cc: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "CC",
         },
         bcc: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "BCC",
         },
         subject: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "Email Subject",
         },
         contents: {
-          type: "string",
+          type: AutomationIOType.STRING,
           title: "HTML Contents",
+        },
+        addInvite: {
+          type: AutomationIOType.BOOLEAN,
+          title: "Add calendar invite",
+        },
+        startTime: {
+          type: AutomationIOType.DATE,
+          title: "Start Time",
+          dependsOn: "addInvite",
+        },
+        endTime: {
+          type: AutomationIOType.DATE,
+          title: "End Time",
+          dependsOn: "addInvite",
+        },
+        summary: {
+          type: AutomationIOType.STRING,
+          title: "Meeting Summary",
+          dependsOn: "addInvite",
+        },
+        location: {
+          type: AutomationIOType.STRING,
+          title: "Location",
+          dependsOn: "addInvite",
+        },
+        url: {
+          type: AutomationIOType.STRING,
+          title: "URL",
+          dependsOn: "addInvite",
         },
       },
       required: ["to", "from", "subject", "contents"],
@@ -48,11 +83,11 @@ export const definition: AutomationStepSchema = {
     outputs: {
       properties: {
         success: {
-          type: "boolean",
+          type: AutomationIOType.BOOLEAN,
           description: "Whether the email was sent",
         },
         response: {
-          type: "object",
+          type: AutomationIOType.OBJECT,
           description: "A response from the email client, this may be an error",
         },
       },
@@ -62,21 +97,43 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  let { to, from, subject, contents, cc, bcc } = inputs
+  let {
+    to,
+    from,
+    subject,
+    contents,
+    cc,
+    bcc,
+    addInvite,
+    startTime,
+    endTime,
+    summary,
+    location,
+    url,
+  } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
   try {
-    let response = await sendSmtpEmail(
+    let response = await sendSmtpEmail({
       to,
       from,
       subject,
       contents,
       cc,
       bcc,
-      true
-    )
+      automation: true,
+      invite: addInvite
+        ? {
+            startTime,
+            endTime,
+            summary,
+            location,
+            url,
+          }
+        : undefined,
+    })
     return {
       success: true,
       response,

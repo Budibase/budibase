@@ -4,7 +4,7 @@ import {
   notificationStore,
 } from "./stores/index.js"
 import { get } from "svelte/store"
-import { io } from "socket.io-client"
+import { createWebsocket } from "@budibase/frontend-core"
 
 let socket
 
@@ -18,19 +18,8 @@ export const initWebsocket = () => {
   }
 
   // Initialise connection
-  const tls = location.protocol === "https:"
-  const proto = tls ? "wss:" : "ws:"
-  const host = location.hostname
-  const port = location.port || (tls ? 443 : 80)
-  socket = io(`${proto}//${host}:${port}`, {
-    path: "/socket/client",
-    // Cap reconnection attempts to 3 (total of 15 seconds before giving up)
-    reconnectionAttempts: 3,
-    // Delay reconnection attempt by 5 seconds
-    reconnectionDelay: 5000,
-    reconnectionDelayMax: 5000,
-    // Timeout after 4 seconds so we never stack requests
-    timeout: 4000,
+  socket = createWebsocket("/socket/client", {
+    heartbeat: false,
   })
 
   // Event handlers

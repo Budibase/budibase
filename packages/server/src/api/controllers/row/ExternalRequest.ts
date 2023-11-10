@@ -1,30 +1,38 @@
 import {
-  FilterType,
-  IncludeRelationship,
-  Operation,
-  PaginationJson,
-  RelationshipsJson,
-  SearchFilters,
-  SortJson,
+  AutoReason,
   Datasource,
   FieldSchema,
+  FieldType,
+  FilterType,
+  IncludeRelationship,
+  ManyToManyRelationshipFieldMetadata,
+  OneToManyRelationshipFieldMetadata,
+  Operation,
+  PaginationJson,
+  RelationshipFieldMetadata,
+  RelationshipsJson,
+  RelationshipType,
   Row,
+  SearchFilters,
+  SortJson,
+  SortType,
   Table,
 } from "@budibase/types"
 import {
+  breakExternalTableId,
   breakRowIdField,
+  convertRowId,
   generateRowIdField,
   isRowId,
-  convertRowId,
+  isSQL,
 } from "../../../integrations/utils"
-import { getDatasourceAndQuery } from "./utils"
-import { FieldTypes, RelationshipTypes } from "../../../constants"
-import { breakExternalTableId, isSQL } from "../../../integrations/utils"
+import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
+import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
-// @ts-ignore
 import { cloneDeep } from "lodash/fp"
-import { processFormulas, processDates } from "../../../utilities/rowProcessor"
-import { context } from "@budibase/backend-core"
+import { processDates, processFormulas } from "../../../utilities/rowProcessor"
+import { db as dbCore } from "@budibase/backend-core"
+import sdk from "../../../sdk"
 
 export interface ManyRelationship {
   tableId?: string
@@ -43,6 +51,7 @@ export interface RunConfig {
   row?: Row
   rows?: Row[]
   tables?: Record<string, Table>
+  includeSqlRelationships?: IncludeRelationship
 }
 
 function buildFilters(
@@ -55,15 +64,21 @@ function buildFilters(
   let idCopy: undefined | string | any[] = cloneDeep(id)
   if (filters) {
     // need to map over the filters and make sure the _id field isn't present
-    for (let filter of Object.values(filters)) {
-      if (filter._id && primary) {
-        const parts = breakRowIdField(filter._id)
-        for (let field of primary) {
-          filter[field] = parts.shift()
+    let prefix = 1
+    for (let operator of Object.values(filters)) {
+      for (let field of Object.keys(operator || {})) {
+        if (dbCore.removeKeyNumbering(field) === "_id") {
+          if (primary) {
+            const parts = breakRowIdField(operator[field])
+            for (let field of primary) {
+              operator[`${prefix}:${field}`] = parts.shift()
+            }
+            prefix++
+          }
+          // make sure this field doesn't exist on any filter
+          delete operator[field]
         }
       }
-      // make sure this field doesn't exist on any filter
-      delete filter._id
     }
   }
   // there is no id, just use the user provided filters
@@ -133,7 +148,11 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   return config
 }
 
-function generateIdForRow(row: Row | undefined, table: Table): string {
+function generateIdForRow(
+  row: Row | undefined,
+  table: Table,
+  isLinked: boolean = false
+): string {
   const primary = table.primary
   if (!row || !primary) {
     return ""
@@ -141,9 +160,13 @@ function generateIdForRow(row: Row | undefined, table: Table): string {
   // build id array
   let idParts = []
   for (let field of primary) {
-    // need to handle table name + field or just field, depending on if relationships used
-    const fieldValue = row[`${table.name}.${field}`] || row[field]
-    if (fieldValue) {
+    let fieldValue = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName: field,
+      isLinked,
+    })
+    if (fieldValue != null) {
       idParts.push(fieldValue)
     }
   }
@@ -165,21 +188,55 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
-function basicProcessing(row: Row, table: Table): Row {
+// need to handle table name + field or just field, depending on if relationships used
+function extractFieldValue({
+  row,
+  tableName,
+  fieldName,
+  isLinked,
+}: {
+  row: Row
+  tableName: string
+  fieldName: string
+  isLinked: boolean
+}) {
+  let value = row[`${tableName}.${fieldName}`]
+  if (value == null && !isLinked) {
+    value = row[fieldName]
+  }
+  return value
+}
+
+function basicProcessing({
+  row,
+  table,
+  isLinked,
+}: {
+  row: Row
+  table: Table
+  isLinked: boolean
+}): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let fieldName of Object.keys(table.schema)) {
-    const pathValue = row[`${table.name}.${fieldName}`]
-    const value = pathValue != null ? pathValue : row[fieldName]
+  for (let field of Object.values(table.schema)) {
+    const fieldName = field.name
+
+    const value = extractFieldValue({
+      row,
+      tableName: table.name,
+      fieldName,
+      isLinked,
+    })
+
     // all responses include "select col as table.col" so that overlaps are handled
     if (value != null) {
       thisRow[fieldName] = value
     }
   }
-  thisRow._id = generateIdForRow(row, table)
+  thisRow._id = generateIdForRow(row, table, isLinked)
   thisRow.tableId = table._id
   thisRow._rev = "rev"
-  return processFormulas(table, thisRow)
+  return thisRow
 }
 
 function fixArrayTypes(row: Row, table: Table) {
@@ -199,19 +256,39 @@ function fixArrayTypes(row: Row, table: Table) {
   return row
 }
 
-function isOneSide(field: FieldSchema) {
+function isOneSide(
+  field: RelationshipFieldMetadata
+): field is OneToManyRelationshipFieldMetadata {
   return (
     field.relationshipType && field.relationshipType.split("-")[0] === "one"
   )
 }
 
-export class ExternalRequest {
-  private operation: Operation
-  private tableId: string
+function isManyToMany(
+  field: RelationshipFieldMetadata
+): field is ManyToManyRelationshipFieldMetadata {
+  return !!(field as ManyToManyRelationshipFieldMetadata).through
+}
+
+function isEditableColumn(column: FieldSchema) {
+  const isExternalAutoColumn =
+    column.autocolumn &&
+    column.autoReason !== AutoReason.FOREIGN_KEY &&
+    column.subtype !== AutoFieldSubTypes.AUTO_ID
+  const isFormula = column.type === FieldTypes.FORMULA
+  return !(isExternalAutoColumn || isFormula)
+}
+
+export type ExternalRequestReturnType<T extends Operation> =
+  T extends Operation.READ ? Row[] : { row: Row; table: Table }
+
+export class ExternalRequest<T extends Operation> {
+  private readonly operation: T
+  private readonly tableId: string
   private datasource?: Datasource
   private tables: { [key: string]: Table } = {}
 
-  constructor(operation: Operation, tableId: string, datasource?: Datasource) {
+  constructor(operation: T, tableId: string, datasource?: Datasource) {
     this.operation = operation
     this.tableId = tableId
     this.datasource = datasource
@@ -241,17 +318,7 @@ export class ExternalRequest {
       manyRelationships: ManyRelationship[] = []
     for (let [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
-      if (
-        row[key] == null ||
-        newRow[key] ||
-        field.autocolumn ||
-        field.type === FieldTypes.FORMULA
-      ) {
-        continue
-      }
-      // if its an empty string then it means return the column to null (if possible)
-      if (row[key] === "") {
-        newRow[key] = null
+      if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
         continue
       }
       // parse floats/numbers
@@ -274,17 +341,23 @@ export class ExternalRequest {
       // one to many
       if (isOneSide(field)) {
         let id = row[key][0]
-        if (typeof row[key] === "string") {
-          id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+        if (id) {
+          if (typeof row[key] === "string") {
+            id = decodeURIComponent(row[key]).match(/\[(.*?)\]/)?.[1]
+          }
+          newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
+        } else {
+          // Removing from both new and row, as we don't know if it has already been processed
+          row[field.foreignKey || linkTablePrimary] = null
+          newRow[field.foreignKey || linkTablePrimary] = null
         }
-        newRow[field.foreignKey || linkTablePrimary] = breakRowIdField(id)[0]
       }
       // many to many
-      else if (field.through) {
+      else if (isManyToMany(field)) {
         // we're not inserting a doc, will be a bunch of update calls
         const otherKey: string = field.throughFrom || linkTablePrimary
         const thisKey: string = field.throughTo || tablePrimary
-        row[key].map((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.through || field.tableId,
             isUpdate: false,
@@ -293,14 +366,14 @@ export class ExternalRequest {
             // leave the ID for enrichment later
             [thisKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
       // many to one
       else {
         const thisKey: string = "id"
         // @ts-ignore
         const otherKey: string = field.fieldName
-        row[key].map((relationship: any) => {
+        for (const relationship of row[key]) {
           manyRelationships.push({
             tableId: field.tableId,
             isUpdate: true,
@@ -309,7 +382,7 @@ export class ExternalRequest {
             // leave the ID for enrichment later
             [otherKey]: `{{ literal ${tablePrimary} }}`,
           })
-        })
+        }
       }
     }
     // we return the relationships that may need to be created in the through table
@@ -318,7 +391,7 @@ export class ExternalRequest {
     return { row: newRow, manyRelationships }
   }
 
-  squashRelationshipColumns(
+  processRelationshipFields(
     table: Table,
     row: Row,
     relationships: RelationshipsJson[]
@@ -328,13 +401,18 @@ export class ExternalRequest {
       if (!linkedTable || !row[relationship.column]) {
         continue
       }
-      const display = linkedTable.primaryDisplay
       for (let key of Object.keys(row[relationship.column])) {
-        const related: Row = row[relationship.column][key]
-        row[relationship.column][key] = {
-          primaryDisplay: display ? related[display] : undefined,
-          _id: related._id,
+        let relatedRow: Row = row[relationship.column][key]
+        // add this row as context for the relationship
+        for (let col of Object.values(linkedTable.schema)) {
+          if (col.type === FieldType.LINK && col.tableId === table._id) {
+            relatedRow[col.name] = [row]
+          }
         }
+        // process additional types
+        relatedRow = processDates(table, relatedRow)
+        relatedRow = processFormulas(linkedTable, relatedRow)
+        row[relationship.column][key] = relatedRow
       }
     }
     return row
@@ -370,7 +448,8 @@ export class ExternalRequest {
       ) {
         continue
       }
-      let linked = basicProcessing(row, linkedTable)
+
+      let linked = basicProcessing({ row, table: linkedTable, isLinked: true })
       if (!linked._id) {
         continue
       }
@@ -418,7 +497,10 @@ export class ExternalRequest {
         )
         continue
       }
-      const thisRow = fixArrayTypes(basicProcessing(row, table), table)
+      const thisRow = fixArrayTypes(
+        basicProcessing({ row, table, isLinked: false }),
+        table
+      )
       if (thisRow._id == null) {
         throw "Unable to generate row ID for SQL rows"
       }
@@ -432,14 +514,14 @@ export class ExternalRequest {
       )
     }
 
-    // Process some additional data types
-    let finalRowArray = Object.values(finalRows)
-    finalRowArray = processDates(table, finalRowArray)
-    finalRowArray = processFormulas(table, finalRowArray) as Row[]
-
-    return finalRowArray.map((row: Row) =>
-      this.squashRelationshipColumns(table, row, relationships)
+    // make sure all related rows are correct
+    let finalRowArray = Object.values(finalRows).map(row =>
+      this.processRelationshipFields(table, row, relationships)
     )
+
+    // process some additional types
+    finalRowArray = processDates(table, finalRowArray)
+    return finalRowArray
   }
 
   /**
@@ -462,15 +544,12 @@ export class ExternalRequest {
       if (!table.primary || !linkTable.primary) {
         continue
       }
-      const definition: any = {
-        // if no foreign key specified then use the name of the field in other table
-        from: field.foreignKey || table.primary[0],
-        to: field.fieldName,
+      const definition: RelationshipsJson = {
         tableName: linkTableName,
         // need to specify where to put this back into
         column: fieldName,
       }
-      if (field.through) {
+      if (isManyToMany(field)) {
         const { tableName: throughTableName } = breakExternalTableId(
           field.through
         )
@@ -480,6 +559,10 @@ export class ExternalRequest {
         definition.to = field.throughFrom || linkTable.primary[0]
         definition.fromPrimary = table.primary[0]
         definition.toPrimary = linkTable.primary[0]
+      } else {
+        // if no foreign key specified then use the name of the field in other table
+        definition.from = field.foreignKey || table.primary[0]
+        definition.to = field.fieldName
       }
       relationships.push(definition)
     }
@@ -501,7 +584,7 @@ export class ExternalRequest {
     const primaryKey = table.primary[0]
     // make a new request to get the row with all its relationships
     // we need this to work out if any relationships need removed
-    for (let field of Object.values(table.schema)) {
+    for (const field of Object.values(table.schema)) {
       if (
         field.type !== FieldTypes.LINK ||
         !field.fieldName ||
@@ -509,14 +592,14 @@ export class ExternalRequest {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipTypes.MANY_TO_MANY
+      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
       const tableId = isMany ? field.through : field.tableId
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-      const manyKey = field.throughTo || primaryKey
+
       const lookupField = isMany ? primaryKey : field.foreignKey
-      const fieldName = isMany ? manyKey : field.fieldName
+      const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
       }
@@ -558,19 +641,41 @@ export class ExternalRequest {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
-      // @ts-ignore
-      const linkPrimary = linkTable?.primary[0]
+      const relationshipPrimary = linkTable?.primary || []
+      const linkPrimary = relationshipPrimary[0]
       if (!linkTable || !linkPrimary) {
         return
       }
+
+      const linkSecondary = relationshipPrimary[1]
+
       const rows = related[key]?.rows || []
-      const found = rows.find(
-        (row: { [key: string]: any }) =>
+
+      function relationshipMatchPredicate({
+        row,
+        linkPrimary,
+        linkSecondary,
+      }: {
+        row: Row
+        linkPrimary: string
+        linkSecondary?: string
+      }) {
+        const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
+        if (!matchesPrimaryLink || !linkSecondary) {
+          return matchesPrimaryLink
+        }
+
+        const matchesSecondayLink = row[linkSecondary] === body?.[linkSecondary]
+        return matchesPrimaryLink && matchesSecondayLink
+      }
+
+      const existingRelationship = rows.find((row: { [key: string]: any }) =>
+        relationshipMatchPredicate({ row, linkPrimary, linkSecondary })
       )
       const operation = isUpdate ? Operation.UPDATE : Operation.CREATE
-      if (!found) {
+      if (!existingRelationship) {
         promises.push(
           getDatasourceAndQuery({
             endpoint: getEndpoint(tableId, operation),
@@ -581,7 +686,7 @@ export class ExternalRequest {
         )
       } else {
         // remove the relationship from cache so it isn't adjusted again
-        rows.splice(rows.indexOf(found), 1)
+        rows.splice(rows.indexOf(existingRelationship), 1)
       }
     }
     // finally cleanup anything that needs to be removed
@@ -620,10 +725,7 @@ export class ExternalRequest {
    * Creating the specific list of fields that we desire, and excluding the ones that are no use to us
    * is more performant and has the added benefit of protecting against this scenario.
    */
-  buildFields(
-    table: Table,
-    includeRelations: IncludeRelationship = IncludeRelationship.INCLUDE
-  ) {
+  buildFields(table: Table, includeRelations: boolean) {
     function extractRealFields(table: Table, existing: string[] = []) {
       return Object.entries(table.schema)
         .filter(
@@ -651,15 +753,14 @@ export class ExternalRequest {
     return fields
   }
 
-  async run(config: RunConfig) {
+  async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
     let { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!tableName) {
       throw "Unable to run without a table name"
     }
     if (!this.datasource) {
-      const db = context.getAppDB()
-      this.datasource = await db.get(datasourceId)
+      this.datasource = await sdk.datasources.get(datasourceId!)
       if (!this.datasource || !this.datasource.entities) {
         throw "No tables found, fetch tables before query."
       }
@@ -675,8 +776,26 @@ export class ExternalRequest {
       config,
       table
     )
+    //if the sort column is a formula, remove it
+    for (let sortColumn of Object.keys(sort || {})) {
+      if (!sort?.[sortColumn]) {
+        continue
+      }
+      switch (table.schema[sortColumn]?.type) {
+        case FieldType.FORMULA:
+          delete sort?.[sortColumn]
+          break
+        case FieldType.NUMBER:
+          sort[sortColumn].type = SortType.number
+          break
+      }
+    }
     filters = buildFilters(id, filters || {}, table)
     const relationships = this.buildRelationships(table)
+
+    const includeSqlRelationships =
+      config.includeSqlRelationships === IncludeRelationship.INCLUDE
+
     // clean up row on ingress using schema
     const processed = this.inputProcessing(row, table)
     row = processed.row
@@ -694,7 +813,7 @@ export class ExternalRequest {
       },
       resource: {
         // have to specify the fields to avoid column overlap (for SQL)
-        fields: isSql ? this.buildFields(table) : [],
+        fields: isSql ? this.buildFields(table, includeSqlRelationships) : [],
       },
       filters,
       sort,
@@ -709,10 +828,11 @@ export class ExternalRequest {
         table,
       },
     }
+
     // can't really use response right now
     const response = await getDatasourceAndQuery(json)
     // handle many to many relationships now if we know the ID (could be auto increment)
-    if (operation !== Operation.READ && processed.manyRelationships) {
+    if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",
         response[0],
@@ -721,8 +841,12 @@ export class ExternalRequest {
     }
     const output = this.outputProcessing(response, table, relationships)
     // if reading it'll just be an array of rows, return whole thing
-    return operation === Operation.READ && Array.isArray(response)
-      ? output
-      : { row: output[0], table }
+    if (operation === Operation.READ) {
+      return (
+        Array.isArray(output) ? output : [output]
+      ) as ExternalRequestReturnType<T>
+    } else {
+      return { row: output[0], table } as ExternalRequestReturnType<T>
+    }
   }
 }

@@ -8,42 +8,45 @@
   export let options = []
   export let error = null
   export let disabled = false
+  export let readonly = false
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
 
   const dispatch = createEventDispatcher()
+
   const onChange = e => {
-    let tempValue = value
-    let isChecked = e.target.checked
-    if (!tempValue.includes(e.target.value) && isChecked) {
-      tempValue.push(e.target.value)
+    const optionValue = e.target.value
+    if (e.target.checked && !value.includes(optionValue)) {
+      dispatch("change", [...value, optionValue])
+    } else {
+      dispatch(
+        "change",
+        value.filter(x => x !== optionValue)
+      )
     }
-    value = tempValue
-    dispatch(
-      "change",
-      tempValue.filter(val => val !== e.target.value || isChecked)
-    )
   }
 </script>
 
 <div class={`spectrum-FieldGroup spectrum-FieldGroup--${direction}`}>
   {#if options && Array.isArray(options)}
     {#each options as option}
+      {@const optionValue = getOptionValue(option)}
       <div
         title={getOptionLabel(option)}
         class="spectrum-Checkbox spectrum-FieldGroup-item"
         class:is-invalid={!!error}
+        class:readonly
       >
         <label
           class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
         >
           <input
             on:change={onChange}
-            value={getOptionValue(option)}
             type="checkbox"
             class="spectrum-Checkbox-input"
+            value={optionValue}
+            checked={value.includes(optionValue)}
             {disabled}
-            checked={value.includes(getOptionValue(option))}
           />
           <span class="spectrum-Checkbox-box">
             <svg
@@ -64,5 +67,8 @@
 <style>
   .spectrum-Checkbox-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

@@ -20,6 +20,7 @@ export const doesContainString = templates.doesContainString
 export const disableEscaping = templates.disableEscaping
 export const findHBSBlocks = templates.findHBSBlocks
 export const convertToJS = templates.convertToJS
+export const FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
 
 if (process && !process.env.NO_JS) {
   /**

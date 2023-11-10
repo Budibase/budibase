@@ -38,7 +38,7 @@ router
     "/api/automations",
     bodyResource("_id"),
     authorized(permissions.BUILDER),
-    automationValidator(true),
+    automationValidator(false),
     controller.update
   )
   .post(
@@ -65,7 +65,6 @@ router
   )
   .post(
     "/api/automations/:id/trigger",
-    appInfoMiddleware({ appType: AppType.PROD }),
     paramResource("id"),
     authorized(
       permissions.PermissionType.AUTOMATION,
@@ -84,4 +83,4 @@ router
     controller.test
   )
 
-export = router
+export default router

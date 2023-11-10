@@ -1,6 +1,12 @@
-import PouchDB from "pouchdb"
-import Nano from "nano"
-import { AllDocsResponse, AnyDocument, Document } from "../"
+import Nano from "@budibase/nano"
+import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
+import { Writable } from "stream"
+
+export enum SearchIndex {
+  ROWS = "rows",
+  AUDIT = "audit",
+  USER = "user",
+}
 
 export type PouchOptions = {
   inMemory?: boolean
@@ -12,6 +18,37 @@ export type PouchOptions = {
 export enum SortOption {
   ASCENDING = "asc",
   DESCENDING = "desc",
+}
+
+export type IndexAnalyzer = {
+  name: string
+  default?: string
+  fields?: Record<string, string>
+}
+
+export type DBView = {
+  name?: string
+  map: string
+  reduce?: string
+  meta?: ViewTemplateOpts
+  groupBy?: string
+}
+
+export interface DesignDocument extends Document {
+  // we use this static reference for all design documents
+  _id: "_design/database"
+  language?: string
+  // CouchDB views
+  views?: {
+    [viewName: string]: DBView
+  }
+  // Lucene indexes
+  indexes?: {
+    [indexName: string]: {
+      index: string
+      analyzer?: string | IndexAnalyzer
+    }
+  }
 }
 
 export type CouchFindOptions = {
@@ -48,20 +85,36 @@ export type DatabaseDeleteIndexOpts = {
   type?: string | undefined
 }
 
+type DBPrimitiveKey = string | number | {}
+export type DatabaseKey = DBPrimitiveKey | DBPrimitiveKey[]
+
 export type DatabaseQueryOpts = {
   include_docs?: boolean
-  startkey?: string
-  endkey?: string
+  startkey?: DatabaseKey
+  endkey?: DatabaseKey
   limit?: number
   skip?: number
   descending?: boolean
-  key?: string
-  keys?: string[]
+  key?: DatabaseKey
+  keys?: DatabaseKey[]
   group?: boolean
+  startkey_docid?: string
 }
 
 export const isDocument = (doc: any): doc is Document => {
   return typeof doc === "object" && doc._id && doc._rev
+}
+
+export interface DatabaseDumpOpts {
+  filter?: (doc: AnyDocument) => boolean
+  batch_size?: number
+  batch_limit?: number
+  style?: "main_only" | "all_docs"
+  timeout?: number
+  doc_ids?: string[]
+  query_params?: any
+  view?: string
+  selector?: any
 }
 
 export interface Database {
@@ -69,7 +122,11 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T | any>
+  get<T extends Document>(id?: string): Promise<T>
+  getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]>
   remove(
     id: string | Document,
     rev?: string
@@ -79,8 +136,10 @@ export interface Database {
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
-  allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>>
-  query<T>(
+  allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>>
+  query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
@@ -88,7 +147,7 @@ export interface Database {
   compact(): Promise<Nano.OkResponse | void>
   // these are all PouchDB related functions that are rarely used - in future
   // should be replaced by better typed/non-pouch implemented methods
-  dump(...args: any[]): Promise<any>
+  dump(stream: Writable, opts?: DatabaseDumpOpts): Promise<any>
   load(...args: any[]): Promise<any>
   createIndex(...args: any[]): Promise<any>
   deleteIndex(...args: any[]): Promise<any>

@@ -9,7 +9,7 @@ const read = [],
  * @openapi
  * /applications:
  *   post:
- *     operationId: create
+ *     operationId: appCreate
  *     summary: Create an application
  *     tags:
  *       - applications
@@ -42,7 +42,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   put:
- *     operationId: update
+ *     operationId: appUpdate
  *     summary: Update an application
  *     tags:
  *       - applications
@@ -75,7 +75,7 @@ write.push(
  * @openapi
  * /applications/{appId}:
  *   delete:
- *     operationId: destroy
+ *     operationId: appDestroy
  *     summary: Delete an application
  *     tags:
  *       - applications
@@ -96,9 +96,116 @@ write.push(new Endpoint("delete", "/applications/:appId", controller.destroy))
 
 /**
  * @openapi
+ * /applications/{appId}/unpublish:
+ *   post:
+ *     operationId: appUnpublish
+ *     summary: Unpublish an application
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     responses:
+ *       204:
+ *         description: The app was published successfully.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/unpublish", controller.unpublish)
+)
+
+/**
+ * @openapi
+ * /applications/{appId}/publish:
+ *   post:
+ *     operationId: appPublish
+ *     summary: Unpublish an application
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     responses:
+ *       200:
+ *         description: Returns the deployment object.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/deploymentOutput'
+ *             examples:
+ *               deployment:
+ *                 $ref: '#/components/examples/deploymentOutput'
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/publish", controller.publish)
+)
+
+/**
+ * @openapi
+ * /applications/{appId}/import:
+ *   post:
+ *     operationId: appImport
+ *     summary: Import an app to an existing app 🔒
+ *     description: This endpoint is only available on a business or enterprise license.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               encryptedPassword:
+ *                 description: Password for the export if it is encrypted.
+ *                 type: string
+ *               appExport:
+ *                 description: The app export to import.
+ *                 type: string
+ *                 format: binary
+ *             required:
+ *               - appExport
+ *     responses:
+ *       204:
+ *         description: Application has been updated.
+ */
+write.push(
+  new Endpoint("post", "/applications/:appId/import", controller.importToApp)
+)
+
+/**
+ * @openapi
+ * /applications/{appId}/export:
+ *   post:
+ *     operationId: appExport
+ *     summary: Export an app 🔒
+ *     description: This endpoint is only available on a business or enterprise license.
+ *     tags:
+ *       - applications
+ *     parameters:
+ *       - $ref: '#/components/parameters/appIdUrl'
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/appExport'
+ *     responses:
+ *       200:
+ *         description: A gzip tarball containing the app export, encrypted if password provided.
+ *         content:
+ *           application/gzip:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               example: Tarball containing database and object store contents...
+ */
+read.push(
+  new Endpoint("post", "/applications/:appId/export", controller.exportApp)
+)
+
+/**
+ * @openapi
  * /applications/{appId}:
  *   get:
- *     operationId: getById
+ *     operationId: appGetById
  *     summary: Retrieve an application
  *     tags:
  *       - applications
@@ -121,7 +228,7 @@ read.push(new Endpoint("get", "/applications/:appId", controller.read))
  * @openapi
  * /applications/search:
  *   post:
- *     operationId: search
+ *     operationId: appSearch
  *     summary: Search for applications
  *     description: Based on application properties (currently only name) search for applications.
  *     tags:

@@ -1,4 +1,8 @@
 import { Knex, knex } from "knex"
+import { db as dbCore } from "@budibase/backend-core"
+import { QueryOptions } from "../../definitions/datasource"
+import { isIsoDateString, SqlClient } from "../utils"
+import SqlTableQueryBuilder from "./sqlTable"
 import {
   Operation,
   QueryJson,
@@ -6,11 +10,8 @@ import {
   SearchFilters,
   SortDirection,
 } from "@budibase/types"
-import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient } from "../utils"
-import SqlTableQueryBuilder from "./sqlTable"
 import environment from "../../environment"
-import { removeKeyNumbering } from "./utils"
+import { isValidFilter } from "../utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -23,9 +24,6 @@ const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
 
 function likeKey(client: string, key: string): string {
-  if (!key.includes(" ")) {
-    return key
-  }
   let start: string, end: string
   switch (client) {
     case SqlClient.MY_SQL:
@@ -61,7 +59,7 @@ function parse(input: any) {
     return null
   }
   if (isIsoDateString(input)) {
-    return new Date(input)
+    return new Date(input.trim())
   }
   return input
 }
@@ -93,10 +91,15 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
 function generateSelectStatement(
   json: QueryJson,
   knex: Knex
-): (string | Knex.Raw)[] {
+): (string | Knex.Raw)[] | "*" {
   const { resource, meta } = json
+
+  if (!resource) {
+    return "*"
+  }
+
   const schema = meta?.table?.schema
-  return resource!.fields.map(field => {
+  return resource.fields.map(field => {
     const fieldNames = field.split(/\./g)
     const tableName = fieldNames[0]
     const columnName = fieldNames[1]
@@ -134,7 +137,7 @@ class InternalBuilder {
       fn: (key: string, value: any) => void
     ) {
       for (let [key, value] of Object.entries(structure)) {
-        const updatedKey = removeKeyNumbering(key)
+        const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
           fn(`${opts.tableName}.${updatedKey}`, value)
@@ -154,7 +157,7 @@ class InternalBuilder {
         const rawFnc = `${fnc}Raw`
         // @ts-ignore
         query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
-          `%${value}%`,
+          `%${value.toLowerCase()}%`,
         ])
       }
     }
@@ -200,7 +203,7 @@ class InternalBuilder {
           let statement = ""
           for (let i in value) {
             if (typeof value[i] === "string") {
-              value[i] = `%"${value[i]}"%`
+              value[i] = `%"${value[i].toLowerCase()}"%`
             } else {
               value[i] = `%${value[i]}%`
             }
@@ -235,7 +238,9 @@ class InternalBuilder {
         } else {
           const rawFnc = `${fnc}Raw`
           // @ts-ignore
-          query = query[rawFnc](`LOWER(${key}) LIKE ?`, [`${value}%`])
+          query = query[rawFnc](`LOWER(${likeKey(this.client, key)}) LIKE ?`, [
+            `${value.toLowerCase()}%`,
+          ])
         }
       })
     }
@@ -244,15 +249,30 @@ class InternalBuilder {
     }
     if (filters.range) {
       iterate(filters.range, (key, value) => {
-        if (value.low && value.high) {
+        const isEmptyObject = (val: any) => {
+          return (
+            val &&
+            Object.keys(val).length === 0 &&
+            Object.getPrototypeOf(val) === Object.prototype
+          )
+        }
+        if (isEmptyObject(value.low)) {
+          value.low = ""
+        }
+        if (isEmptyObject(value.high)) {
+          value.high = ""
+        }
+        const lowValid = isValidFilter(value.low),
+          highValid = isValidFilter(value.high)
+        if (lowValid && highValid) {
           // Use a between operator if we have 2 valid range values
           const fnc = allOr ? "orWhereBetween" : "whereBetween"
           query = query[fnc](key, [value.low, value.high])
-        } else if (value.low) {
+        } else if (lowValid) {
           // Use just a single greater than operator if we only have a low
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, ">", value.low)
-        } else if (value.high) {
+        } else if (highValid) {
           // Use just a single less than operator if we only have a high
           const fnc = allOr ? "orWhere" : "where"
           query = query[fnc](key, "<", value.high)
@@ -298,9 +318,10 @@ class InternalBuilder {
   addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
     let { sort, paginate } = json
     const table = json.meta?.table
-    if (sort) {
+    if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
-        const direction = value === SortDirection.ASCENDING ? "asc" : "desc"
+        const direction =
+          value.direction === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${table?.name}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
@@ -313,7 +334,8 @@ class InternalBuilder {
   addRelationships(
     query: KnexQuery,
     fromTable: string,
-    relationships: RelationshipsJson[] | undefined
+    relationships: RelationshipsJson[] | undefined,
+    schema: string | undefined
   ): KnexQuery {
     if (!relationships) {
       return query
@@ -337,9 +359,13 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
+      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
+      const throughTableWithSchema = schema
+        ? `${schema}.${throughTable}`
+        : throughTable
       if (!throughTable) {
         // @ts-ignore
-        query = query.leftJoin(toTable, function () {
+        query = query.leftJoin(toTableWithSchema, function () {
           for (let relationship of relationships) {
             const from = relationship.from,
               to = relationship.to
@@ -350,7 +376,7 @@ class InternalBuilder {
       } else {
         query = query
           // @ts-ignore
-          .leftJoin(throughTable, function () {
+          .leftJoin(throughTableWithSchema, function () {
             for (let relationship of relationships) {
               const fromPrimary = relationship.fromPrimary
               const from = relationship.from
@@ -362,7 +388,7 @@ class InternalBuilder {
               )
             }
           })
-          .leftJoin(toTable, function () {
+          .leftJoin(toTableWithSchema, function () {
             for (let relationship of relationships) {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
@@ -388,6 +414,7 @@ class InternalBuilder {
         delete parsedBody[key]
       }
     }
+
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.insert(parsedBody)
@@ -456,7 +483,12 @@ class InternalBuilder {
       preQuery = this.addSorting(preQuery, json)
     }
     // handle joins
-    query = this.addRelationships(preQuery, tableName, relationships)
+    query = this.addRelationships(
+      preQuery,
+      tableName,
+      relationships,
+      endpoint.schema
+    )
     return this.addFilters(query, filters, { relationship: true })
   }
 
@@ -487,7 +519,7 @@ class InternalBuilder {
     if (opts.disableReturning) {
       return query.delete()
     } else {
-      return query.delete().returning("*")
+      return query.delete().returning(generateSelectStatement(json, knex))
     }
   }
 }
@@ -504,7 +536,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * @param json The JSON query DSL which is to be converted to SQL.
    * @param opts extra options which are to be passed into the query builder, e.g. disableReturning
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
-   * @return {{ sql: string, bindings: object }} the query ready to be passed to the driver.
+   * @return the query ready to be passed to the driver.
    */
   _query(json: QueryJson, opts: QueryOptions = {}) {
     const sqlClient = this.getSqlClient()

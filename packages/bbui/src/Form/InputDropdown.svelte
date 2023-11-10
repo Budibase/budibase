@@ -14,7 +14,6 @@
   export let error = null
   export let updateOnChange = true
   export let quiet = false
-  export let dataCy
   export let autofocus
   export let options = []
 
@@ -32,7 +31,6 @@
 
 <Field {label} {labelPosition} {error}>
   <InputDropdown
-    {dataCy}
     {updateOnChange}
     {error}
     {disabled}

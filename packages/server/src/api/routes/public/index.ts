@@ -1,4 +1,5 @@
 import appEndpoints from "./applications"
+import metricEndpoints from "./metrics"
 import queryEndpoints from "./queries"
 import tableEndpoints from "./tables"
 import rowEndpoints from "./rows"
@@ -6,62 +7,79 @@ import userEndpoints from "./users"
 import authorized from "../../../middleware/authorized"
 import publicApi from "../../../middleware/publicApi"
 import { paramResource, paramSubResource } from "../../../middleware/resourceId"
+import { PermissionType, PermissionLevel } from "@budibase/types"
 import { CtxFn } from "./utils/Endpoint"
 import mapperMiddleware from "./middleware/mapper"
 import env from "../../../environment"
 // below imports don't have declaration files
 const Router = require("@koa/router")
 const { RateLimit, Stores } = require("koa2-ratelimit")
-import { redis, permissions } from "@budibase/backend-core"
-const { PermissionType, PermissionLevel } = permissions
+import { middleware, redis } from "@budibase/backend-core"
+import { SelectableDatabase } from "@budibase/backend-core/src/redis/utils"
+
+interface KoaRateLimitOptions {
+  socket: {
+    host: string
+    port: number
+  }
+  password?: string
+  database?: number
+}
 
 const PREFIX = "/api/public/v1"
-// allow a lot more requests when in test
-const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
 
-function getApiLimitPerSecond(): number {
-  if (!env.API_REQ_LIMIT_PER_SEC) {
-    return DEFAULT_API_REQ_LIMIT_PER_SEC
-  }
-  return parseInt(env.API_REQ_LIMIT_PER_SEC)
-}
+// type can't be known - untyped libraries
+let limiter: any, rateLimitStore: any
+if (!env.DISABLE_RATE_LIMITING) {
+  // allow a lot more requests when in test
+  const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
 
-let rateLimitStore: any = null
-if (!env.isTest()) {
-  const REDIS_OPTS = redis.utils.getRedisOptions()
-  let options
-  if (REDIS_OPTS.redisProtocolUrl) {
-    // fully qualified redis URL
-    options = {
-      url: REDIS_OPTS.redisProtocolUrl,
+  function getApiLimitPerSecond(): number {
+    if (!env.API_REQ_LIMIT_PER_SEC) {
+      return DEFAULT_API_REQ_LIMIT_PER_SEC
     }
-  } else {
-    options = {
+    return parseInt(env.API_REQ_LIMIT_PER_SEC)
+  }
+
+  if (!env.isTest()) {
+    const { password, host, port } = redis.utils.getRedisConnectionDetails()
+    let options: KoaRateLimitOptions = {
       socket: {
-        host: REDIS_OPTS.host,
-        port: REDIS_OPTS.port,
+        host: host,
+        port: port,
       },
-      password: REDIS_OPTS.opts.password,
-      database: 1,
     }
+
+    if (password) {
+      options.password = password
+    }
+
+    if (!env.REDIS_CLUSTERED) {
+      // Can't set direct redis db in clustered env
+      options.database = SelectableDatabase.RATE_LIMITING
+    }
+    rateLimitStore = new Stores.Redis(options)
+    RateLimit.defaultOptions({
+      store: rateLimitStore,
+    })
   }
-  rateLimitStore = new Stores.Redis(options)
-  RateLimit.defaultOptions({
-    store: rateLimitStore,
+  // rate limiting, allows for 2 requests per second
+  limiter = RateLimit.middleware({
+    interval: { sec: 1 },
+    // per ip, per interval
+    max: getApiLimitPerSecond(),
   })
+} else {
+  console.log("**** PUBLIC API RATE LIMITING DISABLED ****")
 }
-// rate limiting, allows for 2 requests per second
-const limiter = RateLimit.middleware({
-  interval: { sec: 1 },
-  // per ip, per interval
-  max: getApiLimitPerSecond(),
-})
 
 const publicRouter = new Router({
   prefix: PREFIX,
 })
 
-publicRouter.use(limiter)
+if (limiter) {
+  publicRouter.use(limiter)
+}
 
 function addMiddleware(
   endpoints: any,
@@ -91,9 +109,16 @@ function addToRouter(endpoints: any) {
   }
 }
 
+function applyAdminRoutes(endpoints: any) {
+  addMiddleware(endpoints.read, middleware.builderOrAdmin)
+  addMiddleware(endpoints.write, middleware.builderOrAdmin)
+  addToRouter(endpoints.read)
+  addToRouter(endpoints.write)
+}
+
 function applyRoutes(
   endpoints: any,
-  permType: string,
+  permType: PermissionType,
   resource: string,
   subResource?: string
 ) {
@@ -119,6 +144,7 @@ function applyRoutes(
   addToRouter(endpoints.write)
 }
 
+applyAdminRoutes(metricEndpoints)
 applyRoutes(appEndpoints, PermissionType.APP, "appId")
 applyRoutes(tableEndpoints, PermissionType.TABLE, "tableId")
 applyRoutes(userEndpoints, PermissionType.USER, "userId")

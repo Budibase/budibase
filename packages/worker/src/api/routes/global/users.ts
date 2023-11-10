@@ -14,6 +14,7 @@ function buildAdminInitValidation() {
       email: Joi.string().required(),
       password: Joi.string(),
       tenantId: Joi.string().required(),
+      ssoId: Joi.string(),
     })
       .required()
       .unknown(false)
@@ -50,7 +51,9 @@ function buildInviteAcceptValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
     inviteCode: Joi.string().required(),
-    password: Joi.string().required(),
+    password: Joi.string().optional(),
+    firstName: Joi.string().optional(),
+    lastName: Joi.string().optional(),
   }).required().unknown(true))
 }
 
@@ -69,7 +72,8 @@ router
   )
 
   .get("/api/global/users", auth.builderOrAdmin, controller.fetch)
-  .post("/api/global/users/search", auth.builderOrAdmin, controller.search)
+  // search can be used by any user now, to retrieve users for user column
+  .post("/api/global/users/search", controller.search)
   .delete("/api/global/users/:id", auth.adminOnly, controller.destroy)
   .get(
     "/api/global/users/count/:appId",
@@ -79,18 +83,35 @@ router
   .get("/api/global/roles/:appId")
   .post(
     "/api/global/users/invite",
-    auth.adminOnly,
+    auth.builderOrAdmin,
     buildInviteValidation(),
     controller.invite
   )
   .post(
+    "/api/global/users/onboard",
+    auth.builderOrAdmin,
+    buildInviteMultipleValidation(),
+    controller.onboardUsers
+  )
+  .post(
     "/api/global/users/multi/invite",
-    auth.adminOnly,
+    auth.builderOrAdmin,
     buildInviteMultipleValidation(),
     controller.inviteMultiple
   )
 
   // non-global endpoints
+  .get("/api/global/users/invite/:code", controller.checkInvite)
+  .post(
+    "/api/global/users/invite/update/:code",
+    auth.builderOrAdmin,
+    controller.updateInvite
+  )
+  .get(
+    "/api/global/users/invites",
+    auth.builderOrAdmin,
+    controller.getUserInvites
+  )
   .post(
     "/api/global/users/invite/accept",
     buildInviteAcceptValidation(),
@@ -109,8 +130,8 @@ router
   .get("/api/global/users/self", selfController.getSelf)
   .post(
     "/api/global/users/self",
-    users.buildUserSaveValidation(true),
+    users.buildUserSaveValidation(),
     selfController.updateSelf
   )
 
-export = router
+export default router

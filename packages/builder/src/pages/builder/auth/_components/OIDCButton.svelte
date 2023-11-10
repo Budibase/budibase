@@ -1,5 +1,5 @@
 <script>
-  import { ActionButton, notifications } from "@budibase/bbui"
+  import { notifications, FancyButton } from "@budibase/bbui"
   import OidcLogo from "assets/oidc-logo.png"
   import Auth0Logo from "assets/auth0-logo.png"
   import MicrosoftLogo from "assets/microsoft-logo.png"
@@ -8,6 +8,8 @@
 
   import { oidc, organisation, auth } from "stores/portal"
   import { onMount } from "svelte"
+
+  export let samePage
 
   $: show = $organisation.oidc
 
@@ -27,40 +29,22 @@
     }
   })
 
-  $: src = !$oidc.logo
-    ? OidcLogo
-    : preDefinedIcons[$oidc.logo] || `/global/logos_oidc/${$oidc.logo}`
+  $: oidcLogoImageURL = preDefinedIcons[$oidc.logo] ?? $oidc.logo
+  $: logoSrc = oidcLogoImageURL ?? OidcLogo
 </script>
 
 {#if show}
-  <ActionButton
-    on:click={() =>
-      window.open(
-        `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`,
-        "_blank"
-      )}
+  <FancyButton
+    icon={logoSrc}
+    on:click={() => {
+      const url = `/api/global/auth/${$auth.tenantId}/oidc/configs/${$oidc.uuid}`
+      if (samePage) {
+        window.location = url
+      } else {
+        window.open(url, "_blank")
+      }
+    }}
   >
-    <div class="inner">
-      <img {src} alt="oidc icon" />
-      <p>{`Sign in with ${$oidc.name || "OIDC"}`}</p>
-    </div>
-  </ActionButton>
+    {`Log in with ${$oidc.name || "OIDC"}`}
+  </FancyButton>
 {/if}
-
-<style>
-  .inner {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    padding-top: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
-  }
-  .inner img {
-    width: 18px;
-    margin: 3px 10px 3px 3px;
-  }
-  .inner p {
-    margin: 0;
-  }
-</style>

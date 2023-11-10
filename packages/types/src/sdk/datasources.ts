@@ -1,5 +1,7 @@
 import { Table } from "../documents"
 
+export const PASSWORD_REPLACEMENT = "--secret-value--"
+
 export enum Operation {
   CREATE = "CREATE",
   READ = "READ",
@@ -33,6 +35,8 @@ export enum DatasourceFieldType {
   OBJECT = "object",
   JSON = "json",
   FILE = "file",
+  FIELD_GROUP = "fieldGroup",
+  SELECT = "select",
 }
 
 export enum SourceName {
@@ -52,7 +56,6 @@ export enum SourceName {
   FIRESTORE = "FIRESTORE",
   REDIS = "REDIS",
   SNOWFLAKE = "SNOWFLAKE",
-  UNKNOWN = "unknown",
 }
 
 export enum IncludeRelationship {
@@ -69,6 +72,12 @@ export enum FilterType {
   EMPTY = "empty",
   NOT_EMPTY = "notEmpty",
   ONE_OF = "oneOf",
+}
+
+export enum DatasourceFeature {
+  CONNECTION_CHECKING = "connection",
+  FETCH_TABLE_NAMES = "fetch_table_names",
+  EXPORT_SCHEMA = "export_schema",
 }
 
 export interface StepDefinition {
@@ -95,20 +104,60 @@ export interface ExtraQueryConfig {
   }
 }
 
+interface DatasourceBasicFieldConfig {
+  type: DatasourceFieldType
+  display?: string
+  required?: boolean
+  default?: any
+  deprecated?: boolean
+  hidden?: string
+}
+
+interface DatasourceSelectFieldConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.SELECT
+  config: { options: string[] }
+}
+
+interface DatasourceFieldGroupConfig extends DatasourceBasicFieldConfig {
+  type: DatasourceFieldType.FIELD_GROUP
+  config: {
+    openByDefault?: boolean
+    nestedFields?: boolean
+  }
+}
+
+type DatasourceFieldConfig =
+  | DatasourceSelectFieldConfig
+  | DatasourceFieldGroupConfig
+  | DatasourceBasicFieldConfig
+
+export interface DatasourceConfig {
+  [key: string]: DatasourceFieldConfig & {
+    fields?: DatasourceConfig
+  }
+}
+
 export interface Integration {
   docs: string
   plus?: boolean
+  isSQL?: boolean
   auth?: { type: string }
+  features?: Partial<Record<DatasourceFeature, boolean>>
   relationships?: boolean
   description: string
   friendlyName: string
   type?: string
   iconUrl?: string
-  datasource: {}
+  datasource: DatasourceConfig
   query: {
     [key: string]: QueryDefinition
   }
   extra?: ExtraQueryConfig
+}
+
+export type ConnectionInfo = {
+  connected: boolean
+  error?: string
 }
 
 export interface IntegrationBase {
@@ -116,15 +165,29 @@ export interface IntegrationBase {
   read?(query: any): Promise<any[] | any>
   update?(query: any): Promise<any[] | any>
   delete?(query: any): Promise<any[] | any>
+  testConnection?(): Promise<ConnectionInfo>
+  getExternalSchema?(): Promise<string>
+  defineTypeCastingFromSchema?(schema: {
+    [key: string]: {
+      name: string
+      type: string
+    }
+  }): void
+}
+
+export interface Schema {
+  tables: Record<string, Table>
+  errors: Record<string, string>
 }
 
 export interface DatasourcePlus extends IntegrationBase {
-  tables: Record<string, Table>
-  schemaErrors: Record<string, string>
-
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
-  buildSchema(datasourceId: string, entities: Record<string, Table>): any
+  buildSchema(
+    datasourceId: string,
+    entities: Record<string, Table>
+  ): Promise<Schema>
+  getTableNames(): Promise<string[]>
 }

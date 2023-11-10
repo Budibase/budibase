@@ -16,8 +16,8 @@ export const buildViewEndpoints = API => ({
       params.set("group", groupBy)
     }
     const QUERY_VIEW_URL = field
-      ? `/api/views/${name}?${params}`
-      : `/api/views/${name}`
+      ? `/api/views/${encodeURIComponent(name)}?${params}`
+      : `/api/views/${encodeURIComponent(name)}`
     return await API.get({ url: QUERY_VIEW_URL })
   },
 
@@ -53,7 +53,7 @@ export const buildViewEndpoints = API => ({
    */
   deleteView: async viewName => {
     return await API.delete({
-      url: `/api/views/${viewName}`,
+      url: `/api/views/${encodeURIComponent(viewName)}`,
     })
   },
 })

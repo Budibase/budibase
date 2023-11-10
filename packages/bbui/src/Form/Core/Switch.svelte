@@ -6,7 +6,6 @@
   export let id = null
   export let text = null
   export let disabled = false
-  export let dataCy = null
 
   const dispatch = createEventDispatcher()
   const onChange = event => {
@@ -16,7 +15,6 @@
 
 <div class="spectrum-Switch spectrum-Switch--emphasized">
   <input
-    data-cy={dataCy}
     checked={value}
     {disabled}
     on:change={onChange}

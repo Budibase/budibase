@@ -13,6 +13,8 @@ export enum QuotaType {
 export enum StaticQuotaName {
   ROWS = "rows",
   APPS = "apps",
+  USERS = "users",
+  CREATORS = "creators",
   USER_GROUPS = "userGroups",
   PLUGINS = "plugins",
 }
@@ -54,13 +56,7 @@ export const isConstantQuota = (
   return quotaType === QuotaType.CONSTANT
 }
 
-export type PlanQuotas = {
-  [PlanType.FREE]: Quotas
-  [PlanType.PRO]: Quotas
-  [PlanType.TEAM]: Quotas
-  [PlanType.BUSINESS]: Quotas
-  [PlanType.ENTERPRISE]: Quotas
-}
+export type PlanQuotas = { [key in PlanType]: Quotas | undefined }
 
 export type MonthlyQuotas = {
   [MonthlyQuotaName.QUERIES]: Quota
@@ -71,6 +67,8 @@ export type MonthlyQuotas = {
 export type StaticQuotas = {
   [StaticQuotaName.ROWS]: Quota
   [StaticQuotaName.APPS]: Quota
+  [StaticQuotaName.USERS]: Quota
+  [StaticQuotaName.CREATORS]: Quota
   [StaticQuotaName.USER_GROUPS]: Quota
   [StaticQuotaName.PLUGINS]: Quota
 }
@@ -99,4 +97,5 @@ export interface Quota {
    * which can have subsequent effects such as sending emails to users.
    */
   triggers: number[]
+  startDate?: number
 }

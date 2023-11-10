@@ -26,6 +26,21 @@ export const capitalise = s => {
 
 export const lowercase = s => s.substring(0, 1).toLowerCase() + s.substring(1)
 
+export const lowercaseExceptFirst = s =>
+  s.charAt(0) + s.substring(1).toLowerCase()
+
 export const get_name = s => (!s ? "" : last(s.split("/")))
 
 export const get_capitalised_name = name => pipe(name, [get_name, capitalise])
+
+export const isBuilderInputFocused = e => {
+  const activeTag = document.activeElement?.tagName.toLowerCase()
+  const inCodeEditor = document.activeElement?.classList?.contains("cm-content")
+  if (
+    (inCodeEditor || ["input", "textarea"].indexOf(activeTag) !== -1) &&
+    e.key !== "Escape"
+  ) {
+    return true
+  }
+  return false
+}

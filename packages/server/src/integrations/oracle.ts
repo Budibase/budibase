@@ -7,9 +7,14 @@ import {
   SqlQuery,
   Table,
   DatasourcePlus,
+  DatasourceFeature,
+  ConnectionInfo,
+  Schema,
+  TableSourceType,
 } from "@budibase/types"
 import {
   buildExternalTableId,
+  checkExternalTables,
   convertSqlType,
   finaliseExternalTables,
   getSqlQuery,
@@ -24,12 +29,7 @@ import {
   ExecuteOptions,
   Result,
 } from "oracledb"
-import {
-  OracleTable,
-  OracleColumn,
-  OracleColumnsResponse,
-  OracleConstraint,
-} from "./base/types"
+import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -53,6 +53,10 @@ const SCHEMA: Integration = {
   type: "Relational",
   description:
     "Oracle Database is an object-relational database management system developed by Oracle Corporation",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+    [DatasourceFeature.FETCH_TABLE_NAMES]: true,
+  },
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
@@ -67,6 +71,7 @@ const SCHEMA: Integration = {
     database: {
       type: DatasourceFieldType.STRING,
       required: true,
+      display: "Service Name",
     },
     user: {
       type: DatasourceFieldType.STRING,
@@ -105,9 +110,6 @@ const OracleContraintTypes = {
 class OracleIntegration extends Sql implements DatasourcePlus {
   private readonly config: OracleConfig
   private index: number = 1
-
-  public tables: Record<string, Table> = {}
-  public schemaErrors: Record<string, string> = {}
 
   private readonly COLUMNS_SQL = `
     SELECT
@@ -247,7 +249,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn): { type: string } {
+  private internalConvertType(column: OracleColumn) {
     if (this.isBooleanType(column)) {
       return { type: FieldTypes.BOOLEAN }
     }
@@ -257,10 +259,13 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   /**
    * Fetches the tables from the oracle table and assigns them to the datasource.
-   * @param {*} datasourceId - datasourceId to fetch
+   * @param datasourceId - datasourceId to fetch
    * @param entities - the tables that are to be built
    */
-  async buildSchema(datasourceId: string, entities: Record<string, Table>) {
+  async buildSchema(
+    datasourceId: string,
+    entities: Record<string, Table>
+  ): Promise<Schema> {
     const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
       sql: this.COLUMNS_SQL,
     })
@@ -273,10 +278,13 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       let table = tables[oracleTable.name]
       if (!table) {
         table = {
+          type: "table",
           _id: buildExternalTableId(datasourceId, oracleTable.name),
           primary: [],
           name: oracleTable.name,
           schema: {},
+          sourceId: datasourceId,
+          sourceType: TableSourceType.EXTERNAL,
         }
         tables[oracleTable.name] = table
       }
@@ -301,6 +309,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
               },
               ...this.internalConvertType(oracleColumn),
             }
+
             table.schema[columnName] = fieldSchema
           }
 
@@ -319,9 +328,40 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         })
     })
 
-    const final = finaliseExternalTables(tables, entities)
-    this.tables = final.tables
-    this.schemaErrors = final.errors
+    let externalTables = finaliseExternalTables(tables, entities)
+    let errors = checkExternalTables(externalTables)
+    return { tables: externalTables, errors }
+  }
+
+  async getTableNames() {
+    const columnsResponse = await this.internalQuery<OracleColumnsResponse>({
+      sql: this.COLUMNS_SQL,
+    })
+    return (columnsResponse.rows || []).map(row => row.TABLE_NAME)
+  }
+
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    let connection
+    try {
+      connection = await this.getConnection()
+      response.connected = true
+    } catch (err: any) {
+      response.connected = false
+      response.error = err.message
+    } finally {
+      if (connection) {
+        try {
+          await connection.close()
+        } catch (err: any) {
+          response.connected = false
+          response.error = err.message
+        }
+      }
+    }
+    return response
   }
 
   private async internalQuery<T>(query: SqlQuery): Promise<Result<T>> {

@@ -1,10 +1,15 @@
 import { getAppClient } from "../redis/init"
 import { doWithDB, DocumentType } from "../db"
-import { Database } from "@budibase/types"
+import { Database, App } from "@budibase/types"
 
-const AppState = {
-  INVALID: "invalid",
+export enum AppState {
+  INVALID = "invalid",
 }
+
+export interface DeletedApp {
+  state: AppState
+}
+
 const EXPIRY_SECONDS = 3600
 
 /**
@@ -14,7 +19,7 @@ async function populateFromDB(appId: string) {
   return doWithDB(
     appId,
     (db: Database) => {
-      return db.get(DocumentType.APP_METADATA)
+      return db.get<App>(DocumentType.APP_METADATA)
     },
     { skip_setup: true }
   )
@@ -28,10 +33,10 @@ function isInvalid(metadata?: { state: string }) {
  * Get the requested app metadata by id.
  * Use redis cache to first read the app metadata.
  * If not present fallback to loading the app metadata directly and re-caching.
- * @param {string} appId the id of the app to get metadata from.
- * @returns {object} the app metadata.
+ * @param appId the id of the app to get metadata from.
+ * @returns the app metadata.
  */
-export async function getAppMetadata(appId: string) {
+export async function getAppMetadata(appId: string): Promise<App | DeletedApp> {
   const client = await getAppClient()
   // try cache
   let metadata = await client.get(appId)
@@ -50,7 +55,7 @@ export async function getAppMetadata(appId: string) {
         throw err
       }
     }
-    // needed for cypress/some scenarios where the caching happens
+    // needed for some scenarios where the caching happens
     // so quickly the requests can get slightly out of sync
     // might store its invalid just before it stores its valid
     if (isInvalid(metadata)) {
@@ -61,18 +66,15 @@ export async function getAppMetadata(appId: string) {
     }
     await client.store(appId, metadata, expiry)
   }
-  // we've stored in the cache an object to tell us that it is currently invalid
-  if (isInvalid(metadata)) {
-    throw { status: 404, message: "No app metadata found" }
-  }
+
   return metadata
 }
 
 /**
  * Invalidate/reset the cached metadata when a change occurs in the db.
- * @param appId {string} the cache key to bust/update.
- * @param newMetadata {object|undefined} optional - can simply provide the new metadata to update with.
- * @return {Promise<void>} will respond with success when cache is updated.
+ * @param appId the cache key to bust/update.
+ * @param newMetadata optional - can simply provide the new metadata to update with.
+ * @return will respond with success when cache is updated.
  */
 export async function invalidateAppMetadata(appId: string, newMetadata?: any) {
   if (!appId) {

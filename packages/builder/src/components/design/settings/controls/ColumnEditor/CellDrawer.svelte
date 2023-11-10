@@ -16,7 +16,11 @@
 <DrawerContent>
   <div class="container">
     <Layout noPadding gap="S">
-      <Input bind:value={column.width} label="Width" placeholder="Auto" />
+      <Input
+        bind:value={column.width}
+        label="Width (must include a unit like px or %)"
+        placeholder="Auto"
+      />
       <Select
         label="Alignment"
         bind:value={column.align}
@@ -42,7 +46,6 @@
         <ColorPicker
           value={column.background}
           on:change={e => (column.background = e.detail)}
-          alignRight
           spectrumTheme={$store.theme}
         />
       </Layout>
@@ -51,7 +54,6 @@
         <ColorPicker
           value={column.color}
           on:change={e => (column.color = e.detail)}
-          alignRight
           spectrumTheme={$store.theme}
         />
       </Layout>

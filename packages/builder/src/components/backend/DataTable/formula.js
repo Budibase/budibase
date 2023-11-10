@@ -76,6 +76,10 @@ export function getBindings({
       // will be replaced by the main array binding
       readableBinding: label,
       runtimeBinding: binding,
+      display: {
+        name: label,
+        type: field.name === FIELDS.LINK.name ? "Array" : field.name,
+      },
     })
   }
   return bindings

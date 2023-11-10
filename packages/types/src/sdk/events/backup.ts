@@ -5,6 +5,7 @@ export interface AppBackupRestoreEvent extends BaseEvent {
   appId: string
   restoreId: string
   backupCreatedAt: string
+  name: string
 }
 
 export interface AppBackupTriggeredEvent extends BaseEvent {
@@ -12,4 +13,5 @@ export interface AppBackupTriggeredEvent extends BaseEvent {
   appId: string
   trigger: AppBackupTrigger
   type: AppBackupType
+  name: string
 }

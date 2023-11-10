@@ -34,7 +34,6 @@
     display: none;
   }
   .main {
-    font-family: var(--font-sans);
     padding: var(--spacing-xl);
   }
   .main :global(textarea) {

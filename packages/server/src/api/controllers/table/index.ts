@@ -1,80 +1,100 @@
 import * as internal from "./internal"
 import * as external from "./external"
-import * as csvParser from "../../../utilities/csvParser"
-import { isExternalTable, isSQL } from "../../../integrations/utils"
-import { getDatasourceParams } from "../../../db/utils"
-import { context, events } from "@budibase/backend-core"
-import { Table, BBContext } from "@budibase/types"
+import {
+  isRows,
+  isSchema,
+  validate as validateSchema,
+} from "../../../utilities/schema"
+import {
+  isExternalTable,
+  isExternalTableID,
+  isSQL,
+} from "../../../integrations/utils"
+import { events } from "@budibase/backend-core"
+import {
+  BulkImportRequest,
+  BulkImportResponse,
+  DocumentType,
+  FetchTablesResponse,
+  MigrateRequest,
+  MigrateResponse,
+  Row,
+  SaveTableRequest,
+  SaveTableResponse,
+  Table,
+  TableResponse,
+  TableSourceType,
+  UserCtx,
+  SEPARATOR,
+} from "@budibase/types"
 import sdk from "../../../sdk"
+import { jsonFromCsvString } from "../../../utilities/csv"
+import { builderSocket } from "../../../websockets"
+import { cloneDeep, isEqual } from "lodash"
 
 function pickApi({ tableId, table }: { tableId?: string; table?: Table }) {
-  if (table && !tableId) {
-    tableId = table._id
-  }
-  if (table && table.type === "external") {
+  if (table && isExternalTable(table)) {
     return external
-  } else if (tableId && isExternalTable(tableId)) {
+  }
+  if (tableId && isExternalTableID(tableId)) {
     return external
   }
   return internal
 }
 
 // covers both internal and external
-export async function fetch(ctx: BBContext) {
-  const db = context.getAppDB()
-
+export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   const internal = await sdk.tables.getAllInternalTables()
 
-  const externalTables = await db.allDocs(
-    getDatasourceParams("plus", {
-      include_docs: true,
-    })
-  )
+  const datasources = await sdk.datasources.getExternalDatasources()
 
-  const external = externalTables.rows.flatMap(tableDoc => {
-    let entities = tableDoc.doc.entities
+  const external = datasources.flatMap(datasource => {
+    let entities = datasource.entities
     if (entities) {
-      return Object.values(entities).map((entity: any) => ({
+      return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
-        type: "external",
-        sourceId: tableDoc.doc._id,
-        sql: isSQL(tableDoc.doc),
+        sourceType: TableSourceType.EXTERNAL,
+        sourceId: datasource._id!,
+        sql: isSQL(datasource),
       }))
     } else {
       return []
     }
   })
 
-  ctx.body = [...internal, ...external]
+  ctx.body = [...internal, ...external].map(sdk.tables.enrichViewSchemas)
 }
 
-export async function find(ctx: BBContext) {
+export async function find(ctx: UserCtx<void, TableResponse>) {
   const tableId = ctx.params.tableId
-  ctx.body = await sdk.tables.getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
+
+  ctx.body = sdk.tables.enrichViewSchemas(table)
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   const appId = ctx.appId
   const table = ctx.request.body
-  const importFormat =
-    table.dataImport && table.dataImport.csvString ? "csv" : undefined
+  const isImport = table.rows
+
   const savedTable = await pickApi({ table }).save(ctx)
   if (!table._id) {
     await events.table.created(savedTable)
   } else {
     await events.table.updated(savedTable)
   }
-  if (importFormat) {
-    await events.table.imported(savedTable, importFormat)
+  if (isImport) {
+    await events.table.imported(savedTable)
   }
   ctx.status = 200
   ctx.message = `Table ${table.name} saved successfully.`
   ctx.eventEmitter &&
-    ctx.eventEmitter.emitTable(`table:save`, appId, savedTable)
+    ctx.eventEmitter.emitTable(`table:save`, appId, { ...savedTable })
   ctx.body = savedTable
+  builderSocket?.emitTableUpdate(ctx, cloneDeep(savedTable))
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const appId = ctx.appId
   const tableId = ctx.params.tableId
   const deletedTable = await pickApi({ tableId }).destroy(ctx)
@@ -84,31 +104,80 @@ export async function destroy(ctx: BBContext) {
   ctx.status = 200
   ctx.table = deletedTable
   ctx.body = { message: `Table ${tableId} deleted.` }
+  builderSocket?.emitTableDeletion(ctx, deletedTable)
 }
 
-export async function bulkImport(ctx: BBContext) {
+export async function bulkImport(
+  ctx: UserCtx<BulkImportRequest, BulkImportResponse>
+) {
   const tableId = ctx.params.tableId
-  await pickApi({ tableId }).bulkImport(ctx)
+  let tableBefore = await sdk.tables.getTable(tableId)
+  let tableAfter = await pickApi({ tableId }).bulkImport(ctx)
+
+  if (!isEqual(tableBefore, tableAfter)) {
+    await sdk.tables.saveTable(tableAfter)
+  }
+
   // right now we don't trigger anything for bulk import because it
   // can only be done in the builder, but in the future we may need to
   // think about events for bulk items
+
   ctx.status = 200
   ctx.body = { message: `Bulk rows created.` }
 }
 
-export async function validateCSVSchema(ctx: BBContext) {
-  // tableId being specified means its an import to an existing table
-  const { csvString, schema = {}, tableId } = ctx.request.body
-  let existingTable
+export async function csvToJson(ctx: UserCtx) {
+  const { csvString } = ctx.request.body
+
+  const result = await jsonFromCsvString(csvString)
+
+  ctx.status = 200
+  ctx.body = result
+}
+
+export async function validateNewTableImport(ctx: UserCtx) {
+  const { rows, schema }: { rows: unknown; schema: unknown } = ctx.request.body
+
+  if (isRows(rows) && isSchema(schema)) {
+    ctx.status = 200
+    ctx.body = validateSchema(rows, schema)
+  } else {
+    ctx.status = 422
+  }
+}
+
+export async function validateExistingTableImport(ctx: UserCtx) {
+  const { rows, tableId }: { rows: Row[]; tableId?: string } = ctx.request.body
+
+  let schema = null
   if (tableId) {
-    existingTable = await sdk.tables.getTable(tableId)
+    const table = await sdk.tables.getTable(tableId)
+    schema = table.schema
+  } else {
+    ctx.status = 422
+    return
   }
-  let result: Record<string, any> | undefined = await csvParser.parse(
-    csvString,
-    schema
-  )
-  if (existingTable) {
-    result = csvParser.updateSchema({ schema: result, existingTable })
+
+  if (tableId && isRows(rows) && isSchema(schema)) {
+    ctx.status = 200
+    ctx.body = validateSchema(rows, schema)
+  } else {
+    ctx.status = 422
   }
-  ctx.body = { schema: result }
+}
+
+export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
+  const { oldColumn, newColumn } = ctx.request.body
+  let tableId = ctx.params.tableId as string
+  const table = await sdk.tables.getTable(tableId)
+  let result = await sdk.tables.migrate(table, oldColumn, newColumn)
+
+  for (let table of result.tablesUpdated) {
+    builderSocket?.emitTableUpdate(ctx, table, {
+      includeOriginator: true,
+    })
+  }
+
+  ctx.status = 200
+  ctx.body = { message: `Column ${oldColumn.name} migrated.` }
 }

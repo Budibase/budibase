@@ -47,7 +47,7 @@
   </svg>
   {#if tooltip && showTooltip}
     <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction="bottom" text={tooltip} />
+      <Tooltip textWrapping direction="top" text={tooltip} />
     </div>
   {/if}
 </div>
@@ -67,6 +67,9 @@
     color: var(--spectrum-alias-icon-color-selected-hover) !important;
     cursor: pointer;
   }
+  svg.hoverable:active {
+    color: var(--spectrum-global-color-blue-400) !important;
+  }
 
   svg.disabled {
     color: var(--spectrum-global-color-gray-500) !important;
@@ -77,15 +80,14 @@
     position: absolute;
     pointer-events: none;
     left: 50%;
-    top: calc(100% + 4px);
-    width: 100vw;
-    max-width: 150px;
+    bottom: calc(100% + 4px);
     transform: translateX(-50%);
     text-align: center;
+    z-index: 1;
   }
 
   .spectrum-Icon--sizeXS {
-    width: 10px;
-    height: 10px;
+    width: var(--spectrum-global-dimension-size-150);
+    height: var(--spectrum-global-dimension-size-150);
   }
 </style>

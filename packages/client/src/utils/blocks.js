@@ -1,10 +1,12 @@
 import { makePropSafe as safe } from "@budibase/string-templates"
+import { API } from "../api/index.js"
 
 // Map of data types to component types for search fields inside blocks
 const schemaComponentMap = {
   string: "stringfield",
   options: "optionsfield",
   number: "numberfield",
+  bigint: "bigintfield",
   datetime: "datetimefield",
   boolean: "booleanfield",
   formula: "stringfield",
@@ -15,10 +17,28 @@ const schemaComponentMap = {
  * @param searchColumns the search columns to use
  * @param schema the datasource schema
  */
-export const enrichSearchColumns = (searchColumns, schema) => {
+export const enrichSearchColumns = async (searchColumns, schema) => {
+  if (!searchColumns?.length || !schema) {
+    return []
+  }
   let enrichedColumns = []
-  searchColumns?.forEach(column => {
-    const schemaType = schema?.[column]?.type
+  for (let column of searchColumns) {
+    let schemaType = schema[column]?.type
+
+    // Check if this is a field in another related table. The only way we can
+    // check this is checking for a "." inside the column, then checking if we
+    // have a link field named the same as that field prefix.
+    if (column.includes(".")) {
+      const split = column.split(".")
+      const sourceField = split[0]
+      const linkField = split.slice(1).join(".")
+      const linkSchema = schema[sourceField]
+      if (linkSchema?.type === "link") {
+        const linkedDef = await API.fetchTableDefinition(linkSchema.tableId)
+        schemaType = linkedDef?.schema?.[linkField]?.type
+      }
+    }
+
     const componentType = schemaComponentMap[schemaType]
     if (componentType) {
       enrichedColumns.push({
@@ -27,7 +47,7 @@ export const enrichSearchColumns = (searchColumns, schema) => {
         type: schemaType,
       })
     }
-  })
+  }
   return enrichedColumns.slice(0, 5)
 }
 
@@ -57,12 +77,14 @@ export const enrichFilter = (filter, columns, formId) => {
         value: `{{ ${binding} }}`,
       })
       const format = "YYYY-MM-DDTHH:mm:ss.SSSZ"
+      let hbs = `{{ date (add (date ${binding} "x") 86399999) "${format}" }}`
+      hbs = `{{#if ${binding} }}${hbs}{{/if}}`
       enrichedFilter.push({
         field: column.name,
         type: column.type,
         operator: "rangeHigh",
         valueType: "Binding",
-        value: `{{ date (add (date ${binding} "x") 86399999) "${format}" }}`,
+        value: hbs,
       })
     }
 

@@ -10,19 +10,28 @@ export const buildUserEndpoints = API => ({
 
   /**
    * Gets a list of users in the current tenant.
-   * @param {string} page The page to retrieve
-   * @param {string} search The starts with string to search username/email by.
+   * @param {string} bookmark The page to retrieve
+   * @param {object} query search filters for lookup by user (all operators not supported).
+   * @param {string} appId Facilitate app/role based user searching
+   * @param {boolean} paginate Allow the disabling of pagination
+   * @param {number} limit How many users to retrieve in a single search
    */
-  searchUsers: async ({ page, email, appId } = {}) => {
+  searchUsers: async ({ paginate, bookmark, query, appId, limit } = {}) => {
     const opts = {}
-    if (page) {
-      opts.page = page
+    if (bookmark) {
+      opts.bookmark = bookmark
     }
-    if (email) {
-      opts.email = email
+    if (query) {
+      opts.query = query
     }
     if (appId) {
       opts.appId = appId
+    }
+    if (typeof paginate === "boolean") {
+      opts.paginate = paginate
+    }
+    if (limit) {
+      opts.limit = limit
     }
     return await API.post({
       url: `/api/global/users/search`,
@@ -133,16 +142,68 @@ export const buildUserEndpoints = API => ({
    * @param builder whether the user should be a global builder
    * @param admin whether the user should be a global admin
    */
-  inviteUser: async ({ email, builder, admin }) => {
+  inviteUser: async ({ email, builder, admin, apps }) => {
     return await API.post({
       url: "/api/global/users/invite",
       body: {
         email,
         userInfo: {
-          admin: admin ? { global: true } : undefined,
-          builder: builder ? { global: true } : undefined,
+          admin: admin?.global ? { global: true } : undefined,
+          builder: builder?.global ? { global: true } : undefined,
+          apps: apps ? apps : undefined,
         },
       },
+    })
+  },
+
+  onboardUsers: async payload => {
+    return await API.post({
+      url: "/api/global/users/onboard",
+      body: payload.map(invite => {
+        const { email, admin, builder, apps } = invite
+        return {
+          email,
+          userInfo: {
+            admin,
+            builder,
+            apps: apps ? apps : undefined,
+          },
+        }
+      }),
+    })
+  },
+
+  /**
+   * Accepts a user invite as a body and will update the associated app roles.
+   * for an existing invite
+   * @param invite the invite code sent in the email
+   */
+  updateUserInvite: async invite => {
+    await API.post({
+      url: `/api/global/users/invite/update/${invite.code}`,
+      body: {
+        apps: invite.apps,
+        builder: invite.builder,
+      },
+    })
+  },
+
+  /**
+   * Retrieves the invitation associated with a provided code.
+   * @param code The unique code for the target invite
+   */
+  getUserInvite: async code => {
+    return await API.get({
+      url: `/api/global/users/invite/${code}`,
+    })
+  },
+
+  /**
+   * Retrieves all user invitations for the current tenant.
+   */
+  getUserInvites: async () => {
+    return await API.get({
+      url: `/api/global/users/invites`,
     })
   },
 
@@ -159,6 +220,7 @@ export const buildUserEndpoints = API => ({
           admin: user.admin ? { global: true } : undefined,
           builder: user.admin || user.builder ? { global: true } : undefined,
           userGroups: user.groups,
+          roles: user.apps ? user.apps : undefined,
         },
       })),
     })
@@ -168,13 +230,17 @@ export const buildUserEndpoints = API => ({
    * Accepts an invite to join the platform and creates a user.
    * @param inviteCode the invite code sent in the email
    * @param password the password for the newly created user
+   * @param firstName the first name of the new user
+   * @param lastName the last name of the new user
    */
-  acceptInvite: async ({ inviteCode, password }) => {
+  acceptInvite: async ({ inviteCode, password, firstName, lastName }) => {
     return await API.post({
       url: "/api/global/users/invite/accept",
       body: {
         inviteCode,
         password,
+        firstName,
+        lastName,
       },
     })
   },
@@ -187,6 +253,28 @@ export const buildUserEndpoints = API => ({
   getUserCountByApp: async ({ appId }) => {
     return await API.get({
       url: `/api/global/users/count/${appId}`,
+    })
+  },
+
+  /**
+   * Adds a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to add as a builder
+   */
+  addAppBuilder: async ({ userId, appId }) => {
+    return await API.post({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
+    })
+  },
+
+  /**
+   * Removes a per app builder to the selected app
+   * @param appId the applications id
+   * @param userId The id of the user to remove as a builder
+   */
+  removeAppBuilder: async ({ userId, appId }) => {
+    return await API.delete({
+      url: `/api/global/users/${userId}/app/${appId}/builder`,
     })
   },
 })

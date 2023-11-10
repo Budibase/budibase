@@ -4,9 +4,6 @@
   const { linkable, styleable } = getContext("sdk")
   const component = getContext("component")
 
-  // BB emblem: https://i.imgur.com/Xhdt1YP.png
-  // Space logo: https://i.imgur.com/Dn7Xt1G.png
-
   export let logoUrl
   export let hideLogo
 </script>
@@ -18,7 +15,7 @@
         <img
           class="logo"
           alt="logo"
-          src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
+          src={logoUrl || "/builder/bblogo.png"}
           height="48"
         />
       </a>

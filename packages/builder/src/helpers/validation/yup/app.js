@@ -52,7 +52,13 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
           }
           return !apps
             .map(app => app.url)
-            .some(appUrl => appUrl?.toLowerCase() === value.toLowerCase())
+            .some(appUrl => {
+              const url =
+                appUrl?.[0] === "/"
+                  ? appUrl.substring(1, appUrl.length)
+                  : appUrl
+              return url?.toLowerCase() === value.toLowerCase()
+            })
         }
       )
       .test("valid-url", "Not a valid URL", value => {
@@ -62,11 +68,9 @@ export const url = (validation, { apps, currentApp } = { apps: [] }) => {
         }
         // make it clear that this is a url path and cannot be a full url
         return (
-          value.startsWith("/") &&
           !value.includes("http") &&
           !value.includes("www") &&
-          !value.includes(".") &&
-          value.length > 1 // just '/' is not valid
+          !value.includes(".")
         )
       })
   )

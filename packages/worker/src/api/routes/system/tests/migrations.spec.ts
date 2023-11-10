@@ -30,7 +30,7 @@ describe("/api/system/migrations", () => {
         headers: {},
         status: 403,
       })
-      expect(res.text).toBe("Unauthorized - no public worker access")
+      expect(res.body).toEqual({ message: "Unauthorized", status: 403 })
       expect(migrateFn).toBeCalledTimes(0)
     })
 
@@ -47,7 +47,7 @@ describe("/api/system/migrations", () => {
         headers: {},
         status: 403,
       })
-      expect(res.text).toBe("Unauthorized - no public worker access")
+      expect(res.body).toEqual({ message: "Unauthorized", status: 403 })
     })
 
     it("returns definitions", async () => {

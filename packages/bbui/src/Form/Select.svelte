@@ -14,13 +14,18 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionIcon = option => option?.icon
+  export let useOptionIconImage = false
   export let getOptionColour = option => option?.colour
   export let isOptionEnabled
   export let quiet = false
   export let autoWidth = false
   export let sort = false
   export let tooltip = ""
-
+  export let autocomplete = false
+  export let customPopoverHeight
+  export let align
+  export let footer = null
+  export let tag = null
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -46,11 +51,17 @@
     {placeholder}
     {autoWidth}
     {sort}
+    {align}
+    {footer}
     {getOptionLabel}
     {getOptionValue}
     {getOptionIcon}
     {getOptionColour}
+    {useOptionIconImage}
     {isOptionEnabled}
+    {autocomplete}
+    {customPopoverHeight}
+    {tag}
     on:change={onChange}
     on:click
   />

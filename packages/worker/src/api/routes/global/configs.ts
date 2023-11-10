@@ -58,6 +58,13 @@ function oidcValidation() {
   }).unknown(true)
 }
 
+function scimValidation() {
+  // prettier-ignore
+  return Joi.object({
+    enabled: Joi.boolean().required(),
+  }).unknown(true)
+}
+
 function buildConfigSaveValidation() {
   // prettier-ignore
   return auth.joiValidator.body(Joi.object({
@@ -74,7 +81,8 @@ function buildConfigSaveValidation() {
           { is: ConfigType.SETTINGS, then: settingValidation() },
           { is: ConfigType.ACCOUNT, then: Joi.object().unknown(true) },
           { is: ConfigType.GOOGLE, then: googleValidation() },
-          { is: ConfigType.OIDC, then: oidcValidation() }
+          { is: ConfigType.OIDC, then: oidcValidation() },
+          { is: ConfigType.SCIM, then: scimValidation() }
         ],
       }),
   }).required().unknown(true),
@@ -104,13 +112,7 @@ router
     controller.save
   )
   .delete("/api/global/configs/:id/:rev", auth.adminOnly, controller.destroy)
-  .get("/api/global/configs", controller.fetch)
   .get("/api/global/configs/checklist", controller.configChecklist)
-  .get(
-    "/api/global/configs/all/:type",
-    buildConfigGetValidation(),
-    controller.fetch
-  )
   .get("/api/global/configs/public", controller.publicSettings)
   .get("/api/global/configs/public/oidc", controller.publicOidc)
   .get("/api/global/configs/:type", buildConfigGetValidation(), controller.find)
@@ -121,4 +123,4 @@ router
     controller.upload
   )
 
-export = router
+export default router

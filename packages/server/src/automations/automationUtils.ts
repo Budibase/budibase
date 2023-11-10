@@ -5,6 +5,7 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import { Row } from "@budibase/types"
+import { LoopStep, LoopStepType, LoopInput } from "../definitions/automations"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -13,16 +14,16 @@ import { Row } from "@budibase/types"
  * make sure that the post template statement can be cast into the correct type, this function does this for numbers
  * and booleans.
  *
- * @param {object} inputs An object of inputs, please note this will not recurse down into any objects within, it simply
+ * @param inputs An object of inputs, please note this will not recurse down into any objects within, it simply
  * cleanses the top level inputs, however it can be used by recursively calling it deeper into the object structures if
  * the schema is known.
- * @param {object} schema The defined schema of the inputs, in the form of JSON schema. The schema definition of an
+ * @param schema The defined schema of the inputs, in the form of JSON schema. The schema definition of an
  * automation is the likely use case of this, however validate.js syntax can be converted closely enough to use this by
  * wrapping the schema properties in a top level "properties" object.
- * @returns {object} The inputs object which has had all the various types supported by this function converted to their
+ * @returns The inputs object which has had all the various types supported by this function converted to their
  * primitive types.
  */
-export function cleanInputValues(inputs: Record<string, any>, schema: any) {
+export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
   if (schema == null) {
     return inputs
   }
@@ -51,6 +52,20 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
       }
     }
   }
+  //Check if input field for Update Row should be a relationship and cast to array
+  for (let key in inputs.row) {
+    if (
+      inputs.schema?.[key]?.type === "link" &&
+      inputs.row[key] &&
+      typeof inputs.row[key] === "string"
+    ) {
+      try {
+        inputs.row[key] = JSON.parse(inputs.row[key])
+      } catch (e) {
+        //Link is not an array or object, so continue
+      }
+    }
+  }
   return inputs
 }
 
@@ -59,9 +74,9 @@ export function cleanInputValues(inputs: Record<string, any>, schema: any) {
  * the automation but is instead part of the Table/Table. This function will get the table schema and use it to instead
  * perform the cleanInputValues function on the input row.
  *
- * @param {string} tableId The ID of the Table/Table which the schema is to be retrieved for.
- * @param {object} row The input row structure which requires clean-up after having been through template statements.
- * @returns {Promise<Object>} The cleaned up rows object, will should now have all the required primitive types.
+ * @param tableId The ID of the Table/Table which the schema is to be retrieved for.
+ * @param row The input row structure which requires clean-up after having been through template statements.
+ * @returns The cleaned up rows object, will should now have all the required primitive types.
  */
 export async function cleanUpRow(tableId: string, row: Row) {
   let table = await sdk.tables.getTable(tableId)
@@ -92,7 +107,7 @@ export function substituteLoopStep(hbsString: string, substitute: string) {
   let pointer = 0,
     openPointer = 0,
     closedPointer = 0
-  while (pointer < hbsString.length) {
+  while (pointer < hbsString?.length) {
     openPointer = hbsString.indexOf(open, pointer)
     closedPointer = hbsString.indexOf(closed, pointer) + 2
     if (openPointer < 0 || closedPointer < 0) {
@@ -122,4 +137,27 @@ export function stringSplit(value: string | string[]) {
     value = value.split(",")
   }
   return value
+}
+
+export function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
+  if (!input || !input.binding) {
+    return null
+  }
+  try {
+    switch (loopStep.inputs.option) {
+      case LoopStepType.ARRAY:
+        if (typeof input.binding === "string") {
+          return JSON.parse(input.binding)
+        }
+        break
+      case LoopStepType.STRING:
+        if (Array.isArray(input.binding)) {
+          return input.binding.join(",")
+        }
+        break
+    }
+  } catch (err) {
+    throw new Error("Unable to cast to correct type")
+  }
+  return input.binding
 }

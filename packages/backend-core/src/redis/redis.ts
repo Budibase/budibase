@@ -1,24 +1,39 @@
 import env from "../environment"
-// ioredis mock is all in memory
-const Redis = env.isTest() ? require("ioredis-mock") : require("ioredis")
+import Redis from "ioredis"
+// mock-redis doesn't have any typing
+let MockRedis: any | undefined
+if (env.MOCK_REDIS) {
+  try {
+    // ioredis mock is all in memory
+    MockRedis = require("ioredis-mock")
+  } catch (err) {
+    console.log("Mock redis unavailable")
+  }
+}
 import {
   addDbPrefix,
   removeDbPrefix,
   getRedisOptions,
   SEPARATOR,
   SelectableDatabase,
+  getRedisConnectionDetails,
 } from "./utils"
+import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
 const STARTUP_TIMEOUT_MS = 5000
-const CLUSTERED = false
+const CLUSTERED = env.REDIS_CLUSTERED
 const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-// if in test always connected
-let CONNECTED = env.isTest()
+let CONNECTED = false
+
+// mock redis always connected
+if (env.MOCK_REDIS) {
+  CONNECTED = true
+}
 
 function pickClient(selectDb: number): any {
   return CLIENTS[selectDb]
@@ -49,6 +64,7 @@ function connectionError(
  * will return the ioredis client which will be ready to use.
  */
 function init(selectDb = DEFAULT_SELECT_DB) {
+  const RedisCore = env.MOCK_REDIS && MockRedis ? MockRedis : Redis
   let timeout: NodeJS.Timeout
   CLOSED = false
   let client = pickClient(selectDb)
@@ -57,8 +73,8 @@ function init(selectDb = DEFAULT_SELECT_DB) {
     return
   }
   // testing uses a single in memory client
-  if (env.isTest()) {
-    CLIENTS[selectDb] = new Redis(getRedisOptions())
+  if (env.MOCK_REDIS) {
+    CLIENTS[selectDb] = new RedisCore(getRedisOptions())
   }
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
@@ -75,17 +91,21 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions(CLUSTERED)
+  const { host, port } = getRedisConnectionDetails()
+  const opts = getRedisOptions()
 
   if (CLUSTERED) {
-    client = new Redis.Cluster([{ host, port }], opts)
-  } else if (redisProtocolUrl) {
-    client = new Redis(redisProtocolUrl)
+    client = new RedisCore.Cluster([{ host, port }], opts)
   } else {
-    client = new Redis(opts)
+    client = new RedisCore(opts)
   }
   // attach handlers
   client.on("end", (err: Error) => {
+    if (env.isTest()) {
+      // don't try to re-connect in test env
+      // allow the process to exit
+      return
+    }
     connectionError(selectDb, timeout, err)
   })
   client.on("error", (err: Error) => {
@@ -107,9 +127,9 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
       return
     }
     // check if the connection is ready
-    const interval = setInterval(() => {
+    const interval = timers.set(() => {
       if (CONNECTED) {
-        clearInterval(interval)
+        timers.clear(interval)
         resolve("")
       }
     }, 500)
@@ -121,7 +141,7 @@ function waitForConnection(selectDb: number = DEFAULT_SELECT_DB) {
  * this can only be done with redis streams because they will have an end.
  * @param stream A redis stream, specifically as this type of stream will have an end.
  * @param client The client to use for further lookups.
- * @return {Promise<object>} The final output of the stream
+ * @return The final output of the stream
  */
 function promisifyStream(stream: any, client: RedisWrapper) {
   return new Promise((resolve, reject) => {
@@ -172,6 +192,9 @@ class RedisWrapper {
     CLOSED = false
     init(this._select)
     await waitForConnection(this._select)
+    if (this._select && !env.isTest()) {
+      this.getClient().select(this._select)
+    }
     return this
   }
 
@@ -198,6 +221,11 @@ class RedisWrapper {
     return this.getClient().keys(addDbPrefix(db, pattern))
   }
 
+  async exists(key: string) {
+    const db = this._db
+    return await this.getClient().exists(addDbPrefix(db, key))
+  }
+
   async get(key: string) {
     const db = this._db
     let response = await this.getClient().get(addDbPrefix(db, key))
@@ -213,7 +241,7 @@ class RedisWrapper {
     }
   }
 
-  async bulkGet(keys: string[]) {
+  async bulkGet<T>(keys: string[]) {
     const db = this._db
     if (keys.length === 0) {
       return {}
@@ -221,7 +249,7 @@ class RedisWrapper {
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
     let response = await this.getClient().mget(prefixedKeys)
     if (Array.isArray(response)) {
-      let final: any = {}
+      let final: Record<string, T> = {}
       let count = 0
       for (let result of response) {
         if (result) {
@@ -276,4 +304,4 @@ class RedisWrapper {
   }
 }
 
-export = RedisWrapper
+export default RedisWrapper

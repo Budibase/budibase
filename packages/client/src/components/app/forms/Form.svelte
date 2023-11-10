@@ -2,12 +2,15 @@
   import { getContext } from "svelte"
   import InnerForm from "./InnerForm.svelte"
   import { Helpers } from "@budibase/bbui"
+  import { writable } from "svelte/store"
 
   export let dataSource
   export let theme
   export let size
   export let disabled = false
+  export let readonly = false
   export let actionType = "Create"
+  export let initialFormStep = 1
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
@@ -20,10 +23,25 @@
   const context = getContext("context")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
+  const getInitialFormStep = () => {
+    const parsedFormStep = parseInt(initialFormStep)
+    if (isNaN(parsedFormStep)) {
+      return 1
+    }
+    return parsedFormStep
+  }
+
+  let loaded = false
   let schema
   let table
+  let currentStep = writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
+  $: schemaKey = generateSchemaKey(schema)
+  $: initialValues = getInitialValues(actionType, dataSource, $context)
+  $: resetKey = Helpers.hashString(
+    schemaKey + JSON.stringify(initialValues) + disabled + readonly
+  )
 
   // Returns the closes data context which isn't a built in context
   const getInitialValues = (type, dataSource, context) => {
@@ -55,30 +73,41 @@
     }
     const res = await fetchDatasourceSchema(dataSource)
     schema = res || {}
+    if (!loaded) {
+      loaded = true
+    }
   }
 
-  $: initialValues = getInitialValues(actionType, dataSource, $context)
-  $: resetKey = Helpers.hashString(
-    !!schema +
-      JSON.stringify(initialValues) +
-      JSON.stringify(dataSource) +
-      disabled
-  )
+  // Generates a predictable string that uniquely identifies a schema. We can't
+  // simply stringify the whole schema as there are array fields which have
+  // random order.
+  const generateSchemaKey = schema => {
+    if (!schema) {
+      return null
+    }
+    const fields = Object.keys(schema)
+    fields.sort()
+    return fields.map(field => `${field}:${schema[field].type}`).join("-")
+  }
 </script>
 
-{#key resetKey}
-  <InnerForm
-    {dataSource}
-    {theme}
-    {size}
-    {disabled}
-    {actionType}
-    {schema}
-    {table}
-    {initialValues}
-    {disableValidation}
-    {editAutoColumns}
-  >
-    <slot />
-  </InnerForm>
-{/key}
+{#if loaded}
+  {#key resetKey}
+    <InnerForm
+      {dataSource}
+      {theme}
+      {size}
+      {disabled}
+      {readonly}
+      {actionType}
+      {schema}
+      {table}
+      {initialValues}
+      {disableValidation}
+      {editAutoColumns}
+      {currentStep}
+    >
+      <slot />
+    </InnerForm>
+  {/key}
+{/if}

@@ -1,13 +1,15 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
-import Sentry from "@sentry/node"
-import { FieldTypes, RelationshipTypes } from "../../constants"
-import { context } from "@budibase/backend-core"
+import { FieldTypes } from "../../constants"
+import { context, logging } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
 import {
   Database,
   FieldSchema,
+  FieldType,
   LinkDocumentValue,
+  RelationshipFieldMetadata,
+  RelationshipType,
   Row,
   Table,
 } from "@budibase/types"
@@ -36,7 +38,7 @@ class LinkController {
 
   /**
    * Retrieves the table, if it was not already found in the eventData.
-   * @returns {Promise<object>} This will return a table based on the event data, either
+   * @returns This will return a table based on the event data, either
    * if it was in the event already, or it uses the specified tableId to get it.
    */
   async table() {
@@ -50,8 +52,8 @@ class LinkController {
   /**
    * Checks if the table this was constructed with has any linking columns currently.
    * If the table has not been retrieved this will retrieve it based on the eventData.
-   * @params {object|null} table If a table that is not known to the link controller is to be tested.
-   * @returns {Promise<boolean>} True if there are any linked fields, otherwise it will return
+   * @params table If a table that is not known to the link controller is to be tested.
+   * @returns True if there are any linked fields, otherwise it will return
    * false.
    */
   async doesTableHaveLinkedFields(table?: Table) {
@@ -132,19 +134,22 @@ class LinkController {
    * Given the link field of this table, and the link field of the linked table, this makes sure
    * the state of relationship type is accurate on both.
    */
-  handleRelationshipType(linkerField: FieldSchema, linkedField: FieldSchema) {
+  handleRelationshipType(
+    linkerField: RelationshipFieldMetadata,
+    linkedField: RelationshipFieldMetadata
+  ) {
     if (
       !linkerField.relationshipType ||
-      linkerField.relationshipType === RelationshipTypes.MANY_TO_MANY
+      linkerField.relationshipType === RelationshipType.MANY_TO_MANY
     ) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_MANY
+      linkedField.relationshipType = RelationshipType.MANY_TO_MANY
       // make sure by default all are many to many (if not specified)
-      linkerField.relationshipType = RelationshipTypes.MANY_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.MANY_TO_ONE) {
+      linkerField.relationshipType = RelationshipType.MANY_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.MANY_TO_ONE) {
       // Ensure that the other side of the relationship is locked to one record
-      linkedField.relationshipType = RelationshipTypes.ONE_TO_MANY
-    } else if (linkerField.relationshipType === RelationshipTypes.ONE_TO_MANY) {
-      linkedField.relationshipType = RelationshipTypes.MANY_TO_ONE
+      linkedField.relationshipType = RelationshipType.ONE_TO_MANY
+    } else if (linkerField.relationshipType === RelationshipType.ONE_TO_MANY) {
+      linkedField.relationshipType = RelationshipType.MANY_TO_ONE
     }
     return { linkerField, linkedField }
   }
@@ -154,7 +159,7 @@ class LinkController {
   /**
    * When a row is saved this will carry out the necessary operations to make sure
    * the link has been created/updated.
-   * @returns {Promise<object>} returns the row that has been cleaned and prepared to be written to the DB - links
+   * @returns returns the row that has been cleaned and prepared to be written to the DB - links
    * have also been created.
    */
   async rowSaved() {
@@ -181,8 +186,8 @@ class LinkController {
         })
 
         // if 1:N, ensure that this ID is not already attached to another record
-        const linkedTable = await this._db.get(field.tableId)
-        const linkedSchema = linkedTable.schema[field.fieldName!]
+        const linkedTable = await this._db.get<Table>(field.tableId)
+        const linkedSchema = linkedTable.schema[field.fieldName]
 
         // We need to map the global users to metadata in each app for relationships
         if (field.tableId === InternalTables.USER_METADATA) {
@@ -200,7 +205,8 @@ class LinkController {
         // iterate through the link IDs in the row field, see if any don't exist already
         for (let linkId of rowField) {
           if (
-            linkedSchema?.relationshipType === RelationshipTypes.ONE_TO_MANY
+            linkedSchema?.type === FieldType.LINK &&
+            linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
             let links = (
               (await getLinkDocuments({
@@ -265,7 +271,7 @@ class LinkController {
   /**
    * When a row is deleted this will carry out the necessary operations to make sure
    * any links that existed have been removed.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. This also returns the row that was deleted.
    */
   async rowDeleted() {
@@ -287,12 +293,12 @@ class LinkController {
 
   /**
    * Remove a field from a table as well as any linked rows that pertained to it.
-   * @param {string} fieldName The field to be removed from the table.
-   * @returns {Promise<void>} The table has now been updated.
+   * @param fieldName The field to be removed from the table.
+   * @returns The table has now been updated.
    */
   async removeFieldFromTable(fieldName: string) {
     let oldTable = this._oldTable
-    let field = oldTable?.schema[fieldName] as FieldSchema
+    let field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
     const linkDocs = await this.getTableLinkDocs()
     let toDelete = linkDocs.filter(linkDoc => {
       let correctFieldName =
@@ -309,18 +315,25 @@ class LinkController {
         }
       })
     )
-    // remove schema from other table
-    let linkedTable = await this._db.get(field.tableId)
-    if (field.fieldName) {
-      delete linkedTable.schema[field.fieldName]
+    try {
+      // remove schema from other table, if it exists
+      let linkedTable = await this._db.get<Table>(field.tableId)
+      if (field.fieldName) {
+        delete linkedTable.schema[field.fieldName]
+      }
+      await this._db.put(linkedTable)
+    } catch (error: any) {
+      // ignore missing to ensure broken relationship columns can be deleted
+      if (error.statusCode !== 404) {
+        throw error
+      }
     }
-    await this._db.put(linkedTable)
   }
 
   /**
    * When a table is saved this will carry out the necessary operations to make sure
    * any linked tables are notified and updated correctly.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. Also returns the table that was operated on.
    */
   async tableSaved() {
@@ -336,7 +349,7 @@ class LinkController {
         // table for some reason
         let linkedTable
         try {
-          linkedTable = await this._db.get(field.tableId)
+          linkedTable = await this._db.get<Table>(field.tableId)
         } catch (err) {
           /* istanbul ignore next */
           continue
@@ -345,9 +358,9 @@ class LinkController {
           name: field.fieldName,
           type: FieldTypes.LINK,
           // these are the props of the table that initiated the link
-          tableId: table._id,
+          tableId: table._id!,
           fieldName: fieldName,
-        })
+        } as RelationshipFieldMetadata)
 
         // update table schema after checking relationship types
         schema[fieldName] = fields.linkerField
@@ -381,7 +394,7 @@ class LinkController {
   /**
    * Update a table, this means if a field is removed need to handle removing from other table and removing
    * any link docs that pertained to it.
-   * @returns {Promise<Object>} The table which has been saved, same response as with the tableSaved function.
+   * @returns The table which has been saved, same response as with the tableSaved function.
    */
   async tableUpdated() {
     const oldTable = this._oldTable
@@ -405,7 +418,7 @@ class LinkController {
    * When a table is deleted this will carry out the necessary operations to make sure
    * any linked tables have the joining column correctly removed as well as removing any
    * now stale linking documents.
-   * @returns {Promise<object>} The operation has been completed and the link documents should now
+   * @returns The operation has been completed and the link documents should now
    * be accurate. Also returns the table that was operated on.
    */
   async tableDeleted() {
@@ -415,13 +428,12 @@ class LinkController {
       const field = schema[fieldName]
       try {
         if (field.type === FieldTypes.LINK && field.fieldName) {
-          const linkedTable = await this._db.get(field.tableId)
+          const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
           await this._db.put(linkedTable)
         }
-      } catch (err) {
-        /* istanbul ignore next */
-        Sentry.captureException(err)
+      } catch (err: any) {
+        logging.logWarn(err?.message, err)
       }
     }
     // need to get the full link docs to delete them
@@ -441,4 +453,4 @@ class LinkController {
   }
 }
 
-export = LinkController
+export default LinkController

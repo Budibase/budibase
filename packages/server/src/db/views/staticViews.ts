@@ -1,6 +1,6 @@
 import { context } from "@budibase/backend-core"
-import { DocumentType, SEPARATOR, ViewName, SearchIndexes } from "../utils"
-import { LinkDocument, Row } from "@budibase/types"
+import { DocumentType, SEPARATOR, ViewName } from "../utils"
+import { LinkDocument, Row, SearchIndex } from "@budibase/types"
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************
@@ -17,12 +17,12 @@ const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 /**
  * Creates the link view for the instance, this will overwrite the existing one, but this should only
  * be called if it is found that the view does not exist.
- * @returns {Promise<void>} The view now exists, please note that the next view of this query will actually build it,
+ * @returns The view now exists, please note that the next view of this query will actually build it,
  * so it may be slow.
  */
 export async function createLinkView() {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   const view = {
     map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
@@ -58,7 +58,7 @@ export async function createLinkView() {
 
 export async function createRoutingView() {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   const view = {
     // if using variables in a map function need to inject them before use
     map: `function(doc) {
@@ -79,7 +79,7 @@ export async function createRoutingView() {
 
 async function searchIndex(indexName: string, fnString: string) {
   const db = context.getAppDB()
-  const designDoc = await db.get("_design/database")
+  const designDoc = await db.get<any>("_design/database")
   designDoc.indexes = {
     [indexName]: {
       index: fnString,
@@ -91,7 +91,7 @@ async function searchIndex(indexName: string, fnString: string) {
 
 export async function createAllSearchIndex() {
   await searchIndex(
-    SearchIndexes.ROWS,
+    SearchIndex.ROWS,
     function (doc: Row) {
       function idx(input: Row, prev?: string) {
         for (let key of Object.keys(input)) {

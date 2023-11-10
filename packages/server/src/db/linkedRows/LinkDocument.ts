@@ -6,12 +6,12 @@ import { LinkDocument } from "@budibase/types"
  * Creates a new link document structure which can be put to the database. It is important to
  * note that while this talks about linker/linked the link is bi-directional and for all intent
  * and purposes it does not matter from which direction the link was initiated.
- * @param {string} tableId1 The ID of the first table (the linker).
- * @param {string} tableId2 The ID of the second table (the linked).
- * @param {string} fieldName1 The name of the field in the linker table.
- * @param {string} fieldName2 The name of the field in the linked table.
- * @param {string} rowId1 The ID of the row which is acting as the linker.
- * @param {string} rowId2 The ID of the row which is acting as the linked.
+ * @param tableId1 The ID of the first table (the linker).
+ * @param tableId2 The ID of the second table (the linked).
+ * @param fieldName1 The name of the field in the linker table.
+ * @param fieldName2 The name of the field in the linked table.
+ * @param rowId1 The ID of the row which is acting as the linker.
+ * @param rowId2 The ID of the row which is acting as the linked.
  * @constructor
  */
 class LinkDocumentImpl implements LinkDocument {
@@ -57,4 +57,4 @@ class LinkDocumentImpl implements LinkDocument {
   }
 }
 
-export = LinkDocumentImpl
+export default LinkDocumentImpl

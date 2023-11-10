@@ -1,42 +1,20 @@
-jest.mock("node-fetch")
-jest.mock("aws-sdk", () => ({
-  config: {
-    update: jest.fn(),
-  },
-  DynamoDB: {
-    DocumentClient: jest.fn(),
-  },
-  S3: jest.fn(() => ({
-    getSignedUrl: jest.fn(() => {
-      return "my-url"
-    }),
-  })),
-}))
-
 const setup = require("./utilities")
-const { events, constants } = require("@budibase/backend-core")
+const { constants } = require("@budibase/backend-core")
 
 describe("/static", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let app
+  let cleanupEnv
 
-  afterAll(setup.afterAll)
-
-  beforeEach(async () => {
-    app = await config.init()
+  afterAll(() => {
+    setup.afterAll()
+    cleanupEnv()
   })
 
-  describe("/builder", () => {
-    it("should serve the builder", async () => {
-      const res = await request
-        .get("/builder/portal")
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /text\/html/)
-        .expect(200)
-
-      expect(res.text).toContain("<title>Budibase</title>")
-    })
+  beforeAll(async () => {
+    cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
+    app = await config.init()
   })
 
   describe("/app", () => {
@@ -102,7 +80,7 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.body.signedUrl).toEqual("my-url")
+        expect(res.body.signedUrl).toEqual("http://test.com/foo/bar")
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )

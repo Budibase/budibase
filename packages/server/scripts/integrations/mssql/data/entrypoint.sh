@@ -11,6 +11,7 @@ if [ "$1" = '/opt/mssql/bin/sqlservr' ]; then
 
       echo "RUNNING BUDIBASE SETUP"
 
+      cat setup.sql
       #run the setup script to create the DB and the schema in the DB
       /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Passw0rd -i setup.sql
 

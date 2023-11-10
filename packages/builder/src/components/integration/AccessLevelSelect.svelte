@@ -40,7 +40,7 @@
       return
     }
     try {
-      roleId = (await permissions.forResource(queryToFetch._id))["read"]
+      roleId = (await permissions.forResource(queryToFetch._id))["read"].role
     } catch (err) {
       roleId = Constants.Roles.BASIC
     }

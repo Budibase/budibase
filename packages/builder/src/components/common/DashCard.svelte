@@ -4,12 +4,11 @@
   export let title = ""
   export let actionIcon
   export let action
-  export let dataCy
 
   $: actionDefined = typeof action === "function"
 </script>
 
-<div class="dash-card" data-cy={dataCy}>
+<div class="dash-card">
   <div class="dash-card-header" class:active={actionDefined} on:click={action}>
     <span class="dash-card-title">
       <Detail size="M">{title}</Detail>
@@ -29,7 +28,6 @@
   .dash-card {
     background: var(--spectrum-alias-background-color-primary);
     border-radius: var(--border-radius-s);
-    overflow: hidden;
     min-height: 170px;
   }
   .dash-card-header {

@@ -16,6 +16,10 @@ export type CreateRowParams = components["schemas"]["row"]
 export type User = components["schemas"]["userOutput"]["data"]
 export type CreateUserParams = components["schemas"]["user"]
 
+export type RoleAssignRequest = components["schemas"]["rolesAssign"]
+export type RoleUnAssignRequest = components["schemas"]["rolesUnAssign"]
+export type RoleAssignmentResponse = components["schemas"]["rolesOutput"]
+
 export type SearchInputParams =
   | components["schemas"]["nameSearch"]
   | components["schemas"]["rowSearch"]

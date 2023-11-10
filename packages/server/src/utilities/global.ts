@@ -1,133 +1,135 @@
-import { getMultiIDParams, getGlobalIDFromUserMetadataID } from "../db/utils"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
   roles,
   db as dbCore,
   cache,
   tenancy,
   context,
+  users,
 } from "@budibase/backend-core"
 import env from "../environment"
 import { groups } from "@budibase/pro"
-import { BBContext, ContextUser, User } from "@budibase/types"
+import { UserCtx, ContextUser, User, UserGroup } from "@budibase/types"
+import cloneDeep from "lodash/cloneDeep"
 
-export function updateAppRole(
+export async function processUser(
   user: ContextUser,
-  { appId }: { appId?: string } = {}
+  opts: { appId?: string; groups?: UserGroup[] } = {}
 ) {
-  appId = appId || context.getAppId()
-
-  if (!user || !user.roles) {
+  if (!user || (!user.roles && !user.userGroups)) {
     return user
   }
-  // if in an multi-tenancy environment make sure roles are never updated
+  user = cloneDeep(user)
+  delete user.password
+  const appId = opts.appId || context.getAppId()
+  if (!appId) {
+    throw new Error("Unable to process user without app ID")
+  }
+  // if in a multi-tenancy environment and in wrong tenant make sure roles are never updated
   if (env.MULTI_TENANCY && appId && !tenancy.isUserInAppTenant(appId, user)) {
-    delete user.builder
-    delete user.admin
+    user = users.removePortalUserPermissions(user)
     user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
     return user
   }
-  // always use the deployed app
-  if (appId) {
+  let groupList: UserGroup[] = []
+  if (appId && user?.userGroups?.length) {
+    groupList = opts.groups
+      ? opts.groups
+      : await groups.getBulk(user.userGroups)
+  }
+  // check if a group provides builder access
+  const builderAppIds = await groups.getGroupBuilderAppIds(user, {
+    appId,
+    groups: groupList,
+  })
+  if (builderAppIds.length && !users.isBuilder(user, appId)) {
+    const existingApps = user.builder?.apps || []
+    user.builder = {
+      apps: [...new Set(existingApps.concat(builderAppIds))],
+    }
+  }
+  // builders are always admins within the app
+  if (users.isBuilder(user, appId)) {
+    user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
+  }
+  // try to get the role from the user list
+  if (!user.roleId && appId && user.roles) {
     user.roleId = user.roles[dbCore.getProdAppID(appId)]
   }
-  // if a role wasn't found then either set as admin (builder) or public (everyone else)
-  if (!user.roleId && user.builder && user.builder.global) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.ADMIN
-  } else if (!user.roleId && !user?.userGroups?.length) {
-    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
-  } else if (user?.userGroups?.length) {
-    user.roleId = undefined
+  // try to get the role from the group list
+  if (!user.roleId && groupList) {
+    user.roleId = await groups.getGroupRoleId(user, appId, {
+      groups: groupList,
+    })
   }
-
+  // final fallback, simply couldn't find a role - user must be public
+  if (!user.roleId) {
+    user.roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  }
+  // remove the roles as it is now set
   delete user.roles
   return user
 }
 
-async function checkGroupRoles(
-  user: ContextUser,
-  { appId }: { appId?: string } = {}
-) {
-  if (user.roleId && user.roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
-    return user
-  }
-  if (appId) {
-    user.roleId = await groups.getGroupRoleId(user as User, appId)
-  }
-  return user
-}
-
-async function processUser(
-  user: ContextUser,
-  { appId }: { appId?: string } = {}
-) {
-  if (user) {
-    delete user.password
-  }
-  user = await updateAppRole(user, { appId })
-  if (!user.roleId && user?.userGroups?.length) {
-    user = await checkGroupRoles(user, { appId })
-  }
-
-  return user
-}
-
-export async function getCachedSelf(ctx: BBContext, appId: string) {
+export async function getCachedSelf(
+  ctx: UserCtx,
+  appId: string
+): Promise<ContextUser> {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await cache.user.getUser(ctx.user?._id!)
   return processUser(user, { appId })
 }
 
-export async function getRawGlobalUser(userId: string) {
+export async function getRawGlobalUser(userId: string): Promise<User> {
   const db = tenancy.getGlobalDB()
-  return db.get(getGlobalIDFromUserMetadataID(userId))
+  return db.get<User>(getGlobalIDFromUserMetadataID(userId))
 }
 
-export async function getGlobalUser(userId: string) {
+export async function getGlobalUser(userId: string): Promise<ContextUser> {
   const appId = context.getAppId()
   let user = await getRawGlobalUser(userId)
   return processUser(user, { appId })
 }
 
-export async function getGlobalUsers(users?: ContextUser[]) {
-  const appId = context.getAppId()
+export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
-  let globalUsers
-  if (users) {
-    const globalIds = users.map(user =>
-      getGlobalIDFromUserMetadataID(user._id!)
-    )
-    globalUsers = (await db.allDocs(getMultiIDParams(globalIds))).rows.map(
-      row => row.doc
-    )
+  let globalUsers: User[]
+  if (userIds) {
+    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
   } else {
     globalUsers = (
-      await db.allDocs(
+      await db.allDocs<User>(
         dbCore.getGlobalUserParams(null, {
           include_docs: true,
         })
       )
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
   }
-  globalUsers = globalUsers
+  return globalUsers
     .filter(user => user != null)
     .map(user => {
       delete user.password
       delete user.forceResetPassword
       return user
     })
-  if (!appId) {
-    return globalUsers
-  }
+}
 
-  return globalUsers.map(user => updateAppRole(user))
+export async function getGlobalUsers(
+  userIds?: string[]
+): Promise<ContextUser[]> {
+  const users = await getRawGlobalUsers(userIds)
+  const allGroups = await groups.fetch()
+  return Promise.all(
+    users.map(user => processUser(user, { groups: allGroups }))
+  )
 }
 
 export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
-  const globalUsers = await getGlobalUsers(users)
+  const globalUsers = await getGlobalUsers(users.map(user => user._id!))
   return users.map(user => {
     const globalUser = globalUsers.find(
-      globalUser => globalUser && user._id?.includes(globalUser._id)
+      globalUser => globalUser && user._id?.includes(globalUser._id!)
     )
     return {
       ...globalUser,

@@ -3,10 +3,13 @@ import {
   DatasourceFieldType,
   QueryType,
   IntegrationBase,
+  DatasourceFeature,
+  ConnectionInfo,
 } from "@budibase/types"
 
-const AWS = require("aws-sdk")
-const { AWS_REGION } = require("../db/dynamoClient")
+import AWS from "aws-sdk"
+import { AWS_REGION } from "../db/dynamoClient"
+import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 interface DynamoDBConfig {
   region: string
@@ -22,6 +25,9 @@ const SCHEMA: Integration = {
     "Amazon DynamoDB is a key-value and document database that delivers single-digit millisecond performance at any scale.",
   friendlyName: "DynamoDB",
   type: "Non-relational",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     region: {
       type: DatasourceFieldType.STRING,
@@ -128,7 +134,7 @@ const SCHEMA: Integration = {
 
 class DynamoDBIntegration implements IntegrationBase {
   private config: DynamoDBConfig
-  private client: any
+  private client
 
   constructor(config: DynamoDBConfig) {
     this.config = config
@@ -148,7 +154,23 @@ class DynamoDBIntegration implements IntegrationBase {
     this.client = new AWS.DynamoDB.DocumentClient(this.config)
   }
 
-  async create(query: { table: string; json: object }) {
+  async testConnection() {
+    const response: ConnectionInfo = {
+      connected: false,
+    }
+    try {
+      const scanRes = await new AWS.DynamoDB(this.config).listTables().promise()
+      response.connected = !!scanRes.$response
+    } catch (e: any) {
+      response.error = e.message as string
+    }
+    return response
+  }
+
+  async create(query: {
+    table: string
+    json: Omit<DocumentClient.PutItemInput, "TableName">
+  }) {
     const params = {
       TableName: query.table,
       ...query.json,
@@ -182,14 +204,17 @@ class DynamoDBIntegration implements IntegrationBase {
     return response
   }
 
-  async describe(query: { table: string }) {
+  async describe(query: { table: string }): Promise<any> {
     const params = {
       TableName: query.table,
     }
     return new AWS.DynamoDB(this.config).describeTable(params).promise()
   }
 
-  async get(query: { table: string; json: object }) {
+  async get(query: {
+    table: string
+    json: Omit<DocumentClient.GetItemInput, "TableName">
+  }) {
     const params = {
       TableName: query.table,
       ...query.json,
@@ -197,7 +222,10 @@ class DynamoDBIntegration implements IntegrationBase {
     return this.client.get(params).promise()
   }
 
-  async update(query: { table: string; json: object }) {
+  async update(query: {
+    table: string
+    json: Omit<DocumentClient.UpdateItemInput, "TableName">
+  }) {
     const params = {
       TableName: query.table,
       ...query.json,
@@ -205,7 +233,10 @@ class DynamoDBIntegration implements IntegrationBase {
     return this.client.update(params).promise()
   }
 
-  async delete(query: { table: string; json: object }) {
+  async delete(query: {
+    table: string
+    json: Omit<DocumentClient.DeleteItemInput, "TableName">
+  }) {
     const params = {
       TableName: query.table,
       ...query.json,

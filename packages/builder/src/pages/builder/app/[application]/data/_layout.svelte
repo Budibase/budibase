@@ -1,75 +1,54 @@
 <script>
-  import { redirect } from "@roxi/routify"
-  import { Button, Tabs, Tab, Layout } from "@budibase/bbui"
+  import { Button, Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
-  import CreateDatasourceModal from "components/backend/DatasourceNavigator/modals/CreateDatasourceModal.svelte"
+  import Panel from "components/design/Panel.svelte"
+  import { isActive, redirect, goto, params } from "@roxi/routify"
+  import { datasources } from "stores/backend"
 
-  let selected = "Sources"
-
-  let modal
-
-  function selectFirstDatasource() {
-    $redirect("./table")
+  $: {
+    // If we ever don't have any data other than the users table, prompt the
+    // user to add some
+    // Don't redirect if setting up google sheets, or we lose the query parameter
+    if (!$datasources.hasData && !$params["?continue_google_setup"]) {
+      $redirect("./new")
+    }
   }
 </script>
 
 <!-- routify:options index=1 -->
-<div class="root">
-  <div class="nav">
-    <Tabs {selected} on:select={selectFirstDatasource}>
-      <Tab title="Sources">
-        <Layout paddingX="L" paddingY="L" gap="S">
-          <Button dataCy={`new-datasource`} cta wide on:click={modal.show}
-            >Add source</Button
-          >
-        </Layout>
-        <CreateDatasourceModal bind:modal />
+<div class="data">
+  {#if !$isActive("./new")}
+    <Panel title="Sources" borderRight>
+      <Layout paddingX="L" paddingY="XL" gap="S">
+        <Button cta on:click={() => $goto("./new")}>Add source</Button>
         <DatasourceNavigator />
-      </Tab>
-    </Tabs>
-  </div>
+      </Layout>
+    </Panel>
+  {/if}
+
   <div class="content">
     <slot />
   </div>
 </div>
 
 <style>
-  .root {
+  .data {
     flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: stretch;
     height: 0;
-    display: grid;
-    grid-template-columns: 260px minmax(0, 1fr);
   }
-
   .content {
-    flex: 1 1 auto;
-    padding: var(--spacing-l) 40px 40px 40px;
+    padding: 28px 40px 40px 40px;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
     gap: var(--spacing-l);
-  }
-  .content :global(> span) {
-    display: contents;
-  }
-
-  .nav {
-    overflow-y: auto;
-    background: var(--background);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    position: relative;
-    border-right: var(--border-light);
-    padding-bottom: 60px;
-  }
-
-  .add-button {
-    position: absolute;
-    top: var(--spacing-l);
-    right: var(--spacing-xl);
+    flex: 1 1 auto;
+    z-index: 1;
   }
 </style>

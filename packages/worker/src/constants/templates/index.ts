@@ -21,6 +21,7 @@ export const EmailTemplates = {
     join(__dirname, "welcome.hbs")
   ),
   [EmailTemplatePurpose.CUSTOM]: readStaticFile(join(__dirname, "custom.hbs")),
+  [EmailTemplatePurpose.CORE]: readStaticFile(join(__dirname, "core.hbs")),
 }
 
 export function addBaseTemplates(templates: Template[], type?: string) {
@@ -55,12 +56,12 @@ export async function getTemplates({
   id,
 }: { ownerId?: string; type?: string; id?: string } = {}) {
   const db = tenancy.getGlobalDB()
-  const response = await db.allDocs(
+  const response = await db.allDocs<Template>(
     dbCore.getTemplateParams(ownerId || GLOBAL_OWNER, id, {
       include_docs: true,
     })
   )
-  let templates = response.rows.map(row => row.doc)
+  let templates = response.rows.map(row => row.doc!)
   // should only be one template with ID
   if (id) {
     return templates[0]
@@ -72,6 +73,6 @@ export async function getTemplates({
 }
 
 export async function getTemplateByPurpose(type: string, purpose: string) {
-  const templates = await getTemplates({ type })
+  const templates = (await getTemplates({ type })) as Template[]
   return templates.find((template: Template) => template.purpose === purpose)
 }

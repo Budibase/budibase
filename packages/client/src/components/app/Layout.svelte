@@ -3,19 +3,16 @@
   import { writable } from "svelte/store"
   import { Heading, Icon, clickOutside } from "@budibase/bbui"
   import { FieldTypes } from "constants"
+  import { Constants } from "@budibase/frontend-core"
   import active from "svelte-spa-router/active"
-  import { RoleUtils } from "@budibase/frontend-core"
-  import FreeLogo from "../FreeLogo.svelte"
-  import licensing from "../../licensing"
 
   const sdk = getContext("sdk")
   const {
     routeStore,
+    roleStore,
     styleable,
     linkable,
     builderStore,
-    currentRole,
-    environmentStore,
     sidePanelStore,
   } = sdk
   const component = getContext("component")
@@ -36,6 +33,8 @@
   export let navTextColor
   export let navWidth
   export let pageWidth
+
+  export let embedded = false
 
   const NavigationClasses = {
     Top: "top",
@@ -62,7 +61,7 @@
   })
   setContext("layout", store)
 
-  $: validLinks = getValidLinks(links, $currentRole)
+  $: validLinks = getValidLinks(links, $roleStore)
   $: typeClass = NavigationClasses[navigation] || NavigationClasses.None
   $: navWidthClass = WidthClasses[navWidth || width] || WidthClasses.Large
   $: pageWidthClass = WidthClasses[pageWidth || width] || WidthClasses.Large
@@ -73,33 +72,40 @@
     $context.device.height
   )
   $: autoCloseSidePanel = !$builderStore.inBuilder && $sidePanelStore.open
+  $: screenId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-screen`
+    : "screen"
+  $: navigationId = $builderStore.inBuilder
+    ? `${$builderStore.screen?._id}-navigation`
+    : "navigation"
 
-  // Scroll navigation into view if selected
+  // Scroll navigation into view if selected.
+  // Memoize into a primitive to avoid spamming this whenever builder store
+  // changes.
+  $: selected =
+    $builderStore.inBuilder &&
+    $builderStore.selectedComponentId?.endsWith("-navigation")
   $: {
-    if (
-      $builderStore.inBuilder &&
-      $builderStore.selectedComponentId === "navigation"
-    ) {
+    if (selected) {
       const node = document.getElementsByClassName("nav-wrapper")?.[0]
       if (node) {
         node.style.scrollMargin = "100px"
         node.scrollIntoView({
           behavior: "smooth",
-          block: "start",
+          block: "nearest",
           inline: "start",
         })
       }
     }
   }
 
-  const getValidLinks = (allLinks, role) => {
+  const getValidLinks = (allLinks, userRoleHierarchy) => {
     // Strip links missing required info
     let validLinks = (allLinks || []).filter(link => link.text && link.url)
-
     // Filter to only links allowed by the current role
-    const priority = RoleUtils.getRolePriority(role)
     return validLinks.filter(link => {
-      return !link.roleId || RoleUtils.getRolePriority(link.roleId) <= priority
+      const role = link.roleId || Constants.Roles.BASIC
+      return userRoleHierarchy?.find(roleId => roleId === role)
     })
   }
 
@@ -147,26 +153,29 @@
 </script>
 
 <div
-  class="layout layout--{typeClass}"
+  class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
+  data-id={screenId}
+  data-name="Screen"
+  data-icon="WebPage"
 >
-  <div class="layout-body">
+  <div class="{screenId}-dom screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
-        class="interactive component navigation"
-        data-id="navigation"
+        class="interactive component {navigationId}"
+        data-id={navigationId}
         data-name="Navigation"
-        data-icon="Link"
+        data-icon="Visibility"
       >
         <div
-          class="nav-wrapper"
+          class="nav-wrapper {navigationId}-dom"
           class:sticky
           class:hidden={$routeStore.queryParams?.peek}
           class:clickable={$builderStore.inBuilder}
           on:click={$builderStore.inBuilder
-            ? builderStore.actions.clickNav
+            ? builderStore.actions.selectComponent(navigationId)
             : null}
           style={navStyle}
         >
@@ -183,18 +192,17 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img
-                    src={logoUrl || "https://i.imgur.com/Xhdt1YP.png"}
-                    alt={title}
-                  />
+                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                 {/if}
                 {#if !hideTitle && title}
                   <Heading size="S">{title}</Heading>
                 {/if}
               </div>
-              <div class="portal">
-                <Icon hoverable name="Apps" on:click={navigateToPortal} />
-              </div>
+              {#if !embedded}
+                <div class="portal">
+                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                </div>
+              {/if}
             </div>
             <div
               class="mobile-click-handler"
@@ -237,11 +245,6 @@
         </div>
       </div>
     {/if}
-
-    {#if !$builderStore.inBuilder && licensing.logoEnabled() && $environmentStore.cloud}
-      <FreeLogo />
-    {/if}
-
     <div class="main-wrapper">
       <div class="main size--{pageWidthClass}">
         <slot />
@@ -275,7 +278,6 @@
     justify-content: center;
     align-items: stretch;
     z-index: 1;
-    border-top: 1px solid var(--spectrum-global-color-gray-300);
     overflow: hidden;
     position: relative;
   }
@@ -315,6 +317,12 @@
     position: sticky;
     top: 0;
     left: 0;
+  }
+  .layout--top .nav-wrapper {
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+  }
+  .layout--left .nav-wrapper {
+    border-right: 1px solid var(--spectrum-global-color-gray-300);
   }
 
   .nav {
@@ -390,10 +398,6 @@
     align-items: stretch;
     flex: 1 1 auto;
     z-index: 1;
-    border-top: 1px solid var(--spectrum-global-color-gray-300);
-  }
-  .layout--none .main-wrapper {
-    border-top: none;
   }
   .main {
     display: flex;
@@ -487,7 +491,7 @@
   }
 
   /* Desktop nav overrides */
-  .desktop.layout--left {
+  .desktop.layout--left .layout-body {
     flex-direction: row;
     overflow: hidden;
   }
@@ -523,6 +527,8 @@
     top: 0;
     left: 0;
     box-shadow: 0 0 8px -1px rgba(0, 0, 0, 0.075);
+    border-bottom: 1px solid var(--spectrum-global-color-gray-300);
+    border-right: none;
   }
 
   /* Show close button in drawer */

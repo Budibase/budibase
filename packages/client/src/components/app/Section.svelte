@@ -11,6 +11,7 @@
   let layoutMap = {
     mainSidebar: 2,
     sidebarMain: 2,
+    oneColumn: 1,
     twoColumns: 2,
     threeColumns: 3,
   }
@@ -46,25 +47,29 @@
 <style>
   div {
     display: grid;
-    grid-gap: 16px;
+    --gap: 16px;
+    grid-gap: var(--gap);
   }
   .mainSidebar {
-    grid-template-columns: 3fr 1fr;
+    grid-template-columns:
+      calc((100% - var(--gap)) / 4 * 3) /* 75% */
+      calc((100% - var(--gap)) / 4); /* 25% */
   }
   .sidebarMain {
-    grid-template-columns: 1fr 3fr;
+    grid-template-columns:
+      calc((100% - var(--gap)) / 4) /* 25% */
+      calc((100% - var(--gap)) / 4 * 3); /* 75% */
   }
-  .twoColumns {
-    grid-template-columns: 1fr 1fr;
-  }
-  .threeColumns {
-    grid-template-columns: 1fr 1fr 1fr;
-  }
+  .oneColumn,
   .columns-1 {
     grid-template-columns: 1fr;
   }
+  .twoColumns,
   .columns-2 {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, calc((100% - var(--gap)) / 2));
+  }
+  .threeColumns {
+    grid-template-columns: repeat(3, calc((100% - var(--gap)) / 3));
   }
   .placeholder {
     border: 2px dashed var(--spectrum-global-color-gray-600);

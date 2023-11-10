@@ -23,6 +23,7 @@
   export let schema
   export let editable = true
   export let height = 500
+  export let noLabel = false
 
   let stepEditors = []
 
@@ -75,7 +76,7 @@
     {#if schema.type === QueryTypes.SQL}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={noLabel ? null : "Query"}
         mode="sql"
         on:change={updateQuery}
         readOnly={!editable}
@@ -85,7 +86,7 @@
     {:else if shouldDisplayJsonBox}
       <Editor
         editorHeight={height}
-        label="Query"
+        label={noLabel ? null : "Query"}
         mode="json"
         on:change={updateQuery}
         readOnly={!editable}
@@ -105,6 +106,7 @@
       {#if !query.fields.steps?.length}
         <div class="controls">
           <Button
+            disabled={!editable}
             secondary
             slot="buttons"
             on:click={() => {
@@ -131,6 +133,7 @@
                       {#if index > 0}
                         <ActionButton
                           quiet
+                          disabled={!editable}
                           on:click={() => {
                             updateEditorsOnSwap(index, index - 1)
                             const target = query.fields.steps[index - 1].key
@@ -144,6 +147,7 @@
                       {#if index < query.fields.steps.length - 1}
                         <ActionButton
                           quiet
+                          disabled={!editable}
                           on:click={() => {
                             updateEditorsOnSwap(index, index + 1)
                             const target = query.fields.steps[index + 1].key
@@ -156,6 +160,7 @@
                       {/if}
                     </div>
                     <ActionButton
+                      disabled={!editable}
                       on:click={() => {
                         updateEditorsOnDelete(index)
                         query.fields.steps.splice(index, 1)
@@ -169,6 +174,7 @@
                   <div class="fields">
                     <div class="block-field">
                       <Select
+                        disabled={!editable}
                         value={step.key}
                         options={schema.steps.map(s => s.key)}
                         on:change={({ detail }) => {
@@ -178,6 +184,7 @@
                       <Editor
                         bind:this={stepEditors[index]}
                         editorHeight={height / 2}
+                        readOnly={!editable}
                         mode="json"
                         value={typeof step.value === "string"
                           ? step.value
@@ -194,9 +201,11 @@
             <div class="separator" />
             {#if index === query.fields.steps.length - 1}
               <Icon
+                disabled={!editable}
                 hoverable
                 name="AddCircle"
                 size="S"
+                readOnly={!editable}
                 on:click={() => {
                   query.fields.steps = [
                     ...query.fields.steps,

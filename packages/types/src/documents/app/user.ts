@@ -1,5 +1,6 @@
-import { Document } from "../document"
+import { User } from "../global"
+import { Row } from "./row"
+import { ContextUser } from "../../sdk"
 
-export interface UserMetadata extends Document {
-  roleId: string
-}
+export type UserMetadata = User & Row
+export type ContextUserMetadata = ContextUser & Row

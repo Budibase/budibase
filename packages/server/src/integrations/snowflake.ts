@@ -1,4 +1,11 @@
-import { Integration, QueryType, SqlQuery } from "@budibase/types"
+import {
+  ConnectionInfo,
+  DatasourceFeature,
+  DatasourceFieldType,
+  Integration,
+  QueryType,
+  SqlQuery,
+} from "@budibase/types"
 import { Snowflake } from "snowflake-promise"
 
 interface SnowflakeConfig {
@@ -16,29 +23,35 @@ const SCHEMA: Integration = {
     "Snowflake is a solution for data warehousing, data lakes, data engineering, data science, data application development, and securely sharing and consuming shared data.",
   friendlyName: "Snowflake",
   type: "Relational",
+  features: {
+    [DatasourceFeature.CONNECTION_CHECKING]: true,
+  },
   datasource: {
     account: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     username: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     password: {
-      type: "password",
+      type: DatasourceFieldType.PASSWORD,
       required: true,
     },
+    role: {
+      type: DatasourceFieldType.STRING,
+    },
     warehouse: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     database: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
     schema: {
-      type: "string",
+      type: DatasourceFieldType.STRING,
       required: true,
     },
   },
@@ -63,6 +76,18 @@ class SnowflakeIntegration {
 
   constructor(config: SnowflakeConfig) {
     this.client = new Snowflake(config)
+  }
+
+  async testConnection(): Promise<ConnectionInfo> {
+    try {
+      await this.client.connect()
+      return { connected: true }
+    } catch (e: any) {
+      return {
+        connected: false,
+        error: e.message as string,
+      }
+    }
   }
 
   async internalQuery(query: SqlQuery) {

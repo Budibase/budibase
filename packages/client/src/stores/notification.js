@@ -13,7 +13,13 @@ const createNotificationStore = () => {
     setTimeout(() => (block = false), timeout)
   }
 
-  const send = (message, type = "info", icon, autoDismiss = true) => {
+  const send = (
+    message,
+    type = "info",
+    icon,
+    autoDismiss = true,
+    count = 1
+  ) => {
     if (block) {
       return
     }
@@ -33,6 +39,11 @@ const createNotificationStore = () => {
     }
     const _id = id()
     store.update(state => {
+      const duplicateError = state.find(err => err.message === message)
+      if (duplicateError) {
+        duplicateError.count += 1
+        return [...state]
+      }
       return [
         ...state,
         {
@@ -42,6 +53,7 @@ const createNotificationStore = () => {
           icon,
           dismissable: !autoDismiss,
           delay: get(store) != null,
+          count,
         },
       ]
     })

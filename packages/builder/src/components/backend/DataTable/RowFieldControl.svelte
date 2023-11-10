@@ -44,10 +44,10 @@
 {#if type === "options" && meta.constraints.inclusion.length !== 0}
   <Select
     {label}
-    data-cy="{meta.name}-select"
     bind:value
     options={meta.constraints.inclusion}
     sort
+    {error}
   />
 {:else if type === "datetime"}
   <DatePicker
@@ -61,7 +61,7 @@
 {:else if type === "attachment"}
   <Dropzone {label} {error} bind:value />
 {:else if type === "boolean"}
-  <Toggle text={label} {error} bind:value data-cy="{meta.name}-input" />
+  <Toggle text={label} {error} bind:value />
 {:else if type === "array" && meta.constraints.inclusion.length !== 0}
   <Multiselect
     bind:value
@@ -81,18 +81,12 @@
   <Label>{label}</Label>
   <Editor
     editorHeight="250"
+    editorWidth="320"
     mode="json"
     on:change={({ detail }) => (value = detail.value)}
     value={stringVal}
     {error}
   />
 {:else}
-  <Input
-    {label}
-    data-cy="{meta.name}-input"
-    {type}
-    {error}
-    bind:value
-    disabled={readonly}
-  />
+  <Input {label} {type} {error} bind:value disabled={readonly} />
 {/if}

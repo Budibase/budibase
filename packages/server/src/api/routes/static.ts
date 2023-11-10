@@ -3,8 +3,9 @@ import * as controller from "../controllers/static"
 import { budibaseTempDir } from "../../utilities/budibaseDir"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
-import * as env from "../../environment"
+import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
+import { devClientLibPath } from "../../utilities/fileSystem"
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -17,7 +18,8 @@ router.param("file", async (file: any, ctx: any, next: any) => {
   }
   // test serves from require
   if (env.isTest()) {
-    ctx.devPath = require.resolve("@budibase/client").split(ctx.file)[0]
+    const path = devClientLibPath()
+    ctx.devPath = path.split(ctx.file)[0]
   } else if (env.isDev()) {
     // Serving the client library from your local dir in dev
     ctx.devPath = budibaseTempDir()
@@ -25,15 +27,9 @@ router.param("file", async (file: any, ctx: any, next: any) => {
   return next()
 })
 
-// only used in development for retrieving the client library,
-// in production the client lib is always stored in the object store.
-if (env.isDev()) {
-  router.get("/api/assets/client", controller.serveClientLibrary)
-}
-
 router
-  // TODO: for now this builder endpoint is not authorized/secured, will need to be
   .get("/builder/:file*", controller.serveBuilder)
+  .get("/api/assets/client", controller.serveClientLibrary)
   .post("/api/attachments/process", authorized(BUILDER), controller.uploadFile)
   .post(
     "/api/attachments/delete",
@@ -62,4 +58,4 @@ router
     controller.getSignedUploadURL
   )
 
-export = router
+export default router
