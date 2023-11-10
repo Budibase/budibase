@@ -9,15 +9,13 @@
   } from "builderStore/dataBinding"
   import { currentAsset } from "builderStore"
   import DraggableList from "../DraggableList/DraggableList.svelte"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher } from "svelte"
   import { store, selectedScreen } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
   export let value
-
-  const updates = getContext("settings")
 
   const dispatch = createEventDispatcher()
   let sanitisedFields
@@ -29,7 +27,6 @@
   let unconfigured
 
   let selectAll = true
-  let updating = false
 
   $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
   $: actionType = componentInstance.actionType
@@ -47,10 +44,6 @@
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
-  }
-
-  $: if (typeof $updates.resp == "string") {
-    updating = false
   }
 
   const updateState = value => {
@@ -161,7 +154,6 @@
   }
 
   const toggleAll = update => {
-    updating = true
     listUpdated(update)
   }
 </script>
@@ -180,7 +172,6 @@
       text=""
       bind:value={selectAll}
       thin
-      disabled={updating}
     />
   </div>
   {#if fieldList?.length}
@@ -193,9 +184,7 @@
       listTypeProps={{
         componentBindings,
         bindings,
-        updating,
       }}
-      draggable={!updating}
     />
   {/if}
 </div>
