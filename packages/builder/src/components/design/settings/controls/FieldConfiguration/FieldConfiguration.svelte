@@ -152,10 +152,6 @@
     const parsedColumns = getValidColumns(columns, options)
     dispatch("change", parsedColumns)
   }
-
-  const toggleAll = update => {
-    listUpdated(update)
-  }
 </script>
 
 <div class="field-configuration">
@@ -167,7 +163,7 @@
           ...field,
           active: selectAll,
         }))
-        toggleAll(update)
+        listUpdated(update)
       }}
       text=""
       bind:value={selectAll}
