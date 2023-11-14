@@ -40,7 +40,7 @@ const removeInvalidAddMissing = (
   const primaryDisplayIndex = combinedColumns.findIndex(
     column => column.field === primaryDisplayColumnName
   )
-  if (primaryDisplayIndex) {
+  if (primaryDisplayIndex > -1) {
     combinedColumns[primaryDisplayIndex].active = true
   }
 

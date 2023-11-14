@@ -33,16 +33,6 @@
     return schema
   }
 
-  const handleDatasourceIdChange = datasourceId => {
-    if (datasourceId !== previousDatasourceId) {
-      if (previousDatasourceId !== null) {
-        handleChange(undefined)
-      }
-
-      previousDatasourceId = datasourceId
-    }
-  }
-
   $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
   $: primaryDisplayColumnName = getSchemaForDatasource(
     $currentAsset,
@@ -56,10 +46,6 @@
     onChange: handleChange,
     createComponent: store.actions.components.createInstance,
   })
-
-  $: datasourceId = datasource?.resourceId || datasource?.tableId
-  let previousDatasourceId = null
-  $: handleDatasourceIdChange(datasourceId)
 </script>
 
 {#if columns.primary}
