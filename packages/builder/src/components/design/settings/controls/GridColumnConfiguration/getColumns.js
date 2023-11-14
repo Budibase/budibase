@@ -34,6 +34,8 @@ const removeInvalidAddMissing = (
     missingColumns = missingColumns.map(field => ({ ...field, active: false }))
   }
 
+  console.log("bv", columns, defaultColumns);
+  console.log("v", validColumns, missingColumns);
   const combinedColumns = [...validColumns, ...missingColumns]
 
   // Ensure the primary display column is always visible
