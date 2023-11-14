@@ -14,6 +14,7 @@
   export let value
   export let componentInstance
 
+
   const dispatch = createEventDispatcher()
   let primaryDisplayColumnAnchor
 
@@ -46,6 +47,10 @@
     onChange: handleChange,
     createComponent: store.actions.components.createInstance,
   })
+
+  $: {
+    console.log(columns);
+  }
 </script>
 
 {#if columns.primary}

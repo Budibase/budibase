@@ -48,10 +48,11 @@ const removeInvalidAddMissing = (
 }
 
 const getDefault = (schema = {}) => {
+  console.log(schema);
   const defaultValues = Object.values(schema).map(column => ({
     label: column.name,
     field: column.name,
-    active: column.visible,
+    active: column.visible ?? true,
     order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
   }))
 
