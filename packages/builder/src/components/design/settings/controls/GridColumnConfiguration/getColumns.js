@@ -48,12 +48,14 @@ const removeInvalidAddMissing = (
 }
 
 const getDefault = (schema = {}) => {
-  const defaultValues = Object.values(schema).map(column => ({
-    label: column.name,
-    field: column.name,
-    active: column.visible ?? true,
-    order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
-  }))
+  const defaultValues = Object.values(schema)
+    .filter(column => !column.nestedJSON)
+    .map(column => ({
+      label: column.name,
+      field: column.name,
+      active: column.visible ?? true,
+      order: column.visible ? column.order ?? -1 : Number.MAX_SAFE_INTEGER,
+    }))
 
   defaultValues.sort((a, b) => a.order - b.order)
 

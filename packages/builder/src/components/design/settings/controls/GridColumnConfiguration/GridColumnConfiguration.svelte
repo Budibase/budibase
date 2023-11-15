@@ -49,7 +49,9 @@
   })
 
   $: {
+    console.log(value);
     console.log(columns);
+    console.log(schema);
   }
 </script>
 
