@@ -13,6 +13,11 @@
   export let align
   export let onChange
   export let span
+  export let helpText = null
+
+  $: {
+    console.log('ht', helpText);
+  }
 
   let fieldState
   let fieldApi
@@ -33,6 +38,7 @@
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
   bind:fieldApi

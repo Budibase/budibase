@@ -2723,6 +2723,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },

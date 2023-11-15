@@ -1,6 +1,8 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
+  import { Icon } from "@budibase/bbui"
+
 
   export let label
   export let field
@@ -13,6 +15,7 @@
   export let readonly = false
   export let validation
   export let span = 6
+  export let helpText = null
 
   // Get contexts
   const formContext = getContext("form")
@@ -98,6 +101,9 @@
       <slot />
       {#if fieldState.error}
         <div class="error">{fieldState.error}</div>
+      {:else if helpText}
+        <div class="helpText">
+          <Icon name="HelpOutline" /> <span>{helpText}</span></div>
       {/if}
     {/if}
   </div>
@@ -134,6 +140,23 @@
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
+  }
+
+  .helpText {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+
+  .helpText :global(svg){
+    width: 15px;
+    color: var(--grey-6);
+    margin-right: 4px;
+  }
+
+  .helpText span {
+    color: var(--grey-7);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {

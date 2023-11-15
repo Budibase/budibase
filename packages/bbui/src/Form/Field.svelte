@@ -6,6 +6,7 @@
   export let label = null
   export let labelPosition = "above"
   export let error = null
+  export let helpText = null
   export let tooltip = ""
 </script>
 
@@ -17,7 +18,10 @@
     <slot />
     {#if error}
       <div class="error">{error}</div>
+    {:else if helpText}
+      <div class="helpText">{helpText}</div>
     {/if}
+
   </div>
 </div>
 
