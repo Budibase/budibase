@@ -165,10 +165,22 @@ class RedisIntegration {
       // commands split line by line
       const commands = query.json.trim().split("\n")
       let pipelineCommands = []
+      let tokenised
 
       // process each command separately
       for (let command of commands) {
-        const tokenised = command.trim().split(" ")
+        const valueToken = command.trim().match(/".*"/)
+        if (valueToken?.[0]) {
+          tokenised = [
+            ...command
+              .substring(0, command.indexOf(valueToken[0]) - 1)
+              .trim()
+              .split(" "),
+            valueToken?.[0],
+          ]
+        } else {
+          tokenised = command.trim().split(" ")
+        }
         // Pipeline only accepts lower case commands
         tokenised[0] = tokenised[0].toLowerCase()
         pipelineCommands.push(tokenised)

@@ -28,7 +28,6 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-0
 let CONNECTED = false
 
 // mock redis always connected
