@@ -8,7 +8,13 @@ describe("getColumns", () => {
       two: { name: "two", visible: true, order: 1, type: "foo" },
       three: { name: "three", visible: true, order: 2, type: "foo" },
       four: { name: "four", visible: false, order: 3, type: "foo" },
-      five: { name: "excluded", visible: true, order: 4, type: "foo", nestedJSON: true },
+      five: {
+        name: "excluded",
+        visible: true,
+        order: 4,
+        type: "foo",
+        nestedJSON: true,
+      },
     }
 
     ctx.primaryDisplayColumnName = "four"
@@ -30,11 +36,15 @@ describe("getColumns", () => {
     })
 
     it("does not return nested json fields, as the grid cannot display them", ctx => {
-      expect(ctx.columns.sortable).not.toContainEqual(
-        { name: "excluded", visible: true, order: 4, type: "foo", nestedJSON: true }
-      )
+      expect(ctx.columns.sortable).not.toContainEqual({
+        name: "excluded",
+        visible: true,
+        order: 4,
+        type: "foo",
+        nestedJSON: true,
+      })
     })
-  });
+  })
 
   describe("using the old grid column format", () => {
     beforeEach(ctx => {
