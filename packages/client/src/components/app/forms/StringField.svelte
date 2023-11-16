@@ -15,10 +15,6 @@
   export let span
   export let helpText = null
 
-  $: {
-    console.log('ht', helpText);
-  }
-
   let fieldState
   let fieldApi
 

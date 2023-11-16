@@ -149,13 +149,13 @@
   }
 
   .helpText :global(svg){
-    width: 15px;
-    color: var(--grey-6);
+    width: 14px;
+    color: var(--grey-7);
     margin-right: 4px;
   }
 
   .helpText span {
-    color: var(--grey-7);
+    color: var(--grey-5);
     font-size: var(--spectrum-global-dimension-font-size-75);
   }
   .spectrum-FieldLabel--right,

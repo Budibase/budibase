@@ -2859,6 +2859,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -2953,6 +2958,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -3120,6 +3130,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -3331,6 +3346,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
@@ -3532,6 +3552,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Text",
         "key": "text"
       },
@@ -3650,6 +3675,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -3772,6 +3802,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -3888,6 +3923,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -4152,6 +4192,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Extensions",
         "key": "extensions"
       },
@@ -4241,6 +4286,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -4349,6 +4399,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
@@ -6369,6 +6424,11 @@
         "type": "text",
         "label": "Label",
         "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "text",
