@@ -21,9 +21,9 @@
       <div class="error">{error}</div>
     {:else if helpText}
       <div class="helpText">
-        <Icon name="HelpOutline" /> <span>{helpText}</span></div>
+        <Icon name="HelpOutline" /> <span>{helpText}</span>
+      </div>
     {/if}
-
   </div>
 </div>
 
@@ -52,7 +52,7 @@
     align-items: center;
   }
 
-  .helpText :global(svg){
+  .helpText :global(svg) {
     width: 14px;
     color: var(--grey-5);
     margin-right: 4px;

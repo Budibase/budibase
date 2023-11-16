@@ -3,7 +3,6 @@
   import { getContext, onDestroy } from "svelte"
   import { Icon } from "@budibase/bbui"
 
-
   export let label
   export let field
   export let fieldState
@@ -103,7 +102,8 @@
         <div class="error">{fieldState.error}</div>
       {:else if helpText}
         <div class="helpText">
-          <Icon name="HelpOutline" /> <span>{helpText}</span></div>
+          <Icon name="HelpOutline" /> <span>{helpText}</span>
+        </div>
       {/if}
     {/if}
   </div>
@@ -148,7 +148,7 @@
     align-items: center;
   }
 
-  .helpText :global(svg){
+  .helpText :global(svg) {
     width: 14px;
     color: var(--grey-7);
     margin-right: 4px;
