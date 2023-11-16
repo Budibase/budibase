@@ -1,6 +1,7 @@
 <script>
   import "@spectrum-css/fieldlabel/dist/index-vars.css"
   import FieldLabel from "./FieldLabel.svelte"
+  import Icon from "../Icon/Icon.svelte"
 
   export let id = null
   export let label = null
@@ -19,7 +20,8 @@
     {#if error}
       <div class="error">{error}</div>
     {:else if helpText}
-      <div class="helpText">{helpText}</div>
+      <div class="helpText">
+        <Icon name="HelpOutline" /> <span>{helpText}</span></div>
     {/if}
 
   </div>
@@ -42,5 +44,22 @@
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
     margin-top: var(--spectrum-global-dimension-size-75);
+  }
+
+  .helpText {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+
+  .helpText :global(svg){
+    width: 14px;
+    color: var(--grey-5);
+    margin-right: 4px;
+  }
+
+  .helpText span {
+    color: var(--grey-7);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
 </style>

@@ -13,6 +13,7 @@
   export let id = null
   export let fullScreenOffset = null
   export let easyMDEOptions = null
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -21,7 +22,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <RichTextField
     {error}
     {disabled}
