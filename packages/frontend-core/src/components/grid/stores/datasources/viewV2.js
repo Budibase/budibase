@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import ViewV2Fetch from "../../../../fetch/ViewV2Fetch"
 
 const SuppressErrors = true
 
@@ -46,10 +45,6 @@ export const createActions = context => {
     )
   }
 
-  const getFeatures = () => {
-    return new ViewV2Fetch({ API }).determineFeatureFlags()
-  }
-
   return {
     viewV2: {
       actions: {
@@ -60,7 +55,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }
@@ -73,6 +67,8 @@ export const initialise = context => {
     sort,
     rows,
     filter,
+    inlineFilters,
+    allFilters,
     subscribe,
     viewV2,
     initialFilter,
@@ -97,6 +93,7 @@ export const initialise = context => {
 
     // Reset state for new view
     filter.set(get(initialFilter))
+    inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
       order: get(initialSortOrder) || "ascending",
@@ -143,21 +140,19 @@ export const initialise = context => {
                 order: $sort.order || "ascending",
               },
             })
-            await rows.actions.refreshData()
           }
         }
-        // Otherwise just update the fetch
-        else {
-          // Ensure we're updating the correct fetch
-          const $fetch = get(fetch)
-          if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
-            return
-          }
-          $fetch.update({
-            sortOrder: $sort.order || "ascending",
-            sortColumn: $sort.column,
-          })
+
+        // Also update the fetch to ensure the new sort is respected.
+        // Ensure we're updating the correct fetch.
+        const $fetch = get(fetch)
+        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+          return
         }
+        $fetch.update({
+          sortOrder: $sort.order,
+          sortColumn: $sort.column,
+        })
       })
     )
 
@@ -176,20 +171,25 @@ export const initialise = context => {
               ...$view,
               query: $filter,
             })
-            await rows.actions.refreshData()
           }
         }
-        // Otherwise just update the fetch
-        else {
-          // Ensure we're updating the correct fetch
-          const $fetch = get(fetch)
-          if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
-            return
-          }
-          $fetch.update({
-            filter: $filter,
-          })
+      })
+    )
+
+    // Keep fetch up to date with filters.
+    // If we're able to save filters against the view then we only need to apply
+    // inline filters to the fetch, as saved filters are applied server side.
+    // If we can't save filters, then all filters must be applied to the fetch.
+    unsubscribers.push(
+      allFilters.subscribe($allFilters => {
+        // Ensure we're updating the correct fetch
+        const $fetch = get(fetch)
+        if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
+          return
         }
+        $fetch.update({
+          filter: $allFilters,
+        })
       })
     )
 

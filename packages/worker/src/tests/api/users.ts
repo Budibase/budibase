@@ -5,6 +5,7 @@ import {
   User,
   CreateAdminUserRequest,
   SearchQuery,
+  InviteUsersResponse,
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
@@ -134,13 +135,19 @@ export class UserAPI extends TestAPI {
       .expect(status ? status : 200)
   }
 
-  searchUsers = ({ query }: { query?: SearchQuery }, status = 200) => {
-    return this.request
+  searchUsers = (
+    { query }: { query?: SearchQuery },
+    opts?: { status?: number; noHeaders?: boolean }
+  ) => {
+    const req = this.request
       .post("/api/global/users/search")
-      .set(this.config.defaultHeaders())
       .send({ query })
       .expect("Content-Type", /json/)
-      .expect(status ? status : 200)
+      .expect(opts?.status ? opts.status : 200)
+    if (!opts?.noHeaders) {
+      req.set(this.config.defaultHeaders())
+    }
+    return req
   }
 
   getUser = (userId: string, opts?: TestAPIOpts) => {
@@ -169,5 +176,25 @@ export class UserAPI extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
+  }
+
+  onboardUser = async (
+    req: InviteUsersRequest
+  ): Promise<InviteUsersResponse> => {
+    const resp = await this.request
+      .post(`/api/global/users/onboard`)
+      .send(req)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+
+    if (resp.status !== 200) {
+      throw new Error(
+        `request failed with status ${resp.status} and body ${JSON.stringify(
+          resp.body
+        )}`
+      )
+    }
+
+    return resp.body as InviteUsersResponse
   }
 }

@@ -90,13 +90,17 @@
 
   .openMenu {
     cursor: pointer;
-    background-color: #6a1dc8;
+    background-color: var(--bb-indigo);
     border-radius: 100px;
     color: white;
     border: none;
     font-size: 13px;
     font-weight: 600;
     padding: 10px 18px;
+    transition: background-color 130ms ease-out;
+  }
+  .openMenu:hover {
+    background-color: var(--bb-indigo-light);
   }
 
   .helpMenu {

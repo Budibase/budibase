@@ -5,6 +5,8 @@ import {
   FieldSchema,
   RelationshipFieldMetadata,
   VirtualDocumentType,
+  INTERNAL_TABLE_SOURCE_ID,
+  DatabaseQueryOpts,
 } from "@budibase/types"
 import { FieldTypes } from "../constants"
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
@@ -18,7 +20,7 @@ export const enum AppStatus {
 }
 
 export const BudibaseInternalDB = {
-  _id: "bb_internal",
+  _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
   source: "BUDIBASE",
@@ -236,7 +238,10 @@ export function getAutomationMetadataParams(otherProps: any = {}) {
 /**
  * Gets parameters for retrieving a query, this is a utility function for the getDocParams function.
  */
-export function getQueryParams(datasourceId?: Optional, otherProps: any = {}) {
+export function getQueryParams(
+  datasourceId?: Optional,
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   if (datasourceId == null) {
     return getDocParams(DocumentType.QUERY, null, otherProps)
   }
@@ -263,7 +268,7 @@ export function generateMetadataID(type: string, entityId: string) {
 export function getMetadataParams(
   type: string,
   entityId?: Optional,
-  otherProps: any = {}
+  otherProps: Partial<DatabaseQueryOpts> = {}
 ) {
   let docId = `${type}${SEPARATOR}`
   if (entityId != null) {
@@ -276,7 +281,9 @@ export function generateMemoryViewID(viewName: string) {
   return `${DocumentType.MEM_VIEW}${SEPARATOR}${viewName}`
 }
 
-export function getMemoryViewParams(otherProps: any = {}) {
+export function getMemoryViewParams(
+  otherProps: Partial<DatabaseQueryOpts> = {}
+) {
   return getDocParams(DocumentType.MEM_VIEW, null, otherProps)
 }
 
@@ -288,16 +295,6 @@ export function generateJunctionTableID(tableId1: string, tableId2: string) {
   const first = tableId1 > tableId2 ? tableId1 : tableId2
   const second = tableId1 > tableId2 ? tableId2 : tableId1
   return `${first}${SEPARATOR}${second}`
-}
-
-/**
- * This can be used with the db.allDocs to get a list of IDs
- */
-export function getMultiIDParams(ids: string[]) {
-  return {
-    keys: ids,
-    include_docs: true,
-  }
 }
 
 /**

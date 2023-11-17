@@ -8,6 +8,7 @@ export const createStores = () => {
   const rows = writable([])
   const loading = writable(false)
   const loaded = writable(false)
+  const refreshing = writable(false)
   const rowChangeCache = writable({})
   const inProgressChanges = writable({})
   const hasNextPage = writable(false)
@@ -53,6 +54,7 @@ export const createStores = () => {
     fetch,
     rowLookupMap,
     loaded,
+    refreshing,
     loading,
     rowChangeCache,
     inProgressChanges,
@@ -66,7 +68,7 @@ export const createActions = context => {
     rows,
     rowLookupMap,
     definition,
-    filter,
+    allFilters,
     loading,
     sort,
     datasource,
@@ -82,6 +84,7 @@ export const createActions = context => {
     notifications,
     fetch,
     isDatasourcePlus,
+    refreshing,
   } = context
   const instanceLoaded = writable(false)
 
@@ -108,23 +111,23 @@ export const createActions = context => {
     // Tick to allow other reactive logic to update stores when datasource changes
     // before proceeding. This allows us to wipe filters etc if needed.
     await tick()
-    const $filter = get(filter)
+    const $allFilters = get(allFilters)
     const $sort = get(sort)
-
-    // Determine how many rows to fetch per page
-    const features = datasource.actions.getFeatures()
-    const limit = features?.supportsPagination ? RowPageSize : null
 
     // Create new fetch model
     const newFetch = fetchData({
       API,
       datasource: $datasource,
       options: {
-        filter: $filter,
+        filter: $allFilters,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
-        limit,
+        limit: RowPageSize,
         paginate: true,
+
+        // Disable client side limiting, so that for queries and custom data
+        // sources we don't impose fake row limits. We want all the data.
+        clientSideLimiting: false,
       },
     })
 
@@ -176,6 +179,9 @@ export const createActions = context => {
         // Notify that we're loaded
         loading.set(false)
       }
+
+      // Update refreshing state
+      refreshing.set($fetch.loading)
     })
 
     fetch.set(newFetch)

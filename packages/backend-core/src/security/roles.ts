@@ -122,7 +122,9 @@ export async function roleToNumber(id?: string) {
   if (isBuiltin(id)) {
     return builtinRoleToNumber(id)
   }
-  const hierarchy = (await getUserRoleHierarchy(id)) as RoleDoc[]
+  const hierarchy = (await getUserRoleHierarchy(id, {
+    defaultPublic: true,
+  })) as RoleDoc[]
   for (let role of hierarchy) {
     if (isBuiltin(role?.inherits)) {
       return builtinRoleToNumber(role.inherits) + 1
@@ -192,12 +194,15 @@ export async function getRole(
 /**
  * Simple function to get all the roles based on the top level user role ID.
  */
-async function getAllUserRoles(userRoleId?: string): Promise<RoleDoc[]> {
+async function getAllUserRoles(
+  userRoleId?: string,
+  opts?: { defaultPublic?: boolean }
+): Promise<RoleDoc[]> {
   // admins have access to all roles
   if (userRoleId === BUILTIN_IDS.ADMIN) {
     return getAllRoles()
   }
-  let currentRole = await getRole(userRoleId)
+  let currentRole = await getRole(userRoleId, opts)
   let roles = currentRole ? [currentRole] : []
   let roleIds = [userRoleId]
   // get all the inherited roles
@@ -226,12 +231,16 @@ export async function getUserRoleIdHierarchy(
  * Returns an ordered array of the user's inherited role IDs, this can be used
  * to determine if a user can access something that requires a specific role.
  * @param userRoleId The user's role ID, this can be found in their access token.
+ * @param opts optional - if want to default to public use this.
  * @returns returns an ordered array of the roles, with the first being their
  * highest level of access and the last being the lowest level.
  */
-export async function getUserRoleHierarchy(userRoleId?: string) {
+export async function getUserRoleHierarchy(
+  userRoleId?: string,
+  opts?: { defaultPublic?: boolean }
+) {
   // special case, if they don't have a role then they are a public user
-  return getAllUserRoles(userRoleId)
+  return getAllUserRoles(userRoleId, opts)
 }
 
 // this function checks that the provided permissions are in an array format

@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let enableTime = true
   export let timeOnly = false
   export let time24hr = false
@@ -13,6 +14,7 @@
   export let validation
   export let defaultValue
   export let onChange
+  export let span
 
   let fieldState
   let fieldApi
@@ -29,8 +31,10 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
+  {span}
   type="datetime"
   bind:fieldState
   bind:fieldApi
@@ -40,6 +44,7 @@
       value={fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       appendTo={document.getElementById("flatpickr-root")}

@@ -12,7 +12,6 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
-  ExternalTable,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
   IntegrationBase,
@@ -59,7 +58,7 @@ async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
   return await connector.buildSchema(
     datasource._id!,
-    datasource.entities! as Record<string, ExternalTable>
+    datasource.entities! as Record<string, Table>
   )
 }
 
@@ -338,7 +337,7 @@ export async function destroy(ctx: UserCtx) {
   if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {
-    const queries = await db.allDocs(getQueryParams(datasourceId, null))
+    const queries = await db.allDocs(getQueryParams(datasourceId))
     await db.bulkDocs(
       queries.rows.map((row: any) => ({
         _id: row.id,

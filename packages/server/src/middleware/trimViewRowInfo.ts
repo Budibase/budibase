@@ -1,7 +1,6 @@
 import { Ctx, Row } from "@budibase/types"
 import * as utils from "../db/utils"
 import sdk from "../sdk"
-import { db } from "@budibase/backend-core"
 import { Next } from "koa"
 import { getTableId } from "../api/controllers/row/utils"
 

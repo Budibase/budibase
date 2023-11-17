@@ -1,5 +1,4 @@
 import { get } from "svelte/store"
-import TableFetch from "../../../../fetch/TableFetch"
 
 const SuppressErrors = true
 
@@ -46,10 +45,6 @@ export const createActions = context => {
     return $columns.some(col => col.name === name) || $sticky?.name === name
   }
 
-  const getFeatures = () => {
-    return new TableFetch({ API }).determineFeatureFlags()
-  }
-
   return {
     table: {
       actions: {
@@ -60,7 +55,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }
@@ -71,6 +65,8 @@ export const initialise = context => {
     datasource,
     fetch,
     filter,
+    inlineFilters,
+    allFilters,
     sort,
     table,
     initialFilter,
@@ -93,6 +89,7 @@ export const initialise = context => {
 
     // Wipe state
     filter.set(get(initialFilter))
+    inlineFilters.set([])
     sort.set({
       column: get(initialSortColumn),
       order: get(initialSortOrder) || "ascending",
@@ -100,14 +97,14 @@ export const initialise = context => {
 
     // Update fetch when filter changes
     unsubscribers.push(
-      filter.subscribe($filter => {
+      allFilters.subscribe($allFilters => {
         // Ensure we're updating the correct fetch
         const $fetch = get(fetch)
         if ($fetch?.options?.datasource?.tableId !== $datasource.tableId) {
           return
         }
         $fetch.update({
-          filter: $filter,
+          filter: $allFilters,
         })
       })
     )

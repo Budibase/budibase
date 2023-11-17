@@ -1,8 +1,9 @@
-import { derived, get, writable } from "svelte/store"
-import { getDatasourceDefinition } from "../../../fetch"
+import { derived, get } from "svelte/store"
+import { getDatasourceDefinition, getDatasourceSchema } from "../../../fetch"
+import { memo } from "../../../utils"
 
 export const createStores = () => {
-  const definition = writable(null)
+  const definition = memo(null)
 
   return {
     definition,
@@ -10,10 +11,15 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { definition, schemaOverrides, columnWhitelist, datasource } = context
+  const { API, definition, schemaOverrides, columnWhitelist, datasource } =
+    context
 
   const schema = derived(definition, $definition => {
-    let schema = $definition?.schema
+    let schema = getDatasourceSchema({
+      API,
+      datasource: get(datasource),
+      definition: $definition,
+    })
     if (!schema) {
       return null
     }
@@ -154,11 +160,6 @@ export const createActions = context => {
     return getAPI()?.actions.canUseColumn(name)
   }
 
-  // Gets the default number of rows for a single page
-  const getFeatures = () => {
-    return getAPI()?.actions.getFeatures()
-  }
-
   return {
     datasource: {
       ...datasource,
@@ -171,7 +172,6 @@ export const createActions = context => {
         getRow,
         isDatasourceValid,
         canUseColumn,
-        getFeatures,
       },
     },
   }

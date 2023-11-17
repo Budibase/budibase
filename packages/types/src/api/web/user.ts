@@ -10,6 +10,7 @@ export interface SaveUserResponse {
 export interface UserDetails {
   _id: string
   email: string
+  password?: string
 }
 
 export interface BulkUserRequest {
@@ -49,12 +50,14 @@ export type InviteUsersRequest = InviteUserRequest[]
 export interface InviteUsersResponse {
   successful: { email: string }[]
   unsuccessful: { email: string; reason: string }[]
+  created?: boolean
 }
 
 export interface SearchUsersRequest {
   bookmark?: string
   query?: SearchQuery
   appId?: string
+  limit?: number
   paginate?: boolean
 }
 

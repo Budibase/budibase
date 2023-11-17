@@ -1,6 +1,6 @@
 <script>
   import { Select, Toggle, Multiselect } from "@budibase/bbui"
-  import { FIELDS } from "constants/backend"
+  import { DB_TYPE_INTERNAL, FIELDS } from "constants/backend"
   import { API } from "api"
   import { parseFile } from "./utils"
 
@@ -169,7 +169,7 @@
       </div>
     {/each}
   </div>
-  {#if tableType === "internal"}
+  {#if tableType === DB_TYPE_INTERNAL}
     <br />
     <Toggle
       bind:value={updateExistingRows}

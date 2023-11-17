@@ -3,10 +3,12 @@ import {
   CreateViewRequest,
   FieldSchema,
   FieldType,
+  INTERNAL_TABLE_SOURCE_ID,
   SearchQueryOperators,
   SortOrder,
   SortType,
   Table,
+  TableSourceType,
   UIFieldMetadata,
   UpdateViewRequest,
   ViewV2,
@@ -18,6 +20,8 @@ function priceTable(): Table {
   return {
     name: "table",
     type: "table",
+    sourceId: INTERNAL_TABLE_SOURCE_ID,
+    sourceType: TableSourceType.INTERNAL,
     schema: {
       Price: {
         type: FieldType.NUMBER,
@@ -54,10 +58,10 @@ describe.each([
         },
       })
 
-      return config.createTable({
+      return config.createExternalTable({
         ...priceTable(),
         sourceId: datasource._id,
-        type: "external",
+        sourceType: TableSourceType.EXTERNAL,
       })
     },
   ],

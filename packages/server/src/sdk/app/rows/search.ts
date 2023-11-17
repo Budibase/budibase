@@ -1,5 +1,11 @@
-import { SearchFilters, SearchParams, Row } from "@budibase/types"
-import { isExternalTable } from "../../../integrations/utils"
+import {
+  Row,
+  SearchFilters,
+  SearchParams,
+  SortOrder,
+  SortType,
+} from "@budibase/types"
+import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
@@ -13,7 +19,7 @@ export interface ViewParams {
 }
 
 function pickApi(tableId: any) {
-  if (isExternalTable(tableId)) {
+  if (isExternalTableID(tableId)) {
     return external
   }
   return internal
@@ -62,6 +68,8 @@ export interface ExportRowsParams {
   rowIds?: string[]
   columns?: string[]
   query?: SearchFilters
+  sort?: string
+  sortOrder?: SortOrder
 }
 
 export interface ExportRowsResult {
@@ -77,6 +85,10 @@ export async function exportRows(
 
 export async function fetch(tableId: string): Promise<Row[]> {
   return pickApi(tableId).fetch(tableId)
+}
+
+export async function fetchRaw(tableId: string): Promise<Row[]> {
+  return pickApi(tableId).fetchRaw(tableId)
 }
 
 export async function fetchView(
