@@ -2723,11 +2723,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -2736,6 +2731,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -2859,11 +2859,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -2872,6 +2867,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -2961,11 +2961,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -2974,6 +2969,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3133,11 +3133,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
@@ -3195,6 +3190,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -3346,11 +3346,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Choose an option"
@@ -3360,6 +3355,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3552,11 +3552,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Text",
         "key": "text"
       },
@@ -3589,6 +3584,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3678,11 +3678,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder",
         "placeholder": "Type something..."
@@ -3692,6 +3687,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3802,11 +3802,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -3839,6 +3834,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3926,11 +3926,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Button text",
         "key": "scanButtonText"
       },
@@ -3939,6 +3934,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -4289,11 +4289,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -4302,6 +4297,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -4402,11 +4402,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -4415,6 +4410,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -6427,11 +6427,6 @@
       },
       {
         "type": "text",
-        "label": "Help text",
-        "key": "helpText"
-      },
-      {
-        "type": "text",
         "label": "Placeholder",
         "key": "placeholder"
       },
@@ -6439,6 +6434,11 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",

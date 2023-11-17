@@ -46,7 +46,6 @@
       on:change={handleChange}
       disabled={fieldState.disabled}
       readonly={fieldState.readonly}
-      error={fieldState.error}
       id={fieldState.fieldId}
       {placeholder}
       {type}

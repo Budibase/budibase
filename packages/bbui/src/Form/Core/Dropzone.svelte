@@ -22,7 +22,6 @@
   export let handleFileTooLarge = null
   export let handleTooManyFiles = null
   export let gallery = true
-  export let error = null
   export let fileTags = []
   export let maximum = null
   export let extensions = "*"
@@ -222,7 +221,6 @@
   {#if showDropzone}
     <div
       class="spectrum-Dropzone"
-      class:is-invalid={!!error}
       class:disabled
       role="region"
       tabindex="0"

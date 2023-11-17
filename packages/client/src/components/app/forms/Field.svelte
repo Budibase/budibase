@@ -64,6 +64,14 @@
     fieldApi?.deregister()
     unsubscribe?.()
   })
+
+  const foo = (fieldState) => {
+    if (fieldState) {
+    fieldState.error = "yes";
+    }
+  }
+
+  $: foo(fieldState);
 </script>
 
 <div
@@ -99,7 +107,9 @@
     {:else}
       <slot />
       {#if fieldState.error}
-        <div class="error">{fieldState.error}</div>
+        <div class="error"> 
+          <Icon name="Alert" /> 
+      <span>{fieldState.error}</span></div>
       {:else if helpText}
         <div class="helpText">
           <Icon name="HelpOutline" /> <span>{helpText}</span>
@@ -133,13 +143,28 @@
     position: relative;
     width: 100%;
   }
+
   .error {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+
+  .error :global(svg) {
+    width: 14px;
+    color: var(
+      --spectrum-semantic-negative-color-default,
+      var(--spectrum-global-color-red-500)
+    );
+    margin-right: 4px;
+  }
+
+  .error span {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
-    margin-top: var(--spectrum-global-dimension-size-75);
   }
 
   .helpText {
