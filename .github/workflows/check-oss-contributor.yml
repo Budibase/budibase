@@ -1,0 +1,13 @@
+name: OSS contributor checks
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8,16 * * 1-5" # on weekdays at 8am and 4pm
+
+jobs:
+  run:
+    name: Publish server and worker docker images
+    uses: ./.github/workflows/budibase_ci.yml
+    with:
+      run_as_oss: true
+    secrets: inherit
