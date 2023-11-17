@@ -35,7 +35,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
@@ -53,7 +53,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -112,7 +112,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
@@ -142,7 +142,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test server
         run: |
@@ -173,7 +173,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -196,7 +196,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: yarn
+          cache: ${{ !env.is_oss_contributor && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
