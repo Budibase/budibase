@@ -1,7 +1,10 @@
-import { utils, tenancy, redis } from "../"
+import * as utils from "../utils"
+import { Duration, DurationType } from "../utils"
 import env from "../environment"
+import { getTenantId } from "../context"
+import * as redis from "../redis/init"
 
-const TTL_SECONDS = 60 * 60 * 24 * 7
+const TTL_SECONDS = Duration.fromDays(7).toSeconds()
 
 interface Invite {
   email: string
@@ -12,25 +15,13 @@ interface InviteWithCode extends Invite {
   code: string
 }
 
-let client: redis.Client
-
-export async function init() {
-  if (!client) {
-    client = new redis.Client(redis.utils.Databases.INVITATIONS)
-  }
-  return client
-}
-
-export async function shutdown() {
-  if (client) await client.finish()
-}
-
 /**
  * Given an invite code and invite body, allow the update an existing/valid invite in redis
- * @param inviteCode The invite code for an invite in redis
+ * @param code The invite code for an invite in redis
  * @param value The body of the updated user invitation
  */
 export async function updateCode(code: string, value: Invite) {
+  const client = await redis.getInviteClient()
   await client.store(code, value, TTL_SECONDS)
 }
 
@@ -42,16 +33,18 @@ export async function updateCode(code: string, value: Invite) {
  */
 export async function createCode(email: string, info: any): Promise<string> {
   const code = utils.newid()
+  const client = await redis.getInviteClient()
   await client.store(code, { email, info }, TTL_SECONDS)
   return code
 }
 
 /**
  * Checks that the provided invite code is valid - will return the email address of user that was invited.
- * @param inviteCode the invite code that was provided as part of the link.
+ * @param code the invite code that was provided as part of the link.
  * @return If the code is valid then an email address will be returned.
  */
 export async function getCode(code: string): Promise<Invite> {
+  const client = await redis.getInviteClient()
   const value = (await client.get(code)) as Invite | undefined
   if (!value) {
     throw "Invitation is not valid or has expired, please request a new one."
@@ -60,13 +53,15 @@ export async function getCode(code: string): Promise<Invite> {
 }
 
 export async function deleteCode(code: string) {
+  const client = await redis.getInviteClient()
   await client.delete(code)
 }
 
-/** 
-  Get all currently available user invitations for the current tenant.
-**/
+/**
+ Get all currently available user invitations for the current tenant.
+ **/
 export async function getInviteCodes(): Promise<InviteWithCode[]> {
+  const client = await redis.getInviteClient()
   const invites: { key: string; value: Invite }[] = await client.scan()
 
   const results: InviteWithCode[] = invites.map(invite => {
@@ -78,7 +73,7 @@ export async function getInviteCodes(): Promise<InviteWithCode[]> {
   if (!env.MULTI_TENANCY) {
     return results
   }
-  const tenantId = tenancy.getTenantId()
+  const tenantId = getTenantId()
   return results.filter(invite => tenantId === invite.info.tenantId)
 }
 
