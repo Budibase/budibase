@@ -19,18 +19,17 @@
   }
 
   // Normally fetched in builder/src/pages/builder/app/[application]/_layout.svelte
-  const fetchScreens = async (appId) => {
-    if (!appId) return;
+  const fetchScreens = async appId => {
+    if (!appId) return
 
     store.actions.reset()
     const pkg = await API.fetchAppPackage(appId)
     await store.actions.initialise(pkg)
   }
 
-  $: fetchScreens(app?.devId);
-  $: noScreens = $sortedScreens.length === 0;
+  $: fetchScreens(app?.devId)
+  $: noScreens = $sortedScreens.length === 0
 </script>
-
 
 <div class="container">
   <div class="header">
@@ -69,16 +68,18 @@
       Fullscreen
     </ActionButton>
   </div>
-    {#if noScreens}
-      <div class="noScreens">
-        <ErrorSVG />
-        <Body>You haven't added any screens to your app yet.</Body>
-          <Body><a href={$url(`/builder/app/${app.devId}/design`)}>Click here</a> to add some.</Body>
-      </div>
-    {:else}
-      <iframe src={iframeUrl} title={app.name} />
-
-    {/if}
+  {#if noScreens}
+    <div class="noScreens">
+      <ErrorSVG />
+      <Body>You haven't added any screens to your app yet.</Body>
+      <Body
+        ><a href={$url(`/builder/app/${app.devId}/design`)}>Click here</a> to add
+        some.</Body
+      >
+    </div>
+  {:else}
+    <iframe src={iframeUrl} title={app.name} />
+  {/if}
 </div>
 
 <style>
