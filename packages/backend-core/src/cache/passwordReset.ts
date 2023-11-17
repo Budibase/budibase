@@ -2,7 +2,7 @@ import * as redis from "../redis/init"
 import * as utils from "../utils"
 import { Duration, DurationType } from "../utils"
 
-const TTL_SECONDS = Duration.fromHours(1).to(DurationType.SECONDS)
+const TTL_SECONDS = Duration.fromHours(1).toSeconds()
 
 interface PasswordReset {
   userId: string

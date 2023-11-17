@@ -18,9 +18,14 @@ export enum TTL {
   ONE_DAY = 86400,
 }
 
-export const keys = GENERIC.keys
-export const get = GENERIC.get
-export const store = GENERIC.store
-export const destroy = GENERIC.delete
-export const withCache = GENERIC.withCache
-export const bustCache = GENERIC.bustCache
+function performExport(funcName: string) {
+  // @ts-ignore
+  return (...args: any) => GENERIC[funcName](...args)
+}
+
+export const keys = performExport("keys")
+export const get = performExport("get")
+export const store = performExport("store")
+export const destroy = performExport("delete")
+export const withCache = performExport("withCache")
+export const bustCache = performExport("bustCache")
