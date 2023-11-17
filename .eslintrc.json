@@ -34,7 +34,6 @@
     },
     {
       "files": ["**/*.ts"],
-      "excludedFiles": "qa-core/**/*",
       "parser": "@typescript-eslint/parser",
       "extends": ["eslint:recommended"],
       "rules": {
@@ -45,19 +44,6 @@
         "no-undef": "off",
         "no-prototype-builtins": "off",
         "local-rules/no-budibase-imports": "error"
-      }
-    },
-    {
-      "files": ["**/*.ts"],
-      "parser": "@typescript-eslint/parser",
-      "extends": ["eslint:recommended"],
-      "rules": {
-        "no-unused-vars": "off",
-        "no-inner-declarations": "off",
-        "no-case-declarations": "off",
-        "no-useless-escape": "off",
-        "no-undef": "off",
-        "no-prototype-builtins": "off"
       }
     }
   ],
