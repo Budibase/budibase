@@ -72,9 +72,8 @@ server.on("close", async () => {
   shuttingDown = true
   console.log("Server Closed")
   timers.cleanup()
-  await redis.invite.shutdown()
-  await redis.passwordReset.shutdown()
-  await events.shutdown()
+  events.shutdown()
+  await redis.clients.shutdown()
   await queue.shutdown()
   if (!env.isTest()) {
     process.exit(errCode)
@@ -89,8 +88,7 @@ const shutdown = () => {
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await initPro()
-  await redis.invite.init()
-  await redis.passwordReset.init()
+  await redis.clients.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
