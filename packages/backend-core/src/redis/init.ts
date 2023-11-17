@@ -11,7 +11,7 @@ let userClient: Client,
   inviteClient: Client,
   passwordResetClient: Client
 
-async function init() {
+export async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
   sessionClient = await new Client(utils.Databases.SESSIONS).init()
   appClient = await new Client(utils.Databases.APP_METADATA).init()
