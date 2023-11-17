@@ -32,6 +32,7 @@ export * as blacklist from "./blacklist"
 export * as docUpdates from "./docUpdates"
 export * from "./utils/Duration"
 export { SearchParams } from "./db"
+export * as docIds from "./docIds"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
 // circular dependencies
