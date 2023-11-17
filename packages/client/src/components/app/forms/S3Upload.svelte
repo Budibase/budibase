@@ -1,8 +1,7 @@
 <script>
   import Field from "./Field.svelte"
-  import { CoreDropzone, ProgressCircle } from "@budibase/bbui"
+  import { CoreDropzone, ProgressCircle, Helpers } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
-  import { cloneDeep } from "@budibase/bbui/src/helpers"
 
   export let datasourceId
   export let bucket
@@ -99,8 +98,9 @@
   }
 
   const handleChange = e => {
+    debugger
     localFiles = e.detail
-    let files = cloneDeep(e.detail) || []
+    let files = Helpers.cloneDeep(e.detail) || []
     // remove URL as it contains the full base64 image data
     files.forEach(file => {
       if (file.type?.startsWith("image")) {
