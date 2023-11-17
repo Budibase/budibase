@@ -64,14 +64,6 @@
     fieldApi?.deregister()
     unsubscribe?.()
   })
-
-  const foo = (fieldState) => {
-    if (fieldState) {
-    fieldState.error = "yes";
-    }
-  }
-
-  $: foo(fieldState);
 </script>
 
 <div
