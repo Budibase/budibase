@@ -19,7 +19,7 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
-  IS_OSS_CONTRIBUTOR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase' }}
+  IS_OSS_CONTRIBUTOR: true
 
 jobs:
   lint:
