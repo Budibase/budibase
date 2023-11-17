@@ -349,9 +349,6 @@
   .spectrum-Dropzone {
     user-select: none;
   }
-  .spectrum-Dropzone.is-invalid {
-    border-color: var(--spectrum-global-color-red-400);
-  }
   input[type="file"] {
     display: none;
   }

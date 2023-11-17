@@ -110,10 +110,7 @@
   }
 </script>
 
-<div
-  class="spectrum-InputGroup"
-  class:is-disabled={disabled}
->
+<div class="spectrum-InputGroup" class:is-disabled={disabled}>
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
     class:is-disabled={disabled}
