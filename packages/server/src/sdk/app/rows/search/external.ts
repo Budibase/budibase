@@ -80,7 +80,10 @@ export async function search(options: SearchParams) {
       rows = rows.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing(table, rows, { preserveLinks: true })
+    rows = await outputProcessing(table, rows, {
+      preserveLinks: true,
+      squash: true,
+    })
 
     // need wrapper object for bookmarks etc when paginating
     return { rows, hasNextPage, bookmark: bookmark && bookmark + 1 }
@@ -98,12 +101,12 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, columns, rowIds } = options
+  const { tableId, format, columns, rowIds, query, sort, sortOrder } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
-  let query: SearchFilters = {}
+  let requestQuery: SearchFilters = {}
   if (rowIds?.length) {
-    query = {
+    requestQuery = {
       oneOf: {
         _id: rowIds.map((row: string) => {
           const ids = JSON.parse(
@@ -119,6 +122,8 @@ export async function exportRows(
         }),
       },
     }
+  } else {
+    requestQuery = query || {}
   }
 
   const datasource = await sdk.datasources.get(datasourceId!)
@@ -126,7 +131,7 @@ export async function exportRows(
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
-  let result = await search({ tableId, query })
+  let result = await search({ tableId, query: requestQuery, sort, sortOrder })
   let rows: Row[] = []
 
   // Filter data to only specified columns if required
@@ -183,6 +188,13 @@ export async function fetch(tableId: string): Promise<Row[]> {
   const table = await sdk.tables.getTable(tableId)
   return await outputProcessing<Row[]>(table, response, {
     preserveLinks: true,
+    squash: true,
+  })
+}
+
+export async function fetchRaw(tableId: string): Promise<Row[]> {
+  return await handleRequest<Operation.READ>(Operation.READ, tableId, {
+    includeSqlRelationships: IncludeRelationship.INCLUDE,
   })
 }
 

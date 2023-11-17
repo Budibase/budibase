@@ -1,6 +1,6 @@
 <script>
   import { helpers } from "@budibase/shared-core"
-  import { Input, DetailSummary, notifications } from "@budibase/bbui"
+  import { DetailSummary, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
@@ -16,19 +16,34 @@
   export let isScreen = false
   export let onUpdateSetting
   export let showSectionTitle = true
-  export let showInstanceName = true
+  export let includeHidden = false
+  export let tag
 
-  $: sections = getSections(componentInstance, componentDefinition, isScreen)
+  $: sections = getSections(
+    componentInstance,
+    componentDefinition,
+    isScreen,
+    tag,
+    includeHidden
+  )
 
-  const getSections = (instance, definition, isScreen) => {
+  const getSections = (instance, definition, isScreen, tag, includeHidden) => {
     const settings = definition?.settings ?? []
-    const generalSettings = settings.filter(setting => !setting.section)
-    const customSections = settings.filter(setting => setting.section)
+    const generalSettings = settings.filter(
+      setting => !setting.section && setting.tag === tag
+    )
+    const customSections = settings.filter(
+      setting => setting.section && setting.tag === tag
+    )
     let sections = [
-      {
-        name: "General",
-        settings: generalSettings,
-      },
+      ...(generalSettings?.length
+        ? [
+            {
+              name: "General",
+              settings: generalSettings,
+            },
+          ]
+        : []),
       ...(customSections || []),
     ]
 
@@ -39,7 +54,12 @@
         return
       }
       section.settings.forEach(setting => {
-        setting.visible = canRenderControl(instance, setting, isScreen)
+        setting.visible = canRenderControl(
+          instance,
+          setting,
+          isScreen,
+          includeHidden
+        )
       })
       section.visible =
         section.name === "General" ||
@@ -109,16 +129,20 @@
     })
   }
 
-  const canRenderControl = (instance, setting, isScreen) => {
+  const canRenderControl = (instance, setting, isScreen, includeHidden) => {
     // Prevent rendering on click setting for screens
     if (setting?.type === "event" && isScreen) {
       return false
     }
+    // Check we have a component to render for this setting
     const control = getComponentForSetting(setting)
     if (!control) {
       return false
     }
-
+    // Check if setting is hidden
+    if (setting.hidden && !includeHidden) {
+      return false
+    }
     return shouldDisplay(instance, setting)
   }
 </script>
@@ -127,28 +151,19 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      collapsible={false}
+      show={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">
           <InfoDisplay body={section.info} />
         </div>
-      {:else if idx === 0 && section.name === "General" && componentDefinition.info}
+      {:else if idx === 0 && section.name === "General" && componentDefinition?.info && !tag}
         <InfoDisplay
           title={componentDefinition.name}
           body={componentDefinition.info}
         />
       {/if}
       <div class="settings">
-        {#if idx === 0 && !componentInstance._component.endsWith("/layout") && !isScreen && showInstanceName}
-          <PropertyControl
-            control={Input}
-            label="Name"
-            key="_instanceName"
-            value={componentInstance._instanceName}
-            onChange={val => updateSetting({ key: "_instanceName" }, val)}
-          />
-        {/if}
         {#each section.settings as setting (setting.key)}
           {#if setting.visible}
             <PropertyControl
@@ -191,7 +206,7 @@
     </DetailSummary>
   {/if}
 {/each}
-{#if componentDefinition?.block}
+{#if componentDefinition?.block && !tag}
   <DetailSummary name="Eject" collapsible={false}>
     <EjectBlockButton />
   </DetailSummary>

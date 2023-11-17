@@ -1,6 +1,18 @@
-import { context, db as dbCore, events, roles } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  events,
+  roles,
+  Header,
+} from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
-import { Database, Role, UserCtx, UserRoles } from "@budibase/types"
+import {
+  Database,
+  Role,
+  UserCtx,
+  UserMetadata,
+  UserRoles,
+} from "@budibase/types"
 import { sdk as sharedSdk } from "@budibase/shared-core"
 import sdk from "../../sdk"
 
@@ -109,12 +121,12 @@ export async function destroy(ctx: UserCtx) {
   const role = await db.get<Role>(roleId)
   // first check no users actively attached to role
   const users = (
-    await db.allDocs(
+    await db.allDocs<UserMetadata>(
       getUserMetadataParams(undefined, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
   const usersWithRole = users.filter(user => user.roleId === roleId)
   if (usersWithRole.length !== 0) {
     ctx.throw(400, "Cannot delete role when it is in use.")
@@ -142,5 +154,21 @@ export async function accessible(ctx: UserCtx) {
     ctx.body = await roles.getAllRoleIds(appId)
   } else {
     ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
+  }
+
+  // If a custom role is provided in the header, filter out higher level roles
+  const roleHeader = ctx.header?.[Header.PREVIEW_ROLE] as string
+  if (roleHeader && !Object.keys(roles.BUILTIN_ROLE_IDS).includes(roleHeader)) {
+    const inherits = (await roles.getRole(roleHeader))?.inherits
+    const orderedRoles = ctx.body.reverse()
+    let filteredRoles = [roleHeader]
+    for (let role of orderedRoles) {
+      filteredRoles = [role, ...filteredRoles]
+      if (role === inherits) {
+        break
+      }
+    }
+    filteredRoles.pop()
+    ctx.body = [roleHeader, ...filteredRoles]
   }
 }

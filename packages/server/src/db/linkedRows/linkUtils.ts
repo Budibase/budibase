@@ -2,7 +2,13 @@ import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
 import { FieldTypes } from "../../constants"
 import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
-import { LinkDocument, LinkDocumentValue, Table } from "@budibase/types"
+import {
+  DatabaseQueryOpts,
+  LinkDocument,
+  LinkDocumentValue,
+  Table,
+} from "@budibase/types"
+import sdk from "../../sdk"
 
 export { createLinkView } from "../views/staticViews"
 
@@ -36,13 +42,13 @@ export async function getLinkDocuments(args: {
 }): Promise<LinkDocumentValue[] | LinkDocument[]> {
   const { tableId, rowId, fieldName, includeDocs } = args
   const db = context.getAppDB()
-  let params: any
+  let params: DatabaseQueryOpts
   if (rowId) {
     params = { key: [tableId, rowId] }
   }
   // only table is known
   else {
-    params = { startKey: [tableId], endKey: [tableId, {}] }
+    params = { startkey: [tableId], endkey: [tableId, {}] }
   }
   if (includeDocs) {
     params.include_docs = true
@@ -105,12 +111,11 @@ export function getLinkedTableIDs(table: Table): string[] {
 }
 
 export async function getLinkedTable(id: string, tables: Table[]) {
-  const db = context.getAppDB()
   let linkedTable = tables.find(table => table._id === id)
   if (linkedTable) {
     return linkedTable
   }
-  linkedTable = await db.get(id)
+  linkedTable = await sdk.tables.getTable(id)
   if (linkedTable) {
     tables.push(linkedTable)
   }

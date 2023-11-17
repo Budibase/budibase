@@ -29,7 +29,6 @@ import {
   buildSqlFieldList,
   generateIdForRow,
   sqlOutputProcessing,
-  squashRelationshipColumns,
   updateRelationshipColumns,
   fixArrayTypes,
   isManyToMany,
@@ -217,7 +216,7 @@ function basicProcessing({
   thisRow._id = generateIdForRow(row, table, isLinked)
   thisRow.tableId = table._id
   thisRow._rev = "rev"
-  return processFormulas(table, thisRow)
+  return thisRow
 }
 
 function isOneSide(
@@ -349,6 +348,33 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow, manyRelationships }
   }
 
+  processRelationshipFields(
+    table: Table,
+    row: Row,
+    relationships: RelationshipsJson[]
+  ): Row {
+    for (let relationship of relationships) {
+      const linkedTable = this.tables[relationship.tableName]
+      if (!linkedTable || !row[relationship.column]) {
+        continue
+      }
+      for (let key of Object.keys(row[relationship.column])) {
+        let relatedRow: Row = row[relationship.column][key]
+        // add this row as context for the relationship
+        for (let col of Object.values(linkedTable.schema)) {
+          if (col.type === FieldType.LINK && col.tableId === table._id) {
+            relatedRow[col.name] = [row]
+          }
+        }
+        // process additional types
+        relatedRow = processDates(table, relatedRow)
+        relatedRow = processFormulas(linkedTable, relatedRow)
+        row[relationship.column][key] = relatedRow
+      }
+    }
+    return row
+  }
+
   outputProcessing(
     rows: Row[] = [],
     table: Table,
@@ -391,13 +417,14 @@ export class ExternalRequest<T extends Operation> {
       )
     }
 
-    // Process some additional data types
-    let finalRowArray = Object.values(finalRows)
-    finalRowArray = processDates(table, finalRowArray)
-    finalRowArray = processFormulas(table, finalRowArray) as Row[]
-    return finalRowArray.map((row: Row) =>
-      squashRelationshipColumns(table, tableMap, row, relationships)
+    // make sure all related rows are correct
+    let finalRowArray = Object.values(finalRows).map(row =>
+      this.processRelationshipFields(table, row, relationships)
     )
+
+    // process some additional types
+    finalRowArray = processDates(table, finalRowArray)
+    return finalRowArray
   }
 
   /**
@@ -487,7 +514,7 @@ export class ExternalRequest<T extends Operation> {
         linkPrimary,
         linkSecondary,
       }: {
-        row: Record<string, any>
+        row: Row
         linkPrimary: string
         linkSecondary?: string
       }) {

@@ -6,6 +6,7 @@ import {
   ExportRowsRequest,
   BulkImportRequest,
   BulkImportResponse,
+  SearchRowResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
@@ -55,7 +56,13 @@ export class RowAPI extends TestAPI {
       .send(row)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    if (resp.status !== expectStatus) {
+      throw new Error(
+        `Expected status ${expectStatus} but got ${
+          resp.status
+        }, body: ${JSON.stringify(resp.body)}`
+      )
+    }
     return resp.body as Row
   }
 
@@ -77,13 +84,20 @@ export class RowAPI extends TestAPI {
     sourceId: string,
     row: PatchRowRequest,
     { expectStatus } = { expectStatus: 200 }
-  ) => {
-    return this.request
+  ): Promise<Row> => {
+    let resp = await this.request
       .patch(`/api/${sourceId}/rows`)
       .send(row)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    if (resp.status !== expectStatus) {
+      throw new Error(
+        `Expected status ${expectStatus} but got ${
+          resp.status
+        }, body: ${JSON.stringify(resp.body)}`
+      )
+    }
+    return resp.body as Row
   }
 
   delete = async (
@@ -141,7 +155,7 @@ export class RowAPI extends TestAPI {
   search = async (
     sourceId: string,
     { expectStatus } = { expectStatus: 200 }
-  ): Promise<Row[]> => {
+  ): Promise<SearchRowResponse> => {
     const request = this.request
       .post(`/api/${sourceId}/search`)
       .set(this.config.defaultHeaders())

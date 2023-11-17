@@ -8,11 +8,15 @@ describe("/webhooks", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
   let webhook: Webhook
+  let cleanupEnv: () => void
 
-  afterAll(setup.afterAll)
+  afterAll(() => {
+    setup.afterAll()
+    cleanupEnv()
+  })
 
   const setupTest = async () => {
-    config.modeSelf()
+    cleanupEnv = config.setEnv({ SELF_HOSTED: "true" })
     await config.init()
     const autoConfig = basicAutomation()
     autoConfig.definition.trigger.schema = {

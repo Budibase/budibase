@@ -196,8 +196,36 @@
     }
   }
 
+  const validateQuery = async () => {
+    const forbiddenBindings = /{{\s?user(\.(\w|\$)*\s?|\s?)}}/g
+    const bindingError = new Error(
+      "'user' is a protected binding and cannot be used"
+    )
+
+    if (forbiddenBindings.test(url)) {
+      throw bindingError
+    }
+
+    if (forbiddenBindings.test(query.fields.requestBody ?? "")) {
+      throw bindingError
+    }
+
+    Object.values(requestBindings).forEach(bindingValue => {
+      if (forbiddenBindings.test(bindingValue)) {
+        throw bindingError
+      }
+    })
+
+    Object.values(query.fields.headers).forEach(headerValue => {
+      if (forbiddenBindings.test(headerValue)) {
+        throw bindingError
+      }
+    })
+  }
+
   async function runQuery() {
     try {
+      await validateQuery()
       response = await queries.preview(buildQuery())
       if (response.rows.length === 0) {
         notifications.info("Request did not return any data")
@@ -376,7 +404,7 @@
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
-    breakQs = restUtils.breakQueryString(qs)
+    breakQs = restUtils.breakQueryString(encodeURI(qs))
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
@@ -624,7 +652,7 @@
     <div class="bottom">
       <Layout paddingY="S" gap="S">
         <Divider />
-        {#if !response && Object.keys(schema).length === 0}
+        {#if !response && Object.keys(schema || {}).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">
             <div class="placeholder-internal">

@@ -159,8 +159,10 @@
           {#if selectedImage.size}
             <div class="filesize">
               {#if selectedImage.size <= BYTES_IN_MB}
-                {`${selectedImage.size / BYTES_IN_KB} KB`}
-              {:else}{`${selectedImage.size / BYTES_IN_MB} MB`}{/if}
+                {`${(selectedImage.size / BYTES_IN_KB).toFixed(1)} KB`}
+              {:else}{`${(selectedImage.size / BYTES_IN_MB).toFixed(
+                  1
+                )} MB`}{/if}
             </div>
           {/if}
           {#if !disabled}
@@ -203,8 +205,8 @@
             {#if file.size}
               <div class="filesize">
                 {#if file.size <= BYTES_IN_MB}
-                  {`${file.size / BYTES_IN_KB} KB`}
-                {:else}{`${file.size / BYTES_IN_MB} MB`}{/if}
+                  {`${(file.size / BYTES_IN_KB).toFixed(1)} KB`}
+                {:else}{`${(file.size / BYTES_IN_MB).toFixed(1)} MB`}{/if}
               </div>
             {/if}
             {#if !disabled}
@@ -384,7 +386,7 @@
   }
   .compact .placeholder,
   .compact img {
-    margin: 10px 16px;
+    margin: 8px 16px;
   }
   .compact img {
     height: 90px;
@@ -454,16 +456,18 @@
     color: var(--red);
   }
 
+  .spectrum-Dropzone {
+    height: 220px;
+  }
+  .compact .spectrum-Dropzone {
+    height: 40px;
+  }
   .spectrum-Dropzone.disabled {
     pointer-events: none;
     background-color: var(--spectrum-global-color-gray-200);
   }
   .disabled .spectrum-Heading--sizeL {
     color: var(--spectrum-alias-text-color-disabled);
-  }
-  .compact .spectrum-Dropzone {
-    padding-top: 8px;
-    padding-bottom: 8px;
   }
   .compact .spectrum-IllustratedMessage-description {
     margin: 0;
@@ -475,7 +479,6 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-
   .tag {
     margin-top: 8px;
   }

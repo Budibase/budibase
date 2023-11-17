@@ -1,3 +1,5 @@
+import { ValidFileExtensions } from "@budibase/shared-core"
+
 require("svelte/register")
 
 import { join } from "../../../utilities/centralPath"
@@ -10,35 +12,28 @@ import {
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
-import { context, objectStore, utils, configs } from "@budibase/backend-core"
+import {
+  context,
+  objectStore,
+  utils,
+  configs,
+  BadRequestError,
+} from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, DocumentType } from "@budibase/types"
+import {
+  App,
+  Ctx,
+  DocumentType,
+  ProcessAttachmentResponse,
+  Upload,
+} from "@budibase/types"
 
 const send = require("koa-send")
 
-async function prepareUpload({ s3Key, bucket, metadata, file }: any) {
-  const response = await objectStore.upload({
-    bucket,
-    metadata,
-    filename: s3Key,
-    path: file.path,
-    type: file.type,
-  })
-
-  // don't store a URL, work this out on the way out as the URL could change
-  return {
-    size: file.size,
-    name: file.name,
-    url: objectStore.getAppFileUrl(s3Key),
-    extension: [...file.name.split(".")].pop(),
-    key: response.Key,
-  }
-}
-
-export const toggleBetaUiFeature = async function (ctx: any) {
+export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
 
   if (ctx.cookies.get(cookieName)) {
@@ -66,40 +61,73 @@ export const toggleBetaUiFeature = async function (ctx: any) {
   }
 }
 
-export const serveBuilder = async function (ctx: any) {
+export const serveBuilder = async function (ctx: Ctx) {
   const builderPath = join(TOP_LEVEL_PATH, "builder")
   await send(ctx, ctx.file, { root: builderPath })
 }
 
-export const uploadFile = async function (ctx: any) {
-  let files =
-    ctx.request.files.file.length > 1
-      ? Array.from(ctx.request.files.file)
-      : [ctx.request.files.file]
+export const uploadFile = async function (
+  ctx: Ctx<{}, ProcessAttachmentResponse>
+) {
+  const file = ctx.request?.files?.file
+  if (!file) {
+    throw new BadRequestError("No file provided")
+  }
 
-  const uploads = files.map(async (file: any) => {
-    const fileExtension = [...file.name.split(".")].pop()
-    // filenames converted to UUIDs so they are unique
-    const processedFileName = `${uuid.v4()}.${fileExtension}`
+  let files = file && Array.isArray(file) ? Array.from(file) : [file]
 
-    return prepareUpload({
-      file,
-      s3Key: `${context.getProdAppId()}/attachments/${processedFileName}`,
-      bucket: ObjectStoreBuckets.APPS,
+  ctx.body = await Promise.all(
+    files.map(async file => {
+      if (!file.name) {
+        throw new BadRequestError(
+          "Attempted to upload a file without a filename"
+        )
+      }
+
+      const extension = [...file.name.split(".")].pop()
+      if (!extension) {
+        throw new BadRequestError(
+          `File "${file.name}" has no extension, an extension is required to upload a file`
+        )
+      }
+
+      if (!env.SELF_HOSTED && !ValidFileExtensions.includes(extension)) {
+        throw new BadRequestError(
+          `File "${file.name}" has an invalid extension: "${extension}"`
+        )
+      }
+
+      // filenames converted to UUIDs so they are unique
+      const processedFileName = `${uuid.v4()}.${extension}`
+
+      const s3Key = `${context.getProdAppId()}/attachments/${processedFileName}`
+
+      const response = await objectStore.upload({
+        bucket: ObjectStoreBuckets.APPS,
+        filename: s3Key,
+        path: file.path,
+        type: file.type,
+      })
+
+      return {
+        size: file.size,
+        name: file.name,
+        url: objectStore.getAppFileUrl(s3Key),
+        extension,
+        key: response.Key,
+      }
     })
-  })
-
-  ctx.body = await Promise.all(uploads)
+  )
 }
 
-export const deleteObjects = async function (ctx: any) {
+export const deleteObjects = async function (ctx: Ctx) {
   ctx.body = await objectStore.deleteFiles(
     ObjectStoreBuckets.APPS,
     ctx.request.body.keys
   )
 }
 
-export const serveApp = async function (ctx: any) {
+export const serveApp = async function (ctx: Ctx) {
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -124,7 +152,7 @@ export const serveApp = async function (ctx: any) {
       const { head, html, css } = App.render({
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
@@ -162,7 +190,7 @@ export const serveApp = async function (ctx: any) {
         metaTitle: branding?.metaTitle,
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         favicon:
           branding.faviconUrl !== ""
@@ -180,7 +208,7 @@ export const serveApp = async function (ctx: any) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: any) {
+export const serveBuilderPreview = async function (ctx: Ctx) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
@@ -196,18 +224,30 @@ export const serveBuilderPreview = async function (ctx: any) {
   }
 }
 
-export const serveClientLibrary = async function (ctx: any) {
+export const serveClientLibrary = async function (ctx: Ctx) {
+  const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
-  // incase running from TS directly
-  if (env.isDev() && !fs.existsSync(rootPath)) {
-    rootPath = join(require.resolve("@budibase/client"), "..")
+  if (!appId) {
+    ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  return send(ctx, "budibase-client.js", {
-    root: rootPath,
-  })
+  if (env.isProd()) {
+    ctx.body = await objectStore.getReadStream(
+      ObjectStoreBuckets.APPS,
+      objectStore.clientLibraryPath(appId!)
+    )
+    ctx.set("Content-Type", "application/javascript")
+  } else if (env.isDev()) {
+    // incase running from TS directly
+    const tsPath = join(require.resolve("@budibase/client"), "..")
+    return send(ctx, "budibase-client.js", {
+      root: !fs.existsSync(rootPath) ? tsPath : rootPath,
+    })
+  } else {
+    ctx.throw(500, "Unable to retrieve client library.")
+  }
 }
 
-export const getSignedUploadURL = async function (ctx: any) {
+export const getSignedUploadURL = async function (ctx: Ctx) {
   // Ensure datasource is valid
   let datasource
   try {
@@ -246,7 +286,7 @@ export const getSignedUploadURL = async function (ctx: any) {
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
       publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
-    } catch (error) {
+    } catch (error: any) {
       ctx.throw(400, error)
     }
   }

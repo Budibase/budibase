@@ -10,6 +10,7 @@ import {
   DatabaseDeleteIndexOpts,
   Document,
   isDocument,
+  RowResponse,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
@@ -49,10 +50,7 @@ export class DatabaseImpl implements Database {
 
   private readonly couchInfo = getCouchInfo()
 
-  constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
-    if (dbName == null) {
-      throw new Error("Database name cannot be undefined.")
-    }
+  constructor(dbName: string, opts?: DatabaseOpts, connection?: string) {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
@@ -113,12 +111,41 @@ export class DatabaseImpl implements Database {
     }
   }
 
-  async get<T>(id?: string): Promise<T | any> {
+  async get<T extends Document>(id?: string): Promise<T> {
     const db = await this.checkSetup()
     if (!id) {
       throw new Error("Unable to get doc without a valid _id.")
     }
     return this.updateOutput(() => db.get(id))
+  }
+
+  async getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]> {
+    // get unique
+    ids = [...new Set(ids)]
+    const response = await this.allDocs<T>({
+      keys: ids,
+      include_docs: true,
+    })
+    const rowUnavailable = (row: RowResponse<T>) => {
+      // row is deleted - key lookup can return this
+      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+        return true
+      }
+      return row.error === "not_found"
+    }
+
+    const rows = response.rows.filter(row => !rowUnavailable(row))
+    const someMissing = rows.length !== response.rows.length
+    // some were filtered out - means some missing
+    if (!opts?.allowMissing && someMissing) {
+      const missing = response.rows.filter(row => rowUnavailable(row))
+      const missingIds = missing.map(row => row.key).join(", ")
+      throw new Error(`Unable to get documents: ${missingIds}`)
+    }
+    return rows.map(row => row.doc!)
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
@@ -176,7 +203,9 @@ export class DatabaseImpl implements Database {
     return this.updateOutput(() => db.bulk({ docs: documents }))
   }
 
-  async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
+  async allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>> {
     const db = await this.checkSetup()
     return this.updateOutput(() => db.list(params))
   }
@@ -196,7 +225,7 @@ export class DatabaseImpl implements Database {
     return (await response.json()) as T
   }
 
-  async query<T>(
+  async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {

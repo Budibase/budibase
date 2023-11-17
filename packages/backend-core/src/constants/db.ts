@@ -28,7 +28,7 @@ export enum ViewName {
   APP_BACKUP_BY_TRIGGER = "by_trigger",
 }
 
-export const DeprecatedViews = {
+export const DeprecatedViews: Record<string, string[]> = {
   [ViewName.USER_BY_EMAIL]: [
     // removed due to inaccuracy in view doc filter logic
     "by_email",

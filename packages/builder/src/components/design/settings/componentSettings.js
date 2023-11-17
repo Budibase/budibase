@@ -1,5 +1,5 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
-import DataSourceSelect from "./controls/DataSourceSelect.svelte"
+import DataSourceSelect from "./controls/DataSourceSelect/DataSourceSelect.svelte"
 import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
 import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor.svelte"
@@ -23,6 +23,7 @@ import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
+import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 
 const componentMap = {
@@ -48,6 +49,7 @@ const componentMap = {
   "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
+  buttonConfiguration: ButtonConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,

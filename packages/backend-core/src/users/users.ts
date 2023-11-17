@@ -19,6 +19,8 @@ import {
   SearchUsersRequest,
   User,
   ContextUser,
+  DatabaseQueryOpts,
+  CouchFindOptions,
 } from "@budibase/types"
 import { getGlobalDB } from "../context"
 import * as context from "../context"
@@ -139,7 +141,7 @@ export const getGlobalUserByEmail = async (
 
 export const searchGlobalUsersByApp = async (
   appId: any,
-  opts: any,
+  opts: DatabaseQueryOpts,
   getOpts?: GetOpts
 ) => {
   if (typeof appId !== "string") {
@@ -149,7 +151,7 @@ export const searchGlobalUsersByApp = async (
     include_docs: true,
   })
   params.startkey = opts && opts.startkey ? opts.startkey : params.startkey
-  let response = await queryGlobalView(ViewName.USER_BY_APP, params)
+  let response = await queryGlobalView<User>(ViewName.USER_BY_APP, params)
 
   if (!response) {
     response = []
@@ -165,7 +167,10 @@ export const searchGlobalUsersByApp = async (
   Return any user who potentially has access to the application
   Admins, developers and app users with the explicitly role.
 */
-export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
+export const searchGlobalUsersByAppAccess = async (
+  appId: any,
+  opts?: { limit?: number }
+) => {
   const roleSelector = `roles.${appId}`
 
   let orQuery: any[] = [
@@ -186,7 +191,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
     orQuery.push(roleCheck)
   }
 
-  let searchOptions = {
+  let searchOptions: CouchFindOptions = {
     selector: {
       $or: orQuery,
       _id: {
@@ -197,7 +202,7 @@ export const searchGlobalUsersByAppAccess = async (appId: any, opts: any) => {
   }
 
   const resp = await directCouchFind(context.getGlobalDBName(), searchOptions)
-  return resp?.rows
+  return resp.rows
 }
 
 export const getGlobalUserByAppPage = (appId: string, user: User) => {
@@ -241,12 +246,15 @@ export const paginatedUsers = async ({
   bookmark,
   query,
   appId,
+  limit,
 }: SearchUsersRequest = {}) => {
   const db = getGlobalDB()
+  const pageSize = limit ?? PAGE_LIMIT
+  const pageLimit = pageSize + 1
   // get one extra document, to have the next page
-  const opts: any = {
+  const opts: DatabaseQueryOpts = {
     include_docs: true,
-    limit: PAGE_LIMIT + 1,
+    limit: pageLimit,
   }
   // add a startkey if the page was specified (anchor)
   if (bookmark) {
@@ -269,7 +277,7 @@ export const paginatedUsers = async ({
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, PAGE_LIMIT, {
+  return pagination(userList, pageSize, {
     paginate: true,
     property,
     getKey,

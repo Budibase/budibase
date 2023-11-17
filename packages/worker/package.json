@@ -20,7 +20,6 @@
     "run:docker": "node dist/index.js",
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
-    "build:docker": "yarn build && docker build . -t worker-service --label version=$BUDIBASE_RELEASE_VERSION",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
     "dev:builder": "npm run dev:stack:init && nodemon",
     "dev:built": "yarn run dev:stack:init && yarn run run:docker",
