@@ -88,8 +88,7 @@ const shutdown = () => {
 export default server.listen(parseInt(env.PORT || "4002"), async () => {
   console.log(`Worker running on ${JSON.stringify(server.address())}`)
   await initPro()
-  await redis.clients.getInviteClient()
-  await redis.clients.getPasswordResetClient()
+  await redis.clients.init()
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   await events.processors.init(proSdk.auditLogs.write)
