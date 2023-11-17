@@ -98,7 +98,6 @@
   }
 
   const handleChange = e => {
-    debugger
     localFiles = e.detail
     let files = Helpers.cloneDeep(e.detail) || []
     // remove URL as it contains the full base64 image data
