@@ -19,7 +19,7 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
-  IS_OSS_CONTRIBUTOR: true
+  IS_OSS_CONTRIBUTOR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase' }}
 
 jobs:
   lint:
@@ -200,7 +200,7 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
-      - name: Build pro for OSS contributor
+      - name: Build backend-core for OSS contributor (required for pro)
         if: ${{ env.IS_OSS_CONTRIBUTOR == 'true' }}
         run: yarn build --scope @budibase/backend-core
       - name: Run tests
