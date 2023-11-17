@@ -37,12 +37,27 @@ function mockAuthWithNoCookie() {
   mockWorker()
   jest.mock("@budibase/backend-core", () => {
     const core = jest.requireActual("@budibase/backend-core")
-    core.db.dbExists = () => true
-    core.cache.user.getUser = () => ({ _id: "us_uuid1" })
-    core.utils.getAppIdFromCtx = jest.fn()
-    core.utils.setCookie = jest.fn()
-    core.utils.getCookie = jest.fn()
-    return core
+    return {
+      ...core,
+      db: {
+        ...core.db,
+        dbExists: () => true,
+      },
+      cache: {
+        user: {
+          getUser: async id => {
+            return {
+              _id: "us_uuid1",
+            }
+          },
+        },
+      },
+      utils: {
+        getAppIdFromCtx: jest.fn(),
+        setCookie: jest.fn(),
+        getCookie: jest.fn(),
+      },
+    }
   })
 }
 
@@ -51,13 +66,30 @@ function mockAuthWithCookie() {
   mockWorker()
   jest.mock("@budibase/backend-core", () => {
     const core = jest.requireActual("@budibase/backend-core")
-    core.db.dbExists = () => true
-    core.cache.user.getUser = () => ({ _id: "us_uuid1" })
-    core.utils.getAppIdFromCtx = () => "app_test"
-    core.utils.getCookie = () => ({ appId: "app_different", roleId: "PUBLIC" })
-    core.utils.setCookie = jest.fn()
-    core.utils.clearCookie = jest.fn()
-    return core
+    return {
+      ...core,
+      db: {
+        ...core.db,
+        dbExists: () => true,
+      },
+      utils: {
+        getAppIdFromCtx: () => {
+          return "app_test"
+        },
+        setCookie: jest.fn(),
+        clearCookie: jest.fn(),
+        getCookie: () => ({ appId: "app_different", roleId: "PUBLIC" }),
+      },
+      cache: {
+        user: {
+          getUser: async id => {
+            return {
+              _id: "us_uuid1",
+            }
+          },
+        },
+      },
+    }
   })
 }
 
@@ -145,16 +177,29 @@ describe("Current app middleware", () => {
       mockReset()
       jest.mock("@budibase/backend-core", () => {
         const core = jest.requireActual("@budibase/backend-core")
-        core.db.dbExists = () => true
-        core.cache.user.getUser = () => ({ _id: "us_uuid1" })
-        core.utils.getAppIdFromCtx = () => "app_test"
-        core.utils.getCookie = () => ({
-          appId: "app_different",
-          roleId: "PUBLIC",
-        })
-        core.utils.setCookie = jest.fn()
-        core.utils.clearCookie = jest.fn()
-        return core
+        return {
+          ...core,
+          db: {
+            ...core.db,
+            dbExists: () => true,
+          },
+          utils: {
+            getAppIdFromCtx: () => {
+              return "app_test"
+            },
+            setCookie: jest.fn(),
+            getCookie: jest.fn(),
+          },
+          cache: {
+            user: {
+              getUser: async id => {
+                return {
+                  _id: "us_uuid1",
+                }
+              },
+            },
+          },
+        }
       })
       await checkExpected()
     })
