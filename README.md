@@ -8,7 +8,7 @@
 </h1>
 
 <h3 align="center">
-  The low code platform you'll enjoy using
+  ANR
 </h3>
 <p align="center">
   Budibase is an open source low-code platform, and the easiest way to build internal apps that improve productivity.
