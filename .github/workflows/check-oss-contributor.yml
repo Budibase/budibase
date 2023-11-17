@@ -3,6 +3,9 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 8,16 * * 1-5" # on weekdays at 8am and 4pm
+  push:
+    branches:
+      - chore/run_oss_checks # TODO: remove
 
 jobs:
   run:
