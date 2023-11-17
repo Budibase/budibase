@@ -28,14 +28,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
@@ -45,7 +45,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -53,7 +53,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
@@ -75,7 +75,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -83,7 +83,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -104,7 +104,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -112,7 +112,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
@@ -134,7 +134,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
@@ -142,7 +142,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test server
         run: |
@@ -173,7 +173,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -189,14 +189,14 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
         with:
-          submodules: ${{ env.IS_OSS_CONTRIBUTOR == false }}
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: ${{ env.IS_OSS_CONTRIBUTOR == false && 'yarn' || '' }}
+          cache: ${{ env.IS_OSS_CONTRIBUTOR == 'false' && 'yarn' || '' }}
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
