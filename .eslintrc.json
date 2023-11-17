@@ -19,6 +19,7 @@
     "bundle.js"
   ],
   "extends": ["eslint:recommended"],
+  "plugins": ["import"],
   "overrides": [
     {
       "files": ["**/*.svelte"],
@@ -30,7 +31,6 @@
         "sourceType": "module",
         "allowImportExportEverywhere": true
       }
-
     },
     {
       "files": ["**/*.ts"],
@@ -48,7 +48,15 @@
   ],
   "rules": {
     "no-self-assign": "off",
-    "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }]
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ],
+    "import/no-relative-packages": "error"
   },
   "globals": {
     "GeolocationPositionError": true
