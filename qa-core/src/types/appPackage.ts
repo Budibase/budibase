@@ -1,4 +1,4 @@
-import { Application } from "@budibase/server/api/controllers/public/mapping/types"
+import { Application } from "../types"
 import { Layout } from "@budibase/types"
 import { Screen } from "@budibase/types"
 // Create type for getAppPackage response
