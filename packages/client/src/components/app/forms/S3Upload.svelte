@@ -2,7 +2,7 @@
   import Field from "./Field.svelte"
   import { CoreDropzone, ProgressCircle } from "@budibase/bbui"
   import { getContext, onMount, onDestroy } from "svelte"
-  import { cloneDeep } from "../../../../../bbui/src/helpers"
+  import { cloneDeep } from "@budibase/bbui/src/helpers"
 
   export let datasourceId
   export let bucket
