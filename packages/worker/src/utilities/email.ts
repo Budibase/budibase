@@ -3,9 +3,8 @@ import { EmailTemplatePurpose, TemplateType } from "../constants"
 import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
-import { redis } from "@budibase/backend-core"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs } from "@budibase/backend-core"
+import { configs, cache } from "@budibase/backend-core"
 import ical from "ical-generator"
 const nodemailer = require("nodemailer")
 
@@ -61,9 +60,9 @@ async function getLinkCode(
 ) {
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return redis.passwordReset.createCode(user._id!, info)
+      return cache.passwordReset.createCode(user._id!, info)
     case EmailTemplatePurpose.INVITATION:
-      return redis.invite.createCode(email, info)
+      return cache.invite.createCode(email, info)
     default:
       return null
   }
