@@ -200,6 +200,9 @@ jobs:
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
+      - name: Build pro for OSS contributor
+        if: ${{ env.IS_OSS_CONTRIBUTOR == 'true' }}
+        run: yarn build --scope @budibase/backend-core
       - name: Run tests
         run: |
           cd qa-core
