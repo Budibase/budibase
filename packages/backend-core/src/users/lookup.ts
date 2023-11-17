@@ -6,7 +6,7 @@ import {
 } from "@budibase/types"
 import * as dbUtils from "../db"
 import { ViewName } from "../constants"
-import { getExistingInvites } from "../redis/invite"
+import { getExistingInvites } from "../cache/invite"
 
 /**
  * Apply a system-wide search on emails:
