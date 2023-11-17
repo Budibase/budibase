@@ -19,50 +19,41 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
+  IS_OSS_CONTRIBUTOR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase' }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
           fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
@@ -81,24 +72,18 @@ jobs:
   test-libraries:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
           fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -116,24 +101,18 @@ jobs:
   test-worker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
           fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
@@ -152,24 +131,18 @@ jobs:
   test-server:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
           fetch-depth: 0
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test server
         run: |
@@ -200,7 +173,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -213,21 +186,17 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
 
       - name: Use Node.js 18.x
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: "yarn"
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
