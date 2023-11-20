@@ -1,7 +1,4 @@
-import {
-  CreateUserParams,
-  User,
-} from "@budibase/server/api/controllers/public/mapping/types"
+import { CreateUserParams, User } from "../../types"
 import { generator } from "../../shared"
 
 export const generateUser = (
