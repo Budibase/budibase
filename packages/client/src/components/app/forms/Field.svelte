@@ -169,7 +169,7 @@
   .helpText :global(svg) {
     width: 14px;
     color: var(--grey-7);
-    margin-right: 4px;
+    margin-right: 6px;
   }
 
   .helpText span {

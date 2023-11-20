@@ -55,7 +55,7 @@
   .helpText :global(svg) {
     width: 14px;
     color: var(--grey-5);
-    margin-right: 4px;
+    margin-right: 6px;
   }
 
   .helpText span {
