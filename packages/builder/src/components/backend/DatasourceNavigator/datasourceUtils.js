@@ -1,5 +1,3 @@
-import { TableNames } from "constants"
-
 const showDatasourceOpen = ({
   selected,
   containsSelected,
@@ -28,7 +26,7 @@ const containsActiveEntity = (
   datasource,
   params,
   isActive,
-  tables,
+  selectedTableId,
   queries,
   views,
   viewsV2
@@ -71,8 +69,7 @@ const containsActiveEntity = (
 
   // Check for a matching table
   if (params.tableId) {
-    const selectedTable = tables.selected?._id
-    return options.find(x => x._id === selectedTable) != null
+    return options.find(x => x._id === selectedTableId) != null
   }
 
   // Check for a matching view
@@ -93,7 +90,7 @@ export const enrichDatasources = (
   datasources,
   params,
   isActive,
-  tables,
+  selectedTableId,
   queries,
   views,
   viewsV2,
@@ -103,6 +100,7 @@ export const enrichDatasources = (
   if (!datasources?.list?.length) {
     return []
   }
+
   const onlySource = datasources.list.length === 1
   return datasources.list.map(datasource => {
     const selected =
@@ -112,18 +110,19 @@ export const enrichDatasources = (
       datasource,
       params,
       isActive,
-      tables,
+      selectedTableId,
       queries,
       views,
       viewsV2
     )
 
-    const dsTables = tables.list.filter(
+    const entities = Array.isArray(datasource.entities)
+      ? datasource.entities
+      : Object.values(datasource.entities)
+    const dsTables = entities.filter(
       table =>
-        table.sourceId === datasource._id &&
-        table._id !== TableNames.USERS &&
-        (!searchTerm ||
-          table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
+        !searchTerm ||
+        table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1
     )
     const dsQueries = queries.list.filter(
       query =>
@@ -140,7 +139,7 @@ export const enrichDatasources = (
       onlyOneSource: onlySource,
     })
 
-    const show = !searchTerm || dsQueries.length || dsTables.length
+    const show = !searchTerm || dsQueries.length || dsTables.length || false
     return {
       ...datasource,
       selected,
