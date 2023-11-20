@@ -1,5 +1,5 @@
 import Nano from "@budibase/nano"
-import { AllDocsResponse, AnyDocument, Document } from "../"
+import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
 import { Writable } from "stream"
 
 export enum SearchIndex {
@@ -18,6 +18,37 @@ export type PouchOptions = {
 export enum SortOption {
   ASCENDING = "asc",
   DESCENDING = "desc",
+}
+
+export type IndexAnalyzer = {
+  name: string
+  default?: string
+  fields?: Record<string, string>
+}
+
+export type DBView = {
+  name?: string
+  map: string
+  reduce?: string
+  meta?: ViewTemplateOpts
+  groupBy?: string
+}
+
+export interface DesignDocument extends Document {
+  // we use this static reference for all design documents
+  _id: "_design/database"
+  language?: string
+  // CouchDB views
+  views?: {
+    [viewName: string]: DBView
+  }
+  // Lucene indexes
+  indexes?: {
+    [indexName: string]: {
+      index: string
+      analyzer?: string | IndexAnalyzer
+    }
+  }
 }
 
 export type CouchFindOptions = {
@@ -54,15 +85,18 @@ export type DatabaseDeleteIndexOpts = {
   type?: string | undefined
 }
 
+type DBPrimitiveKey = string | number | {}
+export type DatabaseKey = DBPrimitiveKey | DBPrimitiveKey[]
+
 export type DatabaseQueryOpts = {
   include_docs?: boolean
-  startkey?: string
-  endkey?: string
+  startkey?: DatabaseKey
+  endkey?: DatabaseKey
   limit?: number
   skip?: number
   descending?: boolean
-  key?: string
-  keys?: string[]
+  key?: DatabaseKey
+  keys?: DatabaseKey[]
   group?: boolean
   startkey_docid?: string
 }
@@ -88,7 +122,11 @@ export interface Database {
 
   exists(): Promise<boolean>
   checkSetup(): Promise<Nano.DocumentScope<any>>
-  get<T>(id?: string): Promise<T>
+  get<T extends Document>(id?: string): Promise<T>
+  getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]>
   remove(
     id: string | Document,
     rev?: string
@@ -98,8 +136,10 @@ export interface Database {
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
-  allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>>
-  query<T>(
+  allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>>
+  query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>

@@ -1,4 +1,4 @@
-import { IncludeRelationship, Operation, Row } from "@budibase/types"
+import { IncludeRelationship, Operation } from "@budibase/types"
 import { handleRequest } from "../../../api/controllers/row/external"
 import { breakRowIdField } from "../../../integrations/utils"
 

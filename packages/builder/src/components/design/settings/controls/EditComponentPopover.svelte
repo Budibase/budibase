@@ -11,6 +11,7 @@
   export let componentBindings
   export let bindings
   export let parseSettings
+  export let disabled
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()
@@ -20,7 +21,7 @@
   let open = false
 
   // Auto hide the component when another item is selected
-  $: if (open && $draggable.selected != componentInstance._id) {
+  $: if (open && $draggable.selected !== componentInstance._id) {
     popover.hide()
   }
 
@@ -100,13 +101,13 @@
   }}
   on:close={() => {
     open = false
-    if ($draggable.selected == componentInstance._id) {
+    if ($draggable.selected === componentInstance._id) {
       $draggable.actions.select()
     }
   }}
   {anchor}
   align="left-outside"
-  showPopover={drawers.length == 0}
+  showPopover={drawers.length === 0}
   clickOutsideOverride={drawers.length > 0}
   maxHeight={600}
   handlePostionUpdate={customPositionHandler}
@@ -115,6 +116,7 @@
     <Layout noPadding noGap>
       <slot name="header" />
       <ComponentSettingsSection
+        includeHidden
         {componentInstance}
         componentDefinition={parsedComponentDef}
         isScreen={false}

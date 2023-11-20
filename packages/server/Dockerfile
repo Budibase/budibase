@@ -38,7 +38,7 @@ RUN apt update && apt upgrade -y \
 
 COPY package.json .
 COPY dist/yarn.lock .
-RUN yarn install --production=true \
+RUN yarn install --production=true --network-timeout 1000000 \
     # Remove unneeded data from file system to reduce image size
     && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp

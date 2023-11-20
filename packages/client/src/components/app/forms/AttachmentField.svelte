@@ -6,11 +6,13 @@
   export let field
   export let label
   export let disabled = false
+  export let readonly = false
   export let compact = false
   export let validation
   export let extensions
   export let onChange
   export let maximum = undefined
+  export let span
 
   let fieldState
   let fieldApi
@@ -71,33 +73,27 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
+  {span}
   type="attachment"
   bind:fieldState
   bind:fieldApi
   defaultValue={[]}
 >
-  <div class="minHeightWrapper">
-    {#if fieldState}
-      <CoreDropzone
-        value={fieldState.value}
-        disabled={fieldState.disabled}
-        error={fieldState.error}
-        on:change={handleChange}
-        {processFiles}
-        {deleteAttachments}
-        {handleFileTooLarge}
-        {handleTooManyFiles}
-        {maximum}
-        {extensions}
-        {compact}
-      />
-    {/if}
-  </div>
+  {#if fieldState}
+    <CoreDropzone
+      value={fieldState.value}
+      disabled={fieldState.disabled || fieldState.readonly}
+      error={fieldState.error}
+      on:change={handleChange}
+      {processFiles}
+      {deleteAttachments}
+      {handleFileTooLarge}
+      {handleTooManyFiles}
+      {maximum}
+      {extensions}
+      {compact}
+    />
+  {/if}
 </Field>
-
-<style>
-  .minHeightWrapper {
-    min-height: 80px;
-  }
-</style>

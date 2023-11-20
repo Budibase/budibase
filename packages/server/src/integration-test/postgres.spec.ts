@@ -1,6 +1,4 @@
 import fetch from "node-fetch"
-// @ts-ignore
-fetch.mockSearch()
 import {
   generateMakeRequest,
   MakeRequestResponse,
@@ -13,12 +11,15 @@ import {
   RelationshipType,
   Row,
   Table,
+  TableSourceType,
 } from "@budibase/types"
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import { Client } from "pg"
+// @ts-ignore
+fetch.mockSearch()
 
 const config = setup.getConfig()!
 
@@ -52,7 +53,7 @@ describe("postgres integrations", () => {
     async function createAuxTable(prefix: string) {
       return await config.createTable({
         name: `${prefix}_${generator.word({ length: 6 })}`,
-        type: "external",
+        type: "table",
         primary: ["id"],
         primaryDisplay: "title",
         schema: {
@@ -67,6 +68,7 @@ describe("postgres integrations", () => {
           },
         },
         sourceId: postgresDatasource._id,
+        sourceType: TableSourceType.EXTERNAL,
       })
     }
 
@@ -88,7 +90,7 @@ describe("postgres integrations", () => {
 
     primaryPostgresTable = await config.createTable({
       name: `p_${generator.word({ length: 6 })}`,
-      type: "external",
+      type: "table",
       primary: ["id"],
       schema: {
         id: {
@@ -143,6 +145,7 @@ describe("postgres integrations", () => {
         },
       },
       sourceId: postgresDatasource._id,
+      sourceType: TableSourceType.EXTERNAL,
     })
   })
 
@@ -249,7 +252,7 @@ describe("postgres integrations", () => {
   async function createDefaultPgTable() {
     return await config.createTable({
       name: generator.word({ length: 10 }),
-      type: "external",
+      type: "table",
       primary: ["id"],
       schema: {
         id: {
@@ -259,6 +262,7 @@ describe("postgres integrations", () => {
         },
       },
       sourceId: postgresDatasource._id,
+      sourceType: TableSourceType.EXTERNAL,
     })
   }
 
@@ -919,7 +923,6 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })
@@ -928,7 +931,6 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })

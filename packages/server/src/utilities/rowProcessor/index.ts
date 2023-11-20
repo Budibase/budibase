@@ -2,22 +2,21 @@ import * as linkRows from "../../db/linkedRows"
 import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { ObjectStoreBuckets } from "../../constants"
-import { context, db as dbCore, objectStore } from "@budibase/backend-core"
+import {
+  context,
+  db as dbCore,
+  objectStore,
+  utils,
+} from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import {
-  AutoColumnFieldMetadata,
-  FieldSubtype,
-  Row,
-  RowAttachment,
-  Table,
-} from "@budibase/types"
+import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
-import { isExternalTable } from "../../integrations/utils"
+import { isExternalTableID } from "../../integrations/utils"
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {
@@ -51,7 +50,7 @@ function getRemovedAttachmentKeys(
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
  * time now and the current logged in user making the request.
- * @param user The user to be used for an appId as well as the createdBy and createdAt fields.
+ * @param userId The user to be used for an appId as well as the createdBy and createdAt fields.
  * @param table The table which is to be used for the schema, as well as handling auto IDs incrementing.
  * @param row The row which is to be updated with information for the auto columns.
  * @param opts specific options for function to carry out optional features.
@@ -233,6 +232,11 @@ export async function outputProcessing<T extends Row[] | Row>(
       })
     : safeRows
 
+  // make sure squash is enabled if needed
+  if (!opts.squash && utils.hasCircularStructure(rows)) {
+    opts.squash = true
+  }
+
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldTypes.ATTACHMENT) {
@@ -241,7 +245,7 @@ export async function outputProcessing<T extends Row[] | Row>(
           continue
         }
         row[property].forEach((attachment: RowAttachment) => {
-          attachment.url = objectStore.getAppFileUrl(attachment.key)
+          attachment.url ??= objectStore.getAppFileUrl(attachment.key)
         })
       }
     } else if (
@@ -258,7 +262,7 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process formulas after the complex types had been processed
-  enriched = processFormulas(table, enriched, { dynamic: true }) as Row[]
+  enriched = processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(
@@ -267,7 +271,7 @@ export async function outputProcessing<T extends Row[] | Row>(
     )) as Row[]
   }
   // remove null properties to match internal API
-  if (isExternalTable(table._id!)) {
+  if (isExternalTableID(table._id!)) {
     for (let row of enriched) {
       for (let key of Object.keys(row)) {
         if (row[key] === null) {
