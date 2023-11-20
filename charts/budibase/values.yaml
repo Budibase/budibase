@@ -2,11 +2,6 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-image:
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-
 imagePullSecrets: []
 nameOverride: ""
 # fullnameOverride: ""
@@ -41,14 +36,10 @@ service:
 
 ingress:
   enabled: true
-  aws: false
-  nginx: true
-  certificateArn: ""
   className: ""
   annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/client-max-body-size: 150M
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+    # nginx.ingress.kubernetes.io/client-max-body-size: 150M
+    # nginx.ingress.kubernetes.io/proxy-body-size: 50m
   hosts:
     - host: # change if using custom domain
       paths:
@@ -59,6 +50,10 @@ ingress:
               name: proxy-service
               port:
                 number: 10000
+
+awsAlbIngress:
+  enabled: false
+  certificateArn: ""
 
 autoscaling:
   enabled: false
@@ -111,7 +106,6 @@ globals:
 #  globalAgentNoProxy:
 
 services:
-  budibaseVersion: latest
   dns: cluster.local
   # tlsRejectUnauthorized: 0
 
@@ -145,10 +139,6 @@ services:
         scheme: HTTP
       failureThreshold: 3
       periodSeconds: 5
-  #    annotations:
-  #      co.elastic.logs/module: nginx
-  #      co.elastic.logs/fileset.stdout: access
-  #      co.elastic.logs/fileset.stderr: error
 
   apps:
     port: 4002
@@ -280,7 +270,6 @@ couchdb:
 
   # adminUsername: budibase
   # adminPassword: budibase
-  # adminHash: -pbkdf2-this_is_not_necessarily_secure_either
   # cookieAuthSecret: admin
 
   ## When enabled, will deploy a networkpolicy that allows CouchDB pods to
@@ -310,16 +299,12 @@ couchdb:
 
   ## The CouchDB image
   image:
-    repository: couchdb
-    tag: 3.1.1
+    repository: budibase/couchdb
+    tag: 3.2.1
     pullPolicy: IfNotPresent
 
   ## Experimental integration with Lucene-powered fulltext search
-  enableSearch: true
-  searchImage:
-    repository: kocolosk/couchdb-search
-    tag: 0.2.0
-    pullPolicy: IfNotPresent
+  enableSearch: false
 
   initImage:
     repository: busybox
