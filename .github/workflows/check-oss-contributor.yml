@@ -28,7 +28,7 @@ jobs:
       - name: Notify error
         uses: tsickert/discord-webhook@v5.3.0
         with:
-          webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
+          webhook-url: ${{ secrets.OSS_CHECKS_WEBHOOK_URL }}
           embed-title: 🚨 OSS checks failed in master
           embed-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           embed-description: |
