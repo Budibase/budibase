@@ -168,6 +168,40 @@ describe("datasourceUtils", () => {
           }),
         ])
       })
+
+      it("given a non matching search term, all entities are empty", () => {
+        const searchTerm = "non matching"
+
+        const result = enrichDatasources(
+          datasources,
+          {},
+          isActive,
+          "",
+          { list: [] },
+          { list: [] },
+          { list: [] },
+          {},
+          searchTerm
+        )
+
+        expect(result).toEqual([
+          expect.objectContaining({
+            _id: internalTables._id,
+            show: false,
+            tables: [],
+          }),
+          expect.objectContaining({
+            _id: pgDatasource._id,
+            show: false,
+            tables: [],
+          }),
+          expect.objectContaining({
+            _id: mysqlDatasource._id,
+            show: false,
+            tables: [],
+          }),
+        ])
+      })
     })
   })
 })
