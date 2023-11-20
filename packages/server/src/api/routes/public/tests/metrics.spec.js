@@ -25,10 +25,9 @@ describe("/metrics", () => {
 
     it("endpoint should not be publicly exposed", async () => {
       await request
-      .get(`/api/public/v1/metrics`)
-      .set(config.publicHeaders())
-      .expect(403)
+        .get(`/api/public/v1/metrics`)
+        .set(config.publicHeaders())
+        .expect(403)
     })
   })
-
 })

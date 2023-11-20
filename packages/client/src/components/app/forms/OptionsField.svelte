@@ -20,6 +20,7 @@
   export let onChange
   export let sort = true
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -51,6 +52,7 @@
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type="options"
   bind:fieldState
   bind:fieldApi
