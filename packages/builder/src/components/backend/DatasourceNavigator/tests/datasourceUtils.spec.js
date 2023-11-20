@@ -15,42 +15,23 @@ describe("datasourceUtils", () => {
     describe("filtering", () => {
       const internalTables = {
         _id: "datasource_internal_bb_default",
-        type: "budibase",
         name: "Sample Data",
-        source: "BUDIBASE",
-        config: {},
         entities: [
           {
             _id: "ta_bb_employee",
-            type: "table",
             name: "Employees",
-            sourceId: "datasource_internal_bb_default",
-            sourceType: "internal",
           },
           {
             _id: "ta_bb_expenses",
-            type: "table",
-            views: {},
             name: "Expenses",
-            sourceId: "datasource_internal_bb_default",
-            sourceType: "internal",
           },
           {
             _id: "ta_bb_inventory",
-            type: "table",
-            views: {},
-            sourceId: "datasource_internal_bb_default",
-            sourceType: "internal",
-            primaryDisplay: "Item Name",
             name: "Inventory",
           },
           {
             _id: "ta_bb_jobs",
-            type: "table",
             name: "Jobs",
-            sourceId: "datasource_internal_bb_default",
-            sourceType: "internal",
-            primaryDisplay: "Job ID",
           },
         ],
       }
@@ -58,96 +39,48 @@ describe("datasourceUtils", () => {
       const pgDatasource = {
         _id: "pg_ds",
         name: "PostgreSQL local",
-        plus: true,
         entities: {
-          "mic moc": {
-            type: "table",
-            _id: "datasource_plus_865bf332f37f454b82e2d371be90a0ef__mic%20moc",
-            primary: ["id"],
-            name: "mic moc",
-            sourceId: "datasource_plus_865bf332f37f454b82e2d371be90a0ef",
-            sourceType: "external",
-            primaryDisplay: "Column 01",
+          "External Inventory": {
+            _id: "pg_ds-external_inventory",
+            name: "External Inventory",
             views: {
-              "mic view": {
-                name: "mic view",
-                tableId:
-                  "datasource_plus_865bf332f37f454b82e2d371be90a0ef__mic%20moc",
-                query: null,
-                sort: { field: null, order: "ascending" },
-                schema: {
-                  "Column 01": { visible: true },
-                  "Column 02": { visible: true },
-                  id: { visible: true },
-                },
-                primaryDisplay: "Column 01",
-                id: "view_datasource_plus_865bf332f37f454b82e2d371be90a0ef__mic%20moc_201b0c7a6766423a8abab64fd31bc9dc",
-                version: 2,
+              "External Inventory first view": {
+                name: "External Inventory first view",
+                id: "pg_ds_view_1",
+              },
+              "External Inventory second view": {
+                name: "External Inventory second view",
+                id: "pg_ds_view_2",
               },
             },
           },
-          "table 1": {
-            type: "table",
-            _id: "datasource_plus_865bf332f37f454b82e2d371be90a0ef__table%201",
-            primary: ["id"],
-            name: "table 1",
-            sourceId: "datasource_plus_865bf332f37f454b82e2d371be90a0ef",
-            sourceType: "external",
-            primaryDisplay: "Column 01",
+          "Another table": {
+            _id: "pg_ds-another_table",
+            name: "Another table",
             views: {
-              fr: {
-                id: "view_datasource_plus_865bf332f37f454b82e2d371be90a0ef__table%201_f8a0299dfb9b4423b2a88809c2ee0bcb",
-                name: "fr",
-                version: 2,
-                tableId:
-                  "datasource_plus_865bf332f37f454b82e2d371be90a0ef__table%201",
-                query: null,
-                sort: { field: null, order: "ascending" },
-                schema: {
-                  "Column 01": { width: 200, visible: true },
-                  id: { order: 1, width: 200, visible: true },
-                },
-                primaryDisplay: "Column 01",
+              view1: {
+                id: "pg_ds-another_table-view1",
+                name: "view1",
+              },
+              ["View 2"]: {
+                id: "pg_ds-another_table-view2",
+                name: "View 2",
               },
             },
           },
-          test2: {
-            type: "table",
-            _id: "datasource_plus_865bf332f37f454b82e2d371be90a0ef__test2",
-            primary: ["id"],
-            name: "test2",
-            sourceId: "datasource_plus_865bf332f37f454b82e2d371be90a0ef",
-            sourceType: "external",
-            sql: true,
+          table2: {
+            _id: "pg_ds_table2",
+            name: "table2",
             views: {
               "new 2": {
                 name: "new 2",
-                tableId:
-                  "datasource_plus_865bf332f37f454b82e2d371be90a0ef__test2",
-                query: null,
-                sort: { field: null, order: "ascending" },
-                schema: {
-                  id: { visible: true },
-                  "Column 01": { visible: true },
-                },
-                primaryDisplay: "id",
-                id: "view_datasource_plus_865bf332f37f454b82e2d371be90a0ef__test2_cdb7ea28c0104dfb93309c54276d28cd",
-                version: 2,
+                id: "pg_ds_table2_new_2",
               },
               new: {
-                id: "view_datasource_plus_865bf332f37f454b82e2d371be90a0ef__test2_b7848afdbca54cd488f3eabf8be56e07",
                 name: "new",
-                version: 2,
-                tableId:
-                  "datasource_plus_865bf332f37f454b82e2d371be90a0ef__test2",
-                query: null,
-                sort: { field: null, order: "ascending" },
-                schema: { id: { width: 200, visible: true } },
-                primaryDisplay: "id",
+                id: "pg_ds_table2_new_",
               },
             },
-            primaryDisplay: "id",
-            indexes: [],
           },
         },
       }
