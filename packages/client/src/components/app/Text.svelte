@@ -94,7 +94,7 @@
   .align--right {
     text-align: right;
   }
-  .align-justify {
+  .align--justify {
     text-align: justify;
   }
 </style>
