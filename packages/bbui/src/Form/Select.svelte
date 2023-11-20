@@ -26,6 +26,7 @@
   export let align
   export let footer = null
   export let tag = null
+  export let helpText = null
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -40,7 +41,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error} {tooltip}>
+<Field {helpText} {label} {labelPosition} {error} {tooltip}>
   <Select
     {quiet}
     {error}
