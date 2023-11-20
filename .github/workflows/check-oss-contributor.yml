@@ -3,9 +3,6 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 8,16 * * 1-5" # on weekdays at 8am and 4pm
-  push:
-    branches:
-      - chore/run_oss_checks # TODO: remove
 
 jobs:
   run-checks:
@@ -16,8 +13,8 @@ jobs:
     secrets: inherit
 
   notify-error:
-    # needs: ["run-checks"]
-    if: ${{ always() }}
+    needs: ["run-checks"]
+    if: ${{ failure() }}
     name: Notify error
     runs-on: ubuntu-latest
     steps:
