@@ -1,9 +1,8 @@
 <script>
-  import { url, params, goto } from "@roxi/routify"
+  import { params, goto } from "@roxi/routify"
   import { apps, auth, sideBarCollapsed } from "stores/portal"
-  import { Body, ActionButton } from "@budibase/bbui"
+  import { Link, Body, ActionButton } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
-  import { store, sortedScreens } from "builderStore"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
 
@@ -18,17 +17,17 @@
     return `/${app.devId}`
   }
 
+  let noScreens = false
+
   // Normally fetched in builder/src/pages/builder/app/[application]/_layout.svelte
   const fetchScreens = async appId => {
     if (!appId) return
 
-    store.actions.reset()
     const pkg = await API.fetchAppPackage(appId)
-    await store.actions.initialise(pkg)
+    noScreens = pkg.screens.length === 0
   }
 
   $: fetchScreens(app?.devId)
-  $: noScreens = $sortedScreens.length === 0
 </script>
 
 <div class="container">
@@ -72,10 +71,11 @@
     <div class="noScreens">
       <ErrorSVG />
       <Body>You haven't added any screens to your app yet.</Body>
-      <Body
-        ><a href={$url(`/builder/app/${app.devId}/design`)}>Click here</a> to add
-        some.</Body
-      >
+      <Body>
+        <Link size="L" href={`/builder/app/${app.devId}/design`}
+          >Click here</Link
+        > to add some.
+      </Body>
     </div>
   {:else}
     <iframe src={iframeUrl} title={app.name} />
@@ -121,13 +121,5 @@
     width: 100px;
     height: 100px;
     margin-bottom: 10px;
-  }
-
-  .noScreens a {
-    color: var(--bb-indigo);
-  }
-
-  .noScreens a:hover {
-    color: var(--bb-indigo-light);
   }
 </style>
