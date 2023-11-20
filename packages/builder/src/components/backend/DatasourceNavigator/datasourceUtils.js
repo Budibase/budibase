@@ -121,16 +121,10 @@ export const enrichDatasources = (
 
     const dsTables = tables.list.filter(
       table =>
-        table.sourceId === datasource._id &&
-        table._id !== TableNames.USERS &&
-        (!searchTerm ||
-          table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
+        table.sourceId === datasource._id && table._id !== TableNames.USERS
     )
     const dsQueries = queries.list.filter(
-      query =>
-        query.datasourceId === datasource._id &&
-        (!searchTerm ||
-          query.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
+      query => query.datasourceId === datasource._id
     )
 
     const open = showDatasourceOpen({
@@ -141,14 +135,46 @@ export const enrichDatasources = (
       onlyOneSource: onlySource,
     })
 
-    const show = !!(!searchTerm || dsQueries.length || dsTables.length)
+    const visibleDsQueries = dsQueries.filter(
+      q =>
+        !searchTerm ||
+        q.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1
+    )
+
+    const visibleDsTables = dsTables
+      .map(t => ({
+        ...t,
+        views: !searchTerm
+          ? t.views
+          : Object.keys(t.views || {})
+              .filter(
+                viewName =>
+                  viewName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
+              )
+              .reduce(
+                (acc, viewName) => ({ ...acc, [viewName]: t.views[viewName] }),
+                {}
+              ),
+      }))
+      .filter(
+        table =>
+          !searchTerm ||
+          table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1 ||
+          Object.keys(table.views).length
+      )
+
+    const show = !!(
+      !searchTerm ||
+      visibleDsQueries.length ||
+      visibleDsTables.length
+    )
     return {
       ...datasource,
       selected,
       containsSelected,
       open,
-      queries: dsQueries,
-      tables: dsTables,
+      queries: visibleDsQueries,
+      tables: visibleDsTables,
       show,
     }
   })

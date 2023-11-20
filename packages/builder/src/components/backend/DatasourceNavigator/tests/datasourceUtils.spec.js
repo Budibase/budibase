@@ -142,7 +142,7 @@ describe("datasourceUtils", () => {
         )
       })
 
-      it("given a valid search term, all entities are correctly filtered", () => {
+      it("given a valid search term, all tables are correctly filtered", () => {
         const searchTerm = "ex"
 
         const result = enrichDatasources(
