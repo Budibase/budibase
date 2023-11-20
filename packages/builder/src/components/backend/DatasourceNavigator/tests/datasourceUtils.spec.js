@@ -26,6 +26,10 @@ describe("datasourceUtils", () => {
             name: "Expenses",
           },
           {
+            _id: "ta_bb_expenses_2",
+            name: "Expenses 2",
+          },
+          {
             _id: "ta_bb_inventory",
             name: "Inventory",
           },
@@ -85,8 +89,19 @@ describe("datasourceUtils", () => {
         },
       }
 
+      const mysqlDatasource = {
+        _id: "mysql_ds",
+        name: "My SQL local",
+        entities: {
+          "MySQL table": {
+            _id: "mysql_ds-mysql_table",
+            name: "MySQL table",
+          },
+        },
+      }
+
       const datasources = {
-        list: [internalTables, pgDatasource],
+        list: [internalTables, pgDatasource, mysqlDatasource],
       }
       const isActive = vi.fn().mockReturnValue(true)
 
@@ -134,10 +149,22 @@ describe("datasourceUtils", () => {
           expect.objectContaining({
             _id: internalTables._id,
             show: true,
+            tables: [
+              expect.objectContaining({ _id: "ta_bb_expenses" }),
+              expect.objectContaining({ _id: "ta_bb_expenses_2" }),
+            ],
           }),
           expect.objectContaining({
             _id: pgDatasource._id,
             show: true,
+            tables: [
+              expect.objectContaining({ _id: "pg_ds-external_inventory" }),
+            ],
+          }),
+          expect.objectContaining({
+            _id: mysqlDatasource._id,
+            show: false,
+            tables: [],
           }),
         ])
       })
