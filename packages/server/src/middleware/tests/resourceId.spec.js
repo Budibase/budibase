@@ -3,7 +3,7 @@ const {
   paramSubResource,
   bodyResource,
   bodySubResource,
-  ResourceIdGetter
+  ResourceIdGetter,
 } = require("../resourceId")
 
 class TestConfiguration {
@@ -41,7 +41,7 @@ describe("resourceId middleware", () => {
   it("generates a resourceId middleware for context query parameters", () => {
     const config = new TestConfiguration(paramResource("main"))
     config.setParams({
-      main: "test"
+      main: "test",
     })
 
     config.executeMiddleware()
@@ -53,7 +53,7 @@ describe("resourceId middleware", () => {
     const config = new TestConfiguration(paramSubResource("main", "sub"))
     config.setParams({
       main: "main",
-      sub: "test"
+      sub: "test",
     })
 
     config.executeMiddleware()
@@ -65,7 +65,7 @@ describe("resourceId middleware", () => {
   it("generates a resourceId middleware for context request body", () => {
     const config = new TestConfiguration(bodyResource("main"))
     config.setBody({
-      main: "test"
+      main: "test",
     })
 
     config.executeMiddleware()
@@ -77,7 +77,7 @@ describe("resourceId middleware", () => {
     const config = new TestConfiguration(bodySubResource("main", "sub"))
     config.setBody({
       main: "main",
-      sub: "test"
+      sub: "test",
     })
 
     config.executeMiddleware()
@@ -94,7 +94,7 @@ describe("resourceId middleware", () => {
     let config = new TestConfiguration(middleware)
     config.setBody({
       custom: "test",
-      customSub: "subtest"
+      customSub: "subtest",
     })
 
     config.executeMiddleware()
