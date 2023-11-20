@@ -303,7 +303,7 @@ export class UserDB {
 
   static async bulkCreate(
     newUsersRequested: User[],
-    groups: string[]
+    groups?: string[]
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -328,7 +328,7 @@ export class UserDB {
         })
         continue
       }
-      newUser.userGroups = groups
+      newUser.userGroups = groups || []
       newUsers.push(newUser)
       if (isCreator(newUser)) {
         newCreators.push(newUser)
