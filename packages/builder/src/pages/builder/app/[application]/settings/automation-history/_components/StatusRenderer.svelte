@@ -1,5 +1,6 @@
 <script>
   import { Badge } from "@budibase/bbui"
+
   export let value
 
   $: isError = !value || value.toLowerCase() === "error"
