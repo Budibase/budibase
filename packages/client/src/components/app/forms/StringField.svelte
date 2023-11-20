@@ -13,6 +13,7 @@
   export let align
   export let onChange
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -33,6 +34,7 @@
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
   bind:fieldApi
@@ -44,7 +46,6 @@
       on:change={handleChange}
       disabled={fieldState.disabled}
       readonly={fieldState.readonly}
-      error={fieldState.error}
       id={fieldState.fieldId}
       {placeholder}
       {type}
