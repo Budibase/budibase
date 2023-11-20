@@ -21,7 +21,8 @@
   $: schemaContexts = getComponentContexts(
     $currentAsset,
     $store.selectedComponentId,
-    "schema"
+    "schema",
+    { includeSelf: nested }
   )
   $: providerOptions = getProviderOptions(formContexts, schemaContexts)
   $: schemaFields = getSchemaFields(parameters?.tableId)

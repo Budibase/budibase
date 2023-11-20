@@ -6,10 +6,8 @@
   import {
     Button,
     Popover,
-    Divider,
     Select,
     Layout,
-    Heading,
     Drawer,
     DrawerContent,
     Icon,
@@ -32,6 +30,7 @@
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { findAllComponents } from "builderStore/componentUtils"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
+  import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
 
   export let value = {}
@@ -280,102 +279,81 @@
 </div>
 <Popover bind:this={dropdownRight} anchor={anchorRight}>
   <div class="dropdown">
-    <div class="title">
-      <Heading size="XS">Tables</Heading>
-    </div>
-    <ul>
-      {#each tables as table}
-        <li on:click={() => handleSelected(table)}>{table.label}</li>
-      {/each}
-    </ul>
+    <DataSourceCategory
+      heading="Tables"
+      dataSet={tables}
+      {value}
+      onSelect={handleSelected}
+    />
     {#if views?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Views</Heading>
-      </div>
-      <ul>
-        {#each views as view}
-          <li on:click={() => handleSelected(view)}>{view.label}</li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="Views"
+        dataSet={views}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if queries?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Queries</Heading>
-      </div>
-      <ul>
-        {#each queries as query}
-          <li
-            class:selected={value === query}
-            on:click={() => handleSelected(query)}
-          >
-            {query.label}
-          </li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="Queries"
+        dataSet={queries}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if links?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Relationships</Heading>
-      </div>
-      <ul>
-        {#each links as link}
-          <li on:click={() => handleSelected(link)}>{link.label}</li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="Links"
+        dataSet={links}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if fields?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Fields</Heading>
-      </div>
-      <ul>
-        {#each fields as field}
-          <li on:click={() => handleSelected(field)}>{field.label}</li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="Fields"
+        dataSet={fields}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if jsonArrays?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">JSON Arrays</Heading>
-      </div>
-      <ul>
-        {#each jsonArrays as field}
-          <li on:click={() => handleSelected(field)}>{field.label}</li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="JSON Arrays"
+        dataSet={jsonArrays}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
     {#if showDataProviders && dataProviders?.length}
-      <Divider />
-      <div class="title">
-        <Heading size="XS">Data Providers</Heading>
-      </div>
-      <ul>
-        {#each dataProviders as provider}
-          <li
-            class:selected={value === provider}
-            on:click={() => handleSelected(provider)}
-          >
-            {provider.label}
-          </li>
-        {/each}
-      </ul>
+      <DataSourceCategory
+        dividerState={true}
+        heading="Data Providers"
+        dataSet={dataProviders}
+        {value}
+        onSelect={handleSelected}
+      />
     {/if}
-    <Divider />
-    <div class="title">
-      <Heading size="XS">Other</Heading>
-    </div>
-    <ul>
-      <li on:click={() => handleSelected(custom)}>{custom.label}</li>
-      {#if otherSources?.length}
-        {#each otherSources as source}
-          <li on:click={() => handleSelected(source)}>{source.label}</li>
-        {/each}
-      {/if}
-    </ul>
+    <DataSourceCategory
+      dividerState={true}
+      heading="Other"
+      dataSet={[custom]}
+      {value}
+      onSelect={handleSelected}
+    />
+    {#if otherSources?.length}
+      <DataSourceCategory
+        dividerState={false}
+        dataSet={otherSources}
+        {value}
+        onSelect={handleSelected}
+      />
+    {/if}
   </div>
 </Popover>
 
@@ -399,31 +377,6 @@
   .dropdown {
     padding: var(--spacing-m) 0;
     z-index: 99999999;
-    overflow-y: scroll;
-  }
-  .title {
-    padding: 0 var(--spacing-m) var(--spacing-s) var(--spacing-m);
-  }
-
-  ul {
-    list-style: none;
-    padding-left: 0px;
-    margin: 0px;
-  }
-
-  li {
-    cursor: pointer;
-    margin: 0px;
-    padding: var(--spacing-s) var(--spacing-m);
-    font-size: var(--font-size-m);
-  }
-
-  .selected {
-    color: var(--spectrum-global-color-blue-600);
-  }
-
-  li:hover {
-    background-color: var(--spectrum-global-color-gray-200);
   }
 
   .icon {

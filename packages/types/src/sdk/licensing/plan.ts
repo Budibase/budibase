@@ -4,8 +4,12 @@ export enum PlanType {
   PRO = "pro",
   /** @deprecated */
   TEAM = "team",
+  /** @deprecated */
   PREMIUM = "premium",
+  PREMIUM_PLUS = "premium_plus",
+  /** @deprecated */
   BUSINESS = "business",
+  ENTERPRISE_BASIC = "enterprise_basic",
   ENTERPRISE = "enterprise",
 }
 
@@ -26,10 +30,12 @@ export interface AvailablePrice {
   currency: string
   duration: PriceDuration
   priceId: string
+  type?: string
 }
 
 export enum PlanModel {
   PER_USER = "perUser",
+  PER_CREATOR_PER_USER = "per_creator_per_user",
   DAY_PASS = "dayPass",
 }
 

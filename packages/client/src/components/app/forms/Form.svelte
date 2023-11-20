@@ -8,6 +8,7 @@
   export let theme
   export let size
   export let disabled = false
+  export let readonly = false
   export let actionType = "Create"
   export let initialFormStep = 1
 
@@ -45,7 +46,7 @@
     $context
   )
   $: resetKey = Helpers.hashString(
-    schemaKey + JSON.stringify(initialValues) + disabled
+    schemaKey + JSON.stringify(initialValues) + disabled + readonly
   )
 
   // Returns the closes data context which isn't a built in context
@@ -117,6 +118,7 @@
       {theme}
       {size}
       {disabled}
+      {readonly}
       {actionType}
       {schema}
       {table}

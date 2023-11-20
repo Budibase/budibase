@@ -154,7 +154,6 @@ const fetchRowHandler = async action => {
 
 const deleteRowHandler = async action => {
   const { tableId, rowId: rowConfig, notificationOverride } = action.parameters
-
   if (tableId && rowConfig) {
     try {
       let requestConfig
@@ -180,9 +179,11 @@ const deleteRowHandler = async action => {
         requestConfig = [parsedRowConfig]
       } else if (Array.isArray(parsedRowConfig)) {
         requestConfig = parsedRowConfig
+      } else if (Number.isInteger(parsedRowConfig)) {
+        requestConfig = [String(parsedRowConfig)]
       }
 
-      if (!requestConfig.length) {
+      if (!requestConfig && !parsedRowConfig) {
         notificationStore.actions.warning("No valid rows were supplied")
         return false
       }

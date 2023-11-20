@@ -114,10 +114,6 @@ export const createActions = context => {
     const $allFilters = get(allFilters)
     const $sort = get(sort)
 
-    // Determine how many rows to fetch per page
-    const features = datasource.actions.getFeatures()
-    const limit = features?.supportsPagination ? RowPageSize : null
-
     // Create new fetch model
     const newFetch = fetchData({
       API,
@@ -126,8 +122,12 @@ export const createActions = context => {
         filter: $allFilters,
         sortColumn: $sort.column,
         sortOrder: $sort.order,
-        limit,
+        limit: RowPageSize,
         paginate: true,
+
+        // Disable client side limiting, so that for queries and custom data
+        // sources we don't impose fake row limits. We want all the data.
+        clientSideLimiting: false,
       },
     })
 
@@ -314,8 +314,12 @@ export const createActions = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await datasource.actions.getRow(id)
-    replaceRow(id, row)
+    try {
+      const row = await datasource.actions.getRow(id)
+      replaceRow(id, row)
+    } catch {
+      // Do nothing - we probably just don't support refreshing individual rows
+    }
   }
 
   // Refreshes all data

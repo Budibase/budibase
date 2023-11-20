@@ -580,7 +580,7 @@ export const getFrontendStore = () => {
         let table = validTables.find(table => {
           return (
             table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
-            table.type === DB_TYPE_INTERNAL
+            table.sourceType === DB_TYPE_INTERNAL
           )
         })
         if (table) {
@@ -591,7 +591,7 @@ export const getFrontendStore = () => {
         table = validTables.find(table => {
           return (
             table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
-            table.type === DB_TYPE_INTERNAL
+            table.sourceType === DB_TYPE_INTERNAL
           )
         })
         if (table) {
@@ -599,7 +599,7 @@ export const getFrontendStore = () => {
         }
 
         // Finally try an external table
-        return validTables.find(table => table.type === DB_TYPE_EXTERNAL)
+        return validTables.find(table => table.sourceType === DB_TYPE_EXTERNAL)
       },
       enrichEmptySettings: (component, opts) => {
         if (!component?._component) {

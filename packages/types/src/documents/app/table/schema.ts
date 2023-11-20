@@ -102,6 +102,7 @@ export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
   subtype: FieldSubtype.USER | FieldSubtype.USERS
+  relationshipType?: RelationshipType
 }
 
 export interface FieldConstraints {
@@ -163,4 +164,34 @@ export type FieldSchema =
 
 export interface TableSchema {
   [key: string]: FieldSchema
+}
+
+export function isRelationshipField(
+  field: FieldSchema
+): field is RelationshipFieldMetadata {
+  return field.type === FieldType.LINK
+}
+
+export function isManyToMany(
+  field: RelationshipFieldMetadata
+): field is ManyToManyRelationshipFieldMetadata {
+  return field.relationshipType === RelationshipType.MANY_TO_MANY
+}
+
+export function isOneToMany(
+  field: RelationshipFieldMetadata
+): field is OneToManyRelationshipFieldMetadata {
+  return field.relationshipType === RelationshipType.ONE_TO_MANY
+}
+
+export function isManyToOne(
+  field: RelationshipFieldMetadata
+): field is ManyToOneRelationshipFieldMetadata {
+  return field.relationshipType === RelationshipType.MANY_TO_ONE
+}
+
+export function isBBReferenceField(
+  field: FieldSchema
+): field is BBReferenceFieldMetadata {
+  return field.type === FieldType.BB_REFERENCE
 }

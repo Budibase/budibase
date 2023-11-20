@@ -155,6 +155,7 @@
     interactive &&
     !isLayout &&
     !isRoot &&
+    !isBlock &&
     definition?.draggable !== false
   $: droppable = interactive
   $: builderHidden =
@@ -206,6 +207,7 @@
       interactive,
       draggable,
       editable,
+      isBlock,
     },
     empty: emptyState,
     selected,
