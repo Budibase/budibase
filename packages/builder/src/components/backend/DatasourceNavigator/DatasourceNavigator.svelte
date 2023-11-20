@@ -30,7 +30,7 @@
     $datasources,
     $params,
     $isActive,
-    $tables,
+    $tables.selected?._id,
     $queries,
     $views,
     $viewsV2,
