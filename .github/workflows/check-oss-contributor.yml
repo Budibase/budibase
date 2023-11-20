@@ -16,8 +16,8 @@ jobs:
     secrets: inherit
 
   notify-error:
-    needs: ["run-checks"]
-    if: ${{ failure() }}
+    # needs: ["run-checks"]
+    if: ${{ always() }}
     name: Notify error
     runs-on: ubuntu-latest
     steps:
