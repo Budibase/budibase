@@ -139,7 +139,7 @@ export const enrichDatasources = (
       onlyOneSource: onlySource,
     })
 
-    const show = !searchTerm || dsQueries.length || dsTables.length || false
+    const show = !!(!searchTerm || dsQueries.length || dsTables.length)
     return {
       ...datasource,
       selected,
