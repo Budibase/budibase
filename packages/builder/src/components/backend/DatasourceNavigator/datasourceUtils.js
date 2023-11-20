@@ -1,3 +1,5 @@
+import { TableNames } from "constants"
+
 const showDatasourceOpen = ({
   selected,
   containsSelected,
@@ -26,7 +28,7 @@ const containsActiveEntity = (
   datasource,
   params,
   isActive,
-  selectedTableId,
+  tables,
   queries,
   views,
   viewsV2
@@ -69,7 +71,8 @@ const containsActiveEntity = (
 
   // Check for a matching table
   if (params.tableId) {
-    return options.find(x => x._id === selectedTableId) != null
+    const selectedTable = tables.selected?._id
+    return options.find(x => x._id === selectedTable) != null
   }
 
   // Check for a matching view
@@ -90,7 +93,7 @@ export const enrichDatasources = (
   datasources,
   params,
   isActive,
-  selectedTableId,
+  tables,
   queries,
   views,
   viewsV2,
@@ -110,19 +113,18 @@ export const enrichDatasources = (
       datasource,
       params,
       isActive,
-      selectedTableId,
+      tables,
       queries,
       views,
       viewsV2
     )
 
-    const entities = Array.isArray(datasource.entities)
-      ? datasource.entities
-      : Object.values(datasource.entities || {})
-    const dsTables = entities.filter(
+    const dsTables = tables.list.filter(
       table =>
-        !searchTerm ||
-        table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1
+        table.sourceId === datasource._id &&
+        table._id !== TableNames.USERS &&
+        (!searchTerm ||
+          table.name?.toLowerCase()?.indexOf(searchTerm.toLowerCase()) > -1)
     )
     const dsQueries = queries.list.filter(
       query =>
