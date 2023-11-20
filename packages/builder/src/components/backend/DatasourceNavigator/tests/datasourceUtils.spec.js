@@ -130,18 +130,16 @@ describe("datasourceUtils", () => {
           searchTerm
         )
 
-        expect(result).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              _id: internalTables._id,
-              show: true,
-            }),
-            expect.objectContaining({
-              _id: pgDatasource._id,
-              show: false,
-            }),
-          ])
-        )
+        expect(result).toEqual([
+          expect.objectContaining({
+            _id: internalTables._id,
+            show: true,
+          }),
+          expect.objectContaining({
+            _id: pgDatasource._id,
+            show: true,
+          }),
+        ])
       })
     })
   })
