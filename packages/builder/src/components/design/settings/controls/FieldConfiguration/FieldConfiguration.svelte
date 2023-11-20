@@ -18,6 +18,7 @@
   export let value
 
   const dispatch = createEventDispatcher()
+
   let sanitisedFields
   let fieldList
   let schema

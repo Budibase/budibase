@@ -270,7 +270,6 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
-            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -6399,8 +6398,29 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "buttonConfiguration",
+            "key": "buttons",
+            "nested": true,
+            "max": 3,
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
