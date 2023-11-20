@@ -118,7 +118,7 @@ export const enrichDatasources = (
 
     const entities = Array.isArray(datasource.entities)
       ? datasource.entities
-      : Object.values(datasource.entities)
+      : Object.values(datasource.entities || {})
     const dsTables = entities.filter(
       table =>
         !searchTerm ||
