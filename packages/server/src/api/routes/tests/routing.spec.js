@@ -37,19 +37,23 @@ describe("/routing", () => {
       await runInProd(async () => {
         return request
           .get(`/api/routing/client`)
-          .set(await config.roleHeaders({
-            roleId: BUILTIN_ROLE_IDS.BASIC,
-            prodApp: false
-          }))
+          .set(
+            await config.roleHeaders({
+              roleId: BUILTIN_ROLE_IDS.BASIC,
+              prodApp: false,
+            })
+          )
           .expect(302)
       })
     })
     it("returns the correct routing for basic user", async () => {
       const res = await request
         .get(`/api/routing/client`)
-        .set(await config.roleHeaders({
-          roleId: BUILTIN_ROLE_IDS.BASIC
-        }))
+        .set(
+          await config.roleHeaders({
+            roleId: BUILTIN_ROLE_IDS.BASIC,
+          })
+        )
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.routes).toBeDefined()
@@ -57,18 +61,20 @@ describe("/routing", () => {
         subpaths: {
           [route]: {
             screenId: basic._id,
-            roleId: basic.routing.roleId
-          }
-        }
+            roleId: basic.routing.roleId,
+          },
+        },
       })
     })
 
     it("returns the correct routing for power user", async () => {
       const res = await request
         .get(`/api/routing/client`)
-        .set(await config.roleHeaders({
-          roleId: BUILTIN_ROLE_IDS.POWER
-        }))
+        .set(
+          await config.roleHeaders({
+            roleId: BUILTIN_ROLE_IDS.POWER,
+          })
+        )
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.routes).toBeDefined()
@@ -76,9 +82,9 @@ describe("/routing", () => {
         subpaths: {
           [route]: {
             screenId: power._id,
-            roleId: power.routing.roleId
-          }
-        }
+            roleId: power.routing.roleId,
+          },
+        },
       })
     })
   })
@@ -87,10 +93,12 @@ describe("/routing", () => {
     it("should fetch all routes for builder", async () => {
       const res = await request
         .get(`/api/routing`)
-        .set(await config.roleHeaders({
-          roleId: BUILTIN_ROLE_IDS.POWER,
-          builder: true,
-        }))
+        .set(
+          await config.roleHeaders({
+            roleId: BUILTIN_ROLE_IDS.POWER,
+            builder: true,
+          })
+        )
         .expect(200)
         .expect("Content-Type", /json/)
       expect(res.body.routes).toBeDefined()
