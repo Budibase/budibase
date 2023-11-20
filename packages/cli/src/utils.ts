@@ -1,7 +1,6 @@
 import chalk from "chalk"
 import fs from "fs"
-import path from "path"
-import { join } from "path"
+import path, { join } from "path"
 import fetch from "node-fetch"
 const progress = require("cli-progress")
 

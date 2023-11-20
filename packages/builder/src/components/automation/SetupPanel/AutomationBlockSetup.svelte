@@ -38,13 +38,12 @@
     EditorModes,
   } from "components/common/CodeEditor"
   import FilterDrawer from "components/design/settings/controls/FilterEditor/FilterDrawer.svelte"
-  import { LuceneUtils } from "@budibase/frontend-core"
+  import { LuceneUtils , Utils } from "@budibase/frontend-core"
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
   } from "builderStore/dataBinding"
-  import { Utils } from "@budibase/frontend-core"
-  import { TriggerStepID, ActionStepID } from "constants/backend/automations"
+    import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
 

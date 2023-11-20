@@ -1,6 +1,6 @@
 <script>
   import { Heading, Body, Layout, Button, Modal } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation , store } from "builderStore"
   import AutomationPanel from "components/automation/AutomationPanel/AutomationPanel.svelte"
   import CreateAutomationModal from "components/automation/AutomationPanel/CreateAutomationModal.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
@@ -8,8 +8,7 @@
   import { onDestroy, onMount } from "svelte"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
-  import { store } from "builderStore"
-
+  
   $: automationId = $selectedAutomation?._id
   $: store.actions.websocket.selectResource(automationId)
 

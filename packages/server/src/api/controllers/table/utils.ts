@@ -5,16 +5,14 @@ import {
   AutoFieldSubTypes,
   FieldTypes,
   GOOGLE_SHEETS_PRIMARY_KEY,
-} from "../../../constants"
+
+  USERS_TABLE_SCHEMA,
+  SwitchableTypes,
+  CanSwitchTypes} from "../../../constants"
 import {
   inputProcessing,
   cleanupAttachments,
 } from "../../../utilities/rowProcessor"
-import {
-  USERS_TABLE_SCHEMA,
-  SwitchableTypes,
-  CanSwitchTypes,
-} from "../../../constants"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
 import { cloneDeep } from "lodash/fp"

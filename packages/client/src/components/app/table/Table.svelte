@@ -1,9 +1,8 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext , onDestroy } from "svelte"
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
-  import { onDestroy } from "svelte"
-  import { canBeSortColumn } from "@budibase/shared-core"
+    import { canBeSortColumn } from "@budibase/shared-core"
 
   export let dataProvider
   export let columns
