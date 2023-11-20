@@ -32,8 +32,7 @@ jobs:
         uses: tsickert/discord-webhook@v5.3.0
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
-          embed-title: "[TEST] OSS checks failed in master"
+          embed-title: 🚨 OSS checks failed in master
           embed-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           embed-description: |
-            🚨 The OSS build is failing on master ⚠️
             Git sha: `${{ steps.set_sha.outputs.sha }}`
