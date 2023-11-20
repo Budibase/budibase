@@ -1,5 +1,11 @@
 import { BuiltinPermissionID, PermissionLevel } from "./permissions"
-import { prefixRoleID, getRoleParams, DocumentType, SEPARATOR , doWithDB } from "../db"
+import {
+  prefixRoleID,
+  getRoleParams,
+  DocumentType,
+  SEPARATOR,
+  doWithDB,
+} from "../db"
 import { getAppDB } from "../context"
 import { Screen, Role as RoleDoc } from "@budibase/types"
 import cloneDeep from "lodash/fp/cloneDeep"

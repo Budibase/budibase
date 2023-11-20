@@ -1,10 +1,18 @@
 <script>
-  import { Layout, Heading, Body, Button, notifications , FancyForm, FancyInput } from "@budibase/bbui"
+  import {
+    Layout,
+    Heading,
+    Body,
+    Button,
+    notifications,
+    FancyForm,
+    FancyInput,
+  } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { users, organisation, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-    import { onMount } from "svelte"
+  import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "../auth/_components/utils"
 
   const inviteCode = $params["?code"]

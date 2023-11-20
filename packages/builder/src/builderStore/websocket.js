@@ -7,8 +7,8 @@ import {
 } from "builderStore"
 import { datasources, tables } from "stores/backend"
 import { get } from "svelte/store"
-import { auth , apps } from "stores/portal"
-import { SocketEvent, BuilderSocketEvent , helpers } from "@budibase/shared-core"
+import { auth, apps } from "stores/portal"
+import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
 
 export const createBuilderWebsocket = appId => {

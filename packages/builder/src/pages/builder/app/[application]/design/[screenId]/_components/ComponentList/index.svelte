@@ -4,10 +4,10 @@
   import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
-  import { dndStore , DropPosition } from "./dndStore.js"
+  import { dndStore, DropPosition } from "./dndStore.js"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
-    import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
+  import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
 
   let scrolling = false

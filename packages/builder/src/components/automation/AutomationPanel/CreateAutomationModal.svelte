@@ -1,6 +1,7 @@
 <script>
   import { automationStore } from "builderStore"
-  import { notifications ,
+  import {
+    notifications,
     Input,
     InlineAlert,
     ModalContent,
@@ -9,7 +10,7 @@
     Icon,
     Label,
   } from "@budibase/bbui"
-    import { TriggerStepID } from "constants/backend/automations"
+  import { TriggerStepID } from "constants/backend/automations"
 
   export let webhookModal
 

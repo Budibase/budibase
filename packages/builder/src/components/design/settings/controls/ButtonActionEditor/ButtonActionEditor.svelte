@@ -1,7 +1,7 @@
 <script>
-  import { ActionButton, Button, Drawer , notifications } from "@budibase/bbui"
+  import { ActionButton, Button, Drawer, notifications } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-    import ButtonActionDrawer from "./ButtonActionDrawer.svelte"
+  import ButtonActionDrawer from "./ButtonActionDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
 
   const dispatch = createEventDispatcher()

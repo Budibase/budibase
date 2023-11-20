@@ -1,6 +1,6 @@
 <script>
-  import { ModalContent , Select } from "@budibase/bbui"
-    import { themeStore } from "builderStore"
+  import { ModalContent, Select } from "@budibase/bbui"
+  import { themeStore } from "builderStore"
   import { Constants } from "@budibase/frontend-core"
 </script>
 

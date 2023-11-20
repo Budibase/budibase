@@ -1,5 +1,9 @@
 import * as linkRows from "../../db/linkedRows"
-import { FieldTypes, AutoFieldSubTypes , ObjectStoreBuckets } from "../../constants"
+import {
+  FieldTypes,
+  AutoFieldSubTypes,
+  ObjectStoreBuckets,
+} from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import {
   context,

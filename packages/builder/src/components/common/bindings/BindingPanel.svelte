@@ -9,18 +9,19 @@
     Heading,
     Icon,
   } from "@budibase/bbui"
-  import { createEventDispatcher, onMount , getContext } from "svelte"
+  import { createEventDispatcher, onMount, getContext } from "svelte"
   import {
     isValid,
     decodeJSBinding,
     encodeJSBinding,
-   convertToJS } from "@budibase/string-templates"
+    convertToJS,
+  } from "@budibase/string-templates"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
 
-    import { admin } from "stores/portal"
+  import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -31,7 +32,7 @@
     hbInsert,
     jsInsert,
   } from "../CodeEditor"
-    import BindingPicker from "./BindingPicker.svelte"
+  import BindingPicker from "./BindingPicker.svelte"
 
   const dispatch = createEventDispatcher()
 

@@ -5,10 +5,10 @@ import {
   AutoFieldSubTypes,
   FieldTypes,
   GOOGLE_SHEETS_PRIMARY_KEY,
-
   USERS_TABLE_SCHEMA,
   SwitchableTypes,
-  CanSwitchTypes} from "../../../constants"
+  CanSwitchTypes,
+} from "../../../constants"
 import {
   inputProcessing,
   cleanupAttachments,

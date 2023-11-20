@@ -1,10 +1,16 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables , roles } from "stores/backend"
-    import { notifications , keepOpen, ModalContent, Select, Link } from "@budibase/bbui"
+  import { tables, roles } from "stores/backend"
+  import {
+    notifications,
+    keepOpen,
+    ModalContent,
+    Select,
+    Link,
+  } from "@budibase/bbui"
   import RowFieldControl from "../RowFieldControl.svelte"
   import { API } from "api"
-    import ErrorsBox from "components/common/ErrorsBox.svelte"
+  import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { goto } from "@roxi/routify"
 
   export let row = {}

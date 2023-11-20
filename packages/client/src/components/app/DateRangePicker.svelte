@@ -1,9 +1,9 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { getContext , onDestroy } from "svelte"
+  import { getContext, onDestroy } from "svelte"
   import dayjs from "dayjs"
   import utc from "dayjs/plugin/utc"
-  
+
   dayjs.extend(utc)
 
   export let dataProvider

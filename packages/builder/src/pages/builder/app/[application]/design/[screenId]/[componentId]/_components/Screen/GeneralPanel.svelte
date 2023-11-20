@@ -1,13 +1,14 @@
 <script>
   import { get } from "svelte/store"
-  import { Helpers ,
+  import {
+    Helpers,
     Input,
     Checkbox,
     Banner,
     Select,
     notifications,
   } from "@budibase/bbui"
-    import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
+  import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { selectedScreen, store } from "builderStore"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
