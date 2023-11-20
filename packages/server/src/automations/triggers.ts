@@ -94,7 +94,7 @@ export async function externalTrigger(
   automation: Automation,
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
-) {
+): Promise<any> {
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&

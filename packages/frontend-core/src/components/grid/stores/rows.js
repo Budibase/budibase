@@ -314,8 +314,12 @@ export const createActions = context => {
 
   // Refreshes a specific row
   const refreshRow = async id => {
-    const row = await datasource.actions.getRow(id)
-    replaceRow(id, row)
+    try {
+      const row = await datasource.actions.getRow(id)
+      replaceRow(id, row)
+    } catch {
+      // Do nothing - we probably just don't support refreshing individual rows
+    }
   }
 
   // Refreshes all data
