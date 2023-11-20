@@ -32,7 +32,9 @@
   }
 </script>
 
-<ActionButton on:click={modal.show}>{layoutMap[value].name}</ActionButton>
+<ActionButton on:click={modal.show}>
+  {layoutMap[value || "mainSidebar"].name}
+</ActionButton>
 <Modal bind:this={modal}>
   <ModalContent
     onConfirm={() => dispatch("change", selected)}
