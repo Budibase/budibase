@@ -241,7 +241,7 @@ class Orchestrator {
     })
   }
 
-  async execute() {
+  async execute(): Promise<any> {
     // this will retrieve from context created at start of thread
     this._context.env = await sdkUtils.getEnvironmentVariables()
     let automation = this._automation

@@ -12,7 +12,7 @@ import { generator } from "./generator"
 import { tenant } from "."
 
 export const newEmail = () => {
-  return `${uuid()}@test.com`
+  return `${uuid()}@example.com`
 }
 
 export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
