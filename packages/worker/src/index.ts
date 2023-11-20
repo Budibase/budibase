@@ -18,12 +18,14 @@ import {
   timers,
   redis,
 } from "@budibase/backend-core"
+
 db.init()
 import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
 
 const koaSession = require("koa-session")
+
 import { userAgent } from "koa-useragent"
 
 import destroyable from "server-destroy"

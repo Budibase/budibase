@@ -22,6 +22,7 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
 } from "@budibase/types"
+
 const { BUILTIN_ROLE_IDS } = roles
 
 export function basicTable(): Table {

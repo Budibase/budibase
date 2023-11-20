@@ -1,4 +1,5 @@
 import { default as threadUtils } from "./utils"
+
 threadUtils.threadSetup()
 import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
 import ScriptRunner from "../utilities/scriptRunner"

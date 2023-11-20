@@ -1,4 +1,5 @@
 import { default as ArangoDBIntegration } from "../arangodb"
+
 jest.mock("arangojs")
 
 class TestConfiguration {
