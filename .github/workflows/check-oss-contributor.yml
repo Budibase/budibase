@@ -33,4 +33,7 @@ jobs:
         with:
           webhook-url: ${{ secrets.PROD_DEPLOY_WEBHOOK_URL }}
           embed-title: "[TEST] OSS checks failed in master"
-          content: "The OSS build is failing on master. SHA: ${{ steps.set_sha.outputs.sha }}, link: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          embed-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          embed-description: |
+            🚨 The OSS build is failing on master ⚠️
+            Git sha: `${{ steps.set_sha.outputs.sha }}`
