@@ -11,6 +11,7 @@
   export let error = null
   export let placeholder = "Choose an option or type"
   export let options = []
+  export let helpText = null
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
 
@@ -27,7 +28,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <Combobox
     {error}
     {disabled}
