@@ -8,7 +8,8 @@ import {
   accounts,
   db as dbUtils,
 } from "@budibase/backend-core"
-import { QuotaUsage ,
+import {
+  QuotaUsage,
   CloudAccount,
   App,
   TenantBackfillSucceededEvent,

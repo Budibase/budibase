@@ -8,7 +8,9 @@
     Layout,
     notifications,
     Link,
-   FancyForm, FancyInput } from "@budibase/bbui"
+    FancyForm,
+    FancyInput,
+  } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
   import GoogleButton from "./_components/GoogleButton.svelte"
@@ -16,7 +18,7 @@
   import { handleError } from "./_components/utils"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-    import { onMount } from "svelte"
+  import { onMount } from "svelte"
 
   let loaded = false
   let form

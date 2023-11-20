@@ -1,7 +1,7 @@
 import * as rowController from "../../../controllers/row"
 import * as appController from "../../../controllers/application"
 import { AppStatus } from "../../../../db/utils"
-import { roles, tenancy, context , db } from "@budibase/backend-core"
+import { roles, tenancy, context, db } from "@budibase/backend-core"
 import env from "../../../../environment"
 import Nano from "@budibase/nano"
 

@@ -1,5 +1,5 @@
 import emitter from "../events/index"
-import { getAutomationParams , isDevAppID } from "../db/utils"
+import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
 import { definitions } from "./triggerInfo"
 // need this to call directly, so we can get a response

@@ -1,11 +1,11 @@
 <script>
   import "@spectrum-css/popover/dist/index-vars.css"
   import Portal from "svelte-portal"
-  import { createEventDispatcher , getContext } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import positionDropdown from "../Actions/position_dropdown"
   import clickOutside from "../Actions/click_outside"
   import { fly } from "svelte/transition"
-    import Context from "../context"
+  import Context from "../context"
 
   const dispatch = createEventDispatcher()
 

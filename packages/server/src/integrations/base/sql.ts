@@ -1,7 +1,7 @@
 import { Knex, knex } from "knex"
 import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient , isValidFilter } from "../utils"
+import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   Operation,

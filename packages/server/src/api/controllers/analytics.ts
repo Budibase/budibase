@@ -1,4 +1,4 @@
-import { events , context } from "@budibase/backend-core"
+import { events, context } from "@budibase/backend-core"
 import { AnalyticsPingRequest, App, PingSource } from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
 

@@ -1,8 +1,8 @@
 <script>
-  import { Table, Modal, Layout, ActionButton , Helpers } from "@budibase/bbui"
+  import { Table, Modal, Layout, ActionButton, Helpers } from "@budibase/bbui"
   import AuthTypeRenderer from "./AuthTypeRenderer.svelte"
   import RestAuthenticationModal from "./RestAuthenticationModal.svelte"
-    import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher } from "svelte"
 
   export let authConfigs = []
 

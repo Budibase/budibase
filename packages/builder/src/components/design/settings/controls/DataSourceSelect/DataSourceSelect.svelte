@@ -24,8 +24,10 @@
     queries as queriesStore,
     viewsV2 as viewsV2Store,
     views as viewsStore,
-   datasources, integrations } from "stores/backend"
-    import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
+    datasources,
+    integrations,
+  } from "stores/backend"
+  import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"

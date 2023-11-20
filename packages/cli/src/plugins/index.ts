@@ -1,5 +1,10 @@
 import { Command } from "../structures/Command"
-import { CommandWord, AnalyticsEvent, InitType , GENERATED_USER_EMAIL } from "../constants"
+import {
+  CommandWord,
+  AnalyticsEvent,
+  InitType,
+  GENERATED_USER_EMAIL,
+} from "../constants"
 import { getSkeleton, fleshOutSkeleton } from "./skeleton"
 import * as questions from "../questions"
 import fs from "fs"

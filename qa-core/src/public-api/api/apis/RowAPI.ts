@@ -1,4 +1,4 @@
-import { CreateRowParams, Row, SearchInputParams , State } from "../../../types"
+import { CreateRowParams, Row, SearchInputParams, State } from "../../../types"
 import { HeadersInit, Response } from "node-fetch"
 import BudibasePublicAPIClient from "../BudibasePublicAPIClient"
 import * as fixtures from "../../fixtures"

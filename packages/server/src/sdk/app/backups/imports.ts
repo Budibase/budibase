@@ -1,5 +1,7 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import { Database, Row ,
+import {
+  Database,
+  Row,
   Automation,
   AutomationTriggerStepId,
   RowAttachment,

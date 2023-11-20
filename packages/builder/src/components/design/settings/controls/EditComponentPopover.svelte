@@ -2,9 +2,9 @@
   import { Icon, Popover, Layout } from "@budibase/bbui"
   import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher , getContext } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  
+
   export let anchor
   export let componentInstance
   export let componentBindings

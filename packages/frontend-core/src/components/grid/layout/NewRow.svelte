@@ -4,8 +4,8 @@
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
-  import { GutterWidth , NewRowID } from "../lib/constants"
-    import GutterCell from "../cells/GutterCell.svelte"
+  import { GutterWidth, NewRowID } from "../lib/constants"
+  import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
   const {
