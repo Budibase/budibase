@@ -8,11 +8,10 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { SourceName } from "@budibase/types"
+import { SourceName , Query } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
-import { Query } from "@budibase/types"
 
 class QueryRunner {
   datasource: any

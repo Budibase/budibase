@@ -1,11 +1,10 @@
 <script>
-  import { Button, Heading, notifications, Layout, Body } from "@budibase/bbui"
+  import { Button, Heading, notifications, Layout, Body , FancyForm, FancyInput } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { API } from "api"
   import { admin, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
-  import { FancyForm, FancyInput } from "@budibase/bbui"
-  import { TestimonialPage } from "@budibase/frontend-core/src/components"
+    import { TestimonialPage } from "@budibase/frontend-core/src/components"
   import { passwordsMatch, handleError } from "../auth/_components/utils"
 
   let form

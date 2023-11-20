@@ -58,7 +58,8 @@
       }
     ],
     "import/no-relative-packages": "error",
-    "import/export": "error"
+    "import/export": "error",
+    "import/no-duplicates": "error"
   },
   "globals": {
     "GeolocationPositionError": true

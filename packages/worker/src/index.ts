@@ -19,7 +19,6 @@ import {
   redis,
 } from "@budibase/backend-core"
 db.init()
-import Koa from "koa"
 import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
@@ -40,7 +39,7 @@ if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
 // this will setup http and https proxies form env variables
 bootstrap()
 
-const app: Application = new Koa()
+const app: Application = new Application()
 
 app.keys = ["secret", "key"]
 

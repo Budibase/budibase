@@ -6,14 +6,13 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { notifications } from "@budibase/bbui"
+  import { notifications , ActionButton } from "@budibase/bbui"
 
   import {
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
-  import { ActionButton } from "@budibase/bbui"
-  import { capitalise } from "helpers"
+    import { capitalise } from "helpers"
 
   const onUpdateName = async value => {
     try {

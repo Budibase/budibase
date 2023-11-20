@@ -1,7 +1,6 @@
 <script>
-  import { onMount } from "svelte"
-  import { getContext } from "svelte"
-  import { Dropzone } from "@budibase/bbui"
+  import { onMount , getContext } from "svelte"
+    import { Dropzone } from "@budibase/bbui"
 
   export let value
   export let focused = false

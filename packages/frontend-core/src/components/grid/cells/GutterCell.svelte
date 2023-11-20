@@ -1,10 +1,9 @@
 <script>
   import { GutterWidth } from "../lib/constants"
-  import { getContext } from "svelte"
+  import { getContext , createEventDispatcher } from "svelte"
   import { Checkbox, Icon } from "@budibase/bbui"
   import GridCell from "./GridCell.svelte"
-  import { createEventDispatcher } from "svelte"
-
+  
   export let row
   export let rowFocused = false
   export let rowHovered = false

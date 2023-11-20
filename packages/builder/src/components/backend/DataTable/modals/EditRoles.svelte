@@ -1,9 +1,8 @@
 <script>
-  import { keepOpen, ModalContent, Select, Input, Button } from "@budibase/bbui"
+  import { keepOpen, ModalContent, Select, Input, Button , notifications } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { API } from "api"
-  import { notifications } from "@budibase/bbui"
-  import ErrorsBox from "components/common/ErrorsBox.svelte"
+    import ErrorsBox from "components/common/ErrorsBox.svelte"
   import { roles } from "stores/backend"
 
   const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }

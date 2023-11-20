@@ -1,5 +1,5 @@
 <script>
-  import { RelationshipType } from "constants/backend"
+  import { RelationshipType , PrettyRelationshipDefinitions } from "constants/backend"
   import {
     keepOpen,
     Button,
@@ -8,14 +8,12 @@
     Select,
     Detail,
     Body,
-  } from "@budibase/bbui"
+   Helpers } from "@budibase/bbui"
   import { tables } from "stores/backend"
-  import { Helpers } from "@budibase/bbui"
-  import { RelationshipErrorChecker } from "./relationshipErrors"
+    import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
-  import { PrettyRelationshipDefinitions } from "constants/backend"
-
+  
   export let save
   export let datasource
   export let plusTables = []
