@@ -16,7 +16,20 @@ describe("datasourceUtils", () => {
       const internalTables = {
         _id: "datasource_internal_bb_default",
         name: "Sample Data",
-        entities: [
+      }
+
+      const pgDatasource = {
+        _id: "pg_ds",
+        name: "PostgreSQL local",
+      }
+
+      const mysqlDatasource = {
+        _id: "mysql_ds",
+        name: "My SQL local",
+      }
+
+      const tables = [
+        ...[
           {
             _id: "ta_bb_employee",
             name: "Employees",
@@ -37,14 +50,12 @@ describe("datasourceUtils", () => {
             _id: "ta_bb_jobs",
             name: "Jobs",
           },
-        ],
-      }
-
-      const pgDatasource = {
-        _id: "pg_ds",
-        name: "PostgreSQL local",
-        entities: {
-          "External Inventory": {
+        ].map(t => ({
+          ...t,
+          sourceId: internalTables._id,
+        })),
+        ...[
+          {
             _id: "pg_ds-external_inventory",
             name: "External Inventory",
             views: {
@@ -58,7 +69,7 @@ describe("datasourceUtils", () => {
               },
             },
           },
-          "Another table": {
+          {
             _id: "pg_ds-another_table",
             name: "Another table",
             views: {
@@ -72,7 +83,7 @@ describe("datasourceUtils", () => {
               },
             },
           },
-          table2: {
+          {
             _id: "pg_ds_table2",
             name: "table2",
             views: {
@@ -86,19 +97,20 @@ describe("datasourceUtils", () => {
               },
             },
           },
-        },
-      }
-
-      const mysqlDatasource = {
-        _id: "mysql_ds",
-        name: "My SQL local",
-        entities: {
-          "MySQL table": {
+        ].map(t => ({
+          ...t,
+          sourceId: pgDatasource._id,
+        })),
+        ...[
+          {
             _id: "mysql_ds-mysql_table",
             name: "MySQL table",
           },
-        },
-      }
+        ].map(t => ({
+          ...t,
+          sourceId: mysqlDatasource._id,
+        })),
+      ]
 
       const datasources = {
         list: [internalTables, pgDatasource, mysqlDatasource],
@@ -137,7 +149,7 @@ describe("datasourceUtils", () => {
           datasources,
           {},
           isActive,
-          "",
+          { list: tables },
           { list: [] },
           { list: [] },
           { list: [] },
@@ -176,7 +188,7 @@ describe("datasourceUtils", () => {
           datasources,
           {},
           isActive,
-          "",
+          { list: tables },
           { list: [] },
           { list: [] },
           { list: [] },
