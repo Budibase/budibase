@@ -28,6 +28,9 @@ export class Duration {
       toMs: () => {
         return Duration.convert(from, DurationType.MILLISECONDS, duration)
       },
+      toSeconds: () => {
+        return Duration.convert(from, DurationType.SECONDS, duration)
+      },
     }
   }
 
