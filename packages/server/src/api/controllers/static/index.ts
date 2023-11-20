@@ -148,7 +148,7 @@ export const serveApp = async function (ctx: Ctx) {
       const { head, html, css } = App.render({
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
@@ -186,7 +186,7 @@ export const serveApp = async function (ctx: Ctx) {
         metaTitle: branding?.metaTitle,
         metaImage:
           branding?.metaImageUrl ||
-          "https://res.cloudinary.com/daog6scxm/image/upload/v1666109324/meta-images/budibase-meta-image_uukc1m.png",
+          "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         favicon:
           branding.faviconUrl !== ""

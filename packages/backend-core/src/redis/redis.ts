@@ -16,6 +16,7 @@ import {
   getRedisOptions,
   SEPARATOR,
   SelectableDatabase,
+  getRedisConnectionDetails,
 } from "./utils"
 import * as timers from "../timers"
 
@@ -27,7 +28,6 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-0
 let CONNECTED = false
 
 // mock redis always connected
@@ -91,12 +91,11 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   if (client) {
     client.disconnect()
   }
-  const { redisProtocolUrl, opts, host, port } = getRedisOptions()
+  const { host, port } = getRedisConnectionDetails()
+  const opts = getRedisOptions()
 
   if (CLUSTERED) {
     client = new RedisCore.Cluster([{ host, port }], opts)
-  } else if (redisProtocolUrl) {
-    client = new RedisCore(redisProtocolUrl)
   } else {
     client = new RedisCore(opts)
   }

@@ -6,7 +6,6 @@ import BullQueue, { QueueOptions } from "bull"
 import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
-import * as Redis from "ioredis"
 
 // the queue lock is held for 5 minutes
 const QUEUE_LOCK_MS = Duration.fromMinutes(5).toMs()
@@ -27,9 +26,9 @@ export function createQueue<T>(
   jobQueue: JobQueue,
   opts: { removeStalledCb?: StalledFn } = {}
 ): BullQueue.Queue<T> {
-  const { opts: redisOpts, redisProtocolUrl } = getRedisOptions()
+  const redisOpts = getRedisOptions()
   const queueConfig: QueueOptions = {
-    redis: redisProtocolUrl! || (redisOpts as Redis.RedisOptions),
+    redis: redisOpts,
     settings: {
       maxStalledCount: 0,
       lockDuration: QUEUE_LOCK_MS,

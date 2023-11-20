@@ -2,6 +2,7 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import Placeholder from "components/app/Placeholder.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
+  import { getContext } from "svelte"
 
   export let dataSource
   export let actionUrl
@@ -9,7 +10,6 @@
   export let size
   export let disabled
   export let fields
-  export let labelPosition
   export let title
   export let description
   export let saveButtonLabel
@@ -33,6 +33,7 @@
     barcodeqr: "codescanner",
     bb_reference: "bbreferencefield",
   }
+  const context = getContext("context")
 
   let formId
 
@@ -136,7 +137,8 @@
       actionType: actionType === "Create" ? "Create" : "Update",
       dataSource,
       size,
-      disabled: disabled || actionType === "View",
+      disabled,
+      readonly: !disabled && actionType === "View",
     }}
     styles={{
       normal: {
@@ -226,16 +228,20 @@
         <BlockComponent type="text" props={{ text: description }} order={1} />
       {/if}
       {#key fields}
-        <BlockComponent type="fieldgroup" props={{ labelPosition }} order={1}>
-          {#each fields as field, idx}
-            {#if getComponentForField(field) && field.active}
-              <BlockComponent
-                type={getComponentForField(field)}
-                props={getPropsForField(field)}
-                order={idx}
-              />
-            {/if}
-          {/each}
+        <BlockComponent type="container">
+          <div class="form-block fields" class:mobile={$context.device.mobile}>
+            {#each fields as field, idx}
+              {#if getComponentForField(field) && field.active}
+                <BlockComponent
+                  type={getComponentForField(field)}
+                  props={getPropsForField(field)}
+                  order={idx}
+                  interactive
+                  name={field?.field}
+                />
+              {/if}
+            {/each}
+          </div>
         </BlockComponent>
       {/key}
     </BlockComponent>
@@ -245,3 +251,14 @@
     text="Choose your table and add some fields to your form to get started"
   />
 {/if}
+
+<style>
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px 16px;
+  }
+  .fields.mobile :global(.spectrum-Form-item) {
+    grid-column: span 6 !important;
+  }
+</style>

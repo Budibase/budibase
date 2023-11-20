@@ -303,7 +303,7 @@ export class UserDB {
 
   static async bulkCreate(
     newUsersRequested: User[],
-    groups: string[]
+    groups?: string[]
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -328,7 +328,7 @@ export class UserDB {
         })
         continue
       }
-      newUser.userGroups = groups
+      newUser.userGroups = groups || []
       newUsers.push(newUser)
       if (isCreator(newUser)) {
         newCreators.push(newUser)
@@ -413,15 +413,13 @@ export class UserDB {
     }
 
     // Get users and delete
-    const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
+    const allDocsResponse = await db.allDocs<User>({
       include_docs: true,
       keys: userIds,
     })
-    const usersToDelete: User[] = allDocsResponse.rows.map(
-      (user: RowResponse<User>) => {
-        return user.doc
-      }
-    )
+    const usersToDelete = allDocsResponse.rows.map(user => {
+      return user.doc!
+    })
 
     // Delete from DB
     const toDelete = usersToDelete.map(user => ({

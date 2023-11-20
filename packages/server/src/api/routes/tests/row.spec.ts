@@ -10,6 +10,7 @@ import {
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
+  FormulaTypes,
   INTERNAL_TABLE_SOURCE_ID,
   MonthlyQuotaName,
   PermissionLevel,
@@ -32,6 +33,7 @@ import {
   structures,
 } from "@budibase/backend-core/tests"
 import _ from "lodash"
+import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -49,7 +51,12 @@ describe.each([
   let table: Table
   let tableId: string
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    if (dsProvider) {
+      await dsProvider.stopContainer()
+    }
+    setup.afterAll()
+  })
 
   beforeAll(async () => {
     await config.init()
@@ -63,7 +70,7 @@ describe.each([
 
   const generateTableConfig: () => SaveTableRequest = () => {
     return {
-      name: generator.word(),
+      name: uuid.v4(),
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
@@ -476,7 +483,7 @@ describe.each([
       })
 
       const createViewResponse = await config.createView({
-        name: generator.word(),
+        name: uuid.v4(),
         schema: {
           Country: {
             visible: true,
@@ -521,20 +528,17 @@ describe.each([
       const rowUsage = await getRowUsage()
       const queryUsage = await getQueryUsage()
 
-      const res = await config.api.row.patch(table._id!, {
+      const row = await config.api.row.patch(table._id!, {
         _id: existing._id!,
         _rev: existing._rev!,
         tableId: table._id!,
         name: "Updated Name",
       })
 
-      expect((res as any).res.statusMessage).toEqual(
-        `${table.name} updated successfully.`
-      )
-      expect(res.body.name).toEqual("Updated Name")
-      expect(res.body.description).toEqual(existing.description)
+      expect(row.name).toEqual("Updated Name")
+      expect(row.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(res.body._id, table._id!)
+      const savedRow = await loadRow(row._id!, table._id!)
 
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
@@ -560,6 +564,56 @@ describe.each([
 
       await assertRowUsage(rowUsage)
       await assertQueryUsage(queryUsage)
+    })
+
+    it("should not overwrite links if those links are not set", async () => {
+      let linkField: FieldSchema = {
+        type: FieldType.LINK,
+        name: "",
+        fieldName: "",
+        constraints: {
+          type: "array",
+          presence: false,
+        },
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        tableId: InternalTable.USER_METADATA,
+      }
+
+      let table = await config.api.table.create({
+        name: "TestTable",
+        type: "table",
+        sourceType: TableSourceType.INTERNAL,
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        schema: {
+          user1: { ...linkField, name: "user1", fieldName: "user1" },
+          user2: { ...linkField, name: "user2", fieldName: "user2" },
+        },
+      })
+
+      let user1 = await config.createUser()
+      let user2 = await config.createUser()
+
+      let row = await config.api.row.save(table._id!, {
+        user1: [{ _id: user1._id }],
+        user2: [{ _id: user2._id }],
+      })
+
+      let getResp = await config.api.row.get(table._id!, row._id!)
+      expect(getResp.body.user1[0]._id).toEqual(user1._id)
+      expect(getResp.body.user2[0]._id).toEqual(user2._id)
+
+      let patchResp = await config.api.row.patch(table._id!, {
+        _id: row._id!,
+        _rev: row._rev!,
+        tableId: table._id!,
+        user1: [{ _id: user2._id }],
+      })
+      expect(patchResp.user1[0]._id).toEqual(user2._id)
+      expect(patchResp.user2[0]._id).toEqual(user2._id)
+
+      getResp = await config.api.row.get(table._id!, row._id!)
+      expect(getResp.body.user1[0]._id).toEqual(user2._id)
+      expect(getResp.body.user2[0]._id).toEqual(user2._id)
     })
   })
 
@@ -764,7 +818,8 @@ describe.each([
             RelationshipType.ONE_TO_MANY,
             ["link"],
             {
-              name: generator.word(),
+              // Making sure that the combined table name + column name is within postgres limits
+              name: uuid.v4().replace(/-/g, "").substring(0, 16),
               type: "table",
               primary: ["id"],
               primaryDisplay: "id",
@@ -897,7 +952,7 @@ describe.each([
   describe("view 2.0", () => {
     async function userTable(): Promise<Table> {
       return {
-        name: `users_${generator.word()}`,
+        name: `users_${uuid.v4()}`,
         sourceId: INTERNAL_TABLE_SOURCE_ID,
         sourceType: TableSourceType.INTERNAL,
         type: "table",
@@ -1081,7 +1136,7 @@ describe.each([
       const viewSchema = { age: { visible: true }, name: { visible: true } }
       async function userTable(): Promise<Table> {
         return {
-          name: `users_${generator.word()}`,
+          name: `users_${uuid.v4()}`,
           sourceId: INTERNAL_TABLE_SOURCE_ID,
           sourceType: TableSourceType.INTERNAL,
           type: "table",
@@ -1578,7 +1633,7 @@ describe.each([
       }),
       (tableId: string) =>
         config.api.row.save(tableId, {
-          name: generator.word(),
+          name: uuid.v4(),
           description: generator.paragraph(),
           tableId,
         }),
@@ -1944,6 +1999,54 @@ describe.each([
               bookmark: null,
             }),
       })
+    })
+  })
+
+  describe("Formula fields", () => {
+    let relationshipTable: Table, tableId: string, relatedRow: Row
+
+    beforeAll(async () => {
+      const otherTableId = config.table!._id!
+      const cfg = generateTableConfig()
+      relationshipTable = await config.createLinkedTable(
+        RelationshipType.ONE_TO_MANY,
+        ["links"],
+        {
+          ...cfg,
+          // needs to be a short name
+          name: "b",
+          schema: {
+            ...cfg.schema,
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: "{{ links.0.name }}",
+              formulaType: FormulaTypes.DYNAMIC,
+            },
+          },
+        }
+      )
+
+      tableId = relationshipTable._id!
+
+      relatedRow = await config.api.row.save(otherTableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+      })
+      await config.api.row.save(tableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+        tableId,
+        links: [relatedRow._id],
+      })
+    })
+
+    it("should be able to search for rows containing formulas", async () => {
+      const { rows } = await config.api.row.search(tableId)
+      expect(rows.length).toBe(1)
+      expect(rows[0].links.length).toBe(1)
+      const row = rows[0]
+      expect(row.formula).toBe(relatedRow.name)
     })
   })
 })

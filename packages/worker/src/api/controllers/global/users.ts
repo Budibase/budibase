@@ -1,8 +1,3 @@
-import {
-  checkInviteCode,
-  getInviteCodes,
-  updateInviteCode,
-} from "../../../utilities/redis"
 import * as userSdk from "../../../sdk/users"
 import env from "../../../environment"
 import {
@@ -16,6 +11,7 @@ import {
   Ctx,
   InviteUserRequest,
   InviteUsersRequest,
+  InviteUsersResponse,
   MigrationType,
   SaveUserResponse,
   SearchUsersRequest,
@@ -249,59 +245,35 @@ export const tenantUserLookup = async (ctx: any) => {
 /* 
   Encapsulate the app user onboarding flows here.
 */
-export const onboardUsers = async (ctx: Ctx<InviteUsersRequest>) => {
-  const request = ctx.request.body
-  const isBulkCreate = "create" in request
-
-  const emailConfigured = await isEmailConfigured()
-
-  let onboardingResponse
-
-  if (isBulkCreate) {
-    // @ts-ignore
-    const { users, groups, roles } = request.create
-    const assignUsers = users.map((user: User) => (user.roles = roles))
-    onboardingResponse = await userSdk.db.bulkCreate(assignUsers, groups)
-    ctx.body = onboardingResponse
-  } else if (emailConfigured) {
-    onboardingResponse = await inviteMultiple(ctx)
-  } else if (!emailConfigured) {
-    const inviteRequest = ctx.request.body
-
-    let createdPasswords: any = {}
-
-    const users: User[] = inviteRequest.map(invite => {
-      let password = Math.random().toString(36).substring(2, 22)
-
-      // Temp password to be passed to the user.
-      createdPasswords[invite.email] = password
-
-      return {
-        email: invite.email,
-        password,
-        forceResetPassword: true,
-        roles: invite.userInfo.apps,
-        admin: invite.userInfo.admin,
-        builder: invite.userInfo.builder,
-        tenantId: tenancy.getTenantId(),
-      }
-    })
-    let bulkCreateReponse = await userSdk.db.bulkCreate(users, [])
-
-    // Apply temporary credentials
-    ctx.body = {
-      ...bulkCreateReponse,
-      successful: bulkCreateReponse?.successful.map(user => {
-        return {
-          ...user,
-          password: createdPasswords[user.email],
-        }
-      }),
-      created: true,
-    }
-  } else {
-    ctx.throw(400, "User onboarding failed")
+export const onboardUsers = async (
+  ctx: Ctx<InviteUsersRequest, InviteUsersResponse>
+) => {
+  if (await isEmailConfigured()) {
+    await inviteMultiple(ctx)
+    return
   }
+
+  let createdPasswords: Record<string, string> = {}
+  const users: User[] = ctx.request.body.map(invite => {
+    let password = Math.random().toString(36).substring(2, 22)
+    createdPasswords[invite.email] = password
+
+    return {
+      email: invite.email,
+      password,
+      forceResetPassword: true,
+      roles: invite.userInfo.apps,
+      admin: invite.userInfo.admin,
+      builder: invite.userInfo.builder,
+      tenantId: tenancy.getTenantId(),
+    }
+  })
+
+  let resp = await userSdk.db.bulkCreate(users)
+  for (const user of resp.successful) {
+    user.password = createdPasswords[user.email]
+  }
+  ctx.body = { ...resp, created: true }
 }
 
 export const invite = async (ctx: Ctx<InviteUserRequest>) => {
@@ -328,18 +300,18 @@ export const invite = async (ctx: Ctx<InviteUserRequest>) => {
 }
 
 export const inviteMultiple = async (ctx: Ctx<InviteUsersRequest>) => {
-  const request = ctx.request.body
-  ctx.body = await userSdk.invite(request)
+  ctx.body = await userSdk.invite(ctx.request.body)
 }
 
 export const checkInvite = async (ctx: any) => {
   const { code } = ctx.params
   let invite
   try {
-    invite = await checkInviteCode(code, false)
+    invite = await cache.invite.getCode(code)
   } catch (e) {
     console.warn("Error getting invite from code", e)
     ctx.throw(400, "There was a problem with the invite")
+    return
   }
   ctx.body = {
     email: invite.email,
@@ -347,14 +319,12 @@ export const checkInvite = async (ctx: any) => {
 }
 
 export const getUserInvites = async (ctx: any) => {
-  let invites
   try {
     // Restricted to the currently authenticated tenant
-    invites = await getInviteCodes()
+    ctx.body = await cache.invite.getInviteCodes()
   } catch (e) {
     ctx.throw(400, "There was a problem fetching invites")
   }
-  ctx.body = invites
 }
 
 export const updateInvite = async (ctx: any) => {
@@ -365,12 +335,10 @@ export const updateInvite = async (ctx: any) => {
 
   let invite
   try {
-    invite = await checkInviteCode(code, false)
-    if (!invite) {
-      throw new Error("The invite could not be retrieved")
-    }
+    invite = await cache.invite.getCode(code)
   } catch (e) {
     ctx.throw(400, "There was a problem with the invite")
+    return
   }
 
   let updated = {
@@ -395,7 +363,7 @@ export const updateInvite = async (ctx: any) => {
     }
   }
 
-  await updateInviteCode(code, updated)
+  await cache.invite.updateCode(code, updated)
   ctx.body = { ...invite }
 }
 
@@ -405,7 +373,8 @@ export const inviteAccept = async (
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
     // info is an extension of the user object that was stored by global
-    const { email, info }: any = await checkInviteCode(inviteCode)
+    const { email, info }: any = await cache.invite.getCode(inviteCode)
+    await cache.invite.deleteCode(inviteCode)
     const user = await tenancy.doInTenant(info.tenantId, async () => {
       let request: any = {
         firstName,
