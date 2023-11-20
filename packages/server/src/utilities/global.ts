@@ -1,4 +1,4 @@
-import { getMultiIDParams, getGlobalIDFromUserMetadataID } from "../db/utils"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
   roles,
   db as dbCore,
@@ -96,9 +96,7 @@ export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
   let globalUsers: User[]
   if (userIds) {
-    globalUsers = (await db.allDocs<User>(getMultiIDParams(userIds))).rows.map(
-      row => row.doc!
-    )
+    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
   } else {
     globalUsers = (
       await db.allDocs<User>(
