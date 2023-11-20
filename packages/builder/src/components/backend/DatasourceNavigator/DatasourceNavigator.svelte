@@ -22,6 +22,7 @@
   import { TableNames } from "constants"
   import { userSelectedResourceMap } from "builderStore"
   import { enrichDatasources } from "./datasourceUtils"
+  import { onMount } from "svelte"
 
   export let searchTerm
   let toggledDatasources = {}
@@ -62,6 +63,12 @@
   $: showAppUsersTable =
     !searchTerm ||
     appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
+
+  onMount(() => {
+    if ($tables.selected) {
+      toggledDatasources[$tables.selected.sourceId] = true
+    }
+  })
 </script>
 
 {#if $database?._id}
