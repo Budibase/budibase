@@ -27,7 +27,7 @@ import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
-import { processStringSync } from "@budibase/string-templates"
+import { processStringSync, makePropSafe } from "@budibase/string-templates"
 
 export default {
   API,
@@ -57,6 +57,7 @@ export default {
   getAPIKey,
   enrichButtonActions,
   processStringSync,
+  makePropSafe,
   createContextStore,
 
   // Components
