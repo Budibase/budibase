@@ -1,5 +1,6 @@
 <script>
   import { goto, isActive, params } from "@roxi/routify"
+  import { Layout } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import {
     database,
@@ -69,6 +70,9 @@
       toggledDatasources[$tables.selected.sourceId] = true
     }
   })
+
+  $: showNoResults =
+    searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
 </script>
 
 {#if $database?._id}
@@ -125,6 +129,13 @@
         {/each}
       {/if}
     {/each}
+    {#if showNoResults}
+      <Layout paddingY="none" paddingX="L">
+        <div class="no-results">
+          There aren't any datasource matching '{searchTerm}'
+        </div>
+      </Layout>
+    {/if}
   </div>
 {/if}
 
