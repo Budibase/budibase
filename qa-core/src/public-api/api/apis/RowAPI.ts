@@ -1,8 +1,4 @@
-import {
-  CreateRowParams,
-  Row,
-  SearchInputParams,
-} from "@budibase/server/api/controllers/public/mapping/types"
+import { CreateRowParams, Row, SearchInputParams } from "../../../types"
 import { HeadersInit, Response } from "node-fetch"
 import BudibasePublicAPIClient from "../BudibasePublicAPIClient"
 import * as fixtures from "../../fixtures"

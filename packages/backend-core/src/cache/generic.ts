@@ -1,6 +1,6 @@
-const BaseCache = require("./base")
+import BaseCache from "./base"
 
-const GENERIC = new BaseCache.default()
+const GENERIC = new BaseCache()
 
 export enum CacheKey {
   CHECKLIST = "checklist",
@@ -19,6 +19,7 @@ export enum TTL {
 }
 
 function performExport(funcName: string) {
+  // @ts-ignore
   return (...args: any) => GENERIC[funcName](...args)
 }
 
