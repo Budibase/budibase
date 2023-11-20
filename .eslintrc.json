@@ -57,7 +57,8 @@
         "destructuredArrayIgnorePattern": "^_"
       }
     ],
-    "import/no-relative-packages": "error"
+    "import/no-relative-packages": "error",
+    "import/export": "error"
   },
   "globals": {
     "GeolocationPositionError": true
