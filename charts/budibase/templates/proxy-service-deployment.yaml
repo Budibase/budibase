@@ -24,7 +24,6 @@ spec:
 {{ if .Values.services.proxy.templateAnnotations }}
 {{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}
-      creationTimestamp: null
       labels:
         app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.templateLabels }}
