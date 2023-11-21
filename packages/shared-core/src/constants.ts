@@ -98,6 +98,7 @@ export const ValidQueryNameRegex = /^[^()]*$/
 export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g
 
 export const InvalidFileExtensions = [
+  "7z",
   "action",
   "apk",
   "app",
@@ -138,6 +139,7 @@ export const InvalidFileExtensions = [
   "sct",
   "shb",
   "shs",
+  "tar",
   "u3p",
   "vb",
   "vbe",
@@ -147,4 +149,5 @@ export const InvalidFileExtensions = [
   "ws",
   "wsf",
   "wsh",
+  "zip",
 ]
