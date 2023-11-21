@@ -11,6 +11,7 @@
   import {
     findComponentPath,
     getComponentText,
+    getComponentName,
   } from "builderStore/componentUtils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
@@ -109,6 +110,7 @@
         on:drop={onDrop}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
+        iconTooltip={getComponentName(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
         selected={$store.selectedComponentId === component._id}

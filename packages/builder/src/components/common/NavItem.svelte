@@ -1,10 +1,11 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { AbsTooltip, Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
+  export let iconTooltip
   export let withArrow = false
   export let withActions = true
   export let indentLevel = 0
@@ -98,7 +99,9 @@
       </div>
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
+        <AbsTooltip type="info" position="right" text={iconTooltip}>
         <Icon color={iconColor} size="S" name={icon} />
+        </AbsTooltip>
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
