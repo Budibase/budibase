@@ -270,7 +270,6 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
-            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -2749,6 +2748,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2880,6 +2884,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2975,6 +2984,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3193,6 +3207,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3351,6 +3370,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3577,6 +3601,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3673,6 +3702,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3817,6 +3851,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3910,6 +3949,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -4163,6 +4207,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Extensions",
         "key": "extensions"
       },
@@ -4263,6 +4312,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -4371,6 +4425,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -6354,8 +6413,29 @@
             "resetOn": "table"
           }
         ]
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "buttonConfiguration",
+            "key": "buttons",
+            "nested": true,
+            "max": 3,
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
@@ -6389,6 +6469,11 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",

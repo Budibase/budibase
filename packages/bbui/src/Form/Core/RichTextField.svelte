@@ -5,14 +5,13 @@
   export let placeholder = null
   export let disabled = false
   export let readonly = false
-  export let error = null
   export let height = null
   export let id = null
   export let fullScreenOffset = null
   export let easyMDEOptions = null
 </script>
 
-<div class:error>
+<div>
   <MarkdownEditor
     {value}
     {placeholder}
@@ -27,18 +26,4 @@
 </div>
 
 <style>
-  .error :global(.EasyMDEContainer .editor-toolbar) {
-    border-top-color: var(--spectrum-semantic-negative-color-default);
-    border-left-color: var(--spectrum-semantic-negative-color-default);
-    border-right-color: var(--spectrum-semantic-negative-color-default);
-  }
-  .error :global(.EasyMDEContainer .CodeMirror) {
-    border-bottom-color: var(--spectrum-semantic-negative-color-default);
-    border-left-color: var(--spectrum-semantic-negative-color-default);
-    border-right-color: var(--spectrum-semantic-negative-color-default);
-  }
-  .error :global(.EasyMDEContainer .editor-preview-side) {
-    border-bottom-color: var(--spectrum-semantic-negative-color-default);
-    border-right-color: var(--spectrum-semantic-negative-color-default);
-  }
 </style>

@@ -1,4 +1,5 @@
 <script>
+  import { Toggle } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash/fp"
   import {
     getDatasourceForProvider,
@@ -17,6 +18,7 @@
   export let value
 
   const dispatch = createEventDispatcher()
+
   let sanitisedFields
   let fieldList
   let schema
@@ -24,6 +26,8 @@
   let options
   let sanitisedValue
   let unconfigured
+
+  let selectAll = true
 
   $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
   $: actionType = componentInstance.actionType
@@ -145,16 +149,31 @@
     dispatch("change", getValidColumns(parentFieldsUpdated, options))
   }
 
-  const listUpdated = e => {
-    const parsedColumns = getValidColumns(e.detail, options)
+  const listUpdated = columns => {
+    const parsedColumns = getValidColumns(columns, options)
     dispatch("change", parsedColumns)
   }
 </script>
 
 <div class="field-configuration">
+  <div class="toggle-all">
+    <span />
+    <Toggle
+      on:change={() => {
+        let update = fieldList.map(field => ({
+          ...field,
+          active: selectAll,
+        }))
+        listUpdated(update)
+      }}
+      text=""
+      bind:value={selectAll}
+      thin
+    />
+  </div>
   {#if fieldList?.length}
     <DraggableList
-      on:change={listUpdated}
+      on:change={e => listUpdated(e.detail)}
       on:itemChange={processItemUpdate}
       items={fieldList}
       listItemKey={"_id"}
@@ -170,5 +189,22 @@
 <style>
   .field-configuration :global(.spectrum-ActionButton) {
     width: 100%;
+  }
+  .toggle-all {
+    display: flex;
+    justify-content: space-between;
+  }
+  .toggle-all :global(.spectrum-Switch) {
+    margin-right: 0px;
+    padding-right: calc(var(--spacing-s) - 1px);
+    min-height: unset;
+  }
+  .toggle-all :global(.spectrum-Switch .spectrum-Switch-switch) {
+    margin-top: 0px;
+  }
+  .toggle-all span {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
+    margin-left: calc(var(--spacing-s) - 1px);
   }
 </style>
