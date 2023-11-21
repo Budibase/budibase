@@ -1,7 +1,10 @@
 import * as linkRows from "../../db/linkedRows"
-import { FieldTypes, AutoFieldSubTypes } from "../../constants"
+import {
+  FieldTypes,
+  AutoFieldSubTypes,
+  ObjectStoreBuckets,
+} from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
-import { ObjectStoreBuckets } from "../../constants"
 import {
   context,
   db as dbCore,
@@ -17,6 +20,7 @@ import {
   processOutputBBReferences,
 } from "./bbReferenceProcessor"
 import { isExternalTableID } from "../../integrations/utils"
+
 export * from "./utils"
 
 type AutoColumnProcessingOpts = {

@@ -1,5 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
+
   export let datasource
   export let selected = false
 

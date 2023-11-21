@@ -1,6 +1,13 @@
 <script>
-  import { ModalContent, Modal, Icon, ActionButton } from "@budibase/bbui"
-  import { Input, Button, StatusLight } from "@budibase/bbui"
+  import {
+    ModalContent,
+    Modal,
+    Icon,
+    ActionButton,
+    Input,
+    Button,
+    StatusLight,
+  } from "@budibase/bbui"
   import { Html5Qrcode } from "html5-qrcode"
   import { createEventDispatcher } from "svelte"
 
