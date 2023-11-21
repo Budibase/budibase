@@ -25,7 +25,7 @@
     }
 
     return columns?.map(column => ({
-      label: column.displayName,
+      label: column.displayName || column.name,
       field: column.name,
       active: true,
     }))

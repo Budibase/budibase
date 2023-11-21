@@ -31,12 +31,14 @@
       })
   }
 
-  const getIcon = () => {
+  const getIcon = item => {
     const component = `@budibase/standard-components/${
       FieldTypeToComponentMap[item.columnType]
     }`
-    return store.actions.components.getDefinition(component).icon
+    return store.actions.components.getDefinition(component)?.icon
   }
+
+  $: icon = getIcon(item)
 </script>
 
 <div class="list-item-body">
@@ -48,16 +50,13 @@
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name={getIcon()} />
+        <Icon name={icon} />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>
     <div class="field-label">{item.label || item.field}</div>
   </div>
-  <div
-    title="The leftmost column is dictated by your datasource's primary column, which can be changed in the data section"
-    class="list-item-right"
-  >
+  <div title="The display column is always shown first" class="list-item-right">
     <Icon name={"Info"} />
   </div>
 </div>
