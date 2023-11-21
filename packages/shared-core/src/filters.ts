@@ -9,6 +9,7 @@ import {
   SortDirection,
   SortType,
 } from "@budibase/types"
+import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
 
@@ -302,12 +303,19 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
       docValue: string | number | null,
       testValue: { low: number; high: number }
     ) => {
-      return (
-        docValue == null ||
-        docValue === "" ||
-        +docValue < testValue.low ||
-        +docValue > testValue.high
-      )
+      if (docValue == null || docValue === "") {
+        return true
+      }
+      if (!isNaN(+docValue)) {
+        return +docValue < testValue.low || +docValue > testValue.high
+      }
+      if (dayjs(docValue).isValid()) {
+        return (
+          new Date(docValue).getTime() < new Date(testValue.low).getTime() ||
+          new Date(docValue).getTime() > new Date(testValue.high).getTime()
+        )
+      }
+      throw "Cannot perform range filter - invalid type."
     }
   )
 
