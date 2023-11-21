@@ -266,10 +266,7 @@ describe("test the string helpers", () => {
   })
 
   it("should allow use of the ellipsis helper", async () => {
-    const output = await processString(
-      "{{ ellipsis \"adfasdfasdfasf\" 7 }}",
-      {},
-    )
+    const output = await processString('{{ ellipsis "adfasdfasdfasf" 7 }}', {})
     expect(output).toBe("adfasdf…")
   })
 })

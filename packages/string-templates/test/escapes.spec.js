@@ -68,11 +68,11 @@ describe("attempt some complex problems", () => {
 describe("check behaviour with newlines", () => {
   const context = {
     binding: `Hello
-      there`
+      there`,
   }
   it("should escape new line to \\n with double brace", async () => {
     const hbs = JSON.stringify({
-      body: "{{ binding }}"
+      body: "{{ binding }}",
     })
     const output = await processString(hbs, context, { escapeNewlines: true })
     expect(JSON.parse(output).body).toBe(context.binding)
@@ -80,7 +80,7 @@ describe("check behaviour with newlines", () => {
 
   it("should work the same with triple brace", async () => {
     const hbs = JSON.stringify({
-      body: "{{{ binding }}}"
+      body: "{{{ binding }}}",
     })
     const output = await processString(hbs, context, { escapeNewlines: true })
     expect(JSON.parse(output).body).toBe(context.binding)
@@ -88,9 +88,12 @@ describe("check behaviour with newlines", () => {
 
   it("should still work with helpers disabled", async () => {
     const hbs = JSON.stringify({
-      body: "{{ binding }}"
+      body: "{{ binding }}",
     })
-    const output = await processString(hbs, context, { escapeNewlines: true, noHelpers: true })
+    const output = await processString(hbs, context, {
+      escapeNewlines: true,
+      noHelpers: true,
+    })
     expect(JSON.parse(output).body).toBe(context.binding)
   })
 })
