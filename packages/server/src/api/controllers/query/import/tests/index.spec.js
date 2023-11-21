@@ -1,11 +1,14 @@
 const TestConfig = require("../../../../../tests/utilities/TestConfiguration")
 const { RestImporter } = require("../index")
 const fs = require("fs")
-const path = require('path')
-const { events} = require("@budibase/backend-core")
+const path = require("path")
+const { events } = require("@budibase/backend-core")
 
-const getData = (file) => {
-  return fs.readFileSync(path.join(__dirname, `../sources/tests/${file}`), "utf8")
+const getData = file => {
+  return fs.readFileSync(
+    path.join(__dirname, `../sources/tests/${file}`),
+    "utf8"
+  )
 }
 
 // openapi2 (swagger)
@@ -14,7 +17,7 @@ const oapi2CrudYaml = getData("openapi2/data/crud/crud.json")
 const oapi2PetstoreJson = getData("openapi2/data/petstore/petstore.json")
 const oapi2PetstoreYaml = getData("openapi2/data/petstore/petstore.json")
 
-// openapi3 
+// openapi3
 const oapi3CrudJson = getData("openapi3/data/crud/crud.json")
 const oapi3CrudYaml = getData("openapi3/data/crud/crud.json")
 const oapi3PetstoreJson = getData("openapi3/data/petstore/petstore.json")
@@ -35,7 +38,7 @@ const datasets = {
   oapi3PetstoreJson,
   oapi3PetstoreYaml,
   // curl
-  curl
+  curl,
 }
 
 describe("Rest Importer", () => {
@@ -45,9 +48,9 @@ describe("Rest Importer", () => {
     await config.init()
   })
 
-  let restImporter 
+  let restImporter
 
-  const init = async (data) => {
+  const init = async data => {
     restImporter = new RestImporter(data)
     await restImporter.init()
   }
@@ -69,35 +72,35 @@ describe("Rest Importer", () => {
   it("gets info", async () => {
     const assertions = {
       // openapi2 (swagger)
-      "oapi2CrudJson" : {
+      oapi2CrudJson: {
         name: "CRUD",
       },
-      "oapi2CrudYaml" : {
+      oapi2CrudYaml: {
         name: "CRUD",
       },
-      "oapi2PetstoreJson" : {
+      oapi2PetstoreJson: {
         name: "Swagger Petstore",
       },
-      "oapi2PetstoreYaml" :{
+      oapi2PetstoreYaml: {
         name: "Swagger Petstore",
       },
       // openapi3
-      "oapi3CrudJson" : {
+      oapi3CrudJson: {
         name: "CRUD",
       },
-      "oapi3CrudYaml" : {
+      oapi3CrudYaml: {
         name: "CRUD",
       },
-      "oapi3PetstoreJson" : {
+      oapi3PetstoreJson: {
         name: "Swagger Petstore - OpenAPI 3.0",
       },
-      "oapi3PetstoreYaml" :{
+      oapi3PetstoreYaml: {
         name: "Swagger Petstore - OpenAPI 3.0",
       },
       // curl
-      "curl": {
+      curl: {
         name: "example.com",
-      }
+      },
     }
     await runTest(testGetInfo, assertions)
   })
@@ -109,53 +112,57 @@ describe("Rest Importer", () => {
     expect(importResult.errorQueries.length).toBe(0)
     expect(importResult.queries.length).toBe(assertions[key].count)
     expect(events.query.imported).toBeCalledTimes(1)
-    expect(events.query.imported).toBeCalledWith(datasource, assertions[key].source, assertions[key].count)
+    expect(events.query.imported).toBeCalledWith(
+      datasource,
+      assertions[key].source,
+      assertions[key].count
+    )
     jest.clearAllMocks()
   }
 
   it("imports queries", async () => {
-    // simple sanity assertions that the whole dataset 
+    // simple sanity assertions that the whole dataset
     // makes it through the importer
     const assertions = {
       // openapi2 (swagger)
-      "oapi2CrudJson" : {
+      oapi2CrudJson: {
         count: 6,
         source: "openapi2.0",
       },
-      "oapi2CrudYaml" :{
+      oapi2CrudYaml: {
         count: 6,
-        source: "openapi2.0"
+        source: "openapi2.0",
       },
-      "oapi2PetstoreJson" : {
+      oapi2PetstoreJson: {
         count: 20,
-        source: "openapi2.0"
+        source: "openapi2.0",
       },
-      "oapi2PetstoreYaml" :{
+      oapi2PetstoreYaml: {
         count: 20,
-        source: "openapi2.0"
+        source: "openapi2.0",
       },
       // openapi3
-      "oapi3CrudJson" : {
+      oapi3CrudJson: {
         count: 6,
-        source: "openapi3.0"
+        source: "openapi3.0",
       },
-      "oapi3CrudYaml" :{
+      oapi3CrudYaml: {
         count: 6,
-        source: "openapi3.0"
+        source: "openapi3.0",
       },
-      "oapi3PetstoreJson" : {
+      oapi3PetstoreJson: {
         count: 19,
-        source: "openapi3.0"
+        source: "openapi3.0",
       },
-      "oapi3PetstoreYaml" :{
+      oapi3PetstoreYaml: {
         count: 19,
-        source: "openapi3.0"
+        source: "openapi3.0",
       },
       // curl
-      "curl": {
+      curl: {
         count: 1,
-        source: "curl"
-      }
+        source: "curl",
+      },
     }
     await runTest(testImportQueries, assertions)
   })

@@ -6,7 +6,6 @@
   export let placeholder = null
   export let type = "text"
   export let disabled = false
-  export let error = null
   export let id = null
   export let readonly = false
   export let updateOnChange = true
@@ -78,19 +77,9 @@
 <div
   class="spectrum-Textfield"
   class:spectrum-Textfield--quiet={quiet}
-  class:is-invalid={!!error}
   class:is-disabled={disabled}
   class:is-focused={focus}
 >
-  {#if error}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-Alert" />
-    </svg>
-  {/if}
   <input
     bind:this={field}
     {disabled}

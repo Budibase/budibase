@@ -38,7 +38,7 @@ describe("/api/keys", () => {
         const res = await request
           .put(`/api/keys/TEST`)
           .send({
-            value: "test"
+            value: "test",
           })
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)

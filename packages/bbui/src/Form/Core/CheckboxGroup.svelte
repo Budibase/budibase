@@ -6,8 +6,8 @@
   export let direction = "vertical"
   export let value = []
   export let options = []
-  export let error = null
   export let disabled = false
+  export let readonly = false
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
 
@@ -33,7 +33,7 @@
       <div
         title={getOptionLabel(option)}
         class="spectrum-Checkbox spectrum-FieldGroup-item"
-        class:is-invalid={!!error}
+        class:readonly
       >
         <label
           class="spectrum-Checkbox spectrum-Checkbox--sizeM spectrum-FieldGroup-item"
@@ -65,5 +65,8 @@
 <style>
   .spectrum-Checkbox-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

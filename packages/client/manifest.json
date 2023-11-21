@@ -270,7 +270,6 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
-            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -2590,6 +2589,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "text",
         "label": "Initial form step",
         "key": "initialFormStep",
@@ -2722,6 +2732,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2737,6 +2752,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/string",
@@ -2842,6 +2868,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2857,6 +2888,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/number",
@@ -2926,6 +2968,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3144,6 +3191,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3164,6 +3216,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -3293,6 +3356,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3318,6 +3386,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -3506,6 +3585,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3521,6 +3605,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/boolean",
@@ -3593,6 +3688,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3629,6 +3729,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/string",
@@ -3724,6 +3835,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3739,6 +3855,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "validation/datetime",
@@ -3806,6 +3933,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -4059,6 +4191,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Extensions",
         "key": "extensions"
       },
@@ -4087,7 +4224,7 @@
       },
       {
         "type": "boolean",
-        "label": "Disabled",
+        "label": "Read only",
         "key": "disabled",
         "defaultValue": false
       },
@@ -4161,6 +4298,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -4192,6 +4334,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -4258,6 +4411,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -4273,6 +4431,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",
@@ -5923,12 +6092,7 @@
             "type": "boolean",
             "label": "Disabled",
             "key": "disabled",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "defaultValue": false
           }
         ]
       },
@@ -6234,8 +6398,29 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "buttonConfiguration",
+            "key": "buttons",
+            "nested": true,
+            "max": 3,
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    }
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
@@ -6269,6 +6454,11 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",

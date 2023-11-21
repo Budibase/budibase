@@ -7,11 +7,13 @@
   export let placeholder
   export let type = "text"
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue = ""
   export let align
   export let onChange
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -28,9 +30,11 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type={type === "number" ? "number" : "string"}
   bind:fieldState
   bind:fieldApi
@@ -41,7 +45,7 @@
       value={fieldState.value}
       on:change={handleChange}
       disabled={fieldState.disabled}
-      error={fieldState.error}
+      readonly={fieldState.readonly}
       id={fieldState.fieldId}
       {placeholder}
       {type}
