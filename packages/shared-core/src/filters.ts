@@ -302,11 +302,16 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
       docValue: string | number | null,
       testValue: { low: number; high: number }
     ) => {
+      if (docValue == null || docValue === "") {
+        return true
+      }
+      if (!isNaN(+docValue)) {
+        return +docValue < testValue.low || +docValue > testValue.high
+      }
+      // if the string is NaN, then assume date
       return (
-        docValue == null ||
-        docValue === "" ||
-        +docValue < testValue.low ||
-        +docValue > testValue.high
+        new Date(docValue).getTime() < new Date(testValue.low).getTime() ||
+        new Date(docValue).getTime() > new Date(testValue.high).getTime()
       )
     }
   )
