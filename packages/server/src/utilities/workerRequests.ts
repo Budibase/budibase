@@ -167,7 +167,9 @@ export async function createAdminUser(
   return checkResponse(response, "create admin user")
 }
 
-export async function getChecklist() {
+export async function getChecklist(): Promise<{
+  adminUser: { checked: boolean }
+}> {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
     request(undefined, { method: "GET" })
