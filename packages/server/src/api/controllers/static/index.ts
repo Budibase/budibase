@@ -1,4 +1,4 @@
-import { ValidFileExtensions } from "@budibase/shared-core"
+import { InvalidFileExtensions } from "@budibase/shared-core"
 
 require("svelte/register")
 
@@ -91,7 +91,10 @@ export const uploadFile = async function (
         )
       }
 
-      if (!env.SELF_HOSTED && !ValidFileExtensions.includes(extension)) {
+      if (
+        !env.SELF_HOSTED &&
+        InvalidFileExtensions.includes(extension.toLowerCase())
+      ) {
         throw new BadRequestError(
           `File "${file.name}" has an invalid extension: "${extension}"`
         )

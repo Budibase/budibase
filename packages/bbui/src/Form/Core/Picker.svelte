@@ -14,7 +14,6 @@
 
   export let id = null
   export let disabled = false
-  export let error = null
   export let fieldText = ""
   export let fieldIcon = ""
   export let fieldColour = ""
@@ -113,7 +112,6 @@
   class="spectrum-Picker spectrum-Picker--sizeM"
   class:spectrum-Picker--quiet={quiet}
   {disabled}
-  class:is-invalid={!!error}
   class:is-open={open}
   aria-haspopup="listbox"
   on:click={onClick}
@@ -142,16 +140,6 @@
   >
     {fieldText}
   </span>
-  {#if error}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Picker-validationIcon"
-      focusable="false"
-      aria-hidden="true"
-      aria-label="Folder"
-    >
-      <use xlink:href="#spectrum-icon-18-Alert" />
-    </svg>
-  {/if}
   <svg
     class="spectrum-Icon spectrum-UIIcon-ChevronDown100 spectrum-Picker-menuIcon"
     focusable="false"
