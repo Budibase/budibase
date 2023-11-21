@@ -7,6 +7,7 @@
   export let label = null
   export let labelPosition = "above"
   export let disabled = false
+  export let readonly = false
   export let error = null
   export let enableTime = true
   export let timeOnly = false
@@ -15,6 +16,7 @@
   export let appendTo = undefined
   export let ignoreTimezones = false
   export let range = false
+  export let helpText = null
   const dispatch = createEventDispatcher()
 
   const onChange = e => {
@@ -29,10 +31,11 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <DatePicker
     {error}
     {disabled}
+    {readonly}
     {value}
     {placeholder}
     {enableTime}

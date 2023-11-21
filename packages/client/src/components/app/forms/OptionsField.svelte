@@ -6,6 +6,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let optionsType = "select"
   export let validation
   export let defaultValue
@@ -19,6 +20,7 @@
   export let onChange
   export let sort = true
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -46,9 +48,11 @@
   {field}
   {label}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type="options"
   bind:fieldState
   bind:fieldApi
@@ -60,6 +64,7 @@
         value={fieldState.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         {options}
         {placeholder}
@@ -74,6 +79,7 @@
         value={fieldState.value}
         id={fieldState.fieldId}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         {options}
         {direction}

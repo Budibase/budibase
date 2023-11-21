@@ -6,10 +6,12 @@
   export let label
   export let text
   export let disabled = false
+  export let readonly = false
   export let size
   export let validation
   export let defaultValue
   export let onChange
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -39,7 +41,9 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
+  {helpText}
   defaultValue={isTruthy(defaultValue)}
   type="boolean"
   bind:fieldState
@@ -49,6 +53,7 @@
     <CoreCheckbox
       value={fieldState.value}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       id={fieldState.fieldId}
       {size}

@@ -1,6 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let label
   export let field
@@ -10,8 +11,10 @@
   export let defaultValue
   export let type
   export let disabled = false
+  export let readonly = false
   export let validation
   export let span = 6
+  export let helpText = null
 
   // Get contexts
   const formContext = getContext("form")
@@ -29,6 +32,7 @@
     type,
     defaultValue,
     disabled,
+    readonly,
     validation,
     formStep
   )
@@ -76,6 +80,7 @@
       contenteditable={$component.editing}
       on:blur={$component.editing ? updateLabel : null}
       class:hidden={!label}
+      class:readonly
       for={fieldState?.fieldId}
       class={`spectrum-FieldLabel spectrum-FieldLabel--sizeM spectrum-Form-itemLabel ${labelClass}`}
     >
@@ -94,7 +99,14 @@
     {:else}
       <slot />
       {#if fieldState.error}
-        <div class="error">{fieldState.error}</div>
+        <div class="error">
+          <Icon name="Alert" />
+          <span>{fieldState.error}</span>
+        </div>
+      {:else if helpText}
+        <div class="helpText">
+          <Icon name="HelpOutline" /> <span>{helpText}</span>
+        </div>
       {/if}
     {/if}
   </div>
@@ -124,16 +136,51 @@
     position: relative;
     width: 100%;
   }
+
   .error {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+
+  .error :global(svg) {
+    width: 14px;
+    color: var(
+      --spectrum-semantic-negative-color-default,
+      var(--spectrum-global-color-red-500)
+    );
+    margin-right: 4px;
+  }
+
+  .error span {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
+  }
+
+  .helpText {
+    display: flex;
     margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+
+  .helpText :global(svg) {
+    width: 14px;
+    color: var(--grey-7);
+    margin-right: 6px;
+  }
+
+  .helpText span {
+    color: var(--grey-5);
+    font-size: var(--spectrum-global-dimension-font-size-75);
   }
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

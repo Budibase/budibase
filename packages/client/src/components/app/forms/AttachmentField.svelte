@@ -6,12 +6,14 @@
   export let field
   export let label
   export let disabled = false
+  export let readonly = false
   export let compact = false
   export let validation
   export let extensions
   export let onChange
   export let maximum = undefined
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -72,8 +74,10 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {span}
+  {helpText}
   type="attachment"
   bind:fieldState
   bind:fieldApi
@@ -82,7 +86,7 @@
   {#if fieldState}
     <CoreDropzone
       value={fieldState.value}
-      disabled={fieldState.disabled}
+      disabled={fieldState.disabled || fieldState.readonly}
       error={fieldState.error}
       on:change={handleChange}
       {processFiles}

@@ -5,7 +5,7 @@
   export let value = ""
   export let placeholder = null
   export let disabled = false
-  export let error = null
+  export let readonly = false
   export let id = null
   export let height = null
   export let minHeight = null
@@ -40,20 +40,9 @@
 <div
   style={`${heightString}${minHeightString}`}
   class="spectrum-Textfield spectrum-Textfield--multiline"
-  class:is-invalid={!!error}
   class:is-disabled={disabled}
   class:is-focused={focus}
 >
-  {#if error}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM
-      spectrum-Textfield-validationIcon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-Alert" />
-    </svg>
-  {/if}
   <!-- prettier-ignore -->
   <textarea
     bind:this={textarea}
@@ -61,6 +50,7 @@
     class="spectrum-Textfield-input"
     style={align ? `text-align: ${align}` : ""}
     {disabled}
+    {readonly}
     {id}
     on:focus={() => (focus = true)}
     on:blur={onChange}
