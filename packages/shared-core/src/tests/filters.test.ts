@@ -1,5 +1,5 @@
 import { SearchQuery, SearchQueryOperators } from "@budibase/types"
-import { runLuceneQuery } from "../src/filters"
+import { runLuceneQuery } from "../filters"
 import { expect, describe, it } from "vitest"
 
 describe("runLuceneQuery", () => {
