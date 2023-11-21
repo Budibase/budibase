@@ -3,6 +3,7 @@ import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
+import { logWarn } from "../logging"
 
 async function getClient(
   type: LockType,
@@ -116,7 +117,7 @@ export async function doWithLock<T>(
     const result = await task()
     return { executed: true, result }
   } catch (e: any) {
-    console.warn("lock error")
+    logWarn(`lock type: ${opts.type} error`, e)
     // lock limit exceeded
     if (e.name === "LockError") {
       if (opts.type === LockType.TRY_ONCE) {
@@ -124,11 +125,9 @@ export async function doWithLock<T>(
         // due to retry count (0) exceeded
         return { executed: false }
       } else {
-        console.error(e)
         throw e
       }
     } else {
-      console.error(e)
       throw e
     }
   } finally {
