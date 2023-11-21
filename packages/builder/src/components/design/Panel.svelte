@@ -1,8 +1,9 @@
 <script>
-  import { Icon, Body } from "@budibase/bbui"
+  import { AbsTooltip, Icon, Body } from "@budibase/bbui"
 
   export let title
   export let icon
+  export let iconTooltip
   export let showAddButton = false
   export let showBackButton = false
   export let showCloseButton = false
@@ -31,7 +32,9 @@
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
     {/if}
     {#if icon}
-      <Icon name={icon} />
+      <AbsTooltip type="info" text={iconTooltip}>
+        <Icon name={icon} />
+      </AbsTooltip>
     {/if}
     <div class="title">
       {#if customTitleContent}
