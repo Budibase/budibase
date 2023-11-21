@@ -11,7 +11,6 @@
 # the License.
 
 # erlang cookie for clouseau security
--name couchdb@127.0.0.1
 -setcookie monster
 
 # Ensure that the Erlang VM listens on a known port
