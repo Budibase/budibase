@@ -5,7 +5,6 @@ const { getDB } = require("../db")
 describe("db", () => {
   describe("getDB", () => {
     it("returns a db", async () => {
-      
       const dbName = structures.db.id()
       const db = getDB(dbName)
       expect(db).toBeDefined()
