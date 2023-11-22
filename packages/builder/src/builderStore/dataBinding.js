@@ -228,7 +228,12 @@ export const getContextProviderComponents = (
 /**
  * Gets all data provider components above a component.
  */
-export const getActionProviderComponents = (asset, componentId, actionType) => {
+export const getActionProviders = (
+  asset,
+  componentId,
+  actionType,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -236,13 +241,30 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
-  // Filter by only data provider components
-  return path.filter(component => {
+  // Find matching contexts and generate bindings
+  let providers = []
+  path.forEach(component => {
     const def = store.actions.components.getDefinition(component._component)
-    return def?.actions?.includes(actionType)
+    const actions = (def?.actions || []).map(action => {
+      return typeof action === "string" ? { type: action } : action
+    })
+    const action = actions.find(x => x.type === actionType)
+    if (action) {
+      let runtimeBinding = component._id
+      if (action.suffix) {
+        runtimeBinding += `-${action.suffix}`
+      }
+      providers.push({
+        readableBinding: component._instanceName,
+        runtimeBinding,
+      })
+    }
   })
+  return providers
 }
 
 /**
