@@ -155,19 +155,9 @@ export async function readGlobalUser(ctx: Ctx): Promise<User> {
   return checkResponse(response, "get user", { ctx })
 }
 
-export async function createAdminUser(
-  email: string,
-  password: string,
-  tenantId: string
-) {
-  const response = await fetch(
-    checkSlashesInUrl(env.WORKER_URL + "/api/global/users/init"),
-    request(undefined, { method: "POST", body: { email, password, tenantId } })
-  )
-  return checkResponse(response, "create admin user")
-}
-
-export async function getChecklist() {
+export async function getChecklist(): Promise<{
+  adminUser: { checked: boolean }
+}> {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
     request(undefined, { method: "GET" })
