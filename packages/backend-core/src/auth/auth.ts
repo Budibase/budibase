@@ -1,5 +1,6 @@
 const _passport = require("koa-passport")
 const LocalStrategy = require("passport-local").Strategy
+
 import { getGlobalDB } from "../context"
 import { Cookie } from "../constants"
 import { getSessionsForUser, invalidateSessions } from "../security/sessions"
@@ -26,6 +27,7 @@ import { clearCookie, getCookie } from "../utils"
 import { ssoSaveUserNoOp } from "../middleware/passport/sso/sso"
 
 const refresh = require("passport-oauth2-refresh")
+
 export {
   auditLog,
   authError,

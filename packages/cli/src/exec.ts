@@ -1,5 +1,6 @@
 import util from "util"
 import childProcess from "child_process"
+
 const runCommand = util.promisify(childProcess.exec)
 
 export async function exec(command: string, dir = "./") {

@@ -1,5 +1,11 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import { Database, Row } from "@budibase/types"
+import {
+  Database,
+  Row,
+  Automation,
+  AutomationTriggerStepId,
+  RowAttachment,
+} from "@budibase/types"
 import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
@@ -8,11 +14,7 @@ import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-import {
-  Automation,
-  AutomationTriggerStepId,
-  RowAttachment,
-} from "@budibase/types"
+
 const uuid = require("uuid/v4")
 const tar = require("tar")
 

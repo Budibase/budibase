@@ -1,6 +1,7 @@
 // mock the email system
 jest.mock("nodemailer")
 import { TestConfiguration, structures, mocks } from "../../../../tests"
+
 mocks.email.mock()
 import { events } from "@budibase/backend-core"
 import { GetPublicSettingsResponse, Config, ConfigType } from "@budibase/types"

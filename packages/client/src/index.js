@@ -15,6 +15,7 @@ import { initWebsocket } from "./websocket.js"
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
 import * as internal from "svelte/internal"
+
 window.svelte_internal = internal
 window.svelte = svelte
 
