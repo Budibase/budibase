@@ -1,4 +1,5 @@
 const Redis = require("ioredis-mock")
+
 import { default as RedisIntegration } from "../redis"
 
 class TestConfiguration {

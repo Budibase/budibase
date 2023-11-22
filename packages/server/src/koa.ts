@@ -1,6 +1,5 @@
 import env from "./environment"
-import { ExtendableContext } from "koa"
-import Koa from "koa"
+import Koa, { ExtendableContext } from "koa"
 import koaBody from "koa-body"
 import http from "http"
 import * as api from "./api"

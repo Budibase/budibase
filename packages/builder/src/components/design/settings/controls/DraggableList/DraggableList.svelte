@@ -1,8 +1,7 @@
 <script>
   import { dndzone } from "svelte-dnd-action"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import { generate } from "shortid"
-  import { setContext } from "svelte"
   import { writable, get } from "svelte/store"
   import DragHandle from "./drag-handle.svelte"
 
