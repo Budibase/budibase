@@ -1,4 +1,4 @@
-import { context, locks, queue } from "@budibase/backend-core"
+import { cache, context, locks, queue } from "@budibase/backend-core"
 import { UserCtx, Document, LockName, LockType } from "@budibase/types"
 import Bull, { Job } from "bull"
 
@@ -27,8 +27,34 @@ interface MigrationDoc extends Document {
 const appQueues: Record<string, Bull.Queue<any>> = {}
 
 async function processMessage(job: Job) {
-  const message = job.data
-  await MIGRATIONS[message.migrationId].migration()
+  const { appId, migrationId, previousMigrationId } = job.data
+
+  await locks.doWithLock(
+    {
+      name: LockName.APP_MIGRATION,
+      type: LockType.TRY_ONCE,
+      resource: appId,
+      ttl: 2000,
+    },
+    async () => {
+      await context.doInAppContext(appId, async () => {
+        const db = context.getAppDB()
+        const migrationDoc = await db.get<MigrationDoc>("_design/migrations")
+        if (migrationDoc.version >= migrationId) {
+          await job.moveToCompleted()
+          return
+        }
+
+        if (migrationDoc.version !== previousMigrationId) {
+          return
+        }
+
+        // Transaction
+        await MIGRATIONS[migrationId].migration()
+        await db.put({ ...migrationDoc, version: migrationId })
+      })
+    }
+  )
 }
 
 export default async (ctx: UserCtx, next: any) => {
@@ -41,11 +67,13 @@ export default async (ctx: UserCtx, next: any) => {
   const db = context.getAppDB()
   let migrationDoc: MigrationDoc = { version: "" }
   try {
-    migrationDoc = await db.get<MigrationDoc>("_migrations")
+    migrationDoc = await db.get<MigrationDoc>("_design/migrations")
   } catch (e: any) {
     if (e.status !== 404) {
       throw e
     }
+
+    await db.put({ _id: "_design/migrations" })
   }
 
   const currentMigration = migrationDoc.version || ""
