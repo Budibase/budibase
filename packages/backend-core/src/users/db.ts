@@ -1,6 +1,5 @@
 import env from "../environment"
 import * as eventHelpers from "./events"
-import * as accounts from "../accounts"
 import * as accountSdk from "../accounts"
 import * as cache from "../cache"
 import { doInTenant, getGlobalDB, getIdentity, getTenantId } from "../context"
@@ -465,7 +464,7 @@ export class UserDB {
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       // root account holder can't be deleted from inside budibase
       const email = dbUser.email
-      const account = await accounts.getAccount(email)
+      const account = await accountSdk.getAccount(email)
       if (account) {
         if (dbUser.userId === getIdentity()!._id) {
           throw new HTTPError('Please visit "Account" to delete this user', 400)

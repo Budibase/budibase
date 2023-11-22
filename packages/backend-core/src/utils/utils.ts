@@ -11,6 +11,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
+
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR

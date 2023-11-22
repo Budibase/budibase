@@ -1,14 +1,13 @@
-import { PathLike } from "fs"
-import fs from "fs"
+import fs, { PathLike } from "fs"
 import { budibaseTempDir } from "../budibaseDir"
 import { resolve, join } from "path"
 import env from "../../environment"
 import tar from "tar"
-import environment from "../../environment"
+
 const uuid = require("uuid/v4")
 
 export const TOP_LEVEL_PATH =
-  environment.TOP_LEVEL_PATH || resolve(join(__dirname, "..", "..", ".."))
+  env.TOP_LEVEL_PATH || resolve(join(__dirname, "..", "..", ".."))
 
 /**
  * Upon first startup of instance there may not be everything we need in tmp directory, set it up.

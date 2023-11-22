@@ -6,6 +6,7 @@ const mockStrategy = require("passport-google-oauth").OAuth2Strategy
 
 jest.mock("../sso")
 import * as _sso from "../sso"
+
 const sso = jest.mocked(_sso)
 
 const mockSaveUserFn = jest.fn()
