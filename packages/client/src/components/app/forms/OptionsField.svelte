@@ -2,6 +2,7 @@
   import { CoreSelect, CoreRadioGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
+
   export let field
   export let label
   export let placeholder
