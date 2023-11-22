@@ -1,4 +1,5 @@
 import { prefixed, DocumentType } from "@budibase/types"
+
 export {
   SEPARATOR,
   UNICODE_MAX,
