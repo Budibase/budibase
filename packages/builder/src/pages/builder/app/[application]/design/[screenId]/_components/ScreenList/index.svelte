@@ -9,51 +9,42 @@
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
-  import { onMount, tick } from "svelte"
   import { goto } from "@roxi/routify"
+  import { getVerticalResizeActions } from './resizable';
+  import { tick } from "svelte"
 
-  let search = false
+  const [resizable, resizableHandle] = getVerticalResizeActions();
+
+  let searching = false
   let resizing = false
   let searchValue = ""
   let searchInput
   let container
   let screensContainer
   let scrolling = false
-  let previousHeight = null
-  let dragOffset
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
   const openSearch = async () => {
-    search = true
+    searching = true
     await tick()
     searchInput.focus()
     screensContainer.scroll({ top: 0, behavior: "smooth" })
-    previousHeight = $screensHeight
-    $screensHeight = "calc(100% + 1px)"
   }
 
   const closeSearch = async () => {
-    if (previousHeight) {
-      // Restore previous height and wait for animation
-      $screensHeight = previousHeight
-      previousHeight = null
-      await sleep(300)
-    }
-    search = false
+    searching = false
     searchValue = ""
   }
 
-  const getFilteredScreens = (screens, search) => {
+  const getFilteredScreens = (screens, searchValue) => {
     return screens.filter(screen => {
-      return !search || screen.routing.route.includes(search)
+      return !searchValue || screen.routing.route.includes(searchValue)
     })
   }
 
   const handleAddButton = () => {
-    if (search) {
+    if (searching) {
       closeSearch()
     } else {
       $goto("../new")
@@ -70,67 +61,35 @@
     scrolling = e.target.scrollTop !== 0
   }
 
-  const startResizing = e => {
-    // Reset the height store to match the true height
-    $screensHeight = `${container.getBoundingClientRect().height}px`
-
-    // Store an offset to easily compute new height when moving the mouse
-    dragOffset = parseInt($screensHeight) - e.clientY
-
-    // Add event listeners
-    resizing = true
-    document.addEventListener("mousemove", resize)
-    document.addEventListener("mouseup", stopResizing)
-  }
-
-  const resize = e => {
-    // Prevent negative heights as this screws with layout
-    const newHeight = Math.max(0, e.clientY + dragOffset)
-    if (newHeight == null || isNaN(newHeight)) {
-      return
-    }
-    $screensHeight = `${newHeight}px`
-  }
-
-  const stopResizing = () => {
-    resizing = false
-    document.removeEventListener("mousemove", resize)
-  }
-
-  onMount(() => {
-    // Ensure we aren't stuck at 100% height from leaving while searching
-    if ($screensHeight == null || isNaN(parseInt($screensHeight))) {
-      $screensHeight = "210px"
-    }
-  })
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
 <div
   class="screens"
-  class:search
+  class:searching
   class:resizing
   style={`height:${$screensHeight};`}
   bind:this={container}
+  use:resizable
 >
   <div class="header" class:scrolling>
     <input
-      readonly={!search}
+      readonly={!searching}
       bind:value={searchValue}
       bind:this={searchInput}
       class="input"
       placeholder="Search for screens"
     />
-    <div class="title" class:hide={search}>
+    <div on:click={openSearch} class="title" class:hide={searching}>
       <Body size="S">Screens</Body>
     </div>
-    <div on:click={openSearch} class="searchButton" class:hide={search}>
+    <div on:click={openSearch} class="searchButton" class:hide={searching}>
       <Icon size="S" name="Search" />
     </div>
     <div
       on:click={handleAddButton}
       class="addButton"
-      class:closeButton={search}
+      class:closeButton={searching}
     >
       <Icon name="Add" />
     </div>
@@ -164,8 +123,10 @@
   </div>
 
   <div
+    disabled={searching}
     class="divider"
-    on:mousedown={startResizing}
+    class:disabled={searching}
+    use:resizableHandle
     on:dblclick={() => screensHeight.set("210px")}
   />
 </div>
@@ -177,10 +138,11 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-  }
-  .screens.search {
     transition: height 300ms ease-out;
+  }
+  .screens.searching {
     max-height: none;
+    height: 100% !important;
   }
   .screens.resizing {
     user-select: none;
@@ -219,7 +181,7 @@
   .input::placeholder {
     color: var(--spectrum-global-color-gray-600);
   }
-  .screens.search input {
+  .screens.searching input {
     display: block;
   }
 
@@ -304,5 +266,11 @@
   }
   .divider:hover:after {
     background: var(--spectrum-global-color-gray-300);
+  }
+  .divider.disabled {
+    cursor: auto;
+  }
+  .divider.disabled:after {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>
