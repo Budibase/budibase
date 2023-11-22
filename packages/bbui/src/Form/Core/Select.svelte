@@ -6,7 +6,6 @@
   export let id = null
   export let placeholder = "Choose an option"
   export let disabled = false
-  export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -71,7 +70,6 @@
   on:loadMore
   {quiet}
   {id}
-  {error}
   {disabled}
   {readonly}
   {fieldText}

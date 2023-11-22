@@ -14,7 +14,6 @@
   export let disabled = false
   export let readonly = false
   export let updateOnChange = true
-  export let error = null
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
@@ -111,27 +110,12 @@
   }
 </script>
 
-<div
-  class="spectrum-InputGroup"
-  class:is-invalid={!!error}
-  class:is-disabled={disabled}
->
+<div class="spectrum-InputGroup" class:is-disabled={disabled}>
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
-    class:is-invalid={!!error}
     class:is-disabled={disabled}
     class:is-focused={focus}
   >
-    {#if error}
-      <svg
-        class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-        focusable="false"
-        aria-hidden="true"
-      >
-        <use xlink:href="#spectrum-icon-18-Alert" />
-      </svg>
-    {/if}
-
     <input
       {id}
       on:click
