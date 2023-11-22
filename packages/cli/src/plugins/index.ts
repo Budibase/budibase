@@ -1,5 +1,10 @@
 import { Command } from "../structures/Command"
-import { CommandWord, AnalyticsEvent, InitType } from "../constants"
+import {
+  CommandWord,
+  AnalyticsEvent,
+  InitType,
+  GENERATED_USER_EMAIL,
+} from "../constants"
 import { getSkeleton, fleshOutSkeleton } from "./skeleton"
 import * as questions from "../questions"
 import fs from "fs"
@@ -9,9 +14,9 @@ import { runPkgCommand } from "../exec"
 import { join } from "path"
 import { success, error, info, moveDirectory } from "../utils"
 import { captureEvent } from "../events"
-import { GENERATED_USER_EMAIL } from "../constants"
 import { init as hostingInit } from "../hosting/init"
 import { start as hostingStart } from "../hosting/start"
+
 const fp = require("find-free-port")
 
 type PluginOpts = {

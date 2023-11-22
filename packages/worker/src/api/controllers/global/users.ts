@@ -120,28 +120,17 @@ export const adminUser = async (
       )
     }
 
-    const user: User = {
-      email: email,
-      password: password,
-      createdAt: Date.now(),
-      roles: {},
-      builder: {
-        global: true,
-      },
-      admin: {
-        global: true,
-      },
-      tenantId,
-      ssoId,
-    }
     try {
-      // always bust checklist beforehand, if an error occurs but can proceed, don't get
-      // stuck in a cycle
-      await cache.bustCache(cache.CacheKey.CHECKLIST)
-      const finalUser = await userSdk.db.save(user, {
-        hashPassword,
-        requirePassword,
-      })
+      const finalUser = await userSdk.db.createAdminUser(
+        email,
+        password,
+        tenantId,
+        {
+          ssoId,
+          hashPassword,
+          requirePassword,
+        }
+      )
 
       // events
       let account: CloudAccount | undefined
