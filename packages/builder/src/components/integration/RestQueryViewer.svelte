@@ -404,7 +404,7 @@
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
-    breakQs = restUtils.breakQueryString(encodeURI(qs))
+    breakQs = restUtils.breakQueryString(encodeURI(qs ?? ""))
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
