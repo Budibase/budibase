@@ -1,6 +1,7 @@
 import { context } from "@budibase/backend-core"
 import { SEPARATOR, ViewName } from "../utils"
 import { DocumentType, LinkDocument, Row, SearchIndex } from "@budibase/types"
+
 const SCREEN_PREFIX = DocumentType.SCREEN + SEPARATOR
 
 /**************************************************

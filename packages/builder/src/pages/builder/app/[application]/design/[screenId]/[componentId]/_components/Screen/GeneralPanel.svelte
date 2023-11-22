@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
-  import { Helpers } from "@budibase/bbui"
   import {
+    Helpers,
     Input,
     Checkbox,
     Banner,
