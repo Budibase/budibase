@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DATA_DIR=${DATA_DIR:-/data}
+
 mkdir -p ${DATA_DIR}
 mkdir -p ${DATA_DIR}/couch/{dbs,views}
 mkdir -p ${DATA_DIR}/search

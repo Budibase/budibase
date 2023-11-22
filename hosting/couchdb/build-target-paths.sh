@@ -18,7 +18,10 @@ if [[ "${TARGETBUILD}" = "aas" ]]; then
     /etc/init.d/ssh restart
     sed -i "s#DATA_DIR#/home#g" /opt/clouseau/clouseau.ini
     sed -i "s#DATA_DIR#/home#g" /opt/couchdb/etc/local.ini
-elif  [[ -n $KUBERNETES_SERVICE_HOST ]]; then
+elif [[ "${TARGETBUILD}" = "single" ]]; then
+    sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
+    sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
+elif [[ -n $KUBERNETES_SERVICE_HOST ]]; then
     # In Kubernetes the directory /opt/couchdb/data has a persistent volume
     # mount for storing database data.
     sed -i "s#DATA_DIR#/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
