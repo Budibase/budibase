@@ -26,6 +26,7 @@ import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
+
 const DEFAULT_SCHEMA = "dbo"
 
 import { ConfidentialClientApplication } from "@azure/msal-node"

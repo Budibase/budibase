@@ -1,4 +1,5 @@
 import { default as FirebaseIntegration } from "../firebase"
+
 jest.mock("@google-cloud/firestore")
 
 class TestConfiguration {
