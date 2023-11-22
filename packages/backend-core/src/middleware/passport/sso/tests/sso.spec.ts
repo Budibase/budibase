@@ -11,6 +11,7 @@ const mockSaveUser = jest.fn()
 
 jest.mock("../../../../users")
 import * as _users from "../../../../users"
+
 const users = jest.mocked(_users)
 
 const getErrorMessage = () => {
