@@ -8,13 +8,23 @@ const MIGRATIONS: Record<
 > = {
   "20231122115100": {
     migration: async () => {
-      console.error("a")
+      await new Promise<void>(r => {
+        setTimeout(() => {
+          console.error("a")
+          r()
+        }, 10000)
+      })
     },
     blocking: false,
   },
   "20231122115532": {
     migration: async () => {
-      console.error("b")
+      await new Promise<void>(r => {
+        setTimeout(() => {
+          console.error("b")
+          r()
+        }, 10000)
+      })
     },
     blocking: true,
   },
@@ -32,9 +42,9 @@ async function processMessage(job: Job) {
   await locks.doWithLock(
     {
       name: LockName.APP_MIGRATION,
-      type: LockType.TRY_ONCE,
+      type: LockType.DEFAULT,
       resource: appId,
-      ttl: 2000,
+      ttl: 20000,
     },
     async () => {
       await context.doInAppContext(appId, async () => {
