@@ -146,12 +146,12 @@ export class UserDB {
 
   static async allUsers() {
     const db = getGlobalDB()
-    const response = await db.allDocs(
+    const response = await db.allDocs<User>(
       dbUtils.getGlobalUserParams(null, {
         include_docs: true,
       })
     )
-    return response.rows.map((row: any) => row.doc)
+    return response.rows.map(row => row.doc!)
   }
 
   static async countUsersByApp(appId: string) {
