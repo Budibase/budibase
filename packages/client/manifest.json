@@ -6037,53 +6037,31 @@
         ]
       },
       {
+        "tag": "style",
+        "type": "select",
+        "label": "Button position",
+        "key": "buttonPosition",
+        "options": [
+          {
+            "label": "Bottom",
+            "value": "bottom"
+          },
+          {
+            "label": "Top",
+            "value": "top"
+          }
+        ],
+        "defaultValue": "bottom"
+      },
+      {
         "section": true,
         "name": "Buttons",
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "View",
-          "invert": true
-        },
         "settings": [
           {
-            "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save button",
+            "type": "buttonConfiguration",
+            "key": "buttons",
             "nested": true,
-            "defaultValue": "Save"
-          },
-          {
-            "type": "text",
-            "key": "deleteButtonLabel",
-            "label": "Delete button",
-            "nested": true,
-            "defaultValue": "Delete",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
-          },
-          {
-            "type": "url",
-            "label": "Navigate after button press",
-            "key": "actionUrl",
-            "placeholder": "Choose a screen",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Hide notifications",
-            "key": "notificationOverride",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "resetOn": ["actionType", "dataSource"]
           }
         ]
       },
