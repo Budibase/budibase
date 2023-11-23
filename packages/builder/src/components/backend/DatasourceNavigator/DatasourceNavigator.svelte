@@ -132,7 +132,7 @@
     {#if showNoResults}
       <Layout paddingY="none" paddingX="L">
         <div class="no-results">
-          There aren't any datasource matching '{searchTerm}'
+          There aren't any datasource matching that route
         </div>
       </Layout>
     {/if}
@@ -147,5 +147,9 @@
     display: grid;
     place-items: center;
     flex: 0 0 24px;
+  }
+
+  .no-results {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>
