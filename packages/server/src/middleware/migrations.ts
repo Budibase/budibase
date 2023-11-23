@@ -2,10 +2,7 @@ import { cache, context, locks, queue } from "@budibase/backend-core"
 import { UserCtx, Document, LockName, LockType } from "@budibase/types"
 import Bull, { Job } from "bull"
 
-const MIGRATIONS: Record<
-  string,
-  { migration: () => Promise<void>; blocking: boolean }
-> = {
+const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
   "20231122115100": {
     migration: async () => {
       await new Promise<void>(r => {
@@ -15,7 +12,6 @@ const MIGRATIONS: Record<
         }, 10000)
       })
     },
-    blocking: false,
   },
   "20231122115532": {
     migration: async () => {
@@ -26,7 +22,6 @@ const MIGRATIONS: Record<
         }, 10000)
       })
     },
-    blocking: true,
   },
 }
 
@@ -129,6 +124,8 @@ export default async (ctx: UserCtx, next: any) => {
       }
       // TODO: idempotency
     )
+
+    ctx.response.set("migration-header", appId)
   }
 
   return next()
