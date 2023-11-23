@@ -82,6 +82,7 @@
       minWidth: "200px",
     },
     role: {
+      displayName: "Access",
       sortable: false,
       width: "1fr",
     },
