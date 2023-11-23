@@ -7,9 +7,9 @@
   export let placeholder
   export let value
   export let onAdd
+  export let search
 
   let searchInput
-  let search = false
 
   const openSearch = async () => {
     search = true
