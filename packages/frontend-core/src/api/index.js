@@ -170,6 +170,13 @@ export const createAPIClient = config => {
 
     // Handle response
     if (response.status >= 200 && response.status < 400) {
+      const migration = response.headers.get("migration-header")
+      if (migration) {
+        window.location = `/builder/updating?migrationId=${migration}&returnUrl=${encodeURI(
+          window.location
+        )}`
+      }
+
       try {
         if (parseResponse) {
           return await parseResponse(response)
