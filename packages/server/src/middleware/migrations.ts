@@ -129,22 +129,6 @@ export default async (ctx: UserCtx, next: any) => {
       }
       // TODO: idempotency
     )
-      migrationId: migration,
-      previousMigrationId: migrationKeys[migrationKeys.indexOf(migration) - 1],
-    })
-  }
-
-  const blockingMigration = pendingMigrations
-    .sort((a, b) => b.localeCompare(a))
-    .find(m => MIGRATIONS[m].blocking)
-
-  if (blockingMigration) {
-    ctx.redirect(
-      `/builder/updating?migrationId=${blockingMigration}&returnUrl=${encodeURI(
-        ctx.request.url
-      )}`
-    )
-    return
   }
 
   return next()
