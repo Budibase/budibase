@@ -66,6 +66,7 @@
 
 <style>
   .panel {
+    min-width: 260px;
     width: 260px;
     flex: 0 0 260px;
     background: var(--background);
@@ -83,6 +84,7 @@
     border-right: var(--border-light);
   }
   .panel.wide {
+    min-width: 310px;
     width: 310px;
     flex: 0 0 310px;
   }

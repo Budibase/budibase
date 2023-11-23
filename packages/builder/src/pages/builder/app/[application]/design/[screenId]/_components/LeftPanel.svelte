@@ -24,13 +24,13 @@
 <style>
   .panel {
     display: flex;
-    min-width: 250px;
+    min-width: 270px;
     width: 310px;
     height: 100%;
   }
 
   .content {
-    overflow: scroll;
+    overflow: hidden;
     flex-grow: 1;
     height: 100%;
     display: flex;

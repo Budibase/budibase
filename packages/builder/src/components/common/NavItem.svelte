@@ -166,9 +166,10 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    width: max-content;
+    width: 100%;
     position: relative;
     padding-left: var(--spacing-l);
+    box-sizing: border-box;
   }
 
   /* Needed to fully display the actions icon */
@@ -266,6 +267,7 @@
   }
 
   .right {
+    margin-left: auto;
     order: 10;
   }
 </style>
