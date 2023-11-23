@@ -76,7 +76,11 @@ export function hasBuilderPermissions(user?: User | ContextUser): boolean {
   if (!user) {
     return false
   }
-  return user.builder?.global || hasAppBuilderPermissions(user)
+  return (
+    user.builder?.global ||
+    hasAppBuilderPermissions(user) ||
+    hasCreatorPermissions(user)
+  )
 }
 
 // checks if a user is capable of being an admin
