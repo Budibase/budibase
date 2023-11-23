@@ -4,7 +4,6 @@
     store,
     sortedScreens,
     userSelectedResourceMap,
-    screensHeight,
   } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
@@ -19,7 +18,6 @@
   let resizing = false
   let searchValue = ""
   let searchInput
-  let container
   let screensContainer
   let scrolling = false
 
@@ -68,8 +66,6 @@
   class="screens"
   class:searching
   class:resizing
-  style={`height:${$screensHeight};`}
-  bind:this={container}
   use:resizable
 >
   <div class="header" class:scrolling>
@@ -127,7 +123,6 @@
     class="divider"
     class:disabled={searching}
     use:resizableHandle
-    on:dblclick={() => screensHeight.set("210px")}
   />
 </div>
 
@@ -138,10 +133,11 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-    transition: height 300ms ease-out;
+    transition: height 300ms ease-out, max-height 300ms ease-out;
+    height: 210px;
   }
   .screens.searching {
-    max-height: none;
+    max-height: 100%;
     height: 100% !important;
   }
   .screens.resizing {
