@@ -20,6 +20,7 @@ export const TableNames = {
 export const BudibaseRoles = {
   AppUser: "appUser",
   Developer: "developer",
+  Creator: "creator",
   Admin: "admin",
 }
 
@@ -29,8 +30,9 @@ export const BudibaseRoleOptionsOld = [
   { label: "Admin", value: BudibaseRoles.Admin },
 ]
 export const BudibaseRoleOptions = [
-  { label: "Member", value: BudibaseRoles.AppUser },
-  { label: "Admin", value: BudibaseRoles.Admin },
+  { label: "App user", value: BudibaseRoles.AppUser },
+  { label: "Creator", value: BudibaseRoles.Creator },
+  { label: "Account admin", value: BudibaseRoles.Admin },
 ]
 
 export const BudibaseRoleOptionsNew = [
