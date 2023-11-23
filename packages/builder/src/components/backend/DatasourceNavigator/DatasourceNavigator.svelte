@@ -132,7 +132,7 @@
     {#if showNoResults}
       <Layout paddingY="none" paddingX="L">
         <div class="no-results">
-          There aren't any datasource matching that route
+          There aren't any datasources matching that name
         </div>
       </Layout>
     {/if}
