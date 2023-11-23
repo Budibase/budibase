@@ -20,6 +20,7 @@ const getResizeActions = (cssProperty, mouseMoveEventProperty, elementProperty, 
     let startPosition = null;
 
     const handleMouseMove = (e) => {
+      e.preventDefault(); // Prevent highlighting while dragging
       const change = e[mouseMoveEventProperty] - startPosition;
       element.style[cssProperty] = `${startProperty + change}px`
     }
