@@ -1,18 +1,14 @@
 <script>
   import { Icon, Layout, Body } from "@budibase/bbui"
-  import {
-    store,
-    sortedScreens,
-    userSelectedResourceMap,
-  } from "builderStore"
+  import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
   import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from './resizable';
+  import { getVerticalResizeActions } from "./resizable"
   import { tick } from "svelte"
 
-  const [resizable, resizableHandle] = getVerticalResizeActions();
+  const [resizable, resizableHandle] = getVerticalResizeActions()
 
   let searching = false
   let resizing = false
@@ -58,16 +54,10 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
-
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
-<div
-  class="screens"
-  class:searching
-  class:resizing
-  use:resizable
->
+<div class="screens" class:searching class:resizing use:resizable>
   <div class="header" class:scrolling>
     <input
       readonly={!searching}

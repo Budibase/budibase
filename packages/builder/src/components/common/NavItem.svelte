@@ -100,7 +100,7 @@
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
         <AbsTooltip type="info" position="right" text={iconTooltip}>
-        <Icon color={iconColor} size="S" name={icon} />
+          <Icon color={iconColor} size="S" name={icon} />
         </AbsTooltip>
       </div>
     {/if}

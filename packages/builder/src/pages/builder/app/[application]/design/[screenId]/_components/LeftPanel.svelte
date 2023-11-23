@@ -1,9 +1,9 @@
 <script>
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
-  import { getHorizontalResizeActions } from './ScreenList/resizable';
+  import { getHorizontalResizeActions } from "./ScreenList/resizable"
 
-  const [resizable, resizableHandle] = getHorizontalResizeActions();
+  const [resizable, resizableHandle] = getHorizontalResizeActions()
 </script>
 
 <div class="panel" use:resizable>
@@ -11,13 +11,8 @@
     <ScreenList />
     <ComponentList />
   </div>
-  <div
-    class="divider"
-  >
-    <div class="dividerClickExtender"
-      role="separator"
-      use:resizableHandle
-     />
+  <div class="divider">
+    <div class="dividerClickExtender" role="separator" use:resizableHandle />
   </div>
 </div>
 

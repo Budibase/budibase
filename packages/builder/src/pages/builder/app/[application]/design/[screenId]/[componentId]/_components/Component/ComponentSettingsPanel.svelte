@@ -45,12 +45,18 @@
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
 
-  $: componentName = getComponentName(componentInstance);
+  $: componentName = getComponentName(componentInstance)
 </script>
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-  <Panel {title} icon={componentDefinition?.icon} iconTooltip={componentName} borderLeft wide>
+    <Panel
+      {title}
+      icon={componentDefinition?.icon}
+      iconTooltip={componentName}
+      borderLeft
+      wide
+    >
       <span class="panel-title-content" slot="panel-title-content">
         <input
           class="input"
