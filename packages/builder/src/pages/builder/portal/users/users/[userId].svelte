@@ -98,7 +98,17 @@
       return y._id === userId
     })
   })
-  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
+  $: globalRole = getGlobalRole(user)
+
+  const getGlobalRole = user => {
+    if (sdk.users.isAdmin(user)) {
+      return Constants.BudibaseRoles.Admin
+    } else if (sdk.users.isCreator(user)) {
+      return Constants.BudibaseRoles.Creator
+    } else {
+      return Constants.BudibaseRoles.AppUser
+    }
+  }
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -177,12 +187,17 @@
   }
 
   async function updateUserRole({ detail }) {
-    if (detail === "developer") {
+    if (detail === Constants.BudibaseRoles.Developer) {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
-    } else if (detail === "admin") {
+    } else if (detail === Constants.BudibaseRoles.Admin) {
       toggleFlags({ admin: { global: true }, builder: { global: true } })
-    } else if (detail === "appUser") {
+    } else if (detail === Constants.BudibaseRoles.AppUser) {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
+    } else if (detail === Constants.BudibaseRoles.Creator) {
+      toggleFlags({
+        admin: { global: false },
+        builder: { global: false, creator: true },
+      })
     }
   }
 

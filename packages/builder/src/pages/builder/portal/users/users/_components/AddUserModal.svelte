@@ -98,7 +98,7 @@
         align-items: center;
         flex-direction: row;"
       >
-        <div style="width: 90%">
+        <div style="flex: 1 1 auto;">
           <InputDropdown
             inputType="email"
             bind:inputValue={input.email}

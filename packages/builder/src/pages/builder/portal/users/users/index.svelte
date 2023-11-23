@@ -171,6 +171,7 @@
     const payload = userData?.users?.map(user => ({
       email: user.email,
       builder: user.role === Constants.BudibaseRoles.Developer,
+      creator: user.role === Constants.BudibaseRoles.Creator,
       admin: user.role === Constants.BudibaseRoles.Admin,
       groups: userData.groups,
     }))
