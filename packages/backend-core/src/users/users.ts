@@ -25,6 +25,7 @@ import {
 import { getGlobalDB } from "../context"
 import * as context from "../context"
 import { isCreator } from "./utils"
+import { UserDB } from "./db"
 
 type GetOpts = { cleanup?: boolean }
 
@@ -335,4 +336,20 @@ export function cleanseUserObject(user: User | ContextUser, base?: User) {
     user.roles = base.roles
   }
   return user
+}
+
+export async function addAppBuilder(user: User, appId: string) {
+  const prodAppId = getProdAppID(appId)
+  user.builder ??= {}
+  user.builder.apps ??= []
+  user.builder.apps.push(prodAppId)
+  await UserDB.save(user, { hashPassword: false })
+}
+
+export async function removeAppBuilder(user: User, appId: string) {
+  const prodAppId = getProdAppID(appId)
+  if (user.builder && user.builder.apps?.includes(prodAppId)) {
+    user.builder.apps = user.builder.apps.filter(id => id !== prodAppId)
+  }
+  await UserDB.save(user, { hashPassword: false })
 }
