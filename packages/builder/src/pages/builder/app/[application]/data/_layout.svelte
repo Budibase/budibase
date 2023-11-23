@@ -21,7 +21,7 @@
 <!-- routify:options index=1 -->
 <div class="data">
   {#if !$isActive("./new")}
-    <Panel borderRight>
+    <Panel borderRight borderBottomHeader={false}>
       <span class="panel-title-content" slot="panel-title-content">
         <NavHeader
           title="Sources"
@@ -30,7 +30,7 @@
           onAdd={() => $goto("./new")}
         />
       </span>
-      <Layout paddingX="L" paddingY="XL" gap="S">
+      <Layout paddingX="L" paddingY="none" gap="S">
         <DatasourceNavigator searchTerm={searchValue} />
       </Layout>
     </Panel>
