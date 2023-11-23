@@ -98,17 +98,7 @@
       return y._id === userId
     })
   })
-  $: globalRole = getGlobalRole(user)
-
-  const getGlobalRole = user => {
-    if (sdk.users.isAdmin(user)) {
-      return Constants.BudibaseRoles.Admin
-    } else if (sdk.users.isCreator(user)) {
-      return Constants.BudibaseRoles.Creator
-    } else {
-      return Constants.BudibaseRoles.AppUser
-    }
-  }
+  $: globalRole = users.getUserRole(user)
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -310,6 +300,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
+              placeholder={null}
               disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}

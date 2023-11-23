@@ -804,8 +804,8 @@
             <FancySelect
               bind:value={creationRoleType}
               options={sdk.users.isAdmin($auth.user)
-                ? Constants.BudibaseRoleOptionsNew
-                : Constants.BudibaseRoleOptionsNew.filter(
+                ? Constants.BudibaseRoleOptions
+                : Constants.BudibaseRoleOptions.filter(
                     option => option.value !== Constants.BudibaseRoles.Admin
                   )}
               label="Role"
