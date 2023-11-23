@@ -48,19 +48,6 @@ export const BudibaseRoleOptions = [
   },
 ]
 
-export const BuilderRoleDescriptions = [
-  {
-    value: BudibaseRoles.AppUser,
-    icon: "User",
-    label: "App user - Only has access to published apps",
-  },
-  {
-    value: BudibaseRoles.Admin,
-    icon: "Draw",
-    label: "Admin - Full access",
-  },
-]
-
 export const PlanType = {
   FREE: "free",
   TEAM: "team",
