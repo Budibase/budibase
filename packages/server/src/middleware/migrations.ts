@@ -119,7 +119,18 @@ export default async (ctx: UserCtx, next: any) => {
     })
   }
 
-  const isBlocking = pendingMigrations.some(m => MIGRATIONS[m].blocking)
+  const blockingMigration = pendingMigrations
+    .sort((a, b) => b.localeCompare(a))
+    .find(m => MIGRATIONS[m].blocking)
+
+  if (blockingMigration) {
+    ctx.redirect(
+      `/builder/updating?migrationId=${blockingMigration}&returnUrl=${encodeURI(
+        ctx.request.url
+      )}`
+    )
+    return
+  }
 
   return next()
 }
