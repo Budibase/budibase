@@ -147,5 +147,3 @@ export const userSelectedResourceMap = derived(userStore, $userStore => {
 export const isOnlyUser = derived(userStore, $userStore => {
   return $userStore.length < 2
 })
-
-export const screensHeight = writable("210px")
