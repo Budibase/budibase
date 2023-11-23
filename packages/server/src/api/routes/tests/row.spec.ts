@@ -10,6 +10,7 @@ import {
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
+  FormulaTypes,
   INTERNAL_TABLE_SOURCE_ID,
   MonthlyQuotaName,
   PermissionLevel,
@@ -32,6 +33,7 @@ import {
   structures,
 } from "@budibase/backend-core/tests"
 import _ from "lodash"
+import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
@@ -68,7 +70,7 @@ describe.each([
 
   const generateTableConfig: () => SaveTableRequest = () => {
     return {
-      name: generator.word(),
+      name: uuid.v4(),
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
@@ -481,7 +483,7 @@ describe.each([
       })
 
       const createViewResponse = await config.createView({
-        name: generator.word(),
+        name: uuid.v4(),
         schema: {
           Country: {
             visible: true,
@@ -816,7 +818,8 @@ describe.each([
             RelationshipType.ONE_TO_MANY,
             ["link"],
             {
-              name: generator.word(),
+              // Making sure that the combined table name + column name is within postgres limits
+              name: uuid.v4().replace(/-/g, "").substring(0, 16),
               type: "table",
               primary: ["id"],
               primaryDisplay: "id",
@@ -949,7 +952,7 @@ describe.each([
   describe("view 2.0", () => {
     async function userTable(): Promise<Table> {
       return {
-        name: `users_${generator.word()}`,
+        name: `users_${uuid.v4()}`,
         sourceId: INTERNAL_TABLE_SOURCE_ID,
         sourceType: TableSourceType.INTERNAL,
         type: "table",
@@ -1133,7 +1136,7 @@ describe.each([
       const viewSchema = { age: { visible: true }, name: { visible: true } }
       async function userTable(): Promise<Table> {
         return {
-          name: `users_${generator.word()}`,
+          name: `users_${uuid.v4()}`,
           sourceId: INTERNAL_TABLE_SOURCE_ID,
           sourceType: TableSourceType.INTERNAL,
           type: "table",
@@ -1630,7 +1633,7 @@ describe.each([
       }),
       (tableId: string) =>
         config.api.row.save(tableId, {
-          name: generator.word(),
+          name: uuid.v4(),
           description: generator.paragraph(),
           tableId,
         }),
@@ -1996,6 +1999,54 @@ describe.each([
               bookmark: null,
             }),
       })
+    })
+  })
+
+  describe("Formula fields", () => {
+    let relationshipTable: Table, tableId: string, relatedRow: Row
+
+    beforeAll(async () => {
+      const otherTableId = config.table!._id!
+      const cfg = generateTableConfig()
+      relationshipTable = await config.createLinkedTable(
+        RelationshipType.ONE_TO_MANY,
+        ["links"],
+        {
+          ...cfg,
+          // needs to be a short name
+          name: "b",
+          schema: {
+            ...cfg.schema,
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: "{{ links.0.name }}",
+              formulaType: FormulaTypes.DYNAMIC,
+            },
+          },
+        }
+      )
+
+      tableId = relationshipTable._id!
+
+      relatedRow = await config.api.row.save(otherTableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+      })
+      await config.api.row.save(tableId, {
+        name: generator.word(),
+        description: generator.paragraph(),
+        tableId,
+        links: [relatedRow._id],
+      })
+    })
+
+    it("should be able to search for rows containing formulas", async () => {
+      const { rows } = await config.api.row.search(tableId)
+      expect(rows.length).toBe(1)
+      expect(rows[0].links.length).toBe(1)
+      const row = rows[0]
+      expect(row.formula).toBe(relatedRow.name)
     })
   })
 })

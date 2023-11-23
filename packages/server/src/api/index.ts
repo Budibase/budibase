@@ -4,6 +4,7 @@ import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
+
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
 

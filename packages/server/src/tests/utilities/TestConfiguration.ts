@@ -264,7 +264,7 @@ class TestConfiguration {
     admin = false,
     email = this.defaultUserValues.email,
     roles,
-  }: any = {}) {
+  }: any = {}): Promise<User> {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
@@ -510,13 +510,14 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    await context.doInAppContext(null, async () => {
-      this.app = await this._req(
+    this.app = await context.doInAppContext(null, async () => {
+      const app = await this._req(
         { name: appName },
         null,
         controllers.app.create
       )
-      this.appId = this.app?.appId!
+      this.appId = app.appId!
+      return app
     })
     return await context.doInAppContext(this.appId, async () => {
       // create production app
@@ -525,7 +526,7 @@ class TestConfiguration {
       this.allApps.push(this.prodApp)
       this.allApps.push(this.app)
 
-      return this.app
+      return this.app!
     })
   }
 
@@ -537,7 +538,7 @@ class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get(dbCore.DocumentType.APP_METADATA)
+      return await db.get<App>(dbCore.DocumentType.APP_METADATA)
     })
   }
 

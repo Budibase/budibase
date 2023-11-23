@@ -1,4 +1,5 @@
 import { default as DynamoDBIntegration } from "../dynamodb"
+
 jest.mock("aws-sdk")
 
 class TestConfiguration {

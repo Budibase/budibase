@@ -18,6 +18,7 @@ import {
 import { builderSocket } from "../../../websockets"
 
 const cloneDeep = require("lodash/cloneDeep")
+
 import isEqual from "lodash/isEqual"
 
 export async function fetch(ctx: Ctx) {
@@ -47,8 +48,11 @@ export async function save(ctx: Ctx) {
 
   // add views to table document
   if (!table.views) table.views = {}
-  if (!view.meta.schema) {
-    view.meta.schema = table.schema
+  if (!view.meta?.schema) {
+    view.meta = {
+      ...view.meta!,
+      schema: table.schema,
+    }
   }
   table.views[viewName] = { ...view.meta, name: viewName }
   if (originalName) {
@@ -125,10 +129,13 @@ export async function destroy(ctx: Ctx) {
   const db = context.getAppDB()
   const viewName = decodeURIComponent(ctx.params.viewName)
   const view = await deleteView(viewName)
+  if (!view || !view.meta) {
+    ctx.throw(400, "Unable to delete view - no metadata/view not found.")
+  }
   const table = await sdk.tables.getTable(view.meta.tableId)
   delete table.views![viewName]
   await db.put(table)
-  await events.view.deleted(view)
+  await events.view.deleted(view as View)
 
   ctx.body = view
   builderSocket?.emitTableUpdate(ctx, table)
@@ -147,7 +154,7 @@ export async function exportView(ctx: Ctx) {
     )
   }
 
-  if (view) {
+  if (view && view.meta) {
     ctx.params.viewName = viewName
     // Fetch view rows
     ctx.query = {

@@ -23,6 +23,7 @@
   export let highlighted = false
   export let propertyFocus = false
   export let info = null
+  export let disableBindings = false
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
@@ -99,6 +100,7 @@
       {nested}
       {key}
       {type}
+      {disableBindings}
       {...props}
       on:drawerHide
       on:drawerShow

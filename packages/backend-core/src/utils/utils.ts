@@ -11,6 +11,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
+
 const jwt = require("jsonwebtoken")
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
@@ -236,4 +237,18 @@ export function timeout(timeMs: number) {
 
 export function isAudited(event: Event) {
   return !!AuditedEventFriendlyName[event]
+}
+
+export function hasCircularStructure(json: any) {
+  if (typeof json !== "object") {
+    return false
+  }
+  try {
+    JSON.stringify(json)
+  } catch (err) {
+    if (err instanceof Error && err?.message.includes("circular structure")) {
+      return true
+    }
+  }
+  return false
 }
