@@ -43,13 +43,16 @@
     builderStore,
     notificationStore,
     enrichButtonActions,
+    ActionTypes,
+    createContextStore,
   } = getContext("sdk")
+
+  let grid
 
   $: columnWhitelist = parsedColumns
     ?.filter(col => col.active)
     ?.map(col => col.field)
   $: schemaOverrides = getSchemaOverrides(parsedColumns)
-
   $: enrichedButtons = enrichButtons(buttons)
 
   const getSchemaOverrides = columns => {
@@ -71,11 +74,16 @@
       text: settings.text,
       type: settings.type,
       onClick: async row => {
-        // We add a fake context binding in here, which allows us to pretend
-        // that the grid provides a "schema" binding - that lets us use the
-        // clicked row in things like save row actions
-        const enrichedContext = { ...get(context), [get(component).id]: row }
-        const fn = enrichButtonActions(settings.onClick, enrichedContext)
+        // Create a fake, ephemeral context to run the buttons actions with
+        const id = get(component).id
+        const gridContext = createContextStore(context)
+        gridContext.actions.provideData(id, row)
+        gridContext.actions.provideAction(
+          id,
+          ActionTypes.RefreshDatasource,
+          () => grid?.getContext()?.rows.actions.refreshData()
+        )
+        const fn = enrichButtonActions(settings.onClick, get(gridContext))
         return await fn?.({ row })
       },
     }))
@@ -87,6 +95,7 @@
   class:in-builder={$builderStore.inBuilder}
 >
   <Grid
+    bind:this={grid}
     datasource={table}
     {API}
     {stripeRows}
