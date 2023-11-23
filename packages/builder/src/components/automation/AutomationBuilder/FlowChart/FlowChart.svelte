@@ -1,5 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    automationHistoryStore,
+  } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -8,7 +12,6 @@
   import { Icon, notifications, Modal } from "@budibase/bbui"
   import { ActionStepID } from "constants/backend/automations"
   import UndoRedoControl from "components/common/UndoRedoControl.svelte"
-  import { automationHistoryStore } from "builderStore"
 
   export let automation
 

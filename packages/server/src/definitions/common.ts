@@ -1,4 +1,5 @@
 import { Document } from "@budibase/types"
+
 export {
   Query,
   Datasource,

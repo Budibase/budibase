@@ -1,13 +1,14 @@
 <script>
-  import { store, userSelectedResourceMap } from "builderStore"
-  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
-  import NavItem from "components/common/NavItem.svelte"
-  import { notifications } from "@budibase/bbui"
   import {
+    store,
+    userSelectedResourceMap,
     selectedComponentPath,
     selectedComponent,
     selectedScreen,
   } from "builderStore"
+  import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
+  import NavItem from "components/common/NavItem.svelte"
+  import { notifications } from "@budibase/bbui"
   import {
     findComponentPath,
     getComponentText,
