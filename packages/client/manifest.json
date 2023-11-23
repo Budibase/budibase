@@ -6165,6 +6165,24 @@
         "defaultValue": "spectrum--medium"
       }
     ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
+      }
+    ],
     "context": [
       {
         "type": "form",
@@ -6420,7 +6438,8 @@
     ],
     "context": {
       "type": "schema"
-    }
+    },
+    "actions": ["RefreshDatasource"]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
