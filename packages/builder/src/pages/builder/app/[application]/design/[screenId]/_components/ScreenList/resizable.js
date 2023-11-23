@@ -25,10 +25,16 @@ const getResizeActions = (cssProperty, mouseMoveEventProperty, elementProperty, 
       element.style[cssProperty] = `${startProperty + change}px`
     }
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e) => {
+      e.preventDefault(); // Prevent highlighting while dragging
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+
       element.style.removeProperty('transition'); // remove temporary transition override
+      for (let item of document.getElementsByTagName("iframe")) {
+        item.style.removeProperty("pointer-events");
+      }
+
       setValue(element[elementProperty]);
     }
 
@@ -48,6 +54,13 @@ const getResizeActions = (cssProperty, mouseMoveEventProperty, elementProperty, 
       }
 
       element.style.transition = `${cssProperty} 0ms`; // temporarily override any height transitions
+
+      // iframes swallow mouseup events if your cursor ends up over it during a drag, so make them
+      // temporarily non-interactive
+      for (let item of document.getElementsByTagName("iframe")) {
+        item.style.pointerEvents = "none";
+      }
+
       startProperty = element[elementProperty];
       startPosition = e[mouseMoveEventProperty];
 

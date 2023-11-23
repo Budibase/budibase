@@ -94,6 +94,7 @@
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <NavItem
+          scrollable
           icon={screen.routing.homeScreen ? "Home" : null}
           indentLevel={0}
           selected={$store.selectedScreenId === screen._id}
@@ -168,7 +169,7 @@
     background-color: transparent;
     border: none;
     font-size: var(--spectrum-alias-font-size-default);
-    width: 260px;
+    flex: 1;
     box-sizing: border-box;
     display: none;
   }
