@@ -262,7 +262,7 @@ services:
 # Override values in couchDB subchart
 couchdb:
   # -- the initial number of nodes in the CouchDB cluster.
-  clusterSize: 3
+  clusterSize: 1
 
   # -- If allowAdminParty is enabled the cluster will start up without any database
   # administrator account; i.e., all users will be granted administrative
@@ -329,7 +329,9 @@ couchdb:
     tag: v3.2.1
     pullPolicy: IfNotPresent
 
-  # -- Flip this to flag to include the Search container in each Pod
+  # This should remain false. We ship Clouseau ourselves as part of the
+  # budibase/couchdb image, and it's not possible to disable it because it's a
+  # core part of the Budibase experience.
   enableSearch: false
 
   initImage:
@@ -448,7 +450,7 @@ couchdb:
   # ref: http://docs.couchdb.org/en/latest/config/index.html
   couchdbConfig:
     couchdb:
-      uuid: decafbaddecafbaddecafbaddecafbad # Unique identifier for this CouchDB server instance
+      uuid: budibase-couchdb # Unique identifier for this CouchDB server instance
     # cluster:
     #   q: 8 # Create 8 shards for each database
     chttpd:
