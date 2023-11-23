@@ -119,6 +119,7 @@
   </div>
 
   <div
+    role="separator"
     disabled={searching}
     class="divider"
     class:disabled={searching}

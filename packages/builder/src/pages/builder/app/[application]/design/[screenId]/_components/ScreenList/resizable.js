@@ -1,12 +1,11 @@
-
-export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
+const getResizeActions = (cssProperty, mouseMoveEventProperty, elementProperty, initialValue, setValue = () => {}) => {
   let element = null;
 
   const elementAction = (node) => {
     element = node;
 
     if (initialValue != null) {
-      element.style.height = `${initialValue}px`
+      element.style[cssProperty] = `${initialValue}px`
     }
 
     return {
@@ -17,19 +16,19 @@ export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
   }
 
   const dragHandleAction = (node) => {
-    let startHeight = null;
+    let startProperty = null;
     let startPosition = null;
 
     const handleMouseMove = (e) => {
-      const change = e.pageY - startPosition;
-      element.style.height = `${startHeight + change}px`
+      const change = e[mouseMoveEventProperty] - startPosition;
+      element.style[cssProperty] = `${startProperty + change}px`
     }
 
     const handleMouseUp = () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
       element.style.removeProperty('transition'); // remove temporary transition override
-      setValue(element.clientHeight);
+      setValue(element[elementProperty]);
     }
 
     const handleMouseDown = (e) => {
@@ -47,16 +46,16 @@ export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
         return;
       }
 
-      element.style.transition = "height 0ms"; // temporarily override any height transitions
-      startHeight = element.clientHeight;
-      startPosition = e.pageY;
+      element.style.transition = `${cssProperty} 0ms`; // temporarily override any height transitions
+      startProperty = element[elementProperty];
+      startPosition = e[mouseMoveEventProperty];
 
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
     };
 
-    const handleDoubleClick = (e) => {
-      element.style.removeProperty("height");
+    const handleDoubleClick = () => {
+      element.style.removeProperty(cssProperty);
     }
 
     node.addEventListener("mousedown", handleMouseDown);
@@ -74,4 +73,12 @@ export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
     elementAction,
     dragHandleAction
   ]
+};
+
+export const getVerticalResizeActions = (initialValue, setValue = () => {}) => {
+  return getResizeActions("height", "pageY", 'clientHeight', initialValue, setValue);
+};
+
+export const getHorizontalResizeActions = (initialValue, setValue = () => {}) => {
+  return getResizeActions("width", "pageX", 'clientWidth', initialValue, setValue);
 };
