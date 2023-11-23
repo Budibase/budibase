@@ -3,10 +3,9 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  import { currentAsset, store } from "builderStore"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import PrimaryColumnFieldSetting from "./PrimaryColumnFieldSetting.svelte"
   import getColumns from "./getColumns.js"
