@@ -87,13 +87,21 @@ export function hasAdminPermissions(user?: User | ContextUser): boolean {
   return !!user.admin?.global
 }
 
+export function hasCreatorPermissions(user?: User | ContextUser): boolean {
+  if (!user) {
+    return false
+  }
+  return !!user.builder?.creator
+}
+
 export function isCreator(user?: User | ContextUser): boolean {
   if (!user) {
     return false
   }
   return (
-    isGlobalBuilder(user) ||
+    isGlobalBuilder(user!) ||
     hasAdminPermissions(user) ||
+    hasCreatorPermissions(user) ||
     hasAppBuilderPermissions(user) ||
     hasAppCreatorPermissions(user)
   )
