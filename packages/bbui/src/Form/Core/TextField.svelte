@@ -66,12 +66,11 @@
     if (type === "bigint") {
       return "numeric"
     }
-    return type === "number" ?
-"decimal" : "text"
+    return type === "number" ? "decimal" : "text"
   }
 
   onMount(() => {
-    if (disabled) return;
+    if (disabled) return
     focus = autofocus
     if (focus) field.focus()
   })

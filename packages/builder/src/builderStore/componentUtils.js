@@ -257,9 +257,10 @@ export const getComponentName = component => {
     return ""
   }
 
-  const components = get(store)?.components || {};
-  const componentDefinition = components[component._component] || {};
-  const name = componentDefinition.friendlyName || componentDefinition.name || "";
+  const components = get(store)?.components || {}
+  const componentDefinition = components[component._component] || {}
+  const name =
+    componentDefinition.friendlyName || componentDefinition.name || ""
 
-  return name;
+  return name
 }
