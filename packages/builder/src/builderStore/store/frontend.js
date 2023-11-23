@@ -610,7 +610,8 @@ export const getFrontendStore = () => {
             enrichedComponent["buttons"] =
               Utils.buildDynamicButtonConfig(enrichedComponent)
             //Ensure existing Formblocks position their buttons at the top.
-            enrichedComponent["buttonPosition"] = "top"
+            enrichedComponent["buttonPosition"] =
+              enrichedComponent["buttonPosition"] || "top"
           } else if (enrichedComponent["buttons"] == null) {
             // Ignore legacy config if 'buttons' has been reset by 'resetOn'
             const { _id, actionType, dataSource } = enrichedComponent
