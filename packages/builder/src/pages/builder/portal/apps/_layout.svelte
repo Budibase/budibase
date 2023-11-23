@@ -34,7 +34,7 @@
       }
 
       // Go to new app page if no apps exists
-      if (!$apps.length && sdk.users.isGlobalBuilder($auth.user)) {
+      if (!$apps.length && sdk.users.hasBuilderPermissions($auth.user)) {
         $redirect("./onboarding")
       }
     } catch (error) {
