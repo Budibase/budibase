@@ -19,6 +19,8 @@
   export let includeHidden = false
   export let tag
 
+  $: store.actions.components.processNestedSettings(componentInstance)
+
   $: sections = getSections(
     componentInstance,
     componentDefinition,

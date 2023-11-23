@@ -4,28 +4,31 @@
   import Block from "components/Block.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import InnerFormBlock from "./InnerFormBlock.svelte"
+  import { Utils } from "@budibase/frontend-core"
 
   export let actionType
   export let dataSource
   export let size
   export let disabled
   export let fields
+  export let buttons
+  export let buttonPosition
+
   export let title
   export let description
-  export let showDeleteButton
-  export let showSaveButton
-  export let saveButtonLabel
-  export let deleteButtonLabel
   export let rowId
   export let actionUrl
   export let noRowsMessage
   export let notificationOverride
 
-  // Accommodate old config to ensure delete button does not reappear
-  $: deleteLabel = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
-  $: saveLabel = showSaveButton === false ? "" : saveButtonLabel?.trim()
+  // Legacy
+  export let showDeleteButton
+  export let showSaveButton
+  export let saveButtonLabel
+  export let deleteButtonLabel
 
   const { fetchDatasourceSchema } = getContext("sdk")
+  const component = getContext("component")
 
   const convertOldFieldFormat = fields => {
     if (!fields) {
@@ -98,11 +101,23 @@
     fields: fieldsOrDefault,
     title,
     description,
-    saveButtonLabel: saveLabel,
-    deleteButtonLabel: deleteLabel,
     schema,
     repeaterId,
     notificationOverride,
+    buttons:
+      buttons ||
+      Utils.buildDynamicButtonConfig({
+        _id: $component.id,
+        showDeleteButton,
+        showSaveButton,
+        saveButtonLabel,
+        deleteButtonLabel,
+        notificationOverride,
+        actionType,
+        actionUrl,
+        dataSource,
+      }),
+    buttonPosition,
   }
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
