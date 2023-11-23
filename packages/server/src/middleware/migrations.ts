@@ -37,31 +37,40 @@ interface MigrationDoc extends Document {
 const appQueues: Record<string, Bull.Queue<any>> = {}
 
 async function processMessage(job: Job) {
-  const { appId, migrationId, previousMigrationId } = job.data
+  const { appId } = job.data
 
   await locks.doWithLock(
     {
       name: LockName.APP_MIGRATION,
       type: LockType.DEFAULT,
       resource: appId,
-      ttl: 20000,
+      ttl: 30000,
     },
     async () => {
       await context.doInAppContext(appId, async () => {
         const db = context.getAppDB()
         const migrationDoc = await db.get<MigrationDoc>("_design/migrations")
-        if (migrationDoc.version >= migrationId) {
-          await job.moveToCompleted()
-          return
-        }
 
-        if (migrationDoc.version !== previousMigrationId) {
-          return
-        }
+        const currentVersion = migrationDoc.version
 
-        // Transaction
-        await MIGRATIONS[migrationId].migration()
-        await db.put({ ...migrationDoc, version: migrationId })
+        const pendingMigrations = Object.keys(MIGRATIONS).filter(
+          m => m > currentVersion
+        )
+
+        let index = 0
+        for (const migration of pendingMigrations) {
+          const counter = `(${++index}/${pendingMigrations.length})`
+          console.info(`Running migration ${migration}... ${counter}`, {
+            migration,
+            appId,
+          })
+          await MIGRATIONS[migration].migration()
+          // await db.put({ ...migrationDoc, version: migrationId })
+          console.info(`Migration ran successfully ${migration} ${counter}`, {
+            migration,
+            appId,
+          })
+        }
       })
     }
   )
@@ -77,6 +86,7 @@ export default async (ctx: UserCtx, next: any) => {
   const db = context.getAppDB()
   let migrationDoc: MigrationDoc = { version: "" }
   try {
+    // TODO: cache
     migrationDoc = await db.get<MigrationDoc>("_design/migrations")
   } catch (e: any) {
     if (e.status !== 404) {
@@ -88,32 +98,37 @@ export default async (ctx: UserCtx, next: any) => {
 
   const currentMigration = migrationDoc.version || ""
 
-  const migrationKeys = Object.keys(MIGRATIONS)
+  const pendingMigrations = Object.keys(MIGRATIONS).some(
+    m => m > currentMigration
+  )
 
-  const pendingMigrations = migrationKeys.filter(m => m > currentMigration)
-
-  let appQueue = appQueues[appId]
-  if (!appQueue) {
-    await locks.doWithLock(
-      {
-        name: LockName.APP_MIGRATION,
-        type: LockType.TRY_TWICE,
-        resource: appId,
-        ttl: 150,
-      },
-      async () => {
-        if (appQueues[appId]) {
-          return
+  if (pendingMigrations) {
+    let appQueue = appQueues[appId]
+    if (!appQueue) {
+      await locks.doWithLock(
+        {
+          name: LockName.APP_MIGRATION,
+          type: LockType.DEFAULT,
+          resource: appId,
+          ttl: 150,
+        },
+        async () => {
+          if (appQueues[appId]) {
+            return
+          }
+          appQueues[appId] = queue.createQueue(appId)
+          appQueue = appQueues[appId]
+          appQueue.process(processMessage)
         }
-        appQueues[appId] = queue.createQueue(appId)
-        appQueue = appQueues[appId]
-        appQueue.process(processMessage)
+      )
+    }
+
+    await appQueue.add(
+      {
+        appId,
       }
+      // TODO: idempotency
     )
-  }
-  for (const migration of pendingMigrations) {
-    await appQueue.add({
-      appId,
       migrationId: migration,
       previousMigrationId: migrationKeys[migrationKeys.indexOf(migration) - 1],
     })
