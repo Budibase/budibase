@@ -16,6 +16,7 @@
   export let appendTo = undefined
   export let ignoreTimezones = false
   export let range = false
+  export let helpText = null
   const dispatch = createEventDispatcher()
 
   const onChange = e => {
@@ -30,7 +31,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <DatePicker
     {error}
     {disabled}

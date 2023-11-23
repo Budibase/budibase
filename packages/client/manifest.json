@@ -2732,6 +2732,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2863,6 +2868,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2958,6 +2968,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3176,6 +3191,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3334,6 +3354,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3560,6 +3585,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3656,6 +3686,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3800,6 +3835,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3893,6 +3933,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -4146,6 +4191,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Extensions",
         "key": "extensions"
       },
@@ -4246,6 +4296,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -4354,6 +4409,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -6391,6 +6451,11 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",

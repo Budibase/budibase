@@ -1,6 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Hosting, PlanType } from "@budibase/types"
+
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 describe("license management", () => {

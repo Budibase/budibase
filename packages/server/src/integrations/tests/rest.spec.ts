@@ -16,6 +16,7 @@ jest.mock("node-fetch", () => {
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
+
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
 

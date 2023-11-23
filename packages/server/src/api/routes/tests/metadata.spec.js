@@ -14,7 +14,10 @@ describe("/metadata", () => {
     automation = await config.createAutomation()
   })
 
-  async function createMetadata(data, type = MetadataTypes.AUTOMATION_TEST_INPUT) {
+  async function createMetadata(
+    data,
+    type = MetadataTypes.AUTOMATION_TEST_INPUT
+  ) {
     const res = await request
       .post(`/api/metadata/${type}/${automation._id}`)
       .send(data)
@@ -53,7 +56,9 @@ describe("/metadata", () => {
   describe("destroy", () => {
     it("should be able to delete some test inputs", async () => {
       const res = await request
-        .delete(`/api/metadata/${MetadataTypes.AUTOMATION_TEST_INPUT}/${automation._id}`)
+        .delete(
+          `/api/metadata/${MetadataTypes.AUTOMATION_TEST_INPUT}/${automation._id}`
+        )
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
