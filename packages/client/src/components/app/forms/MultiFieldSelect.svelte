@@ -2,6 +2,7 @@
   import { CoreMultiselect, CoreCheckboxGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
+
   export let field
   export let label
   export let placeholder
@@ -19,6 +20,7 @@
   export let optionsType = "select"
   export let direction = "vertical"
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -60,6 +62,7 @@
   {readonly}
   {validation}
   {span}
+  {helpText}
   defaultValue={expandedDefaultValue}
   type="array"
   bind:fieldState

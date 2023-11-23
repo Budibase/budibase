@@ -58,6 +58,7 @@ export default {
   enrichButtonActions,
   processStringSync,
   makePropSafe,
+  createContextStore,
 
   // Components
   Provider,

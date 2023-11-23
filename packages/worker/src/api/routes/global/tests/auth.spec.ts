@@ -7,6 +7,7 @@ import {
   structures,
   generator,
 } from "../../../../tests"
+
 const sendMailMock = mocks.email.mock()
 import { events, constants } from "@budibase/backend-core"
 import { Response } from "superagent"

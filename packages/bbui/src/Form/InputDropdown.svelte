@@ -15,6 +15,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let autofocus
+  export let helpText = null
   export let options = []
 
   const dispatch = createEventDispatcher()
@@ -29,7 +30,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <InputDropdown
     {updateOnChange}
     {error}

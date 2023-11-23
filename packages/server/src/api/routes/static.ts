@@ -6,6 +6,7 @@ import { permissions } from "@budibase/backend-core"
 import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 import { devClientLibPath } from "../../utilities/fileSystem"
+
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()

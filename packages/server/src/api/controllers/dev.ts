@@ -4,8 +4,13 @@ import { checkSlashesInUrl } from "../../utilities"
 import { request } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
 import { DocumentType } from "../../db/utils"
-import { context, env as envCore } from "@budibase/backend-core"
-import { events, db as dbCore, cache } from "@budibase/backend-core"
+import {
+  context,
+  env as envCore,
+  events,
+  db as dbCore,
+  cache,
+} from "@budibase/backend-core"
 import { App } from "@budibase/types"
 
 async function redirect(ctx: any, method: string, path: string = "global") {

@@ -1,5 +1,6 @@
 <script>
   import "@spectrum-css/divider/dist/index-vars.css"
+
   export let size = "M"
 
   export let vertical = false
