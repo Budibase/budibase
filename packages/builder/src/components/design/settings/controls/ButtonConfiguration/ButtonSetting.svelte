@@ -55,7 +55,10 @@
       size="S"
       name="Close"
       hoverable
-      on:click={() => removeButton(item._id)}
+      on:click={e => {
+        e.stopPropagation()
+        removeButton(item._id)
+      }}
     />
   </div>
 </div>

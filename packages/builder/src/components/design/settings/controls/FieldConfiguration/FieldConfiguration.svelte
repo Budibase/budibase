@@ -156,7 +156,7 @@
 
 <div class="field-configuration">
   <div class="toggle-all">
-    <span />
+    <span>Fields</span>
     <Toggle
       on:change={() => {
         let update = fieldList.map(field => ({
@@ -186,6 +186,9 @@
 </div>
 
 <style>
+  .field-configuration {
+    padding-top: 1px;
+  }
   .field-configuration :global(.spectrum-ActionButton) {
     width: 100%;
   }
@@ -204,6 +207,5 @@
   .toggle-all span {
     color: var(--spectrum-global-color-gray-700);
     font-size: 12px;
-    margin-left: calc(var(--spacing-s) - 1px);
   }
 </style>
