@@ -39,7 +39,7 @@ COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 COPY packages/string-templates packages/string-templates
 
 
-FROM budibase/couchdb as runner
+FROM samwho/test as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 ENV NODE_MAJOR 18

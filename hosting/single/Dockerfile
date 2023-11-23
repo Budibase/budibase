@@ -81,7 +81,6 @@ RUN chmod +x ./healthcheck.sh
 # For Azure App Service install SSH & point data locations to /home
 ADD hosting/single/ssh/sshd_config /etc/
 ADD hosting/single/ssh/ssh_setup.sh /tmp
-RUN /build-target-paths.sh
 
 # cleanup cache
 RUN yarn cache clean -f

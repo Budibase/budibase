@@ -11,6 +11,7 @@
 # the License.
 
 # erlang cookie for clouseau security
+-name couchdb@127.0.0.1
 -setcookie monster
 
 # Ensure that the Erlang VM listens on a known port
@@ -18,8 +19,8 @@
 -kernel inet_dist_listen_max 9100
 
 # Tell kernel and SASL not to log anything
--kernel error_logger silent
--sasl sasl_error_logger false
+# -kernel error_logger silent
+# -sasl sasl_error_logger false
 
 # Use kernel poll functionality if supported by emulator
 +K true
