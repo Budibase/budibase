@@ -92,7 +92,7 @@
       on:click={() => {
         get(store).actions.select(draggableItem.id)
       }}
-      on:mousedown={e => {
+      on:mousedown={() => {
         get(store).actions.select()
       }}
       bind:this={anchors[draggableItem.id]}
