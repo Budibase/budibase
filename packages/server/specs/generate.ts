@@ -3,6 +3,7 @@ import { writeFileSync } from "fs"
 import { examples, schemas } from "./resources"
 import * as parameters from "./parameters"
 import * as security from "./security"
+
 const swaggerJsdoc = require("swagger-jsdoc")
 
 const VARIABLES = {}

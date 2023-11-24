@@ -1,9 +1,12 @@
 import env from "../../environment"
 import { logger } from "./logger"
 import { IncomingMessage } from "http"
+
 const pino = require("koa-pino-logger")
+
 import { Options } from "pino-http"
 import { Ctx } from "@budibase/types"
+
 const correlator = require("correlation-id")
 
 export function pinoSettings(): Options {

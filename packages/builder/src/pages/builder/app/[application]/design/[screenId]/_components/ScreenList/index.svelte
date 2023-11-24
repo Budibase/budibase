@@ -1,34 +1,30 @@
 <script>
-  import { Icon, Layout, Body } from "@budibase/bbui"
+  import { Layout } from "@budibase/bbui"
   import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
   import { goto } from "@roxi/routify"
   import { getVerticalResizeActions } from "./resizable"
-  import { tick } from "svelte"
+  import NavHeader from "components/common/NavHeader.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()
 
   let searching = false
-  let resizing = false
   let searchValue = ""
-  let searchInput
   let screensContainer
   let scrolling = false
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
-  const openSearch = async () => {
-    searching = true
-    await tick()
-    searchInput.focus()
+  const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
   }
 
-  const closeSearch = async () => {
-    searching = false
-    searchValue = ""
+  $: {
+    if (searching) {
+      handleOpenSearch()
+    }
   }
 
   const getFilteredScreens = (screens, searchValue) => {
@@ -37,48 +33,20 @@
     })
   }
 
-  const handleAddButton = () => {
-    if (searching) {
-      closeSearch()
-    } else {
-      $goto("../new")
-    }
-  }
-
-  const onKeyDown = e => {
-    if (e.key === "Escape") {
-      closeSearch()
-    }
-  }
-
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
 </script>
 
-<svelte:window on:keydown={onKeyDown} />
-<div class="screens" class:searching class:resizing use:resizable>
+<div class="screens" class:searching use:resizable>
   <div class="header" class:scrolling>
-    <input
-      readonly={!searching}
-      bind:value={searchValue}
-      bind:this={searchInput}
-      class="input"
+    <NavHeader
+      title="Screens"
       placeholder="Search for screens"
+      bind:value={searchValue}
+      bind:search={searching}
+      onAdd={() => $goto("../new")}
     />
-    <div on:click={openSearch} class="title" class:hide={searching}>
-      <Body size="S">Screens</Body>
-    </div>
-    <div on:click={openSearch} class="searchButton" class:hide={searching}>
-      <Icon size="S" name="Search" />
-    </div>
-    <div
-      on:click={handleAddButton}
-      class="addButton"
-      class:closeButton={searching}
-    >
-      <Icon name="Add" />
-    </div>
   </div>
   <div on:scroll={handleScroll} bind:this={screensContainer} class="content">
     {#if filteredScreens?.length}
@@ -132,10 +100,6 @@
     max-height: 100%;
     height: 100% !important;
   }
-  .screens.resizing {
-    user-select: none;
-    cursor: row-resize;
-  }
 
   .header {
     flex-shrink: 0;
@@ -152,75 +116,13 @@
     border-bottom: var(--border-light);
   }
 
-  .input {
-    font-family: var(--font-sans);
-    position: absolute;
-    color: var(--ink);
-    background-color: transparent;
-    border: none;
-    font-size: var(--spectrum-alias-font-size-default);
-    flex: 1;
-    box-sizing: border-box;
-    display: none;
-  }
-  .input:focus {
-    outline: none;
-  }
-  .input::placeholder {
-    color: var(--spectrum-global-color-gray-600);
-  }
-  .screens.searching input {
-    display: block;
-  }
-
-  .title {
-    display: flex;
-    align-items: center;
-    height: 100%;
-    box-sizing: border-box;
-    flex: 1;
-    opacity: 1;
-    z-index: 1;
-  }
-
   .content {
     overflow: auto;
     flex-grow: 1;
   }
-  .screens.resizing .content {
-    pointer-events: none;
-  }
 
   .screens :global(.nav-item) {
     padding-right: 8px !important;
-  }
-
-  .searchButton {
-    color: var(--grey-7);
-    cursor: pointer;
-    margin-right: 10px;
-    opacity: 1;
-  }
-  .searchButton:hover {
-    color: var(--ink);
-  }
-
-  .hide {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  .addButton {
-    color: var(--grey-7);
-    cursor: pointer;
-    transition: transform 300ms ease-out;
-  }
-  .addButton:hover {
-    color: var(--ink);
-  }
-
-  .closeButton {
-    transform: rotate(45deg);
   }
 
   .icon {
