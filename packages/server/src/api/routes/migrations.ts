@@ -11,4 +11,5 @@ router
     auth.internalApi,
     migrationsController.fetchDefinitions
   )
+  .get("/api/migrations/status", migrationsController.migrationCompleted)
 export default router

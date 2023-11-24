@@ -1,8 +1,8 @@
-import { cache, context, locks, queue } from "@budibase/backend-core"
+import { context, locks, queue } from "@budibase/backend-core"
 import { UserCtx, Document, LockName, LockType } from "@budibase/types"
 import Bull, { Job } from "bull"
 
-const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
+export const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
   "20231122115100": {
     migration: async () => {
       await new Promise<void>(r => {
@@ -25,7 +25,7 @@ const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
   },
 }
 
-interface MigrationDoc extends Document {
+export interface MigrationDoc extends Document {
   version: string
 }
 
@@ -46,7 +46,7 @@ async function processMessage(job: Job) {
         const db = context.getAppDB()
         const migrationDoc = await db.get<MigrationDoc>("_design/migrations")
 
-        const currentVersion = migrationDoc.version
+        const currentVersion = migrationDoc.version || ""
 
         const pendingMigrations = Object.keys(MIGRATIONS).filter(
           m => m > currentVersion
@@ -60,7 +60,7 @@ async function processMessage(job: Job) {
             appId,
           })
           await MIGRATIONS[migration].migration()
-          // await db.put({ ...migrationDoc, version: migration })
+          await db.put({ ...migrationDoc, version: migration })
           console.info(`Migration ran successfully ${migration} ${counter}`, {
             migration,
             appId,
@@ -122,6 +122,11 @@ export default async (ctx: UserCtx, next: any) => {
           appQueue.process(processMessage)
         }
       )
+
+      if (!appQueue) {
+        // TODO
+        throw "Error"
+      }
     }
 
     await appQueue.add(
