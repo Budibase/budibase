@@ -80,7 +80,9 @@ export default async (ctx: UserCtx, next: any) => {
     if (new URL(ctx.headers.referer!).pathname === "/builder/updating") {
       return next()
     }
-  } catch {}
+  } catch {
+    // TODO
+  }
 
   const { appId } = ctx
 
