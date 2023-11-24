@@ -78,6 +78,9 @@ export function createUsersStore() {
         case "developer":
           body.builder = { global: true }
           break
+        case "creator":
+          body.builder = { creator: true, global: false }
+          break
         case "admin":
           body.admin = { global: true }
           body.builder = { global: true }
