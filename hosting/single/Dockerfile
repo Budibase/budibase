@@ -94,8 +94,6 @@ RUN chmod +x ./healthcheck.sh
 # For Azure App Service install SSH & point data locations to /home
 COPY hosting/single/ssh/sshd_config /etc/
 COPY hosting/single/ssh/ssh_setup.sh /tmp
-RUN /build-target-paths.sh
-
 
 #  setup letsencrypt certificate
 RUN apt-get install -y certbot python3-certbot-nginx
