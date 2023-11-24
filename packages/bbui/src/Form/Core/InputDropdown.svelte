@@ -17,7 +17,7 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
-
+  export let getOptionSubtitle = option => option?.subtitle
   export let isOptionSelected = () => false
 
   const dispatch = createEventDispatcher()
@@ -135,7 +135,7 @@
       class="spectrum-Textfield-input spectrum-InputGroup-input"
     />
   </div>
-  <div style="width: 30%">
+  <div style="width: 40%">
     <button
       {id}
       class="spectrum-Picker spectrum-Picker--sizeM override-borders"
@@ -157,38 +157,43 @@
         <use xlink:href="#spectrum-css-icon-Chevron100" />
       </svg>
     </button>
-    {#if open}
-      <div
-        use:clickOutside={handleOutsideClick}
-        transition:fly|local={{ y: -20, duration: 200 }}
-        class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
-      >
-        <ul class="spectrum-Menu" role="listbox">
-          {#each options as option, idx}
-            <li
-              class="spectrum-Menu-item"
-              class:is-selected={isOptionSelected(getOptionValue(option, idx))}
-              role="option"
-              aria-selected="true"
-              tabindex="0"
-              on:click={() => onPick(getOptionValue(option, idx))}
-            >
-              <span class="spectrum-Menu-itemLabel">
-                {getOptionLabel(option, idx)}
-              </span>
-              <svg
-                class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
-                focusable="false"
-                aria-hidden="true"
-              >
-                <use xlink:href="#spectrum-css-icon-Checkmark100" />
-              </svg>
-            </li>
-          {/each}
-        </ul>
-      </div>
-    {/if}
   </div>
+  {#if open}
+    <div
+      use:clickOutside={handleOutsideClick}
+      transition:fly|local={{ y: -20, duration: 200 }}
+      class="spectrum-Popover spectrum-Popover--bottom spectrum-Picker-popover is-open"
+    >
+      <ul class="spectrum-Menu" role="listbox">
+        {#each options as option, idx}
+          <li
+            class="spectrum-Menu-item"
+            class:is-selected={isOptionSelected(getOptionValue(option, idx))}
+            role="option"
+            aria-selected="true"
+            tabindex="0"
+            on:click={() => onPick(getOptionValue(option, idx))}
+          >
+            <span class="spectrum-Menu-itemLabel">
+              {getOptionLabel(option, idx)}
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text">
+                  {getOptionSubtitle(option, idx)}
+                </span>
+              {/if}
+            </span>
+            <svg
+              class="spectrum-Icon spectrum-UIIcon-Checkmark100 spectrum-Menu-checkmark spectrum-Menu-itemIcon"
+              focusable="false"
+              aria-hidden="true"
+            >
+              <use xlink:href="#spectrum-css-icon-Checkmark100" />
+            </svg>
+          </li>
+        {/each}
+      </ul>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -196,7 +201,6 @@
     min-width: 0;
     width: 100%;
   }
-
   .spectrum-InputGroup-input {
     border-right-width: 1px;
   }
@@ -206,7 +210,6 @@
   .spectrum-Textfield-input {
     width: 0;
   }
-
   .override-borders {
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
@@ -215,5 +218,18 @@
     max-height: 240px;
     z-index: 999;
     top: 100%;
+    width: 100%;
+  }
+  .subtitle-text {
+    font-size: 12px;
+    line-height: 15px;
+    font-weight: 500;
+    color: var(--spectrum-global-color-gray-600);
+    display: block;
+    margin-top: var(--spacing-s);
+  }
+  .spectrum-Menu-checkmark {
+    align-self: center;
+    margin-top: 0;
   }
 </style>

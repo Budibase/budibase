@@ -29,7 +29,6 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
-
   $: userCount = $licensing.userCount + userData.length
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
