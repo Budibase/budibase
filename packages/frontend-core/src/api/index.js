@@ -172,6 +172,7 @@ export const createAPIClient = config => {
     if (response.status >= 200 && response.status < 400) {
       const migration = response.headers.get("migration-header")
       if (migration) {
+        // TODO: move to a store event
         window.location = `/builder/updating?migrationId=${migration}&returnUrl=${encodeURI(
           window.location
         )}`
