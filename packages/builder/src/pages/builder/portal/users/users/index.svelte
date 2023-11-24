@@ -191,18 +191,18 @@
 
     for (const user of userData?.users ?? []) {
       const { email } = user
-
       if (
         newUsers.find(x => x.email === email) ||
         currentUserEmails.includes(email)
-      )
+      ) {
         continue
-
+      }
       newUsers.push(user)
     }
 
-    if (!newUsers.length)
+    if (!newUsers.length) {
       notifications.info("Duplicated! There is no new users to add.")
+    }
     return { ...userData, users: newUsers }
   }
 
@@ -267,7 +267,6 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
-
       pendingInvites = await users.getInvites()
       invitesLoaded = true
     } catch (error) {
