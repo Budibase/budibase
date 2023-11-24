@@ -816,7 +816,7 @@
                 : Constants.BudibaseRoleOptions.filter(
                     option => option.value !== Constants.BudibaseRoles.Admin
                   )}
-              label="Access"
+              label="Role"
               on:change={checkAppAccess}
             />
             <span class="role-wrap">
