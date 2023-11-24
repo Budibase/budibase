@@ -341,6 +341,7 @@ export function cleanseUserObject(user: User | ContextUser, base?: User) {
 export async function addAppBuilder(user: User, appId: string) {
   const prodAppId = getProdAppID(appId)
   user.builder ??= {}
+  user.builder.creator = true
   user.builder.apps ??= []
   user.builder.apps.push(prodAppId)
   await UserDB.save(user, { hashPassword: false })
