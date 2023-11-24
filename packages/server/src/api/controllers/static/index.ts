@@ -25,6 +25,7 @@ import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
 import { App, Ctx, ProcessAttachmentResponse, Upload } from "@budibase/types"
+import { MigrationDoc, MIGRATIONS } from "../../../middleware/migrations"
 
 const send = require("koa-send")
 
@@ -126,6 +127,18 @@ export const deleteObjects = async function (ctx: Ctx) {
 }
 
 export const serveApp = async function (ctx: Ctx) {
+  // TODO: merge with middleware
+  const appDb = context.getAppDB()
+  const migrationDoc = await appDb.get<MigrationDoc>("_design/migrations")
+  const latestMigration =
+    Object.keys(MIGRATIONS).sort()[Object.keys(MIGRATIONS).length - 1]
+
+  const migrated = migrationDoc.version === latestMigration
+  if (!migrated) {
+    // TODO
+    return ctx.redirect("/app-preview-page")
+  }
+
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -271,7 +284,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
-      return
     }
     try {
       const s3 = new AWS.S3({
