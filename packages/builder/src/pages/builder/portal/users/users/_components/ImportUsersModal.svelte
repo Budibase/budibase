@@ -11,11 +11,11 @@
   import { emailValidator } from "helpers/validation"
   import { Constants } from "@budibase/frontend-core"
   import { capitalise } from "helpers"
-  import { BudibaseRoleOptions } from "@budibase/frontend-core/src/constants"
 
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
+
   export let createUsersFromCsv
 
   let files = []

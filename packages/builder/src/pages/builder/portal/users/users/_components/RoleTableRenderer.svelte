@@ -4,12 +4,6 @@
 
   export let row
 
-  const TooltipMap = {
-    appUser: "Only has access to assigned apps",
-    developer: "Access to the app builder",
-    admin: "Full access",
-  }
-
   $: role = Constants.BudibaseRoleOptions.find(
     x => x.value === users.getUserRole(row)
   )
