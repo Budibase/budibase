@@ -187,7 +187,11 @@
     } else if (detail === Constants.BudibaseRoles.Creator) {
       toggleFlags({
         admin: { global: false },
-        builder: { global: false, creator: true },
+        builder: {
+          global: false,
+          creator: true,
+          apps: user?.builder?.apps || [],
+        },
       })
     }
   }
