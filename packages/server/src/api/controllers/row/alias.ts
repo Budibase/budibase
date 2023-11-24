@@ -33,7 +33,7 @@ class AliasTables {
     return field
   }
 
-  reverse<T extends Row | Row[]>(tableNames: string[], rows: T): T {
+  reverse<T extends Row | Row[]>(rows: T): T {
     const process = (row: Row) => {
       const final: Row = {}
       for (let [key, value] of Object.entries(row)) {
@@ -96,6 +96,6 @@ class AliasTables {
       json.meta.tables = aliasedTables
     }
     const response = await getDatasourceAndQuery(json)
-    return this.reverse(tableNames, response)
+    return this.reverse(response)
   }
 }
