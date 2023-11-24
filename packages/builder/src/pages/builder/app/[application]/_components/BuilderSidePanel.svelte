@@ -364,7 +364,10 @@
     const payload = [
       {
         email: newUserEmail,
-        builder: { global: creationRoleType === Constants.BudibaseRoles.Admin },
+        builder: {
+          global: creationRoleType === Constants.BudibaseRoles.Admin,
+          creator: creationRoleType === Constants.BudibaseRoles.Creator,
+        },
         admin: { global: creationRoleType === Constants.BudibaseRoles.Admin },
       },
     ]
@@ -516,6 +519,18 @@
       return Constants.Roles.CREATOR
     }
     return user.role
+  }
+
+  const checkAppAccess = e => {
+    // Ensure we don't get into an invalid combo of tenant role and app access
+    if (
+      e.detail === Constants.BudibaseRoles.AppUser &&
+      creationAccessType === Constants.Roles.CREATOR
+    ) {
+      creationAccessType = Constants.Roles.BASIC
+    } else if (e.detail === Constants.BudibaseRoles.Admin) {
+      creationAccessType = Constants.Roles.CREATOR
+    }
   }
 </script>
 
@@ -802,28 +817,29 @@
                     option => option.value !== Constants.BudibaseRoles.Admin
                   )}
               label="Access"
+              on:change={checkAppAccess}
             />
-            {#if creationRoleType !== Constants.BudibaseRoles.Admin}
-              <span class="role-wrap">
-                <RoleSelect
-                  placeholder={false}
-                  bind:value={creationAccessType}
-                  allowPublic={false}
-                  allowCreator={true}
-                  quiet={true}
-                  autoWidth
-                  align="right"
-                  fancySelect
-                />
-              </span>
-            {/if}
+            <span class="role-wrap">
+              <RoleSelect
+                placeholder={false}
+                bind:value={creationAccessType}
+                allowPublic={false}
+                allowCreator={creationRoleType !==
+                  Constants.BudibaseRoles.AppUser}
+                quiet={true}
+                autoWidth
+                align="right"
+                fancySelect
+                allowedRoles={creationRoleType === Constants.BudibaseRoles.Admin
+                  ? [Constants.Roles.CREATOR]
+                  : null}
+                footer={getRoleFooter({
+                  isAdminOrGlobalBuilder:
+                    creationRoleType === Constants.BudibaseRoles.Admin,
+                })}
+              />
+            </span>
           </FancyForm>
-          {#if creationRoleType === Constants.BudibaseRoles.Admin}
-            <div class="admin-info">
-              <Icon name="Info" />
-              Admins will get full access to all apps and settings
-            </div>
-          {/if}
           <span class="add-user">
             <Button
               newStyles
@@ -862,16 +878,6 @@
     padding-top: var(--spacing-xl);
     width: 100%;
     display: grid;
-  }
-
-  .admin-info {
-    margin-top: var(--spacing-xl);
-    padding: var(--spacing-l) var(--spacing-l) var(--spacing-l) var(--spacing-l);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xl);
-    height: 30px;
-    background-color: var(--background-alt);
   }
 
   .underlined {
