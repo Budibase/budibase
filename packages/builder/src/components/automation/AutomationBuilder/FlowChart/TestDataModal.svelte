@@ -68,7 +68,7 @@
 
 <ModalContent
   title="Add test data"
-  confirmText="TeRun testst"
+  confirmText="Run test"
   size="L"
   showConfirmButton={true}
   disabled={isError}
