@@ -55,6 +55,7 @@
     },
     role: {
       width: "1fr",
+      displayName: "Access",
     },
   }
   const customGroupTableRenderers = [
