@@ -119,7 +119,7 @@ export async function exportRows(
         rows[i][column] = result[i][column]
       }
     }
-    headers = Object.keys(rows[0]).filter(header => columns.includes(header))
+    headers = columns
   } else {
     rows = result
   }

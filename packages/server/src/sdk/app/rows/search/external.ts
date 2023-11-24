@@ -148,7 +148,7 @@ export async function exportRows(
         rows[i][column] = result.rows[i][column]
       }
     }
-    headers = Object.keys(schema).filter(header => columns.includes(header))
+    headers = columns
   } else {
     rows = result.rows
   }
