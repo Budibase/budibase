@@ -60,7 +60,7 @@ async function processMessage(job: Job) {
             appId,
           })
           await MIGRATIONS[migration].migration()
-          // await db.put({ ...migrationDoc, version: migrationId })
+          // await db.put({ ...migrationDoc, version: migration })
           console.info(`Migration ran successfully ${migration} ${counter}`, {
             migration,
             appId,
@@ -75,6 +75,12 @@ export default async (ctx: UserCtx, next: any) => {
   if (!ctx.appId) {
     return next()
   }
+
+  try {
+    if (new URL(ctx.headers.referer!).pathname === "/builder/updating") {
+      return next()
+    }
+  } catch {}
 
   const { appId } = ctx
 
