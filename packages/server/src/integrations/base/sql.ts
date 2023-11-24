@@ -437,6 +437,7 @@ class InternalBuilder {
 
   read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     let { endpoint, resource, filters, paginate, relationships } = json
+
     const tableName = endpoint.entityId
     // select all if not specified
     if (!resource) {
