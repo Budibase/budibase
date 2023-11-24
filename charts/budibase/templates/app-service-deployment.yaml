@@ -194,7 +194,7 @@ spec:
         {{ end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
         {{- with .Values.services.apps.startupProbe }}
         startupProbe:
