@@ -5,22 +5,38 @@ LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-ho
 LABEL com.centurylinklabs.watchtower.lifecycle.post-update="scripts/watchtower-hooks/post-update.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.post-check="scripts/watchtower-hooks/post-check.sh"
 
-WORKDIR /app
 
 # handle node-gyp
-RUN apk add --no-cache --virtual .gyp python3 make g++
+RUN apk add --no-cache --virtual .gyp python3 make g++ jq
 RUN yarn global add pm2
 
+WORKDIR /
 
-COPY package.json .
-COPY dist/yarn.lock .
-RUN yarn install --production=true --network-timeout 1000000
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+
+
+WORKDIR /string-templates
+COPY packages/string-templates/package.json package.json
+RUN ../scripts/removeWorkspaceDependencies.sh package.json
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000
+COPY packages/string-templates .
+
+
+WORKDIR /app
+COPY packages/worker/package.json .
+COPY packages/worker/dist/yarn.lock .
+RUN cd ../string-templates && yarn link && cd - && yarn link @budibase/string-templates
+
+RUN ../scripts/removeWorkspaceDependencies.sh package.json
+
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000
 # Remove unneeded data from file system to reduce image size
 RUN apk del .gyp \
     && yarn cache clean
 
-COPY dist/ dist/
-COPY docker_run.sh .
+COPY packages/worker/dist/ dist/
+COPY packages/worker/docker_run.sh .
 
 EXPOSE 4001
 
@@ -33,5 +49,10 @@ ENV SERVICE=worker-service
 ENV POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
+
+ARG BUDIBASE_VERSION
+# Ensuring the version argument is sent
+RUN test -n "$BUDIBASE_VERSION"
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
 
 CMD ["./docker_run.sh"]
