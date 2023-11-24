@@ -121,7 +121,15 @@
     width: 100%;
   }
 
-  input:focus:hover::placeholder {
-    color: var(--grey-8) !important;
+  input::placeholder {
+    color: var(--grey-7);
+  }
+
+  input:hover::placeholder {
+    color: var(--grey-7) !important;
+  }
+
+  input:focus::placeholder {
+    color: var(--grey-7) !important;
   }
 </style>
