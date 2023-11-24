@@ -129,7 +129,7 @@ export function createUsersStore() {
       return Constants.BudibaseRoles.Admin
     } else if (sdk.users.isBuilder(user)) {
       return Constants.BudibaseRoles.Developer
-    } else if (sdk.users.isCreator(user)) {
+    } else if (sdk.users.hasCreatorPermissions(user)) {
       return Constants.BudibaseRoles.Creator
     } else {
       return Constants.BudibaseRoles.AppUser
