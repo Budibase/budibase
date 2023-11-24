@@ -471,10 +471,6 @@
     await users.removeAppBuilder(userId, prodAppId)
   }
 
-  const addGroupAppBuilder = async groupId => {
-    await groups.actions.addGroupAppBuilder(groupId, prodAppId)
-  }
-
   const removeGroupAppBuilder = async groupId => {
     await groups.actions.removeGroupAppBuilder(groupId, prodAppId)
   }
@@ -495,14 +491,12 @@
   }
 
   const getInviteRoleValue = invite => {
-    if (invite.info?.admin?.global && invite.info?.builder?.global) {
-      return Constants.Roles.ADMIN
-    }
-
-    if (invite.info?.builder?.apps?.includes(prodAppId)) {
+    if (
+      (invite.info?.admin?.global && invite.info?.builder?.global) ||
+      invite.info?.builder?.apps?.includes(prodAppId)
+    ) {
       return Constants.Roles.CREATOR
     }
-
     return invite.info.apps?.[prodAppId]
   }
 
@@ -512,7 +506,7 @@
       return `This user has been given ${role?.name} access from the ${user.group} group`
     }
     if (user.isAdminOrGlobalBuilder) {
-      return "This user's role grants admin access to all apps"
+      return "Account admins can edit all apps"
     }
     return null
   }
@@ -650,8 +644,9 @@
                       autoWidth
                       align="right"
                       allowedRoles={user.isAdminOrGlobalBuilder
-                        ? [Constants.Roles.ADMIN]
+                        ? [Constants.Roles.CREATOR]
                         : null}
+                      labelPrefix="Can use as"
                     />
                   </div>
                 </div>
@@ -695,19 +690,16 @@
                       allowRemove={group.role}
                       allowPublic={false}
                       quiet={true}
-                      allowCreator={true}
+                      allowCreator={group.role === Constants.Roles.CREATOR}
                       on:change={e => {
-                        if (e.detail === Constants.Roles.CREATOR) {
-                          addGroupAppBuilder(group._id)
-                        } else {
-                          onUpdateGroup(group, e.detail)
-                        }
+                        onUpdateGroup(group, e.detail)
                       }}
                       on:remove={() => {
                         onUpdateGroup(group)
                       }}
                       autoWidth
                       align="right"
+                      labelPrefix="Can use as"
                     />
                   </div>
                 </div>
@@ -753,6 +745,7 @@
                       allowedRoles={user.isAdminOrGlobalBuilder
                         ? [Constants.Roles.CREATOR]
                         : null}
+                      labelPrefix="Can use as"
                     />
                   </div>
                 </div>
@@ -898,7 +891,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-s);
-    width: 400px;
   }
 
   .auth-entity-meta {
@@ -927,7 +919,7 @@
   .auth-entity,
   .auth-entity-header {
     display: grid;
-    grid-template-columns: 1fr 110px;
+    grid-template-columns: 1fr 180px;
     align-items: center;
     gap: var(--spacing-xl);
   }
@@ -958,7 +950,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     position: absolute;
-    width: 400px;
+    width: 440px;
     right: 0;
     height: 100%;
     box-shadow: 0 0 40px 10px rgba(0, 0, 0, 0.1);
