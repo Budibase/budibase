@@ -182,7 +182,11 @@
             </StatusLight>
           </div>
           <Icon
-            on:click={() => dispatch("toggle")}
+            e.stopPropagation()
+            on:click={e => {
+              e.stopPropagation()
+              dispatch("toggle")
+            }}
             hoverable
             name={open ? "ChevronUp" : "ChevronDown"}
           />
@@ -209,7 +213,10 @@
         {/if}
         {#if !showTestStatus}
           <Icon
-            on:click={() => dispatch("toggle")}
+            on:click={e => {
+              e.stopPropagation()
+              dispatch("toggle")
+            }}
             hoverable
             name={open ? "ChevronUp" : "ChevronDown"}
           />
