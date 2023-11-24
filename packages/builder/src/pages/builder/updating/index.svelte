@@ -13,6 +13,10 @@
 
     window.location = returnUrl
   }, 1000)
+
+  setTimeout(() => {
+    alert("Something went wrong 💀")
+  }, 60000)
 </script>
 
 <div class="loading">
