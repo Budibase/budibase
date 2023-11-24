@@ -7,10 +7,9 @@
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  import { currentAsset, store, selectedScreen } from "builderStore"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store, selectedScreen } from "builderStore"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
@@ -18,6 +17,7 @@
   export let value
 
   const dispatch = createEventDispatcher()
+
   let sanitisedFields
   let fieldList
   let schema

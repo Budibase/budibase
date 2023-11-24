@@ -4,11 +4,10 @@ import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
 import { getDeploymentStore } from "./store/deployments"
-import { derived } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
-import { get } from "svelte/store"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()

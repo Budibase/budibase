@@ -1,4 +1,5 @@
 const pg = require("pg")
+
 jest.mock("pg", () => {
   return {
     Client: jest.fn().mockImplementation(() => ({
@@ -13,6 +14,7 @@ jest.mock("pg", () => {
 import * as setup from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
+
 const structures = setup.structures
 
 env._set("ENCRYPTION_KEY", "budibase")

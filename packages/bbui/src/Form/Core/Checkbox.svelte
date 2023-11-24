@@ -4,7 +4,6 @@
   import { createEventDispatcher } from "svelte"
 
   export let value = false
-  export let error = null
   export let id = null
   export let text = null
   export let disabled = false
@@ -22,7 +21,6 @@
 
 <label
   class="spectrum-Checkbox spectrum-Checkbox--emphasized {sizeClass}"
-  class:is-invalid={!!error}
   class:checked={value}
   class:is-indeterminate={indeterminate}
   class:readonly
