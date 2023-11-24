@@ -246,6 +246,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           query.sql = query.sql.replace(match, escaped)
         }
       }
+      // if a binding is empty, save null
+      query.bindings = query.bindings?.map(binding =>
+        binding === "" ? null : binding
+      )
     }
     try {
       return await client.query(query.sql, query.bindings || [])

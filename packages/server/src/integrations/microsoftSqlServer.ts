@@ -320,6 +320,10 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       if (Array.isArray(query.bindings)) {
         let count = 0
         for (let binding of query.bindings) {
+          // if a binding is empty, save null
+          if (binding === "") {
+            binding = null
+          }
           request.input(`p${count++}`, binding)
         }
       }

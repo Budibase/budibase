@@ -39,6 +39,15 @@ describe("MS SQL Server Integration", () => {
       expect(config.integration.client.request).toHaveBeenCalledWith()
       expect(response[0]).toEqual(sql)
     })
+
+    it("parses empty bindings as null", async () => {
+      const query = {
+        sql: `insert into users (name, age) values (?, ?)`,
+        bindings: ["Joe", ""],
+      }
+      const response = await config.integration.create(query)
+      // TODO check request.input() has been called correctly...
+    })
   })
 
   describe("no rows returned", () => {

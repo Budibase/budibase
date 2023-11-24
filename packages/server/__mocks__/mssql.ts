@@ -16,6 +16,7 @@ module MsSqlMock {
     connect: jest.fn(() => ({
       request: jest.fn(() => ({
         query: jest.fn(sql => ({ recordset: [sql] })),
+        input: jest.fn(),
       })),
     })),
   }))

@@ -117,6 +117,11 @@ export function bindingTypeCoerce(bindings: any[]) {
     if (typeof binding !== "string") {
       continue
     }
+    // if a binding is empty, save null
+    if (binding === "") {
+      bindings[i] = null
+      continue
+    }
     const matches = binding.match(NUMBER_REGEX)
     // check if number first
     if (matches && matches[0] !== "" && !isNaN(Number(matches[0]))) {

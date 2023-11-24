@@ -98,7 +98,7 @@ export interface QueryJson {
 
 export interface SqlQuery {
   sql: string
-  bindings?: string[]
+  bindings?: (string | null)[]
 }
 
 export enum EmptyFilterOption {
