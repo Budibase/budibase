@@ -20,7 +20,7 @@ import ValidationEditor from "./controls/ValidationEditor/ValidationEditor.svelt
 import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 import ColumnEditor from "./controls/ColumnEditor/ColumnEditor.svelte"
 import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
-import GridColumnEditor from "./controls/ColumnEditor/GridColumnEditor.svelte"
+import GridColumnEditor from "./controls/GridColumnConfiguration/GridColumnConfiguration.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
@@ -28,6 +28,7 @@ import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte
 
 const componentMap = {
   text: DrawerBindableInput,
+  plainText: Input,
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
