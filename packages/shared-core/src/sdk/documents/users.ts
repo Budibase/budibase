@@ -13,7 +13,7 @@ export function isBuilder(user: User | ContextUser, appId?: string): boolean {
   if (!user) {
     return false
   }
-  if (user.builder?.global) {
+  if (user.builder?.global || user.builder?.creator) {
     return true
   } else if (appId && user.builder?.apps?.includes(getProdAppID(appId))) {
     return true
