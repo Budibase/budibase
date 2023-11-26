@@ -43,6 +43,7 @@
     {quiet}
     {autofocus}
     {options}
+    isOptionSelected={option => option === dropdownValue}
     on:change={onChange}
     on:pick={onPick}
     on:click

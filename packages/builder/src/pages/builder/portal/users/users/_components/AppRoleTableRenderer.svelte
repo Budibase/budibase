@@ -14,6 +14,10 @@
   }
 </script>
 
-<StatusLight square color={RoleUtils.getRoleColour(value)}>
-  {getRoleLabel(value)}
-</StatusLight>
+{#if value === Constants.Roles.CREATOR}
+  Can edit
+{:else}
+  <StatusLight square color={RoleUtils.getRoleColour(value)}>
+    Can use as {getRoleLabel(value)}
+  </StatusLight>
+{/if}
