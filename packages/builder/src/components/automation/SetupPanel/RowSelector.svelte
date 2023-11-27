@@ -114,7 +114,7 @@
 </div>
 {#if schemaFields.length}
   {#each schemaFields as [field, schema]}
-    {#if !schema.autocolumn && schema.type !== "attachment"}
+    {#if !schema.autocolumn}
       <div class="schema-fields">
         <Label>{field}</Label>
         <div class="field-width">

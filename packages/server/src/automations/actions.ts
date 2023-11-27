@@ -76,6 +76,9 @@ if (env.SELF_HOSTED) {
   const bash = require("./steps/bash")
   const openai = require("./steps/openai")
 
+  const htmlToPdf = require("./steps/htmlToPDF")
+  const syncToStore = require("./steps/syncFileToStore")
+
   // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore
@@ -83,6 +86,12 @@ if (env.SELF_HOSTED) {
 
   ACTION_IMPLS.OPENAI = openai.run
   BUILTIN_ACTION_DEFINITIONS.OPENAI = openai.definition
+
+  ACTION_IMPLS["HTML_TO_PDF"] = htmlToPdf.run
+  BUILTIN_ACTION_DEFINITIONS["HTML_TO_PDF"] = htmlToPdf.definition
+
+  ACTION_IMPLS["SYNC_TO_STORE"] = syncToStore.run
+  BUILTIN_ACTION_DEFINITIONS["SYNC_TO_STORE"] = syncToStore.definition
 }
 
 export async function getActionDefinitions() {
