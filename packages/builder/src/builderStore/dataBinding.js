@@ -1226,3 +1226,36 @@ export const runtimeToReadableBinding = (
     "readableBinding"
   )
 }
+
+/**
+ * Used to update binding references for automation or action steps
+ *
+ * @param obj - The object to be updated
+ * @param modifiedIndex - The index of the step that was modified
+ * @param action - Used to determine if a step is being added or deleted
+ * @param label - The binding text that describes the steps
+ */
+export const updateReferencesInObject = (obj, modifiedIndex, action, label) => {
+  const regex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = regex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+        if (action === "add" && referencedStep >= modifiedIndex) {
+          obj[key] = obj[key].replace(
+            `{{ ${label}.${referencedStep}.`,
+            `{{ ${label}.${referencedStep + 1}.`
+          )
+        } else if (action === "delete" && referencedStep > modifiedIndex) {
+          obj[key] = obj[key].replace(
+            `{{ ${label}.${referencedStep}.`,
+            `{{ ${label}.${referencedStep - 1}.`
+          )
+        }
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      updateReferencesInObject(obj[key], modifiedIndex, action, label)
+    }
+  }
+}
