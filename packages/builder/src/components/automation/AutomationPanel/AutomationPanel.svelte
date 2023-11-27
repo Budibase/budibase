@@ -12,7 +12,7 @@
   <span class="panel-title-content" slot="panel-title-content">
     <div class="header">
       <div>Automations</div>
-      <div on:click={modal.show} class="spacing">
+      <div on:click={modal.show} class="add-automation-button">
         <Icon name="Add" />
       </div>
     </div>
@@ -32,7 +32,8 @@
     gap: var(--spacing-m);
   }
 
-  .spacing {
+  .add-automation-button {
     margin-left: 130px;
+    cursor: pointer;
   }
 </style>
