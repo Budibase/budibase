@@ -21,7 +21,7 @@ export async function getAppMigrationMetadata(appId: string): Promise<string> {
   const cacheKey = `appmigrations_${env.VERSION}_${appId}`
 
   let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
-  if (!metadata) {
+  if (!metadata || env.isDev()) {
     try {
       metadata = await populateFromDB(appId)
     } catch (err: any) {
