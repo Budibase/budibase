@@ -11,8 +11,12 @@ export async function checkMissingMigrations(appId: string) {
     await queue.add(
       {
         appId,
+      },
+      {
+        jobId: appId,
+        removeOnComplete: true,
+        removeOnFail: true,
       }
-      // TODO: idempotency
     )
   }
 }
