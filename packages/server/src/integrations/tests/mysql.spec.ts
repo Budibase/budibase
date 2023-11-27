@@ -49,6 +49,19 @@ describe("MySQL Integration", () => {
     expect(config.integration.client.query).toHaveBeenCalledWith(sql, [])
   })
 
+  it("parses empty bindings as null", async () => {
+    const sql = `insert into users (name, age) values (?, ?)`
+    const bindings = ["", 123]
+    await config.integration.internalQuery({
+      sql,
+      bindings,
+    })
+    expect(config.integration.client.query).toHaveBeenCalledWith(sql, [
+      null,
+      123,
+    ])
+  })
+
   describe("no rows returned", () => {
     it("returns the correct response when the create response has no rows", async () => {
       const sql = "insert into users (name, age) values ('Joe', 123);"
