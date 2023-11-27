@@ -32,6 +32,7 @@ import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
+import AliasTables from "./alias"
 import sdk from "../../../sdk"
 
 export interface ManyRelationship {
@@ -178,13 +179,13 @@ function generateIdForRow(
 
 function getEndpoint(tableId: string | undefined, operation: string) {
   if (!tableId) {
-    return {}
+    throw new Error("Cannot get endpoint information - no table ID specified")
   }
   const { datasourceId, tableName } = breakExternalTableId(tableId)
   return {
-    datasourceId,
-    entityId: tableName,
-    operation,
+    datasourceId: datasourceId!,
+    entityId: tableName!,
+    operation: operation as Operation,
   }
 }
 
@@ -704,7 +705,7 @@ export class ExternalRequest<T extends Operation> {
         // safety check, if there are no filters on deletion bad things happen
         if (Object.keys(filters).length !== 0) {
           const op = isMany ? Operation.DELETE : Operation.UPDATE
-          const body = isMany ? null : { [colName]: null }
+          const body = isMany ? undefined : { [colName]: null }
           promises.push(
             getDatasourceAndQuery({
               endpoint: getEndpoint(tableId, op),
@@ -807,7 +808,7 @@ export class ExternalRequest<T extends Operation> {
     }
     let json = {
       endpoint: {
-        datasourceId,
+        datasourceId: datasourceId!,
         entityId: tableName,
         operation,
       },
@@ -829,9 +830,9 @@ export class ExternalRequest<T extends Operation> {
       },
     }
 
-    // can't really use response right now
-    const response = await getDatasourceAndQuery(json)
-    // handle many to many relationships now if we know the ID (could be auto increment)
+    const aliasing = new AliasTables(Object.keys(this.tables))
+    const response = await aliasing.queryWithAliasing(json)
+    // handle many-to-many relationships now if we know the ID (could be auto increment)
     if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",

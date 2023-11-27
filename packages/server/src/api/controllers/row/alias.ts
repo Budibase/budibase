@@ -2,12 +2,14 @@ import { QueryJson, SearchFilters, Table, Row } from "@budibase/types"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
 
-class AliasTables {
+export default class AliasTables {
   character: string
   aliases: Record<string, string>
   tableAliases: Record<string, string>
+  tableNames: string[]
 
-  constructor() {
+  constructor(tableNames: string[]) {
+    this.tableNames = tableNames
     this.character = "a"
     this.aliases = {}
     this.tableAliases = {}
@@ -17,13 +19,15 @@ class AliasTables {
     if (this.aliases[tableName]) {
       return this.aliases[tableName]
     }
-    this.character = String.fromCharCode(this.character.charCodeAt(0) + 1)
-    this.aliases[tableName] = this.character
-    this.tableAliases[this.character] = tableName
-    return this.character
+    const char = this.character
+    this.aliases[tableName] = char
+    this.tableAliases[char] = tableName
+    this.character = String.fromCharCode(char.charCodeAt(0) + 1)
+    return char
   }
 
-  aliasField(tableNames: string[], field: string) {
+  aliasField(field: string) {
+    const tableNames = this.tableNames
     if (field.includes(".")) {
       const [tableName, column] = field.split(".")
       if (tableNames.includes(tableName)) {
@@ -54,9 +58,9 @@ class AliasTables {
     }
   }
 
-  async queryWithAliasing(tableNames: string[], json: QueryJson) {
+  async queryWithAliasing(json: QueryJson) {
     json = cloneDeep(json)
-    const aliasField = (field: string) => this.aliasField(tableNames, field)
+    const aliasField = (field: string) => this.aliasField(field)
     const aliasTable = (table: Table) => ({
       ...table,
       name: this.getAlias(table.name),
@@ -82,7 +86,7 @@ class AliasTables {
     if (json.relationships) {
       json.relationships = json.relationships.map(relationship => ({
         ...relationship,
-        tableName: this.getAlias(relationship.tableName),
+        alias: this.getAlias(relationship.tableName),
       }))
     }
     if (json.meta?.table) {
@@ -95,6 +99,7 @@ class AliasTables {
       }
       json.meta.tables = aliasedTables
     }
+    json.endpoint.alias = this.getAlias(json.endpoint.entityId)
     const response = await getDatasourceAndQuery(json)
     return this.reverse(response)
   }
