@@ -439,6 +439,9 @@ class InternalBuilder {
     let { endpoint, resource, filters, paginate, relationships } = json
 
     const tableName = endpoint.entityId
+    const alias = endpoint.alias
+    const aliased = alias ? alias : tableName
+    const tableAliased = alias ? `${tableName} as ${alias}` : tableName
     // select all if not specified
     if (!resource) {
       resource = { fields: [] }
@@ -463,20 +466,20 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // start building the query
-    let query: KnexQuery = knex(tableName).limit(foundLimit)
+    let query: KnexQuery = knex(tableAliased).limit(foundLimit)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(query, filters, { tableName })
+    query = this.addFilters(query, filters, { tableName: aliased })
     // add sorting to pre-query
     query = this.addSorting(query, json)
     // @ts-ignore
     let preQuery: KnexQuery = knex({
       // @ts-ignore
-      [tableName]: query,
+      [aliased]: query,
     }).select(selectStatement)
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL) {
@@ -485,7 +488,7 @@ class InternalBuilder {
     // handle joins
     query = this.addRelationships(
       preQuery,
-      tableName,
+      aliased,
       relationships,
       endpoint.schema
     )
