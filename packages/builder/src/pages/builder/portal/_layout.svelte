@@ -16,7 +16,7 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: isOnboarding = !$apps.length && sdk.users.isGlobalBuilder($auth.user)
+  $: isOnboarding = !$apps.length && sdk.users.hasBuilderPermissions($auth.user)
 
   const updateActiveTab = menu => {
     for (let entry of menu) {

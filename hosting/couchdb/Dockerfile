@@ -29,7 +29,6 @@ WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
 WORKDIR /
-ADD build-target-paths.sh .
 ADD runner.sh ./bbcouch-runner.sh
-RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau ./build-target-paths.sh
+RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau
 CMD ["./bbcouch-runner.sh"]
