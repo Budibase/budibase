@@ -92,8 +92,8 @@ RUN chmod +x ./healthcheck.sh
 
 # Script below sets the path for storing data based on $DATA_DIR
 # For Azure App Service install SSH & point data locations to /home
-ADD hosting/single/ssh/sshd_config /etc/
-ADD hosting/single/ssh/ssh_setup.sh /tmp
+COPY hosting/single/ssh/sshd_config /etc/
+COPY hosting/single/ssh/ssh_setup.sh /tmp
 
 #  setup letsencrypt certificate
 RUN apt-get install -y certbot python3-certbot-nginx
