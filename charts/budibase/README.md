@@ -6,7 +6,14 @@ Budibase is an open source low-code platform, helping thousands of teams build a
 
 - `helm` v3 or above
 - Kubernetes 1.4+
-- A storage controller (for `PersistentVolume` creation, if you want to ensure your data does not get lost when pods restart)
+- A storage controller (if you want to use persistent storage)
+- An ingress controller (if you want to define an `Ingress` resource)
+
+## Chart dependencies
+
+This chart depends on the official Apache CouchDB chart. You can see its
+documentation here:
+<https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
 
 ## Installing the Chart
 
