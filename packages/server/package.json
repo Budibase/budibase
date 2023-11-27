@@ -67,7 +67,6 @@
     "curlconverter": "3.21.0",
     "dd-trace": "3.13.2",
     "dotenv": "8.2.0",
-    "file-type": "^18.7.0",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
     "google-auth-library": "7.12.0",

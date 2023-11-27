@@ -2,16 +2,6 @@ import fs from "fs"
 
 import { objectStore, db as dbCore } from "@budibase/backend-core"
 import { ObjectStoreBuckets } from "../../constants/index"
-// import { fileTypeFromFile } from "file-type"
-
-let fileTypeFromFilex: Function
-
-  // Shim - NOT FOR PRODUCTION
-;(async () => {
-  // ESM only - package used to work in previous node version
-  const { fileTypeFromFile } = await import("file-type")
-  fileTypeFromFilex = fileTypeFromFile
-})()
 
 import {
   AutomationActionStepId,
@@ -95,7 +85,7 @@ export async function run({ inputs, context, appId }: AutomationStepInput) {
   // Enforce file limit.
   // Mime detection
   // const stream = fs.createReadStream(sourceFilePath)
-  const sourceType = await fileTypeFromFilex(sourceFilePath)
+  const sourceType = "demo" // await fileTypeFromFilex(sourceFilePath)
   const prodId = dbCore.getProdAppID(appId)
 
   // Upload file to store.
