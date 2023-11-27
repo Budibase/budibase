@@ -9,7 +9,7 @@ export const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
         setTimeout(() => {
           console.error("a")
           r()
-        }, 10000)
+        }, 1000)
       })
     },
   },
@@ -19,7 +19,7 @@ export const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {
         setTimeout(() => {
           console.error("b")
           r()
-        }, 10000)
+        }, 1000)
       })
     },
   },
@@ -30,6 +30,10 @@ export interface MigrationDoc extends Document {
 }
 
 const appQueues: Record<string, Bull.Queue<any>> = {}
+
+export async function runMigration(migrationId: string) {
+  await MIGRATIONS[migrationId].migration()
+}
 
 async function processMessage(job: Job) {
   const { appId } = job.data
@@ -59,7 +63,7 @@ async function processMessage(job: Job) {
             migration,
             appId,
           })
-          await MIGRATIONS[migration].migration()
+          await runMigration(migration)
           await db.put({ ...migrationDoc, version: migration })
           console.info(`Migration ran successfully ${migration} ${counter}`, {
             migration,
