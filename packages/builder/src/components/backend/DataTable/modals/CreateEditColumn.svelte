@@ -342,6 +342,7 @@
 
         if (editableColumn.type === LINK_TYPE) {
           // Updating the relationships
+          tables.fetch()
           datasources.fetch()
         }
       }
