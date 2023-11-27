@@ -4,14 +4,14 @@ import { objectStore, db as dbCore } from "@budibase/backend-core"
 import { ObjectStoreBuckets } from "../../constants/index"
 // import { fileTypeFromFile } from "file-type"
 
-let fileTypeFromFilex:Function;
+let fileTypeFromFilex: Function
 
 // Shim - NOT FOR PRODUCTIONS
-(async () => {
+;(async () => {
   // ESM only - package used to work in previous node version
-  const { fileTypeFromFile } = await import("file-type" );
+  const { fileTypeFromFile } = await import("file-type")
   fileTypeFromFilex = fileTypeFromFile
-})();
+})()
 
 import {
   AutomationActionStepId,
@@ -136,7 +136,7 @@ export async function run({ inputs, context, appId }: AutomationStepInput) {
       },
       filename: fileKey,
       path: sourceFilePath,
-      type: "unknown",//sourceType?.mime,
+      type: "unknown", //sourceType?.mime,
     })
 
     // Sample response from above
@@ -174,7 +174,7 @@ export async function run({ inputs, context, appId }: AutomationStepInput) {
     const storeSync = {
       size: stats.size,
       name: inputs.fileName,
-      extension: "unknown",//sourceType?.ext,
+      extension: "unknown", //sourceType?.ext,
       source: sourceFilePath,
       key: response.Key,
       url: objectStore.getAppFileUrl(`${destBucket}/${inputs.fileName}`),
