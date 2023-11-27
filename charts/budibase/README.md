@@ -8,6 +8,7 @@ Budibase is an open source low-code platform, helping thousands of teams build a
 - Kubernetes 1.4+
 - A storage controller (if you want to use persistent storage)
 - An ingress controller (if you want to define an `Ingress` resource)
+- `metrics-server` (if you want to make use of horizontal pod autoscaling)
 
 ## Chart dependencies
 
