@@ -17,6 +17,7 @@ describe("Postgres Integration", () => {
 
   beforeEach(() => {
     config = new TestConfiguration()
+    pg.queryMock.mockImplementation(() => ({ rows: [] }))
   })
 
   it("calls the create method with the correct params", async () => {
@@ -37,7 +38,7 @@ describe("Postgres Integration", () => {
 
   it("calls the update method with the correct params", async () => {
     const sql = "update table users set name = 'test';"
-    const response = await config.integration.update({
+    await config.integration.update({
       sql,
     })
     expect(pg.queryMock).toHaveBeenCalledWith(sql, [])
@@ -49,6 +50,16 @@ describe("Postgres Integration", () => {
       sql,
     })
     expect(pg.queryMock).toHaveBeenCalledWith(sql, [])
+  })
+
+  it("parses empty bindings as null", async () => {
+    const sql = `insert into users (name, age) values (?, ?)`
+    const bindings = ["", 123]
+    await config.integration.internalQuery({
+      sql,
+      bindings,
+    })
+    expect(pg.queryMock).toHaveBeenCalledWith(sql, [null, 123])
   })
 
   describe("no rows returned", () => {
