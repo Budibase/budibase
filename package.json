@@ -79,7 +79,8 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "submodules:load": "git submodule init && git submodule update && yarn",
-    "submodules:unload": "git submodule deinit --all && yarn"
+    "submodules:unload": "git submodule deinit --all && yarn",
+    "add-app-migration": "node scripts/add-app-migration.js"
   },
   "workspaces": {
     "packages": [
