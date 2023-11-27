@@ -2,7 +2,6 @@ import puppeteer from "puppeteer"
 import fs from "fs"
 import { objectStore } from "@budibase/backend-core"
 import { ObjectStoreBuckets } from "../../constants/index"
-const uuid = require("uuid")
 
 import {
   AutomationActionStepId,
@@ -11,6 +10,8 @@ import {
   AutomationStepType,
   AutomationIOType,
 } from "@budibase/types"
+
+const uuid = require("uuid")
 
 export const definition: AutomationStepSchema = {
   name: "HtmlToPDF",
