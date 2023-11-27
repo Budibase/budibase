@@ -1,0 +1,92 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+## Prerequisites
+
+- `helm` v3 or above
+- Kubernetes 1.4+
+- A storage controller (for `PersistentVolume` creation, if you want to ensure your data does not get lost when pods restart)
+
+## Installing the Chart
+
+To install the chart from our repository:
+
+```console
+$ helm repo add budibase https://budibase.github.io/budibase/
+$ helm repo update
+$ helm install --create-namespace --namespace budibase budibase budibase/budibase
+```
+
+To install the chart from this repo:
+
+```console
+$ git clone git@github.com:budibase/budibase.git
+$ cd budibase/charts/budibase
+$ helm install --create-namespace --namespace budibase budibase .
+```
+
+## Example minimal configuration
+
+Here's an example `values.yaml` that would get a Budibase instance running in a home
+cluster using an nginx ingress controller and NFS as cluster storage (basically one of our
+staff's homelabs).
+
+<details>
+
+```yaml
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/client-max-body-size: 150M
+    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  className: "nginx"
+  hosts:
+    - host: budibase.local # set this to whatever DNS name you'd use
+      paths:
+        - backend:
+            service:
+              name: proxy-service
+              port:
+                number: 10000
+          path: /
+          pathType: Prefix
+
+couchdb:
+  persistentVolume:
+    enabled: true
+    storageClass: "nfs-client"
+  adminPassword: admin
+
+  image:
+    repository: samwho/test
+    tag: latest
+    pullPolicy: Always
+
+  objectStore:
+    storageClass: "nfs-client"
+  redis:
+    storageClass: "nfs-client"
+```
+
+If you wanted to use this when bringing up Budibase in your own cluster, you could save it
+to your hard disk and run the following:
+
+```console
+$ helm install --create-namespace --namespace budibase budibase . -f values.yaml
+```
+
+</details>
+
+## Configuration reference
+
+{{ template "chart.valuesTable" . }}
+
+## Uninstalling the Chart
+
+To uninstall the chart, assuming you named the release `budibase` (both commands in the installation section do so):
+
+```console
+$ helm uninstall --namespace budibase budibase
+```
+
+{{ template "helm-docs.versionFooter" . }}
