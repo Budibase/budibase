@@ -1,5 +1,7 @@
 const pg = require("pg")
+
 import { default as PostgresIntegration } from "../postgres"
+
 jest.mock("pg")
 
 class TestConfiguration {

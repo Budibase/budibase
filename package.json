@@ -3,7 +3,7 @@
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.22.5",
-    "@babel/eslint-parser": "^7.22.15",
+    "@babel/eslint-parser": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@typescript-eslint/parser": "6.9.0",
@@ -11,6 +11,8 @@
     "esbuild-node-externals": "^1.8.0",
     "eslint": "^8.52.0",
     "eslint-plugin-svelte": "^2.34.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-local-rules": "^2.0.0",
     "husky": "^8.0.3",
     "kill-port": "^1.6.1",
     "lerna": "7.1.1",
@@ -21,6 +23,7 @@
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "svelte-eslint-parser": "^0.33.1",
+    "svelte": "3.49.0",
     "typescript": "5.2.2"
   },
   "scripts": {

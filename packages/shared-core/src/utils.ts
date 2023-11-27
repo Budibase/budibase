@@ -1,3 +1,5 @@
+import * as Constants from "./constants"
+
 export function unreachable(
   value: never,
   message = `No such case in exhaustive switch: ${value}`
@@ -42,4 +44,16 @@ export async function parallelForeach<T>(
   processNext()
 
   await Promise.all(promises)
+}
+
+export function filterValueToLabel() {
+  return Object.keys(Constants.OperatorOptions).reduce(
+    (acc: { [key: string]: string }, key: string) => {
+      const ops: { [key: string]: any } = Constants.OperatorOptions
+      const op: { [key: string]: string } = ops[key]
+      acc[op["value"]] = op.label
+      return acc
+    },
+    {}
+  )
 }
