@@ -1,10 +1,7 @@
 <script>
   import {
     ModalContent,
-    Tabs,
-    Tab,
     TextArea,
-    Label,
     notifications,
     ActionButton,
   } from "@budibase/bbui"
