@@ -170,7 +170,7 @@ describe("/roles", () => {
         .get("/api/roles/accessible")
         .set({
           ...config.defaultHeaders(),
-          "x-budibase-role": "CUSTOM_ROLE"
+          "x-budibase-role": "CUSTOM_ROLE",
         })
         .expect(200)
       expect(res.body.length).toBe(3)

@@ -1,9 +1,8 @@
 import env from "../environment"
 import * as eventHelpers from "./events"
-import * as accounts from "../accounts"
 import * as accountSdk from "../accounts"
 import * as cache from "../cache"
-import { getGlobalDB, getIdentity, getTenantId } from "../context"
+import { doInTenant, getGlobalDB, getIdentity, getTenantId } from "../context"
 import * as dbUtils from "../db"
 import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
@@ -11,12 +10,10 @@ import * as sessions from "../security/sessions"
 import * as usersCore from "./users"
 import {
   Account,
-  AllDocsResponse,
   BulkUserCreated,
   BulkUserDeleted,
   isSSOAccount,
   isSSOUser,
-  RowResponse,
   SaveUserOpts,
   User,
   UserStatus,
@@ -149,12 +146,12 @@ export class UserDB {
 
   static async allUsers() {
     const db = getGlobalDB()
-    const response = await db.allDocs(
+    const response = await db.allDocs<User>(
       dbUtils.getGlobalUserParams(null, {
         include_docs: true,
       })
     )
-    return response.rows.map((row: any) => row.doc)
+    return response.rows.map(row => row.doc!)
   }
 
   static async countUsersByApp(appId: string) {
@@ -210,13 +207,6 @@ export class UserDB {
 
     if (!email && !_id) {
       throw new Error("_id or email is required")
-    }
-
-    if (
-      user.builder?.apps?.length &&
-      !(await UserDB.features.isAppBuildersEnabled())
-    ) {
-      throw new Error("Unable to update app builders, please check license")
     }
 
     let dbUser: User | undefined
@@ -303,7 +293,7 @@ export class UserDB {
 
   static async bulkCreate(
     newUsersRequested: User[],
-    groups: string[]
+    groups?: string[]
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -328,7 +318,7 @@ export class UserDB {
         })
         continue
       }
-      newUser.userGroups = groups
+      newUser.userGroups = groups || []
       newUsers.push(newUser)
       if (isCreator(newUser)) {
         newCreators.push(newUser)
@@ -467,7 +457,7 @@ export class UserDB {
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       // root account holder can't be deleted from inside budibase
       const email = dbUser.email
-      const account = await accounts.getAccount(email)
+      const account = await accountSdk.getAccount(email)
       if (account) {
         if (dbUser.userId === getIdentity()!._id) {
           throw new HTTPError('Please visit "Account" to delete this user', 400)
@@ -486,6 +476,37 @@ export class UserDB {
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })
+  }
+
+  static async createAdminUser(
+    email: string,
+    password: string,
+    tenantId: string,
+    opts?: { ssoId?: string; hashPassword?: boolean; requirePassword?: boolean }
+  ) {
+    const user: User = {
+      email: email,
+      password: password,
+      createdAt: Date.now(),
+      roles: {},
+      builder: {
+        global: true,
+      },
+      admin: {
+        global: true,
+      },
+      tenantId,
+    }
+    if (opts?.ssoId) {
+      user.ssoId = opts.ssoId
+    }
+    // always bust checklist beforehand, if an error occurs but can proceed, don't get
+    // stuck in a cycle
+    await cache.bustCache(cache.CacheKey.CHECKLIST)
+    return await UserDB.save(user, {
+      hashPassword: opts?.hashPassword,
+      requirePassword: opts?.requirePassword,
+    })
   }
 
   static async getGroups(groupIds: string[]) {
