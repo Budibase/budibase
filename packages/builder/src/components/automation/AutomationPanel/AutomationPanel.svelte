@@ -1,7 +1,7 @@
 <script>
   import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal, Button, Layout, Icon } from "@budibase/bbui"
+  import { Modal, Icon } from "@budibase/bbui"
   import Panel from "components/design/Panel.svelte"
 
   export let modal
