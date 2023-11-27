@@ -13,9 +13,10 @@
   export let options = []
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
+  export let getOptionSubtitle = option => option?.subtitle
   export let getOptionIcon = option => option?.icon
-  export let useOptionIconImage = false
   export let getOptionColour = option => option?.colour
+  export let useOptionIconImage = false
   export let isOptionEnabled
   export let quiet = false
   export let autoWidth = false
@@ -58,6 +59,7 @@
     {getOptionValue}
     {getOptionIcon}
     {getOptionColour}
+    {getOptionSubtitle}
     {useOptionIconImage}
     {isOptionEnabled}
     {autocomplete}

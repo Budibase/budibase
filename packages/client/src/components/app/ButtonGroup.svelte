@@ -3,9 +3,9 @@
   import Block from "../Block.svelte"
 
   export let buttons = []
-  export let direction
-  export let hAlign
-  export let vAlign
+  export let direction = "row"
+  export let hAlign = "left"
+  export let vAlign = "top"
   export let gap = "S"
 </script>
 

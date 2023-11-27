@@ -6,6 +6,7 @@ import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
 import { configs, cache } from "@budibase/backend-core"
 import ical from "ical-generator"
+
 const nodemailer = require("nodemailer")
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
