@@ -2698,6 +2698,22 @@
       }
     ]
   },
+  "labelfield": {
+    "name": "Text Field",
+    "icon": "Text",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 32
+    },
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
@@ -6165,6 +6181,24 @@
         "defaultValue": "spectrum--medium"
       }
     ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
+      }
+    ],
     "context": [
       {
         "type": "form",
@@ -6291,19 +6325,6 @@
         "required": true
       },
       {
-        "type": "columns/grid",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": [
-          "table",
-          {
-            "setting": "table.type",
-            "value": "custom",
-            "invert": true
-          }
-        ]
-      },
-      {
         "type": "filter",
         "label": "Filtering",
         "key": "initialFilter",
@@ -6401,6 +6422,18 @@
       },
       {
         "section": true,
+        "name": "Columns",
+        "settings": [
+          {
+            "type": "columns/grid",
+            "key": "columns",
+            "nested": true,
+            "resetOn": "table"
+          }
+        ]
+      },
+      {
+        "section": true,
         "name": "Buttons",
         "settings": [
           {
@@ -6420,7 +6453,8 @@
     ],
     "context": {
       "type": "schema"
-    }
+    },
+    "actions": ["RefreshDatasource"]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",

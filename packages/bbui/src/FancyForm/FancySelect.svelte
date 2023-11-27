@@ -12,11 +12,13 @@
   export let error = null
   export let validate = null
   export let options = []
+  export let footer = null
   export let isOptionEnabled = () => true
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionSubtitle = option => extractProperty(option, "subtitle")
   export let getOptionColour = () => null
+
   const dispatch = createEventDispatcher()
 
   let open = false
@@ -100,6 +102,7 @@
     {error}
     {disabled}
     {options}
+    {footer}
     {getOptionLabel}
     {getOptionValue}
     {getOptionSubtitle}

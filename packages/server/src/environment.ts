@@ -1,5 +1,6 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
+
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
@@ -32,6 +33,7 @@ const environment = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
+  CLUSTER_MODE: process.env.CLUSTER_MODE,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,

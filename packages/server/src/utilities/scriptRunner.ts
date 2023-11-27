@@ -1,5 +1,6 @@
 import fetch from "node-fetch"
 import { VM, VMScript } from "vm2"
+
 const JS_TIMEOUT_MS = 1000
 
 class ScriptRunner {
