@@ -43,10 +43,17 @@ describe("MS SQL Server Integration", () => {
     it("parses empty bindings as null", async () => {
       const query = {
         sql: `insert into users (name, age) values (?, ?)`,
-        bindings: ["Joe", ""],
+        bindings: ["", 123],
       }
-      const response = await config.integration.create(query)
-      // TODO check request.input() has been called correctly...
+      const inputMock = jest.fn()
+      config.integration.client.request.mockImplementation(() => ({
+        query: jest.fn(sql => ({ recordset: [sql] })),
+        input: inputMock,
+      }))
+      await config.integration.internalQuery(query)
+      expect(inputMock).toHaveBeenCalledTimes(2)
+      expect(inputMock).toHaveBeenCalledWith(`p0`, null)
+      expect(inputMock).toHaveBeenCalledWith(`p1`, 123)
     })
   })
 
