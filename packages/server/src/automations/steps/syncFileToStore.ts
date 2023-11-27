@@ -6,7 +6,7 @@ import { ObjectStoreBuckets } from "../../constants/index"
 
 let fileTypeFromFilex: Function
 
-// Shim - NOT FOR PRODUCTIONS
+  // Shim - NOT FOR PRODUCTION
 ;(async () => {
   // ESM only - package used to work in previous node version
   const { fileTypeFromFile } = await import("file-type")
