@@ -29,10 +29,6 @@ WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
 WORKDIR /
-ADD healthcheck.sh ./healthcheck.sh
-RUN chmod +x ./healthcheck.sh
-HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh"
-
 ADD runner.sh ./bbcouch-runner.sh
 RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau
 CMD ["./bbcouch-runner.sh"]
