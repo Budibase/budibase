@@ -70,7 +70,12 @@
     options={meta.constraints.inclusion}
   />
 {:else if type === "link"}
-  <LinkedRowSelector {error} bind:linkedRows={value} schema={meta} />
+  <LinkedRowSelector
+    {error}
+    linkedRows={value}
+    schema={meta}
+    on:change={e => (value = e.detail)}
+  />
 {:else if type === "longform"}
   {#if meta.useRichText}
     <RichTextField {error} {label} height="150px" bind:value />
