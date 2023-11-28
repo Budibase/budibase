@@ -260,20 +260,42 @@ export const getComponentContexts = (
 /**
  * Gets all data provider components above a component.
  */
-export const getActionProviderComponents = (asset, componentId, actionType) => {
+export const getActionProviders = (
+  asset,
+  componentId,
+  actionType,
+  options = { includeSelf: false }
+) => {
   if (!asset) {
     return []
   }
+
+  // Get all components
   const components = findAllComponents(asset.props)
-  return components.filter(component => {
-    // Ignore ourselves
-    if (componentId && component._id === componentId) {
-      return false
+
+  // Find matching contexts and generate bindings
+  let providers = []
+  components.forEach(component => {
+    if (!options?.includeSelf && component._id === componentId) {
+      return
     }
-    // Find components when expose this action
     const def = store.actions.components.getDefinition(component._component)
-    return def?.actions?.includes(actionType)
+    const actions = (def?.actions || []).map(action => {
+      return typeof action === "string" ? { type: action } : action
+    })
+    const action = actions.find(x => x.type === actionType)
+    if (action) {
+      let runtimeBinding = component._id
+      if (action.suffix) {
+        runtimeBinding += `-${action.suffix}`
+      }
+      providers.push({
+        readableBinding: component._instanceName,
+        runtimeBinding,
+      })
+    }
   })
+  return providers
 }
 
 /**
@@ -1116,17 +1138,18 @@ export const removeBindings = (obj, replacement = "Invalid binding") => {
  * When converting from readable to runtime it can sometimes add too many square brackets,
  * this makes sure that doesn't happen.
  */
-const shouldReplaceBinding = (currentValue, convertFrom, convertTo) => {
-  if (!currentValue?.includes(convertFrom)) {
+const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
+  if (!currentValue?.includes(from)) {
     return false
   }
   if (convertTo === "readableBinding") {
-    return true
+    // Dont replace if the value already matches the readable binding
+    return currentValue.indexOf(binding.readableBinding) === -1
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
   const noSpaces = currentValue.replace(/\s+/g, "")
-  const fromNoSpaces = convertFrom.replace(/\s+/g, "")
+  const fromNoSpaces = from.replace(/\s+/g, "")
   const invalids = [
     `[${fromNoSpaces}]`,
     `"${fromNoSpaces}"`,
@@ -1178,8 +1201,11 @@ const bindingReplacement = (
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
-      if (isJS || shouldReplaceBinding(newBoundValue, from, convertTo)) {
-        const binding = bindableProperties.find(el => el[convertFrom] === from)
+      const binding = bindableProperties.find(el => el[convertFrom] === from)
+      if (
+        isJS ||
+        shouldReplaceBinding(newBoundValue, from, convertTo, binding)
+      ) {
         let idx
         do {
           // see if any instances of this binding exist in the search string

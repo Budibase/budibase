@@ -2,29 +2,19 @@
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables, viewsV2 } from "stores/backend"
-  import {
-    getSchemaForDatasourcePlus,
-    getComponentContexts,
-  } from "builderStore/dataBinding"
+  import { getSchemaForDatasourcePlus } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
+  import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 
   export let parameters
   export let bindings = []
   export let nested
 
-  $: formContexts = getComponentContexts(
-    $currentAsset,
-    $store.selectedComponentId,
-    "form",
-    { includeSelf: nested }
-  )
-  $: schemaContexts = getComponentContexts(
-    $currentAsset,
-    $store.selectedComponentId,
-    "schema",
-    { includeSelf: nested }
-  )
-  $: providerOptions = getProviderOptions(formContexts, schemaContexts)
+  $: providerOptions = getDatasourceLikeProviders({
+    asset: $currentAsset,
+    componentId: $store.selectedComponentId,
+    nested,
+  })
   $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list.map(table => ({
     label: table.name,
@@ -35,25 +25,6 @@
     resourceId: view.id,
   }))
   $: options = [...(tableOptions || []), ...(viewOptions || [])]
-
-  // Gets options for valid context keys which provide valid data to submit
-  const getProviderOptions = (formContexts, schemaContexts) => {
-    const allContexts = formContexts.concat(schemaContexts)
-    let options = []
-    allContexts.forEach(({ component, contexts }) => {
-      let runtimeBinding = component._id
-      contexts.forEach(context => {
-        if (context.suffix) {
-          runtimeBinding += `-${context.suffix}`
-        }
-        options.push({
-          label: component._instanceName,
-          value: runtimeBinding,
-        })
-      })
-    })
-    return options
-  }
 
   const getSchemaFields = resourceId => {
     const { schema } = getSchemaForDatasourcePlus(resourceId)

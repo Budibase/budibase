@@ -10,7 +10,7 @@ class TestConfiguration {
 
     this.ctx = {
       next: this.next,
-      throw: this.throw
+      throw: this.throw,
     }
   }
 
@@ -35,7 +35,7 @@ describe("Self host middleware", () => {
   })
 
   it("calls next() when SELF_HOSTED env var is set", async () => {
-    env.SELF_HOSTED = 1 
+    env.SELF_HOSTED = 1
 
     await config.executeMiddleware()
     expect(config.next).toHaveBeenCalled()

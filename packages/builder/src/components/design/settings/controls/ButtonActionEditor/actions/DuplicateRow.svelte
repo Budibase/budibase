@@ -2,26 +2,19 @@
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { store, currentAsset } from "builderStore"
   import { tables, viewsV2 } from "stores/backend"
-  import {
-    getComponentContexts,
-    getSchemaForDatasourcePlus,
-  } from "builderStore/dataBinding"
+  import { getSchemaForDatasourcePlus } from "builderStore/dataBinding"
   import SaveFields from "./SaveFields.svelte"
+  import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 
   export let parameters
   export let bindings = []
+  export let nested
 
-  $: formContexts = getComponentContexts(
-    $currentAsset,
-    $store.selectedComponentId,
-    "form"
-  )
-  $: schemaContexts = getComponentContexts(
-    $currentAsset,
-    $store.selectedComponentId,
-    "schema"
-  )
-  $: providerOptions = getProviderOptions(formContexts, schemaContexts)
+  $: providerOptions = getDatasourceLikeProviders({
+    asset: $currentAsset,
+    componentId: $store.selectedComponentId,
+    nested,
+  })
   $: schemaFields = getSchemaFields(parameters?.tableId)
   $: tableOptions = $tables.list.map(table => ({
     label: table.name,
@@ -33,32 +26,8 @@
   }))
   $: options = [...(tableOptions || []), ...(viewOptions || [])]
 
-  // Gets options for valid context keys which provide valid data to submit
-  const getProviderOptions = (formContexts, schemaContexts) => {
-    const allContexts = formContexts.concat(schemaContexts)
-    let options = []
-    allContexts.forEach(({ component, contexts }) => {
-      let runtimeBinding = component._id
-      contexts.forEach(context => {
-        if (context.suffix) {
-          runtimeBinding += `-${context.suffix}`
-        }
-        options.push({
-          label: component._instanceName,
-          value: runtimeBinding,
-        })
-      })
-    })
-    return options
-  }
-
   const getSchemaFields = resourceId => {
-    let { schema } = getSchemaForDatasourcePlus(resourceId)
-
-    // Since we're duplicating, we don't want to allow changing the ID or rev
-    delete schema._id
-    delete schema._rev
-
+    const { schema } = getSchemaForDatasourcePlus(resourceId)
     return Object.values(schema || {})
   }
 

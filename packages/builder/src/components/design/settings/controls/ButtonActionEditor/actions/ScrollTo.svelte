@@ -1,22 +1,36 @@
 <script>
   import { currentAsset, store } from "builderStore"
   import { Label, Combobox, Select } from "@budibase/bbui"
-  import {
-    getActionProviderComponents,
-    buildFormSchema,
-  } from "builderStore/dataBinding"
+  import { getActionProviders, buildFormSchema } from "builderStore/dataBinding"
   import { findComponent } from "builderStore/componentUtils"
 
   export let parameters
+  export let nested
 
-  $: formComponent = findComponent($currentAsset.props, parameters.componentId)
+  $: formComponent = getFormComponent(
+    $currentAsset.props,
+    parameters.componentId
+  )
   $: formSchema = buildFormSchema(formComponent)
   $: fieldOptions = Object.keys(formSchema || {})
-  $: actionProviders = getActionProviderComponents(
+  $: actionProviders = getActionProviders(
     $currentAsset,
     $store.selectedComponentId,
-    "ScrollTo"
+    "ScrollTo",
+    { includeSelf: nested }
   )
+
+  const getFormComponent = (asset, id) => {
+    let component = findComponent(asset, id)
+    if (component) {
+      return component
+    }
+    // Check for block component IDs, and use the block itself instead
+    if (id?.includes("-")) {
+      return findComponent(asset, id.split("-")[0])
+    }
+    return null
+  }
 </script>
 
 <div class="root">
@@ -24,8 +38,8 @@
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
-    getOptionLabel={x => x._instanceName}
-    getOptionValue={x => x._id}
+    getOptionLabel={x => x.readableBinding}
+    getOptionValue={x => x.runtimeBinding}
   />
   <Label small>Field</Label>
   <Combobox bind:value={parameters.field} options={fieldOptions} />
