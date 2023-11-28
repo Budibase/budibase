@@ -319,7 +319,7 @@
   </Layout>
   <Layout noPadding>
     {#if selectedActionComponent && !showAvailableActions}
-      {#key (selectedAction.id, originalActionIndex, actions?.length)}
+      {#key (selectedAction.id, originalActionIndex)}
         <div class="selected-action-container">
           <svelte:component
             this={selectedActionComponent}
