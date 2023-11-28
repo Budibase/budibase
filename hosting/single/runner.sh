@@ -22,11 +22,11 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 
 # Azure App Service customisations
 if [[ "${TARGETBUILD}" = "aas" ]]; then
-    DATA_DIR="${DATA_DIR:-/home}"
+    export DATA_DIR="${DATA_DIR:-/home}"
     WEBSITES_ENABLE_APP_SERVICE_STORAGE=true
     /etc/init.d/ssh start
 else
-    DATA_DIR=${DATA_DIR:-/data}
+    export DATA_DIR=${DATA_DIR:-/data}
 fi
 mkdir -p ${DATA_DIR}
 # Mount NFS or GCP Filestore if env vars exist for it

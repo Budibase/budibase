@@ -44,6 +44,7 @@ export interface User extends Document {
   builder?: {
     global?: boolean
     apps?: string[]
+    creator?: boolean
   }
   admin?: {
     global: boolean
