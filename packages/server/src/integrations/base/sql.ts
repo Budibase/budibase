@@ -390,7 +390,7 @@ class InternalBuilder {
             const from = relationship.from,
               to = relationship.to
             // @ts-ignore
-            this.orOn(`${fromTable}.${from}`, "=", `${toAlias}.${to}`)
+            this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
           }
         })
       } else {
