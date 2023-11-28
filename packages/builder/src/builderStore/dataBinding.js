@@ -254,7 +254,7 @@ export const getComponentContexts = (
     delete map[componentId]
   }
 
-  return Object.values(map)
+  return Object.values(map).filter(x => x.contexts.length > 0)
 }
 
 /**
