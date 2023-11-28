@@ -5,7 +5,7 @@
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
   import { goto } from "@roxi/routify"
-  import { getVerticalResizeActions } from "./resizable"
+  import { getVerticalResizeActions } from "components/common/resizable"
   import NavHeader from "components/common/NavHeader.svelte"
 
   const [resizable, resizableHandle] = getVerticalResizeActions()

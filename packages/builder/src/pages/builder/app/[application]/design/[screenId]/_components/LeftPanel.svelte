@@ -1,7 +1,7 @@
 <script>
   import ScreenList from "./ScreenList/index.svelte"
   import ComponentList from "./ComponentList/index.svelte"
-  import { getHorizontalResizeActions } from "./ScreenList/resizable"
+  import { getHorizontalResizeActions } from "components/common/resizable"
 
   const [resizable, resizableHandle] = getHorizontalResizeActions()
 </script>
@@ -48,7 +48,7 @@
 
   .dividerClickExtender {
     position: absolute;
-    cursor: row-resize;
+    cursor: col-resize;
     height: 100%;
     width: 12px;
   }
