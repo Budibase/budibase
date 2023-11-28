@@ -10,8 +10,9 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
-  export let useOptionIconImage = false
   export let getOptionColour = () => null
+  export let getOptionSubtitle = () => null
+  export let useOptionIconImage = false
   export let isOptionEnabled
   export let readonly = false
   export let quiet = false
@@ -82,8 +83,9 @@
   {getOptionLabel}
   {getOptionValue}
   {getOptionIcon}
-  {useOptionIconImage}
   {getOptionColour}
+  {getOptionSubtitle}
+  {useOptionIconImage}
   {isOptionEnabled}
   {autocomplete}
   {sort}

@@ -224,13 +224,12 @@
               </span>
             {/if}
             <span class="spectrum-Menu-itemLabel">
-              {#if getOptionSubtitle(option, idx)}
-                <span class="subtitle-text"
-                  >{getOptionSubtitle(option, idx)}</span
-                >
-              {/if}
-
               {getOptionLabel(option, idx)}
+              {#if getOptionSubtitle(option, idx)}
+                <span class="subtitle-text">
+                  {getOptionSubtitle(option, idx)}
+                </span>
+              {/if}
             </span>
             {#if option.tag}
               <span class="option-tag">
@@ -275,10 +274,9 @@
     font-size: 12px;
     line-height: 15px;
     font-weight: 500;
-    top: 10px;
     color: var(--spectrum-global-color-gray-600);
     display: block;
-    margin-bottom: var(--spacing-s);
+    margin-top: var(--spacing-s);
   }
 
   .spectrum-Picker-label.auto-width {
