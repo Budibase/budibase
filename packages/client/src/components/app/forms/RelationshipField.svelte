@@ -131,6 +131,7 @@
       filter: [
         ...baseFilter,
         {
+          // Use a big numeric prefix to avoid clashing with an existing filter
           field: `999:${primaryDisplay}`,
           operator: "string",
           value: searchTerm,
