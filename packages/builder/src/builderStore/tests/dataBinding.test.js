@@ -246,25 +246,25 @@ describe("updateReferencesInObject", () => {
       {
         id: "b2",
         parameters: {
-          text: "Banana {{ actions.1.row }}",
+          text: "Banana {{ actions.0.row }}",
         },
       },
       {
         id: "e5",
         parameters: {
-          text: "Eagle {{ actions.4.row }}",
+          text: "Eagle {{ actions.3.row }}",
         },
       },
       {
         id: "c3",
         parameters: {
-          text: "Carrot {{ actions.1.row }}",
+          text: "Carrot {{ actions.0.row }}",
         },
       },
       {
         id: "d4",
         parameters: {
-          text: "Dog {{ actions.3.row }}",
+          text: "Dog {{ actions.2.row }}",
         },
       },
     ]
@@ -286,25 +286,100 @@ describe("updateReferencesInObject", () => {
       {
         id: "b2",
         parameters: {
-          text: "Banana {{ actions.1.row }}",
+          text: "Banana {{ actions.0.row }}",
         },
       },
       {
         id: "e5",
         parameters: {
-          text: "Eagle {{ actions.5.row }}",
+          text: "Eagle {{ actions.4.row }}",
         },
       },
       {
         id: "c3",
         parameters: {
-          text: "Carrot {{ actions.1.row }}",
+          text: "Carrot {{ actions.0.row }}",
         },
       },
       {
         id: "d4",
         parameters: {
-          text: "Dog {{ actions.4.row }}",
+          text: "Dog {{ actions.3.row }}",
+        },
+      },
+    ])
+  })
+
+  it("should handle on 'move' to a higher index", () => {
+    let obj = [
+      {
+        id: "b2",
+        parameters: {
+          text: "Banana {{ actions.0.row }}",
+        },
+      },
+      {
+        id: "c3",
+        parameters: {
+          text: "Carrot {{ actions.0.row }}",
+        },
+      },
+      {
+        id: "a1",
+        parameters: {
+          text: "Apple",
+        },
+      },
+      {
+        id: "d4",
+        parameters: {
+          text: "Dog {{ actions.2.row }}",
+        },
+      },
+      {
+        id: "e5",
+        parameters: {
+          text: "Eagle {{ actions.3.row }}",
+        },
+      },
+    ]
+    updateReferencesInObject({
+      obj,
+      modifiedIndex: 2,
+      action: "move",
+      label: "actions",
+      originalIndex: 0,
+    })
+
+    expect(obj).toEqual([
+      {
+        id: "b2",
+        parameters: {
+          text: "Banana {{ actions.2.row }}",
+        },
+      },
+      {
+        id: "c3",
+        parameters: {
+          text: "Carrot {{ actions.2.row }}",
+        },
+      },
+      {
+        id: "a1",
+        parameters: {
+          text: "Apple",
+        },
+      },
+      {
+        id: "d4",
+        parameters: {
+          text: "Dog {{ actions.1.row }}",
+        },
+      },
+      {
+        id: "e5",
+        parameters: {
+          text: "Eagle {{ actions.3.row }}",
         },
       },
     ])
@@ -382,6 +457,85 @@ describe("updateReferencesInObject", () => {
           autoDismiss: true,
           type: "success",
           message: "{{ actions.2.row }}",
+        },
+        "##eventHandlerType": "Show Notification",
+        id: "JEI5lAyJZ",
+      },
+    ])
+  })
+
+  it("should handle on 'move' of action being referenced, dragged to a lower index", () => {
+    let obj = [
+      {
+        "##eventHandlerType": "Save Row",
+        parameters: {
+          tableId: "ta_bb_employee",
+        },
+        id: "aehg5cTmhR",
+      },
+      {
+        "##eventHandlerType": "Validate Form",
+        id: "cCD0Dwcnq",
+      },
+      {
+        "##eventHandlerType": "Close Screen Modal",
+        id: "3fbbIOfN0H",
+      },
+      {
+        "##eventHandlerType": "Close Side Panel",
+        id: "mzkpf86cxo",
+      },
+      {
+        "##eventHandlerType": "Navigate To",
+        id: "h0uDFeJa8A",
+      },
+      {
+        parameters: {
+          autoDismiss: true,
+          type: "success",
+          message: "{{ actions.4.row }}",
+        },
+        "##eventHandlerType": "Show Notification",
+        id: "JEI5lAyJZ",
+      },
+    ]
+    updateReferencesInObject({
+      obj,
+      modifiedIndex: 0,
+      action: "move",
+      label: "actions",
+      originalIndex: 4,
+    })
+
+    expect(obj).toEqual([
+      {
+        "##eventHandlerType": "Save Row",
+        parameters: {
+          tableId: "ta_bb_employee",
+        },
+        id: "aehg5cTmhR",
+      },
+      {
+        "##eventHandlerType": "Validate Form",
+        id: "cCD0Dwcnq",
+      },
+      {
+        "##eventHandlerType": "Close Screen Modal",
+        id: "3fbbIOfN0H",
+      },
+      {
+        "##eventHandlerType": "Close Side Panel",
+        id: "mzkpf86cxo",
+      },
+      {
+        "##eventHandlerType": "Navigate To",
+        id: "h0uDFeJa8A",
+      },
+      {
+        parameters: {
+          autoDismiss: true,
+          type: "success",
+          message: "{{ actions.0.row }}",
         },
         "##eventHandlerType": "Show Notification",
         id: "JEI5lAyJZ",

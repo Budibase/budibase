@@ -1260,15 +1260,23 @@ export const updateReferencesInObject = ({
             `{{ ${label}.${referencedStep - 1}.`
           )
         } else if (action === "move") {
-          if (referencedStep >= modifiedIndex) {
+          if (referencedStep === originalIndex) {
+            obj[key] = obj[key].replace(
+              `{{ ${label}.${referencedStep}.`,
+              `{{ ${label}.${modifiedIndex}.`
+            )
+          } else if (
+            modifiedIndex <= referencedStep &&
+            modifiedIndex < originalIndex
+          ) {
             obj[key] = obj[key].replace(
               `{{ ${label}.${referencedStep}.`,
               `{{ ${label}.${referencedStep + 1}.`
             )
-          } else if (referencedStep === originalIndex) {
+          } else if (referencedStep === modifiedIndex) {
             obj[key] = obj[key].replace(
               `{{ ${label}.${referencedStep}.`,
-              `{{ ${label}.${modifiedIndex}.`
+              `{{ ${label}.${referencedStep - 1}.`
             )
           }
         }
