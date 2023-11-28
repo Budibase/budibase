@@ -19,5 +19,5 @@
 </script>
 
 <Field {helpText} {label} {labelPosition} {error}>
-  <Switch {error} {disabled} {text} {value} on:change={onChange} />
+  <Switch {error} {disabled} {text} {value} on:change={onChange} on:click />
 </Field>
