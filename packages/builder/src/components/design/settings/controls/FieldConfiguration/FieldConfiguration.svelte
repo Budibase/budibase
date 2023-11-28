@@ -187,7 +187,7 @@
 
 <style>
   .field-configuration {
-    padding-top: 1px;
+    padding-top: 8px;
   }
   .field-configuration :global(.spectrum-ActionButton) {
     width: 100%;
