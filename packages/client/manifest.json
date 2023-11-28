@@ -6003,7 +6003,8 @@
       },
       {
         "type": "schema",
-        "suffix": "repeater"
+        "suffix": "repeater",
+        "scope": "local"
       }
     ]
   },
