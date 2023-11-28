@@ -205,11 +205,11 @@
           messages: [
             {
               message:
-                      "We've updated our pricing - read the blog post to learn more.",
+                "We've updated our pricing - read the blog post to learn more.",
               type: BANNER_TYPES.NEUTRAL,
               extraButtonText: "Learn More",
               extraButtonAction: () =>
-                      window.open("https://budibase.com/blog/updates/pricing-v3"),
+                window.open("https://budibase.com/pricing"),
             },
           ],
         })
