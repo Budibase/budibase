@@ -78,7 +78,7 @@
   {style}
   {draggable}
 >
-  <div class="nav-item-content" bind:this={contentRef}>
+  <div class="nav-item-content" bind:this={contentRef} class:right={rightAlignIcon}>
     {#if withArrow}
       <div
         class:opened
@@ -166,10 +166,14 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    width: 100%;
+    width: max-content;
     position: relative;
     padding-left: var(--spacing-l);
     box-sizing: border-box;
+  }
+
+  .nav-item-content.right {
+    width: 100%;
   }
 
   /* Needed to fully display the actions icon */
