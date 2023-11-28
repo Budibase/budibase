@@ -55,6 +55,7 @@
     },
     role: {
       width: "1fr",
+      displayName: "Access",
     },
   }
   const customGroupTableRenderers = [
@@ -98,7 +99,7 @@
       return y._id === userId
     })
   })
-  $: globalRole = sdk.users.isAdmin(user) ? "admin" : "appUser"
+  $: globalRole = users.getUserRole(user)
 
   const getAvailableApps = (appList, privileged, roles) => {
     let availableApps = appList.slice()
@@ -177,12 +178,21 @@
   }
 
   async function updateUserRole({ detail }) {
-    if (detail === "developer") {
+    if (detail === Constants.BudibaseRoles.Developer) {
       toggleFlags({ admin: { global: false }, builder: { global: true } })
-    } else if (detail === "admin") {
+    } else if (detail === Constants.BudibaseRoles.Admin) {
       toggleFlags({ admin: { global: true }, builder: { global: true } })
-    } else if (detail === "appUser") {
+    } else if (detail === Constants.BudibaseRoles.AppUser) {
       toggleFlags({ admin: { global: false }, builder: { global: false } })
+    } else if (detail === Constants.BudibaseRoles.Creator) {
+      toggleFlags({
+        admin: { global: false },
+        builder: {
+          global: false,
+          creator: true,
+          apps: user?.builder?.apps || [],
+        },
+      })
     }
   }
 
@@ -295,6 +305,7 @@
           <div class="field">
             <Label size="L">Role</Label>
             <Select
+              placeholder={null}
               disabled={!sdk.users.isAdmin($auth.user)}
               value={globalRole}
               options={Constants.BudibaseRoleOptions}
