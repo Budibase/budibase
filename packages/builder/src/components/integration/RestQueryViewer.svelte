@@ -404,7 +404,7 @@
     datasource = $datasources.list.find(ds => ds._id === query?.datasourceId)
     const datasourceUrl = datasource?.config.url
     const qs = query?.fields.queryString
-    breakQs = restUtils.breakQueryString(qs)
+    breakQs = restUtils.breakQueryString(encodeURI(qs ?? ""))
     breakQs = runtimeToReadableMap(mergedBindings, breakQs)
 
     const path = query.fields.path
@@ -652,7 +652,7 @@
     <div class="bottom">
       <Layout paddingY="S" gap="S">
         <Divider />
-        {#if !response && Object.keys(schema).length === 0}
+        {#if !response && Object.keys(schema || {}).length === 0}
           <Heading size="M">Response</Heading>
           <div class="placeholder">
             <div class="placeholder-internal">

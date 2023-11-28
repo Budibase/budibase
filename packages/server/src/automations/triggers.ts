@@ -1,8 +1,7 @@
 import emitter from "../events/index"
-import { getAutomationParams } from "../db/utils"
+import { getAutomationParams, isDevAppID } from "../db/utils"
 import { coerce } from "../utilities/rowProcessor"
 import { definitions } from "./triggerInfo"
-import { isDevAppID } from "../db/utils"
 // need this to call directly, so we can get a response
 import { automationQueue } from "./bullboard"
 import { checkTestFlag } from "../utilities/redis"
@@ -94,7 +93,7 @@ export async function externalTrigger(
   automation: Automation,
   params: { fields: Record<string, any>; timeout?: number },
   { getResponses }: { getResponses?: boolean } = {}
-) {
+): Promise<any> {
   if (
     automation.definition != null &&
     automation.definition.trigger != null &&

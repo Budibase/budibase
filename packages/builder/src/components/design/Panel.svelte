@@ -11,6 +11,7 @@
   export let onClickCloseButton
   export let borderLeft = false
   export let borderRight = false
+  export let borderBottomHeader = true
   export let wide = false
   export let extraWide = false
   export let closeButtonIcon = "Close"
@@ -26,7 +27,11 @@
   class:borderLeft
   class:borderRight
 >
-  <div class="header" class:custom={customHeaderContent}>
+  <div
+    class="header"
+    class:custom={customHeaderContent}
+    class:borderBottom={borderBottomHeader}
+  >
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
     {/if}
@@ -94,8 +99,10 @@
     justify-content: space-between;
     align-items: center;
     padding: 0 var(--spacing-l);
-    border-bottom: var(--border-light);
     gap: var(--spacing-m);
+  }
+  .header.borderBottom {
+    border-bottom: var(--border-light);
   }
   .title {
     flex: 1 1 auto;

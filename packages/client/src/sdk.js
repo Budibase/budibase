@@ -14,6 +14,8 @@ import {
   dndIsDragging,
   confirmationStore,
   roleStore,
+  stateStore,
+  createContextStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -24,9 +26,13 @@ import BlockComponent from "components/BlockComponent.svelte"
 import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
+import { enrichButtonActions } from "./utils/buttonActions.js"
+import { processStringSync, makePropSafe } from "@budibase/string-templates"
 
 export default {
   API,
+
+  // Stores
   authStore,
   notificationStore,
   routeStore,
@@ -41,13 +47,24 @@ export default {
   currentRole,
   confirmationStore,
   roleStore,
+  stateStore,
+
+  // Utils
   styleable,
   linkable,
   getAction,
   fetchDatasourceSchema,
-  Provider,
-  ActionTypes,
   getAPIKey,
+  enrichButtonActions,
+  processStringSync,
+  makePropSafe,
+  createContextStore,
+
+  // Components
+  Provider,
   Block,
   BlockComponent,
+
+  // Constants
+  ActionTypes,
 }

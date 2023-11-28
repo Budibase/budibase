@@ -3,6 +3,7 @@
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import GridRow from "./GridRow.svelte"
   import { BlankRowID } from "../lib/constants"
+  import ButtonColumn from "./ButtonColumn.svelte"
 
   const {
     bounds,
@@ -13,6 +14,7 @@
     dispatch,
     isDragging,
     config,
+    props,
   } = getContext("grid")
 
   let body
@@ -54,6 +56,9 @@
       />
     {/if}
   </GridScrollWrapper>
+  {#if $props.buttons?.length}
+    <ButtonColumn />
+  {/if}
 </div>
 
 <style>

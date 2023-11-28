@@ -9,11 +9,11 @@ function mockWorker() {
       return {
         _id: "us_uuid1",
         roles: {
-          "app_test": "BASIC",
+          app_test: "BASIC",
         },
         roleId: "BASIC",
       }
-    }
+    },
   }))
 }
 
@@ -109,7 +109,7 @@ class TestConfiguration {
       path: "",
       cookies: {
         set: jest.fn(),
-      }
+      },
     }
   }
 

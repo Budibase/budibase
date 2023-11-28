@@ -9,6 +9,7 @@ import {
 import { Response } from "node-fetch"
 import BaseAPI from "./BaseAPI"
 import { APIRequestOpts } from "../../../types"
+
 export default class LicenseAPI extends BaseAPI {
   client: AccountInternalAPIClient
   constructor(client: AccountInternalAPIClient) {

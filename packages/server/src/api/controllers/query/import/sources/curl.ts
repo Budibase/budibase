@@ -1,6 +1,7 @@
 import { ImportSource, ImportInfo } from "./base"
 import { Query } from "../../../../../definitions/common"
 import { URL } from "url"
+
 const curlconverter = require("curlconverter")
 
 const parseCurl = (data: string): any => {

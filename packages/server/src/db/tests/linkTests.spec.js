@@ -45,7 +45,9 @@ describe("test link functionality", () => {
     })
 
     it("should get the field from the link", () => {
-      expect(linkUtils.getRelatedTableForField(link, "otherLink")).toBe("tableID")
+      expect(linkUtils.getRelatedTableForField(link, "otherLink")).toBe(
+        "tableID"
+      )
     })
   })
 
