@@ -58,6 +58,16 @@ export default class AliasTables {
     }
   }
 
+  aliasMap(tableNames: (string | undefined)[]) {
+    const map: Record<string, string> = {}
+    for (let tableName of tableNames) {
+      if (tableName) {
+        map[tableName] = this.getAlias(tableName)
+      }
+    }
+    return map
+  }
+
   async queryWithAliasing(json: QueryJson) {
     json = cloneDeep(json)
     const aliasField = (field: string) => this.aliasField(field)
@@ -86,7 +96,11 @@ export default class AliasTables {
     if (json.relationships) {
       json.relationships = json.relationships.map(relationship => ({
         ...relationship,
-        alias: this.getAlias(relationship.tableName),
+        aliases: this.aliasMap([
+          relationship.through,
+          relationship.tableName,
+          json.endpoint.entityId,
+        ]),
       }))
     }
     if (json.meta?.table) {
