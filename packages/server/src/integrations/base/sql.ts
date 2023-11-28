@@ -330,6 +330,17 @@ class InternalBuilder {
     return query
   }
 
+  tableNameWithSchema(
+    tableName: string,
+    opts?: { alias?: string; schema?: string }
+  ) {
+    let withSchema = opts?.schema ? `${opts.schema}.${tableName}` : tableName
+    if (opts?.alias) {
+      withSchema += ` as ${opts.alias}`
+    }
+    return withSchema
+  }
+
   addRelationships(
     query: KnexQuery,
     fromTable: string,
@@ -339,9 +350,12 @@ class InternalBuilder {
     if (!relationships) {
       return query
     }
-    const tableSets: Record<string, [any]> = {}
+    const tableSets: Record<string, [RelationshipsJson]> = {}
+    // add up all aliases
+    let aliases: Record<string, string> = {}
     // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
+      aliases = { ...aliases, ...relationship.aliases }
       const keyObj: { toTable: string; throughTable: string | undefined } = {
         toTable: relationship.tableName,
         throughTable: undefined,
@@ -358,10 +372,17 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
-      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
-      const throughTableWithSchema = schema
-        ? `${schema}.${throughTable}`
-        : throughTable
+      const toAlias = aliases[toTable],
+        throughAlias = aliases[throughTable],
+        fromAlias = aliases[fromTable]
+      let toTableWithSchema = this.tableNameWithSchema(toTable, {
+        alias: toAlias,
+        schema,
+      })
+      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
+        alias: throughAlias,
+        schema,
+      })
       if (!throughTable) {
         // @ts-ignore
         query = query.leftJoin(toTableWithSchema, function () {
@@ -369,7 +390,7 @@ class InternalBuilder {
             const from = relationship.from,
               to = relationship.to
             // @ts-ignore
-            this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+            this.orOn(`${fromTable}.${from}`, "=", `${toAlias}.${to}`)
           }
         })
       } else {
@@ -381,9 +402,9 @@ class InternalBuilder {
               const from = relationship.from
               // @ts-ignore
               this.orOn(
-                `${fromTable}.${fromPrimary}`,
+                `${fromAlias}.${fromPrimary}`,
                 "=",
-                `${throughTable}.${from}`
+                `${throughAlias}.${from}`
               )
             }
           })
@@ -392,7 +413,7 @@ class InternalBuilder {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
               // @ts-ignore
-              this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+              this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
             }
           })
       }

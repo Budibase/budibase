@@ -67,7 +67,7 @@ export interface RelationshipsJson {
   fromPrimary?: string
   toPrimary?: string
   tableName: string
-  alias?: string
+  aliases?: Record<string, string>
   column: string
 }
 
