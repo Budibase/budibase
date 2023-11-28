@@ -1231,8 +1231,8 @@ export const runtimeToReadableBinding = (
  * Used to update binding references for automation or action steps
  *
  * @param obj - The object to be updated
- * @param modifiedIndex - The index of the step that was modified
- * @param action - Used to determine if a step is being added or deleted
+ * @param modifiedIndex - The new index of the step being modified
+ * @param action - Used to determine if a step is being added, deleted or moved
  * @param label - The binding text that describes the steps
  */
 export const updateReferencesInObject = (obj, modifiedIndex, action, label) => {

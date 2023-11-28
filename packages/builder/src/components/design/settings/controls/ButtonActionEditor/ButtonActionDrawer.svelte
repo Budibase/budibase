@@ -15,6 +15,7 @@
     getEventContextBindings,
     getActionBindings,
     makeStateBinding,
+    updateReferencesInObject,
   } from "builderStore/dataBinding"
   import { cloneDeep } from "lodash/fp"
 
@@ -115,6 +116,9 @@
     if (isSelected) {
       selectedAction = actions?.length ? actions[0] : null
     }
+
+    // Update action binding references
+    updateReferencesInObject(actions, index, "delete", "actions")
   }
 
   const toggleActionList = () => {
