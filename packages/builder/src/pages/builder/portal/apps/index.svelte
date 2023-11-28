@@ -205,7 +205,7 @@
           messages: [
             {
               message:
-                "We've updated our pricing - read the blog post to learn more.",
+                "We've updated our pricing - see our website to learn more.",
               type: BANNER_TYPES.NEUTRAL,
               extraButtonText: "Learn More",
               extraButtonAction: () =>
