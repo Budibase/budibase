@@ -56,12 +56,12 @@
   />
 {:else}
   <Multiselect
-    bind:value={linkedIds}
+    value={linkedIds}
     {label}
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
     sort
-    on:change={() => dispatch("change", linkedIds)}
+    on:change
   />
 {/if}
