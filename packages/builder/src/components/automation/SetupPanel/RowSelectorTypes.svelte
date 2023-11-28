@@ -64,7 +64,7 @@
   </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector
-    bind:linkedRows={value[field]}
+    linkedRows={value[field]}
     {schema}
     on:change={e => onChange(e, field)}
     useLabel={false}
