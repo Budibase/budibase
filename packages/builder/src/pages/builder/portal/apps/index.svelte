@@ -200,16 +200,20 @@
       if (usersLimitLockAction) {
         usersLimitLockAction()
       }
-      banner.queue([
-        {
-          message:
-            "We've updated our pricing - read the blog post to learn more.",
-          type: BANNER_TYPES.NEUTRAL,
-          extraButtonText: "Learn More",
-          extraButtonAction: () =>
-            window.open("https://budibase.com/blog/updates/pricing-v3"),
-        },
-      ])
+      if (!$admin.isDev) {
+        await banner.show({
+          messages: [
+            {
+              message:
+                      "We've updated our pricing - read the blog post to learn more.",
+              type: BANNER_TYPES.NEUTRAL,
+              extraButtonText: "Learn More",
+              extraButtonAction: () =>
+                      window.open("https://budibase.com/blog/updates/pricing-v3"),
+            },
+          ],
+        })
+      }
     } catch (error) {
       notifications.error("Error getting init info")
     }
