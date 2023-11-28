@@ -1231,11 +1231,18 @@ export const runtimeToReadableBinding = (
  * Used to update binding references for automation or action steps
  *
  * @param obj - The object to be updated
+ * @param originalIndex - The original index of the step being moved. Not applicable to add/delete.
  * @param modifiedIndex - The new index of the step being modified
  * @param action - Used to determine if a step is being added, deleted or moved
  * @param label - The binding text that describes the steps
  */
-export const updateReferencesInObject = (obj, modifiedIndex, action, label) => {
+export const updateReferencesInObject = ({
+  obj,
+  modifiedIndex,
+  action,
+  label,
+  originalIndex,
+}) => {
   const regex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
   for (const key in obj) {
     if (typeof obj[key] === "string") {
@@ -1252,10 +1259,28 @@ export const updateReferencesInObject = (obj, modifiedIndex, action, label) => {
             `{{ ${label}.${referencedStep}.`,
             `{{ ${label}.${referencedStep - 1}.`
           )
+        } else if (action === "move") {
+          if (referencedStep >= modifiedIndex) {
+            obj[key] = obj[key].replace(
+              `{{ ${label}.${referencedStep}.`,
+              `{{ ${label}.${referencedStep + 1}.`
+            )
+          } else if (referencedStep === originalIndex) {
+            obj[key] = obj[key].replace(
+              `{{ ${label}.${referencedStep}.`,
+              `{{ ${label}.${modifiedIndex}.`
+            )
+          }
         }
       }
     } else if (typeof obj[key] === "object" && obj[key] !== null) {
-      updateReferencesInObject(obj[key], modifiedIndex, action, label)
+      updateReferencesInObject({
+        obj: obj[key],
+        modifiedIndex,
+        action,
+        label,
+        originalIndex,
+      })
     }
   }
 }

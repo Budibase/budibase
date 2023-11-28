@@ -25,7 +25,12 @@ export const getAutomationStore = () => {
 
 const updateStepReferences = (steps, modifiedIndex, action) => {
   steps.forEach(step => {
-    updateReferencesInObject(step.inputs, modifiedIndex, action, "steps")
+    updateReferencesInObject({
+      obj: step.inputs,
+      modifiedIndex,
+      action,
+      label: "steps",
+    })
   })
 }
 

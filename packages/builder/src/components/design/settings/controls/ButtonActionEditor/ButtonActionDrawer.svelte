@@ -31,6 +31,7 @@
 
   let actionQuery
   let selectedAction = actions?.length ? actions[0] : null
+  let originalActionIndex
 
   const setUpdateActions = actions => {
     return actions
@@ -118,7 +119,12 @@
     }
 
     // Update action binding references
-    updateReferencesInObject(actions, index, "delete", "actions")
+    updateReferencesInObject({
+      obj: actions,
+      modifiedIndex: index,
+      action: "delete",
+      label: "actions",
+    })
   }
 
   const toggleActionList = () => {
@@ -150,9 +156,27 @@
 
   function handleDndConsider(e) {
     actions = e.detail.items
+
+    // set the initial index of the action being dragged
+    if (e.detail.info.trigger === "draggedEntered") {
+      originalActionIndex = actions.findIndex(
+        action => action.id === e.detail.info.id
+      )
+    }
   }
   function handleDndFinalize(e) {
     actions = e.detail.items
+
+    // Update action binding references
+    updateReferencesInObject({
+      obj: actions,
+      modifiedIndex: actions.findIndex(
+        action => action.id === e.detail.info.id
+      ),
+      action: "move",
+      label: "actions",
+      originalIndex: originalActionIndex,
+    })
   }
 
   const getAllBindings = (actionBindings, eventContextBindings, actions) => {
