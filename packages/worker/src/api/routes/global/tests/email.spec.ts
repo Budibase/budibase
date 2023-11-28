@@ -1,5 +1,6 @@
 jest.mock("nodemailer")
 import { TestConfiguration, mocks } from "../../../../tests"
+
 const sendMailMock = mocks.email.mock()
 import { EmailTemplatePurpose } from "../../../../constants"
 

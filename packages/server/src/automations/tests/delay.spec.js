@@ -1,7 +1,7 @@
 const setup = require("./utilities")
 
 // need real Date for this test
-const tk = require('timekeeper');
+const tk = require("timekeeper")
 tk.reset()
 
 describe("test the delay logic", () => {

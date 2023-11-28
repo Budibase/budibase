@@ -30,6 +30,7 @@ import {
   Result,
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+
 let oracledb: any
 try {
   oracledb = require("oracledb")

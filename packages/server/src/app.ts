@@ -3,9 +3,11 @@ if (process.env.DD_APM_ENABLED) {
 }
 
 import * as db from "./db"
+
 db.init()
 import { ServiceType } from "@budibase/types"
 import { env as coreEnv } from "@budibase/backend-core"
+
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { apiEnabled } from "./features"
 import createKoaApp from "./koa"

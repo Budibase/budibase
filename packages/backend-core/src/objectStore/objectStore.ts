@@ -1,4 +1,5 @@
 const sanitize = require("sanitize-s3-objectkey")
+
 import AWS from "aws-sdk"
 import stream, { Readable } from "stream"
 import fetch from "node-fetch"
@@ -259,12 +260,12 @@ export async function listAllObjects(bucketName: string, path: string) {
 }
 
 /**
- * Generate a presigned url with a default TTL of 1 hour
+ * Generate a presigned url with a default TTL of 36 hours
  */
 export function getPresignedUrl(
   bucketName: string,
   key: string,
-  durationSeconds: number = 3600
+  durationSeconds: number = 129600
 ) {
   const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {

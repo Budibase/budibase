@@ -15,6 +15,7 @@ import {
   confirmationStore,
   roleStore,
   stateStore,
+  createContextStore,
 } from "stores"
 import { styleable } from "utils/styleable"
 import { linkable } from "utils/linkable"
@@ -58,6 +59,7 @@ export default {
   enrichButtonActions,
   processStringSync,
   makePropSafe,
+  createContextStore,
 
   // Components
   Provider,

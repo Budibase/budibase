@@ -1,5 +1,7 @@
 import Router from "@koa/router"
+
 const compress = require("koa-compress")
+
 import zlib from "zlib"
 import { routes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
