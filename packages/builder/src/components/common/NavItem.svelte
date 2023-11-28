@@ -78,7 +78,11 @@
   {style}
   {draggable}
 >
-  <div class="nav-item-content" bind:this={contentRef} class:right={rightAlignIcon}>
+  <div
+    class="nav-item-content"
+    bind:this={contentRef}
+    class:right={rightAlignIcon}
+  >
     {#if withArrow}
       <div
         class:opened
