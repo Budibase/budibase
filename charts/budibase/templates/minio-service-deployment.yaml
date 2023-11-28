@@ -46,11 +46,9 @@ spec:
         image: minio/minio
         imagePullPolicy: ""
         livenessProbe:
-          exec:
-            command:
-            - curl
-            - -f
-            - http://localhost:9000/minio/health/live
+          httpGet:
+            path: /minio/health/live
+            port: 9000
           failureThreshold: 3
           periodSeconds: 30
           timeoutSeconds: 20

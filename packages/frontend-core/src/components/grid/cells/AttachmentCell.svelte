@@ -1,6 +1,5 @@
 <script>
-  import { onMount } from "svelte"
-  import { getContext } from "svelte"
+  import { onMount, getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
 
   export let value

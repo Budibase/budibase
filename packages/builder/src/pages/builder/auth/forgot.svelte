@@ -6,13 +6,14 @@
     Body,
     Heading,
     Icon,
+    FancyForm,
+    FancyInput,
   } from "@budibase/bbui"
   import { organisation, auth } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { FancyForm, FancyInput } from "@budibase/bbui"
 
   let email = ""
   let form

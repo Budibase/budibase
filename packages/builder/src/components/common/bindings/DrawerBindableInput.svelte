@@ -21,6 +21,7 @@
   export let allowHelpers = true
   export let updateOnChange = true
   export let drawerLeft
+  export let disableBindings = false
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
@@ -62,7 +63,7 @@
     {placeholder}
     {updateOnChange}
   />
-  {#if !disabled}
+  {#if !disabled && !disableBindings}
     <div
       class="icon"
       on:click={() => {

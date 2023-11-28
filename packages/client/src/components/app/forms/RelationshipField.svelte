@@ -20,6 +20,7 @@
   export let datasourceType = "table"
   export let primaryDisplay
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -192,6 +193,7 @@
   defaultValue={expandedDefaultValue}
   {type}
   {span}
+  {helpText}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
