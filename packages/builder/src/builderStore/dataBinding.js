@@ -1273,7 +1273,10 @@ export const updateReferencesInObject = ({
               `{{ ${label}.${referencedStep}.`,
               `{{ ${label}.${referencedStep + 1}.`
             )
-          } else if (referencedStep === modifiedIndex) {
+          } else if (
+            modifiedIndex >= referencedStep &&
+            modifiedIndex > originalIndex
+          ) {
             obj[key] = obj[key].replace(
               `{{ ${label}.${referencedStep}.`,
               `{{ ${label}.${referencedStep - 1}.`
