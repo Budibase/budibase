@@ -177,6 +177,8 @@
       label: "actions",
       originalIndex: originalActionIndex,
     })
+
+    originalActionIndex = -1
   }
 
   const getAllBindings = (actionBindings, eventContextBindings, actions) => {
@@ -317,7 +319,7 @@
   </Layout>
   <Layout noPadding>
     {#if selectedActionComponent && !showAvailableActions}
-      {#key selectedAction.id}
+      {#key (selectedAction.id, originalActionIndex)}
         <div class="selected-action-container">
           <svelte:component
             this={selectedActionComponent}
