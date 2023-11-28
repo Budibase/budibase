@@ -149,7 +149,6 @@
   }
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
-    console.log("triggered")
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
@@ -172,7 +171,7 @@
         }
       }
     }
-    if (!field && !savingColumn) {
+    if (!savingColumn) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
         const columnNumber = extractColumnNumber(columnName)
@@ -183,9 +182,9 @@
       })
 
       if (highestNumber >= 1) {
-        //editableColumn.name = `Column 0${highestNumber + 1}`
+        editableColumn.name = `Column 0${highestNumber + 1}`
       } else {
-        //editableColumn.name = "Column 01"
+        editableColumn.name = "Column 01"
       }
     }
 
@@ -536,7 +535,6 @@
   onMount(() => {
     mounted = true
   })
-  $: console.log(editableColumn)
 </script>
 
 <Layout noPadding gap="S">
