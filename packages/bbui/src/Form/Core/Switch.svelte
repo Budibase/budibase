@@ -18,6 +18,7 @@
     checked={value}
     {disabled}
     on:change={onChange}
+    on:click
     {id}
     type="checkbox"
     class="spectrum-Switch-input"
