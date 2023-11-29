@@ -126,7 +126,7 @@ export async function doWithLock<T>(
     lock = await redlock.lock(name, opts.ttl)
 
     if (opts.type === LockType.AUTO_EXTEND) {
-      // No TTL is provided, so we keep extending the lock while the task is running
+      // We keep extending the lock while the task is running
       const extendInIntervals = (): void => {
         timeout = setTimeout(async () => {
           let isExpired = false
