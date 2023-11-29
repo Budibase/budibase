@@ -5,6 +5,7 @@ import * as context from "../context"
 import env from "../environment"
 import { logWarn } from "../logging"
 import { Duration } from "../utils"
+import { timers } from ".."
 
 async function getClient(
   type: LockType,
@@ -118,7 +119,7 @@ export async function doWithLock<T>(
 
     if (!opts.ttl) {
       // No TTL is provided, so we keep extending the lock while the task is running
-      interval = setInterval(async () => {
+      interval = timers.set(async () => {
         await lock?.extend(ttl / 2)
       }, ttl / 2)
     }
@@ -146,7 +147,7 @@ export async function doWithLock<T>(
       await lock.unlock()
     }
     if (interval) {
-      clearInterval(interval)
+      timers.clear(interval)
     }
   }
 }
