@@ -90,12 +90,12 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const handleMouseover = (componentId) => {
+  const handleMouseover = componentId => {
     $store.hoverComponentId = componentId
   }
-  const handleMouseout = (componentId) => {
+  const handleMouseout = componentId => {
     if ($store.hoverComponentId === componentId) {
-      $store.hoverComponentId = null;
+      $store.hoverComponentId = null
     }
   }
 </script>

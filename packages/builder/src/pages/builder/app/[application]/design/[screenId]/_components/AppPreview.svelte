@@ -121,7 +121,7 @@
       $store.selectedComponentId = data.id
     } else if (type === "hover-component" && data.id) {
       $store.hoverComponentId = data.id
-      console.log($store.hoverComponentId);
+      console.log($store.hoverComponentId)
     } else if (type === "update-prop") {
       await store.actions.components.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {

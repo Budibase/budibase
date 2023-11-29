@@ -162,11 +162,13 @@
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
-  .nav-item:hover, .isHovering {
+  .nav-item:hover,
+  .isHovering {
     background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
-  .nav-item:hover .actions, .isHovering .actions {
+  .nav-item:hover .actions,
+  .isHovering .actions {
     visibility: visible;
   }
   .nav-item-content {
@@ -277,7 +279,8 @@
     height: 20px;
     margin-left: var(--spacing-xs);
   }
-  .nav-item.withActions:hover .actions, .isHovering .actions {
+  .nav-item.withActions:hover .actions,
+  .isHovering .actions {
     opacity: 1;
   }
 

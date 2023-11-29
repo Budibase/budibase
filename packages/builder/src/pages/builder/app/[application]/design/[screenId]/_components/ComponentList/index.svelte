@@ -33,12 +33,12 @@
     scrolling = e.target.scrollTop !== 0
   }
 
-  const handleMouseover = (componentId) => {
+  const handleMouseover = componentId => {
     $store.hoverComponentId = componentId
   }
-  const handleMouseout = (componentId) => {
+  const handleMouseout = componentId => {
     if ($store.hoverComponentId === componentId) {
-      $store.hoverComponentId = null;
+      $store.hoverComponentId = null
     }
   }
 </script>
@@ -66,9 +66,12 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-screen`
             }}
-            isHovering={$store.hoverComponentId === `${$store.selectedScreenId}-screen`}
-            on:mouseover={() => handleMouseover(`${$store.selectedScreenId}-screen`)}
-            on:mouseout={() => handleMouseout(`${$store.selectedScreenId}-screen`)}
+            isHovering={$store.hoverComponentId ===
+              `${$store.selectedScreenId}-screen`}
+            on:mouseover={() =>
+              handleMouseover(`${$store.selectedScreenId}-screen`)}
+            on:mouseout={() =>
+              handleMouseout(`${$store.selectedScreenId}-screen`)}
             id={`component-screen`}
             selectedBy={$userSelectedResourceMap[
               `${$store.selectedScreenId}-screen`
@@ -90,9 +93,12 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
             }}
-            isHovering={$store.hoverComponentId === `${$store.selectedScreenId}-navigation`}
-            on:mouseover={() => handleMouseover(`${$store.selectedScreenId}-navigation`)}
-            on:mouseout={() => handleMouseout(`${$store.selectedScreenId}-navigation`)}
+            isHovering={$store.hoverComponentId ===
+              `${$store.selectedScreenId}-navigation`}
+            on:mouseover={() =>
+              handleMouseover(`${$store.selectedScreenId}-navigation`)}
+            on:mouseout={() =>
+              handleMouseout(`${$store.selectedScreenId}-navigation`)}
             id={`component-nav`}
             selectedBy={$userSelectedResourceMap[
               `${$store.selectedScreenId}-navigation`
