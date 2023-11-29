@@ -16,7 +16,30 @@ This chart depends on the official Apache CouchDB chart. You can see its
 documentation here:
 <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
 
-## Installing the Chart
+## Upgrading
+
+### `2.x` to `3.0.0`
+
+We made a number of breaking changes in this release to make the chart more
+idiomatic and easier to use.
+
+1. We no longer bundle `ingress-nginx`. If you were relying on this to supply
+   an ingress controller to your cluster, you will now need to deploy that
+   separately. You'll find guidance for that here:
+   <https://kubernetes.github.io/ingress-nginx/>.
+2. We've upgraded the version of the [CouchDB chart](https://github.com/apache/couchdb-helm)
+   we use from `3.3.4` to `4.3.0`. The primary motivation for this was to align
+   the CouchDB chart used with the CouchDB version used, which has also updated
+   from 3.1.1 to 3.2.1.
+3. We've separated out the supplied AWS ALB ingress resource for those deploying
+   into EKS. Where previously you enabled this by setting `ingress.enabled: false`
+   and `ingress.aws: true`, you now set `awsAlbIngress.enabled: true` and all
+   configuration for it is under `awsAlbIngress`.
+4. The `HorizontalPodAutoscaler` that was configured at `hpa.enabled: true` has
+   been split into 3 separate HPAs, one for each of `apps`, `worker`, and `proxy`.
+   They are configured at `services.{apps,worker,proxy}.autoscaling`.
+
+## Installing
 
 To install the chart from our repository:
 
@@ -86,7 +109,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 
 </details>
 
-## Configuration reference
+## Configuring
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -189,7 +212,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.worker.startupProbe | object | HTTP health checks. | Startup probe configuration for worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | tolerations | list | `[]` | Sets the tolerations for all pods created by this chart. Should not ordinarily need to be changed. See <https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/> for more information on tolerations. |
 
-## Uninstalling the Chart
+## Uninstalling
 
 To uninstall the chart, assuming you named the release `budibase` (both commands in the installation section do so):
 
