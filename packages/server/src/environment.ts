@@ -87,6 +87,7 @@ const environment = {
   },
   TOP_LEVEL_PATH:
     process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
+  APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
 }
 
 // threading can cause memory issues with node-ts in development
