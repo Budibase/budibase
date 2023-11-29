@@ -169,11 +169,7 @@ export async function doWithLock<T>(
       throw e
     }
   } finally {
-    if (timeout) {
-      clearTimeout(timeout)
-    }
-    if (lock) {
-      await lock.unlock()
-    }
+    clearTimeout(timeout)
+    await lock?.unlock()
   }
 }
