@@ -3,7 +3,7 @@ import { LockName, LockType } from "@budibase/types"
 import { Job } from "bull"
 import { MIGRATIONS } from "./migrations"
 import {
-  getAppMigrationMetadata,
+  getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
 import environment from "../environment"
@@ -28,24 +28,34 @@ async function processMessage(job: Job) {
     },
     async () => {
       await context.doInAppContext(appId, async () => {
-        const currentVersion = await getAppMigrationMetadata(appId)
+        let currentVersion = await getAppMigrationVersion(appId)
 
         const pendingMigrations = MIGRATIONS.filter(
           m => m.migrationId > currentVersion
-        )
+        ).sort((a, b) => a.migrationId.localeCompare(b.migrationId))
+
+        const migrationIds = MIGRATIONS.map(m => m.migrationId).sort()
 
         let index = 0
-        for (const migration of pendingMigrations) {
+        for (const { migrationId, migrationFunc } of pendingMigrations) {
+          const expectedMigration =
+            migrationIds[migrationIds.indexOf(currentVersion) + 1]
+
+          if (expectedMigration !== migrationId) {
+            throw `Migration ${migrationId} could not run, update for "${migrationId}" is running but ${expectedMigration} is expected`
+          }
+
           const counter = `(${++index}/${pendingMigrations.length})`
-          console.info(`Running migration ${migration}... ${counter}`, {
-            migration,
+          console.info(`Running migration ${migrationId}... ${counter}`, {
+            migrationId,
             appId,
           })
-          await migration.migrationFunc()
+          await migrationFunc()
           await updateAppMigrationMetadata({
             appId,
-            version: migration.migrationId,
+            version: migrationId,
           })
+          currentVersion = migrationId
         }
       })
     }
