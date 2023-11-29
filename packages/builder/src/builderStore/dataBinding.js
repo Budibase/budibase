@@ -254,6 +254,7 @@ export const getComponentContexts = (
     delete map[componentId]
   }
 
+  // Only return components which provide at least 1 matching context
   return Object.values(map).filter(x => x.contexts.length > 0)
 }
 
