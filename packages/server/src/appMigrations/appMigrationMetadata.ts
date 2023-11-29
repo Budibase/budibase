@@ -20,25 +20,30 @@ async function getFromDB(appId: string) {
 
 const getCacheKey = (appId: string) => `appmigrations_${env.VERSION}_${appId}`
 
-export async function getAppMigrationMetadata(appId: string): Promise<string> {
+export async function getAppMigrationVersion(appId: string): Promise<string> {
   const cacheKey = getCacheKey(appId)
 
   let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
-  if (!metadata || env.isDev()) {
-    try {
-      metadata = await getFromDB(appId)
-    } catch (err: any) {
-      if (err.status !== 404) {
-        throw err
-      }
 
-      metadata = { version: "", history: {} }
-    }
-
-    await cache.store(cacheKey, metadata, EXPIRY_SECONDS)
+  if (metadata && !env.isDev()) {
+    return metadata.version
   }
 
-  return metadata.version
+  let version
+  try {
+    metadata = await getFromDB(appId)
+    version = metadata.version
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+
+    version = ""
+  }
+
+  await cache.store(cacheKey, version, EXPIRY_SECONDS)
+
+  return version
 }
 
 export async function updateAppMigrationMetadata({
@@ -49,7 +54,25 @@ export async function updateAppMigrationMetadata({
   version: string
 }): Promise<void> {
   const db = context.getAppDB()
-  const appMigrationDoc = await getFromDB(appId)
+
+  let appMigrationDoc: AppMigrationDoc
+
+  try {
+    appMigrationDoc = await getFromDB(appId)
+  } catch (err: any) {
+    if (err.status !== 404) {
+      throw err
+    }
+
+    appMigrationDoc = {
+      _id: DocumentType.APP_MIGRATION_METADATA,
+      version: "",
+      history: {},
+    }
+    await db.put(appMigrationDoc)
+    appMigrationDoc = await getFromDB(appId)
+  }
+
   const updatedMigrationDoc: AppMigrationDoc = {
     ...appMigrationDoc,
     version,

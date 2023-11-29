@@ -50,13 +50,20 @@ export default migration
     migrationFileContent += `import m${migration} from "./migrations/${migration}"\n`
   }
 
-  migrationFileContent += `\nexport const MIGRATIONS: Record<string, { migration: () => Promise<void> }> = {\n`
+  migrationFileContent += `\nexport const MIGRATIONS: {
+  migrationId: string
+  migrationFunc: () => Promise<void>
+}[] = [
+  // Migrations will be executed sorted by migrationId\n`
 
   for (const migration of migrations) {
-    migrationFileContent += `  [${migration}]: { migration: m${migration} },\n`
+    migrationFileContent += `  {
+    migrationId: "${migration}",
+    migrationFunc: m${migration}
+  },\n`
   }
 
-  migrationFileContent += `}\n`
+  migrationFileContent += `]\n`
 
   fs.writeFileSync(
     path.resolve(__dirname, migrationsFilePath),
