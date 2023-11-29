@@ -29,7 +29,8 @@ idiomatic and easier to use.
 2. We've upgraded the version of the [CouchDB chart](https://github.com/apache/couchdb-helm)
    we use from `3.3.4` to `4.3.0`. The primary motivation for this was to align
    the CouchDB chart used with the CouchDB version used, which has also updated
-   from 3.1.1 to 3.2.1.
+   from 3.1.1 to 3.2.1. Additionally, we're moving away from the official CouchDB
+   to one we're building ourselves.
 3. We've separated out the supplied AWS ALB ingress resource for those deploying
    into EKS. Where previously you enabled this by setting `ingress.enabled: false`
    and `ingress.aws: true`, you now set `awsAlbIngress.enabled: true` and all
