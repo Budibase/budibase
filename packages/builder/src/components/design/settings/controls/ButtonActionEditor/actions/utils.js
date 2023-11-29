@@ -25,8 +25,6 @@ export const getDatasourceLikeProviders = ({ asset, componentId, nested }) => {
     }
   )
 
-  console.log(formComponentContexts)
-
   // Check for duplicate contexts by the same component. In this case, attempt
   // to label contexts with their suffixes
   schemaComponentContexts.forEach(schemaContext => {
