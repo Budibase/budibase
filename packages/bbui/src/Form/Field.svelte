@@ -51,15 +51,13 @@
     margin-top: var(--spectrum-global-dimension-size-75);
     align-items: center;
   }
-
   .helpText :global(svg) {
-    width: 14px;
-    color: var(--grey-5);
+    width: 13px;
+    color: var(--spectrum-global-color-gray-600);
     margin-right: 6px;
   }
-
   .helpText span {
-    color: var(--grey-7);
+    color: var(--spectrum-global-color-gray-800);
     font-size: var(--spectrum-global-dimension-font-size-75);
   }
 </style>

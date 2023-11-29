@@ -137,21 +137,23 @@
     width: 100%;
   }
 
+  .error :global(svg),
+  .helpText :global(svg) {
+    width: 13px;
+    margin-right: 6px;
+  }
+
   .error {
     display: flex;
     margin-top: var(--spectrum-global-dimension-size-75);
     align-items: center;
   }
-
   .error :global(svg) {
-    width: 14px;
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
-    margin-right: 4px;
   }
-
   .error span {
     color: var(
       --spectrum-semantic-negative-color-default,
@@ -165,17 +167,14 @@
     margin-top: var(--spectrum-global-dimension-size-75);
     align-items: center;
   }
-
   .helpText :global(svg) {
-    width: 14px;
-    color: var(--grey-7);
-    margin-right: 6px;
+    color: var(--spectrum-global-color-gray-600);
   }
-
   .helpText span {
-    color: var(--grey-5);
+    color: var(--spectrum-global-color-gray-800);
     font-size: var(--spectrum-global-dimension-font-size-75);
   }
+
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);
