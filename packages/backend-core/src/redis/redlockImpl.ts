@@ -131,7 +131,7 @@ export async function doWithLock<T>(
         timeout = setTimeout(async () => {
           let isExpired = false
           try {
-            lock = await lock!.extend(1000)
+            lock = await lock!.extend(opts.ttl)
           } catch (err: any) {
             isExpired = err.message.includes("Cannot extend lock on resource")
             if (isExpired) {
