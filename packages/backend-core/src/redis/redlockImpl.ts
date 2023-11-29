@@ -111,14 +111,15 @@ export async function doWithLock<T>(
   try {
     const name = getLockName(opts)
 
-    let ttl = opts.ttl || Duration.fromSeconds(15).toMs()
+    let ttl = opts.ttl || Duration.fromSeconds(30).toMs()
 
     // create the lock
     lock = await redlock.lock(name, ttl)
 
     if (!opts.ttl) {
+      // No TTL is provided, so we keep extending the lock while the task is running
       interval = setInterval(() => {
-        lock!.extend(ttl)
+        lock?.extend(ttl / 2)
       }, ttl / 2)
     }
 
