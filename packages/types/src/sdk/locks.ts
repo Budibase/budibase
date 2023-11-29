@@ -36,9 +36,9 @@ export interface LockOptions {
    */
   name: LockName
   /**
-   * The ttl to auto-expire the lock if not unlocked manually
+   * The ttl to auto-expire the lock if not unlocked manually. If undefined, the lock will be autoextending while the process is running.
    */
-  ttl: number
+  ttl?: number
   /**
    * The individual resource to lock. This is useful for locking around very specific identifiers, e.g. a document that is prone to conflicts
    */

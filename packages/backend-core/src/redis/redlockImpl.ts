@@ -4,6 +4,7 @@ import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
 import { logWarn } from "../logging"
+import { Duration } from "../utils"
 
 async function getClient(
   type: LockType,
@@ -105,12 +106,21 @@ export async function doWithLock<T>(
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
-  let lock
+  let lock: Redlock.Lock | undefined
+  let interval
   try {
     const name = getLockName(opts)
 
+    let ttl = opts.ttl || Duration.fromSeconds(15).toMs()
+
     // create the lock
-    lock = await redlock.lock(name, opts.ttl)
+    lock = await redlock.lock(name, ttl)
+
+    if (!opts.ttl) {
+      interval = setInterval(() => {
+        lock!.extend(ttl)
+      }, ttl / 2)
+    }
 
     // perform locked task
     // need to await to ensure completion before unlocking
@@ -133,6 +143,9 @@ export async function doWithLock<T>(
   } finally {
     if (lock) {
       await lock.unlock()
+    }
+    if (interval) {
+      clearInterval(interval)
     }
   }
 }
