@@ -3,6 +3,7 @@ import { Database, DocumentType, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string
+  history: Record<string, { runAt: number }>
 }
 
 const EXPIRY_SECONDS = Duration.fromDays(1).toSeconds()
@@ -31,7 +32,7 @@ export async function getAppMigrationMetadata(appId: string): Promise<string> {
         throw err
       }
 
-      metadata = { version: "" }
+      metadata = { version: "", history: {} }
     }
 
     await cache.store(cacheKey, metadata, EXPIRY_SECONDS)
@@ -49,7 +50,15 @@ export async function updateAppMigrationMetadata({
 }): Promise<void> {
   const db = context.getAppDB()
   const appMigrationDoc = await getFromDB(appId)
-  await db.put({ ...appMigrationDoc, version })
+  const updatedMigrationDoc: AppMigrationDoc = {
+    ...appMigrationDoc,
+    version,
+    history: {
+      ...appMigrationDoc.history,
+      [version]: { runAt: Date.now() },
+    },
+  }
+  await db.put(updatedMigrationDoc)
 
   const cacheKey = getCacheKey(appId)
 
