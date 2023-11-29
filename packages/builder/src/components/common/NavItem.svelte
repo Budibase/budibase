@@ -158,7 +158,7 @@
     --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
-    background-color: var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
