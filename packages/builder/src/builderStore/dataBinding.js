@@ -29,6 +29,12 @@ const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
+const UpdateReferenceAction = {
+  ADD: "add",
+  DELETE: "delete",
+  MOVE: "move",
+}
+
 /**
  * Gets all bindable data context fields and instance fields.
  */
@@ -1243,43 +1249,52 @@ export const updateReferencesInObject = ({
   label,
   originalIndex,
 }) => {
-  const regex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const updateActionStep = (str, index, replaceWith) =>
+    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
   for (const key in obj) {
     if (typeof obj[key] === "string") {
       let matches
-      while ((matches = regex.exec(obj[key])) !== null) {
+      while ((matches = stepIndexRegex.exec(obj[key])) !== null) {
         const referencedStep = parseInt(matches[1])
-        if (action === "add" && referencedStep >= modifiedIndex) {
-          obj[key] = obj[key].replace(
-            `{{ ${label}.${referencedStep}.`,
-            `{{ ${label}.${referencedStep + 1}.`
+        if (
+          action === UpdateReferenceAction.ADD &&
+          referencedStep >= modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep + 1
           )
-        } else if (action === "delete" && referencedStep > modifiedIndex) {
-          obj[key] = obj[key].replace(
-            `{{ ${label}.${referencedStep}.`,
-            `{{ ${label}.${referencedStep - 1}.`
+        } else if (
+          action === UpdateReferenceAction.DELETE &&
+          referencedStep > modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep - 1
           )
-        } else if (action === "move") {
+        } else if (action === UpdateReferenceAction.MOVE) {
           if (referencedStep === originalIndex) {
-            obj[key] = obj[key].replace(
-              `{{ ${label}.${referencedStep}.`,
-              `{{ ${label}.${modifiedIndex}.`
-            )
+            obj[key] = updateActionStep(obj[key], referencedStep, modifiedIndex)
           } else if (
             modifiedIndex <= referencedStep &&
             modifiedIndex < originalIndex
           ) {
-            obj[key] = obj[key].replace(
-              `{{ ${label}.${referencedStep}.`,
-              `{{ ${label}.${referencedStep + 1}.`
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep + 1
             )
           } else if (
             modifiedIndex >= referencedStep &&
             modifiedIndex > originalIndex
           ) {
-            obj[key] = obj[key].replace(
-              `{{ ${label}.${referencedStep}.`,
-              `{{ ${label}.${referencedStep - 1}.`
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep - 1
             )
           }
         }
