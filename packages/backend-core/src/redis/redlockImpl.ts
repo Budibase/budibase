@@ -4,8 +4,7 @@ import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
 import env from "../environment"
 import { logWarn } from "../logging"
-import { Duration } from "../utils"
-import { timers } from ".."
+import { utils } from "@budibase/shared-core"
 
 async function getClient(
   type: LockType,
@@ -14,7 +13,11 @@ async function getClient(
   if (type === LockType.CUSTOM) {
     return newRedlock(opts)
   }
-  if (env.isTest() && type !== LockType.TRY_ONCE) {
+  if (
+    env.isTest() &&
+    type !== LockType.TRY_ONCE &&
+    type !== LockType.AUTO_EXTEND
+  ) {
     return newRedlock(OPTIONS.TEST)
   }
   switch (type) {
@@ -30,13 +33,16 @@ async function getClient(
     case LockType.DELAY_500: {
       return newRedlock(OPTIONS.DELAY_500)
     }
+    case LockType.AUTO_EXTEND: {
+      return newRedlock(OPTIONS.AUTO_EXTEND)
+    }
     default: {
-      throw new Error(`Could not get redlock client: ${type}`)
+      throw utils.unreachable(type)
     }
   }
 }
 
-const OPTIONS = {
+const OPTIONS: Record<keyof typeof LockType | "TEST", Redlock.Options> = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
@@ -69,10 +75,14 @@ const OPTIONS = {
   DELAY_500: {
     retryDelay: 500,
   },
+  CUSTOM: {},
+  AUTO_EXTEND: {
+    retryCount: -1,
+  },
 }
 
 export async function newRedlock(opts: Redlock.Options = {}) {
-  let options = { ...OPTIONS.DEFAULT, ...opts }
+  let options = { ...OPTIONS, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
   return new Redlock([client], options)
@@ -108,20 +118,36 @@ export async function doWithLock<T>(
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
-  let interval
+  let timeout
   try {
     const name = getLockName(opts)
 
-    let ttl = opts.ttl || Duration.fromSeconds(30).toMs()
-
     // create the lock
-    lock = await redlock.lock(name, ttl)
+    lock = await redlock.lock(name, opts.ttl)
 
-    if (!opts.ttl) {
+    if (opts.type === LockType.AUTO_EXTEND) {
       // No TTL is provided, so we keep extending the lock while the task is running
-      interval = timers.set(async () => {
-        await lock?.extend(ttl / 2)
-      }, ttl / 2)
+      const extendInIntervals = (): void => {
+        timeout = setTimeout(async () => {
+          let isExpired = false
+          try {
+            lock = await lock!.extend(1000)
+          } catch (err: any) {
+            isExpired = err.message.includes("Cannot extend lock on resource")
+            if (isExpired) {
+              console.error("The lock expired", { name })
+            } else {
+              throw err
+            }
+          }
+
+          if (!isExpired) {
+            extendInIntervals()
+          }
+        }, opts.ttl / 2)
+      }
+
+      extendInIntervals()
     }
 
     // perform locked task
@@ -143,11 +169,11 @@ export async function doWithLock<T>(
       throw e
     }
   } finally {
+    if (timeout) {
+      clearTimeout(timeout)
+    }
     if (lock) {
       await lock.unlock()
-    }
-    if (interval) {
-      timers.clear(interval)
     }
   }
 }
