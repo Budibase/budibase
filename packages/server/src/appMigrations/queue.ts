@@ -11,10 +11,6 @@ import environment from "../environment"
 const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION)
 appMigrationQueue.process(processMessage)
 
-export async function runMigration(migrationId: string) {
-  await MIGRATIONS[migrationId].migration()
-}
-
 // TODO
 export const PROCESS_MIGRATION_TIMEOUT =
   environment.APP_MIGRATION_TIMEOUT || 60000
@@ -34,8 +30,8 @@ async function processMessage(job: Job) {
       await context.doInAppContext(appId, async () => {
         const currentVersion = await getAppMigrationMetadata(appId)
 
-        const pendingMigrations = Object.keys(MIGRATIONS).filter(
-          m => m > currentVersion
+        const pendingMigrations = MIGRATIONS.filter(
+          m => m.migrationId > currentVersion
         )
 
         let index = 0
@@ -45,8 +41,11 @@ async function processMessage(job: Job) {
             migration,
             appId,
           })
-          await runMigration(migration)
-          await updateAppMigrationMetadata({ appId, version: migration })
+          await migration.migrationFunc()
+          await updateAppMigrationMetadata({
+            appId,
+            version: migration.migrationId,
+          })
         }
       })
     }
