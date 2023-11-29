@@ -1,4 +1,4 @@
-import queue from "./queue"
+import queue, { PROCESS_MIGRATION_TIMEOUT } from "./queue"
 import { getAppMigrationMetadata } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
 
@@ -13,9 +13,10 @@ export async function checkMissingMigrations(appId: string) {
         appId,
       },
       {
-        jobId: appId,
+        jobId: `${appId}_${latestMigration}`,
         removeOnComplete: true,
         removeOnFail: true,
+        timeout: PROCESS_MIGRATION_TIMEOUT,
       }
     )
   }
