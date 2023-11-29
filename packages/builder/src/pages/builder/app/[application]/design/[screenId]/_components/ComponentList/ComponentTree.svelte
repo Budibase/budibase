@@ -89,6 +89,15 @@
     }
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
+
+  const handleMouseover = (componentId) => {
+    $store.hoverComponentId = componentId
+  }
+  const handleMouseout = (componentId) => {
+    if ($store.hoverComponentId === componentId) {
+      $store.hoverComponentId = null;
+    }
+  }
 </script>
 
 <ul>
@@ -101,6 +110,7 @@
       id={`component-${component._id}`}
     >
       <NavItem
+        isHovering={$store.hoverComponentId === component._id}
         compact
         scrollable
         draggable
@@ -109,6 +119,8 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
+        on:mouseover={() => handleMouseover(component._id)}
+        on:mouseout={() => handleMouseout(component._id)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         iconTooltip={getComponentName(component)}
