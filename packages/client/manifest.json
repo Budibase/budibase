@@ -6049,25 +6049,13 @@
         "defaultValue": "Create"
       },
       {
-        "type": "text",
-        "label": "Title",
-        "key": "title",
-        "nested": true
-      },
-      {
-        "type": "text",
-        "label": "Description",
-        "key": "description",
-        "nested": true
-      },
-      {
         "section": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
           "invert": true
         },
-        "name": "Row details",
+        "name": "Row ID",
         "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
         "settings": [
           {
@@ -6087,8 +6075,20 @@
       },
       {
         "section": true,
-        "name": "Fields",
+        "name": "Details",
         "settings": [
+          {
+            "type": "text",
+            "label": "Title",
+            "key": "title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Description",
+            "key": "description",
+            "nested": true
+          },
           {
             "type": "fieldConfiguration",
             "key": "fields",
