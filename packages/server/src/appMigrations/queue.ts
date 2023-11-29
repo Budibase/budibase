@@ -6,6 +6,7 @@ import {
   getAppMigrationMetadata,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
+import environment from "../environment"
 
 const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION)
 appMigrationQueue.process(processMessage)
@@ -15,7 +16,8 @@ export async function runMigration(migrationId: string) {
 }
 
 // TODO
-export const PROCESS_MIGRATION_TIMEOUT = 30000
+export const PROCESS_MIGRATION_TIMEOUT =
+  environment.APP_MIGRATION_TIMEOUT || 60000
 
 async function processMessage(job: Job) {
   const { appId } = job.data
