@@ -68,9 +68,6 @@ staff's homelabs).
 ```yaml
 ingress:
   enabled: true
-  annotations:
-    nginx.ingress.kubernetes.io/client-max-body-size: 150M
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
   className: "nginx"
   hosts:
     - host: budibase.local # set this to whatever DNS name you'd use
