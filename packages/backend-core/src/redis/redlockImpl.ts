@@ -118,8 +118,8 @@ export async function doWithLock<T>(
 
     if (!opts.ttl) {
       // No TTL is provided, so we keep extending the lock while the task is running
-      interval = setInterval(() => {
-        lock?.extend(ttl / 2)
+      interval = setInterval(async () => {
+        await lock?.extend(ttl / 2)
       }, ttl / 2)
     }
 
