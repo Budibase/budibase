@@ -18,7 +18,6 @@ jest.mock("../../../utilities/rowProcessor", () => ({
 
 jest.mock("../../../api/controllers/view/exporters", () => ({
   ...jest.requireActual("../../../api/controllers/view/exporters"),
-  csv: jest.fn(),
   Format: {
     CSV: "csv",
   },
@@ -101,6 +100,33 @@ describe("external row sdk", () => {
       await expect(exportRows(exportOptions)).rejects.toThrowError(
         new HTTPError("Could not find table name.", 400)
       )
+    })
+
+    it("should only export specified columns", async () => {
+      mockDatasourcesGet.mockImplementation(async () => ({
+        entities: {
+          tablename: {
+            schema: {
+              name: {},
+              age: {},
+              dob: {},
+            },
+          },
+        },
+      }))
+      const headers = ["name", "dob"]
+
+      const result = await exportRows({
+        tableId: "datasource__tablename",
+        format: Format.CSV,
+        query: {},
+        columns: headers,
+      })
+
+      expect(result).toEqual({
+        fileName: "export.csv",
+        content: `"name","dob"`,
+      })
     })
   })
 })
