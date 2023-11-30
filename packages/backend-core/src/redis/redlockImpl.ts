@@ -13,13 +13,7 @@ async function getClient(
   if (type === LockType.CUSTOM) {
     return newRedlock(opts)
   }
-  if (
-    env.isTest() &&
-    type !== LockType.TRY_ONCE &&
-    type !== LockType.AUTO_EXTEND
-  ) {
-    return newRedlock(OPTIONS.TEST)
-  }
+
   switch (type) {
     case LockType.TRY_ONCE: {
       return newRedlock(OPTIONS.TRY_ONCE)
@@ -42,18 +36,13 @@ async function getClient(
   }
 }
 
-const OPTIONS: Record<keyof typeof LockType | "TEST", Redlock.Options> = {
+const OPTIONS: Record<keyof typeof LockType, Redlock.Options> = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
   },
   TRY_TWICE: {
     retryCount: 1,
-  },
-  TEST: {
-    // higher retry count in unit tests
-    // due to high contention.
-    retryCount: 100,
   },
   DEFAULT: {
     // the expected clock drift; for more details
