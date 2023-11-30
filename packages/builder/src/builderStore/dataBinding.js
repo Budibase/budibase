@@ -29,6 +29,12 @@ const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
+const UpdateReferenceAction = {
+  ADD: "add",
+  DELETE: "delete",
+  MOVE: "move",
+}
+
 /**
  * Gets all bindable data context fields and instance fields.
  */
@@ -1225,4 +1231,82 @@ export const runtimeToReadableBinding = (
     textWithBindings,
     "readableBinding"
   )
+}
+
+/**
+ * Used to update binding references for automation or action steps
+ *
+ * @param obj - The object to be updated
+ * @param originalIndex - The original index of the step being moved. Not applicable to add/delete.
+ * @param modifiedIndex - The new index of the step being modified
+ * @param action - Used to determine if a step is being added, deleted or moved
+ * @param label - The binding text that describes the steps
+ */
+export const updateReferencesInObject = ({
+  obj,
+  modifiedIndex,
+  action,
+  label,
+  originalIndex,
+}) => {
+  const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const updateActionStep = (str, index, replaceWith) =>
+    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = stepIndexRegex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+        if (
+          action === UpdateReferenceAction.ADD &&
+          referencedStep >= modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep + 1
+          )
+        } else if (
+          action === UpdateReferenceAction.DELETE &&
+          referencedStep > modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep - 1
+          )
+        } else if (action === UpdateReferenceAction.MOVE) {
+          if (referencedStep === originalIndex) {
+            obj[key] = updateActionStep(obj[key], referencedStep, modifiedIndex)
+          } else if (
+            modifiedIndex <= referencedStep &&
+            modifiedIndex < originalIndex
+          ) {
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep + 1
+            )
+          } else if (
+            modifiedIndex >= referencedStep &&
+            modifiedIndex > originalIndex
+          ) {
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep - 1
+            )
+          }
+        }
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      updateReferencesInObject({
+        obj: obj[key],
+        modifiedIndex,
+        action,
+        label,
+        originalIndex,
+      })
+    }
+  }
 }
