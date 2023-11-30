@@ -8,7 +8,7 @@ tk.reset()
 describe("redlockImpl", () => {
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
-    const lockTtl = 30
+    const lockTtl = 25
 
     function runLockWithExecutionTime({
       opts,
@@ -28,7 +28,7 @@ describe("redlockImpl", () => {
     }
 
     it.each(Object.values(LockType))(
-      "should return the task value",
+      "should return the task value and release the lock",
       async (lockType: LockType) => {
         const expectedResult = generator.guid()
         const mockTask = jest.fn().mockResolvedValue(expectedResult)
@@ -64,7 +64,7 @@ describe("redlockImpl", () => {
       const result = await runLockWithExecutionTime({
         opts,
         task: mockTask,
-        executionTimeMs: lockTtl * 2,
+        executionTimeMs: lockTtl * 3,
       })
 
       expect(result.executed).toBe(true)
