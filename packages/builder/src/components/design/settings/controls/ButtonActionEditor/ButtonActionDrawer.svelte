@@ -147,6 +147,7 @@
 
   const selectAction = action => () => {
     selectedAction = action
+    originalActionIndex = actions.findIndex(item => item.id === action.id)
   }
 
   const onAddAction = actionType => {
