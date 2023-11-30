@@ -934,25 +934,43 @@ describe("postgres integrations", () => {
               },
             ],
           })
+          const m2oRel = {
+            [m2oFieldName]: [
+              {
+                _id: row._id,
+              },
+            ],
+          }
           expect(res.body[m2oFieldName]).toEqual([
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][0].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][1].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][2].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
           ])
+          const o2mRel = {
+            [o2mFieldName]: [
+              {
+                _id: row._id,
+              },
+            ],
+          }
           expect(res.body[o2mFieldName]).toEqual([
             {
+              ...o2mRel,
               ...foreignRowsByType[RelationshipType.ONE_TO_MANY][0].row,
               _id: expect.any(String),
               _rev: expect.any(String),
