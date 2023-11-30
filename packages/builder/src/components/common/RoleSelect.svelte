@@ -20,73 +20,91 @@
   export let allowedRoles = null
   export let allowCreator = false
   export let fancySelect = false
+  export let labelPrefix = null
 
   const dispatch = createEventDispatcher()
   const RemoveID = "remove"
 
+  $: enrichLabel = label => (labelPrefix ? `${labelPrefix} ${label}` : label)
   $: options = getOptions(
     $roles,
     allowPublic,
     allowRemove,
     allowedRoles,
-    allowCreator
+    allowCreator,
+    enrichLabel
   )
+
   const getOptions = (
     roles,
     allowPublic,
     allowRemove,
     allowedRoles,
-    allowCreator
+    allowCreator,
+    enrichLabel
   ) => {
+    // Use roles whitelist if specified
     if (allowedRoles?.length) {
-      const filteredRoles = roles.filter(role =>
-        allowedRoles.includes(role._id)
-      )
-      return [
-        ...filteredRoles,
-        ...(allowedRoles.includes(Constants.Roles.CREATOR)
-          ? [{ _id: Constants.Roles.CREATOR, name: "Creator", enabled: false }]
-          : []),
-      ]
-    }
-    let newRoles = [...roles]
-
-    if (allowCreator) {
-      newRoles = [
-        {
+      let options = roles
+        .filter(role => allowedRoles.includes(role._id))
+        .map(role => ({
+          name: enrichLabel(role.name),
+          _id: role._id,
+        }))
+      if (allowedRoles.includes(Constants.Roles.CREATOR)) {
+        options.push({
           _id: Constants.Roles.CREATOR,
-          name: "Creator",
-          tag:
-            !$licensing.perAppBuildersEnabled &&
-            capitalise(Constants.PlanType.BUSINESS),
-        },
-        ...newRoles,
-      ]
+          name: "Can edit",
+          enabled: false,
+        })
+      }
+      return options
     }
+
+    // Allow all core roles
+    let options = roles.map(role => ({
+      name: enrichLabel(role.name),
+      _id: role._id,
+    }))
+
+    // Add creator if required
+    if (allowCreator) {
+      options.unshift({
+        _id: Constants.Roles.CREATOR,
+        name: "Can edit",
+        tag:
+          !$licensing.perAppBuildersEnabled &&
+          capitalise(Constants.PlanType.BUSINESS),
+      })
+    }
+
+    // Add remove option if required
     if (allowRemove) {
-      newRoles = [
-        ...newRoles,
-        {
-          _id: RemoveID,
-          name: "Remove",
-        },
-      ]
+      options.push({
+        _id: RemoveID,
+        name: "Remove",
+      })
     }
-    if (allowPublic) {
-      return newRoles
+
+    // Remove public if not allowed
+    if (!allowPublic) {
+      options = options.filter(role => role._id !== Constants.Roles.PUBLIC)
     }
-    return newRoles.filter(role => role._id !== Constants.Roles.PUBLIC)
+
+    return options
   }
 
   const getColor = role => {
-    if (allowRemove && role._id === RemoveID) {
+    // Creator and remove options have no colors
+    if (role._id === Constants.Roles.CREATOR || role._id === RemoveID) {
       return null
     }
     return RoleUtils.getRoleColour(role._id)
   }
 
   const getIcon = role => {
-    if (allowRemove && role._id === RemoveID) {
+    // Only remove option has an icon
+    if (role._id === RemoveID) {
       return "Close"
     }
     return null

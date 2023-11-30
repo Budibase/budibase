@@ -1,32 +1,27 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { Toggle, Icon } from "@budibase/bbui"
-  import { createEventDispatcher } from "svelte"
-  import { cloneDeep } from "lodash/fp"
+  import { Icon } from "@budibase/bbui"
+  import { setContext } from "svelte"
+  import { writable } from "svelte/store"
+  import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
   import { store } from "builderStore"
-  import { runtimeToReadableBinding } from "builderStore/dataBinding"
-  import { isJSBinding } from "@budibase/string-templates"
 
   export let item
-  export let componentBindings
-  export let bindings
   export let anchor
 
-  const dispatch = createEventDispatcher()
-  const onToggle = item => {
-    return e => {
-      item.active = e.detail
-      dispatch("change", { ...cloneDeep(item), active: e.detail })
-    }
-  }
-  const getReadableText = () => {
-    if (item.label) {
-      return isJSBinding(item.label)
-        ? "(JavaScript function)"
-        : runtimeToReadableBinding([...bindings, componentBindings], item.label)
-    }
-    return item.field
-  }
+  let draggableStore = writable({
+    selected: null,
+    actions: {
+      select: id => {
+        draggableStore.update(state => ({
+          ...state,
+          selected: id,
+        }))
+      },
+    },
+  })
+
+  setContext("draggable", draggableStore)
 
   const parseSettings = settings => {
     return settings
@@ -36,8 +31,14 @@
       })
   }
 
-  $: readableText = getReadableText(item)
-  $: componentDef = store.actions.components.getDefinition(item._component)
+  const getIcon = item => {
+    const component = `@budibase/standard-components/${
+      FieldTypeToComponentMap[item.columnType]
+    }`
+    return store.actions.components.getDefinition(component)?.icon
+  }
+
+  $: icon = getIcon(item)
 </script>
 
 <div class="list-item-body">
@@ -45,28 +46,18 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
-      {bindings}
       {parseSettings}
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name={componentDef.icon} />
+        <Icon name={icon} />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>
-    <div class="field-label">{readableText}</div>
+    <div class="field-label">{item.label || item.field}</div>
   </div>
-  <div class="list-item-right">
-    <Toggle
-      on:change={onToggle(item)}
-      on:click={e => {
-        e.stopPropagation()
-      }}
-      text=""
-      value={item.active}
-      thin
-    />
+  <div title="The display column is always shown first" class="list-item-right">
+    <Icon name={"Info"} />
   </div>
 </div>
 
@@ -83,8 +74,9 @@
     gap: var(--spacing-m);
     min-width: 0;
   }
-  .list-item-right :global(div.spectrum-Switch) {
-    margin: 0px;
+  .list-item-right :global(svg) {
+    color: var(--grey-5);
+    padding: 7px 5px 7px 0;
   }
   .list-item-body {
     justify-content: space-between;

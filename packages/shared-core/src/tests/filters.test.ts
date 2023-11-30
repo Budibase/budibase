@@ -130,32 +130,28 @@ describe("runLuceneQuery", () => {
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
   })
 
-  it("should throw an error is an invalid doc value is passed into a range filter", async () => {
+  it("should return return all docs if an invalid doc value is passed into a range filter", async () => {
+    const docs = [
+      {
+        order_id: 4,
+        customer_id: 1758,
+        order_status: 5,
+        order_date: "{{ Binding.INVALID }}",
+        required_date: "2017-03-05T00:00:00.000Z",
+        shipped_date: "2017-03-03T00:00:00.000Z",
+        store_id: 2,
+        staff_id: 7,
+        description: undefined,
+        label: "",
+      },
+    ]
     const query = buildQuery("range", {
       order_date: {
         low: "2016-01-04T00:00:00.000Z",
         high: "2016-01-11T00:00:00.000Z",
       },
     })
-    expect(() =>
-      runLuceneQuery(
-        [
-          {
-            order_id: 4,
-            customer_id: 1758,
-            order_status: 5,
-            order_date: "INVALID",
-            required_date: "2017-03-05T00:00:00.000Z",
-            shipped_date: "2017-03-03T00:00:00.000Z",
-            store_id: 2,
-            staff_id: 7,
-            description: undefined,
-            label: "",
-          },
-        ],
-        query
-      )
-    ).toThrowError("Cannot perform range filter - invalid type.")
+    expect(runLuceneQuery(docs, query)).toEqual(docs)
   })
 
   it("should return rows with matches on empty filter", () => {

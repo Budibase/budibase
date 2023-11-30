@@ -1,15 +1,12 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
+  import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
   import { store } from "builderStore"
-  import { runtimeToReadableBinding } from "builderStore/dataBinding"
-  import { isJSBinding } from "@budibase/string-templates"
 
   export let item
-  export let componentBindings
-  export let bindings
   export let anchor
 
   const dispatch = createEventDispatcher()
@@ -18,14 +15,6 @@
       item.active = e.detail
       dispatch("change", { ...cloneDeep(item), active: e.detail })
     }
-  }
-  const getReadableText = () => {
-    if (item.label) {
-      return isJSBinding(item.label)
-        ? "(JavaScript function)"
-        : runtimeToReadableBinding([...bindings, componentBindings], item.label)
-    }
-    return item.field
   }
 
   const parseSettings = settings => {
@@ -36,8 +25,12 @@
       })
   }
 
-  $: readableText = getReadableText(item)
-  $: componentDef = store.actions.components.getDefinition(item._component)
+  const getIcon = () => {
+    const component = `@budibase/standard-components/${
+      FieldTypeToComponentMap[item.columnType]
+    }`
+    return store.actions.components.getDefinition(component).icon
+  }
 </script>
 
 <div class="list-item-body">
@@ -45,28 +38,18 @@
     <EditComponentPopover
       {anchor}
       componentInstance={item}
-      {componentBindings}
-      {bindings}
       {parseSettings}
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name={componentDef.icon} />
+        <Icon name={getIcon()} />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>
-    <div class="field-label">{readableText}</div>
+    <div class="field-label">{item.label || item.field}</div>
   </div>
   <div class="list-item-right">
-    <Toggle
-      on:change={onToggle(item)}
-      on:click={e => {
-        e.stopPropagation()
-      }}
-      text=""
-      value={item.active}
-      thin
-    />
+    <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
   </div>
 </div>
 
