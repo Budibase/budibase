@@ -22,6 +22,7 @@ describe("redlockImpl", () => {
     }) {
       return config.doInTenant(() =>
         doWithLock(opts, async () => {
+          // Run in multiple intervals until hitting the expected time
           const interval = lockTtl / 10
           for (let i = executionTimeMs; i > 0; i -= interval) {
             await jest.advanceTimersByTimeAsync(interval)
