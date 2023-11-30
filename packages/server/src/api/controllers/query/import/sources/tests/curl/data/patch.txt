@@ -1,2 +1,0 @@
-curl -X PATCH 'http://example.com/paths/abc' \
-  --data-raw '{ "key" : "val" }' 

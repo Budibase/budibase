@@ -1,4 +1,0 @@
-{
-  "vars": [ "define", "require", "exports"],
-  "props": ["compile", "search", "tokenize", "jmespath", "parse", "stringify", "prototype", "length"]
-}

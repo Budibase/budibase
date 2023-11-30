@@ -1,3 +1,0 @@
-curl 'http://example.com' \
-  -H 'x-bb-header-1: 123' \
-  -H 'x-bb-header-2: 456' 

@@ -1,6 +1,0 @@
-/**
- * Phone number validator/formatter (UK numbers).
- * Author: Brian Barnett, brian@3kb.co.uk, http://brianbar.net/ || http://3kb.co.uk/
- * Date: 21/02/14
- **/
-!function(a){var b=["011# ### ####","01#1 ### ####","013873 #####","015242 #####","015394 #####","015395 #####","015396 #####","016973 #####","016974 #####","016977 ####","016977 #####","017683 #####","017684 #####","017687 #####","019467 #####","01### #####","01### ######","02# #### ####","03## ### ####","05### ######","0500 ######","07### ######","08## ### ###","08## ### ####","09## ### ####"],c=function(){var a=[];return b.forEach(function(b){var c="^"+b.split(" ").map(function(a){return a.split("").every(function(a){return"#"===a})?"\\d{"+a.length+"}":a.split("").map(function(a){return"#"===a?"\\d":a}).join("")}).join(" ")+"$";a.push({regex:new RegExp(c),mask:b})}),a};a._patterns=c(),a.isValid=function(a){return this._patterns.some(function(b){return b.regex.test(a)})},a.format=function(a,b){var c=this._patterns.map(function(a){return a});for(c.reverse(),b=void 0===b?" ":b;0!==c.length;){for(var d=c.pop(),e=a.replace(/[()\[\]\-_A-Za-z ]/gi,"").split(""),f=d.mask.split(""),g=0;g<f.length;g++)" "===f[g]&&e.splice(g,0," ");if(e=e.join(""),d.regex.test(e))return e.replace(/ /g,b)}return!1}}("undefined"==typeof exports?this.phoneNumber={}:exports);

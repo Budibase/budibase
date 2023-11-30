@@ -1,1 +1,0 @@
-echo '{ "current-hook" : "pre-update" }' > 'watchtower-hook.json'
