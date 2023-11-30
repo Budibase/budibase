@@ -25,6 +25,7 @@ import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
 import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
+import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
 
 const componentMap = {
   text: DrawerBindableInput,
@@ -50,6 +51,7 @@ const componentMap = {
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
   buttonConfiguration: ButtonConfiguration,
+  stepConfiguration: FormStepConfiguration,
   columns: ColumnEditor,
   "columns/basic": BasicColumnEditor,
   "columns/grid": GridColumnEditor,
