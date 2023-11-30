@@ -69,7 +69,14 @@ export const selectedComponent = derived(
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }
-    return findComponent($selectedScreen?.props, $store.selectedComponentId)
+    const selected = findComponent(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    )
+
+    const clone = selected ? Object.assign({}, selected) : selected
+    store.actions.components.migrateSettings(clone)
+    return clone
   }
 )
 

@@ -117,7 +117,7 @@
         actionUrl,
         dataSource,
       }),
-    buttonPosition,
+    buttonPosition: buttons ? buttonPosition : "top",
   }
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}

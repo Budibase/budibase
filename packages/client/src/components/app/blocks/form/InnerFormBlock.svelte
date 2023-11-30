@@ -10,7 +10,7 @@
   export let fields
   export let title
   export let description
-  export let buttons = []
+  export let buttons
   export let buttonPosition = "bottom"
   export let schema
 
