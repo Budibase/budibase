@@ -101,7 +101,7 @@ function getLockName(opts: LockOptions) {
   return name
 }
 
-export const autoExtendPollingMs = Duration.fromSeconds(10).toMs()
+export const AUTO_EXTEND_POLLING_MS = Duration.fromSeconds(10).toMs()
 
 export async function doWithLock<T>(
   opts: LockOptions,
@@ -114,7 +114,7 @@ export async function doWithLock<T>(
     const name = getLockName(opts)
 
     const ttl =
-      opts.type === LockType.AUTO_EXTEND ? autoExtendPollingMs : opts.ttl
+      opts.type === LockType.AUTO_EXTEND ? AUTO_EXTEND_POLLING_MS : opts.ttl
 
     // create the lock
     lock = await redlock.lock(name, ttl)

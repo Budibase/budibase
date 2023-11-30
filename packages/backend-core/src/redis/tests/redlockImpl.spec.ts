@@ -1,5 +1,5 @@
 import { LockName, LockType, LockOptions } from "@budibase/types"
-import { autoExtendPollingMs, doWithLock } from "../redlockImpl"
+import { AUTO_EXTEND_POLLING_MS, doWithLock } from "../redlockImpl"
 import { DBTestConfiguration, generator } from "../../../tests"
 
 describe("redlockImpl", () => {
@@ -9,7 +9,7 @@ describe("redlockImpl", () => {
 
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
-    const lockTtl = autoExtendPollingMs
+    const lockTtl = AUTO_EXTEND_POLLING_MS
 
     function runLockWithExecutionTime({
       opts,
