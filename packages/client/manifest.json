@@ -2698,6 +2698,22 @@
       }
     ]
   },
+  "labelfield": {
+    "name": "Text Field",
+    "icon": "Text",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 32
+    },
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
@@ -6041,25 +6057,13 @@
         "defaultValue": "Create"
       },
       {
-        "type": "text",
-        "label": "Title",
-        "key": "title",
-        "nested": true
-      },
-      {
-        "type": "text",
-        "label": "Description",
-        "key": "description",
-        "nested": true
-      },
-      {
         "section": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
           "invert": true
         },
-        "name": "Row details",
+        "name": "Row ID",
         "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
         "settings": [
           {
@@ -6079,8 +6083,20 @@
       },
       {
         "section": true,
-        "name": "Fields",
+        "name": "Details",
         "settings": [
+          {
+            "type": "text",
+            "label": "Title",
+            "key": "title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Description",
+            "key": "description",
+            "nested": true
+          },
           {
             "type": "fieldConfiguration",
             "key": "fields",
@@ -6287,19 +6303,6 @@
         "required": true
       },
       {
-        "type": "columns/grid",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": [
-          "table",
-          {
-            "setting": "table.type",
-            "value": "custom",
-            "invert": true
-          }
-        ]
-      },
-      {
         "type": "filter",
         "label": "Filtering",
         "key": "initialFilter",
@@ -6394,6 +6397,18 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Columns",
+        "settings": [
+          {
+            "type": "columns/grid",
+            "key": "columns",
+            "nested": true,
+            "resetOn": "table"
+          }
+        ]
       },
       {
         "section": true,

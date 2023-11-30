@@ -2,7 +2,7 @@
   import "@spectrum-css/buttongroup/dist/index-vars.css"
 
   export let vertical = false
-  export let gap = ""
+  export let gap = "M"
 
   $: gapStyle =
     gap === "L"

@@ -19,6 +19,22 @@
   export let onRowClick = null
   export let buttons = null
 
+  // parses columns to fix older formats
+  const getParsedColumns = columns => {
+    // If the first element has an active key all elements should be in the new format
+    if (columns?.length && columns[0]?.active !== undefined) {
+      return columns
+    }
+
+    return columns?.map(column => ({
+      label: column.displayName || column.name,
+      field: column.name,
+      active: true,
+    }))
+  }
+
+  $: parsedColumns = getParsedColumns(columns)
+
   const context = getContext("context")
   const component = getContext("component")
   const {
@@ -33,16 +49,17 @@
 
   let grid
 
-  $: columnWhitelist = columns?.map(col => col.name)
-  $: schemaOverrides = getSchemaOverrides(columns)
+  $: columnWhitelist = parsedColumns
+    ?.filter(col => col.active)
+    ?.map(col => col.field)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns)
   $: enrichedButtons = enrichButtons(buttons)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
     columns?.forEach(column => {
-      overrides[column.name] = {
-        displayName: column.displayName || column.name,
-        visible: true,
+      overrides[column.field] = {
+        displayName: column.label,
       }
     })
     return overrides

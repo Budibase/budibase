@@ -82,6 +82,7 @@
       minWidth: "200px",
     },
     role: {
+      displayName: "Access",
       sortable: false,
       width: "1fr",
     },
@@ -171,6 +172,7 @@
     const payload = userData?.users?.map(user => ({
       email: user.email,
       builder: user.role === Constants.BudibaseRoles.Developer,
+      creator: user.role === Constants.BudibaseRoles.Creator,
       admin: user.role === Constants.BudibaseRoles.Admin,
       groups: userData.groups,
     }))
@@ -189,18 +191,18 @@
 
     for (const user of userData?.users ?? []) {
       const { email } = user
-
       if (
         newUsers.find(x => x.email === email) ||
         currentUserEmails.includes(email)
-      )
+      ) {
         continue
-
+      }
       newUsers.push(user)
     }
 
-    if (!newUsers.length)
+    if (!newUsers.length) {
       notifications.info("Duplicated! There is no new users to add.")
+    }
     return { ...userData, users: newUsers }
   }
 
@@ -265,7 +267,6 @@
     try {
       await groups.actions.init()
       groupsLoaded = true
-
       pendingInvites = await users.getInvites()
       invitesLoaded = true
     } catch (error) {
