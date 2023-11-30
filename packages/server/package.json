@@ -2,7 +2,7 @@
   "name": "@budibase/server",
   "email": "hi@budibase.com",
   "version": "0.0.0",
-  "description": "Budibase Web Server",
+  "description": "Budibase Web Server test",
   "main": "src/index.ts",
   "repository": {
     "type": "git",
