@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig-base.build.json",
-  "compilerOptions": {
-    "target": "es6",
-    "moduleResolution": "node",
-    "outDir": "dist/mjs"
-  }
-}

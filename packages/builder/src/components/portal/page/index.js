@@ -1,6 +1,0 @@
-export { default as Breadcrumb } from "./Breadcrumb.svelte"
-export { default as Breadcrumbs } from "./Breadcrumbs.svelte"
-export { default as Header } from "./Header.svelte"
-export { default as Content } from "./Content.svelte"
-export { default as SideNavItem } from "./SideNavItem.svelte"
-export { default as SideNav } from "./SideNav.svelte"
