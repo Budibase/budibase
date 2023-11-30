@@ -1,14 +1,15 @@
 import { LockName, LockType, LockOptions } from "@budibase/types"
-import tk from "timekeeper"
-import { doWithLock } from "../redlockImpl"
+import { autoExtendPollingMs, doWithLock } from "../redlockImpl"
 import { DBTestConfiguration, generator } from "../../../tests"
 
-tk.reset()
-
 describe("redlockImpl", () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+  })
+
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
-    const lockTtl = 50
+    const lockTtl = autoExtendPollingMs
 
     function runLockWithExecutionTime({
       opts,
@@ -21,7 +22,10 @@ describe("redlockImpl", () => {
     }) {
       return config.doInTenant(() =>
         doWithLock(opts, async () => {
-          await new Promise<void>(r => setTimeout(() => r(), executionTimeMs))
+          const interval = lockTtl / 10
+          for (let i = executionTimeMs; i > 0; i -= interval) {
+            await jest.advanceTimersByTimeAsync(interval)
+          }
           return task()
         })
       )
@@ -33,7 +37,7 @@ describe("redlockImpl", () => {
         const expectedResult = generator.guid()
         const mockTask = jest.fn().mockResolvedValue(expectedResult)
 
-        const opts = {
+        const opts: LockOptions = {
           name: LockName.PERSIST_WRITETHROUGH,
           type: lockType,
           ttl: lockTtl,
@@ -54,22 +58,24 @@ describe("redlockImpl", () => {
     it("should extend when type is autoextend", async () => {
       const expectedResult = generator.guid()
       const mockTask = jest.fn().mockResolvedValue(expectedResult)
+      const mockOnExtend = jest.fn()
 
-      const opts = {
+      const opts: LockOptions = {
         name: LockName.PERSIST_WRITETHROUGH,
         type: LockType.AUTO_EXTEND,
-        ttl: lockTtl,
+        onExtend: mockOnExtend,
       }
 
       const result = await runLockWithExecutionTime({
         opts,
         task: mockTask,
-        executionTimeMs: lockTtl * 3,
+        executionTimeMs: lockTtl * 2.5,
       })
 
       expect(result.executed).toBe(true)
       expect(result.executed && result.result).toBe(expectedResult)
       expect(mockTask).toHaveBeenCalledTimes(1)
+      expect(mockOnExtend).toHaveBeenCalledTimes(5)
     })
 
     it.each(Object.values(LockType).filter(t => t !== LockType.AUTO_EXTEND))(
@@ -77,7 +83,7 @@ describe("redlockImpl", () => {
       async (lockType: LockType) => {
         const mockTask = jest.fn().mockResolvedValue("mockResult")
 
-        const opts = {
+        const opts: LockOptions = {
           name: LockName.PERSIST_WRITETHROUGH,
           type: lockType,
           ttl: lockTtl,

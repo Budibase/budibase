@@ -101,20 +101,20 @@ function getLockName(opts: LockOptions) {
   return name
 }
 
+export const autoExtendPollingMs = Duration.fromSeconds(10).toMs()
+
 export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
-  let timeout
+  let timeout: NodeJS.Timeout | undefined
   try {
     const name = getLockName(opts)
 
     const ttl =
-      opts.type === LockType.AUTO_EXTEND
-        ? Duration.fromSeconds(10).toMs()
-        : opts.ttl
+      opts.type === LockType.AUTO_EXTEND ? autoExtendPollingMs : opts.ttl
 
     // create the lock
     lock = await redlock.lock(name, ttl)
@@ -123,21 +123,9 @@ export async function doWithLock<T>(
       // We keep extending the lock while the task is running
       const extendInIntervals = (): void => {
         timeout = setTimeout(async () => {
-          let isExpired = false
-          try {
-            lock = await lock!.extend(ttl)
-          } catch (err: any) {
-            isExpired = err.message.includes("Cannot extend lock on resource")
-            if (isExpired) {
-              console.error("The lock expired", { name })
-            } else {
-              throw err
-            }
-          }
+          lock = await lock!.extend(ttl, () => opts.onExtend && opts.onExtend())
 
-          if (!isExpired) {
-            extendInIntervals()
-          }
+          extendInIntervals()
         }, ttl / 2)
       }
 
