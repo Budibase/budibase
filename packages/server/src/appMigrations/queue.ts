@@ -11,10 +11,6 @@ import environment from "../environment"
 const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION)
 appMigrationQueue.process(processMessage)
 
-// TODO
-export const PROCESS_MIGRATION_TIMEOUT =
-  environment.APP_MIGRATION_TIMEOUT || 60000
-
 async function processMessage(job: Job) {
   const { appId } = job.data
   console.log(`Processing app migration for "${appId}"`)
@@ -22,9 +18,9 @@ async function processMessage(job: Job) {
   await locks.doWithLock(
     {
       name: LockName.APP_MIGRATION,
-      type: LockType.DEFAULT,
+      type: LockType.AUTO_EXTEND,
       resource: appId,
-      ttl: PROCESS_MIGRATION_TIMEOUT,
+      ttl: 60000,
     },
     async () => {
       await context.doInAppContext(appId, async () => {
