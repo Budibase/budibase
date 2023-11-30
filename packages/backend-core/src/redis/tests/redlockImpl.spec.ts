@@ -8,7 +8,7 @@ tk.reset()
 describe("redlockImpl", () => {
   describe("doWithLock", () => {
     const config = new DBTestConfiguration()
-    const lockTtl = 25
+    const lockTtl = 50
 
     function runLockWithExecutionTime({
       opts,
