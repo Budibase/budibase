@@ -2,9 +2,9 @@ import Redlock from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
-import env from "../environment"
 import { logWarn } from "../logging"
 import { utils } from "@budibase/shared-core"
+import { Duration } from "../utils"
 
 async function getClient(
   type: LockType,
@@ -111,8 +111,13 @@ export async function doWithLock<T>(
   try {
     const name = getLockName(opts)
 
+    const ttl =
+      opts.type === LockType.AUTO_EXTEND
+        ? Duration.fromSeconds(10).toMs()
+        : opts.ttl
+
     // create the lock
-    lock = await redlock.lock(name, opts.ttl)
+    lock = await redlock.lock(name, ttl)
 
     if (opts.type === LockType.AUTO_EXTEND) {
       // We keep extending the lock while the task is running
@@ -120,7 +125,7 @@ export async function doWithLock<T>(
         timeout = setTimeout(async () => {
           let isExpired = false
           try {
-            lock = await lock!.extend(opts.ttl)
+            lock = await lock!.extend(ttl)
           } catch (err: any) {
             isExpired = err.message.includes("Cannot extend lock on resource")
             if (isExpired) {
@@ -133,7 +138,7 @@ export async function doWithLock<T>(
           if (!isExpired) {
             extendInIntervals()
           }
-        }, opts.ttl / 2)
+        }, ttl / 2)
       }
 
       extendInIntervals()
