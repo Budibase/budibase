@@ -37,7 +37,7 @@ export interface LockOptions {
    */
   name: LockName
   /**
-   * The ttl to auto-expire the lock if not unlocked manually.
+   * The ttl to auto-expire the lock if not unlocked manually
    */
   ttl: number
   /**
