@@ -71,7 +71,7 @@ const OPTIONS: Record<keyof typeof LockType, Redlock.Options> = {
 }
 
 export async function newRedlock(opts: Redlock.Options = {}) {
-  let options = { ...OPTIONS, ...opts }
+  const options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
   return new Redlock([client], options)
