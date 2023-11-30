@@ -6017,6 +6017,37 @@
       }
     ]
   },
+  "multistepformblock": {
+    "name": "Multi step Formblock",
+    "icon": "AssetsAdded",
+    "block": true,
+    "settings": [
+      {
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "radio",
+        "label": "Type",
+        "key": "actionType",
+        "options": ["Create", "Update", "View"],
+        "defaultValue": "Create"
+      },
+      {
+        "name": "Details",
+        "section": true,
+        "settings": [
+          {
+            "type": "stepConfiguration",
+            "key": "steps",
+            "label": "Multi Steps"
+          }
+        ],
+        "resetOn": ["dataSource", "actionType"]
+      }
+    ]
+  },
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
