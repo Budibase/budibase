@@ -527,12 +527,14 @@ describe.each([
       otherTableConfig.name = "a"
       otherTableConfig.schema.relationship = {
         name: "relationship",
-        type: FieldType.LINK,
-        fieldName: "relationship",
-        tableId: table._id!,
         relationshipType: RelationshipType.ONE_TO_MANY,
+        type: FieldType.LINK,
+        tableId: table._id!,
+        fieldName: "relationship",
       }
       otherTable = await createTable(otherTableConfig)
+      // need to set the config back to the original table
+      config.table = table
     })
 
     it("should update only the fields that are supplied", async () => {
