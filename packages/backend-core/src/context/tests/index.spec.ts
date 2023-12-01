@@ -1,6 +1,10 @@
 import { testEnv } from "../../../tests/extra"
 import * as context from "../"
 import { DEFAULT_TENANT_ID } from "../../constants"
+import { structures } from "../../../tests"
+import { db } from "../.."
+import Context from "../Context"
+import { ContextMap } from "../types"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -142,6 +146,38 @@ describe("context", () => {
     it("returns false when not set", () => {
       const isScim = context.isScim()
       expect(isScim).toBe(false)
+    })
+  })
+
+  describe("doInAppMigrationContext", () => {
+    it("the context is set correctly", async () => {
+      const appId = db.generateAppID()
+
+      await context.doInAppMigrationContext(appId, () => {
+        const context = Context.get()
+
+        const expected: ContextMap = {
+          appId,
+          isMigrating: true,
+        }
+        expect(context).toEqual(expected)
+      })
+    })
+
+    it("the context is set correctly when running in a tenant id", async () => {
+      const tenantId = structures.tenant.id()
+      const appId = db.generateAppID(tenantId)
+
+      await context.doInAppMigrationContext(appId, () => {
+        const context = Context.get()
+
+        const expected: ContextMap = {
+          appId,
+          isMigrating: true,
+          tenantId,
+        }
+        expect(context).toEqual(expected)
+      })
     })
   })
 })

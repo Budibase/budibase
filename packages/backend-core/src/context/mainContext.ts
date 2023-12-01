@@ -148,12 +148,20 @@ export async function doInAppContext<T>(
   appId: string,
   task: () => T
 ): Promise<T> {
+  return _doInAppContext(appId, task)
+}
+
+async function _doInAppContext<T>(
+  appId: string,
+  task: () => T,
+  extraContextSettings?: ContextMap
+): Promise<T> {
   if (!appId) {
     throw new Error("appId is required")
   }
 
   const tenantId = getTenantIDFromAppID(appId)
-  const updates: ContextMap = { appId }
+  const updates: ContextMap = { appId, ...extraContextSettings }
   if (tenantId) {
     updates.tenantId = tenantId
   }
@@ -182,21 +190,15 @@ export async function doInAppMigrationContext<T>(
   appId: string,
   task: () => T
 ): Promise<T> {
-  if (!appId && !env.isTest()) {
-    throw new Error("appId is required")
+  try {
+    return _doInAppContext(appId, task, {
+      isMigrating: true,
+    })
+  } finally {
+    updateContext({
+      isMigrating: undefined,
+    })
   }
-
-  let updates: ContextMap
-  if (!appId) {
-    updates = { appId: "" }
-  } else {
-    const tenantId = getTenantIDFromAppID(appId)
-    updates = { appId }
-    if (tenantId) {
-      updates.tenantId = tenantId
-    }
-  }
-  return newContext(updates, task)
 }
 
 export function getIdentity(): IdentityContext | undefined {
