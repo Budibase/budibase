@@ -421,12 +421,24 @@ class InternalBuilder {
     return query.limit(BASE_LIMIT)
   }
 
-  create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
-    const { endpoint, body } = json
-    let query: KnexQuery = knex(endpoint.entityId)
+  knexWithAlias(
+    knex: Knex,
+    endpoint: { entityId: string; alias?: string; schema?: string }
+  ): { query: KnexQuery; name: string } {
+    const tableName = endpoint.entityId
+    const alias = endpoint.alias
+    const aliased = alias ? alias : tableName
+    const tableAliased = alias ? `${tableName} as ${alias}` : tableName
+    let query = knex(tableAliased)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
+    return { query, name: aliased }
+  }
+
+  create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+    const { endpoint, body } = json
+    let { query } = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
@@ -445,10 +457,7 @@ class InternalBuilder {
 
   bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
     const { endpoint, body } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+    let { query } = this.knexWithAlias(knex, endpoint)
     if (!Array.isArray(body)) {
       return query
     }
@@ -459,10 +468,6 @@ class InternalBuilder {
   read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
     let { endpoint, resource, filters, paginate, relationships } = json
 
-    const tableName = endpoint.entityId
-    const alias = endpoint.alias
-    const aliased = alias ? alias : tableName
-    const tableAliased = alias ? `${tableName} as ${alias}` : tableName
     // select all if not specified
     if (!resource) {
       resource = { fields: [] }
@@ -487,10 +492,9 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // start building the query
-    let query: KnexQuery = knex(tableAliased).limit(foundLimit)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+
+    let { query, name: aliased } = this.knexWithAlias(knex, endpoint)
+    query = query.limit(foundLimit)
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
@@ -518,10 +522,7 @@ class InternalBuilder {
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+    let { query } = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
     query = this.addFilters(query, filters, { tableName: endpoint.entityId })
     // mysql can't use returning
@@ -534,11 +535,8 @@ class InternalBuilder {
 
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
-    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
+    let { query, name: aliased } = this.knexWithAlias(knex, endpoint)
+    query = this.addFilters(query, filters, { tableName: aliased })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()
