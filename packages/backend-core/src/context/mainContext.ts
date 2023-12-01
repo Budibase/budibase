@@ -190,15 +190,9 @@ export async function doInAppMigrationContext<T>(
   appId: string,
   task: () => T
 ): Promise<T> {
-  try {
     return _doInAppContext(appId, task, {
       isMigrating: true,
     })
-  } finally {
-    updateContext({
-      isMigrating: undefined,
-    })
-  }
 }
 
 export function getIdentity(): IdentityContext | undefined {

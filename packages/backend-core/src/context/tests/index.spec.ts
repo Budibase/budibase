@@ -179,5 +179,23 @@ describe("context", () => {
         expect(context).toEqual(expected)
       })
     })
+
+    it("the context is not modified outside the delegate", async () => {
+      const appId = db.generateAppID()
+
+      expect(Context.get()).toBeUndefined()
+
+      await context.doInAppMigrationContext(appId, () => {
+        const context = Context.get()
+
+        const expected: ContextMap = {
+          appId,
+          isMigrating: true,
+        }
+        expect(context).toEqual(expected)
+      })
+
+      expect(Context.get()).toBeUndefined()
+    })
   })
 })
