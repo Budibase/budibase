@@ -6,7 +6,7 @@ import {
   AutomationTriggerStepId,
   RowAttachment,
 } from "@budibase/types"
-import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
+import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
 import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
 import { downloadTemplate } from "../../../utilities/fileSystem"
@@ -114,12 +114,11 @@ async function getTemplateStream(template: TemplateType) {
   }
 }
 
-export function untarFile(file: { path: string }) {
+export async function untarFile(file: { path: string }) {
   const tmpPath = join(budibaseTempDir(), uuid())
   fs.mkdirSync(tmpPath)
   // extract the tarball
-  tar.extract({
-    sync: true,
+  await tar.extract({
     cwd: tmpPath,
     file: file.path,
   })
@@ -130,9 +129,11 @@ async function decryptFiles(path: string, password: string) {
   try {
     for (let file of fs.readdirSync(path)) {
       const inputPath = join(path, file)
-      const outputPath = inputPath.replace(/\.enc$/, "")
-      await encryption.decryptFile(inputPath, outputPath, password)
-      fs.rmSync(inputPath)
+      if (!inputPath.endsWith("attachments")) {
+        const outputPath = inputPath.replace(/\.enc$/, "")
+        await encryption.decryptFile(inputPath, outputPath, password)
+        fs.rmSync(inputPath)
+      }
     }
   } catch (err: any) {
     if (err.message === "incorrect header check") {
@@ -162,7 +163,7 @@ export async function importApp(
   const isDirectory =
     template.file && fs.lstatSync(template.file.path).isDirectory()
   if (template.file && (isTar || isDirectory)) {
-    const tmpPath = isTar ? untarFile(template.file) : template.file.path
+    const tmpPath = isTar ? await untarFile(template.file) : template.file.path
     if (isTar && template.file.password) {
       await decryptFiles(tmpPath, template.file.password)
     }
