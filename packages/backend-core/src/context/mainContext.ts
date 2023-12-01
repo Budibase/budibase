@@ -145,23 +145,19 @@ export async function doInTenant<T>(
 }
 
 export async function doInAppContext<T>(
-  appId: string | null,
+  appId: string,
   task: () => T
 ): Promise<T> {
-  if (!appId && !env.isTest()) {
+  if (!appId) {
     throw new Error("appId is required")
   }
 
-  let updates: ContextMap
-  if (!appId) {
-    updates = { appId: "" }
-  } else {
-    const tenantId = getTenantIDFromAppID(appId)
-    updates = { appId }
-    if (tenantId) {
-      updates.tenantId = tenantId
-    }
+  const tenantId = getTenantIDFromAppID(appId)
+  const updates: ContextMap = { appId }
+  if (tenantId) {
+    updates.tenantId = tenantId
   }
+
   return newContext(updates, task)
 }
 
@@ -180,6 +176,27 @@ export async function doInIdentityContext<T>(
     context.tenantId = identity.tenantId
   }
   return newContext(context, task)
+}
+
+export async function doInAppMigrationContext<T>(
+  appId: string,
+  task: () => T
+): Promise<T> {
+  if (!appId && !env.isTest()) {
+    throw new Error("appId is required")
+  }
+
+  let updates: ContextMap
+  if (!appId) {
+    updates = { appId: "" }
+  } else {
+    const tenantId = getTenantIDFromAppID(appId)
+    updates = { appId }
+    if (tenantId) {
+      updates.tenantId = tenantId
+    }
+  }
+  return newContext(updates, task)
 }
 
 export function getIdentity(): IdentityContext | undefined {
