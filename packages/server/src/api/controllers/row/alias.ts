@@ -88,7 +88,7 @@ export default class AliasTables {
         }
         const aliasedFilters: typeof filter = {}
         for (let key of Object.keys(filter)) {
-          aliasedFilters[aliasField(key)] = filter
+          aliasedFilters[aliasField(key)] = filter[key]
         }
         json.filters[filterKey as keyof SearchFilters] = aliasedFilters
       }
