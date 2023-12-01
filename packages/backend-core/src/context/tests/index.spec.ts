@@ -5,6 +5,7 @@ import { structures } from "../../../tests"
 import { db } from "../.."
 import Context from "../Context"
 import { ContextMap } from "../types"
+import { IdentityType } from "@budibase/types"
 
 describe("context", () => {
   describe("doInTenant", () => {
@@ -197,5 +198,58 @@ describe("context", () => {
 
       expect(Context.get()).toBeUndefined()
     })
+
+    it.each([
+      [
+        "doInAppMigrationContext",
+        () => context.doInAppMigrationContext(db.generateAppID(), () => {}),
+      ],
+      [
+        "doInAppContext",
+        () => context.doInAppContext(db.generateAppID(), () => {}),
+      ],
+      [
+        "doInAutomationContext",
+        () =>
+          context.doInAutomationContext({
+            appId: db.generateAppID(),
+            automationId: structures.generator.guid(),
+            task: () => {},
+          }),
+      ],
+      ["doInContext", () => context.doInContext(db.generateAppID(), () => {})],
+      [
+        "doInEnvironmentContext",
+        () => context.doInEnvironmentContext({}, () => {}),
+      ],
+      [
+        "doInIdentityContext",
+        () =>
+          context.doInIdentityContext(
+            {
+              account: undefined,
+              type: IdentityType.USER,
+              _id: structures.users.user()._id!,
+            },
+            () => {}
+          ),
+      ],
+      ["doInScimContext", () => context.doInScimContext(() => {})],
+      [
+        "doInTenant",
+        () => context.doInTenant(structures.tenant.id(), () => {}),
+      ],
+    ])(
+      "a nested context.%s function cannot run",
+      async (_, otherContextCall: () => Promise<void>) => {
+        await expect(
+          context.doInAppMigrationContext(db.generateAppID(), async () => {
+            await otherContextCall()
+          })
+        ).rejects.toThrowError(
+          "The context cannot be change, a migration is currently running"
+        )
+      }
+    )
   })
 })

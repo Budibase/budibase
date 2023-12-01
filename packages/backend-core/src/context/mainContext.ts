@@ -99,6 +99,8 @@ function updateContext(updates: ContextMap): ContextMap {
 }
 
 async function newContext<T>(updates: ContextMap, task: () => T) {
+  guardMigration()
+
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
   return Context.run(context, task)
@@ -186,13 +188,22 @@ export async function doInIdentityContext<T>(
   return newContext(context, task)
 }
 
+function guardMigration() {
+  const context = Context.get()
+  if (context?.isMigrating) {
+    throw new Error(
+      "The context cannot be change, a migration is currently running"
+    )
+  }
+}
+
 export async function doInAppMigrationContext<T>(
   appId: string,
   task: () => T
 ): Promise<T> {
-    return _doInAppContext(appId, task, {
-      isMigrating: true,
-    })
+  return _doInAppContext(appId, task, {
+    isMigrating: true,
+  })
 }
 
 export function getIdentity(): IdentityContext | undefined {
