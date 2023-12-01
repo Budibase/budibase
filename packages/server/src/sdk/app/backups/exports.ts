@@ -30,12 +30,11 @@ export interface ExportOpts extends DBDumpOpts {
   encryptPassword?: string
 }
 
-function tarFilesToTmp(tmpDir: string, files: string[]) {
+async function tarFilesToTmp(tmpDir: string, files: string[]) {
   const fileName = `${uuid()}.tar.gz`
   const exportFile = join(budibaseTempDir(), fileName)
-  tar.create(
+  await tar.create(
     {
-      sync: true,
       gzip: true,
       file: exportFile,
       noDirRecurse: false,
@@ -150,19 +149,21 @@ export async function exportApp(appId: string, config?: ExportOpts) {
     for (let file of fs.readdirSync(tmpPath)) {
       const path = join(tmpPath, file)
 
-      await encryption.encryptFile(
-        { dir: tmpPath, filename: file },
-        config.encryptPassword
-      )
-
-      fs.rmSync(path)
+      // skip the attachments - too big to encrypt
+      if (file !== "attachments") {
+        await encryption.encryptFile(
+          { dir: tmpPath, filename: file },
+          config.encryptPassword
+        )
+        fs.rmSync(path)
+      }
     }
   }
 
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
-    const tarPath = tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
+    const tarPath = await tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
     // cleanup the tmp export files as tarball returned
     fs.rmSync(tmpPath, { recursive: true, force: true })
 
