@@ -1,10 +1,11 @@
 <script>
-  import { Icon } from "@budibase/bbui"
+  import { AbsTooltip, Icon } from "@budibase/bbui"
   import { createEventDispatcher, getContext } from "svelte"
   import { helpers } from "@budibase/shared-core"
   import { UserAvatars } from "@budibase/frontend-core"
 
   export let icon
+  export let iconTooltip
   export let withArrow = false
   export let withActions = true
   export let indentLevel = 0
@@ -77,7 +78,11 @@
   {style}
   {draggable}
 >
-  <div class="nav-item-content" bind:this={contentRef}>
+  <div
+    class="nav-item-content"
+    bind:this={contentRef}
+    class:right={rightAlignIcon}
+  >
     {#if withArrow}
       <div
         class:opened
@@ -98,7 +103,9 @@
       </div>
     {:else if icon}
       <div class="icon" class:right={rightAlignIcon}>
-        <Icon color={iconColor} size="S" name={icon} />
+        <AbsTooltip type="info" position="right" text={iconTooltip}>
+          <Icon color={iconColor} size="S" name={icon} />
+        </AbsTooltip>
       </div>
     {/if}
     <div class="text" title={showTooltip ? text : null}>
@@ -166,6 +173,11 @@
     width: max-content;
     position: relative;
     padding-left: var(--spacing-l);
+    box-sizing: border-box;
+  }
+
+  .nav-item-content.right {
+    width: 100%;
   }
 
   /* Needed to fully display the actions icon */
@@ -264,6 +276,7 @@
   }
 
   .right {
+    margin-left: auto;
     order: 10;
   }
 </style>
