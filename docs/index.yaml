@@ -2,6 +2,33 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 2.13.30
+    created: "2023-12-01T11:26:30.383749292Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 3.3.4
+    - condition: ingress.nginx
+      name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: 4.0.13
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 1e9e43e0a94776e507b3bc8e0e4f9d9fb4a899aa888d6706fdc78c43a536e878
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-2.13.30.tgz
+    version: 2.13.30
+  - apiVersion: v2
     appVersion: 2.13.29
     created: "2023-12-01T11:18:03.988167Z"
     dependencies:
@@ -2889,8 +2916,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 2.13.28
-    created: "2023-11-30T17:41:49.206779593Z"
+    appVersion: 2.13.30
+    created: "2023-12-01T11:26:30.523982726Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -2902,7 +2929,7 @@ entries:
       version: 4.0.13
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: 540a59f3d0721e7fdb0d400e6e9e6e513dce1139453b72d8e16b9db1374ac6d1
+    digest: 046d20474676ad9d86bf9facb2cd8ce0a3bcfd3d4be9ba7ed2d6dc82b3514cd2
     keywords:
     - low-code
     - database
@@ -2942,4 +2969,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2023-12-01T11:18:03.984845Z"
+generated: "2023-12-01T11:26:30.518500744Z"
