@@ -19,6 +19,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: budibase-proxy
+  minReadySeconds: 10
   strategy:
     type: RollingUpdate
   template:
