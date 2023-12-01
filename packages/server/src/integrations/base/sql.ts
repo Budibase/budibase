@@ -372,9 +372,9 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
-      const toAlias = aliases[toTable],
-        throughAlias = aliases[throughTable],
-        fromAlias = aliases[fromTable]
+      const toAlias = aliases[toTable] || toTable,
+        throughAlias = aliases[throughTable] || throughTable,
+        fromAlias = aliases[fromTable] || fromTable
       let toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema,
