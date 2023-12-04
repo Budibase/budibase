@@ -14,7 +14,7 @@
   import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
-  let loaded = $apps.length != null
+  let loaded = !!$apps?.length
 
   onMount(async () => {
     try {
