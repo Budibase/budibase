@@ -57,7 +57,6 @@
   const toggle = () => {
     selectedValues = !selectedValues
     selectedJSON = !selectedJSON
-    console.log(selectedJSON)
   }
   let selectedValues = true
   let selectedJSON = false
