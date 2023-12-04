@@ -6,7 +6,6 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
-import environment from "../environment"
 
 const appMigrationQueue = queue.createQueue(queue.JobQueue.APP_MIGRATION)
 appMigrationQueue.process(processMessage)
