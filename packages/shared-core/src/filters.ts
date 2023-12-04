@@ -315,7 +315,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
           new Date(docValue).getTime() > new Date(testValue.high).getTime()
         )
       }
-      throw "Cannot perform range filter - invalid type."
+      return false
     }
   )
 
