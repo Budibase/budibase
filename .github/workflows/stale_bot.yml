@@ -10,6 +10,7 @@ jobs:
     steps:
       - uses: actions/stale@v8
         with:
+          days-before-stale: 330
           operations-per-run: 1
           # stale rules for PRs
           days-before-pr-stale: 7
