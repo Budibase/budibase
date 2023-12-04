@@ -30,14 +30,6 @@
         "ecmaVersion": 2019,
         "sourceType": "module",
         "allowImportExportEverywhere": true
-      },
-      "rules": {
-        "svelte/valid-compile": [
-          "error",
-          {
-            "ignoreWarnings": true
-          }
-        ]
       }
     },
     {
