@@ -8,4 +8,5 @@ export type ContextMap = {
   environmentVariables?: Record<string, string>
   isScim?: boolean
   automationId?: string
+  isMigrating?: boolean
 }
