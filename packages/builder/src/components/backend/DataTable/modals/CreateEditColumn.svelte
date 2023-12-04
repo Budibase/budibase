@@ -307,12 +307,6 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (saveColumn.type === LINK_TYPE) {
-        // Fetching the new tables
-        tables.fetch()
-        // Fetching the new relationships
-        datasources.fetch()
-      }
       if (originalName) {
         notifications.success("Column updated successfully")
       } else {
@@ -339,12 +333,6 @@
         confirmDeleteDialog.hide()
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
-
-        if (editableColumn.type === LINK_TYPE) {
-          // Updating the relationships
-          tables.fetch()
-          datasources.fetch()
-        }
       }
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
