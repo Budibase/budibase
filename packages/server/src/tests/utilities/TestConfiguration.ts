@@ -137,6 +137,10 @@ class TestConfiguration {
   }
 
   getAppId() {
+    if (!this.appId) {
+      throw "appId has not been initialised properly"
+    }
+
     return this.appId
   }
 
@@ -510,7 +514,7 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    this.app = await context.doInAppContext(null, async () => {
+    this.app = await context.doInTenant(this.tenantId!, async () => {
       const app = await this._req(
         { name: appName },
         null,
@@ -519,7 +523,7 @@ class TestConfiguration {
       this.appId = app.appId!
       return app
     })
-    return await context.doInAppContext(this.appId, async () => {
+    return await context.doInAppContext(this.getAppId(), async () => {
       // create production app
       this.prodApp = await this.publish()
 
@@ -817,7 +821,7 @@ class TestConfiguration {
   }
 
   async getAutomationLogs() {
-    return context.doInAppContext(this.appId, async () => {
+    return context.doInAppContext(this.getAppId(), async () => {
       const now = new Date()
       return await pro.sdk.automations.logs.logSearch({
         startDate: new Date(now.getTime() - 100000).toISOString(),

@@ -24,7 +24,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse, Upload } from "@budibase/types"
+import { App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
 
 const send = require("koa-send")
 
@@ -212,7 +212,9 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
+    const templateLoc = join(__dirname, "templates")
+    const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
+    const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })

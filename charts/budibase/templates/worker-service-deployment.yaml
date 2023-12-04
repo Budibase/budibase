@@ -2,12 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert
-    kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.worker.deploymentAnnotations }}
 {{- toYaml .Values.services.worker.deploymentAnnotations | indent 4 -}}
 {{ end }}
-  creationTimestamp: null
   labels:
     io.kompose.service: worker-service
 {{ if .Values.services.worker.deploymentLabels }}
@@ -24,12 +21,9 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert
-        kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.worker.templateAnnotations }}
 {{- toYaml .Values.services.worker.templateAnnotations | indent 8 -}}
 {{ end }}
-      creationTimestamp: null
       labels:
         io.kompose.service: worker-service
 {{ if .Values.services.worker.templateLabels }}
