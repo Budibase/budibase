@@ -20,7 +20,7 @@
   let focus = false
 
   const updateValue = newValue => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     if (type === "number") {
@@ -31,14 +31,14 @@
   }
 
   const onFocus = () => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     focus = true
   }
 
   const onBlur = event => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     focus = false
@@ -46,14 +46,14 @@
   }
 
   const onInput = event => {
-    if (readonly || !updateOnChange) {
+    if (readonly || !updateOnChange || disabled) {
       return
     }
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     if (event.key === "Enter") {
@@ -69,6 +69,7 @@
   }
 
   onMount(() => {
+    if (disabled) return
     focus = autofocus
     if (focus) field.focus()
   })
@@ -107,5 +108,17 @@
 <style>
   .spectrum-Textfield {
     width: 100%;
+  }
+
+  input::placeholder {
+    color: var(--grey-7);
+  }
+
+  input:hover::placeholder {
+    color: var(--grey-7) !important;
+  }
+
+  input:focus::placeholder {
+    color: var(--grey-7) !important;
   }
 </style>

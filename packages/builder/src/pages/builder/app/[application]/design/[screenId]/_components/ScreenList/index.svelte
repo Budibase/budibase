@@ -1,108 +1,50 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import {
-    store,
-    sortedScreens,
-    userSelectedResourceMap,
-    screensHeight,
-  } from "builderStore"
+  import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
-  import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
+  import { getVerticalResizeActions } from "components/common/resizable"
   import NavHeader from "components/common/NavHeader.svelte"
 
-  let search = false
-  let resizing = false
-  let searchValue = ""
+  const [resizable, resizableHandle] = getVerticalResizeActions()
 
-  let container
+  let searching = false
+  let searchValue = ""
   let screensContainer
   let scrolling = false
-  let previousHeight = null
-  let dragOffset
 
   $: filteredScreens = getFilteredScreens($sortedScreens, searchValue)
 
-  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-
-  $: search ? openSearch() : closeSearch()
-
-  const openSearch = async () => {
+  const handleOpenSearch = async () => {
     screensContainer.scroll({ top: 0, behavior: "smooth" })
-    previousHeight = $screensHeight
-    $screensHeight = "calc(100% + 1px)"
   }
 
-  const closeSearch = async () => {
-    if (previousHeight) {
-      // Restore previous height and wait for animation
-      $screensHeight = previousHeight
-      previousHeight = null
-      await sleep(300)
+  $: {
+    if (searching) {
+      handleOpenSearch()
     }
   }
 
-  const getFilteredScreens = (screens, search) => {
+  const getFilteredScreens = (screens, searchValue) => {
     return screens.filter(screen => {
-      return !search || screen.routing.route.includes(search)
+      return !searchValue || screen.routing.route.includes(searchValue)
     })
   }
 
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
-
-  const startResizing = e => {
-    // Reset the height store to match the true height
-    $screensHeight = `${container.getBoundingClientRect().height}px`
-
-    // Store an offset to easily compute new height when moving the mouse
-    dragOffset = parseInt($screensHeight) - e.clientY
-
-    // Add event listeners
-    resizing = true
-    document.addEventListener("mousemove", resize)
-    document.addEventListener("mouseup", stopResizing)
-  }
-
-  const resize = e => {
-    // Prevent negative heights as this screws with layout
-    const newHeight = Math.max(0, e.clientY + dragOffset)
-    if (newHeight == null || isNaN(newHeight)) {
-      return
-    }
-    $screensHeight = `${newHeight}px`
-  }
-
-  const stopResizing = () => {
-    resizing = false
-    document.removeEventListener("mousemove", resize)
-  }
-
-  onMount(() => {
-    // Ensure we aren't stuck at 100% height from leaving while searching
-    if ($screensHeight == null || isNaN(parseInt($screensHeight))) {
-      $screensHeight = "210px"
-    }
-  })
 </script>
 
-<svelte:window />
-<div
-  class="screens"
-  class:search
-  class:resizing
-  style={`height:${$screensHeight};`}
-  bind:this={container}
->
+<div class="screens" class:searching use:resizable>
   <div class="header" class:scrolling>
     <NavHeader
       title="Screens"
       placeholder="Search for screens"
       bind:value={searchValue}
-      bind:search
+      bind:search={searching}
       onAdd={() => $goto("../new")}
     />
   </div>
@@ -110,6 +52,7 @@
     {#if filteredScreens?.length}
       {#each filteredScreens as screen (screen._id)}
         <NavItem
+          scrollable
           icon={screen.routing.homeScreen ? "Home" : null}
           indentLevel={0}
           selected={$store.selectedScreenId === screen._id}
@@ -135,9 +78,11 @@
   </div>
 
   <div
+    role="separator"
+    disabled={searching}
     class="divider"
-    on:mousedown={startResizing}
-    on:dblclick={() => screensHeight.set("210px")}
+    class:disabled={searching}
+    use:resizableHandle
   />
 </div>
 
@@ -148,14 +93,12 @@
     min-height: 147px;
     max-height: calc(100% - 147px);
     position: relative;
-    transition: height 300ms ease-out;
+    transition: height 300ms ease-out, max-height 300ms ease-out;
+    height: 210px;
   }
-  .screens.search {
-    max-height: none;
-  }
-  .screens.resizing {
-    user-select: none;
-    cursor: row-resize;
+  .screens.searching {
+    max-height: 100%;
+    height: 100% !important;
   }
 
   .header {
@@ -176,9 +119,6 @@
   .content {
     overflow: auto;
     flex-grow: 1;
-  }
-  .screens.resizing .content {
-    pointer-events: none;
   }
 
   .screens :global(.nav-item) {
@@ -216,5 +156,11 @@
   }
   .divider:hover:after {
     background: var(--spectrum-global-color-gray-300);
+  }
+  .divider.disabled {
+    cursor: auto;
+  }
+  .divider.disabled:after {
+    background: var(--spectrum-global-color-gray-200);
   }
 </style>

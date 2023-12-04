@@ -12970,16 +12970,16 @@ invert-kv@^2.0.0:
   resolved "https://registry.yarnpkg.com/invert-kv/-/invert-kv-2.0.0.tgz#7393f5afa59ec9ff5f67a27620d11c226e3eec02"
   integrity sha512-wPVv/y/QQ/Uiirj/vh3oP+1Ww+AWehmi1g5fFWGPF6IpCBCDVrhgHRMvrLfdYcwDh3QJbGXDW4JAuzxElLSqKA==
 
-ioredis-mock@8.7.0:
-  version "8.7.0"
-  resolved "https://registry.yarnpkg.com/ioredis-mock/-/ioredis-mock-8.7.0.tgz#9877a85e0d233e1b49123d1c6e320df01e9a1d36"
-  integrity sha512-BJcSjkR3sIMKbH93fpFzwlWi/jl1kd5I3vLvGQxnJ/W/6bD2ksrxnyQN186ljAp3Foz4p1ivViDE3rZeKEAluA==
+ioredis-mock@8.9.0:
+  version "8.9.0"
+  resolved "https://registry.yarnpkg.com/ioredis-mock/-/ioredis-mock-8.9.0.tgz#5d694c4b81d3835e4291e0b527f947e260981779"
+  integrity sha512-yIglcCkI1lvhwJVoMsR51fotZVsPsSk07ecTCgRTRlicG0Vq3lke6aAaHklyjmRNRsdYAgswqC2A0bPtQK4LSw==
   dependencies:
     "@ioredis/as-callback" "^3.0.0"
     "@ioredis/commands" "^1.2.0"
     fengari "^0.1.4"
     fengari-interop "^0.1.3"
-    semver "^7.3.8"
+    semver "^7.5.4"
 
 ioredis@5.3.2:
   version "5.3.2"
