@@ -69,9 +69,6 @@ staff's homelabs).
 ```yaml
 ingress:
   enabled: true
-  annotations:
-    nginx.ingress.kubernetes.io/client-max-body-size: 150M
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
   className: "nginx"
   hosts:
     - host: budibase.local # set this to whatever DNS name you'd use
@@ -130,7 +127,6 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | globals.internalApiKeyFallback | string | `""` | A fallback value for `internalApiKey`. If you're rotating your encryption key, you can set this to the old value for the duration of the rotation. |
 | globals.jwtSecret | string | `""` | Secret used for signing JWTs. You don't need to set this if `createSecrets` is true. |
 | globals.jwtSecretFallback | string | `""` | A fallback value for `jwtSecret`. If you're rotating your JWT secret, you can set this to the old value for the duration of the rotation. |
-| globals.multiTenancy | string | `"0"` | Whether to enable the multi-tenancy feature or not. "0" means an installation can only have one tenant. "1" allows multiple tenants. |
 | globals.platformUrl | string | `""` | Set the `platformUrl` binding. You can also do this in Settings > Organisation if you are self-hosting. |
 | globals.smtp.enabled | bool | `false` | Whether to enable SMTP or not. |
 | globals.smtp.from | string | `""` | The email address to use in the "From:" field of emails sent by Budibase. |

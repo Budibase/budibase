@@ -71,11 +71,10 @@ globals:
   # @ignore (should not normally need to be changed, we only set this to "0"
   # when deploying to our Cloud environment)
   selfHosted: "1"
-  # -- Whether to enable the multi-tenancy feature or not. "0" means an installation can only
-  # have one tenant. "1" allows multiple tenants.
+  # @ignore (doesn't work out of the box for self-hosted users, only meant for Budicloud)
   multiTenancy: "0"
   # @ignore (only currently used to determine whether to fetch licenses offline or not, should
-  # not normally need to be changed)
+  # not normally need to be changed, and only applies to Enterprise customers)
   offlineMode: "0"
   # @ignore (only needs to be set in our cloud environment)
   accountPortalUrl: ""
