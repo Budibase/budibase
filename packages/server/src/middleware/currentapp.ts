@@ -72,7 +72,7 @@ export default async (ctx: UserCtx, next: any) => {
 
   const userId = ctx.user ? generateUserMetadataID(ctx.user._id!) : undefined
 
-  // if the user not in the right tenant then make to wipe their cookie
+  // if the user is not in the right tenant then make sure to wipe their cookie
   // also cleanse any information about them that has been allocated
   // this avoids apps making calls to say the worker which are cross tenant,
   // we simply remove the authentication
