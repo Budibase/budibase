@@ -20,7 +20,6 @@ async function processMessage(job: Job) {
       name: LockName.APP_MIGRATION,
       type: LockType.AUTO_EXTEND,
       resource: appId,
-      ttl: 60000,
     },
     async () => {
       await context.doInAppContext(appId, async () => {
