@@ -192,7 +192,7 @@ function guardMigration() {
   const context = Context.get()
   if (context?.isMigrating) {
     throw new Error(
-      "The context cannot be change, a migration is currently running"
+      "The context cannot be changed, a migration is currently running"
     )
   }
 }
