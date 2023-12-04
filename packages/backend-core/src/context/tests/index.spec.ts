@@ -247,7 +247,7 @@ describe("context", () => {
             await otherContextCall()
           })
         ).rejects.toThrowError(
-          "The context cannot be change, a migration is currently running"
+          "The context cannot be changed, a migration is currently running"
         )
       }
     )
