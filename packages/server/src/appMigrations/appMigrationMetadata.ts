@@ -3,7 +3,7 @@ import { Database, DocumentType, Document } from "@budibase/types"
 
 export interface AppMigrationDoc extends Document {
   version: string
-  history: Record<string, { runAt: number }>
+  history: Record<string, { runAt: string }>
 }
 
 const EXPIRY_SECONDS = Duration.fromDays(1).toSeconds()
@@ -78,7 +78,7 @@ export async function updateAppMigrationMetadata({
     version,
     history: {
       ...appMigrationDoc.history,
-      [version]: { runAt: Date.now() },
+      [version]: { runAt: new Date().toISOString() },
     },
   }
   await db.put(updatedMigrationDoc)
