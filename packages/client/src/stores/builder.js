@@ -25,7 +25,6 @@ const createBuilderStore = () => {
   const store = writable(initialState)
   const actions = {
     hoverComponent: id => {
-      console.log("set", id)
       if (id === get(store).hoverComponentId) {
         return
       }

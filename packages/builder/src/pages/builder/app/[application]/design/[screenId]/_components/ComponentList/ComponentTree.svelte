@@ -118,7 +118,7 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
-        isHovering={$store.hoverComponentId === component._id}
+        hovering={$store.hoverComponentId === component._id}
         on:mouseover={() => handleMouseover(component._id)}
         on:mouseout={() => handleMouseout(component._id)}
         text={getComponentText(component)}

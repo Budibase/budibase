@@ -66,7 +66,7 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-screen`
             }}
-            isHovering={$store.hoverComponentId ===
+            hovering={$store.hoverComponentId ===
               `${$store.selectedScreenId}-screen`}
             on:mouseover={() =>
               handleMouseover(`${$store.selectedScreenId}-screen`)}
@@ -93,7 +93,7 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
             }}
-            isHovering={$store.hoverComponentId ===
+            hovering={$store.hoverComponentId ===
               `${$store.selectedScreenId}-navigation`}
             on:mouseover={() =>
               handleMouseover(`${$store.selectedScreenId}-navigation`)}

@@ -23,7 +23,7 @@
   export let showTooltip = false
   export let selectedBy = null
   export let compact = false
-  export let isHovering = false
+  export let hovering = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -62,7 +62,7 @@
 
 <div
   class="nav-item"
-  class:isHovering
+  class:hovering
   class:border
   class:selected
   class:withActions
@@ -163,12 +163,12 @@
     color: var(--ink);
   }
   .nav-item:hover,
-  .isHovering {
+  .hovering {
     background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions,
-  .isHovering .actions {
+  .hovering .actions {
     visibility: visible;
   }
   .nav-item-content {
@@ -279,8 +279,7 @@
     height: 20px;
     margin-left: var(--spacing-xs);
   }
-  .nav-item.withActions:hover .actions,
-  .isHovering .actions {
+  .nav-item.withActions:hover .actions {
     opacity: 1;
   }
 
