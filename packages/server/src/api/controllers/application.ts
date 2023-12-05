@@ -335,12 +335,13 @@ async function performAppCreate(ctx: UserCtx) {
     /* istanbul ignore next */
     if (!env.isTest()) {
       await createApp(appId)
-      // Initialise app migration version
-      await appMigrations.updateAppMigrationMetadata({
-        appId,
-        version: appMigrations.latestMigration,
-      })
     }
+
+    // Initialise app migration version
+    await appMigrations.updateAppMigrationMetadata({
+      appId,
+      version: appMigrations.latestMigration,
+    })
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
