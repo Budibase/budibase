@@ -16,7 +16,8 @@
   export let wide = false
   export let extraWide = false
   export let closeButtonIcon = "Close"
-
+  export let noHeaderBorder = false
+  export let titleCSS = true
   $: customHeaderContent = $$slots["panel-header-content"]
   $: customTitleContent = $$slots["panel-title-content"]
 </script>
@@ -32,6 +33,7 @@
     class="header"
     class:custom={customHeaderContent}
     class:borderBottom={borderBottomHeader}
+    class:noHeaderBorder
   >
     {#if showBackButton}
       <Icon name="ArrowLeft" hoverable on:click={onClickBackButton} />
@@ -41,7 +43,7 @@
         <Icon name={icon} />
       </AbsTooltip>
     {/if}
-    <div class="title">
+    <div class:title={titleCSS}>
       {#if customTitleContent}
         <slot name="panel-title-content" />
       {:else}
@@ -105,6 +107,10 @@
     align-items: center;
     padding: 0 var(--spacing-l);
     gap: var(--spacing-m);
+  }
+
+  .noHeaderBorder {
+    border-bottom: none !important;
   }
   .header.borderBottom {
     border-bottom: var(--border-light);
