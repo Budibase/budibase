@@ -134,16 +134,16 @@ function parseAppIdFromUrl(url?: string) {
  * opens the contents of the specified encrypted JWT.
  * @return the contents of the token.
  */
-export function openJwt(token: string) {
+export function openJwt<T>(token?: string): T | undefined {
   if (!token) {
-    return token
+    return undefined
   }
   try {
-    return jwt.verify(token, env.JWT_SECRET as Secret)
+    return jwt.verify(token, env.JWT_SECRET as Secret) as T
   } catch (e) {
     if (env.JWT_SECRET_FALLBACK) {
       // fallback to enable rotation
-      return jwt.verify(token, env.JWT_SECRET_FALLBACK)
+      return jwt.verify(token, env.JWT_SECRET_FALLBACK) as T
     } else {
       throw e
     }
@@ -165,14 +165,14 @@ export function isValidInternalAPIKey(apiKey: string) {
  * @param ctx The request which is to be manipulated.
  * @param name The name of the cookie to get.
  */
-export function getCookie(ctx: Ctx, name: string) {
+export function getCookie<T>(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
-    return cookie
+    return undefined
   }
 
-  return openJwt(cookie)
+  return openJwt(cookie) as T
 }
 
 /**
