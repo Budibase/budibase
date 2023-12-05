@@ -1,0 +1,3 @@
+/packages/server         @Budibase/backend
+/packages/worker         @Budibase/backend
+/packages/backend-core   @Budibase/backend
