@@ -1,3 +1,6 @@
+import { makePropSafe as safe } from "@budibase/string-templates"
+import { Helpers } from "@budibase/bbui"
+
 /**
  * Utility to wrap an async function and ensure all invocations happen
  * sequentially.
@@ -105,4 +108,136 @@ export const domDebounce = callback => {
       })
     }
   }
+}
+
+/**
+ * Build the default FormBlock button configs per actionType
+ * Parse any legacy button config and mirror its the outcome
+ *
+ * @param {any} props
+ * */
+export const buildDynamicButtonConfig = props => {
+  const {
+    _id,
+    actionType,
+    dataSource,
+    notificationOverride,
+    actionUrl,
+    showDeleteButton,
+    deleteButtonLabel,
+    showSaveButton,
+    saveButtonLabel,
+  } = props || {}
+
+  if (!_id) {
+    console.log("MISSING ID")
+    return
+  }
+  const formId = `${_id}-form`
+  const repeaterId = `${_id}-repeater`
+  const resourceId = dataSource?.resourceId
+
+  // Accommodate old config to ensure delete button does not reappear
+  const deleteText = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
+  const saveText = showSaveButton === false ? "" : saveButtonLabel?.trim()
+
+  const onSave = [
+    {
+      "##eventHandlerType": "Validate Form",
+      parameters: {
+        componentId: formId,
+      },
+    },
+    {
+      "##eventHandlerType": "Save Row",
+      parameters: {
+        providerId: formId,
+        tableId: resourceId,
+        notificationOverride,
+      },
+    },
+    {
+      "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
+    },
+    // Clear a create form once submitted
+    ...(actionType !== "Create"
+      ? []
+      : [
+          {
+            "##eventHandlerType": "Clear Form",
+            parameters: {
+              componentId: formId,
+            },
+          },
+        ]),
+
+    ...(actionUrl
+      ? [
+          {
+            "##eventHandlerType": "Navigate To",
+            parameters: {
+              url: actionUrl,
+            },
+          },
+        ]
+      : []),
+  ]
+
+  const onDelete = [
+    {
+      "##eventHandlerType": "Delete Row",
+      parameters: {
+        confirm: true,
+        tableId: resourceId,
+        rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
+        revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
+        notificationOverride,
+      },
+    },
+    {
+      "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
+    },
+
+    ...(actionUrl
+      ? [
+          {
+            "##eventHandlerType": "Navigate To",
+            parameters: {
+              url: actionUrl,
+            },
+          },
+        ]
+      : []),
+  ]
+
+  const defaultButtons = []
+
+  if (["Update", "Create"].includes(actionType) && showSaveButton !== false) {
+    defaultButtons.push({
+      text: saveText || "Save",
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      onClick: onSave,
+      type: "cta",
+    })
+  }
+
+  if (actionType == "Update" && showDeleteButton !== false) {
+    defaultButtons.push({
+      text: deleteText || "Delete",
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      onClick: onDelete,
+      quiet: true,
+      type: "secondary",
+    })
+  }
+
+  return defaultButtons
 }
