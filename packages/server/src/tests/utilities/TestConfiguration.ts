@@ -56,6 +56,7 @@ import {
 
 import API from "./api"
 import { cloneDeep } from "lodash"
+import jwt, { Secret } from "jsonwebtoken"
 
 mocks.licenses.init(pro)
 
@@ -391,7 +392,7 @@ class TestConfiguration {
         sessionId: "sessionid",
         tenantId: this.getTenantId(),
       }
-      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -412,7 +413,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId,
     }
-    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
     const headers: any = {
       Accept: "application/json",

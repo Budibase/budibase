@@ -11,8 +11,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
-
-const jwt = require("jsonwebtoken")
+import jwt, { Secret } from "jsonwebtoken"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -60,10 +59,7 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   // prod app
-  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
-    return true
-  }
-  return false
+  return ctx.path.startsWith(PROD_APP_PREFIX)
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
@@ -138,16 +134,16 @@ function parseAppIdFromUrl(url?: string) {
  * opens the contents of the specified encrypted JWT.
  * @return the contents of the token.
  */
-export function openJwt(token: string) {
+export function openJwt<T>(token?: string): T | undefined {
   if (!token) {
-    return token
+    return undefined
   }
   try {
-    return jwt.verify(token, env.JWT_SECRET)
+    return jwt.verify(token, env.JWT_SECRET as Secret) as T
   } catch (e) {
     if (env.JWT_SECRET_FALLBACK) {
       // fallback to enable rotation
-      return jwt.verify(token, env.JWT_SECRET_FALLBACK)
+      return jwt.verify(token, env.JWT_SECRET_FALLBACK) as T
     } else {
       throw e
     }
@@ -159,13 +155,9 @@ export function isValidInternalAPIKey(apiKey: string) {
     return true
   }
   // fallback to enable rotation
-  if (
-    env.INTERNAL_API_KEY_FALLBACK &&
-    env.INTERNAL_API_KEY_FALLBACK === apiKey
-  ) {
-    return true
-  }
-  return false
+  return !!(
+    env.INTERNAL_API_KEY_FALLBACK && env.INTERNAL_API_KEY_FALLBACK === apiKey
+  )
 }
 
 /**
@@ -173,14 +165,14 @@ export function isValidInternalAPIKey(apiKey: string) {
  * @param ctx The request which is to be manipulated.
  * @param name The name of the cookie to get.
  */
-export function getCookie(ctx: Ctx, name: string) {
+export function getCookie<T>(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
-    return cookie
+    return undefined
   }
 
-  return openJwt(cookie)
+  return openJwt(cookie) as T
 }
 
 /**
@@ -197,7 +189,7 @@ export function setCookie(
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, env.JWT_SECRET)
+    value = jwt.sign(value, env.JWT_SECRET as Secret)
   }
 
   const config: SetOption = {
