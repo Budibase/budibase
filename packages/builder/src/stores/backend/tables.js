@@ -95,7 +95,7 @@ export function createTablesStore() {
       }
     }
 
-    const tableIdsToFetch = [...new Set([...newTableIds, ...oldTableIds ])]
+    const tableIdsToFetch = [...new Set([...newTableIds, ...oldTableIds])]
     // too many tables to fetch, just get all
     if (tableIdsToFetch.length > 3) {
       await fetch()
