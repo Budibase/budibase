@@ -25,6 +25,7 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
 
   let metadata: AppMigrationDoc | undefined = await cache.get(cacheKey)
 
+  // We don't want to cache in dev, in order to be able to tweak it
   if (metadata && !env.isDev()) {
     return metadata.version
   }
@@ -75,7 +76,7 @@ export async function updateAppMigrationMetadata({
 
   const updatedMigrationDoc: AppMigrationDoc = {
     ...appMigrationDoc,
-    version,
+    version: version || "",
     history: {
       ...appMigrationDoc.history,
       [version]: { runAt: new Date().toISOString() },
