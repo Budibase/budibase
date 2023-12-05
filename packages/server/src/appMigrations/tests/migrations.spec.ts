@@ -10,10 +10,10 @@ describe("migration", () => {
     await config.doInContext(config.getAppId(), async () => {
       const db = context.getAppDB()
       for (const migration of MIGRATIONS) {
-        await migration.migrationFunc()
+        await migration.func()
         const docs = await db.allDocs({ include_docs: true })
 
-        await migration.migrationFunc()
+        await migration.func()
         const latestDocs = await db.allDocs({ include_docs: true })
 
         expect(docs).toEqual(latestDocs)
