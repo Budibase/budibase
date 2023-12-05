@@ -2,16 +2,14 @@ import * as setup from "../../api/routes/tests/utilities"
 import { processMigrations } from "../migrationsProcessor"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 import { context } from "@budibase/backend-core"
+import { AppMigration } from ".."
 
 describe("migrationsProcessor", () => {
   it("running migrations will update the latest applied migration", async () => {
-    const testMigrations: {
-      migrationId: string
-      migrationFunc: () => Promise<void>
-    }[] = [
-      { migrationId: "123", migrationFunc: async () => {} },
-      { migrationId: "124", migrationFunc: async () => {} },
-      { migrationId: "125", migrationFunc: async () => {} },
+    const testMigrations: AppMigration[] = [
+      { id: "123", func: async () => {} },
+      { id: "124", func: async () => {} },
+      { id: "125", func: async () => {} },
     ]
 
     const config = setup.getConfig()
@@ -29,13 +27,10 @@ describe("migrationsProcessor", () => {
   })
 
   it("no context can be initialised within a migration", async () => {
-    const testMigrations: {
-      migrationId: string
-      migrationFunc: () => Promise<void>
-    }[] = [
+    const testMigrations: AppMigration[] = [
       {
-        migrationId: "123",
-        migrationFunc: async () => {
+        id: "123",
+        func: async () => {
           await context.doInAppMigrationContext("any", () => {})
         },
       },

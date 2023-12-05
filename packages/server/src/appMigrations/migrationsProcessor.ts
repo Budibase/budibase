@@ -5,13 +5,11 @@ import {
   getAppMigrationVersion,
   updateAppMigrationMetadata,
 } from "./appMigrationMetadata"
+import { AppMigration } from "."
 
 export async function processMigrations(
   appId: string,
-  migrations: {
-    migrationId: string
-    migrationFunc: () => Promise<void>
-  }[]
+  migrations: AppMigration[]
 ) {
   console.log(`Processing app migration for "${appId}"`)
 
@@ -26,31 +24,31 @@ export async function processMigrations(
         let currentVersion = await getAppMigrationVersion(appId)
 
         const pendingMigrations = migrations
-          .filter(m => m.migrationId > currentVersion)
-          .sort((a, b) => a.migrationId.localeCompare(b.migrationId))
+          .filter(m => m.id > currentVersion)
+          .sort((a, b) => a.id.localeCompare(b.id))
 
-        const migrationIds = migrations.map(m => m.migrationId).sort()
+        const migrationIds = migrations.map(m => m.id).sort()
 
         let index = 0
-        for (const { migrationId, migrationFunc } of pendingMigrations) {
+        for (const { id, func } of pendingMigrations) {
           const expectedMigration =
             migrationIds[migrationIds.indexOf(currentVersion) + 1]
 
-          if (expectedMigration !== migrationId) {
-            throw `Migration ${migrationId} could not run, update for "${migrationId}" is running but ${expectedMigration} is expected`
+          if (expectedMigration !== id) {
+            throw `Migration ${id} could not run, update for "${id}" is running but ${expectedMigration} is expected`
           }
 
           const counter = `(${++index}/${pendingMigrations.length})`
-          console.info(`Running migration ${migrationId}... ${counter}`, {
-            migrationId,
+          console.info(`Running migration ${id}... ${counter}`, {
+            migrationId: id,
             appId,
           })
-          await migrationFunc()
+          await func()
           await updateAppMigrationMetadata({
             appId,
-            version: migrationId,
+            version: id,
           })
-          currentVersion = migrationId
+          currentVersion = id
         }
       })
     }

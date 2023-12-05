@@ -4,7 +4,12 @@ import { MIGRATIONS } from "./migrations"
 
 export * from "./appMigrationMetadata"
 
-export const latestMigration = MIGRATIONS.map(m => m.migrationId)
+export type AppMigration = {
+  id: string
+  func: () => Promise<void>
+}
+
+export const latestMigration = MIGRATIONS.map(m => m.id)
   .sort()
   .reverse()[0]
 
