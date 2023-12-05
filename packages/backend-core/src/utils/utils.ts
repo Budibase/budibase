@@ -155,13 +155,9 @@ export function isValidInternalAPIKey(apiKey: string) {
     return true
   }
   // fallback to enable rotation
-  if (
-    env.INTERNAL_API_KEY_FALLBACK &&
-    env.INTERNAL_API_KEY_FALLBACK === apiKey
-  ) {
-    return true
-  }
-  return false
+  return !!(
+    env.INTERNAL_API_KEY_FALLBACK && env.INTERNAL_API_KEY_FALLBACK === apiKey
+  )
 }
 
 /**
