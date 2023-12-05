@@ -3,5 +3,5 @@
 import { AppMigration } from "."
 
 export const MIGRATIONS: AppMigration[] = [
-  // Migrations will be executed sorted by migrationId
+  // Migrations will be executed sorted by id
 ]
