@@ -46,7 +46,7 @@
         if (!$validation.valid) {
           return keepOpen
         }
-        exportApp(password)
+        await exportApp(password)
       },
       isValid: $validation.valid,
     },
