@@ -1,6 +1,13 @@
 const fs = require("fs")
 const path = require("path")
 
+const argv = require("yargs").demandOption(
+  ["title"],
+  "Please provide the required parameter: --title=[title]"
+).argv
+
+const { title } = argv
+
 const generateTimestamp = () => {
   const now = new Date()
   const year = now.getFullYear()
@@ -14,7 +21,7 @@ const generateTimestamp = () => {
 }
 
 const createMigrationFile = () => {
-  const timestamp = generateTimestamp()
+  const migrationFilename = `${generateTimestamp()}_${title}`
   const migrationsDir = "../packages/server/src/appMigrations"
 
   const template = `const migration = async () => {
@@ -27,7 +34,7 @@ export default migration
   const newMigrationPath = path.join(
     migrationsDir,
     "migrations",
-    `${timestamp}.ts`
+    `${migrationFilename}.ts`
   )
   fs.writeFileSync(path.resolve(__dirname, newMigrationPath), template)
 
