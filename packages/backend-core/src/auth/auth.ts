@@ -19,7 +19,7 @@ import {
   GoogleInnerConfig,
   OIDCInnerConfig,
   PlatformLogoutOpts,
-  SessionInfo,
+  SessionCookie,
   SSOProviderType,
 } from "@budibase/types"
 import * as events from "../events"
@@ -191,7 +191,7 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
 
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = getCookie<SessionInfo>(ctx, Cookie.Auth)
+  const currentSession = getCookie<SessionCookie>(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
   if (currentSession && keepActiveSession) {

@@ -13,7 +13,7 @@ import { getGlobalDB, doInTenant } from "../context"
 import { decrypt } from "../security/encryption"
 import * as identity from "../context/identity"
 import env from "../environment"
-import { Ctx, EndpointMatcher, SessionInfo } from "@budibase/types"
+import { Ctx, EndpointMatcher, SessionCookie } from "@budibase/types"
 import { InvalidAPIKeyError, ErrorCode } from "../errors"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
@@ -99,8 +99,8 @@ export default function (
       let headerToken = ctx.request.headers[Header.TOKEN]
 
       const authCookie =
-        getCookie<SessionInfo>(ctx, Cookie.Auth) ||
-        openJwt<SessionInfo>(headerToken)
+        getCookie<SessionCookie>(ctx, Cookie.Auth) ||
+        openJwt<SessionCookie>(headerToken)
       let apiKey = ctx.request.headers[Header.API_KEY]
 
       if (!apiKey && ctx.request.headers[Header.AUTHORIZATION]) {
