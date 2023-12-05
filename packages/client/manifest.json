@@ -6037,6 +6037,7 @@
     "name": "Multi step Formblock",
     "icon": "AssetsAdded",
     "block": true,
+    "hasChildren": false,
     "settings": [
       {
         "type": "table",
@@ -6057,10 +6058,63 @@
           {
             "type": "stepConfiguration",
             "key": "steps",
-            "label": "Multi Steps"
+            "nested": true
           }
         ],
         "resetOn": ["dataSource", "actionType"]
+      }
+    ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
+      },
+      {
+        "type": "ChangeFormStep",
+        "suffix": "form"
+      }
+    ],
+    "context": [
+      {
+        "type": "form",
+        "suffix": "form"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Value",
+            "key": "__value",
+            "type": "object"
+          },
+          {
+            "label": "Valid",
+            "key": "__valid",
+            "type": "boolean"
+          },
+          {
+            "label": "Current Step",
+            "key": "__currentStep",
+            "type": "number"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "__currentStepValid",
+            "type": "boolean"
+          }
+        ]
       }
     ]
   },
