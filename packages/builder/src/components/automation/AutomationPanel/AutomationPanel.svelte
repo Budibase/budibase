@@ -34,6 +34,11 @@
 
   .add-automation-button {
     margin-left: 130px;
+    color: var(--grey-7);
     cursor: pointer;
+  }
+
+  .add-automation-button:hover {
+    color: var(--ink);
   }
 </style>
