@@ -337,7 +337,7 @@ async function performAppCreate(ctx: UserCtx) {
       await createApp(appId)
     }
 
-    // Initialise app migration version
+    // Initialise the app migration version as the latest one
     await appMigrations.updateAppMigrationMetadata({
       appId,
       version: appMigrations.latestMigration,
