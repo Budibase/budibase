@@ -11,8 +11,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
-
-const jwt = require("jsonwebtoken")
+import jwt, { Secret } from "jsonwebtoken"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -60,10 +59,7 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   // prod app
-  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
-    return true
-  }
-  return false
+  return ctx.path.startsWith(PROD_APP_PREFIX)
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
@@ -143,7 +139,7 @@ export function openJwt(token: string) {
     return token
   }
   try {
-    return jwt.verify(token, env.JWT_SECRET)
+    return jwt.verify(token, env.JWT_SECRET as Secret)
   } catch (e) {
     if (env.JWT_SECRET_FALLBACK) {
       // fallback to enable rotation
@@ -197,7 +193,7 @@ export function setCookie(
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, env.JWT_SECRET)
+    value = jwt.sign(value, env.JWT_SECRET as Secret)
   }
 
   const config: SetOption = {
