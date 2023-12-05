@@ -8,7 +8,7 @@ export const latestMigration = MIGRATIONS.map(m => m.migrationId)
   .sort()
   .reverse()[0]
 
-const getTimestamp = (versionId: string) => versionId.split("_")[0]
+const getTimestamp = (versionId: string) => versionId?.split("_")[0]
 
 export async function checkMissingMigrations(appId: string) {
   const currentVersion = await getAppMigrationVersion(appId)
