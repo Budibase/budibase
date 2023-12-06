@@ -12,6 +12,7 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  FieldType,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -314,6 +315,17 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
             constraints,
             ...convertSqlType(column.Type),
             externalType: column.Type,
+          }
+          // enum types in MySQL include the values
+          if (column.Type.startsWith("enum")) {
+            const enumValues = column.Type.substring(5, column.Type.length - 1)
+              .split(",")
+              .map(str => str.replace(/^'(.*)'$/, "$1"))
+            schema[columnName].type = FieldType.OPTIONS
+            schema[columnName].constraints = {
+              ...constraints,
+              inclusion: enumValues,
+            }
           }
         }
         if (!tables[tableName]) {
