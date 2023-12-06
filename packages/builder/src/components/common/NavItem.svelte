@@ -75,8 +75,6 @@
   on:drop
   on:mouseenter
   on:mouseleave
-  on:focus
-  on:blur
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"

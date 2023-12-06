@@ -6,10 +6,6 @@
   $: componentId = $builderStore.hoverComponentId
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
 
-  $: {
-    console.log(componentId);
-  }
-
   const onMouseOver = e => {
     // Ignore if dragging
     if (e.buttons > 0) {

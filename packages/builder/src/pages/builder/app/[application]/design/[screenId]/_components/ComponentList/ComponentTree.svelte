@@ -92,10 +92,7 @@
 
   const handleMouseover = componentId => {
     if ($store.hoverComponentId !== componentId) {
-      console.log('set', componentId);
       $store.hoverComponentId = componentId
-    } else {
-      console.log('not set', componentId);
     }
   }
   const handleMouseout = componentId => {
