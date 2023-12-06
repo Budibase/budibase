@@ -12,12 +12,13 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  FieldType,
 } from "@budibase/types"
 import {
   getSqlQuery,
   SqlClient,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   checkExternalTables,
 } from "./utils"
@@ -305,16 +306,17 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
             (column.Extra === "auto_increment" ||
               column.Extra.toLowerCase().includes("generated"))
           const required = column.Null !== "YES"
-          const constraints = {
-            presence: required && !isAuto && !hasDefault,
-          }
-          schema[columnName] = {
+          schema[columnName] = generateColumnDefinition({
             name: columnName,
             autocolumn: isAuto,
-            constraints,
-            ...convertSqlType(column.Type),
+            presence: required && !isAuto && !hasDefault,
             externalType: column.Type,
-          }
+            options: column.Type.startsWith("enum")
+              ? column.Type.substring(5, column.Type.length - 1)
+                  .split(",")
+                  .map(str => str.replace(/^'(.*)'$/, "$1"))
+              : undefined,
+          })
         }
         if (!tables[tableName]) {
           tables[tableName] = {
