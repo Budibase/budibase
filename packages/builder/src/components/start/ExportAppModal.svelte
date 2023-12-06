@@ -113,7 +113,7 @@
     </Body>
     <InlineAlert
       header={encrypt
-        ? "Please note Budibase does not encrypt the attachments during the export process to ensure efficient export of large attachments."
+        ? "Please note Budibase does not encrypt attachments during the export process to ensure efficient export of large attachments."
         : "Do not share your Budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."}
     />
   {/if}
