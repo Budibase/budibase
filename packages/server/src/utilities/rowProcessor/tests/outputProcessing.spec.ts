@@ -3,6 +3,7 @@ import {
   FieldType,
   FieldTypeSubtypes,
   INTERNAL_TABLE_SOURCE_ID,
+  RowAttachment,
   Table,
   TableSourceType,
 } from "@budibase/types"
@@ -68,6 +69,49 @@ describe("rowProcessor - outputProcessing", () => {
       "123",
       FieldSubtype.USER
     )
+  })
+
+  it("should handle attachments correctly", async () => {
+    const table: Table = {
+      _id: generator.guid(),
+      name: "TestTable",
+      type: "table",
+      sourceId: INTERNAL_TABLE_SOURCE_ID,
+      sourceType: TableSourceType.INTERNAL,
+      schema: {
+        attach: {
+          type: FieldType.ATTACHMENT,
+          name: "attach",
+          constraints: {},
+        },
+      },
+    }
+
+    const row: { attach: RowAttachment[] } = {
+      attach: [
+        {
+          size: 10,
+          name: "test",
+          extension: "jpg",
+          key: "test.jpg",
+        },
+      ],
+    }
+
+    const output = await outputProcessing(table, row, { squash: false })
+    expect(output.attach[0].url).toBe(
+      "/files/signed/prod-budi-app-assets/test.jpg"
+    )
+
+    row.attach[0].url = ""
+    const output2 = await outputProcessing(table, row, { squash: false })
+    expect(output2.attach[0].url).toBe(
+      "/files/signed/prod-budi-app-assets/test.jpg"
+    )
+
+    row.attach[0].url = "aaaa"
+    const output3 = await outputProcessing(table, row, { squash: false })
+    expect(output3.attach[0].url).toBe("aaaa")
   })
 
   it("process output even when the field is not empty", async () => {
