@@ -15,9 +15,12 @@
   export let componentBindings
   export let isScreen = false
   export let onUpdateSetting
+  export let getCustomComponent
+  export let getCustomSectionTitle
   export let showSectionTitle = true
   export let includeHidden = false
   export let tag
+  export let noPadding = false
 
   $: sections = getSections(
     componentInstance,
@@ -129,13 +132,30 @@
     })
   }
 
+  const resolveComponentByType = setting => {
+    if (setting.type) {
+      return getComponentForSetting(setting)
+    } else if (setting.customType && typeof getCustomComponent === "function") {
+      return getCustomComponent(setting.customType)
+    }
+  }
+
+  const resolveSectionName = section => {
+    console.log(resolveSectionName)
+    if (typeof getCustomSectionTitle === "function") {
+      return getCustomSectionTitle(section)
+    } else {
+      return section.name
+    }
+  }
+
   const canRenderControl = (instance, setting, isScreen, includeHidden) => {
     // Prevent rendering on click setting for screens
     if (setting?.type === "event" && isScreen) {
       return false
     }
     // Check we have a component to render for this setting
-    const control = getComponentForSetting(setting)
+    const control = resolveComponentByType(setting)
     if (!control) {
       return false
     }
@@ -152,6 +172,7 @@
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
       show={section.collapsed !== true}
+      {noPadding}
     >
       {#if section.info}
         <div class="section-info">
@@ -168,9 +189,10 @@
           {#if setting.visible}
             <PropertyControl
               type={setting.type}
-              control={getComponentForSetting(setting)}
+              control={resolveComponentByType(setting)}
               label={setting.label}
               labelHidden={setting.labelHidden}
+              wide={setting.wide}
               key={setting.key}
               value={componentInstance[setting.key]}
               defaultValue={setting.defaultValue}
