@@ -17,7 +17,7 @@ import {
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
@@ -429,15 +429,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         const hasDefault = def.COLUMN_DEFAULT
         const isAuto = !!autoColumns.find(col => col === name)
         const required = !!requiredColumns.find(col => col === name)
-        schema[name] = {
+        schema[name] = generateColumnDefinition({
           autocolumn: isAuto,
-          name: name,
-          constraints: {
-            presence: required && !isAuto && !hasDefault,
-          },
-          ...convertSqlType(def.DATA_TYPE),
+          name,
+          presence: required && !isAuto && !hasDefault,
           externalType: def.DATA_TYPE,
-        }
+        })
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
