@@ -365,7 +365,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         }
 
         // Add options
-        if (enumValues[column.udt_name]) {
+        if (enumValues?.[column.udt_name]) {
           tables[tableName].schema[columnName].constraints = {
             ...constraints,
             inclusion: enumValues[column.udt_name],
