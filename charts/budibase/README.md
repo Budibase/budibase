@@ -87,6 +87,7 @@ couchdb:
     storageClass: "nfs-client"
   adminPassword: admin
 
+services:
   objectStore:
     storageClass: "nfs-client"
   redis:
