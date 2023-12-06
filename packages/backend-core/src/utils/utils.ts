@@ -172,7 +172,7 @@ export function getCookie<T>(ctx: Ctx, name: string) {
     return undefined
   }
 
-  return openJwt(cookie) as T
+  return openJwt<T>(cookie)
 }
 
 /**
