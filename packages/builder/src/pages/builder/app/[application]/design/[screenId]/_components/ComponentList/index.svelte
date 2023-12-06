@@ -34,7 +34,9 @@
   }
 
   const handleMouseover = componentId => {
-    $store.hoverComponentId = componentId
+    if ($store.hoverComponentId !== componentId) {
+      $store.hoverComponentId = componentId
+    }
   }
   const handleMouseout = componentId => {
     if ($store.hoverComponentId === componentId) {
@@ -68,9 +70,9 @@
             }}
             hovering={$store.hoverComponentId ===
               `${$store.selectedScreenId}-screen`}
-            on:mouseover={() =>
+            on:mouseenter={() =>
               handleMouseover(`${$store.selectedScreenId}-screen`)}
-            on:mouseout={() =>
+            on:mouseleave={() =>
               handleMouseout(`${$store.selectedScreenId}-screen`)}
             id={`component-screen`}
             selectedBy={$userSelectedResourceMap[
@@ -95,9 +97,9 @@
             }}
             hovering={$store.hoverComponentId ===
               `${$store.selectedScreenId}-navigation`}
-            on:mouseover={() =>
+            on:mouseenter={() =>
               handleMouseover(`${$store.selectedScreenId}-navigation`)}
-            on:mouseout={() =>
+            on:mouseleave={() =>
               handleMouseout(`${$store.selectedScreenId}-navigation`)}
             id={`component-nav`}
             selectedBy={$userSelectedResourceMap[

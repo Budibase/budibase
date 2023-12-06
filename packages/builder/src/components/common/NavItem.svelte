@@ -73,8 +73,8 @@
   on:dragstart
   on:dragover
   on:drop
-  on:mouseover
-  on:mouseout
+  on:mouseenter
+  on:mouseleave
   on:focus
   on:blur
   on:click={onClick}

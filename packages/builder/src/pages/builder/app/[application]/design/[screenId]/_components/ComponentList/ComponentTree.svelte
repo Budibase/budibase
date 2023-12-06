@@ -91,7 +91,12 @@
   }
 
   const handleMouseover = componentId => {
-    $store.hoverComponentId = componentId
+    if ($store.hoverComponentId !== componentId) {
+      console.log('set', componentId);
+      $store.hoverComponentId = componentId
+    } else {
+      console.log('not set', componentId);
+    }
   }
   const handleMouseout = componentId => {
     if ($store.hoverComponentId === componentId) {
@@ -119,8 +124,8 @@
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
         hovering={$store.hoverComponentId === component._id}
-        on:mouseover={() => handleMouseover(component._id)}
-        on:mouseout={() => handleMouseout(component._id)}
+        on:mouseenter={() => handleMouseover(component._id)}
+        on:mouseleave={() => handleMouseout(component._id)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         iconTooltip={getComponentName(component)}
