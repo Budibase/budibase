@@ -81,13 +81,21 @@ export function createTablesStore() {
     replaceTable(savedTable._id, savedTable)
     select(savedTable._id)
     // make sure tables up to date (related)
-    let tableIdsToFetch = []
+    let newTableIds = []
     for (let column of Object.values(updatedTable?.schema || {})) {
       if (column.type === FIELDS.LINK.type) {
-        tableIdsToFetch.push(column.tableId)
+        newTableIds.push(column.tableId)
       }
     }
-    tableIdsToFetch = [...new Set(tableIdsToFetch)]
+
+    let oldTableIds = []
+    for (let column of Object.values(oldTable?.schema || {})) {
+      if (column.type === FIELDS.LINK.type) {
+        oldTableIds.push(column.tableId)
+      }
+    }
+
+    const tableIdsToFetch = [...new Set([...newTableIds, ...oldTableIds])]
     // too many tables to fetch, just get all
     if (tableIdsToFetch.length > 3) {
       await fetch()
