@@ -183,12 +183,19 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
   }
 }
 
-export function convertSqlType(type: string) {
+export function generateColumnDefinition(config: {
+  externalType: string
+  autocolumn: boolean
+  name: string
+  presence: boolean
+  options?: string[]
+}) {
+  let { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
-  const lcType = type.toLowerCase()
+  const lowerCaseType = externalType.toLowerCase()
   let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (lcType.includes(external)) {
+    if (lowerCaseType.includes(external)) {
       matchingTypes.push({ external, internal })
     }
   }
@@ -198,10 +205,27 @@ export function convertSqlType(type: string) {
       return acc.external.length >= val.external.length ? acc : val
     }).internal
   }
-  const schema: any = { type: foundType }
+
+  const constraints: {
+    presence: boolean
+    inclusion?: string[]
+  } = {
+    presence,
+  }
+  if (foundType === FieldType.OPTIONS) {
+    constraints.inclusion = options
+  }
+
+  const schema: any = {
+    type: foundType,
+    externalType,
+    autocolumn,
+    name,
+    constraints,
+  }
   if (foundType === FieldType.DATETIME) {
-    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
-    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
+    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
+    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
   return schema
 }

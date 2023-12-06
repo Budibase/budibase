@@ -16,7 +16,7 @@ import {
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
@@ -353,24 +353,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.is_generated && column.is_generated !== "NEVER"
         const isAuto: boolean = hasNextVal || identity || isGenerated
         const required = column.is_nullable === "NO"
-        const constraints = {
-          presence: required && !hasDefault && !isGenerated,
-        }
-        tables[tableName].schema[columnName] = {
+        tables[tableName].schema[columnName] = generateColumnDefinition({
           autocolumn: isAuto,
           name: columnName,
-          constraints,
-          ...convertSqlType(column.data_type),
+          presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
-        }
-
-        // Add options
-        if (enumValues?.[column.udt_name]) {
-          tables[tableName].schema[columnName].constraints = {
-            ...constraints,
-            inclusion: enumValues[column.udt_name],
-          }
-        }
+          options: enumValues?.[column.udt_name],
+        })
       }
 
       let finalizedTables = finaliseExternalTables(tables, entities)
