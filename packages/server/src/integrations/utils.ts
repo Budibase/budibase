@@ -67,6 +67,10 @@ const SQL_BOOLEAN_TYPE_MAP = {
   tinyint: FieldType.BOOLEAN,
 }
 
+const SQL_OPTIONS_TYPE_MAP = {
+  "user-defined": FieldType.OPTIONS,
+}
+
 const SQL_MISC_TYPE_MAP = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
@@ -78,6 +82,7 @@ const SQL_TYPE_MAP = {
   ...SQL_STRING_TYPE_MAP,
   ...SQL_BOOLEAN_TYPE_MAP,
   ...SQL_MISC_TYPE_MAP,
+  ...SQL_OPTIONS_TYPE_MAP,
 }
 
 export enum SqlClient {
@@ -187,7 +192,7 @@ export function convertSqlType(type: string) {
       matchingTypes.push({ external, internal })
     }
   }
-  //Set the foundType based the longest match
+  // Set the foundType based the longest match
   if (matchingTypes.length > 0) {
     foundType = matchingTypes.reduce((acc, val) => {
       return acc.external.length >= val.external.length ? acc : val
