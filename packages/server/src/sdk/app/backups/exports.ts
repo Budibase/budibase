@@ -8,13 +8,15 @@ import {
   TABLE_ROW_PREFIX,
   USER_METDATA_PREFIX,
 } from "../../../db/utils"
-import { DB_EXPORT_FILE, STATIC_APP_FILES } from "./constants"
+import {
+  DB_EXPORT_FILE,
+  STATIC_APP_FILES,
+  ATTACHMENT_DIRECTORY,
+} from "./constants"
 import fs from "fs"
 import { join } from "path"
 import env from "../../../environment"
-
-const uuid = require("uuid/v4")
-
+import { v4 as uuid } from "uuid"
 import tar from "tar"
 
 const MemoryStream = require("memorystream")
@@ -150,7 +152,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
       const path = join(tmpPath, file)
 
       // skip the attachments - too big to encrypt
-      if (file !== "attachments") {
+      if (file !== ATTACHMENT_DIRECTORY) {
         await encryption.encryptFile(
           { dir: tmpPath, filename: file },
           config.encryptPassword

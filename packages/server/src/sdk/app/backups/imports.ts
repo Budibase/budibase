@@ -8,15 +8,18 @@ import {
 } from "@budibase/types"
 import { getAutomationParams } from "../../../db/utils"
 import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
+import {
+  DB_EXPORT_FILE,
+  GLOBAL_DB_EXPORT_FILE,
+  ATTACHMENT_DIRECTORY,
+} from "./constants"
 import { downloadTemplate } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
 import sdk from "../../"
-
-const uuid = require("uuid/v4")
-const tar = require("tar")
+import { v4 as uuid } from "uuid"
+import tar from "tar"
 
 type TemplateType = {
   file?: {
@@ -129,7 +132,7 @@ async function decryptFiles(path: string, password: string) {
   try {
     for (let file of fs.readdirSync(path)) {
       const inputPath = join(path, file)
-      if (!inputPath.endsWith("attachments")) {
+      if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
         const outputPath = inputPath.replace(/\.enc$/, "")
         await encryption.decryptFile(inputPath, outputPath, password)
         fs.rmSync(inputPath)
