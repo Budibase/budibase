@@ -149,7 +149,6 @@
   }
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
-
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
@@ -171,7 +170,8 @@
           relationshipPart2 = part2
         }
       }
-    } else if (!savingColumn) {
+    }
+    if (!savingColumn) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
         const columnNumber = extractColumnNumber(columnName)
@@ -529,8 +529,16 @@
 <Layout noPadding gap="S">
   {#if mounted}
     <Input
+      value={editableColumn.name}
       autofocus
-      bind:value={editableColumn.name}
+      on:input={e => {
+        if (
+          !uneditable &&
+          !(linkEditDisabled && editableColumn.type === LINK_TYPE)
+        ) {
+          editableColumn.name = e.target.value
+        }
+      }}
       disabled={uneditable ||
         (linkEditDisabled && editableColumn.type === LINK_TYPE)}
       error={errors?.name}
