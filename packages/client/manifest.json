@@ -6058,10 +6058,14 @@
           {
             "type": "stepConfiguration",
             "key": "steps",
-            "nested": true
+            "nested": true,
+            "labelHidden": true,
+            "resetOn": ["dataSource", "actionType"],
+            "defaultValue": [
+              { "title": null, "desc": null, "fields": null, "buttons": {} }
+            ]
           }
-        ],
-        "resetOn": ["dataSource", "actionType"]
+        ]
       }
     ],
     "actions": [
