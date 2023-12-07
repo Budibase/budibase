@@ -15,6 +15,7 @@ import {
   PasswordResetRequest,
   PasswordResetUpdateRequest,
   GoogleInnerConfig,
+  DatasourceAuthCookie,
 } from "@budibase/types"
 import env from "../../../environment"
 
@@ -148,7 +149,13 @@ export const datasourcePreAuth = async (ctx: any, next: any) => {
 }
 
 export const datasourceAuth = async (ctx: any, next: any) => {
-  const authStateCookie = getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = getCookie<DatasourceAuthCookie>(
+    ctx,
+    Cookie.DatasourceAuth
+  )
+  if (!authStateCookie) {
+    throw new Error("Unable to retrieve datasource authentication cookie")
+  }
   const provider = authStateCookie.provider
   const { middleware } = require(`@budibase/backend-core`)
   const handler = middleware.datasource[provider]

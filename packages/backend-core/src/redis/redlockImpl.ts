@@ -109,7 +109,7 @@ export async function doWithLock<T>(
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
   let lock: Redlock.Lock | undefined
-  let timeout: NodeJS.Timeout | undefined
+  let timeout
   try {
     const name = getLockName(opts)
 

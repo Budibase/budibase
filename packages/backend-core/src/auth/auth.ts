@@ -19,6 +19,7 @@ import {
   GoogleInnerConfig,
   OIDCInnerConfig,
   PlatformLogoutOpts,
+  SessionCookie,
   SSOProviderType,
 } from "@budibase/types"
 import * as events from "../events"
@@ -44,7 +45,6 @@ export const buildAuthMiddleware = authenticated
 export const buildTenancyMiddleware = tenancy
 export const buildCsrfMiddleware = csrf
 export const passport = _passport
-export const jwt = require("jsonwebtoken")
 
 // Strategies
 _passport.use(new LocalStrategy(local.options, local.authenticate))
@@ -191,10 +191,10 @@ export async function platformLogout(opts: PlatformLogoutOpts) {
 
   if (!ctx) throw new Error("Koa context must be supplied to logout.")
 
-  const currentSession = getCookie(ctx, Cookie.Auth)
+  const currentSession = getCookie<SessionCookie>(ctx, Cookie.Auth)
   let sessions = await getSessionsForUser(userId)
 
-  if (keepActiveSession) {
+  if (currentSession && keepActiveSession) {
     sessions = sessions.filter(
       session => session.sessionId !== currentSession.sessionId
     )

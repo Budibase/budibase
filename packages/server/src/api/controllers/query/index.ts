@@ -9,7 +9,7 @@ import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { ConfigType, Query, UserCtx } from "@budibase/types"
+import { ConfigType, Query, UserCtx, SessionCookie } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -113,7 +113,7 @@ function getOAuthConfigCookieId(ctx: UserCtx) {
 }
 
 function getAuthConfig(ctx: UserCtx) {
-  const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
+  const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null

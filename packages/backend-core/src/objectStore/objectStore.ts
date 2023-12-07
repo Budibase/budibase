@@ -305,20 +305,33 @@ export async function retrieveDirectory(bucketName: string, path: string) {
   let writePath = join(budibaseTempDir(), v4())
   fs.mkdirSync(writePath)
   const objects = await listAllObjects(bucketName, path)
-  let fullObjects = await Promise.all(
-    objects.map(obj => retrieve(bucketName, obj.Key!))
+  let streams = await Promise.all(
+    objects.map(obj => getReadStream(bucketName, obj.Key!))
   )
   let count = 0
+  const writePromises: Promise<Error>[] = []
   for (let obj of objects) {
     const filename = obj.Key!
-    const data = fullObjects[count++]
+    const stream = streams[count++]
     const possiblePath = filename.split("/")
-    if (possiblePath.length > 1) {
-      const dirs = possiblePath.slice(0, possiblePath.length - 1)
-      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
+    const dirs = possiblePath.slice(0, possiblePath.length - 1)
+    const possibleDir = join(writePath, ...dirs)
+    if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
+      fs.mkdirSync(possibleDir, { recursive: true })
     }
-    fs.writeFileSync(join(writePath, ...possiblePath), data)
+    const writeStream = fs.createWriteStream(join(writePath, ...possiblePath), {
+      mode: 0o644,
+    })
+    stream.pipe(writeStream)
+    writePromises.push(
+      new Promise((resolve, reject) => {
+        stream.on("finish", resolve)
+        stream.on("error", reject)
+        writeStream.on("error", reject)
+      })
+    )
   }
+  await Promise.all(writePromises)
   return writePath
 }
 
