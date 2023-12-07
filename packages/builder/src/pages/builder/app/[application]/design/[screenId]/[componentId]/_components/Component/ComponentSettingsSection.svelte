@@ -35,7 +35,6 @@
       setting => !setting.section && setting.tag === tag
     )
 
-    // object pointers getting copied here?
     const customSections = settings.filter(
       setting => setting.section && setting.tag === tag
     )
@@ -52,7 +51,6 @@
     ]
 
     // Filter out settings which shouldn't be rendered
-
     newSections.forEach(newSection => {
       newSection.visible = shouldDisplay(instance, newSection)
       if (!newSection.visible) {
