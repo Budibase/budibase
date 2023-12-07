@@ -1,18 +1,22 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
   import Placeholder from "components/app/Placeholder.svelte"
+  import { makePropSafe as safe } from "@budibase/string-templates"
   import { getContext } from "svelte"
 
   export let dataSource
+  export let actionUrl
   export let actionType
   export let size
   export let disabled
   export let fields
   export let title
   export let description
-  export let buttons
-  export let buttonPosition = "bottom"
+  export let saveButtonLabel
+  export let deleteButtonLabel
   export let schema
+  export let repeaterId
+  export let notificationOverride
 
   const FieldTypeToComponentMap = {
     string: "stringfield",
@@ -33,7 +37,74 @@
 
   let formId
 
-  $: renderHeader = buttons || title
+  $: onSave = [
+    {
+      "##eventHandlerType": "Validate Form",
+      parameters: {
+        componentId: formId,
+      },
+    },
+    {
+      "##eventHandlerType": "Save Row",
+      parameters: {
+        providerId: formId,
+        tableId: dataSource?.resourceId,
+        notificationOverride,
+      },
+    },
+    {
+      "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
+    },
+    // Clear a create form once submitted
+    ...(actionType !== "Create"
+      ? []
+      : [
+          {
+            "##eventHandlerType": "Clear Form",
+            parameters: {
+              componentId: formId,
+            },
+          },
+        ]),
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        url: actionUrl,
+      },
+    },
+  ]
+  $: onDelete = [
+    {
+      "##eventHandlerType": "Delete Row",
+      parameters: {
+        confirm: true,
+        tableId: dataSource?.resourceId,
+        rowId: `{{ ${safe(repeaterId)}.${safe("_id")} }}`,
+        revId: `{{ ${safe(repeaterId)}.${safe("_rev")} }}`,
+        notificationOverride,
+      },
+    },
+    {
+      "##eventHandlerType": "Close Screen Modal",
+    },
+    {
+      "##eventHandlerType": "Close Side Panel",
+    },
+    {
+      "##eventHandlerType": "Navigate To",
+      parameters: {
+        url: actionUrl,
+      },
+    },
+  ]
+
+  $: renderDeleteButton = deleteButtonLabel && actionType === "Update"
+  $: renderSaveButton = saveButtonLabel && actionType !== "View"
+  $: renderButtons = renderDeleteButton || renderSaveButton
+  $: renderHeader = renderButtons || title
 
   const getComponentForField = field => {
     const fieldSchemaName = field.field || field.name
@@ -113,14 +184,42 @@
               props={{ text: title || "" }}
               order={0}
             />
-            {#if buttonPosition == "top"}
+            {#if renderButtons}
               <BlockComponent
-                type="buttongroup"
+                type="container"
                 props={{
-                  buttons,
+                  direction: "row",
+                  hAlign: "stretch",
+                  vAlign: "center",
+                  gap: "M",
+                  wrap: true,
                 }}
-                order={0}
-              />
+                order={1}
+              >
+                {#if renderDeleteButton}
+                  <BlockComponent
+                    type="button"
+                    props={{
+                      text: deleteButtonLabel,
+                      onClick: onDelete,
+                      quiet: true,
+                      type: "secondary",
+                    }}
+                    order={0}
+                  />
+                {/if}
+                {#if renderSaveButton}
+                  <BlockComponent
+                    type="button"
+                    props={{
+                      text: saveButtonLabel,
+                      onClick: onSave,
+                      type: "cta",
+                    }}
+                    order={1}
+                  />
+                {/if}
+              </BlockComponent>
             {/if}
           </BlockComponent>
         </BlockComponent>
@@ -146,20 +245,6 @@
         </BlockComponent>
       {/key}
     </BlockComponent>
-    {#if buttonPosition === "bottom"}
-      <BlockComponent
-        type="buttongroup"
-        props={{
-          buttons,
-        }}
-        styles={{
-          normal: {
-            "margin-top": "16",
-          },
-        }}
-        order={1}
-      />
-    {/if}
   </BlockComponent>
 {:else}
   <Placeholder

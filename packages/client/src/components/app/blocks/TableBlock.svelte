@@ -5,7 +5,6 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
-  import { Utils } from "@budibase/frontend-core"
 
   export let title
   export let dataSource
@@ -34,7 +33,6 @@
   export let notificationOverride
 
   const { fetchDatasourceSchema, API } = getContext("sdk")
-  const component = getContext("component")
   const stateKey = `ID_${generate()}`
 
   let formId
@@ -261,25 +259,16 @@
             name="Details form block"
             type="formblock"
             bind:id={detailsFormBlockId}
-            context="form-edit"
             props={{
               dataSource,
-              buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
-                _id: $component.id + "-form-edit",
-                showDeleteButton: deleteLabel !== "",
-                showSaveButton: true,
-                saveButtonLabel: sidePanelSaveLabel || "Save",
-                deleteButtonLabel: deleteLabel,
-                notificationOverride,
-                actionType: "Update",
-                dataSource,
-              }),
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
+              deleteButtonLabel: deleteLabel,
               actionType: "Update",
               rowId: `{{ ${safe("state")}.${safe(stateKey)} }}`,
               fields: sidePanelFields || normalFields,
               title: editTitle,
               labelPosition: "left",
+              notificationOverride,
             }}
           />
         </BlockComponent>
@@ -295,23 +284,16 @@
           <BlockComponent
             name="New row form block"
             type="formblock"
-            context="form-new"
             props={{
               dataSource,
-              buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
-                _id: $component.id + "-form-new",
-                showDeleteButton: false,
-                showSaveButton: true,
-                saveButtonLabel: "Save",
-                notificationOverride,
-                actionType: "Create",
-                dataSource,
-              }),
+              showSaveButton: true,
+              showDeleteButton: false,
+              saveButtonLabel: sidePanelSaveLabel || "Save", //always show
               actionType: "Create",
               fields: sidePanelFields || normalFields,
               title: "Create Row",
               labelPosition: "left",
+              notificationOverride,
             }}
           />
         </BlockComponent>
