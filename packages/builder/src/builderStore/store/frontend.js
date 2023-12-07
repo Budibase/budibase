@@ -23,6 +23,7 @@ import {
   getComponentSettings,
   makeComponentUnique,
   findComponentPath,
+  findComponentType,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
@@ -701,6 +702,16 @@ export const getFrontendStore = () => {
           return null
         }
 
+        // Find all existing components of this type so that we can give this
+        // component a unique name
+        const screen = get(selectedScreen).props
+        const otherComponents = findAllMatchingComponents(
+          screen,
+          x => x._component === definition.component && x._id !== screen._id
+        )
+        let name = definition.friendlyName || definition.name
+        name = `${name} ${otherComponents.length + 1}`
+
         // Generate basic component structure
         let instance = {
           _id: Helpers.uuid(),
@@ -710,7 +721,7 @@ export const getFrontendStore = () => {
             hover: {},
             active: {},
           },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          _instanceName: name,
           ...presetProps,
         }
 
