@@ -1,6 +1,5 @@
 <script>
   import { getContext } from "svelte"
-  import { Icon } from "@budibase/bbui"
 
   const component = getContext("component")
   const { builderStore, componentStore } = getContext("sdk")
