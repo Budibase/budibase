@@ -19,6 +19,8 @@
   export let includeHidden = false
   export let tag
 
+  let sections = []
+
   $: sections = getSections(
     componentInstance,
     componentDefinition,
@@ -32,10 +34,12 @@
     const generalSettings = settings.filter(
       setting => !setting.section && setting.tag === tag
     )
+
+    // object pointers getting copied here?
     const customSections = settings.filter(
       setting => setting.section && setting.tag === tag
     )
-    let sections = [
+    let newSections = [
       ...(generalSettings?.length
         ? [
             {
@@ -48,12 +52,13 @@
     ]
 
     // Filter out settings which shouldn't be rendered
-    sections.forEach(section => {
-      section.visible = shouldDisplay(instance, section)
-      if (!section.visible) {
+
+    newSections.forEach(newSection => {
+      newSection.visible = shouldDisplay(instance, newSection)
+      if (!newSection.visible) {
         return
       }
-      section.settings.forEach(setting => {
+      newSection.settings.forEach(setting => {
         setting.visible = canRenderControl(
           instance,
           setting,
@@ -61,12 +66,12 @@
           includeHidden
         )
       })
-      section.visible =
-        section.name === "General" ||
-        section.settings.some(setting => setting.visible)
+      newSection.visible =
+        newSection.name === "General" ||
+        newSection.settings.some(setting => setting.visible)
     })
 
-    return sections
+    return newSections
   }
 
   const updateSetting = async (setting, value) => {
@@ -151,7 +156,7 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      show={section.collapsed !== true}
+      initiallyShow={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">
