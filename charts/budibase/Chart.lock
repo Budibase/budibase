@@ -1,9 +1,6 @@
 dependencies:
 - name: couchdb
   repository: https://apache.github.io/couchdb-helm
-  version: 3.3.4
-- name: ingress-nginx
-  repository: https://kubernetes.github.io/ingress-nginx
-  version: 4.0.13
-digest: sha256:20892705c2d8e64c98257d181063a514ac55013e2b43399a6e54868a97f97845
-generated: "2021-12-30T18:55:30.878411Z"
+  version: 4.3.0
+digest: sha256:94449a7f195b186f5af33ec5aa66d58b36bede240fae710f021ca87837b30606
+generated: "2023-11-20T17:43:02.777596Z"

@@ -99,11 +99,6 @@ jobs:
           else
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
           fi
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
 
   test-worker:
     runs-on: ubuntu-latest
@@ -129,12 +124,6 @@ jobs:
             yarn test --scope=@budibase/worker
           fi
 
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
-
   test-server:
     runs-on: ubuntu-latest
     steps:
@@ -158,12 +147,6 @@ jobs:
           else
             yarn test --scope=@budibase/server
           fi
-
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
 
   test-pro:
     runs-on: ubuntu-latest
