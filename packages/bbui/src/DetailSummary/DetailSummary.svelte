@@ -5,7 +5,7 @@
   export let initiallyShow = false
   export let collapsible = true
 
-  let show = initiallyShow;
+  let show = initiallyShow
 
   const onHeaderClick = () => {
     if (!collapsible) {
