@@ -56,6 +56,7 @@ import {
 
 import API from "./api"
 import { cloneDeep } from "lodash"
+import jwt, { Secret } from "jsonwebtoken"
 
 mocks.licenses.init(pro)
 
@@ -137,6 +138,10 @@ class TestConfiguration {
   }
 
   getAppId() {
+    if (!this.appId) {
+      throw "appId has not been initialised properly"
+    }
+
     return this.appId
   }
 
@@ -387,7 +392,7 @@ class TestConfiguration {
         sessionId: "sessionid",
         tenantId: this.getTenantId(),
       }
-      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -408,7 +413,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId,
     }
-    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
     const headers: any = {
       Accept: "application/json",
@@ -510,7 +515,7 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    this.app = await context.doInAppContext(null, async () => {
+    this.app = await context.doInTenant(this.tenantId!, async () => {
       const app = await this._req(
         { name: appName },
         null,
@@ -519,7 +524,7 @@ class TestConfiguration {
       this.appId = app.appId!
       return app
     })
-    return await context.doInAppContext(this.appId, async () => {
+    return await context.doInAppContext(this.getAppId(), async () => {
       // create production app
       this.prodApp = await this.publish()
 
@@ -817,7 +822,7 @@ class TestConfiguration {
   }
 
   async getAutomationLogs() {
-    return context.doInAppContext(this.appId, async () => {
+    return context.doInAppContext(this.getAppId(), async () => {
       const now = new Date()
       return await pro.sdk.automations.logs.logSearch({
         startDate: new Date(now.getTime() - 100000).toISOString(),
