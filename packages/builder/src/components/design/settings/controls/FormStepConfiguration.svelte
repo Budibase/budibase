@@ -31,6 +31,7 @@
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
   $: emitCurrentStep(currentStep)
   $: sectionName = getSectionName($multiStepStore)
+  $: stepConfigInstance = buildPseudoInstance(value[currentStep] || {})
   $: stepDef = {
     settings: [
       {
@@ -39,7 +40,7 @@
         settings: [
           {
             type: "formStepControls",
-            label: "Multi-steps",
+            label: "Steps",
             key: "steps",
           },
           {
@@ -88,40 +89,32 @@
   }
 
   const addStep = () => {
-    const nextStep = currentStep + 1
-    dispatch("change", [
-      ...value.slice(0, nextStep),
-      {},
-      ...value.slice(nextStep),
-    ])
+    dispatch("change", value.toSpliced(currentStep + 1, 0, {}))
     multiStepStore.update(state => ({
       ...state,
-      currentStep: nextStep,
+      currentStep: currentStep + 1,
     }))
   }
 
   const removeStep = () => {
     dispatch("change", value.toSpliced(currentStep, 1))
-    const newStep = Math.min(currentStep, stepCount - 2)
     multiStepStore.update(state => ({
       ...state,
-      currentStep: newStep,
+      currentStep: Math.min(currentStep, stepCount - 2),
     }))
   }
 
   const previousStep = () => {
-    const prevStepIdx = Math.max(currentStep - 1, 0)
     multiStepStore.update(state => ({
       ...state,
-      currentStep: prevStepIdx,
+      currentStep: Math.max(currentStep - 1, 0),
     }))
   }
 
   const nextStep = () => {
-    const nextStepIdx = currentStep + 1
     multiStepStore.update(state => ({
       ...state,
-      currentStep: Math.min(nextStepIdx, value.length - 1),
+      currentStep: Math.min(currentStep + 1, value.length - 1),
     }))
   }
 
@@ -130,9 +123,7 @@
       ...value[currentStep],
       [field.key]: val,
     }
-    let newValue = value.slice()
-    newValue[currentStep] = newStep
-    dispatch("change", newValue)
+    dispatch("change", value.toSpliced(currentStep, 1, newStep))
   }
 
   const handleStepAction = action => {
@@ -162,18 +153,17 @@
   const buildPseudoInstance = ({ buttons, fields, title, desc }) => {
     return {
       _id: Helpers.uuid(),
-      _component: "@budibase/standard-components/multistepformblock-step",
+      _component: "@budibase/standard-components/multistepformblockstep",
+      _instanceName: `Step ${currentStep + 1}`,
       buttons: buttons || defaultButtonConfig,
       fields,
       title,
       desc,
+
+      // Needed for field configuration
       dataSource,
-      step: currentStep + 1,
-      _instanceName: `Step ${currentStep + 1}`,
     }
   }
-
-  $: stepConfigInstance = buildPseudoInstance(value[currentStep] || {})
 </script>
 
 <div class="nested-section">

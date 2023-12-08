@@ -15,15 +15,17 @@
 </script>
 
 {#if stepCount === 1}
-  <ActionButton
-    icon="MultipleAdd"
-    secondary
-    on:click={() => {
-      stepAction("addStep")
-    }}
-  >
-    Add Step
-  </ActionButton>
+  <div class="stretch">
+    <ActionButton
+      icon="MultipleAdd"
+      secondary
+      on:click={() => {
+        stepAction("addStep")
+      }}
+    >
+      Add Step
+    </ActionButton>
+  </div>
 {:else}
   <div class="step-actions">
     <ActionButton
@@ -65,11 +67,13 @@
 {/if}
 
 <style>
+  .stretch :global(.spectrum-ActionButton) {
+    width: 100%;
+  }
   .step-actions {
     display: flex;
     gap: var(--spacing-s);
   }
-
   .step-actions :global(.spectrum-ActionButton) {
     height: 32px;
   }
