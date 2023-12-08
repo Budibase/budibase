@@ -35,6 +35,7 @@ import {
   ConfigType,
 } from "@budibase/types"
 import API from "./api"
+import jwt, { Secret } from "jsonwebtoken"
 
 class TestConfiguration {
   server: any
@@ -209,7 +210,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = auth.jwt.sign(authToken, coreEnv.JWT_SECRET)
+    const authCookie = jwt.sign(authToken, coreEnv.JWT_SECRET as Secret)
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
@@ -327,7 +328,7 @@ class TestConfiguration {
   // CONFIGS - OIDC
 
   getOIDConfigCookie(configId: string) {
-    const token = auth.jwt.sign(configId, coreEnv.JWT_SECRET)
+    const token = jwt.sign(configId, coreEnv.JWT_SECRET as Secret)
     return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
   }
 
