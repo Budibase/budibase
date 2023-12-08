@@ -49,12 +49,12 @@
     ]
 
     // Filter out settings which shouldn't be rendered
-    sections.forEach(newSection => {
-      newSection.visible = shouldDisplay(instance, newSection)
-      if (!newSection.visible) {
+    sections.forEach(section => {
+      section.visible = shouldDisplay(instance, section)
+      if (!section.visible) {
         return
       }
-      newSection.settings.forEach(setting => {
+      section.settings.forEach(setting => {
         setting.visible = canRenderControl(
           instance,
           setting,
@@ -62,9 +62,9 @@
           includeHidden
         )
       })
-      newSection.visible =
-        newSection.name === "General" ||
-        newSection.settings.some(setting => setting.visible)
+      section.visible =
+        section.name === "General" ||
+        section.settings.some(setting => setting.visible)
     })
 
     return sections
