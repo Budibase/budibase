@@ -113,9 +113,9 @@
       "dependsOnFeature": "state"
     },
     {
-      "name": "Upload File to S3",
+      "name": "Upload File",
       "type": "data",
-      "component": "S3Upload",
+      "component": "FileUpload",
       "context": [
         {
           "label": "File URL",

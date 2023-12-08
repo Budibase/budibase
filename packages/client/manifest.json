@@ -4490,7 +4490,7 @@
       }
     ]
   },
-  "s3upload": {
+  "fileupload": {
     "name": "File Upload",
     "icon": "UploadToCloud",
     "styles": ["size"],
@@ -4501,7 +4501,7 @@
     },
     "settings": [
       {
-        "type": "field/s3",
+        "type": "field/upload",
         "label": "Field",
         "key": "field",
         "required": true
@@ -4512,7 +4512,7 @@
         "key": "label"
       },
       {
-        "type": "dataSource/s3",
+        "type": "dataSource/objectStore",
         "label": "Object store",
         "key": "datasourceId",
         "info": "This component can't be used with S3 datasources that use custom endpoints"

@@ -6,12 +6,12 @@
   export let parameters
 
   $: components = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("s3upload")
+    component._component.endsWith("fileupload")
   )
 </script>
 
 <div class="root">
-  <Label small>S3 Upload Component</Label>
+  <Label small>File Upload Component</Label>
   <Select
     bind:value={parameters.componentId}
     options={components}
