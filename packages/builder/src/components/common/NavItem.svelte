@@ -23,6 +23,7 @@
   export let showTooltip = false
   export let selectedBy = null
   export let compact = false
+  export let hovering = false
 
   const scrollApi = getContext("scroll")
   const dispatch = createEventDispatcher()
@@ -61,6 +62,7 @@
 
 <div
   class="nav-item"
+  class:hovering
   class:border
   class:selected
   class:withActions
@@ -71,6 +73,8 @@
   on:dragstart
   on:dragover
   on:drop
+  on:mouseenter
+  on:mouseleave
   on:click={onClick}
   ondragover="return false"
   ondragenter="return false"
@@ -152,15 +156,17 @@
     --avatars-background: var(--spectrum-global-color-gray-200);
   }
   .nav-item.selected {
-    background-color: var(--spectrum-global-color-gray-300);
+    background-color: var(--spectrum-global-color-gray-300) !important;
     --avatars-background: var(--spectrum-global-color-gray-300);
     color: var(--ink);
   }
-  .nav-item:hover {
-    background-color: var(--spectrum-global-color-gray-300);
+  .nav-item:hover,
+  .hovering {
+    background-color: var(--spectrum-global-color-gray-200);
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
-  .nav-item:hover .actions {
+  .nav-item:hover .actions,
+  .hovering .actions {
     visibility: visible;
   }
   .nav-item-content {
