@@ -69,7 +69,7 @@ services:
       MINIO_BROWSER: "off"
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
       interval: 30s
       timeout: 20s
       retries: 3
