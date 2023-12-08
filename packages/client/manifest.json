@@ -6038,6 +6038,11 @@
     "icon": "AssetsAdded",
     "block": true,
     "hasChildren": false,
+    "size": {
+      "width": 400,
+      "height": 400
+    },
+    "styles": ["size"],
     "settings": [
       {
         "type": "table",
