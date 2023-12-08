@@ -4,7 +4,6 @@
   import { getDatasourceForProvider } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
-  import FormStepControls from "./FormStepControls.svelte"
   import { writable } from "svelte/store"
   import { buildMultiStepFormBlockButtonConfig } from "@budibase/frontend-core/src/utils/utils"
 
@@ -14,61 +13,70 @@
   export let bindings
 
   const dispatch = createEventDispatcher()
-
-  let stepState = [...(value || [])]
-
-  const stepStore = writable({
-    stepsCount: stepState?.length || 1,
+  const multiStepStore = writable({
+    stepCount: value?.length ?? 0,
     currentStep: 0,
   })
 
-  setContext("step-form-block", stepStore)
+  setContext("multi-step-form-block", multiStepStore)
 
-  $: ({ currentStep } = $stepStore)
-  $: if (stepState.length) {
-    stepStore.update(state => ({
-      ...state,
-      stepsCount: stepState.length || 0,
-    }))
-  }
+  $: currentStep = $multiStepStore.currentStep
+  $: stepCount = value?.length || 0
+  $: multiStepStore.update(state => ({ ...state, stepCount }))
   $: defaultButtonConfig = buildMultiStepFormBlockButtonConfig({
     _id: componentInstance._id,
-    stepCount: value?.length,
-    currentStep,
+    stepCount: stepCount,
+    currentStep: currentStep,
   })
+  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: emitCurrentStep(currentStep)
+  $: sectionName = getSectionName($multiStepStore)
+  $: stepDef = {
+    settings: [
+      {
+        section: true,
+        name: sectionName,
+        settings: [
+          {
+            type: "formStepControls",
+            label: "Multi-steps",
+            key: "steps",
+          },
+          {
+            type: "text",
+            label: "Title",
+            key: "title",
+            nested: true,
+          },
+          {
+            type: "text",
+            label: "Description",
+            key: "desc",
+            nested: true,
+          },
+          {
+            type: "fieldConfiguration",
+            key: "fields",
+            nested: true,
+          },
+          {
+            type: "buttonConfiguration",
+            label: "Buttons",
+            key: "buttons",
+            wide: true,
+            nested: true,
+          },
+        ],
+      },
+    ],
+  }
 
-  // Step Definition Settings
-  let compSettings = [
-    {
-      customType: "formStepControl",
-      label: "Multi-steps",
-      key: "steps",
-    },
-    {
-      type: "text",
-      label: "Title",
-      key: "title",
-      nested: true,
-    },
-    {
-      type: "text",
-      label: "Description",
-      key: "desc",
-      nested: true,
-    },
-    {
-      type: "fieldConfiguration",
-      key: "fields",
-      nested: true,
-    },
-    {
-      type: "buttonConfiguration",
-      label: "Buttons",
-      key: "buttons",
-      wide: true,
-      nested: true,
-    },
-  ]
+  const getSectionName = ({ stepCount, currentStep }) => {
+    if (stepCount <= 1) {
+      return "Details"
+    }
+    return `Details (Step ${currentStep + 1}/${stepCount})`
+  }
 
   const emitCurrentStep = step => {
     store.actions.preview.sendEvent("builder-meta", {
@@ -79,70 +87,52 @@
     })
   }
 
-  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-
-  $: stepDef = {
-    component: "@budibase/standard-components/multistepformblock-step",
-    name: "Formblock step",
-    settings: compSettings,
-  }
-
   const addStep = () => {
-    const newStepIdx = currentStep + 1
-
-    stepState = [
-      ...stepState.slice(0, newStepIdx),
+    const nextStep = currentStep + 1
+    dispatch("change", [
+      ...value.slice(0, nextStep),
       {},
-      ...stepState.slice(newStepIdx),
-    ]
-
-    stepStore.update(state => ({
+      ...value.slice(nextStep),
+    ])
+    multiStepStore.update(state => ({
       ...state,
-      currentStep: newStepIdx,
+      currentStep: nextStep,
     }))
-
-    dispatch("change", stepState)
-    emitCurrentStep(newStepIdx)
   }
 
   const removeStep = () => {
-    const clone = stepState.map(x => x)
-    clone.splice(currentStep, 1)
-
-    const targetStepIdx = Math.max(currentStep - 1, 0)
-    stepState = clone.map(x => x)
-
-    stepStore.update(state => ({
+    dispatch("change", value.toSpliced(currentStep, 1))
+    const newStep = Math.min(currentStep, stepCount - 2)
+    multiStepStore.update(state => ({
       ...state,
-      currentStep: targetStepIdx,
+      currentStep: newStep,
     }))
-
-    dispatch("change", stepState)
-    emitCurrentStep(targetStepIdx)
   }
 
   const previousStep = () => {
     const prevStepIdx = Math.max(currentStep - 1, 0)
-    stepStore.update(state => ({
+    multiStepStore.update(state => ({
       ...state,
       currentStep: prevStepIdx,
     }))
-    emitCurrentStep(prevStepIdx)
   }
 
   const nextStep = () => {
     const nextStepIdx = currentStep + 1
-    stepStore.update(state => ({
+    multiStepStore.update(state => ({
       ...state,
-      currentStep: Math.min(nextStepIdx, stepState.length - 1),
+      currentStep: Math.min(nextStepIdx, value.length - 1),
     }))
-    emitCurrentStep(nextStepIdx)
   }
 
   const updateStep = (field, val) => {
-    stepState[currentStep] ||= {}
-    stepState[currentStep][field.key] = val
-    dispatch("change", stepState)
+    const newStep = {
+      ...value[currentStep],
+      [field.key]: val,
+    }
+    let newValue = value.slice()
+    newValue[currentStep] = newStep
+    dispatch("change", newValue)
   }
 
   const handleStepAction = action => {
@@ -158,9 +148,6 @@
         break
       case "previousStep":
         previousStep()
-        break
-      default:
-        console.log("Nothing")
     }
   }
 
@@ -186,32 +173,27 @@
     }
   }
 
-  $: stepConfigInstance = buildPseudoInstance(stepState?.[currentStep] || {})
+  $: stepConfigInstance = buildPseudoInstance(value[currentStep] || {})
 </script>
 
-<span class="settings-wrap">
+<div class="nested-section">
   <ComponentSettingsSection
     includeHidden
     componentInstance={stepConfigInstance}
     componentDefinition={stepDef}
     onUpdateSetting={processUpdate}
-    getCustomComponent={type => {
-      const types = { formStepControl: FormStepControls }
-      return types[type]
-    }}
-    getCustomSectionTitle={section => {
-      console.log(section.name)
-      if (section.name === "Details" && stepState?.length > 0) {
-        return `Details (${currentStep}/${stepState?.length})`
-      }
-      return section.name
-    }}
-    showSectionTitle={false}
     showInstanceName={false}
     isScreen={false}
-    noPadding={true}
     nested={true}
     {bindings}
     {componentBindings}
   />
-</span>
+</div>
+
+<style>
+  .nested-section {
+    margin: 0 calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl))
+      calc(-1 * var(--spacing-xl));
+    border-top: var(--border-light);
+  }
+</style>

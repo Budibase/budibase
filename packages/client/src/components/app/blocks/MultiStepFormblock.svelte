@@ -102,7 +102,7 @@
         buttons ||
         Utils.buildMultiStepFormBlockButtonConfig({
           _id: $component.id,
-          stepCount: steps?.length,
+          stepCount: steps?.length ?? 0,
           currentStep: idx,
         }),
     }

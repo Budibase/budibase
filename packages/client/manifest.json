@@ -6057,18 +6057,12 @@
         "defaultValue": "Create"
       },
       {
-        "name": "Details",
-        "section": true,
-        "settings": [
-          {
-            "type": "stepConfiguration",
-            "key": "steps",
-            "nested": true,
-            "labelHidden": true,
-            "resetOn": ["dataSource", "actionType"],
-            "defaultValue": [{}]
-          }
-        ]
+        "type": "stepConfiguration",
+        "key": "steps",
+        "nested": true,
+        "labelHidden": true,
+        "resetOn": ["dataSource", "actionType"],
+        "defaultValue": [{}]
       }
     ],
     "actions": [
