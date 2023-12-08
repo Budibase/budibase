@@ -3,6 +3,7 @@
   import Block from "components/Block.svelte"
   import { getContext } from "svelte"
   import { builderStore } from "stores"
+  import { Utils } from "@budibase/frontend-core"
 
   export let componentInstance
   export let steps
@@ -91,13 +92,19 @@
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }
 
-  $: stepProps = steps?.map(step => {
+  $: stepProps = steps?.map((step, idx) => {
     const { title, desc, fields, buttons } = step
     return {
       fields: getDefaultFields(fields || [], schema),
       title,
       desc,
-      buttons,
+      buttons:
+        buttons ||
+        Utils.buildMultiStepFormBlockButtonConfig({
+          _id: $component.id,
+          stepCount: steps?.length,
+          currentStep: idx,
+        }),
     }
   })
 </script>
@@ -118,6 +125,13 @@
         <BlockComponent
           type="formstep"
           props={{ step: idx + 1, _instanceName: `Step ${idx + 1}` }}
+          styles={{
+            normal: {
+              width: "600px",
+              "margin-left": "auto",
+              "margin-right": "auto",
+            },
+          }}
         >
           <BlockComponent
             type="container"
@@ -157,6 +171,11 @@
             <BlockComponent
               type="buttongroup"
               props={{ buttons: stepProps?.[idx]?.buttons }}
+              styles={{
+                normal: {
+                  "margin-top": "16px",
+                },
+              }}
             />
           </BlockComponent>
         </BlockComponent>
