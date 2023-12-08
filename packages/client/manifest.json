@@ -6060,7 +6060,8 @@
             "key": "steps",
             "nested": true,
             "labelHidden": true,
-            "resetOn": ["dataSource", "actionType"]
+            "resetOn": ["dataSource", "actionType"],
+            "defaultValue": [{}]
           }
         ]
       }

@@ -265,7 +265,7 @@
             props={{
               dataSource,
               buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
+              buttons: Utils.buildFormBlockButtonConfig({
                 _id: $component.id + "-form-edit",
                 showDeleteButton: deleteLabel !== "",
                 showSaveButton: true,
@@ -299,7 +299,7 @@
             props={{
               dataSource,
               buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
+              buttons: Utils.buildFormBlockButtonConfig({
                 _id: $component.id + "-form-new",
                 showDeleteButton: false,
                 showSaveButton: true,

@@ -106,7 +106,7 @@
     notificationOverride,
     buttons:
       buttons ||
-      Utils.buildDynamicButtonConfig({
+      Utils.buildFormBlockButtonConfig({
         _id: $component.id,
         showDeleteButton,
         showSaveButton,

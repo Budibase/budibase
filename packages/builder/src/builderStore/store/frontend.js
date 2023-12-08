@@ -609,12 +609,12 @@ export const getFrontendStore = () => {
           // Use default config if the 'buttons' prop has never been initialised
           if (!("buttons" in enrichedComponent)) {
             enrichedComponent["buttons"] =
-              Utils.buildDynamicButtonConfig(enrichedComponent)
+              Utils.buildFormBlockButtonConfig(enrichedComponent)
             migrated = true
           } else if (enrichedComponent["buttons"] == null) {
             // Ignore legacy config if 'buttons' has been reset by 'resetOn'
             const { _id, actionType, dataSource } = enrichedComponent
-            enrichedComponent["buttons"] = Utils.buildDynamicButtonConfig({
+            enrichedComponent["buttons"] = Utils.buildFormBlockButtonConfig({
               _id,
               actionType,
               dataSource,

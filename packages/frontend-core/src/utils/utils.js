@@ -116,7 +116,7 @@ export const domDebounce = callback => {
  *
  * @param {any} props
  * */
-export const buildDynamicButtonConfig = props => {
+export const buildFormBlockButtonConfig = props => {
   const {
     _id,
     actionType,
@@ -130,7 +130,6 @@ export const buildDynamicButtonConfig = props => {
   } = props || {}
 
   if (!_id) {
-    console.log("MISSING ID")
     return
   }
   const formId = `${_id}-form`
@@ -240,4 +239,57 @@ export const buildDynamicButtonConfig = props => {
   }
 
   return defaultButtons
+}
+
+export const buildMultiStepFormBlockButtonConfig = props => {
+  const { _id, steps, currentStep } = props || {}
+
+  // Sanity check
+  if (!_id || !steps?.length) {
+    return
+  }
+
+  let buttons = []
+
+  // Add previous step button if we aren't the first step
+  buttons.push({
+    _id: Helpers.uuid(),
+    _component: "@budibase/standard-components/button",
+    _instanceName: Helpers.uuid(),
+    text: "Back",
+    type: "secondary",
+    size: "M",
+    disabled: currentStep === 0,
+    onClick: [
+      {
+        parameters: {
+          type: "prev",
+          componentId: `${_id}-form`,
+        },
+        "##eventHandlerType": "Change Form Step",
+      },
+    ],
+  })
+
+  // Add a next button if we aren't the last step
+  buttons.push({
+    _id: Helpers.uuid(),
+    _component: "@budibase/standard-components/button",
+    _instanceName: Helpers.uuid(),
+    text: "Next",
+    type: "cta",
+    size: "M",
+    disabled: currentStep === steps.length - 1,
+    onClick: [
+      {
+        parameters: {
+          type: "next",
+          componentId: `${_id}-form`,
+        },
+        "##eventHandlerType": "Change Form Step",
+      },
+    ],
+  })
+
+  return buttons
 }

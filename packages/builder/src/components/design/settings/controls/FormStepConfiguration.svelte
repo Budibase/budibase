@@ -1,18 +1,16 @@
 <script>
-  // import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  // import { getComponentForSetting } from "components/design/settings/componentSettings"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, setContext } from "svelte"
   import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
   import { getDatasourceForProvider } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
   import FormStepControls from "./FormStepControls.svelte"
-  import { setContext } from "svelte"
   import { writable } from "svelte/store"
+  import { buildMultiStepFormBlockButtonConfig } from "@budibase/frontend-core/src/utils/utils"
 
   export let componentInstance
   export let componentBindings
-  export let value //steps
+  export let value
   export let bindings
 
   const dispatch = createEventDispatcher()
@@ -27,14 +25,17 @@
   setContext("step-form-block", stepStore)
 
   $: ({ currentStep } = $stepStore)
-  $: lastIdx = stepState?.length - 1
-
   $: if (stepState.length) {
     stepStore.update(state => ({
       ...state,
       stepsCount: stepState.length || 0,
     }))
   }
+  $: defaultButtonConfig = buildMultiStepFormBlockButtonConfig({
+    _id: componentInstance._id,
+    steps: value,
+    currentStep,
+  })
 
   // Step Definition Settings
   let compSettings = [
@@ -171,69 +172,11 @@
     }
   }
 
-  // Multistep button generation
-  // This kind of behaviour should be shifted to frontend-core
-  /*
-    Also, look at this unicorn
-    	\
-			 \_
-			 /.(((
-			(,/"(((__,--.
-			    \  ) _( /{
-			     || "  ||
-			     ||    ||
-			     ''    ''
-   */
-  const generateButtons = () => {
-    const buttons = []
-
-    if (stepState.length > 1) {
-      if (currentStep > 0) {
-        buttons.push({
-          _id: Helpers.uuid(),
-          _component: "@budibase/standard-components/button",
-          _instanceName: Helpers.uuid(),
-          text: "Back",
-          type: "secondary",
-          size: "M",
-          onClick: [
-            {
-              parameters: {
-                type: "prev",
-                componentId: `${componentInstance._id}-form`,
-              },
-              "##eventHandlerType": "Change Form Step",
-            },
-          ],
-        })
-      }
-      buttons.push({
-        _id: Helpers.uuid(),
-        _component: "@budibase/standard-components/button",
-        _instanceName: Helpers.uuid(),
-        text: "Next",
-        type: "cta",
-        size: "M",
-        disabled: lastIdx === currentStep,
-        onClick: [
-          {
-            parameters: {
-              type: "next",
-              componentId: `${componentInstance._id}-form`,
-            },
-            "##eventHandlerType": "Change Form Step",
-          },
-        ],
-      })
-    }
-    return buttons
-  }
-
   const buildPseudoInstance = ({ buttons, fields, title, desc }) => {
     return {
       _id: Helpers.uuid(),
       _component: "@budibase/standard-components/multistepformblock-step",
-      buttons: buttons || generateButtons(),
+      buttons: buttons || defaultButtonConfig,
       fields,
       title,
       desc,
