@@ -282,6 +282,12 @@ export const buildMultiStepFormBlockButtonConfig = props => {
     disabled: currentStep === stepCount - 1,
     onClick: [
       {
+        "##eventHandlerType": "Validate Form",
+        parameters: {
+          componentId: `${_id}-form`,
+        },
+      },
+      {
         parameters: {
           type: "next",
           componentId: `${_id}-form`,
