@@ -19,14 +19,7 @@ export class AttachmentCleanup {
     }
   }
 
-  static async tableDelete(table: Table, rows: Row[]) {
-    return AttachmentCleanup.tableUpdate(table, rows, { deleting: true })
-  }
-
-  /**
-   * Cleanup attachments when updating or deleting a table.
-   */
-  static async tableUpdate(
+  private static async tableChange(
     table: Table,
     rows: Row[],
     opts: { oldTable?: Table; rename?: RenameColumn; deleting?: boolean }
@@ -51,6 +44,21 @@ export class AttachmentCleanup {
       }
       return files
     })
+  }
+
+  static async tableDelete(table: Table, rows: Row[]) {
+    return AttachmentCleanup.tableChange(table, rows, { deleting: true })
+  }
+
+  /**
+   * Cleanup attachments when updating a table.
+   */
+  static async tableUpdate(
+    table: Table,
+    rows: Row[],
+    opts: { oldTable?: Table; rename?: RenameColumn }
+  ) {
+    return AttachmentCleanup.tableChange(table, rows, opts)
   }
 
   /**
