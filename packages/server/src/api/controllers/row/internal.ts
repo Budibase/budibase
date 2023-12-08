@@ -79,7 +79,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     table,
   })) as Row
   // check if any attachments removed
-  await AttachmentCleanup.rowUpdate(table, row, oldRow)
+  await AttachmentCleanup.rowUpdate(table, { row, oldRow })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx

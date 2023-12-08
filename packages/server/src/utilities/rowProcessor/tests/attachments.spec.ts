@@ -91,7 +91,10 @@ describe("attachment cleanup", () => {
   it("should handle row updates", async () => {
     const updatedRow = row()
     delete updatedRow.attach
-    await AttachmentCleanup.rowUpdate(table(), updatedRow, row())
+    await AttachmentCleanup.rowUpdate(table(), {
+      row: updatedRow,
+      oldRow: row(),
+    })
     expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
   })
 
@@ -101,7 +104,7 @@ describe("attachment cleanup", () => {
   })
 
   it("shouldn't cleanup attachments if row not updated", async () => {
-    await AttachmentCleanup.rowUpdate(table(), row(), row())
+    await AttachmentCleanup.rowUpdate(table(), { row: row(), oldRow: row() })
     expect(mockedDeleteFiles).not.toBeCalled()
   })
 })
