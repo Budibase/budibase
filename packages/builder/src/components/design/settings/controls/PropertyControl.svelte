@@ -148,6 +148,12 @@
   .control {
     position: relative;
   }
+  .text {
+    font-size: var(--spectrum-global-dimension-font-size-75);
+    color: var(--grey-6);
+    grid-column: 2 / 2;
+  }
+
   .property-control.wide .control {
     flex: 1;
   }
@@ -160,12 +166,10 @@
   .property-control.wide > * {
     width: 100%;
   }
-  .text {
-    font-size: var(--spectrum-global-dimension-font-size-75);
-    color: var(--grey-6);
-    grid-column: 2 / 2;
-  }
   .property-control.wide .text {
     grid-column: 1 / -1;
+  }
+  .property-control.wide .label {
+    margin-bottom: -8px;
   }
 </style>
