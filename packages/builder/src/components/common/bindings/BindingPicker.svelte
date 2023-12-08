@@ -1,6 +1,6 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { convertToJS } from "@budibase/string-templates"
+  import { convertToJS, processStringSync } from "@budibase/string-templates"
   import { Input, Layout, ActionButton, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "constants/completions"
 
@@ -9,6 +9,7 @@
   export let bindings
   export let mode
   export let allowHelpers
+  export let context = null
 
   let search = ""
   let popover
@@ -95,6 +96,9 @@
         {#if hoverTarget.example}
           <pre class="helper__example">{hoverTarget.example}</pre>
         {/if}
+        {#if hoverTarget.val}
+          <pre>{hoverTarget.val}</pre>
+        {/if}
       </div>
     </Layout>
   </Popover>
@@ -165,13 +169,14 @@
               <li
                 class="binding"
                 on:mouseenter={e => {
+                  const hbs = `{{ ${binding.runtimeBinding} }}`
+                  const val = processStringSync(hbs, context)
+                  console.log(binding.runtimeBinding, val)
                   popoverAnchor = e.target
-                  if (!binding.description) {
-                    return
-                  }
                   hoverTarget = {
                     title: binding.display?.name || binding.fieldSchema?.name,
                     description: binding.description,
+                    val,
                   }
                   popover.show()
                   e.stopPropagation()

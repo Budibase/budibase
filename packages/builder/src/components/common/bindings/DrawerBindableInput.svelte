@@ -4,7 +4,6 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
-
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
   import { isJSBinding } from "@budibase/string-templates"
@@ -22,8 +21,10 @@
   export let updateOnChange = true
   export let drawerLeft
   export let disableBindings = false
+  export let context = null
 
   const dispatch = createEventDispatcher()
+
   let bindingDrawer
   let valid = true
   let currentVal = value
@@ -95,6 +96,7 @@
     bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
+    {context}
     {bindings}
     {allowJS}
     {allowHelpers}

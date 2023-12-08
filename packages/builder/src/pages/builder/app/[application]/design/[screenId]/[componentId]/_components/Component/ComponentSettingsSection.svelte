@@ -8,6 +8,7 @@
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "analytics"
+  import { onMount } from "svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -26,6 +27,7 @@
     tag,
     includeHidden
   )
+  $: context = $store.selectedComponentContext
 
   const getSections = (instance, definition, isScreen, tag, includeHidden) => {
     const settings = definition?.settings ?? []
@@ -145,6 +147,12 @@
     }
     return shouldDisplay(instance, setting)
   }
+
+  onMount(() => {
+    store.actions.preview.sendEvent("request-context")
+  })
+
+  $: console.log(context)
 </script>
 
 {#each sections as section, idx (section.name)}
@@ -191,6 +199,7 @@
                 min: setting.min ?? null,
                 max: setting.max ?? null,
               }}
+              {context}
               {bindings}
               {componentBindings}
               {componentInstance}

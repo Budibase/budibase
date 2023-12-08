@@ -181,6 +181,16 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await store.actions.components.addParent(componentId, parentType)
+    } else if (type === "provide-context") {
+      let context = data?.context
+      if (context) {
+        try {
+          context = JSON.parse(context)
+        } catch (error) {
+          context = null
+        }
+      }
+      store.actions.preview.setSelectedComponentContext(context)
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
