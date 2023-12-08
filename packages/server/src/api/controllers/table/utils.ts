@@ -11,7 +11,7 @@ import {
 } from "../../../constants"
 import {
   inputProcessing,
-  cleanupAttachments,
+  AttachmentCleanup,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
@@ -82,7 +82,10 @@ export async function checkForColumnUpdates(
     })
 
     // cleanup any attachments from object storage for deleted attachment columns
-    await cleanupAttachments(updatedTable, { oldTable, rows: rawRows })
+    await AttachmentCleanup.tableUpdate(updatedTable, rawRows, {
+      oldTable,
+      rename: columnRename,
+    })
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
