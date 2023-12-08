@@ -50,9 +50,6 @@ export class AttachmentCleanup {
     return AttachmentCleanup.tableChange(table, rows, { deleting: true })
   }
 
-  /**
-   * Cleanup attachments when updating a table.
-   */
   static async tableUpdate(
     table: Table,
     rows: Row[],
@@ -61,9 +58,6 @@ export class AttachmentCleanup {
     return AttachmentCleanup.tableChange(table, rows, opts)
   }
 
-  /**
-   * Cleanup attachments when deleting rows.
-   */
   static async rowDelete(table: Table, rows: Row[]) {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
@@ -81,10 +75,7 @@ export class AttachmentCleanup {
     })
   }
 
-  /**
-   * Remove attachments when updating a row, if new row doesn't have the attachments.
-   */
-  static rowUpdate(table: Table, row: Row, oldRow: Row) {
+  static rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
@@ -92,9 +83,12 @@ export class AttachmentCleanup {
           continue
         }
         const oldKeys =
-          oldRow[key]?.map((attachment: RowAttachment) => attachment.key) || []
+          opts.oldRow[key]?.map(
+            (attachment: RowAttachment) => attachment.key
+          ) || []
         const newKeys =
-          row[key]?.map((attachment: RowAttachment) => attachment.key) || []
+          opts.row[key]?.map((attachment: RowAttachment) => attachment.key) ||
+          []
         files = files.concat(
           oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
         )
