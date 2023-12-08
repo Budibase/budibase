@@ -19,8 +19,6 @@
   export let includeHidden = false
   export let tag
 
-  let sections = []
-
   $: sections = getSections(
     componentInstance,
     componentDefinition,
