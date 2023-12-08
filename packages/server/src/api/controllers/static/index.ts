@@ -28,7 +28,6 @@ import {
   Ctx,
   DocumentType,
   ProcessAttachmentResponse,
-  Upload,
 } from "@budibase/types"
 
 const send = require("koa-send")
@@ -217,7 +216,9 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 
   if (!env.isJest()) {
     let appId = context.getAppId()
-    const previewHbs = loadHandlebarsFile(`${__dirname}/preview.hbs`)
+    const templateLoc = join(__dirname, "templates")
+    const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
+    const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
     ctx.body = await processString(previewHbs, {
       clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
     })

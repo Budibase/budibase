@@ -16,7 +16,7 @@ import {
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
@@ -162,6 +162,14 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   WHERE pg_namespace.nspname = '${this.config.schema}';
   `
 
+  ENUM_VALUES = () => `
+  SELECT t.typname,  
+      e.enumlabel
+  FROM pg_type t 
+  JOIN pg_enum e on t.oid = e.enumtypid  
+  JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+  `
+
   constructor(config: PostgresConfig) {
     super(SqlClient.POSTGRES)
     this.config = config
@@ -303,6 +311,18 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
       const tables: { [key: string]: Table } = {}
 
+      // Fetch enum values
+      const enumsResponse = await this.client.query(this.ENUM_VALUES())
+      const enumValues = enumsResponse.rows?.reduce((acc, row) => {
+        if (!acc[row.typname]) {
+          return {
+            [row.typname]: [row.enumlabel],
+          }
+        }
+        acc[row.typname].push(row.enumlabel)
+        return acc
+      }, {})
+
       for (let column of columnsResponse.rows) {
         const tableName: string = column.table_name
         const columnName: string = column.column_name
@@ -333,16 +353,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.is_generated && column.is_generated !== "NEVER"
         const isAuto: boolean = hasNextVal || identity || isGenerated
         const required = column.is_nullable === "NO"
-        const constraints = {
-          presence: required && !hasDefault && !isGenerated,
-        }
-        tables[tableName].schema[columnName] = {
+        tables[tableName].schema[columnName] = generateColumnDefinition({
           autocolumn: isAuto,
           name: columnName,
-          constraints,
-          ...convertSqlType(column.data_type),
+          presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
-        }
+          options: enumValues?.[column.udt_name],
+        })
       }
 
       let finalizedTables = finaliseExternalTables(tables, entities)

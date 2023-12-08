@@ -33,7 +33,6 @@ WORKDIR /opt/sqs
 ADD sqlite/sqs sqlite/better_sqlite3.node ./
 
 WORKDIR /
-ADD build-target-paths.sh .
 ADD runner.sh ./bbcouch-runner.sh
-RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau ./build-target-paths.sh /opt/sqs/sqs
+RUN chmod +x ./bbcouch-runner.sh /opt/clouseau/bin/clouseau /opt/sqs/sqs
 CMD ["./bbcouch-runner.sh"]

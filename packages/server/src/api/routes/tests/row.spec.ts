@@ -426,7 +426,7 @@ describe.each([
         const saved = (await loadRow(id, table._id!)).body
 
         expect(saved.stringUndefined).toBe(undefined)
-        expect(saved.stringNull).toBe("")
+        expect(saved.stringNull).toBe(null)
         expect(saved.stringString).toBe("i am a string")
         expect(saved.numberEmptyString).toBe(null)
         expect(saved.numberNull).toBe(null)
@@ -517,9 +517,24 @@ describe.each([
   })
 
   describe("patch", () => {
+    let otherTable: Table
+
     beforeAll(async () => {
       const tableConfig = generateTableConfig()
       table = await createTable(tableConfig)
+      const otherTableConfig = generateTableConfig()
+      // need a short name of table here - for relationship tests
+      otherTableConfig.name = "a"
+      otherTableConfig.schema.relationship = {
+        name: "relationship",
+        relationshipType: RelationshipType.ONE_TO_MANY,
+        type: FieldType.LINK,
+        tableId: table._id!,
+        fieldName: "relationship",
+      }
+      otherTable = await createTable(otherTableConfig)
+      // need to set the config back to the original table
+      config.table = table
     })
 
     it("should update only the fields that are supplied", async () => {
@@ -614,6 +629,28 @@ describe.each([
       getResp = await config.api.row.get(table._id!, row._id!)
       expect(getResp.body.user1[0]._id).toEqual(user2._id)
       expect(getResp.body.user2[0]._id).toEqual(user2._id)
+    })
+
+    it("should be able to update relationships when both columns are same name", async () => {
+      let row = await config.api.row.save(table._id!, {
+        name: "test",
+        description: "test",
+      })
+      let row2 = await config.api.row.save(otherTable._id!, {
+        name: "test",
+        description: "test",
+        relationship: [row._id],
+      })
+      row = (await config.api.row.get(table._id!, row._id!)).body
+      expect(row.relationship.length).toBe(1)
+      const resp = await config.api.row.patch(table._id!, {
+        _id: row._id!,
+        _rev: row._rev!,
+        tableId: row.tableId!,
+        name: "test2",
+        relationship: [row2._id],
+      })
+      expect(resp.relationship.length).toBe(1)
     })
   })
 

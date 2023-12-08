@@ -111,7 +111,7 @@ export async function exportRows(
 
   let rows: Row[] = []
   let schema = table.schema
-
+  let headers
   // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
@@ -120,6 +120,7 @@ export async function exportRows(
         rows[i][column] = result[i][column]
       }
     }
+    headers = columns
   } else {
     rows = result
   }
@@ -128,7 +129,7 @@ export async function exportRows(
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
-      content: csv(Object.keys(rows[0]), exportRows),
+      content: csv(headers ?? Object.keys(rows[0]), exportRows),
     }
   } else if (format === Format.JSON) {
     return {

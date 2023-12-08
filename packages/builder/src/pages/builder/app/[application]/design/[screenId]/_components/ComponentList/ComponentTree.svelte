@@ -12,6 +12,7 @@
   import {
     findComponentPath,
     getComponentText,
+    getComponentName,
   } from "builderStore/componentUtils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
@@ -88,6 +89,17 @@
     }
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
+
+  const handleMouseover = componentId => {
+    if ($store.hoverComponentId !== componentId) {
+      $store.hoverComponentId = componentId
+    }
+  }
+  const handleMouseout = componentId => {
+    if ($store.hoverComponentId === componentId) {
+      $store.hoverComponentId = null
+    }
+  }
 </script>
 
 <ul>
@@ -108,8 +120,12 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
+        hovering={$store.hoverComponentId === component._id}
+        on:mouseenter={() => handleMouseover(component._id)}
+        on:mouseleave={() => handleMouseout(component._id)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
+        iconTooltip={getComponentName(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
         selected={$store.selectedComponentId === component._id}

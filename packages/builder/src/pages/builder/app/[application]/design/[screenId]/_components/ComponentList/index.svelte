@@ -32,6 +32,17 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  const handleMouseover = componentId => {
+    if ($store.hoverComponentId !== componentId) {
+      $store.hoverComponentId = componentId
+    }
+  }
+  const handleMouseout = componentId => {
+    if ($store.hoverComponentId === componentId) {
+      $store.hoverComponentId = null
+    }
+  }
 </script>
 
 <div class="components">
@@ -57,6 +68,12 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-screen`
             }}
+            hovering={$store.hoverComponentId ===
+              `${$store.selectedScreenId}-screen`}
+            on:mouseenter={() =>
+              handleMouseover(`${$store.selectedScreenId}-screen`)}
+            on:mouseleave={() =>
+              handleMouseout(`${$store.selectedScreenId}-screen`)}
             id={`component-screen`}
             selectedBy={$userSelectedResourceMap[
               `${$store.selectedScreenId}-screen`
@@ -78,6 +95,12 @@
             on:click={() => {
               $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
             }}
+            hovering={$store.hoverComponentId ===
+              `${$store.selectedScreenId}-navigation`}
+            on:mouseenter={() =>
+              handleMouseover(`${$store.selectedScreenId}-navigation`)}
+            on:mouseleave={() =>
+              handleMouseout(`${$store.selectedScreenId}-navigation`)}
             id={`component-nav`}
             selectedBy={$userSelectedResourceMap[
               `${$store.selectedScreenId}-navigation`
