@@ -85,6 +85,7 @@ const INITIAL_FRONTEND_STATE = {
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
+  hoverComponentId: null,
 
   // Client state
   selectedComponentInstance: null,
