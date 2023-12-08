@@ -171,7 +171,7 @@
         }
       }
     }
-    if (!savingColumn) {
+    if (!savingColumn && !originalName) {
       let highestNumber = 0
       Object.keys(table.schema).forEach(columnName => {
         const columnNumber = extractColumnNumber(columnName)
