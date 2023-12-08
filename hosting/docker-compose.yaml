@@ -98,25 +98,14 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: ibmcom/couchdb3
+    image: budibase/couchdb:v3.2.1
+    pull_policy: always
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
+      - TARGETBUILD=docker-compose
     volumes:
       - couchdb3_data:/opt/couchdb/data
-
-  couch-init:
-    image: curlimages/curl
-    environment:
-      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
-    depends_on:
-      - couchdb-service
-    command:
-      [
-        "sh",
-        "-c",
-        "sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;",
-      ]
 
   redis-service:
     restart: unless-stopped
