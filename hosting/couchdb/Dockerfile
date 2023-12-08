@@ -30,7 +30,7 @@ WORKDIR /opt/couchdb
 ADD couch/vm.args couch/local.ini ./etc/
 
 WORKDIR /opt/sqs
-ADD sqlite/sqs sqlite/better_sqlite3.node ./
+ADD sqs/sqs sqs/better_sqlite3.node ./
 
 WORKDIR /
 ADD runner.sh ./bbcouch-runner.sh
