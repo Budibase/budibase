@@ -9,8 +9,9 @@ import {
 
 import { BlobServiceClient } from "@azure/storage-blob"
 
-interface BlobConfig {
-  connectionString: string
+interface AzureBlobStorageConfig {
+  accountName: string
+  accountKey: string
 }
 
 const SCHEMA: Integration = {
@@ -23,10 +24,15 @@ const SCHEMA: Integration = {
     [DatasourceFeature.CONNECTION_CHECKING]: true,
   },
   datasource: {
-    connectionString: {
+    accountName: {
       type: DatasourceFieldType.STRING,
       required: true,
-      display: "Connection string",
+      display: "Account name",
+    },
+    accountKey: {
+      type: DatasourceFieldType.PASSWORD,
+      required: true,
+      display: "Account key",
     },
   },
   query: {
@@ -71,9 +77,9 @@ const SCHEMA: Integration = {
 class AzureBlobIntegration implements IntegrationBase {
   private readonly blobServiceClient: BlobServiceClient
 
-  constructor(config: BlobConfig) {
+  constructor(config: AzureBlobStorageConfig) {
     this.blobServiceClient = BlobServiceClient.fromConnectionString(
-      config.connectionString
+      `DefaultEndpointsProtocol=https;AccountName=${config.accountName};AccountKey=${config.accountKey};EndpointSuffix=core.windows.net`
     )
   }
 

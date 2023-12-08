@@ -1,6 +1,6 @@
 import { Checkbox, Select, RadioGroup, Stepper, Input } from "@budibase/bbui"
 import DataSourceSelect from "./controls/DataSourceSelect/DataSourceSelect.svelte"
-import S3DataSourceSelect from "./controls/S3DataSourceSelect.svelte"
+import ObjectStoreSelect from "./controls/ObjectStoreSelect.svelte"
 import DataProviderSelect from "./controls/DataProviderSelect.svelte"
 import ButtonActionEditor from "./controls/ButtonActionEditor/ButtonActionEditor.svelte"
 import TableSelect from "./controls/TableSelect.svelte"
@@ -32,7 +32,7 @@ const componentMap = {
   select: Select,
   radio: RadioGroup,
   dataSource: DataSourceSelect,
-  "dataSource/s3": S3DataSourceSelect,
+  "dataSource/s3": ObjectStoreSelect,
   dataProvider: DataProviderSelect,
   boolean: Checkbox,
   number: Stepper,

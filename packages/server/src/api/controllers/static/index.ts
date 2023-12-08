@@ -21,6 +21,12 @@ import {
   BadRequestError,
 } from "@budibase/backend-core"
 import AWS from "aws-sdk"
+import {
+  StorageSharedKeyCredential,
+  generateBlobSASQueryParameters,
+  BlobSASPermissions,
+  BlobServiceClient,
+} from "@azure/storage-blob"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
@@ -273,7 +279,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
-      return
     }
     try {
       const s3 = new AWS.S3({
@@ -286,6 +291,35 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
       const params = { Bucket: bucket, Key: key }
       signedUrl = s3.getSignedUrl("putObject", params)
       publicUrl = `https://${bucket}.s3.${awsRegion}.amazonaws.com/${key}`
+    } catch (error: any) {
+      ctx.throw(400, error)
+    }
+  } else if (datasource?.source === "AZURE") {
+    const { bucket, key } = ctx.request.body || {}
+    if (!bucket || !key) {
+      ctx.throw(400, "container and key values are required")
+    }
+    try {
+      const containerClient = BlobServiceClient.fromConnectionString(
+        `DefaultEndpointsProtocol=https;AccountName=${datasource?.config?.accountName};AccountKey=${datasource?.config?.accountKey};EndpointSuffix=core.windows.net`
+      ).getContainerClient(bucket)
+
+      const blobSAS = generateBlobSASQueryParameters(
+        {
+          containerName: bucket,
+          blobName: key,
+          permissions: BlobSASPermissions.parse("racwd"),
+          startsOn: new Date(),
+          expiresOn: new Date(new Date().valueOf() + 86400),
+        },
+        new StorageSharedKeyCredential(
+          datasource?.config?.accountName,
+          datasource?.config?.accountKey
+        )
+      ).toString()
+
+      publicUrl = containerClient.getBlobClient(key).url
+      signedUrl = `${publicUrl}?${blobSAS}`
     } catch (error: any) {
       ctx.throw(400, error)
     }

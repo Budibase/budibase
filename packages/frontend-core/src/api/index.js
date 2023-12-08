@@ -136,6 +136,8 @@ export const createAPIClient = config => {
     headers["x-budibase-session-id"] = APISessionID
     if (!external) {
       headers["x-budibase-api-version"] = ApiVersion
+    } else {
+      headers["x-ms-blob-type"] = "BlockBlob"
     }
     if (json) {
       headers["Content-Type"] = "application/json"
