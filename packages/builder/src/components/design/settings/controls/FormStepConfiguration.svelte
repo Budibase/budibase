@@ -33,7 +33,7 @@
   }
   $: defaultButtonConfig = buildMultiStepFormBlockButtonConfig({
     _id: componentInstance._id,
-    steps: value,
+    stepCount: value?.length,
     currentStep,
   })
 

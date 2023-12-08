@@ -242,10 +242,10 @@ export const buildFormBlockButtonConfig = props => {
 }
 
 export const buildMultiStepFormBlockButtonConfig = props => {
-  const { _id, steps, currentStep } = props || {}
+  const { _id, stepCount, currentStep } = props || {}
 
   // Sanity check
-  if (!_id || !steps?.length) {
+  if (!_id || !stepCount) {
     return
   }
 
@@ -279,7 +279,7 @@ export const buildMultiStepFormBlockButtonConfig = props => {
     text: "Next",
     type: "cta",
     size: "M",
-    disabled: currentStep === steps.length - 1,
+    disabled: currentStep === stepCount - 1,
     onClick: [
       {
         parameters: {
