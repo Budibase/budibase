@@ -113,7 +113,7 @@ export const getFrontendStore = () => {
     }
     let clone = cloneDeep(screen)
     const result = patchFn(clone)
-
+    // An explicit false result means skip this change
     if (result === false) {
       return
     }
@@ -602,6 +602,36 @@ export const getFrontendStore = () => {
         // Finally try an external table
         return validTables.find(table => table.sourceType === DB_TYPE_EXTERNAL)
       },
+      migrateSettings: enrichedComponent => {
+        const componentPrefix = "@budibase/standard-components"
+        let migrated = false
+
+        if (enrichedComponent?._component == `${componentPrefix}/formblock`) {
+          // Use default config if the 'buttons' prop has never been initialised
+          if (!("buttons" in enrichedComponent)) {
+            enrichedComponent["buttons"] =
+              Utils.buildDynamicButtonConfig(enrichedComponent)
+            migrated = true
+          } else if (enrichedComponent["buttons"] == null) {
+            // Ignore legacy config if 'buttons' has been reset by 'resetOn'
+            const { _id, actionType, dataSource } = enrichedComponent
+            enrichedComponent["buttons"] = Utils.buildDynamicButtonConfig({
+              _id,
+              actionType,
+              dataSource,
+            })
+            migrated = true
+          }
+
+          // Ensure existing Formblocks position their buttons at the top.
+          if (!("buttonPosition" in enrichedComponent)) {
+            enrichedComponent["buttonPosition"] = "top"
+            migrated = true
+          }
+        }
+
+        return migrated
+      },
       enrichEmptySettings: (component, opts) => {
         if (!component?._component) {
           return
@@ -673,7 +703,6 @@ export const getFrontendStore = () => {
               component[setting.key] = setting.defaultValue
             }
           }
-
           // Validate non-empty settings
           else {
             if (setting.type === "dataProvider") {
@@ -722,6 +751,9 @@ export const getFrontendStore = () => {
           screen: get(selectedScreen),
           useDefaultValues: true,
         })
+
+        // Migrate nested component settings
+        store.actions.components.migrateSettings(instance)
 
         // Add any extra properties the component needs
         let extras = {}
@@ -846,7 +878,16 @@ export const getFrontendStore = () => {
           if (!component) {
             return false
           }
-          return patchFn(component, screen)
+
+          // Mutates the fetched component with updates
+          const patchResult = patchFn(component, screen)
+
+          // Mutates the component with any required settings updates
+          const migrated = store.actions.components.migrateSettings(component)
+
+          // Returning an explicit false signifies that we should skip this
+          // update. If we migrated something, ensure we never skip.
+          return migrated ? null : patchResult
         }
         await store.actions.screens.patch(patchScreen, screenId)
       },
@@ -1248,9 +1289,13 @@ export const getFrontendStore = () => {
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
 
-          const resetFields = settings.filter(
-            setting => name === setting.resetOn
-          )
+          // Can be a single string or array of strings
+          const resetFields = settings.filter(setting => {
+            return (
+              name === setting.resetOn ||
+              (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
+            )
+          })
           resetFields?.forEach(setting => {
             component[setting.key] = null
           })
@@ -1272,6 +1317,7 @@ export const getFrontendStore = () => {
             })
           }
           component[name] = value
+          return true
         }
       },
       requestEjectBlock: componentId => {
@@ -1279,7 +1325,6 @@ export const getFrontendStore = () => {
       },
       handleEjectBlock: async (componentId, ejectedDefinition) => {
         let nextSelectedComponentId
-
         await store.actions.screens.patch(screen => {
           const block = findComponent(screen.props, componentId)
           const parent = findComponentParent(screen.props, componentId)
