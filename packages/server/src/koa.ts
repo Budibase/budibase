@@ -1,5 +1,5 @@
 import env from "./environment"
-import Koa, { ExtendableContext } from "koa"
+import Koa from "koa"
 import koaBody from "koa-body"
 import http from "http"
 import * as api from "./api"
@@ -27,6 +27,9 @@ export default function createKoaApp() {
       // @ts-ignore
       enableTypes: ["json", "form", "text"],
       parsedMethods: ["POST", "PUT", "PATCH", "DELETE"],
+      formidable: {
+        maxFileSize: parseInt(env.MAX_IMPORT_SIZE_MB || "100") * 1024 * 1024,
+      },
     })
   )
 

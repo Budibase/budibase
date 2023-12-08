@@ -85,6 +85,7 @@ const INITIAL_FRONTEND_STATE = {
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
+  hoverComponentId: null,
 
   // Client state
   selectedComponentInstance: null,
@@ -112,7 +113,7 @@ export const getFrontendStore = () => {
     }
     let clone = cloneDeep(screen)
     const result = patchFn(clone)
-
+    // An explicit false result means skip this change
     if (result === false) {
       return
     }
@@ -879,11 +880,14 @@ export const getFrontendStore = () => {
           }
 
           // Mutates the fetched component with updates
-          const updated = patchFn(component, screen)
+          const patchResult = patchFn(component, screen)
+
           // Mutates the component with any required settings updates
           const migrated = store.actions.components.migrateSettings(component)
 
-          return updated || migrated
+          // Returning an explicit false signifies that we should skip this
+          // update. If we migrated something, ensure we never skip.
+          return migrated ? null : patchResult
         }
         await store.actions.screens.patch(patchScreen, screenId)
       },
