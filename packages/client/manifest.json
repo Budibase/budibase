@@ -6038,6 +6038,7 @@
     "icon": "AssetsAdded",
     "block": true,
     "hasChildren": false,
+    "ejectable": false,
     "size": {
       "width": 400,
       "height": 400

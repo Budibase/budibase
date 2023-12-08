@@ -210,7 +210,7 @@
     </DetailSummary>
   {/if}
 {/each}
-{#if componentDefinition?.block && !tag}
+{#if componentDefinition?.block && !tag && componentDefinition.ejectable !== false}
   <DetailSummary name="Eject" collapsible={false}>
     <EjectBlockButton />
   </DetailSummary>
