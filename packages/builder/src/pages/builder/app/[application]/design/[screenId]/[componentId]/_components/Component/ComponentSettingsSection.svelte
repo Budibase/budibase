@@ -36,7 +36,7 @@
     const customSections = settings.filter(
       setting => setting.section && setting.tag === tag
     )
-    let newSections = [
+    let sections = [
       ...(generalSettings?.length
         ? [
             {
@@ -49,7 +49,7 @@
     ]
 
     // Filter out settings which shouldn't be rendered
-    newSections.forEach(newSection => {
+    sections.forEach(newSection => {
       newSection.visible = shouldDisplay(instance, newSection)
       if (!newSection.visible) {
         return
@@ -67,7 +67,7 @@
         newSection.settings.some(setting => setting.visible)
     })
 
-    return newSections
+    return sections
   }
 
   const updateSetting = async (setting, value) => {
