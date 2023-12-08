@@ -4877,7 +4877,7 @@
   },
   "chartblock": {
     "block": true,
-    "name": "Chart block",
+    "name": "Chart Block",
     "icon": "GraphPie",
     "hasChildren": false,
     "settings": [
@@ -5367,7 +5367,7 @@
   },
   "tableblock": {
     "block": true,
-    "name": "Table block",
+    "name": "Table Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -5613,7 +5613,7 @@
   },
   "cardsblock": {
     "block": true,
-    "name": "Cards block",
+    "name": "Cards Block",
     "icon": "PersonalizationField",
     "styles": ["size"],
     "size": {
@@ -5793,7 +5793,7 @@
   },
   "repeaterblock": {
     "block": true,
-    "name": "Repeater block",
+    "name": "Repeater Block",
     "icon": "ViewList",
     "illegalChildren": ["section"],
     "hasChildren": true,
@@ -6034,7 +6034,7 @@
     ]
   },
   "multistepformblock": {
-    "name": "Multi step Formblock",
+    "name": "Multi-step Form Block",
     "icon": "AssetsAdded",
     "block": true,
     "hasChildren": false,
@@ -6060,10 +6060,7 @@
             "key": "steps",
             "nested": true,
             "labelHidden": true,
-            "resetOn": ["dataSource", "actionType"],
-            "defaultValue": [
-              { "title": null, "desc": null, "fields": null, "buttons": {} }
-            ]
+            "resetOn": ["dataSource", "actionType"]
           }
         ]
       }
@@ -6377,7 +6374,7 @@
     }
   },
   "gridblock": {
-    "name": "Grid block",
+    "name": "Grid Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
