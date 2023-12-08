@@ -2,7 +2,7 @@ import * as linkRows from "../../../db/linkedRows"
 import { generateRowID, InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
-  cleanupAttachments,
+  AttachmentCleanup,
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
@@ -90,7 +90,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     table,
   })) as Row
   // check if any attachments removed
-  await cleanupAttachments(table, { oldRow, row })
+  await AttachmentCleanup.rowUpdate(table, { row, oldRow })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
@@ -130,7 +130,7 @@ export async function save(ctx: UserCtx) {
     throw { validation: validateResult.errors }
   }
 
-  // make sure link rows are up to date
+  // make sure link rows are up-to-date
   row = (await linkRows.updateLinks({
     eventType: linkRows.EventType.ROW_SAVE,
     row,
@@ -176,7 +176,7 @@ export async function destroy(ctx: UserCtx) {
     tableId,
   })
   // remove any attachments that were on the row from object storage
-  await cleanupAttachments(table, { row })
+  await AttachmentCleanup.rowDelete(table, [row])
   // remove any static formula
   await updateRelatedFormula(table, row)
 
@@ -227,7 +227,7 @@ export async function bulkDestroy(ctx: UserCtx) {
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
-  await cleanupAttachments(table, { rows: processedRows })
+  await AttachmentCleanup.rowDelete(table, processedRows)
   await updateRelatedFormula(table, processedRows)
   await Promise.all(updates)
   return { response: { ok: true }, rows: processedRows }

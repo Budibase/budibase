@@ -1,20 +1,17 @@
 <script>
   import Icon from "../Icon/Icon.svelte"
-  import { createEventDispatcher } from "svelte"
 
   export let name
-  export let show = false
+  export let initiallyShow = false
   export let collapsible = true
 
-  const dispatch = createEventDispatcher()
+  let show = initiallyShow
+
   const onHeaderClick = () => {
     if (!collapsible) {
       return
     }
     show = !show
-    if (show) {
-      dispatch("open")
-    }
   }
 </script>
 
