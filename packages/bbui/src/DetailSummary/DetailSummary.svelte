@@ -4,7 +4,6 @@
   export let name
   export let initiallyShow = false
   export let collapsible = true
-  export let noPadding = false
 
   let show = initiallyShow
 
@@ -29,7 +28,6 @@
     class="property-panel"
     class:show={show || !collapsible}
     class:no-title={!name}
-    class:no-padding={noPadding}
   >
     <slot />
   </div>
@@ -81,10 +79,6 @@
   }
   .property-panel.no-title {
     padding: var(--spacing-xl);
-  }
-
-  .property-panel.no-title.no-padding {
-    padding: 0px;
   }
 
   .show {

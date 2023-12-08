@@ -2,15 +2,10 @@
   import { createEventDispatcher, getContext } from "svelte"
   import { ActionButton } from "@budibase/bbui"
 
-  const stepState = getContext("step-form-block")
+  const multiStepStore = getContext("multi-step-form-block")
   const dispatch = createEventDispatcher()
 
-  $: ({ stepsCount, currentStep } = $stepState)
-
-  const parseLastIdx = stepsCount => {
-    return Math.max(stepsCount - 1, 0)
-  }
-  $: lastIdx = parseLastIdx(stepsCount)
+  $: ({ stepCount, currentStep } = $multiStepStore)
 
   const stepAction = action => {
     dispatch("change", {
@@ -19,7 +14,7 @@
   }
 </script>
 
-{#if stepsCount === 1}
+{#if stepCount === 1}
   <ActionButton
     icon="MultipleAdd"
     secondary
@@ -43,7 +38,7 @@
     <ActionButton
       size="S"
       secondary
-      disabled={currentStep === lastIdx}
+      disabled={currentStep === stepCount - 1}
       icon="ChevronRight"
       on:click={() => {
         stepAction("nextStep")
@@ -53,7 +48,7 @@
       size="S"
       secondary
       icon="Close"
-      disabled={stepsCount === 1}
+      disabled={stepCount === 1}
       on:click={() => {
         stepAction("removeStep")
       }}
