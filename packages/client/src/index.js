@@ -75,6 +75,12 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
+    } else if (type === "request-context") {
+      const { selectedComponentInstance } = get(componentStore)
+      const context = selectedComponentInstance?.getDataContext()
+      eventStore.actions.dispatchEvent("provide-context", {
+        context: JSON.stringify(context),
+      })
     }
   }
 

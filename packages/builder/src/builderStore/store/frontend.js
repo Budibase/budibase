@@ -88,7 +88,7 @@ const INITIAL_FRONTEND_STATE = {
   selectedLayoutId: null,
 
   // Client state
-  selectedComponentInstance: null,
+  selectedComponentContext: null,
 
   // Onboarding
   onboarding: false,
@@ -501,6 +501,12 @@ export const getFrontendStore = () => {
       registerEventHandler: handler => {
         store.update(state => {
           state.previewEventHandler = handler
+          return state
+        })
+      },
+      setSelectedComponentContext: context => {
+        store.update(state => {
+          state.selectedComponentContext = context
           return state
         })
       },

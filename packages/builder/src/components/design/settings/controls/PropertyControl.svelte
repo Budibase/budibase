@@ -24,6 +24,7 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
+  export let context = null
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
@@ -97,6 +98,7 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
+      {context}
       {nested}
       {key}
       {type}

@@ -6,7 +6,7 @@
   export let value = ""
   export let allowJS = false
   export let allowHelpers = true
-
+  export let context = null
   $: enrichedBindings = enrichBindings(bindings)
 
   // Ensure bindings have the correct categories
@@ -24,6 +24,7 @@
 <BindingPanel
   bind:valid
   bindings={enrichedBindings}
+  {context}
   {value}
   {allowJS}
   {allowHelpers}

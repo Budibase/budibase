@@ -45,6 +45,7 @@
   export let valid
   export let allowJS = false
   export let allowHelpers = true
+  export let context = null
 
   const drawerActions = getContext("drawer-actions")
   const bindingDrawerActions = getContext("binding-drawer-actions")
@@ -250,6 +251,7 @@
                 <BindingPicker
                   {bindings}
                   {allowHelpers}
+                  {context}
                   addHelper={onSelectHelper}
                   addBinding={onSelectBinding}
                   mode={editorMode}
@@ -330,6 +332,7 @@
                   <BindingPicker
                     {bindings}
                     {allowHelpers}
+                    {context}
                     addHelper={onSelectHelper}
                     addBinding={onSelectBinding}
                     mode={editorMode}
