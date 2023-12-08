@@ -5,6 +5,7 @@ import elasticsearch from "./elasticsearch"
 import couchdb from "./couchdb"
 import sqlServer from "./microsoftSqlServer"
 import s3 from "./s3"
+import azureBlobStorage from "./azureBlobStorage"
 import airtable from "./airtable"
 import mysql from "./mysql"
 import arangodb from "./arangodb"
@@ -28,6 +29,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.COUCHDB]: couchdb.schema,
   [SourceName.SQL_SERVER]: sqlServer.schema,
   [SourceName.S3]: s3.schema,
+  [SourceName.AZURE]: azureBlobStorage.schema,
   [SourceName.AIRTABLE]: airtable.schema,
   [SourceName.MYSQL]: mysql.schema,
   [SourceName.ARANGODB]: arangodb.schema,
@@ -47,6 +49,7 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.COUCHDB]: couchdb.integration,
   [SourceName.SQL_SERVER]: sqlServer.integration,
   [SourceName.S3]: s3.integration,
+  [SourceName.AZURE]: azureBlobStorage.integration,
   [SourceName.AIRTABLE]: airtable.integration,
   [SourceName.MYSQL]: mysql.integration,
   [SourceName.ARANGODB]: arangodb.integration,

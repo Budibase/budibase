@@ -43,6 +43,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "@apidevtools/swagger-parser": "10.0.3",
+    "@azure/storage-blob": "^12.17.0",
     "@budibase/backend-core": "0.0.0",
     "@budibase/client": "0.0.0",
     "@budibase/pro": "0.0.0",

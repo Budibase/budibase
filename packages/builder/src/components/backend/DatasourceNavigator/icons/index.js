@@ -15,6 +15,7 @@ import GoogleSheets from "./GoogleSheets.svelte"
 import Firebase from "./Firebase.svelte"
 import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
+import Azure from "./Azure.svelte"
 import Custom from "./Custom.svelte"
 import { integrations } from "stores/backend"
 import { get } from "svelte/store"
@@ -28,6 +29,7 @@ const ICONS = {
   COUCHDB: CouchDB,
   SQL_SERVER: SqlServer,
   S3: S3,
+  AZURE: Azure,
   AIRTABLE: Airtable,
   MYSQL: MySQL,
   ARANGODB: ArangoDB,
