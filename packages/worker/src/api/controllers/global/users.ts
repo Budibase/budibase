@@ -14,7 +14,6 @@ import {
   InviteUsersResponse,
   MigrationType,
   SaveUserResponse,
-  SearchQueryOperators,
   SearchUsersRequest,
   User,
   UserCtx,
