@@ -1,11 +1,9 @@
 <script>
   import {
     ModalContent,
-    Tabs,
-    Tab,
     TextArea,
-    Label,
     notifications,
+    ActionButton,
   } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "builderStore"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
@@ -55,50 +53,69 @@
       notifications.error(error)
     }
   }
+
+  const toggle = () => {
+    selectedValues = !selectedValues
+    selectedJSON = !selectedJSON
+  }
+  let selectedValues = true
+  let selectedJSON = false
 </script>
 
 <ModalContent
   title="Add test data"
-  confirmText="Test"
-  size="M"
+  confirmText="Run test"
+  size="L"
   showConfirmButton={true}
   disabled={isError}
   onConfirm={testAutomation}
   cancelText="Cancel"
 >
-  <Tabs selected="Form" quiet>
-    <Tab icon="Form" title="Form">
-      <div class="tab-content-padding">
-        <AutomationBlockSetup
-          {testData}
-          {schemaProperties}
-          isTestModal
-          block={trigger}
-        />
-      </div></Tab
-    >
-    <Tab icon="FileJson" title="JSON">
-      <div class="tab-content-padding">
-        <Label>JSON</Label>
-        <div class="text-area-container">
-          <TextArea
-            value={JSON.stringify($selectedAutomation.testData, null, 2)}
-            error={failedParse}
-            on:change={e => parseTestJSON(e)}
-          />
-        </div>
-      </div>
-    </Tab>
-  </Tabs>
+  <div class="size">
+    <div class="options">
+      <ActionButton quiet selected={selectedValues} on:click={toggle}
+        >Use values</ActionButton
+      >
+      <ActionButton quiet selected={selectedJSON} on:click={toggle}
+        >Use JSON</ActionButton
+      >
+    </div>
+  </div>
+
+  {#if selectedValues}
+    <div class="tab-content-padding">
+      <AutomationBlockSetup
+        {testData}
+        {schemaProperties}
+        isTestModal
+        block={trigger}
+      />
+    </div>
+  {/if}
+  {#if selectedJSON}
+    <div class="text-area-container">
+      <TextArea
+        value={JSON.stringify($selectedAutomation.testData, null, 2)}
+        error={failedParse}
+        on:change={e => parseTestJSON(e)}
+      />
+    </div>
+  {/if}
 </ModalContent>
 
 <style>
   .text-area-container :global(textarea) {
-    min-height: 200px;
-    height: 200px;
+    min-height: 300px;
+    height: 300px;
   }
 
   .tab-content-padding {
-    padding: 0 var(--spacing-xl);
+    padding: 0 var(--spacing-s);
+  }
+
+  .options {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 </style>
