@@ -265,6 +265,13 @@ class TestConfiguration {
     }
 
     return () => {
+      for (const key in newEnvVars) {
+        // @ts-ignore
+        delete env[key]
+        // @ts-ignore
+        delete coreEnv[key]
+      }
+
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
       }
