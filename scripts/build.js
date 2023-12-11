@@ -13,7 +13,7 @@ const {
 } = require("@esbuild-plugins/tsconfig-paths")
 const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
-var argv = require("minimist")(process.argv.slice(2))
+var { argv } = require("yargs")
 
 function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"

@@ -20,6 +20,7 @@ export enum LockName {
   UPDATE_TENANTS_DOC = "update_tenants_doc",
   PERSIST_WRITETHROUGH = "persist_writethrough",
   QUOTA_USAGE_EVENT = "quota_usage_event",
+  APP_MIGRATION = "app_migrations",
 }
 
 export type LockOptions = {
