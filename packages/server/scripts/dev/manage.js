@@ -28,6 +28,7 @@ async function init() {
       INTERNAL_API_KEY: "budibase",
       ACCOUNT_PORTAL_URL: "http://localhost:10001",
       ACCOUNT_PORTAL_API_KEY: "budibase",
+      PLATFORM_URL: "http://localhost:10000",
       JWT_SECRET: "testsecret",
       ENCRYPTION_KEY: "testsecret",
       REDIS_PASSWORD: "budibase",
