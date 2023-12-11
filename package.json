@@ -17,14 +17,14 @@
     "kill-port": "^1.6.1",
     "lerna": "7.1.1",
     "madge": "^6.0.0",
-    "minimist": "^1.2.8",
     "nx": "16.4.3",
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "svelte": "3.49.0",
     "svelte-eslint-parser": "^0.32.0",
-    "typescript": "5.2.2"
+    "typescript": "5.2.2",
+    "yargs": "^17.7.2"
   },
   "scripts": {
     "preinstall": "node scripts/syncProPackage.js",
@@ -79,7 +79,8 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "submodules:load": "git submodule init && git submodule update && yarn",
-    "submodules:unload": "git submodule deinit --all && yarn"
+    "submodules:unload": "git submodule deinit --all && yarn",
+    "add-app-migration": "node scripts/add-app-migration.js --title"
   },
   "workspaces": {
     "packages": [

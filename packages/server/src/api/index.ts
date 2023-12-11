@@ -4,6 +4,7 @@ import currentApp from "../middleware/currentapp"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
+import migrations from "../middleware/appMigrations"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
@@ -47,6 +48,8 @@ router
   // @ts-ignore
   .use(currentApp)
   .use(auth.auditLog)
+  // @ts-ignore
+  .use(migrations)
 
 // authenticated routes
 for (let route of mainRoutes) {
