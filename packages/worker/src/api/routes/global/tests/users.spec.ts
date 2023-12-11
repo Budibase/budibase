@@ -590,10 +590,28 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should be able to search by email with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { string: { ["999:email"]: user.email } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
+
     it("should be able to search by _id", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
         query: { equal: { _id: user._id } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should be able to search by _id with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { equal: { ["1:_id"]: user._id } },
       })
       expect(response.body.data.length).toBe(1)
       expect(response.body.data[0]._id).toBe(user._id)
