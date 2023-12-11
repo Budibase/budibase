@@ -41,6 +41,5 @@ More documentation can be found in here: https://budibase.atlassian.net/wiki/spa
 
 ### Rollback A Bad Cloud Deployment
 
-- Kick off cloud deploy job
-- Ensure you are running off master
-- Enter the version number of the last known good version of budibase. For example `1.0.0`
+Rollback documentation can be found in here.
+https://budibase.atlassian.net/wiki/spaces/DEVOPS/pages/347930625/Production+release#Rollback
