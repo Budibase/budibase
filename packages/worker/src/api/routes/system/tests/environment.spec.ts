@@ -1,5 +1,7 @@
 import { TestConfiguration } from "../../../../tests"
 
+jest.unmock("node-fetch")
+
 describe("/api/system/environment", () => {
   const config = new TestConfiguration()
 
@@ -29,10 +31,10 @@ describe("/api/system/environment", () => {
     })
 
     it("returns the expected environment for self hosters", async () => {
-      config.withEnv({ SELF_HOSTED: true }, async () => {
+      await config.withEnv({ SELF_HOSTED: true }, async () => {
         const env = await config.api.environment.getEnvironment()
         expect(env.body).toEqual({
-          cloud: true,
+          cloud: false,
           disableAccountPortal: 0,
           isDev: false,
           multiTenancy: true,

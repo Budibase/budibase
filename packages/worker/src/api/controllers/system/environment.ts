@@ -13,12 +13,12 @@ async function isSqsAvailable() {
     await nodeFetch(coreEnv.COUCH_DB_SQL_URL, {
       timeout: 1000,
     })
+    sqsAvailable = true
+    return true
   } catch (e) {
     sqsAvailable = false
     return false
   }
-  sqsAvailable = true
-  return true
 }
 
 export const fetch = async (ctx: Ctx) => {
