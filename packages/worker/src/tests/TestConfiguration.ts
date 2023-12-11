@@ -256,21 +256,15 @@ class TestConfiguration {
    */
   setEnv(newEnvVars: Partial<typeof env>): () => void {
     const oldEnv = cloneDeep(env)
-    const oldCoreEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
       env._set(key, newEnvVars[key])
-      coreEnv._set(key, newEnvVars[key])
     }
 
     return () => {
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
-      }
-
-      for (const [key, value] of Object.entries(oldCoreEnv)) {
-        coreEnv._set(key, value)
       }
     }
   }
