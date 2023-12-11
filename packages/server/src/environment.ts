@@ -59,6 +59,7 @@ const environment = {
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
@@ -87,6 +88,7 @@ const environment = {
   },
   TOP_LEVEL_PATH:
     process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
+  APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
 }
 
 // threading can cause memory issues with node-ts in development
