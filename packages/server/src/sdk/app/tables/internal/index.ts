@@ -19,11 +19,10 @@ import { context } from "@budibase/backend-core"
 import { getTable } from "../getters"
 import { checkAutoColumns } from "./utils"
 import * as viewsSdk from "../../views"
-import sdk from "../../../index"
 import { getRowParams } from "../../../../db/utils"
 import { quotas } from "@budibase/pro"
 import env from "../../../../environment"
-import { cleanupAttachments } from "../../../../utilities/rowProcessor"
+import { AttachmentCleanup } from "../../../../utilities/rowProcessor"
 
 export async function save(
   table: Table,
@@ -164,9 +163,10 @@ export async function destroy(table: Table) {
   await runStaticFormulaChecks(table, {
     deletion: true,
   })
-  await cleanupAttachments(table, {
-    rows: rowsData.rows.map((row: any) => row.doc),
-  })
+  await AttachmentCleanup.tableDelete(
+    table,
+    rowsData.rows.map((row: any) => row.doc)
+  )
 
   return { table }
 }
