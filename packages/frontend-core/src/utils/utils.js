@@ -252,50 +252,72 @@ export const buildMultiStepFormBlockButtonConfig = props => {
   let buttons = []
 
   // Add previous step button if we aren't the first step
-  buttons.push({
-    _id: Helpers.uuid(),
-    _component: "@budibase/standard-components/button",
-    _instanceName: Helpers.uuid(),
-    text: "Back",
-    type: "secondary",
-    size: "M",
-    disabled: currentStep === 0,
-    onClick: [
-      {
-        parameters: {
-          type: "prev",
-          componentId: `${_id}-form`,
+  if (currentStep !== 0) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Back",
+      type: "secondary",
+      size: "M",
+      onClick: [
+        {
+          parameters: {
+            type: "prev",
+            componentId: `${_id}-form`,
+          },
+          "##eventHandlerType": "Change Form Step",
         },
-        "##eventHandlerType": "Change Form Step",
-      },
-    ],
-  })
+      ],
+    })
+  }
 
   // Add a next button if we aren't the last step
-  buttons.push({
-    _id: Helpers.uuid(),
-    _component: "@budibase/standard-components/button",
-    _instanceName: Helpers.uuid(),
-    text: "Next",
-    type: "cta",
-    size: "M",
-    disabled: currentStep === stepCount - 1,
-    onClick: [
-      {
-        "##eventHandlerType": "Validate Form",
-        parameters: {
-          componentId: `${_id}-form`,
+  if (currentStep !== stepCount - 1) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Next",
+      type: "cta",
+      size: "M",
+      onClick: [
+        {
+          "##eventHandlerType": "Validate Form",
+          parameters: {
+            componentId: `${_id}-form`,
+          },
         },
-      },
-      {
-        parameters: {
-          type: "next",
-          componentId: `${_id}-form`,
+        {
+          parameters: {
+            type: "next",
+            componentId: `${_id}-form`,
+          },
+          "##eventHandlerType": "Change Form Step",
         },
-        "##eventHandlerType": "Change Form Step",
-      },
-    ],
-  })
+      ],
+    })
+  }
+
+  // Add save button if we are the last step
+  if (currentStep === stepCount - 1) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Save",
+      type: "cta",
+      size: "M",
+      onClick: [
+        {
+          "##eventHandlerType": "Validate Form",
+          parameters: {
+            componentId: `${_id}-form`,
+          },
+        },
+      ],
+    })
+  }
 
   return buttons
 }
