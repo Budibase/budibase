@@ -30,6 +30,11 @@ export const fetch = async (ctx: Ctx) => {
     disableAccountPortal: env.DISABLE_ACCOUNT_PORTAL,
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
-    isSqsAvailable: await isSqsAvailable(),
+  }
+
+  if (env.SELF_HOSTED) {
+    ctx.body.infrastructure = {
+      sqs: await isSqsAvailable(),
+    }
   }
 }

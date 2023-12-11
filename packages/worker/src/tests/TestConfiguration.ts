@@ -36,6 +36,7 @@ import {
 } from "@budibase/types"
 import API from "./api"
 import jwt, { Secret } from "jsonwebtoken"
+import { cloneDeep } from "lodash"
 
 class TestConfiguration {
   server: any
@@ -238,6 +239,40 @@ class TestConfiguration {
 
   adminOnlyResponse = () => {
     return { message: "Admin user only endpoint.", status: 403 }
+  }
+
+  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+    let cleanup = this.setEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setEnv(newEnvVars: Partial<typeof env>): () => void {
+    const oldEnv = cloneDeep(env)
+    const oldCoreEnv = cloneDeep(coreEnv)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      env._set(key, newEnvVars[key])
+      coreEnv._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
+        env._set(key, value)
+      }
+
+      for (const [key, value] of Object.entries(oldCoreEnv)) {
+        coreEnv._set(key, value)
+      }
+    }
   }
 
   // USERS
