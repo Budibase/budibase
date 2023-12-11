@@ -12,9 +12,10 @@ export type AppMigration = {
   func: () => Promise<void>
 }
 
-export const latestMigration = MIGRATIONS.map(m => m.id)
-  .sort()
-  .reverse()[0]
+export const getLatestMigrationId = () =>
+  MIGRATIONS.map(m => m.id)
+    .sort()
+    .reverse()[0]
 
 const getTimestamp = (versionId: string) => versionId?.split("_")[0]
 
@@ -24,6 +25,7 @@ export async function checkMissingMigrations(
   appId: string
 ) {
   const currentVersion = await getAppMigrationVersion(appId)
+  const latestMigration = getLatestMigrationId()
 
   if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
     await queue.add(
