@@ -28,6 +28,7 @@ export enum Header {
   CSRF_TOKEN = "x-csrf-token",
   CORRELATION_ID = "x-budibase-correlation-id",
   AUTHORIZATION = "authorization",
+  MIGRATING_APP = "x-budibase-migrating-app",
 }
 
 export enum GlobalRole {
