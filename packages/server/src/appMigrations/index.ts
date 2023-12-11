@@ -1,6 +1,9 @@
 import queue from "./queue"
+import { Next } from "koa"
 import { getAppMigrationVersion } from "./appMigrationMetadata"
 import { MIGRATIONS } from "./migrations"
+import { UserCtx } from "@budibase/types"
+import { Header } from "@budibase/backend-core"
 
 export * from "./appMigrationMetadata"
 
@@ -15,7 +18,11 @@ export const latestMigration = MIGRATIONS.map(m => m.id)
 
 const getTimestamp = (versionId: string) => versionId?.split("_")[0]
 
-export async function checkMissingMigrations(appId: string) {
+export async function checkMissingMigrations(
+  ctx: UserCtx,
+  next: Next,
+  appId: string
+) {
   const currentVersion = await getAppMigrationVersion(appId)
 
   if (getTimestamp(currentVersion) < getTimestamp(latestMigration)) {
@@ -29,5 +36,9 @@ export async function checkMissingMigrations(appId: string) {
         removeOnFail: true,
       }
     )
+
+    ctx.response.set(Header.MIGRATING_APP, appId)
   }
+
+  return next()
 }
