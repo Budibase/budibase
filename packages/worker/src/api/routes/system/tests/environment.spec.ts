@@ -1,7 +1,5 @@
 import { TestConfiguration } from "../../../../tests"
 
-jest.unmock("node-fetch")
-
 describe("/api/system/environment", () => {
   const config = new TestConfiguration()
 
