@@ -134,6 +134,10 @@ export default defineConfig(({ mode }) => {
           find: "@budibase/shared-core",
           replacement: path.resolve("../shared-core/src"),
         },
+        {
+          find: "@budibase/bbui",
+          replacement: path.resolve("../bbui/src"),
+        },
       ],
     },
   }
