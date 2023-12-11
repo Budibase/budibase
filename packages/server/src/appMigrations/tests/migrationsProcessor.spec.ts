@@ -4,12 +4,14 @@ import { getAppMigrationVersion } from "../appMigrationMetadata"
 import { context } from "@budibase/backend-core"
 import { AppMigration } from ".."
 
+const futureTimestamp = `20500101174029`
+
 describe("migrationsProcessor", () => {
   it("running migrations will update the latest applied migration", async () => {
     const testMigrations: AppMigration[] = [
-      { id: "123", func: async () => {} },
-      { id: "124", func: async () => {} },
-      { id: "125", func: async () => {} },
+      { id: `${futureTimestamp}_123`, func: async () => {} },
+      { id: `${futureTimestamp}_124`, func: async () => {} },
+      { id: `${futureTimestamp}_125`, func: async () => {} },
     ]
 
     const config = setup.getConfig()
@@ -23,13 +25,13 @@ describe("migrationsProcessor", () => {
 
     expect(
       await config.doInContext(appId, () => getAppMigrationVersion(appId))
-    ).toBe("125")
+    ).toBe(`${futureTimestamp}_125`)
   })
 
   it("no context can be initialised within a migration", async () => {
     const testMigrations: AppMigration[] = [
       {
-        id: "123",
+        id: `${futureTimestamp}_123`,
         func: async () => {
           await context.doInAppMigrationContext("any", () => {})
         },
