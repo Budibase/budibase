@@ -45,4 +45,9 @@ export const API = createAPIClient({
       }
     }
   },
+  onMigrationDetected: appId => {
+    window.location = `/builder/updating/${appId}?returnUrl=${encodeURI(
+      window.location
+    )}`
+  },
 })
