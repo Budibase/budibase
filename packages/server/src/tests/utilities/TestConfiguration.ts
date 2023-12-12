@@ -17,7 +17,6 @@ import {
   basicWebhook,
 } from "./structures"
 import {
-  auth,
   cache,
   constants,
   context,
