@@ -63,6 +63,11 @@ const defaultAPIClientConfig = {
    * invoked before the actual JS error is thrown up the stack.
    */
   onError: null,
+
+  /**
+   * A function can be passed to be called when an API call returns info about a migration running for a specific app
+   */
+  onMigrationDetected: null,
 }
 
 /**
@@ -171,6 +176,7 @@ export const createAPIClient = config => {
 
     // Handle response
     if (response.status >= 200 && response.status < 400) {
+      handleMigrations(response)
       try {
         if (parseResponse) {
           return await parseResponse(response)
@@ -187,7 +193,18 @@ export const createAPIClient = config => {
     }
   }
 
-  // Performs an API call to the server and caches the response.
+  const handleMigrations = response => {
+    if (!config.onMigrationDetected) {
+      return
+    }
+    const migration = response.headers.get(Header.MIGRATING_APP)
+
+    if (migration) {
+      config.onMigrationDetected(migration)
+    }
+  }
+
+  // Performs an API call to the server  and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
   const makeCachedApiCall = async params => {
