@@ -27,7 +27,7 @@
     })
   }
 
-  const afterSave = async ({ action }) => {
+  const afterSave = ({ action }) => {
     notifications.success(`Relationship ${action} successfully`)
     dispatch("updatecolumns")
   }
