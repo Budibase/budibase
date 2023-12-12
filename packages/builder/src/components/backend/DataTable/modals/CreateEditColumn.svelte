@@ -85,6 +85,7 @@
   let relationshipTableIdSecondary = null
 
   let table = $tables.selected
+
   let confirmDeleteDialog
   let savingColumn
   let deleteColName
