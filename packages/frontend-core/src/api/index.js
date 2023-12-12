@@ -1,4 +1,5 @@
 import { Helpers } from "@budibase/bbui"
+import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAppEndpoints } from "./app"
@@ -133,9 +134,9 @@ export const createAPIClient = config => {
 
     // Build headers
     let headers = { Accept: "application/json" }
-    headers["x-budibase-session-id"] = APISessionID
+    headers[Header.SESSION_ID] = APISessionID
     if (!external) {
-      headers["x-budibase-api-version"] = ApiVersion
+      headers[Header.API_VER] = ApiVersion
     }
     if (json) {
       headers["Content-Type"] = "application/json"
@@ -242,7 +243,7 @@ export const createAPIClient = config => {
     getAppID: () => {
       let headers = {}
       config?.attachHeaders(headers)
-      return headers?.["x-budibase-app-id"]
+      return headers?.[Header.APP_ID]
     },
   }
 
