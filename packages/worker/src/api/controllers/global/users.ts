@@ -26,10 +26,10 @@ import {
   migrations,
   platform,
   tenancy,
+  db,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
-import { removeKeyNumbering } from "@budibase/backend-core/src/db"
 
 const MAX_USERS_UPLOAD_LIMIT = 1000
 
@@ -195,13 +195,13 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
       if (filters && typeof filters === "object") {
         for (let [field, value] of Object.entries(filters)) {
           delete filters[field]
-          filters[removeKeyNumbering(field)] = value
+          filters[db.removeKeyNumbering(field)] = value
         }
       }
     }
     // Validate we aren't trying to search on any illegal fields
     if (!userSdk.core.isSupportedUserSearch(body.query)) {
-      ctx.throw(501, "Can only search by string.email or equal._id")
+      ctx.throw(400, "Can only search by string.email or equal._id")
     }
   }
 
