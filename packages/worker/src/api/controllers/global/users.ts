@@ -195,7 +195,11 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
       if (filters && typeof filters === "object") {
         for (let [field, value] of Object.entries(filters)) {
           delete filters[field]
-          filters[db.removeKeyNumbering(field)] = value
+          const cleanedField = db.removeKeyNumbering(field)
+          if (filters[cleanedField] !== undefined) {
+            ctx.throw(400, "Only 1 filter per field is supported")
+          }
+          filters[cleanedField] = value
         }
       }
     }
