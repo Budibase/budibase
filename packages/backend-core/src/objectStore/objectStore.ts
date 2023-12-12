@@ -260,12 +260,12 @@ export async function listAllObjects(bucketName: string, path: string) {
 }
 
 /**
- * Generate a presigned url with a default TTL of 36 hours
+ * Generate a presigned url with a default TTL of 1 hour
  */
 export function getPresignedUrl(
   bucketName: string,
   key: string,
-  durationSeconds: number = 129600
+  durationSeconds: number = 3600
 ) {
   const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {
