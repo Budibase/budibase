@@ -617,6 +617,36 @@ describe("/api/global/users", () => {
       expect(response.body.data[0]._id).toBe(user._id)
     })
 
+    it("should throw an error when using multiple filters on the same field", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["1:email"]: user.email,
+              ["2:email"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("should throw an error when using multiple filters on the same field without prefixes", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["_id"]: user.email,
+              ["999:_id"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
     it("should throw an error when unimplemented options used", async () => {
       const user = await config.createUser()
       await config.api.users.searchUsers(
