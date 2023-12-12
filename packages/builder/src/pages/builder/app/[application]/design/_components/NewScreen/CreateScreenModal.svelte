@@ -125,7 +125,6 @@
 
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ templates }) => {
-    console.log(templates)
     selectedTemplates = templates
     screenAccessRoleModal.show()
   }
