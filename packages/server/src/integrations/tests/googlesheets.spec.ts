@@ -39,7 +39,7 @@ describe("Google Sheets Integration", () => {
   let cleanupEnv: () => void
 
   beforeAll(() => {
-    cleanupEnv = config.setEnv({
+    cleanupEnv = config.setCoreEnv({
       GOOGLE_CLIENT_ID: "test",
       GOOGLE_CLIENT_SECRET: "test",
     })

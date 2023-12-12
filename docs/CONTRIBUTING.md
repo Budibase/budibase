@@ -84,7 +84,7 @@ Component libraries are collections of components as well as the definition of t
 
 - If the project diverges from your branch, please rebase instead of merging. This makes the commit graph easier to read.
 
-- Once your work is completed, please raise a PR against the `develop` branch with some information about what has changed and why.
+- Once your work is completed, please raise a PR against the `master` branch with some information about what has changed and why.
 
 ### Getting Started For Contributors
 
@@ -246,7 +246,7 @@ From here - to develop a change in pro, you can follow the below flow:
 cd packages/pro
 # get the base branch you are working from (same as monorepo)
 git fetch
-git checkout <develop | master>
+git checkout master
 # create a branch, named the same as the branch in your monorepo
 git checkout -b <some branch>
 ... make changes
