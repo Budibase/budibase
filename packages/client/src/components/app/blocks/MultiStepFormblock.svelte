@@ -13,56 +13,6 @@
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
 
-  let schema
-  let formId
-
-  const getCurrentStep = () => {
-    if ($builderStore?.component?._id === $component.id) {
-      return $builderStore?.component.step
-    }
-    return 0
-  }
-
-  $: currentStep = getCurrentStep(
-    $builderStore?.component?._id,
-    componentInstance
-  )
-
-  $: fetchSchema(dataSource)
-
-  const getPropsForField = field => {
-    let fieldProps = field._component
-      ? {
-          ...field,
-        }
-      : {
-          field: field.name,
-          label: field.name,
-          placeholder: field.name,
-          _instanceName: field.name,
-        }
-    return fieldProps
-  }
-
-  const getDefaultFields = (fields, schema) => {
-    if (!schema) {
-      return []
-    }
-    let defaultFields = []
-
-    if (!fields || fields.length === 0) {
-      Object.values(schema)
-        .filter(field => !field.autocolumn)
-        .forEach(field => {
-          defaultFields.push({
-            name: field.name,
-            active: true,
-          })
-        })
-    }
-    return [...fields, ...defaultFields].filter(field => field.active)
-  }
-
   const FieldTypeToComponentMap = {
     string: "stringfield",
     number: "numberfield",
@@ -79,6 +29,35 @@
     bb_reference: "bbreferencefield",
   }
 
+  let schema
+
+  $: fetchSchema(dataSource)
+  $: enrichedSteps = enrichSteps(steps, schema, $component.id)
+  $: currentStep = getCurrentStep(
+    $builderStore?.component?._id,
+    componentInstance
+  )
+
+  const getCurrentStep = () => {
+    if ($builderStore?.component?._id === $component.id) {
+      return $builderStore?.component.step
+    }
+    return 0
+  }
+
+  const getPropsForField = field => {
+    return field._component
+      ? {
+          ...field,
+        }
+      : {
+          field: field.name,
+          label: field.name,
+          placeholder: field.name,
+          _instanceName: field.name,
+        }
+  }
+
   const getComponentForField = field => {
     const fieldSchemaName = field.field || field.name
     if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
@@ -92,24 +71,37 @@
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }
 
-  $: stepProps = steps?.map((step, idx) => {
-    const { title, desc, fields, buttons } = step
-    return {
-      fields: getDefaultFields(fields || [], schema),
-      title,
-      desc,
-      buttons:
-        buttons ||
-        Utils.buildMultiStepFormBlockButtonConfig({
-          _id: $component.id,
-          stepCount: steps?.length ?? 0,
-          currentStep: idx,
-        }),
+  const getDefaultFields = (fields, schema) => {
+    if (fields?.length) {
+      return fields.filter(field => field.active)
     }
-  })
+    return Object.values(schema || {})
+      .filter(field => !field.autocolumn)
+      .map(field => ({
+        name: field.name,
+      }))
+  }
+
+  const enrichSteps = (steps, schema, id) => {
+    const safeSteps = steps?.length ? steps : [{}]
+    return safeSteps.map((step, idx) => {
+      const { title, desc, fields, buttons } = step
+      const defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
+        _id: id,
+        stepCount: safeSteps.length,
+        currentStep: idx,
+      })
+      return {
+        fields: getDefaultFields(fields || [], schema),
+        title: title ?? defaultProps.title,
+        desc,
+        buttons: buttons || defaultProps.buttons,
+      }
+    })
+  }
 </script>
 
-{#key stepProps}
+{#key enrichedSteps}
   <Block>
     <BlockComponent
       type="form"
@@ -119,9 +111,8 @@
         step: $builderStore.inBuilder === true ? currentStep + 1 : null,
       }}
       context="form"
-      bind:id={formId}
     >
-      {#each steps || [] as step, idx ("step" + step._id)}
+      {#each enrichedSteps as step, idx}
         <BlockComponent
           type="formstep"
           props={{ step: idx + 1, _instanceName: `Step ${idx + 1}` }}
@@ -143,39 +134,32 @@
               size: "shrink",
             }}
           >
-            <BlockComponent type="container">
-              <BlockComponent
-                type="heading"
-                props={{ text: stepProps?.[idx]?.title }}
-              />
+            <BlockComponent type="container" order={0}>
+              <BlockComponent type="heading" props={{ text: step.title }} />
             </BlockComponent>
-
-            <BlockComponent
-              type="text"
-              props={{ text: stepProps?.[idx]?.desc }}
-            />
-
-            <BlockComponent type="fieldgroup">
-              {#each stepProps?.[idx]?.fields || [] as field, fieldIdx ("field_" + fieldIdx)}
-                {#if getComponentForField(field) && field.active}
+            <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+            <BlockComponent type="fieldgroup" order={2}>
+              {#each step.fields as field, fieldIdx}
+                {#if getComponentForField(field)}
                   <BlockComponent
                     type={getComponentForField(field)}
                     props={getPropsForField(field)}
-                    order={idx}
+                    order={fieldIdx}
                     interactive
-                    name={field?.field}
+                    name={field.field}
                   />
                 {/if}
               {/each}
             </BlockComponent>
             <BlockComponent
               type="buttongroup"
-              props={{ buttons: stepProps?.[idx]?.buttons }}
+              props={{ buttons: step.buttons }}
               styles={{
                 normal: {
                   "margin-top": "16px",
                 },
               }}
+              order={3}
             />
           </BlockComponent>
         </BlockComponent>

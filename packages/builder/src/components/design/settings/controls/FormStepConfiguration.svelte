@@ -5,7 +5,7 @@
   import { currentAsset, store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
   import { writable } from "svelte/store"
-  import { buildMultiStepFormBlockButtonConfig } from "@budibase/frontend-core/src/utils/utils"
+  import { Utils } from "@budibase/frontend-core"
 
   export let componentInstance
   export let componentBindings
@@ -20,18 +20,18 @@
 
   setContext("multi-step-form-block", multiStepStore)
 
-  $: currentStep = $multiStepStore.currentStep
-  $: stepCount = value?.length || 0
-  $: multiStepStore.update(state => ({ ...state, stepCount }))
-  $: defaultButtonConfig = buildMultiStepFormBlockButtonConfig({
+  $: defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
     _id: componentInstance._id,
     stepCount: stepCount,
     currentStep: currentStep,
   })
+  $: currentStep = $multiStepStore.currentStep
+  $: stepCount = value?.length || 0
+  $: multiStepStore.update(state => ({ ...state, stepCount }))
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
   $: emitCurrentStep(currentStep)
   $: sectionName = getSectionName($multiStepStore)
-  $: stepConfigInstance = buildPseudoInstance(value[currentStep] || {})
+  $: stepInstance = buildPseudoInstance(value[currentStep], defaultProps)
   $: stepDef = {
     settings: [
       {
@@ -150,14 +150,15 @@
     }
   }
 
-  const buildPseudoInstance = ({ buttons, fields, title, desc }) => {
+  const buildPseudoInstance = (instance, defaultProps) => {
+    const { buttons, fields, title, desc } = instance || {}
     return {
       _id: Helpers.uuid(),
       _component: "@budibase/standard-components/multistepformblockstep",
       _instanceName: `Step ${currentStep + 1}`,
-      buttons: buttons || defaultButtonConfig,
+      title: title ?? defaultProps.title,
+      buttons: buttons || defaultProps.buttons,
       fields,
-      title,
       desc,
 
       // Needed for field configuration
@@ -169,7 +170,7 @@
 <div class="nested-section">
   <ComponentSettingsSection
     includeHidden
-    componentInstance={stepConfigInstance}
+    componentInstance={stepInstance}
     componentDefinition={stepDef}
     onUpdateSetting={processUpdate}
     showInstanceName={false}

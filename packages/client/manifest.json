@@ -6095,6 +6095,7 @@
       },
       {
         "type": "static",
+        "suffix": "form",
         "values": [
           {
             "label": "Value",
