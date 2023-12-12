@@ -623,7 +623,7 @@ describe("/api/global/users", () => {
         {
           query: { equal: { firstName: user.firstName } },
         },
-        { status: 501 }
+        { status: 400 }
       )
     })
 
