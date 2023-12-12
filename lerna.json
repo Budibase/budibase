@@ -1,8 +1,10 @@
 {
-  "version": "2.13.35",
+  "version": "2.13.37",
   "npmClient": "yarn",
   "packages": [
-    "packages/*"
+    "packages/*",
+    "!packages/account-portal",
+    "packages/account-portal/packages/*"
   ],
   "useNx": true,
   "command": {

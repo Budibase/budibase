@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "dev:builder": "rollup -cw"
+    "dev": "rollup -cw"
   },
   "dependencies": {
     "@budibase/bbui": "0.0.0",
@@ -78,7 +78,7 @@
           }
         ]
       },
-      "dev:builder": {
+      "dev": {
         "dependsOn": [
           {
             "projects": [
