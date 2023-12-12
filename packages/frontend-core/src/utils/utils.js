@@ -227,7 +227,7 @@ export const buildFormBlockButtonConfig = props => {
     })
   }
 
-  if (actionType == "Update" && showDeleteButton !== false) {
+  if (actionType === "Update" && showDeleteButton !== false) {
     defaultButtons.push({
       text: deleteText || "Delete",
       _id: Helpers.uuid(),
@@ -241,7 +241,7 @@ export const buildFormBlockButtonConfig = props => {
   return defaultButtons
 }
 
-export const buildMultiStepFormBlockButtonConfig = props => {
+export const buildMultiStepFormBlockDefaultProps = props => {
   const { _id, stepCount, currentStep } = props || {}
 
   // Sanity check
@@ -249,6 +249,8 @@ export const buildMultiStepFormBlockButtonConfig = props => {
     return
   }
 
+  // Default the title to "Step X"
+  const title = `Step {{ [${_id}-form].[__currentStep] }}`
   let buttons = []
 
   // Add previous step button if we aren't the first step
@@ -319,5 +321,8 @@ export const buildMultiStepFormBlockButtonConfig = props => {
     })
   }
 
-  return buttons
+  return {
+    buttons,
+    title,
+  }
 }

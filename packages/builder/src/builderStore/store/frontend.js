@@ -1289,15 +1289,14 @@ export const getFrontendStore = () => {
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
 
-          // Can be a single string or array of strings
-          const resetFields = settings.filter(setting => {
-            return (
+          // Reset dependent fields
+          settings.forEach(setting => {
+            const needsReset =
               name === setting.resetOn ||
               (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
-            )
-          })
-          resetFields?.forEach(setting => {
-            component[setting.key] = null
+            if (needsReset) {
+              component[setting.key] = setting.defaultValue || null
+            }
           })
 
           if (
