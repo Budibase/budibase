@@ -26,6 +26,7 @@ import {
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
+import { isEqual } from "lodash"
 
 async function getConnector(
   datasource: Datasource
@@ -198,19 +199,20 @@ async function invalidateVariables(
 export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
-  let datasource = await sdk.datasources.get(datasourceId)
-  const auth = datasource.config?.auth
-  await invalidateVariables(datasource, ctx.request.body)
+  const baseDatasource = await sdk.datasources.get(datasourceId)
+  const auth = baseDatasource.config?.auth
+  await invalidateVariables(baseDatasource, ctx.request.body)
 
-  const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
+  const isBudibaseSource =
+    baseDatasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
   const dataSourceBody = isBudibaseSource
     ? { name: ctx.request.body?.name }
     : ctx.request.body
 
-  datasource = {
-    ...datasource,
-    ...sdk.datasources.mergeConfigs(dataSourceBody, datasource),
+  let datasource: Datasource = {
+    ...baseDatasource,
+    ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
@@ -245,6 +247,15 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
+  // send table updates if they have occurred
+  if (datasource.entities) {
+    for (let table of Object.values(datasource.entities)) {
+      const oldTable = baseDatasource.entities?.[table.name]
+      if (!oldTable || !isEqual(oldTable, table)) {
+        builderSocket?.emitTableUpdate(ctx, table, { includeOriginator: true })
+      }
+    }
+  }
 }
 
 const preSaveAction: Partial<Record<SourceName, any>> = {
