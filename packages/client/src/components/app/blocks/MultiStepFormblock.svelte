@@ -33,16 +33,17 @@
 
   $: fetchSchema(dataSource)
   $: enrichedSteps = enrichSteps(steps, schema, $component.id)
-  $: currentStep = getCurrentStep(
-    $builderStore?.component?._id,
-    componentInstance
-  )
+  $: currentStep = getCurrentStep($builderStore, $component)
 
-  const getCurrentStep = () => {
-    if ($builderStore?.component?._id === $component.id) {
-      return $builderStore?.component.step
+  const getCurrentStep = (builderStore, component) => {
+    if (
+      !component.selected ||
+      !builderStore.inBuilder ||
+      builderStore.metadata?.componentId !== component.id
+    ) {
+      return null
     }
-    return 0
+    return (builderStore.metadata.step || 0) + 1
   }
 
   const getPropsForField = field => {
@@ -108,7 +109,7 @@
       props={{
         dataSource,
         initialFormStep,
-        step: $builderStore.inBuilder === true ? currentStep + 1 : null,
+        step: currentStep,
       }}
       context="form"
     >
