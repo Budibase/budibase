@@ -127,7 +127,10 @@ function parseAppIdFromUrl(url?: string) {
   if (!url) {
     return
   }
-  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
+  return url
+    .split("?")[0]
+    .split("/")
+    .find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**
