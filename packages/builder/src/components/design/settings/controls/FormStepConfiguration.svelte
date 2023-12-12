@@ -4,7 +4,7 @@
   import { getDatasourceForProvider } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
-  import { writable } from "svelte/store"
+  import { derived, writable } from "svelte/store"
   import { Utils } from "@budibase/frontend-core"
 
   export let componentInstance
@@ -17,21 +17,21 @@
     stepCount: value?.length ?? 0,
     currentStep: 0,
   })
+  const currentStep = derived(multiStepStore, state => state.currentStep)
 
   setContext("multi-step-form-block", multiStepStore)
 
   $: defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
     _id: componentInstance._id,
     stepCount: stepCount,
-    currentStep: currentStep,
+    step: $multiStepStore.currentStep,
   })
-  $: currentStep = $multiStepStore.currentStep
   $: stepCount = value?.length || 0
-  $: multiStepStore.update(state => ({ ...state, stepCount }))
+  $: updateStore(stepCount)
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: emitCurrentStep(currentStep)
+  $: emitCurrentStep($currentStep)
   $: sectionName = getSectionName($multiStepStore)
-  $: stepInstance = buildPseudoInstance(value[currentStep], defaultProps)
+  $: stepInstance = buildPseudoInstance(value, $currentStep, defaultProps)
   $: stepDef = {
     settings: [
       {
@@ -72,6 +72,16 @@
     ],
   }
 
+  const updateStore = stepCount => {
+    multiStepStore.update(state => {
+      state.stepCount = stepCount
+      if (state.currentStep >= stepCount) {
+        state.currentStep = 0
+      }
+      return { ...state }
+    })
+  }
+
   const getSectionName = ({ stepCount, currentStep }) => {
     if (stepCount <= 1) {
       return "Details"
@@ -81,49 +91,47 @@
 
   const emitCurrentStep = step => {
     store.actions.preview.sendEvent("builder-meta", {
-      component: {
-        _id: componentInstance._id,
-        step: step,
-      },
+      componentId: componentInstance._id,
+      step: step,
     })
   }
 
   const addStep = () => {
-    dispatch("change", value.toSpliced(currentStep + 1, 0, {}))
+    dispatch("change", value.toSpliced($currentStep + 1, 0, {}))
     multiStepStore.update(state => ({
       ...state,
-      currentStep: currentStep + 1,
+      currentStep: $currentStep + 1,
     }))
   }
 
   const removeStep = () => {
-    dispatch("change", value.toSpliced(currentStep, 1))
+    dispatch("change", value.toSpliced($currentStep, 1))
     multiStepStore.update(state => ({
       ...state,
-      currentStep: Math.min(currentStep, stepCount - 2),
+      currentStep: Math.min($currentStep, stepCount - 2),
     }))
   }
 
   const previousStep = () => {
     multiStepStore.update(state => ({
       ...state,
-      currentStep: Math.max(currentStep - 1, 0),
+      currentStep: Math.max($currentStep - 1, 0),
     }))
   }
 
   const nextStep = () => {
     multiStepStore.update(state => ({
       ...state,
-      currentStep: Math.min(currentStep + 1, value.length - 1),
+      currentStep: Math.min($currentStep + 1, value.length - 1),
     }))
   }
 
   const updateStep = (field, val) => {
     const newStep = {
-      ...value[currentStep],
+      ...value[$currentStep],
       [field.key]: val,
     }
-    dispatch("change", value.toSpliced(currentStep, 1, newStep))
+    dispatch("change", value.toSpliced($currentStep, 1, newStep))
   }
 
   const handleStepAction = action => {
@@ -150,8 +158,8 @@
     }
   }
 
-  const buildPseudoInstance = (instance, defaultProps) => {
-    const { buttons, fields, title, desc } = instance || {}
+  const buildPseudoInstance = (value, currentStep, defaultProps) => {
+    const { buttons, fields, title, desc } = value?.[currentStep] || {}
     return {
       _id: Helpers.uuid(),
       _component: "@budibase/standard-components/multistepformblockstep",

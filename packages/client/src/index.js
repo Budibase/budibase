@@ -76,11 +76,8 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
-    } else if ("builder-meta") {
-      builderStore.update(state => ({
-        ...state,
-        ...data,
-      }))
+    } else if (type === "builder-meta") {
+      builderStore.actions.setMetadata(data)
     }
   }
 
