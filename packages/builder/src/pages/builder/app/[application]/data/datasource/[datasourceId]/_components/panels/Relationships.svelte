@@ -15,7 +15,8 @@
 
   let modal
 
-  $: tables = Object.values(datasource.entities)
+  $: tables =
+    $tablesStore.list.filter(tbl => tbl.sourceId === datasource._id) || []
   $: relationships = getRelationships(tables)
 
   function getRelationships(tables) {
