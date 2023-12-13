@@ -7,7 +7,7 @@ import * as locks from "../redis/redlockImpl"
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
 
-interface CacheItem {
+interface CacheItem<T extends Document> {
   doc: any
   lastWrite: number
 }
@@ -24,7 +24,10 @@ function makeCacheKey(db: Database, key: string) {
   return db.name + key
 }
 
-function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
+function makeCacheItem<T extends Document>(
+  doc: T,
+  lastWrite: number | null = null
+): CacheItem<T> {
   return { doc, lastWrite: lastWrite || Date.now() }
 }
 
@@ -35,7 +38,7 @@ async function put(
 ) {
   const cache = await getCache()
   const key = doc._id
-  let cacheItem: CacheItem | undefined
+  let cacheItem: CacheItem<any> | undefined
   if (key) {
     cacheItem = await cache.get(makeCacheKey(db, key))
   }
@@ -87,13 +90,13 @@ async function put(
 async function get<T extends Document>(db: Database, id: string): Promise<T> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
-  let cacheItem: CacheItem = await cache.get(cacheKey)
+  let cacheItem: CacheItem<T> = await cache.get(cacheKey)
   if (!cacheItem) {
     const doc = await db.get<T>(id)
     cacheItem = makeCacheItem(doc)
     await cache.store(cacheKey, cacheItem)
   }
-  return cacheItem.doc as T
+  return cacheItem.doc
 }
 
 async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
