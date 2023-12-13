@@ -220,6 +220,9 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for apps pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
     # -- Startup probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -286,6 +289,9 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for automation worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
     # -- Startup probe configuration for automation worker pods. You shouldn't
     # need to change this, but if you want to you can find more information
     # here:
@@ -354,6 +360,9 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
     # -- Startup probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
