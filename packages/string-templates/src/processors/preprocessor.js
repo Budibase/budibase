@@ -71,6 +71,9 @@ module.exports.processors = [
     ) {
       insideStatement = `(${insideStatement})`
     }
+    if (statement === "{{ uuid }}") {
+      return statement
+    }
     return `{{ all ${insideStatement} }}`
   }),
 ]
