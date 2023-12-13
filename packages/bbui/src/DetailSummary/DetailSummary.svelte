@@ -78,7 +78,7 @@
       var(--spacing-xl);
   }
   .property-panel.no-title {
-    padding-top: 0;
+    padding-top: var(--spacing-xl);
   }
 
   .show {
