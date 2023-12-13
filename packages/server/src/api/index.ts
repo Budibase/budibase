@@ -5,8 +5,8 @@ import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import migrations from "../middleware/appMigrations"
-import { automationsEnabled } from "src/features"
-import { automationQueue } from "src/automations"
+import { automationsEnabled } from "../features"
+import { automationQueue } from "../automations"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
