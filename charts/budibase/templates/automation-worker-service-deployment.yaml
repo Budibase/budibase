@@ -195,6 +195,10 @@ spec:
         {{ end }}
         - name: APP_FEATURES
           value: "automations"
+        {{- range .Values.services.automationWorkers.extraEnv }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
 
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
