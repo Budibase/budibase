@@ -6,6 +6,7 @@
   import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"
   import { Utils } from "@budibase/frontend-core"
+  import { cloneDeep } from "lodash"
 
   export let componentInstance
   export let componentBindings
@@ -18,6 +19,7 @@
     currentStep: 0,
   })
   const currentStep = derived(multiStepStore, state => state.currentStep)
+  const componentType = "@budibase/standard-components/multistepformblockstep"
 
   setContext("multi-step-form-block", multiStepStore)
 
@@ -30,46 +32,14 @@
   $: updateStore(stepCount)
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
   $: emitCurrentStep($currentStep)
-  $: sectionName = getSectionName($multiStepStore)
+  $: stepLabel = getStepLabel($multiStepStore)
+  $: stepDef = getDefinition(stepLabel)
   $: stepInstance = buildPseudoInstance(value, $currentStep, defaultProps)
-  $: stepDef = {
-    settings: [
-      {
-        section: true,
-        name: sectionName,
-        settings: [
-          {
-            type: "formStepControls",
-            label: "Steps",
-            key: "steps",
-          },
-          {
-            type: "text",
-            label: "Title",
-            key: "title",
-            nested: true,
-          },
-          {
-            type: "text",
-            label: "Description",
-            key: "desc",
-            nested: true,
-          },
-          {
-            type: "fieldConfiguration",
-            key: "fields",
-            nested: true,
-          },
-          {
-            type: "buttonConfiguration",
-            label: "Buttons",
-            key: "buttons",
-            wide: true,
-            nested: true,
-          },
-        ],
-      },
-    ],
+
+  const getDefinition = stepLabel => {
+    let def = cloneDeep(store.actions.components.getDefinition(componentType))
+    def.settings.find(x => x.key === "steps").label = stepLabel
+    return def
   }
 
   const updateStore = stepCount => {
@@ -82,7 +52,7 @@
     })
   }
 
-  const getSectionName = ({ stepCount, currentStep }) => {
+  const getStepLabel = ({ stepCount, currentStep }) => {
     if (stepCount <= 1) {
       return "Details"
     }
@@ -165,7 +135,7 @@
     const { buttons, fields, title, desc } = value?.[currentStep] || {}
     return {
       _id: Helpers.uuid(),
-      _component: "@budibase/standard-components/multistepformblockstep",
+      _component: componentType,
       _instanceName: `Step ${currentStep + 1}`,
       title: title ?? defaultProps.title,
       buttons: buttons || defaultProps.buttons,
@@ -184,7 +154,7 @@
     componentInstance={stepInstance}
     componentDefinition={stepDef}
     onUpdateSetting={processUpdate}
-    showInstanceName={false}
+    showSectionTitle={false}
     isScreen={false}
     nested={true}
     {bindings}
@@ -196,6 +166,5 @@
   .nested-section {
     margin: 0 calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl))
       calc(-1 * var(--spacing-xl));
-    border-top: var(--border-light);
   }
 </style>
