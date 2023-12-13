@@ -97,7 +97,8 @@
   }
 
   const addStep = () => {
-    dispatch("change", value.toSpliced($currentStep + 1, 0, {}))
+    value = value.toSpliced($currentStep + 1, 0, {})
+    dispatch("change", value)
     multiStepStore.update(state => ({
       ...state,
       currentStep: $currentStep + 1,
@@ -105,7 +106,8 @@
   }
 
   const removeStep = () => {
-    dispatch("change", value.toSpliced($currentStep, 1))
+    value = value.toSpliced($currentStep, 1)
+    dispatch("change", value)
     multiStepStore.update(state => ({
       ...state,
       currentStep: Math.min($currentStep, stepCount - 2),
@@ -131,7 +133,8 @@
       ...value[$currentStep],
       [field.key]: val,
     }
-    dispatch("change", value.toSpliced($currentStep, 1, newStep))
+    value = value.toSpliced($currentStep, 1, newStep)
+    dispatch("change", value)
   }
 
   const handleStepAction = action => {
