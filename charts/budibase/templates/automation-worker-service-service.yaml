@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: automation-worker-service
+  name: automation-worker-service
+spec:
+  ports:
+    - name: {{ .Values.services.automationWorkers.port | quote }}
+      port: {{ .Values.services.automationWorkers.port }}
+      targetPort: {{ .Values.services.automationWorkers.port }}
+  selector:
+    io.kompose.service: automation-worker-service
+status:
+  loadBalancer: {}
