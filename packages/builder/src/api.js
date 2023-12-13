@@ -52,6 +52,8 @@ export const API = createAPIClient({
       return
     }
 
-    window.location = `${updatingUrl}?returnUrl=${encodeURI(window.location)}`
+    window.location = `${updatingUrl}?returnUrl=${encodeURIComponent(
+      window.location
+    )}`
   },
 })
