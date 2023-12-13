@@ -1,10 +1,13 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
-  import Block from "components/Block.svelte"
   import { getContext } from "svelte"
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
+  import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
 
+  export let actionType
+  export let rowId
+  export let noRowsMessage
   export let steps
   export let dataSource
   export let initialFormStep = 1
@@ -102,6 +105,8 @@
         _id: id,
         stepCount: safeSteps.length,
         currentStep: idx,
+        actionType,
+        dataSource,
       })
       return {
         fields: getDefaultFields(fields || [], schema),
@@ -113,27 +118,29 @@
   }
 </script>
 
-<Block>
+<FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
   <BlockComponent
     type="form"
+    context="form"
     props={{
       dataSource,
       initialFormStep,
       step: currentStep,
+      actionType: actionType === "Create" ? "Create" : "Update",
+      readonly: actionType === "View",
     }}
-    context="form"
+    styles={{
+      normal: {
+        width: "600px",
+        "margin-left": "auto",
+        "margin-right": "auto",
+      },
+    }}
   >
     {#each enrichedSteps as step, idx}
       <BlockComponent
         type="formstep"
         props={{ step: idx + 1, _instanceName: `Step ${idx + 1}` }}
-        styles={{
-          normal: {
-            width: "600px",
-            "margin-left": "auto",
-            "margin-right": "auto",
-          },
-        }}
       >
         <BlockComponent
           type="container"
@@ -176,4 +183,4 @@
       </BlockComponent>
     {/each}
   </BlockComponent>
-</Block>
+</FormBlockWrapper>

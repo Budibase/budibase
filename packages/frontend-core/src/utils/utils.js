@@ -242,15 +242,16 @@ export const buildFormBlockButtonConfig = props => {
 }
 
 export const buildMultiStepFormBlockDefaultProps = props => {
-  const { _id, stepCount, currentStep } = props || {}
+  const { _id, stepCount, currentStep, actionType, dataSource } = props || {}
 
   // Sanity check
   if (!_id || !stepCount) {
     return
   }
 
-  // Default the title to "Step X"
   const title = `Step {{ [${_id}-form].[__currentStep] }}`
+  const resourceId = dataSource?.resourceId
+  const formId = `${_id}-form`
   let buttons = []
 
   // Add previous step button if we aren't the first step
@@ -266,7 +267,7 @@ export const buildMultiStepFormBlockDefaultProps = props => {
         {
           parameters: {
             type: "prev",
-            componentId: `${_id}-form`,
+            componentId: formId,
           },
           "##eventHandlerType": "Change Form Step",
         },
@@ -287,13 +288,13 @@ export const buildMultiStepFormBlockDefaultProps = props => {
         {
           "##eventHandlerType": "Validate Form",
           parameters: {
-            componentId: `${_id}-form`,
+            componentId: formId,
           },
         },
         {
           parameters: {
             type: "next",
-            componentId: `${_id}-form`,
+            componentId: formId,
           },
           "##eventHandlerType": "Change Form Step",
         },
@@ -302,7 +303,7 @@ export const buildMultiStepFormBlockDefaultProps = props => {
   }
 
   // Add save button if we are the last step
-  if (currentStep === stepCount - 1) {
+  if (actionType !== "View" && currentStep === stepCount - 1) {
     buttons.push({
       _id: Helpers.uuid(),
       _component: "@budibase/standard-components/button",
@@ -314,9 +315,27 @@ export const buildMultiStepFormBlockDefaultProps = props => {
         {
           "##eventHandlerType": "Validate Form",
           parameters: {
-            componentId: `${_id}-form`,
+            componentId: formId,
           },
         },
+        {
+          "##eventHandlerType": "Save Row",
+          parameters: {
+            tableId: resourceId,
+            providerId: formId,
+          },
+        },
+        // Clear a create form once submitted
+        ...(actionType !== "Create"
+          ? []
+          : [
+              {
+                "##eventHandlerType": "Clear Form",
+                parameters: {
+                  componentId: formId,
+                },
+              },
+            ]),
       ],
     })
   }
