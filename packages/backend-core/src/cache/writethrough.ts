@@ -84,16 +84,16 @@ async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-async function get(db: Database, id: string): Promise<any> {
+async function get<T extends Document>(db: Database, id: string): Promise<T> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
   let cacheItem: CacheItem = await cache.get(cacheKey)
   if (!cacheItem) {
-    const doc = await db.get(id)
+    const doc = await db.get<T>(id)
     cacheItem = makeCacheItem(doc)
     await cache.store(cacheKey, cacheItem)
   }
-  return cacheItem.doc
+  return cacheItem.doc as T
 }
 
 async function remove(db: Database, docOrId: any, rev?: any): Promise<void> {
@@ -123,8 +123,8 @@ export class Writethrough {
     return put(this.db, doc, writeRateMs)
   }
 
-  async get(id: string) {
-    return get(this.db, id)
+  async get<T extends Document>(id: string) {
+    return get<T>(this.db, id)
   }
 
   async remove(docOrId: any, rev?: any) {
