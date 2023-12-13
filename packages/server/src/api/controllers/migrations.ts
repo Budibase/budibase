@@ -18,7 +18,7 @@ export async function fetchDefinitions(ctx: Ctx) {
   ctx.status = 200
 }
 
-export async function migrationCompleted(ctx: Ctx) {
+export async function getMigrationStatus(ctx: Ctx) {
   const appId = context.getAppId()
 
   if (!appId) {
