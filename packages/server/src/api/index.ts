@@ -5,13 +5,23 @@ import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
 import migrations from "../middleware/appMigrations"
+import { automationsEnabled } from "src/features"
+import { automationQueue } from "src/automations"
 
 export { shutdown } from "./routes/public"
 const compress = require("koa-compress")
 
 export const router: Router = new Router()
 
-router.get("/health", ctx => (ctx.status = 200))
+router.get("/health", async ctx => {
+  if (automationsEnabled()) {
+    if (!(await automationQueue.isReady())) {
+      ctx.status = 503
+      return
+    }
+  }
+  ctx.status = 200
+})
 router.get("/version", ctx => (ctx.body = envCore.VERSION))
 
 router.use(middleware.errorHandling)

@@ -2,32 +2,32 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-{{ if .Values.services.apps.deploymentAnnotations }}
-{{- toYaml .Values.services.apps.deploymentAnnotations | indent 4 -}}
+{{ if .Values.services.automationWorkers.deploymentAnnotations }}
+{{- toYaml .Values.services.automationWorkers.deploymentAnnotations | indent 4 -}}
 {{ end }}
   labels:
-    io.kompose.service: app-service
-{{ if .Values.services.apps.deploymentLabels }}
-{{- toYaml .Values.services.apps.deploymentLabels | indent 4 -}}
+    io.kompose.service: automation-worker-service
+{{ if .Values.services.automationWorkers.deploymentLabels }}
+{{- toYaml .Values.services.automationWorkers.deploymentLabels | indent 4 -}}
 {{ end }}
-  name: app-service
+  name: automation-worker-service
 spec:
-  replicas: {{ .Values.services.apps.replicaCount }}
+  replicas: {{ .Values.services.automationWorkers.replicaCount }}
   selector:
     matchLabels:
-      io.kompose.service: app-service
+      io.kompose.service: automation-worker-service
   strategy:
     type: RollingUpdate
   template:
     metadata:
       annotations:
-{{ if .Values.services.apps.templateAnnotations }}
-{{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
+{{ if .Values.services.automationWorkers.templateAnnotations }}
+{{- toYaml .Values.services.automationWorkers.templateAnnotations | indent 8 -}}
 {{ end }}
       labels:
-        io.kompose.service: app-service
-{{ if .Values.services.apps.templateLabels }}
-{{- toYaml .Values.services.apps.templateLabels | indent 8 -}}
+        io.kompose.service: automation-worker-service
+{{ if .Values.services.automationWorkers.templateLabels }}
+{{- toYaml .Values.services.automationWorkers.templateLabels | indent 8 -}}
 {{ end }}
     spec:
       containers:
@@ -59,7 +59,7 @@ spec:
         - name: API_ENCRYPTION_KEY
           value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: HTTP_LOGGING
-          value: {{ .Values.services.apps.httpLogging | quote }}
+          value: {{ .Values.services.automationWorkers.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
@@ -107,17 +107,17 @@ spec:
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
-          value: {{ .Values.services.apps.port | quote }}
+          value: {{ .Values.services.automationWorkers.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
         - name: API_REQ_LIMIT_PER_SEC
-          value: {{ .Values.globals.apps.publicApiRateLimitPerSecond | quote }}
+          value: {{ .Values.globals.automationWorkers.publicApiRateLimitPerSecond | quote }}
         {{ end }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: OFFLINE_MODE
           value: {{ .Values.globals.offlineMode | quote }}
         - name: LOG_LEVEL
-          value: {{ .Values.services.apps.logLevel | quote }}
+          value: {{ .Values.services.automationWorkers.logLevel | quote }}
         - name: REDIS_PASSWORD
           value: {{ .Values.services.redis.password }}
         - name: REDIS_URL
@@ -164,9 +164,9 @@ spec:
         - name: PLUGINS_DIR
           value: {{ .Values.globals.pluginsDir | quote }}
         {{ end }}
-        {{ if .Values.services.apps.nodeDebug }}
+        {{ if .Values.services.automationWorkers.nodeDebug }}
         - name: NODE_DEBUG
-          value: {{ .Values.services.apps.nodeDebug | quote }}
+          value: {{ .Values.services.automationWorkers.nodeDebug | quote }}
         {{ end }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
@@ -193,32 +193,33 @@ spec:
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
         - name: APP_FEATURES
-          value: "api"
+          # We keep `api` enabled here for the /health endpoint
+          value: "automations,api"
 
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
-        {{- if .Values.services.apps.startupProbe }}
-        {{- with .Values.services.apps.startupProbe }}
+        {{- if .Values.services.automationWorkers.startupProbe }}
+        {{- with .Values.services.automationWorkers.startupProbe }}
         startupProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        {{- if .Values.services.apps.livenessProbe }}
-        {{- with .Values.services.apps.livenessProbe }}
+        {{- if .Values.services.automationWorkers.livenessProbe }}
+        {{- with .Values.services.automationWorkers.livenessProbe }}
         livenessProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        {{- if .Values.services.apps.readinessProbe }}
-        {{- with .Values.services.apps.readinessProbe }}
+        {{- if .Values.services.automationWorkers.readinessProbe }}
+        {{- with .Values.services.automationWorkers.readinessProbe }}
         readinessProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
         name: bbapps
         ports:
-        - containerPort: {{ .Values.services.apps.port }}
-        {{ with .Values.services.apps.resources }}
+        - containerPort: {{ .Values.services.automationWorkers.port }}
+        {{ with .Values.services.automationWorkers.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
