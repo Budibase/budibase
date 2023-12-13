@@ -161,6 +161,7 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.automationWorkers.autoscaling.maxReplicas | int | `10` |  |
 | services.automationWorkers.autoscaling.minReplicas | int | `1` |  |
 | services.automationWorkers.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the automation worker service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the automation worker pods. |
+| services.automationWorkers.enabled | bool | `true` | Whether or not to enable the automation worker service. If you disable this, automations will be processed by the apps service. |
 | services.automationWorkers.livenessProbe | object | HTTP health checks. | Liveness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.automationWorkers.logLevel | string | `"info"` | The log level for the automation worker service. |
 | services.automationWorkers.readinessProbe | object | HTTP health checks. | Readiness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |

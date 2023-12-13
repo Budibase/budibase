@@ -1,3 +1,4 @@
+{{- if .Values.services.automationWorkers.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -240,3 +241,4 @@ spec:
       restartPolicy: Always
       serviceAccountName: ""
 status: {}
+{{- end }}
