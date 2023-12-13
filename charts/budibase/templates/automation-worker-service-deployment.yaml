@@ -216,7 +216,7 @@ spec:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        name: bbapps
+        name: bbautomationworker
         ports:
         - containerPort: {{ .Values.services.automationWorkers.port }}
         {{ with .Values.services.automationWorkers.resources }}
