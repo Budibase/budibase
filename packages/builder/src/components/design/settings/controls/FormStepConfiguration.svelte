@@ -167,4 +167,7 @@
     margin: 0 calc(-1 * var(--spacing-xl)) calc(-1 * var(--spacing-xl))
       calc(-1 * var(--spacing-xl));
   }
+  .nested-section :global(.property-panel) {
+    padding-top: 0;
+  }
 </style>
