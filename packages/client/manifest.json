@@ -6058,12 +6058,48 @@
         "defaultValue": "Create"
       },
       {
-        "type": "stepConfiguration",
-        "key": "steps",
-        "nested": true,
-        "labelHidden": true,
-        "resetOn": ["dataSource", "actionType"],
-        "defaultValue": [{}]
+        "section": true,
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        },
+        "name": "Row ID",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "No rows found",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "stepConfiguration",
+            "key": "steps",
+            "nested": true,
+            "labelHidden": true,
+            "resetOn": [
+              "dataSource",
+              "actionType"
+            ],
+            "defaultValue": [
+              {}
+            ]
+          }
+        ]
       }
     ],
     "actions": [
@@ -6118,6 +6154,40 @@
             "type": "boolean"
           }
         ]
+      }
+    ]
+  },
+  "multistepformblockstep": {
+    "name": "Multi-step Form Block Step",
+    "settings": [
+      {
+        "type": "formStepControls",
+        "label": "Steps",
+        "key": "steps"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "nested": true
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "desc",
+        "nested": true
+      },
+      {
+        "type": "fieldConfiguration",
+        "key": "fields",
+        "nested": true
+      },
+      {
+        "type": "buttonConfiguration",
+        "label": "Buttons",
+        "key": "buttons",
+        "wide": true,
+        "nested": true
       }
     ]
   },
