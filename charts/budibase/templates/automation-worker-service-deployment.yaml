@@ -193,8 +193,7 @@ spec:
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
         - name: APP_FEATURES
-          # We keep `api` enabled here for the /health endpoint
-          value: "automations,api"
+          value: "automations"
 
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
