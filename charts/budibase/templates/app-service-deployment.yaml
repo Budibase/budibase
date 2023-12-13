@@ -196,6 +196,10 @@ spec:
         - name: APP_FEATURES
           value: "api"
         {{- end }}
+        {{- range .Values.services.apps.extraEnv }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
