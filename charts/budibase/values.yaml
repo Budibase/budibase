@@ -273,6 +273,9 @@ services:
       targetCPUUtilizationPercentage: 80
 
   automationWorkers:
+    # -- Whether or not to enable the automation worker service. If you disable this,
+    # automations will be processed by the apps service.
+    enabled: true
     # @ignore (you shouldn't need to change this)
     port: 4002
     # -- The number of automation worker replicas to run.
