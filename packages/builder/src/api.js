@@ -46,7 +46,7 @@ export const API = createAPIClient({
     }
   },
   onMigrationDetected: appId => {
-    const updatingUrl = `/builder/updating/${appId}`
+    const updatingUrl = `/builder/app/${appId}/updating`
 
     if (window.location.pathname === updatingUrl) {
       return
