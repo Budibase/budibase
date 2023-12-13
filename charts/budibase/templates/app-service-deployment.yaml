@@ -192,12 +192,10 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-        {{ }}
         {{- if .Values.services.automationWorkers.enabled }}
         - name: APP_FEATURES
           value: "api"
         {{- end }}
-
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
