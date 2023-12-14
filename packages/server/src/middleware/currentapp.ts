@@ -23,7 +23,7 @@ export default async (ctx: UserCtx, next: any) => {
     }
 
     if (requestAppId) {
-      span?.addTags({ appId: requestAppId })
+      span?.addTags({ app_id: requestAppId })
     }
 
     // deny access to application preview

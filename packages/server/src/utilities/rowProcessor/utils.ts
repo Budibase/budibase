@@ -52,7 +52,7 @@ export function processFormulas<T extends Row | Row[]>(
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
 ): T {
   return tracer.trace("processFormulas", {}, span => {
-    span?.addTags({ tableId: table._id })
+    span?.addTags({ table_id: table._id })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
     if (rows) {
       for (let [column, schema] of Object.entries(table.schema)) {
