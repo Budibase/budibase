@@ -99,9 +99,15 @@ export async function getLinkDocuments(args: {
 }
 
 export function getUniqueByProp(array: any[], prop: string) {
-  return array.filter((obj, pos, arr) => {
-    return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos
-  })
+  const seen = new Set()
+  const ret = []
+  for (const item of array) {
+    if (!seen.has(item[prop])) {
+      seen.add(item[prop])
+      ret.push(item)
+    }
+  }
+  return ret
 }
 
 export function getLinkedTableIDs(table: Table): string[] {
