@@ -2,19 +2,27 @@
   import Spinner from "components/common/Spinner.svelte"
   import { API } from "api"
 
-  setInterval(async () => {
-    const response = await API.get({ url: "/api/migrations/status" })
-    if (!response.migrated) {
-      return
-    }
+  let timeout
+  async function checkMigrationsFinished() {
+    timeout = setTimeout(async () => {
+      const response = await API.get({ url: "/api/migrations/status" })
+      if (!response.migrated) {
+        checkMigrationsFinished()
+        return
+      }
 
-    const urlParams = new URLSearchParams(window.location.search)
-    const returnUrl = urlParams.get("returnUrl")
+      const urlParams = new URLSearchParams(window.location.search)
+      const returnUrl = urlParams.get("returnUrl")
 
-    window.location = returnUrl
-  }, 1000)
+      window.location = returnUrl
+    }, 1000)
+  }
+
+  checkMigrationsFinished()
 
   setTimeout(() => {
+    clearTimeout(timeout)
+    // TODO
     alert("Something went wrong 💀")
   }, 60000)
 </script>
