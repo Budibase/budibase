@@ -96,7 +96,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   }
 
   // look in the path
-  const pathId = parseAppIdFromUrl(ctx.path)
+  const pathId = parseAppIdFromUrlPath(ctx.path)
   if (!appId && pathId) {
     appId = confirmAppId(pathId)
   }
@@ -116,19 +116,19 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // referer header is present from a builder redirect
   const referer = ctx.request.headers.referer
   if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
-    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
     appId = confirmAppId(refererId)
   }
 
   return appId
 }
 
-function parseAppIdFromUrl(url?: string) {
+function parseAppIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
   return url
-    .split("?")[0]
+    .split("?")[0] // Remove any possible query string
     .split("/")
     .find(subPath => subPath.startsWith(APP_PREFIX))
 }
