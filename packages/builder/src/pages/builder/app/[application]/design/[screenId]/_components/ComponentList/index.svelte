@@ -61,7 +61,7 @@
             on:drop={onDrop}
             on:click={() => ($store.selectedComponentId = screenComponentId)}
             hovering={$store.hoveredComponentId === screenComponentId}
-            on:mouseenter={() => hover(`${$store.selectedScreenId}-screen`)}
+            on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-screen"
             selectedBy={$userSelectedResourceMap[screenComponentId]}
