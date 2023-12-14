@@ -1,14 +1,15 @@
 import { DBTestConfiguration } from "../../../tests/extra"
-import {
-  structures,
-  expectFunctionWasCalledTimesWith,
-  mocks,
-} from "../../../tests"
+import { structures } from "../../../tests"
 import { Writethrough } from "../writethrough"
 import { getDB } from "../../db"
+import { Document } from "@budibase/types"
 import tk from "timekeeper"
 
 tk.freeze(Date.now())
+
+interface ValueDoc extends Document {
+  value: any
+}
 
 const DELAY = 5000
 
@@ -117,7 +118,7 @@ describe("writethrough", () => {
   describe("get", () => {
     it("should be able to retrieve", async () => {
       await config.doInTenant(async () => {
-        const response = await writethrough.get(docId)
+        const response = await writethrough.get<ValueDoc>(docId)
         expect(response.value).toBe(4)
       })
     })
