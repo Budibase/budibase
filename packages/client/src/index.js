@@ -7,6 +7,7 @@ import {
   environmentStore,
   dndStore,
   eventStore,
+  hoverStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -32,7 +33,6 @@ const loadBudibase = async () => {
     layout: window["##BUDIBASE_PREVIEW_LAYOUT##"],
     screen: window["##BUDIBASE_PREVIEW_SCREEN##"],
     selectedComponentId: window["##BUDIBASE_SELECTED_COMPONENT_ID##"],
-    hoverComponentId: window["##BUDIBASE_HOVER_COMPONENT_ID##"],
     previewId: window["##BUDIBASE_PREVIEW_ID##"],
     theme: window["##BUDIBASE_PREVIEW_THEME##"],
     customTheme: window["##BUDIBASE_PREVIEW_CUSTOM_THEME##"],
@@ -76,6 +76,8 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
+    } else if (type === "hover-component") {
+      hoverStore.actions.hoverComponent(data)
     }
   }
 
