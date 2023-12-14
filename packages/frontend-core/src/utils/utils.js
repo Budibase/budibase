@@ -241,7 +241,7 @@ export const buildFormBlockButtonConfig = props => {
   return defaultButtons
 }
 
-export const buildMultiStepFormBlockDefaultProps = (props, log = false) => {
+export const buildMultiStepFormBlockDefaultProps = props => {
   const { _id, stepCount, currentStep, actionType, dataSource } = props || {}
 
   // Sanity check
