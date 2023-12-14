@@ -100,14 +100,14 @@ export async function getLinkDocuments(args: {
 
 export function getUniqueByProp(array: any[], prop: string) {
   const seen = new Set()
-  const ret = []
+  const filteredArray = []
   for (const item of array) {
     if (!seen.has(item[prop])) {
       seen.add(item[prop])
-      ret.push(item)
+      filteredArray.push(item)
     }
   }
-  return ret
+  return filteredArray
 }
 
 export function getLinkedTableIDs(table: Table): string[] {
