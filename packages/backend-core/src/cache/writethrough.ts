@@ -56,11 +56,8 @@ async function put(
         const writeDb = async (toWrite: any) => {
           // doc should contain the _id and _rev
           const response = await db.put(toWrite, { force: true })
-          output = {
-            ...doc,
-            _id: response.id,
-            _rev: response.rev,
-          }
+          output._id = response.id
+          output._rev = response.rev
         }
         try {
           await writeDb(doc)
