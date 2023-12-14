@@ -1,19 +1,23 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
-  import { getContext } from "svelte"
+  import { getContext, setContext } from "svelte"
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
+  import { writable } from "svelte/store"
 
   export let actionType
   export let rowId
   export let noRowsMessage
   export let steps
   export let dataSource
-  export let initialFormStep = 1
 
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
+
+  // Set current step context to force child form to use it
+  const currentStep = writable(1)
+  setContext("current-step", currentStep)
 
   const FieldTypeToComponentMap = {
     string: "stringfield",
@@ -35,30 +39,29 @@
 
   $: fetchSchema(dataSource)
   $: enrichedSteps = enrichSteps(steps, schema, $component.id)
-  $: currentStep = getCurrentStep(enrichedSteps, $builderStore, $component)
+  $: updateCurrentStep(enrichedSteps, $builderStore, $component)
 
-  const getCurrentStep = (steps, builderStore, component) => {
+  const updateCurrentStep = (steps, builderStore, component) => {
     const { componentId, step } = builderStore.metadata || {}
 
-    // If we aren't in the builder or aren't selected then don't return a form
-    // step at all. This will let the form component take over state for which
-    // step is active.
+    // If we aren't in the builder or aren't selected then don't update the step
+    // context at all, allowing the normal form to take control.
     if (
       !component.selected ||
       !builderStore.inBuilder ||
       componentId !== component.id
     ) {
-      return null
+      return
     }
 
     // Ensure we have a valid step selected
-    let currentStep = Math.min(step || 0, steps.length - 1)
+    let newStep = Math.min(step || 0, steps.length - 1)
 
     // Sanity check
-    currentStep = Math.max(currentStep, 0)
+    newStep = Math.max(newStep, 0)
 
     // Add 1 because the form component expects 1 indexed rather than 0 indexed
-    return currentStep + 1
+    currentStep.set(newStep + 1)
   }
 
   const getPropsForField = field => {
@@ -124,8 +127,6 @@
     context="form"
     props={{
       dataSource,
-      initialFormStep,
-      step: currentStep,
       actionType: actionType === "Create" ? "Create" : "Update",
       readonly: actionType === "View",
     }}
