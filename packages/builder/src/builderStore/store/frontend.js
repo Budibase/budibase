@@ -5,7 +5,6 @@ import {
   selectedComponent,
   screenHistoryStore,
   automationHistoryStore,
-  store,
 } from "builderStore"
 import {
   datasources,
