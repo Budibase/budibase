@@ -76,9 +76,10 @@ export function processFormulas<T extends Row | Row[]>(
           let formula = schema.formula
           rows[i] = {
             ...row,
-            [column]: tracer.trace("processStringSync", {}, () =>
-              processStringSync(formula, context)
-            ),
+            [column]: tracer.trace("processStringSync", {}, span => {
+              span?.addTags({ column })
+              return processStringSync(formula, context)
+            }),
           }
         }
       }
