@@ -90,16 +90,7 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const handleMouseover = componentId => {
-    if ($store.hoverComponentId !== componentId) {
-      $store.hoverComponentId = componentId
-    }
-  }
-  const handleMouseout = componentId => {
-    if ($store.hoverComponentId === componentId) {
-      $store.hoverComponentId = null
-    }
-  }
+  const hover = store.actions.components.hover
 </script>
 
 <ul>
@@ -120,9 +111,9 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
-        hovering={$store.hoverComponentId === component._id}
-        on:mouseenter={() => handleMouseover(component._id)}
-        on:mouseleave={() => handleMouseout(component._id)}
+        hovering={$store.hoveredComponentId === component._id}
+        on:mouseenter={() => hover(component._id)}
+        on:mouseleave={() => hover(null)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         iconTooltip={getComponentName(component)}
