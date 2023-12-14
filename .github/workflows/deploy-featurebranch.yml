@@ -16,7 +16,7 @@ jobs:
   release:
     if: |
       (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase') &&
-      contains(github.event.issue.labels.*.name, 'feature-branch')
+      contains(github.event.pull_request.labels.*.name, 'feature-branch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
