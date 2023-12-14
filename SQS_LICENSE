@@ -1,0 +1,31 @@
+FORM OF CUSTOMER LICENCE
+
+Budibase hereby grants the Customer a worldwide, royalty free, non-exclusive,
+perpetual (for the lifetime of the intellectual property rights contained in the Product)
+right and title to utilise the binary code of the The Neighbourhoodie Software GmbH
+Structured Query Server software product (Product) for its own internal business
+purposes (the Purpose) only (the Licence). The Product has the function of bringing a
+CouchDB database (NoSQL database) into an SQL database form (SQLite) and thereby
+making it usable for complex queries - which originally could only be displayed in an
+SQL database. By indexing in SQLite and a server that is tailored to it, the Product
+enables the use of CouchDB with SQL queries.
+The Licence shall not permit sub-licensing, resale or transfer of the Product to third
+parties, other than sub-licensing to the Customer’s direct contractors for the purposes
+of utilizing the Product as contemplated above.
+The Licence shall not permit the adaptation, modification, decompilation, reverse
+engineering or similar activities with respect to the Product.
+This licence is granted to the Customer only, although Customer and its Affiliates’
+employees, servants and agents shall be entitled to utilize the Product within the scope
+of the Licence for the Customer’s Purpose only.
+Reproduction is not permitted to users, except for reproductions that are necessary for
+the use of the product under the licence described above. These conditions apply to the
+product regardless of the form in which we make the product available and on which
+devices it is installed and/or with which devices it is ultimately used. Depending on the
+product variant or intended use, certain technical requirements in the IT infrastructure
+must be satisfied as a prerequisite for use.
+The law of the Northern Ireland applies exclusively to this licence, and the courts of
+Northern Ireland shall have exclusive jurisdiction, save that we reserve a right to sue
+you in the jurisdiction in which you are based. The application of the UN Sales
+Convention (CISG) is excluded.
+The invalidity of any part of this licence does not affect the validity of the remaining
+regulations.

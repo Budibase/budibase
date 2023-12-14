@@ -15,7 +15,8 @@
 
   let modal
 
-  $: tables = Object.values(datasource.entities)
+  $: tables =
+    $tablesStore.list.filter(tbl => tbl.sourceId === datasource._id) || []
   $: relationships = getRelationships(tables)
 
   function getRelationships(tables) {
@@ -43,14 +44,16 @@
       })
     })
 
-    return Object.values(relatedColumns).map(({ from, to, through }) => {
-      return {
-        tables: `${from.tableName} ${through ? "↔" : "→"} ${to.tableName}`,
-        columns: `${from.name} to ${to.name}`,
-        from,
-        to,
-      }
-    })
+    return Object.values(relatedColumns)
+      .filter(({ from, to }) => from && to)
+      .map(({ from, to, through }) => {
+        return {
+          tables: `${from.tableName} ${through ? "↔" : "→"} ${to.tableName}`,
+          columns: `${from.name} to ${to.name}`,
+          from,
+          to,
+        }
+      })
   }
 
   const handleRowClick = ({ detail }) => {

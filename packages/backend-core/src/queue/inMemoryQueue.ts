@@ -68,6 +68,10 @@ class InMemoryQueue {
     })
   }
 
+  async isReady() {
+    return true
+  }
+
   // simply puts a message to the queue and emits to the queue for processing
   /**
    * Simple function to replicate the add message functionality of Bull, putting

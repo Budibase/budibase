@@ -52,6 +52,7 @@ import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { sdk as sharedCoreSDK } from "@budibase/shared-core"
+import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -335,6 +336,12 @@ async function performAppCreate(ctx: UserCtx) {
     if (!env.isTest()) {
       await createApp(appId)
     }
+
+    // Initialise the app migration version as the latest one
+    await appMigrations.updateAppMigrationMetadata({
+      appId,
+      version: appMigrations.getLatestMigrationId(),
+    })
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
