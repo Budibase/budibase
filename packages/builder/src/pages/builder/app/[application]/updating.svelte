@@ -1,5 +1,7 @@
 <script>
   import Spinner from "components/common/Spinner.svelte"
+  import { goto } from "@roxi/routify"
+
   import { API } from "api"
 
   let timeout
@@ -14,7 +16,7 @@
       const urlParams = new URLSearchParams(window.location.search)
       const returnUrl = urlParams.get("returnUrl")
 
-      window.location = returnUrl
+      $goto(returnUrl)
     }, 1000)
   }
 
