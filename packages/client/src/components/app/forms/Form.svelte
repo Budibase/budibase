@@ -11,7 +11,6 @@
   export let readonly = false
   export let actionType = "Create"
   export let initialFormStep = 1
-  export let step
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
@@ -35,16 +34,7 @@
   let loaded = false
   let schema
   let table
-  let currentStep = writable(getInitialFormStep())
-
-  $: if (
-    currentStep &&
-    Number.isInteger($currentStep) &&
-    Number.isInteger(step) &&
-    step !== currentStep
-  ) {
-    currentStep.set(step)
-  }
+  let currentStep = getContext("current-step") || writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)

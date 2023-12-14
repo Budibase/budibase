@@ -23,18 +23,32 @@
 
   setContext("multi-step-form-block", multiStepStore)
 
-  $: defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
-    _id: componentInstance._id,
-    stepCount: stepCount,
-    step: $multiStepStore.currentStep,
-  })
   $: stepCount = value?.length || 0
   $: updateStore(stepCount)
   $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
-  $: stepInstance = buildPseudoInstance(value, $currentStep, defaultProps)
+  $: stepSettings = value?.[$currentStep] || {}
+  $: defaults = Utils.buildMultiStepFormBlockDefaultProps({
+    _id: componentInstance._id,
+    stepCount: $multiStepStore.stepCount,
+    currentStep: $multiStepStore.currentStep,
+    actionType: componentInstance.actionType,
+    dataSource: componentInstance.dataSource,
+  })
+  $: stepInstance = {
+    _id: Helpers.uuid(),
+    _component: componentType,
+    _instanceName: `Step ${currentStep + 1}`,
+    title: stepSettings.title ?? defaults.title,
+    buttons: stepSettings.buttons || defaults.buttons,
+    fields: stepSettings.fields,
+    desc: stepSettings.desc,
+
+    // Needed for field configuration
+    dataSource,
+  }
 
   const getDefinition = stepLabel => {
     let def = cloneDeep(store.actions.components.getDefinition(componentType))
@@ -128,22 +142,6 @@
       handleStepAction(val.action)
     } else {
       updateStep(field, val)
-    }
-  }
-
-  const buildPseudoInstance = (value, currentStep, defaultProps) => {
-    const { buttons, fields, title, desc } = value?.[currentStep] || {}
-    return {
-      _id: Helpers.uuid(),
-      _component: componentType,
-      _instanceName: `Step ${currentStep + 1}`,
-      title: title ?? defaultProps.title,
-      buttons: buttons || defaultProps.buttons,
-      fields,
-      desc,
-
-      // Needed for field configuration
-      dataSource,
     }
   }
 </script>
