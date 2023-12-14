@@ -2,9 +2,7 @@ name: close-featurebranch
 
 on:
   pull_request:
-    types: [closed]
-    branches:
-      - master
+    types: [closed, unlabeled]
   workflow_dispatch:
     inputs:
       BRANCH:
@@ -14,6 +12,9 @@ on:
 
 jobs:
   release:
+    if: |
+      (contains(github.event.pull_request.labels.*.name, 'feature-branch') ||
+       contains(github.event.changes.labels.removed.*.name, 'feature-branch'))
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
