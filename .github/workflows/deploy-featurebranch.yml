@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [
         labeled,
-        # default types
+        # default types (https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
         opened,
         synchronize,
         reopened,
