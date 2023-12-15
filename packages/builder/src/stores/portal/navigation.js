@@ -5,7 +5,7 @@ export function createNavigationStore() {
     initialisated: false,
     goto: undefined,
   })
-  const { set, subscribe, get } = store
+  const { set, subscribe } = store
 
   const init = gotoFunc => {
     if (typeof gotoFunc !== "function") {

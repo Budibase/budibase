@@ -5,7 +5,6 @@
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
   import Branding from "./Branding.svelte"
-  import { goto } from "@roxi/routify"
 
   let loaded = false
 
@@ -18,7 +17,7 @@
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
 
-  navigation.actions.init($goto)
+  navigation.actions.init($redirect)
 
   const validateTenantId = async () => {
     const host = window.location.host
