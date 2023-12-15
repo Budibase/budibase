@@ -56,6 +56,9 @@ module.exports.processJS = (handlebars, context) => {
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error) {
+    if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
+      return "Timed out while executing JS"
+    }
     return "Error while executing JS"
   }
 }
