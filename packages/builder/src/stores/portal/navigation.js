@@ -1,33 +1,27 @@
 import { writable } from "svelte/store"
 
 export function createNavigationStore() {
-  const { subscribe } = writable([])
+  const store = writable({
+    initialisated: false,
+    goto: undefined,
+  })
+  const { set, subscribe, get } = store
 
-  let initialisated = false
-  let _goTo
-
-  const init = goToFunc => {
-    initialisated = true
-    if (typeof goToFunc !== "function") {
-      throw new Error('A valid "goToFunc" must be provided')
+  const init = gotoFunc => {
+    if (typeof gotoFunc !== "function") {
+      throw new Error('A valid "gotoFunc" must be provided')
     }
 
-    _goTo = goToFunc
-  }
-
-  const goTo = (...params) => {
-    if (!initialisated) {
-      throw new Error("You need to call navigation.init first")
-    }
-
-    _goTo(...params)
+    set({
+      initialisated: true,
+      goto: gotoFunc,
+    })
   }
 
   return {
     subscribe,
     actions: {
       init,
-      goTo,
     },
   }
 }
