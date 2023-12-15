@@ -52,7 +52,8 @@ export function processFormulas<T extends Row | Row[]>(
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
 ): T {
   return tracer.trace("processFormulas", {}, span => {
-    span?.addTags({ table_id: table._id })
+    const numRows = Array.isArray(inputRows) ? inputRows.length : 1
+    span?.addTags({ table_id: table._id, dynamic, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
     if (rows) {
       for (let [column, schema] of Object.entries(table.schema)) {
@@ -77,7 +78,7 @@ export function processFormulas<T extends Row | Row[]>(
           rows[i] = {
             ...row,
             [column]: tracer.trace("processStringSync", {}, span => {
-              span?.addTags({ column })
+              span?.addTags({ table_id: table._id, column, statis: isStatic })
               return processStringSync(formula, context)
             }),
           }
