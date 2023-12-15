@@ -5,7 +5,7 @@ import {
 } from "@budibase/frontend-core"
 import { store } from "./builderStore"
 import { get } from "svelte/store"
-import { auth } from "./stores/portal"
+import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
@@ -52,8 +52,8 @@ export const API = createAPIClient({
       return
     }
 
-    window.location = `${updatingUrl}?returnUrl=${encodeURIComponent(
-      window.location
-    )}`
+    navigation.actions.goTo(
+      `${updatingUrl}?returnUrl=${encodeURIComponent(window.location)}`
+    )
   },
 })

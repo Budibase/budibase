@@ -1,10 +1,11 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing, navigation } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
   import Branding from "./Branding.svelte"
+  import { goto } from "@roxi/routify"
 
   let loaded = false
 
@@ -16,6 +17,8 @@
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
+
+  navigation.actions.init($goto)
 
   const validateTenantId = async () => {
     const host = window.location.host
