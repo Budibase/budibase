@@ -1,6 +1,6 @@
 <script>
   import Spinner from "components/common/Spinner.svelte"
-  import { goto } from "@roxi/routify"
+  import { redirect } from "@roxi/routify"
 
   import { API } from "api"
 
@@ -16,7 +16,7 @@
       const urlParams = new URLSearchParams(window.location.search)
       const returnUrl = urlParams.get("returnUrl")
 
-      $goto(returnUrl)
+      $redirect(returnUrl)
     }, 1000)
   }
 
