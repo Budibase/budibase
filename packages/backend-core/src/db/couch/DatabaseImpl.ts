@@ -17,6 +17,7 @@ import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { DDInstrumentedDatabase } from "../instrumentation"
 
 function buildNano(couchInfo: { url: string; cookie: string }) {
   return Nano({
@@ -38,7 +39,10 @@ export function DatabaseWithConnection(
   if (!connection) {
     throw new Error("Must provide connection details")
   }
-  return new DatabaseImpl(dbName, opts, connection)
+  return new DDInstrumentedDatabase(
+    new DatabaseImpl(dbName, opts, connection),
+    "couchdb"
+  )
 }
 
 export class DatabaseImpl implements Database {
