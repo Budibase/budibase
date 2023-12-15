@@ -114,7 +114,7 @@ describe("Test the JavaScript helper", () => {
 
   it("should timeout after one second", () => {
     const output = processJS(`while (true) {}`)
-    expect(output).toBe("Error while executing JS")
+    expect(output).toBe("Timed out while executing JS")
   })
 
   it("should prevent access to the process global", () => {
