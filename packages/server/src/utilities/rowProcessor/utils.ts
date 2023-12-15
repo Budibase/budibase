@@ -78,7 +78,7 @@ export function processFormulas<T extends Row | Row[]>(
           rows[i] = {
             ...row,
             [column]: tracer.trace("processStringSync", {}, span => {
-              span?.addTags({ table_id: table._id, column, statis: isStatic })
+              span?.addTags({ table_id: table._id, column, static: isStatic })
               return processStringSync(formula, context)
             }),
           }
