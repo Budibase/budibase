@@ -4,13 +4,18 @@
 
   import { API } from "api"
 
-  let timeout
+  const timeoutMs = 60000 // 1 minute
+  const loadTime = Date.now()
+
   async function checkMigrationsFinished() {
-    timeout = setTimeout(async () => {
-      const response = await API.get({ url: "/api/migrations/status" })
+    setTimeout(async () => {
+      const response = await API.getMigrationStatus()
       if (!response.migrated) {
-        checkMigrationsFinished()
-        return
+        if (loadTime + timeoutMs > Date.now()) {
+          return checkMigrationsFinished()
+        }
+
+        return migrationTimeout()
       }
 
       const urlParams = new URLSearchParams(window.location.search)
@@ -22,11 +27,10 @@
 
   checkMigrationsFinished()
 
-  setTimeout(() => {
-    clearTimeout(timeout)
+  function migrationTimeout() {
     // TODO
     alert("Something went wrong 💀")
-  }, 60000)
+  }
 </script>
 
 <div class="loading">
