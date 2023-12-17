@@ -97,7 +97,8 @@
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0",
-    "unset-value": "2.0.1"
+    "tough-cookie": "^4.0.0",
+    "node-fetch": "^2.6.7"
   },
   "engines": {
     "node": ">=18.0.0 <19.0.0"
