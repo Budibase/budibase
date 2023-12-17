@@ -98,7 +98,9 @@
     "@budibase/string-templates": "0.0.0",
     "@budibase/types": "0.0.0",
     "tough-cookie": "^4.0.0",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.6.7",
+    "semver": "^7.5.3",
+    "http-cache-semantics": "^4.1.1"
   },
   "engines": {
     "node": ">=18.0.0 <19.0.0"
