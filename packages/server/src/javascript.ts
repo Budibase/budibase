@@ -8,12 +8,16 @@ type TrackerFn = <T>(f: () => T) => T
 export function init() {
   setJSRunner((js: string, ctx: vm.Context) => {
     const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
-    const bbCtx = context.getCurrentContext()
     let track: TrackerFn = f => f()
-    if (perRequestLimit && bbCtx && !bbCtx.jsExecutionTracker) {
-      bbCtx.jsExecutionTracker =
-        timers.ExecutionTimeTracker.withLimit(perRequestLimit)
-      track = bbCtx.jsExecutionTracker.track
+    if (perRequestLimit) {
+      const bbCtx = context.getCurrentContext()
+      if (bbCtx) {
+        if (!bbCtx.jsExecutionTracker) {
+          bbCtx.jsExecutionTracker =
+            timers.ExecutionTimeTracker.withLimit(perRequestLimit)
+        }
+        track = bbCtx.jsExecutionTracker.track.bind(bbCtx.jsExecutionTracker)
+      }
     }
 
     ctx = {
