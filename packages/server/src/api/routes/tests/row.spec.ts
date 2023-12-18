@@ -2089,51 +2089,48 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv(
-        { JS_PER_EXECUTION_TIME_LIMIT_MS: 100 },
-        async () => {
-          const js = Buffer.from(
-            `
+      await config.withEnv({ JS_PER_EXECUTION_TIME_LIMIT_MS: 20 }, async () => {
+        const js = Buffer.from(
+          `
               let i = 0;
               while (true) {
                 i++;
               }
               return i;
             `
-          ).toString("base64")
+        ).toString("base64")
 
-          const table = await config.createTable({
-            name: "table",
-            type: "table",
-            schema: {
-              text: {
-                name: "text",
-                type: FieldType.STRING,
-              },
-              formula: {
-                name: "formula",
-                type: FieldType.FORMULA,
-                formula: `{{ js "${js}"}}`,
-                formulaType: FormulaTypes.DYNAMIC,
-              },
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          schema: {
+            text: {
+              name: "text",
+              type: FieldType.STRING,
             },
-          })
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: `{{ js "${js}"}}`,
+              formulaType: FormulaTypes.DYNAMIC,
+            },
+          },
+        })
 
-          await config.api.row.save(table._id!, { text: "foo" })
-          const { rows } = await config.api.row.search(table._id!)
-          expect(rows).toHaveLength(1)
-          const row = rows[0]
-          expect(row.text).toBe("foo")
-          expect(row.formula).toBe("Timed out while executing JS")
-        }
-      )
+        await config.api.row.save(table._id!, { text: "foo" })
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows).toHaveLength(1)
+        const row = rows[0]
+        expect(row.text).toBe("foo")
+        expect(row.formula).toBe("Timed out while executing JS")
+      })
     })
 
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_EXECUTION_TIME_LIMIT_MS: 100,
-          JS_PER_REQUEST_TIME_LIMIT_MS: 200,
+          JS_PER_EXECUTION_TIME_LIMIT_MS: 20,
+          JS_PER_REQUEST_TIME_LIMIT_MS: 40,
         },
         async () => {
           const js = Buffer.from(
@@ -2167,24 +2164,31 @@ describe.each([
             await config.api.row.save(table._id!, { text: "foo" })
           }
 
-          const { rows } = await config.api.row.search(table._id!)
-          expect(rows).toHaveLength(10)
+          // Run this test 3 times to make sure that there's no cross-request
+          // polution of the execution time tracking.
+          for (let reqs = 0; reqs < 3; reqs++) {
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows).toHaveLength(10)
 
-          let i = 0
-          for (; i < 10; i++) {
-            const row = rows[i]
-            if (row.formula !== "Timed out while executing JS") {
-              break
+            let i = 0
+            for (; i < 10; i++) {
+              const row = rows[i]
+              if (row.formula !== "Timed out while executing JS") {
+                break
+              }
             }
-          }
 
-          expect(i).toBeGreaterThan(0)
-          expect(i).toBeLessThan(5)
+            // Given the execution times are not deterministic, we can't be sure
+            // of the exact number of rows that were executed before the timeout
+            // but it should absolutely be at least 1.
+            expect(i).toBeGreaterThan(0)
+            expect(i).toBeLessThan(5)
 
-          for (; i < 10; i++) {
-            const row = rows[i]
-            expect(row.text).toBe("foo")
-            expect(row.formula).toBe("Request JS execution limit hit")
+            for (; i < 10; i++) {
+              const row = rows[i]
+              expect(row.text).toBe("foo")
+              expect(row.formula).toBe("Request JS execution limit hit")
+            }
           }
         }
       )
