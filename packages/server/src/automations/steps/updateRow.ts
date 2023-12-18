@@ -88,7 +88,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
       inputs.meta?.fields?.[propKey]?.clearRelationships
     if (
       ((inputs.row[propKey] == null || inputs.row[propKey] === "") &&
-        !clearRelationships) ||
+        clearRelationships == null) ||
       (clearRelationships === false && inputs.row[propKey]?.length === 0)
     ) {
       delete inputs.row[propKey]
