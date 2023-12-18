@@ -1,4 +1,5 @@
 const { processStringSync, encodeJSBinding } = require("../src/index.cjs")
+const { UUID_REGEX } = require("./constants")
 
 const processJS = (js, context) => {
   return processStringSync(encodeJSBinding(js), context)
@@ -139,5 +140,10 @@ describe("check JS helpers", () => {
   it("should be able to use toInt", () => {
     const output = processJS(`return helpers.toInt(4.3)`)
     expect(output).toBe(4)
+  })
+
+  it("should be able to use uuid", () => {
+    const output = processJS(`return helpers.uuid()`)
+    expect(output).toMatch(UUID_REGEX)
   })
 })
