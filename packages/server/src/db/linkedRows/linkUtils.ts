@@ -56,7 +56,7 @@ export async function getLinkDocuments(args: {
   try {
     let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
-    const foundIds: string[] = []
+    const foundIds = new Set()
     linkRows = linkRows.filter(link => {
       // make sure anything unique is the correct key
       if (
@@ -65,9 +65,9 @@ export async function getLinkDocuments(args: {
       ) {
         return false
       }
-      const unique = foundIds.indexOf(link.id) === -1
+      const unique = !foundIds.has(link.id)
       if (unique) {
-        foundIds.push(link.id)
+        foundIds.add(link.id)
       }
       return unique
     })
