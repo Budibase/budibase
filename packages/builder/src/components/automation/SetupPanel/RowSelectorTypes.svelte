@@ -69,7 +69,15 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if ["string", "number", "bigint", "barcodeqr", "bb_reference"].includes(schema.type)}
+{:else if schema.type === "bb_reference"}
+  <LinkedRowSelector
+    linkedRows={value[field]}
+    {schema}
+    linkedTableId={"ta_users"}
+    on:change={e => onChange(e, field)}
+    useLabel={false}
+  />
+{:else if ["string", "number", "bigint", "barcodeqr"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}
