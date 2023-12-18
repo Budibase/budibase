@@ -69,7 +69,7 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === "string" || schema.type === "number"}
+{:else if ["string", "number", "bigint", "barcodeqr", "bb_reference"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}

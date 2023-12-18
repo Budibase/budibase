@@ -113,7 +113,11 @@
     if (type === "json" && !isJSBinding(value)) {
       return "json-slot-icon"
     }
-    if (type !== "string" && type !== "number") {
+    if (
+      !["string", "number", "bigint", "barcodeqr", "bb_reference"].includes(
+        type
+      )
+    ) {
       return "slot-icon"
     }
     return ""
