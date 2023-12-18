@@ -2,7 +2,6 @@
   "name": "@budibase/string-templates",
   "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "src/index.cjs",
   "module": "dist/bundle.mjs",
   "license": "MPL-2.0",
   "types": "dist/index.d.ts",
@@ -28,8 +27,8 @@
     "@budibase/handlebars-helpers": "^0.11.9",
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.6",
-    "lodash": "4.17.21",
-    "vm2": "^3.9.19"
+    "isolated-vm": "^4.6.0",
+    "lodash": "4.17.21"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
