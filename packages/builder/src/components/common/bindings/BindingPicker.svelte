@@ -79,6 +79,7 @@
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
+    maxHeight={300}
     dismissible={false}
   >
     <Layout gap="S">
