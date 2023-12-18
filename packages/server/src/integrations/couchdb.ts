@@ -8,6 +8,7 @@ import {
   QueryType,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
+import { DatabaseWithConnectionNoDD } from "@budibase/backend-core/src/db"
 
 interface CouchDBConfig {
   url: string
@@ -69,7 +70,7 @@ class CouchDBIntegration implements IntegrationBase {
   private readonly client: dbCore.DatabaseImpl
 
   constructor(config: CouchDBConfig) {
-    this.client = dbCore.DatabaseWithConnection(config.database, config.url)
+    this.client = dbCore.DatabaseWithConnectionNoDD(config.database, config.url)
   }
 
   async testConnection() {
