@@ -53,7 +53,7 @@ export const API = createAPIClient({
     }
 
     get(navigation).goto(
-      `${updatingUrl}?returnUrl=${encodeURIComponent(window.location)}`
+      `${updatingUrl}?returnUrl=${encodeURIComponent(window.location.pathname)}`
     )
   },
 })
