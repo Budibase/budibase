@@ -33,6 +33,13 @@
         value[schema.name] = ""
       }
     })
+
+    // initialise the meta data
+    schemaFields.forEach(([field, schema]) => {
+      if (schema.type === "link" && !meta.fields?.[field]) {
+        onChangeSetting(false, field)
+      }
+    })
   }
 
   const onChangeTable = e => {
