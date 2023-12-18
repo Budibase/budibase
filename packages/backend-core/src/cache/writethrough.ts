@@ -7,7 +7,7 @@ import * as locks from "../redis/redlockImpl"
 const DEFAULT_WRITE_RATE_MS = 10000
 let CACHE: BaseCache | null = null
 
-interface CacheItem {
+interface CacheItem<T extends Document> {
   doc: any
   lastWrite: number
 }
@@ -24,7 +24,10 @@ function makeCacheKey(db: Database, key: string) {
   return db.name + key
 }
 
-function makeCacheItem(doc: any, lastWrite: number | null = null): CacheItem {
+function makeCacheItem<T extends Document>(
+  doc: T,
+  lastWrite: number | null = null
+): CacheItem<T> {
   return { doc, lastWrite: lastWrite || Date.now() }
 }
 
@@ -35,7 +38,7 @@ async function put(
 ) {
   const cache = await getCache()
   const key = doc._id
-  let cacheItem: CacheItem | undefined
+  let cacheItem: CacheItem<any> | undefined
   if (key) {
     cacheItem = await cache.get(makeCacheKey(db, key))
   }
@@ -53,11 +56,8 @@ async function put(
         const writeDb = async (toWrite: any) => {
           // doc should contain the _id and _rev
           const response = await db.put(toWrite, { force: true })
-          output = {
-            ...doc,
-            _id: response.id,
-            _rev: response.rev,
-          }
+          output._id = response.id
+          output._rev = response.rev
         }
         try {
           await writeDb(doc)
@@ -84,12 +84,12 @@ async function put(
   return { ok: true, id: output._id, rev: output._rev }
 }
 
-async function get(db: Database, id: string): Promise<any> {
+async function get<T extends Document>(db: Database, id: string): Promise<T> {
   const cache = await getCache()
   const cacheKey = makeCacheKey(db, id)
-  let cacheItem: CacheItem = await cache.get(cacheKey)
+  let cacheItem: CacheItem<T> = await cache.get(cacheKey)
   if (!cacheItem) {
-    const doc = await db.get(id)
+    const doc = await db.get<T>(id)
     cacheItem = makeCacheItem(doc)
     await cache.store(cacheKey, cacheItem)
   }
@@ -123,8 +123,8 @@ export class Writethrough {
     return put(this.db, doc, writeRateMs)
   }
 
-  async get(id: string) {
-    return get(this.db, id)
+  async get<T extends Document>(id: string) {
+    return get<T>(this.db, id)
   }
 
   async remove(docOrId: any, rev?: any) {

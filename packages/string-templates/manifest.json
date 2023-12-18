@@ -1180,6 +1180,14 @@
       "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
     }
   },
+  "uuid": {
+    "uuid": {
+      "args": [],
+      "numArgs": 0,
+      "example": "{{ uuid }} -> f34ebc66-93bd-4f7c-b79b-92b5569138bc",
+      "description": "<p>Generates a UUID, using the V4 method (identical to the browser crypto.randomUUID function).</p>\n"
+    }
+  },
   "date": {
     "date": {
       "args": [
