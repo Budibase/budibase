@@ -21,6 +21,10 @@ export function cleanup() {
   intervals = []
 }
 
+export class ExecutionTimeoutError extends Error {
+  public readonly name = "ExecutionTimeoutError"
+}
+
 export class ExecutionTimeTracker {
   static withLimit(limitMs: number) {
     return new ExecutionTimeTracker(limitMs)
@@ -31,6 +35,7 @@ export class ExecutionTimeTracker {
   private totalTimeMs = 0
 
   track<T>(f: () => T): T {
+    this.checkLimit()
     const [startSeconds, startNanoseconds] = process.hrtime()
     const startMs = startSeconds * 1000 + startNanoseconds / 1e6
     try {
@@ -38,15 +43,14 @@ export class ExecutionTimeTracker {
     } finally {
       const [endSeconds, endNanoseconds] = process.hrtime()
       const endMs = endSeconds * 1000 + endNanoseconds / 1e6
-      this.increment(endMs - startMs)
+      this.totalTimeMs += endMs - startMs
+      this.checkLimit()
     }
   }
 
-  private increment(byMs: number) {
-    this.totalTimeMs += byMs
-
+  private checkLimit() {
     if (this.totalTimeMs > this.limitMs) {
-      throw new Error(
+      throw new ExecutionTimeoutError(
         `Execution time limit of ${this.limitMs}ms exceeded: ${this.totalTimeMs}ms`
       )
     }
