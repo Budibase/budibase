@@ -1,6 +1,6 @@
 <script>
   import Spinner from "components/common/Spinner.svelte"
-  import { redirect } from "@roxi/routify"
+  import { redirect, params } from "@roxi/routify"
 
   import { API } from "api"
 
@@ -18,9 +18,8 @@
         return migrationTimeout()
       }
 
-      const urlParams = new URLSearchParams(window.location.search)
-      const returnUrl = urlParams.get("returnUrl")
-
+      // For some reason routify params is not stripping the ? properly, so we need to check both with and without ?
+      const returnUrl = $params.returnUrl || $params["?returnUrl"]
       $redirect(returnUrl)
     }, 1000)
   }
