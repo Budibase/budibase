@@ -49,4 +49,8 @@ export class Duration {
   static fromDays(duration: number) {
     return Duration.from(DurationType.DAYS, duration)
   }
+
+  static fromMiliseconds(duration: number) {
+    return Duration.from(DurationType.MILLISECONDS, duration)
+  }
 }
