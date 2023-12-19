@@ -23,7 +23,7 @@ export default async (ctx: UserCtx, next: any) => {
 
   if (requestAppId) {
     const span = tracer.scope().active()
-    span?.setBaggageItem("app_id", requestAppId)
+    span?.setBaggageItem("appId", requestAppId)
   }
 
   // deny access to application preview
@@ -79,9 +79,9 @@ export default async (ctx: UserCtx, next: any) => {
   if (ctx.user) {
     const span = tracer.scope().active()
     if (ctx.user._id) {
-      span?.setBaggageItem("user_id", ctx.user._id)
+      span?.setBaggageItem("userId", ctx.user._id)
     }
-    span?.setBaggageItem("tenant_id", ctx.user.tenantId)
+    span?.setBaggageItem("tenantId", ctx.user.tenantId)
   }
 
   const userId = ctx.user ? generateUserMetadataID(ctx.user._id!) : undefined
