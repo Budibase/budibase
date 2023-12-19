@@ -37,7 +37,7 @@ export function DatabaseWithConnection(
   opts?: DatabaseOpts
 ) {
   const db = new DatabaseImpl(dbName, opts, connection)
-  return new DDInstrumentedDatabase(db, "couchdb")
+  return new DDInstrumentedDatabase(db)
 }
 
 export class DatabaseImpl implements Database {
