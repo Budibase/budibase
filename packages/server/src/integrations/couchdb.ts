@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  Database,
   DatasourceFeature,
   DatasourceFieldType,
   Document,
@@ -66,7 +67,7 @@ const SCHEMA: Integration = {
 }
 
 class CouchDBIntegration implements IntegrationBase {
-  private readonly client: dbCore.DatabaseImpl
+  private readonly client: Database
 
   constructor(config: CouchDBConfig) {
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)
