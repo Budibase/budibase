@@ -156,10 +156,6 @@ export const serveApp = async function (ctx: Ctx) {
     appHbsPath = join(__dirname, "templates", "app.hbs")
   }
 
-  const App = !needMigrations
-    ? require("./templates/BudibaseApp.svelte").default
-    : require("./templates/Updating.svelte").default
-
   let db
   try {
     db = context.getAppDB({ skip_setup: true })
@@ -168,6 +164,7 @@ export const serveApp = async function (ctx: Ctx) {
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
         metaImage:
           branding?.metaImageUrl ||
@@ -188,6 +185,7 @@ export const serveApp = async function (ctx: Ctx) {
           config?.logoUrl !== ""
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
+        appMigrating: needMigrations,
       })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
@@ -203,6 +201,7 @@ export const serveApp = async function (ctx: Ctx) {
     }
   } catch (error) {
     if (!env.isJest()) {
+      const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
         title: branding?.metaTitle,
         metaTitle: branding?.metaTitle,

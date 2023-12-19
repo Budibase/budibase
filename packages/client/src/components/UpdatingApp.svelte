@@ -1,3 +1,6 @@
+<script>
+</script>
+
 <div class="loading">Updating the system...</div>
 
 <style>
