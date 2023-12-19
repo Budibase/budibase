@@ -19,7 +19,7 @@
     "bundle.js"
   ],
   "extends": ["eslint:recommended"],
-  "plugins": ["import", "eslint-plugin-local-rules"],
+  "plugins": ["import", "eslint-plugin-local-rules", "prettier"],
   "overrides": [
     {
       "files": ["**/*.svelte"],
@@ -60,7 +60,8 @@
     "import/no-relative-packages": "error",
     "import/export": "error",
     "import/no-duplicates": "error",
-    "import/newline-after-import": "error"
+    "import/newline-after-import": "error",
+    "prettier/prettier": "error"
   },
   "globals": {
     "GeolocationPositionError": true
