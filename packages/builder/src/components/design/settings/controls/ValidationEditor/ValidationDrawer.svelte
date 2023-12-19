@@ -164,7 +164,8 @@
     // Required constraint
     if (
       field === dataSourceSchema?.table?.primaryDisplay ||
-      constraints.presence?.allowEmpty === false
+      constraints.presence?.allowEmpty === false ||
+      constraints.presence === true
     ) {
       rules.push({
         constraint: "required",

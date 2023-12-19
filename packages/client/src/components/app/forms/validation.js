@@ -23,7 +23,8 @@ export const createValidatorFromConstraints = (
     // Required constraint
     if (
       field === table?.primaryDisplay ||
-      schemaConstraints.presence?.allowEmpty === false
+      schemaConstraints.presence?.allowEmpty === false ||
+      schemaConstraints.presence === true
     ) {
       rules.push({
         type: schemaConstraints.type == "array" ? "array" : "string",
