@@ -41,7 +41,7 @@
 <div class="filter-editor">
   <ActionButton on:click={drawer.show}>{text}</ActionButton>
 </div>
-<Drawer bind:this={drawer} title="Filtering">
+<Drawer bind:this={drawer} title="Filtering" on:drawerHide on:drawerShow>
   <Button cta slot="buttons" on:click={saveFilter}>Save</Button>
   <FilterDrawer
     slot="body"
