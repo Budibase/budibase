@@ -1,4 +1,4 @@
-import { string, number } from "yup"
+import { string, number, object } from "yup"
 
 const propertyValidator = type => {
   if (type === "number") {
@@ -7,6 +7,10 @@ const propertyValidator = type => {
 
   if (type === "email") {
     return string().email().nullable()
+  }
+
+  if (type === "object") {
+    return object().nullable()
   }
 
   return string().nullable()
