@@ -244,5 +244,13 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.automationWorkers.command }}}
+      command:
+      {{- toYaml .Values.services.automationWorkers.command | nindent 8 }}
+      {{ end }}
+      {{ if .Values.services.automationWorkers.args }}
+      args:
+      {{- toYaml .Values.services.automationWorkers.args | nindent 8 }}
+      {{ end }}
 status: {}
 {{- end }}

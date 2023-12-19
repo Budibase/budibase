@@ -230,4 +230,12 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.worker.command }}
+      command:
+      {{- toYaml .Values.services.worker.command | nindent 8 }}
+      {{ end }}
+      {{ if .Values.services.worker.args }}
+      args:
+      {{- toYaml .Values.services.worker.args | nindent 8 }}
+      {{ end }}
 status: {}
