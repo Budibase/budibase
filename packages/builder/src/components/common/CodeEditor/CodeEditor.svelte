@@ -239,6 +239,8 @@
       extensions: buildExtensions(baseExtensions),
       parent: textarea,
     })
+
+    editor.focus()
   }
 
   $: editorHeight = typeof height === "number" ? `${height}px` : height
