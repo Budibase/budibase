@@ -23,6 +23,7 @@
 
 <BindingPanel
   bind:valid
+  on:saveCodeEditor
   bindings={enrichedBindings}
   {value}
   {allowJS}

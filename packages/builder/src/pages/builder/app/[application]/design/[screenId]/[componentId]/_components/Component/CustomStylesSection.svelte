@@ -13,6 +13,7 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
+  import { KeyboardShortcut } from "@budibase/frontend-core"
 
   export let componentInstance
 
@@ -56,14 +57,28 @@
     <svelte:fragment slot="description">
       Custom CSS overrides all other component styles.
     </svelte:fragment>
-    <Button cta slot="buttons" on:click={save}>Save</Button>
+    <Button cta slot="buttons" on:click={save}>
+      <div class="button-with-keys">
+        Save
+        <KeyboardShortcut action={true} keybind="Ctrl+Enter" />
+      </div>
+    </Button>
     <svelte:component
       this={ClientBindingPanel}
       slot="body"
       value={tempValue}
       on:change={event => (tempValue = event.detail)}
+      on:saveCodeEditor={save}
       allowJS
       {bindings}
     />
   </Drawer>
 {/key}
+
+<style>
+  .button-with-keys {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+</style>

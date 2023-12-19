@@ -189,6 +189,7 @@
                 <CodeEditor
                   value={hbsValue}
                   on:change={onChangeHBSValue}
+                  on:saveCodeEditor
                   bind:getCaretPosition
                   bind:insertAtPos
                   completions={[
