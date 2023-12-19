@@ -50,7 +50,7 @@ export class Duration {
     return Duration.from(DurationType.DAYS, duration)
   }
 
-  static fromMiliseconds(duration: number) {
+  static fromMilliseconds(duration: number) {
     return Duration.from(DurationType.MILLISECONDS, duration)
   }
 }

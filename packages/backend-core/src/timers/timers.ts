@@ -36,14 +36,12 @@ export class ExecutionTimeTracker {
 
   track<T>(f: () => T): T {
     this.checkLimit()
-    const [startSeconds, startNanoseconds] = process.hrtime()
-    const startMs = startSeconds * 1000 + startNanoseconds / 1e6
+    const start = process.hrtime.bigint()
     try {
       return f()
     } finally {
-      const [endSeconds, endNanoseconds] = process.hrtime()
-      const endMs = endSeconds * 1000 + endNanoseconds / 1e6
-      this.totalTimeMs += endMs - startMs
+      const end = process.hrtime.bigint()
+      this.totalTimeMs += Number(end - start) / 1e6
       this.checkLimit()
     }
   }
