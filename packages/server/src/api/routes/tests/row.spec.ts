@@ -2165,7 +2165,7 @@ describe.each([
           }
 
           // Run this test 3 times to make sure that there's no cross-request
-          // polution of the execution time tracking.
+          // pollution of the execution time tracking.
           for (let reqs = 0; reqs < 3; reqs++) {
             const { rows } = await config.api.row.search(table._id!)
             expect(rows).toHaveLength(10)
