@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  Database,
   DatasourceFeature,
   DatasourceFieldType,
   Document,
@@ -8,7 +9,6 @@ import {
   QueryType,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
-import { DatabaseWithConnectionNoDD } from "@budibase/backend-core/src/db"
 
 interface CouchDBConfig {
   url: string
@@ -67,10 +67,10 @@ const SCHEMA: Integration = {
 }
 
 class CouchDBIntegration implements IntegrationBase {
-  private readonly client: dbCore.DatabaseImpl
+  private readonly client: Database
 
   constructor(config: CouchDBConfig) {
-    this.client = dbCore.DatabaseWithConnectionNoDD(config.database, config.url)
+    this.client = dbCore.DatabaseWithConnection(config.database, config.url)
   }
 
   async testConnection() {
