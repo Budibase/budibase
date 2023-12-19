@@ -525,6 +525,11 @@
         "key": "disabled"
       },
       {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
         "type": "event",
         "label": "On click",
         "key": "onClick"
