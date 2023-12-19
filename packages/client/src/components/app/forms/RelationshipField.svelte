@@ -108,8 +108,14 @@
     }
   }
 
+  $: forceFetchRows(filter)
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
+  const forceFetchRows = async filter => {
+    // if the filter has changed, then we need to reset the options and re-fetch
+    optionsObj = {}
+    debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
+  }
   const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
