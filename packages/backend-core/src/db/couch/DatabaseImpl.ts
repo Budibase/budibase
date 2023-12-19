@@ -31,23 +31,12 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
   })
 }
 
-export function DatabaseWithConnectionNoDD(
-  dbName: string,
-  connection: string,
-  opts?: DatabaseOpts
-) {
-  if (!connection) {
-    throw new Error("Must provide connection details")
-  }
-  return new DatabaseImpl(dbName, opts, connection)
-}
-
 export function DatabaseWithConnection(
   dbName: string,
   connection: string,
   opts?: DatabaseOpts
 ) {
-  const db = DatabaseWithConnectionNoDD(dbName, connection, opts)
+  const db = new DatabaseImpl(dbName, opts, connection)
   return new DDInstrumentedDatabase(db, "couchdb")
 }
 
