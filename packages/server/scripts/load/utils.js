@@ -38,6 +38,17 @@ exports.createApp = async apiKey => {
   return json.data
 }
 
+exports.searchApps = async apiKey => {
+  const res = await request(apiKey, `${URL_APP}/search`, "POST", {})
+  const json = await res.json()
+  return json.data
+}
+
+exports.deleteApp = async (apiKey, appId) => {
+  const res = await request(apiKey, `${URL_APP}/${appId}`, "DELETE")
+  return res
+}
+
 exports.getTable = async (apiKey, appId) => {
   const res = await request(apiKey, URL_SEARCH_TABLE, "POST", {}, appId)
   const json = await res.json()
