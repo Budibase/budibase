@@ -19,7 +19,7 @@
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
   $: checkValue(value)
-  $: mde?.codemirror.on("change", debouncedUpdate)
+  $: mde?.codemirror.on("blur", debouncedUpdate)
   $: if (readonly || disabled) {
     mde?.togglePreview()
   }
