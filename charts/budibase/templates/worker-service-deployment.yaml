@@ -107,7 +107,7 @@ spec:
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: TEMPLATES_BUCKET_NAME
-          value: {{ .values.services.objectStore.templatesBucketName | quote }}
+          value: {{ .Values.services.objectStore.templatesBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.worker.port | quote }}
         - name: MULTI_TENANCY
