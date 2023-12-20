@@ -4,7 +4,7 @@ const { createApp, getTable, createRow, createTable } = require("./utils")
 const Chance = require("chance")
 const generator = new Chance()
 
-const STUDENT_COUNT = 10
+const STUDENT_COUNT = 100
 const SUBJECT_COUNT = 10
 
 if (!process.argv[2]) {
@@ -19,7 +19,8 @@ async function sleep(ms) {
 async function run() {
   const apiKey = process.argv[2]
   const app = await createApp(apiKey)
-  console.log(`App created: ${app._id}`)
+  console.log(`App created: http://localhost:10000/builder/app/${app._id}`)
+
   const studentsTable = await getTable(apiKey, app._id)
   if (studentsTable.name !== "Students") {
     throw 'Fetched table should be "Students"'
@@ -44,18 +45,22 @@ async function run() {
     await sleep(50)
   }
 
+  let studentNumber = studentsTable.schema["Auto ID"].lastID
   for (let i = 0; i < STUDENT_COUNT; i++) {
-    await createRow(apiKey, app._id, studentsTable)
+    await createRow(apiKey, app._id, studentsTable, {
+      "Student Number": (++studentNumber).toString(),
+      "First Name": generator.first(),
+      "Last Name": generator.last(),
+      Gender: generator.pickone(["M", "F"]),
+      Grade: generator.pickone(["8", "9", "10", "11"]),
+      "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
+      "Home Number": generator.phone(),
+      "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
+    })
     console.log(`Row ${i + 1} of ${STUDENT_COUNT} created`)
   }
-
-  console.log(`App created: http://localhost:10000/builder/app/${app._id}`)
 }
 
-run()
-  .then(() => {
-    console.log(`Finished creating ${ROW_COUNT} rows.`)
-  })
-  .catch(err => {
-    console.error(err)
-  })
+run().catch(err => {
+  console.error(err)
+})
