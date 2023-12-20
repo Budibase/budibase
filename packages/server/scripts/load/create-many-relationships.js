@@ -4,7 +4,7 @@ const { createApp, getTable, createRow, createTable } = require("./utils")
 const Chance = require("chance")
 const generator = new Chance()
 
-const STUDENT_COUNT = 100
+const STUDENT_COUNT = 500
 const SUBJECT_COUNT = 10
 
 if (!process.argv[2]) {
@@ -15,6 +15,8 @@ if (!process.argv[2]) {
 async function sleep(ms) {
   return new Promise(r => setTimeout(() => r(), ms))
 }
+
+const start = Date.now()
 
 async function run() {
   const apiKey = process.argv[2]
@@ -44,7 +46,11 @@ async function run() {
         "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
       })
     )
-    console.log(`Row ${i + 1} of ${STUDENT_COUNT} created`)
+    console.log(
+      `Student ${i + 1} of ${STUDENT_COUNT} created (${
+        (Date.now() - start) / 1000
+      }s)`
+    )
   }
 
   const subjectTable = await createTable(apiKey, app._id, {
@@ -60,11 +66,15 @@ async function run() {
 
   for (let i = 0; i < SUBJECT_COUNT; i++) {
     subjects.push(
-    await createRow(apiKey, app._id, subjectTable, {
-      Name: generator.profession(),
-    })
+      await createRow(apiKey, app._id, subjectTable, {
+        Name: generator.profession(),
+      })
     )
-    console.log(`Subject ${i + 1} of ${SUBJECT_COUNT} created`)
+    console.log(
+      `Subject ${i + 1} of ${SUBJECT_COUNT} created (${
+        (Date.now() - start) / 1000
+      }s)`
+    )
     await sleep(50)
   }
 
@@ -107,15 +117,21 @@ async function run() {
         Score: generator.integer({ min: 0, max: 100 }),
         Student: [student],
         Subject: [subject],
-    })
+      })
       console.log(
-        `Grade ${++i} of ${students.length * subjects.length} created`
+        `Grade ${++i} of ${students.length * subjects.length} created (${
+          (Date.now() - start) / 1000
+        }s)`
       )
       await sleep(20)
     }
   }
 }
 
-run().catch(err => {
-  console.error(err)
-})
+run()
+  .then(() => {
+    console.log(`Done in(${(Date.now() - start) / 1000} seconds`)
+  })
+  .catch(err => {
+    console.error(err)
+  })
