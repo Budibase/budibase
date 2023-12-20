@@ -27,6 +27,26 @@ async function run() {
   }
   console.log(`Table found: ${studentsTable.name}`)
 
+  const students = [],
+    subjects = []
+
+  let studentNumber = studentsTable.schema["Auto ID"].lastID
+  for (let i = 0; i < STUDENT_COUNT; i++) {
+    students.push(
+      await createRow(apiKey, app._id, studentsTable, {
+        "Student Number": (++studentNumber).toString(),
+        "First Name": generator.first(),
+        "Last Name": generator.last(),
+        Gender: generator.pickone(["M", "F"]),
+        Grade: generator.pickone(["8", "9", "10", "11"]),
+        "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
+        "Home Number": generator.phone(),
+        "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
+      })
+    )
+    console.log(`Row ${i + 1} of ${STUDENT_COUNT} created`)
+  }
+
   const subjectTable = await createTable(apiKey, app._id, {
     schema: {
       Name: {
@@ -35,29 +55,64 @@ async function run() {
       },
     },
     name: "Subjects",
+    primaryDisplay: "Name",
   })
 
   for (let i = 0; i < SUBJECT_COUNT; i++) {
+    subjects.push(
     await createRow(apiKey, app._id, subjectTable, {
       Name: generator.profession(),
     })
+    )
     console.log(`Subject ${i + 1} of ${SUBJECT_COUNT} created`)
     await sleep(50)
   }
 
-  let studentNumber = studentsTable.schema["Auto ID"].lastID
-  for (let i = 0; i < STUDENT_COUNT; i++) {
-    await createRow(apiKey, app._id, studentsTable, {
-      "Student Number": (++studentNumber).toString(),
-      "First Name": generator.first(),
-      "Last Name": generator.last(),
-      Gender: generator.pickone(["M", "F"]),
-      Grade: generator.pickone(["8", "9", "10", "11"]),
-      "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
-      "Home Number": generator.phone(),
-      "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
+  const gradesTable = await createTable(apiKey, app._id, {
+    schema: {
+      Score: {
+        name: "Score",
+        type: "number",
+      },
+      Student: {
+        name: "Student",
+        tableId: studentsTable._id,
+        constraints: {
+          presence: true,
+          type: "array",
+        },
+        fieldName: "Grades",
+        relationshipType: "one-to-many",
+        type: "link",
+      },
+      Subject: {
+        name: "Subject",
+        tableId: subjectTable._id,
+        constraints: {
+          presence: true,
+          type: "array",
+        },
+        fieldName: "Grades",
+        relationshipType: "one-to-many",
+        type: "link",
+      },
+    },
+    name: "Grades",
+  })
+
+  let i = 0
+  for (const student of students) {
+    for (const subject of subjects) {
+      await createRow(apiKey, app._id, gradesTable, {
+        Score: generator.integer({ min: 0, max: 100 }),
+        Student: [student],
+        Subject: [subject],
     })
-    console.log(`Row ${i + 1} of ${STUDENT_COUNT} created`)
+      console.log(
+        `Grade ${++i} of ${students.length * subjects.length} created`
+      )
+      await sleep(20)
+    }
   }
 }
 
