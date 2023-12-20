@@ -1,6 +1,9 @@
 #!/bin/node
 const { createApp, getTable, createRow, createTable } = require("./utils")
 
+const Chance = require("chance")
+const generator = new Chance()
+
 const ROW_COUNT = 10
 
 if (!process.argv[2]) {
@@ -17,23 +20,26 @@ async function run() {
 
   const subjectTable = await createTable(apiKey, app._id, {
     schema: {
-      title: {
+      Name: {
         name: "Name",
         type: "string",
       },
     },
     name: "Subjects",
   })
-  for (let i = 0; i < 10; i++) {
-    await createRow(apiKey, app._id, subjectTable)
+
+  const SUBJECT_COUNT = 10
+  for (let i = 0; i < SUBJECT_COUNT; i++) {
+    await createRow(apiKey, app._id, subjectTable, {
+      Name: generator.profession(),
+    })
+    console.log(`Subject ${i + 1} of ${SUBJECT_COUNT} created`)
   }
 
-  const promises = []
   for (let i = 0; i < ROW_COUNT; i++) {
-    promises.push(await createRow(apiKey, app._id, table))
+    await createRow(apiKey, app._id, table)
     console.log(`Row ${i + 1} of ${ROW_COUNT} created`)
   }
-  await Promise.all(promises)
 
   console.log(`App created: http://localhost:10000/builder/app/${app._id}`)
 }
