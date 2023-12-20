@@ -30,7 +30,7 @@ export class ExecutionTimeTracker {
     return new ExecutionTimeTracker(limitMs)
   }
 
-  constructor(private limitMs: number) {}
+  constructor(readonly limitMs: number) {}
 
   private totalTimeMs = 0
 
@@ -44,6 +44,10 @@ export class ExecutionTimeTracker {
       this.totalTimeMs += Number(end - start) / 1e6
       this.checkLimit()
     }
+  }
+
+  get elapsedMS() {
+    return this.totalTimeMs
   }
 
   private checkLimit() {
