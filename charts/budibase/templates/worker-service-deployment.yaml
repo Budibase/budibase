@@ -213,6 +213,7 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.worker.command }}
         command:
         {{- toYaml .Values.services.worker.command | nindent 10 }}
         {{ end }}
@@ -237,5 +238,4 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
-      {{ if .Values.services.worker.command }}
 status: {}
