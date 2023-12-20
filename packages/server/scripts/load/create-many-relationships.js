@@ -12,10 +12,6 @@ if (!process.argv[2]) {
   process.exit(-1)
 }
 
-async function sleep(ms) {
-  return new Promise(r => setTimeout(() => r(), ms))
-}
-
 const start = Date.now()
 
 async function run() {
@@ -75,7 +71,6 @@ async function run() {
         (Date.now() - start) / 1000
       }s)`
     )
-    await sleep(50)
   }
 
   const gradesTable = await createTable(apiKey, app._id, {
@@ -123,7 +118,6 @@ async function run() {
           (Date.now() - start) / 1000
         }s)`
       )
-      await sleep(20)
     }
   }
 }
