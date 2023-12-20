@@ -3296,6 +3296,7 @@
       {
         "type": "options",
         "key": "customOptions",
+        "supportsConditions": false,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "custom"
@@ -3503,6 +3504,7 @@
       {
         "type": "options",
         "key": "customOptions",
+        "supportsConditions": false,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "custom"
