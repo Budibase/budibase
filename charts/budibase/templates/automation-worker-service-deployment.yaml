@@ -107,6 +107,8 @@ spec:
           value: {{ .Values.services.objectStore.globalBucketName | quote }}
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
+        - name: TEMPLATES_BUCKET_NAME
+          value: {{ .Values.services.objectStore.templatesBucketName | quote }}
         - name: PORT
           value: {{ .Values.services.automationWorkers.port | quote }}
         {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
