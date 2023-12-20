@@ -19,7 +19,7 @@
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
   $: checkValue(value)
-  $: mde?.codemirror.on("blur", debouncedUpdate)
+  $: mde?.codemirror.on("blur", update)
   $: if (readonly || disabled) {
     mde?.togglePreview()
   }
@@ -30,21 +30,10 @@
     }
   }
 
-  const debounce = (fn, interval) => {
-    let timeout
-    return () => {
-      clearTimeout(timeout)
-      timeout = setTimeout(fn, interval)
-    }
-  }
-
   const update = () => {
     latestValue = mde.value()
     dispatch("change", latestValue)
   }
-
-  // Debounce the update function to avoid spamming it constantly
-  const debouncedUpdate = debounce(update, 250)
 </script>
 
 {#key height}
