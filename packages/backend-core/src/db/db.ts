@@ -1,9 +1,8 @@
 import { directCouchQuery, DatabaseImpl } from "./couch"
 import { CouchFindOptions, Database, DatabaseOpts } from "@budibase/types"
-import { DDInstrumentedDatabase } from "./instrumentation"
 
 export function getDB(dbName: string, opts?: DatabaseOpts): Database {
-  return new DDInstrumentedDatabase(new DatabaseImpl(dbName, opts))
+  return new DatabaseImpl(dbName, opts)
 }
 
 // we have to use a callback for this so that we can close
