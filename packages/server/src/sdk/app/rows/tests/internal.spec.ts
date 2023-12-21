@@ -1,3 +1,4 @@
+import tk from "timekeeper"
 import * as internalSdk from "../internal"
 
 import { generator } from "@budibase/backend-core/tests"
@@ -6,9 +7,13 @@ import {
   TableSourceType,
   FieldType,
   Table,
+  AutoFieldSubTypes,
 } from "@budibase/types"
 
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
+import { cache } from "@budibase/backend-core"
+
+tk.freeze(Date.now())
 
 describe("sdk >> rows >> internal", () => {
   const config = new TestConfiguration()
@@ -33,12 +38,6 @@ describe("sdk >> rows >> internal", () => {
       sourceId: INTERNAL_TABLE_SOURCE_ID,
       sourceType: TableSourceType.INTERNAL,
       schema: {
-        id: {
-          name: "id",
-          type: FieldType.AUTO,
-          autocolumn: true,
-          lastID: 0,
-        },
         name: {
           name: "name",
           type: FieldType.STRING,
@@ -110,18 +109,105 @@ describe("sdk >> rows >> internal", () => {
       })
     })
 
-    it.only("can persist in parallel", async () => {
-      const table = await config.createTable(tableData)
-      const rows = Array.from({ length: 100 }, () => makeRow())
+    it("auto ids will update when creating new rows", async () => {
+      const table = await config.createTable({
+        ...tableData,
+        schema: {
+          ...tableData.schema,
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            subtype: AutoFieldSubTypes.AUTO_ID,
+            autocolumn: true,
+            lastID: 0,
+          },
+        },
+      })
+      const row = makeRow()
 
       await config.doInContext(config.appId, async () => {
-        await Promise.all(
-          rows.map(row => internalSdk.save(table._id!, row, config.user._id))
+        const response = await internalSdk.save(
+          table._id!,
+          row,
+          config.user._id
         )
 
-        const persistedRows = await config.getRows(table._id!)
-        expect(persistedRows).toHaveLength(100)
+        expect(response).toEqual({
+          table: {
+            ...table,
+            schema: {
+              ...table.schema,
+              id: {
+                ...table.schema.id,
+                lastID: 1,
+              },
+            },
+          },
+          row: {
+            ...row,
+            id: 1,
+            type: "row",
+            _rev: expect.stringMatching("1-.*"),
+          },
+          squashed: {
+            ...row,
+            id: 1,
+            type: "row",
+            _rev: expect.stringMatching("1-.*"),
+          },
+        })
+
+        const persistedRow = await config.getRow(table._id!, response.row._id!)
+        expect(persistedRow).toEqual({
+          ...row,
+          type: "row",
+          id: 1,
+          _rev: expect.stringMatching("1-.*"),
+          createdAt: expect.any(String),
+          updatedAt: expect.any(String),
+        })
       })
+    })
+
+    it("auto ids will update when creating new rows in parallel", async () => {
+      function makeRows(count: number) {
+        return Array.from({ length: count }, () => makeRow())
+      }
+
+      const table = await config.createTable({
+        ...tableData,
+        schema: {
+          ...tableData.schema,
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            subtype: AutoFieldSubTypes.AUTO_ID,
+            autocolumn: true,
+            lastID: 0,
+          },
+        },
+      })
+
+      await config.doInContext(config.appId, async () => {
+        for (const row of makeRows(30)) {
+          await internalSdk.save(table._id!, row, config.user._id)
+        }
+        await Promise.all(
+          makeRows(200).map(row =>
+            internalSdk.save(table._id!, row, config.user._id)
+          )
+        )
+        for (const row of makeRows(20)) {
+          await internalSdk.save(table._id!, row, config.user._id)
+        }
+      })
+
+      const persistedRows = await config.getRows(table._id!)
+      expect(persistedRows).toHaveLength(250)
+
+      const persistedTable = await config.getTable(table._id)
+      expect((table as any).schema.id.lastID).toBe(0)
+      expect(persistedTable.schema.id.lastID).toBe(250)
     })
   })
 })
