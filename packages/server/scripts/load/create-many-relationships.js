@@ -52,7 +52,7 @@ async function run() {
     apiKey,
     app._id,
     studentsTable,
-    Array.from({ length: SUBJECT_COUNT }).map(() => ({
+    Array.from({ length: STUDENT_COUNT }).map(() => ({
       "Student Number": (++studentNumber).toString(),
       "First Name": generator.first(),
       "Last Name": generator.last(),
