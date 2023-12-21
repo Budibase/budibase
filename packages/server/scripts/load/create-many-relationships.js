@@ -18,13 +18,17 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
   let i = 0
 
   async function createSingleRow(item) {
-    const row = await createRow(apiKey, appId, table, item)
-    console.log(
-      `${table.name} - ${++i} of ${items.length} created (${
-        (Date.now() - start) / 1000
-      }s)`
-    )
-    return row
+    try {
+      const row = await createRow(apiKey, appId, table, item)
+      console.log(
+        `${table.name} - ${++i} of ${items.length} created (${
+          (Date.now() - start) / 1000
+        }s)`
+      )
+      return row
+    } catch {
+      console.error("Error creating row", item)
+    }
   }
 
   const rows = []
