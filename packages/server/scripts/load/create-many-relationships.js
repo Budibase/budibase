@@ -25,11 +25,10 @@ async function run() {
   }
   console.log(`Table found: ${studentsTable.name}`)
 
-  const studentsPromise = []
   let studentNumber = studentsTable.schema["Auto ID"].lastID
-  for (let i = 0; i < STUDENT_COUNT; i++) {
-    studentsPromise.push(
-      (async () => {
+  let i = 0
+  const students = await Promise.all(
+    Array.from({ length: STUDENT_COUNT }).map(async () => {
       await createRow(apiKey, app._id, studentsTable, {
         "Student Number": (++studentNumber).toString(),
         "First Name": generator.first(),
@@ -42,15 +41,12 @@ async function run() {
       })
 
     console.log(
-      `Student ${i + 1} of ${STUDENT_COUNT} created (${
+        `Student ${++i} of ${STUDENT_COUNT} created (${
         (Date.now() - start) / 1000
       }s)`
         )
-      })()
+    })
     )
-  }
-
-  const students = await Promise.all(studentsPromise)
 
   const subjectTable = await createTable(apiKey, app._id, {
     schema: {
@@ -63,23 +59,19 @@ async function run() {
     primaryDisplay: "Name",
   })
 
-  const subjectPromises = []
-  for (let i = 0; i < SUBJECT_COUNT; i++) {
-    subjectPromises.push(
-      (async () => {
+  i = 0
+  const subjects = await Promise.all(
+    Array.from({ length: SUBJECT_COUNT }).map(async () => {
       await createRow(apiKey, app._id, subjectTable, {
         Name: generator.profession(),
       })
     console.log(
-      `Subject ${i + 1} of ${SUBJECT_COUNT} created (${
+        `Subject ${++i} of ${SUBJECT_COUNT} created (${
         (Date.now() - start) / 1000
       }s)`
         )
-      })()
+    })
     )
-  }
-
-  const subjects = await Promise.all(subjectPromises)
 
   const gradesTable = await createTable(apiKey, app._id, {
     schema: {
@@ -113,7 +105,7 @@ async function run() {
     name: "Grades",
   })
 
-  let i = 0
+  i = 0
   for (const student of students) {
     for (const subject of subjects) {
       await createRow(apiKey, app._id, gradesTable, {
