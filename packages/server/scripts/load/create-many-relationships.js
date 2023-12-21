@@ -13,11 +13,10 @@ if (!process.argv[2]) {
 }
 
 const start = Date.now()
-
-async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
+async function batchCreate(apiKey, appId, table, items, batchSize = 10) {
   let i = 0
-
   let errors = 0
+
   async function createSingleRow(item) {
     try {
       const row = await createRow(apiKey, appId, table, item)
@@ -33,14 +32,25 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
   }
 
   const rows = []
-  for (let j = 0; j < items.length; j += batchSize) {
-    const batchPromises = items.slice(j, j + batchSize).map(createSingleRow)
-    const batchRows = await Promise.all(batchPromises)
-    rows.push(...batchRows)
+  const maxConcurrency = Math.min(batchSize, items.length)
+  const inFlight = {}
+
+  for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+    const item = items[itemIndex]
+    const promise = createSingleRow(item).then(result => {
+      rows.push(result)
+      delete inFlight[itemIndex]
+    })
+
+    inFlight[itemIndex] = promise
+
+    if (Object.keys(inFlight).length >= maxConcurrency) {
+      await Promise.race(Object.values(inFlight))
+    }
   }
-  if (errors) {
-    console.error(`Error creating ${errors} row`)
-  }
+
+  await Promise.all(Object.values(inFlight))
+
   return rows
 }
 
