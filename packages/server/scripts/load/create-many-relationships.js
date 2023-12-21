@@ -128,6 +128,10 @@ async function run() {
       }))
     )
   )
+
+  console.log(
+    `Access the app here: http://localhost:10000/builder/app/${app._id}`
+  )
 }
 
 run()
