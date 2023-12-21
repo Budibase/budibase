@@ -2,6 +2,7 @@ import vm from "vm"
 import env from "./environment"
 import { setJSRunner } from "@budibase/string-templates"
 import { context, timers } from "@budibase/backend-core"
+
 type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
