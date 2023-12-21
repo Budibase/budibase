@@ -7,12 +7,39 @@ const generator = new Chance()
 const STUDENT_COUNT = 500
 const SUBJECT_COUNT = 10
 
+const batchSize = 100
+
 if (!process.argv[2]) {
   console.error("Please specify an API key as script argument.")
   process.exit(-1)
 }
 
 const start = Date.now()
+
+async function batchCreate(apiKey, appId, count, table, generator) {
+  let i = 0
+
+  async function createSingleRow() {
+    const row = await createRow(apiKey, appId, table, generator())
+    console.log(
+      `${table.name} - ${++i} of ${count} created (${
+        (Date.now() - start) / 1000
+      }s)`
+    )
+    return row
+  }
+
+  const rows = []
+  for (let j = 0; j < count; j += batchSize) {
+    const batchPromises = Array.from(
+      { length: Math.min(batchSize, count - j) },
+      createSingleRow
+    )
+    const batchRows = await Promise.all(batchPromises)
+    rows.push(...batchRows)
+  }
+  return rows
+}
 
 async function run() {
   const apiKey = process.argv[2]
@@ -26,26 +53,20 @@ async function run() {
   console.log(`Table found: ${studentsTable.name}`)
 
   let studentNumber = studentsTable.schema["Auto ID"].lastID
-  let i = 0
-  const students = await Promise.all(
-    Array.from({ length: STUDENT_COUNT }).map(async () => {
-      const row = await createRow(apiKey, app._id, studentsTable, {
-        "Student Number": (++studentNumber).toString(),
-        "First Name": generator.first(),
-        "Last Name": generator.last(),
-        Gender: generator.pickone(["M", "F"]),
-        Grade: generator.pickone(["8", "9", "10", "11"]),
-        "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
-        "Home Number": generator.phone(),
-        "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
-      })
-
-      console.log(
-        `Student ${++i} of ${STUDENT_COUNT} created (${
-          (Date.now() - start) / 1000
-        }s)`
-      )
-      return row
+  const students = await batchCreate(
+    apiKey,
+    app._id,
+    STUDENT_COUNT,
+    studentsTable,
+    () => ({
+      "Student Number": (++studentNumber).toString(),
+      "First Name": generator.first(),
+      "Last Name": generator.last(),
+      Gender: generator.pickone(["M", "F"]),
+      Grade: generator.pickone(["8", "9", "10", "11"]),
+      "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
+      "Home Number": generator.phone(),
+      "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
     })
   )
 
@@ -60,18 +81,13 @@ async function run() {
     primaryDisplay: "Name",
   })
 
-  i = 0
-  const subjects = await Promise.all(
-    Array.from({ length: SUBJECT_COUNT }).map(async () => {
-      const row = await createRow(apiKey, app._id, subjectTable, {
-        Name: generator.profession(),
-      })
-      console.log(
-        `Subject ${++i} of ${SUBJECT_COUNT} created (${
-          (Date.now() - start) / 1000
-        }s)`
-      )
-      return row
+  const subjects = await batchCreate(
+    apiKey,
+    app._id,
+    SUBJECT_COUNT,
+    subjectTable,
+    () => ({
+      Name: generator.profession(),
     })
   )
 
