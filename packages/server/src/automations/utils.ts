@@ -16,7 +16,6 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { automationsEnabled } from "../features"
-import tracer from "dd-trace"
 
 const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
@@ -40,62 +39,27 @@ function loggingArgs(job: AutomationJob) {
 }
 
 export async function processEvent(job: AutomationJob) {
-  return tracer.trace(
-    "processEvent",
-    { resource: "automation" },
-    async span => {
-      const appId = job.data.event.appId!
-      const automationId = job.data.automation._id!
+  const appId = job.data.event.appId!
+  const automationId = job.data.automation._id!
 
-      span?.addTags({
-        appId,
+  const task = async () => {
+    try {
+      // need to actually await these so that an error can be captured properly
+      console.log("automation running", ...loggingArgs(job))
+
+      const runFn = () => Runner.run(job)
+      const result = await quotas.addAutomation(runFn, {
         automationId,
-        job: {
-          id: job.id,
-          name: job.name,
-          attemptsMade: job.attemptsMade,
-          opts: {
-            attempts: job.opts.attempts,
-            priority: job.opts.priority,
-            delay: job.opts.delay,
-            repeat: job.opts.repeat,
-            backoff: job.opts.backoff,
-            lifo: job.opts.lifo,
-            timeout: job.opts.timeout,
-            jobId: job.opts.jobId,
-            removeOnComplete: job.opts.removeOnComplete,
-            removeOnFail: job.opts.removeOnFail,
-            stackTraceLimit: job.opts.stackTraceLimit,
-            preventParsingData: job.opts.preventParsingData,
-          },
-        },
       })
-
-      const task = async () => {
-        try {
-          // need to actually await these so that an error can be captured properly
-          console.log("automation running", ...loggingArgs(job))
-
-          const runFn = () => Runner.run(job)
-          const result = await quotas.addAutomation(runFn, {
-            automationId,
-          })
-          console.log("automation completed", ...loggingArgs(job))
-          return result
-        } catch (err) {
-          span?.addTags({ error: true })
-          console.error(
-            `automation was unable to run`,
-            err,
-            ...loggingArgs(job)
-          )
-          return { err }
-        }
-      }
-
-      return await context.doInAutomationContext({ appId, automationId, task })
+      console.log("automation completed", ...loggingArgs(job))
+      return result
+    } catch (err) {
+      console.error(`automation was unable to run`, err, ...loggingArgs(job))
+      return { err }
     }
-  )
+  }
+
+  return await context.doInAutomationContext({ appId, automationId, task })
 }
 
 export async function updateTestHistory(
