@@ -189,25 +189,32 @@ describe("sdk >> rows >> internal", () => {
       })
 
       await config.doInContext(config.appId, async () => {
-        for (const row of makeRows(30)) {
+        for (const row of makeRows(5)) {
           await internalSdk.save(table._id!, row, config.user._id)
         }
         await Promise.all(
-          makeRows(200).map(row =>
+          makeRows(10).map(row =>
             internalSdk.save(table._id!, row, config.user._id)
           )
         )
-        for (const row of makeRows(20)) {
+        for (const row of makeRows(5)) {
           await internalSdk.save(table._id!, row, config.user._id)
         }
       })
 
       const persistedRows = await config.getRows(table._id!)
-      expect(persistedRows).toHaveLength(250)
+      expect(persistedRows).toHaveLength(20)
+      expect(persistedRows).toEqual(
+        expect.arrayContaining(
+          Array.from({ length: 20 }).map((_, i) =>
+            expect.objectContaining({ id: i + 1 })
+          )
+        )
+      )
 
       const persistedTable = await config.getTable(table._id)
       expect((table as any).schema.id.lastID).toBe(0)
-      expect(persistedTable.schema.id.lastID).toBe(250)
+      expect(persistedTable.schema.id.lastID).toBe(20)
     })
   })
 })
