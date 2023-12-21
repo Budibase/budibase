@@ -29,7 +29,7 @@ async function run() {
   let i = 0
   const students = await Promise.all(
     Array.from({ length: STUDENT_COUNT }).map(async () => {
-      await createRow(apiKey, app._id, studentsTable, {
+      const row = await createRow(apiKey, app._id, studentsTable, {
         "Student Number": (++studentNumber).toString(),
         "First Name": generator.first(),
         "Last Name": generator.last(),
@@ -40,13 +40,14 @@ async function run() {
         "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
       })
 
-    console.log(
+      console.log(
         `Student ${++i} of ${STUDENT_COUNT} created (${
-        (Date.now() - start) / 1000
-      }s)`
-        )
+          (Date.now() - start) / 1000
+        }s)`
+      )
+      return row
     })
-    )
+  )
 
   const subjectTable = await createTable(apiKey, app._id, {
     schema: {
@@ -62,16 +63,17 @@ async function run() {
   i = 0
   const subjects = await Promise.all(
     Array.from({ length: SUBJECT_COUNT }).map(async () => {
-      await createRow(apiKey, app._id, subjectTable, {
+      const row = await createRow(apiKey, app._id, subjectTable, {
         Name: generator.profession(),
       })
-    console.log(
+      console.log(
         `Subject ${++i} of ${SUBJECT_COUNT} created (${
-        (Date.now() - start) / 1000
-      }s)`
-        )
+          (Date.now() - start) / 1000
+        }s)`
+      )
+      return row
     })
-    )
+  )
 
   const gradesTable = await createTable(apiKey, app._id, {
     schema: {
