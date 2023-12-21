@@ -17,6 +17,7 @@ const start = Date.now()
 async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
   let i = 0
 
+  let errors = 0
   async function createSingleRow(item) {
     try {
       const row = await createRow(apiKey, appId, table, item)
@@ -27,7 +28,7 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
       )
       return row
     } catch {
-      console.error("Error creating row", item)
+      errors++
     }
   }
 
@@ -36,6 +37,9 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
     const batchPromises = items.slice(j, j + batchSize).map(createSingleRow)
     const batchRows = await Promise.all(batchPromises)
     rows.push(...batchRows)
+  }
+  if (errors) {
+    console.error(`Error creating ${errors} row`)
   }
   return rows
 }
