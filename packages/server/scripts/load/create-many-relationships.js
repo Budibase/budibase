@@ -7,8 +7,6 @@ const generator = new Chance()
 const STUDENT_COUNT = 500
 const SUBJECT_COUNT = 10
 
-const batchSize = 100
-
 if (!process.argv[2]) {
   console.error("Please specify an API key as script argument.")
   process.exit(-1)
@@ -16,13 +14,13 @@ if (!process.argv[2]) {
 
 const start = Date.now()
 
-async function batchCreate(apiKey, appId, count, table, generator) {
+async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
   let i = 0
 
-  async function createSingleRow() {
-    const row = await createRow(apiKey, appId, table, generator())
+  async function createSingleRow(item) {
+    const row = await createRow(apiKey, appId, table, item)
     console.log(
-      `${table.name} - ${++i} of ${count} created (${
+      `${table.name} - ${++i} of ${items.length} created (${
         (Date.now() - start) / 1000
       }s)`
     )
@@ -30,11 +28,8 @@ async function batchCreate(apiKey, appId, count, table, generator) {
   }
 
   const rows = []
-  for (let j = 0; j < count; j += batchSize) {
-    const batchPromises = Array.from(
-      { length: Math.min(batchSize, count - j) },
-      createSingleRow
-    )
+  for (let j = 0; j < items.length; j += batchSize) {
+    const batchPromises = items.slice(j, j + batchSize).map(createSingleRow)
     const batchRows = await Promise.all(batchPromises)
     rows.push(...batchRows)
   }
@@ -56,9 +51,8 @@ async function run() {
   const students = await batchCreate(
     apiKey,
     app._id,
-    STUDENT_COUNT,
     studentsTable,
-    () => ({
+    Array.from({ length: SUBJECT_COUNT }).map(() => ({
       "Student Number": (++studentNumber).toString(),
       "First Name": generator.first(),
       "Last Name": generator.last(),
@@ -67,7 +61,7 @@ async function run() {
       "Tardiness (Days)": generator.integer({ min: 1, max: 100 }),
       "Home Number": generator.phone(),
       "Attendance_(%)": generator.integer({ min: 0, max: 100 }),
-    })
+    }))
   )
 
   const subjectTable = await createTable(apiKey, app._id, {
@@ -84,11 +78,10 @@ async function run() {
   const subjects = await batchCreate(
     apiKey,
     app._id,
-    SUBJECT_COUNT,
     subjectTable,
-    () => ({
+    Array.from({ length: SUBJECT_COUNT }).map(() => ({
       Name: generator.profession(),
-    })
+    }))
   )
 
   const gradesTable = await createTable(apiKey, app._id, {
@@ -123,21 +116,18 @@ async function run() {
     name: "Grades",
   })
 
-  i = 0
-  for (const student of students) {
-    for (const subject of subjects) {
-      await createRow(apiKey, app._id, gradesTable, {
+  await batchCreate(
+    apiKey,
+    app._id,
+    gradesTable,
+    students.flatMap(student =>
+      subjects.map(subject => ({
         Score: generator.integer({ min: 0, max: 100 }),
         Student: [student],
         Subject: [subject],
-      })
-      console.log(
-        `Grade ${++i} of ${students.length * subjects.length} created (${
-          (Date.now() - start) / 1000
-        }s)`
-      )
-    }
-  }
+      }))
+    )
+  )
 }
 
 run()
