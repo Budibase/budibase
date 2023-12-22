@@ -647,6 +647,15 @@
     "@azure/abort-controller" "^1.0.0"
     tslib "^2.2.0"
 
+"@azure/core-auth@^1.5.0":
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/@azure/core-auth/-/core-auth-1.5.0.tgz#a41848c5c31cb3b7c84c409885267d55a2c92e44"
+  integrity sha512-udzoBuYG1VBoHVohDTrvKjyzel34zt77Bhp7dQntVGGD0ehVq48owENbBG8fIgkHRNUBQH5k1r0hpoMu5L8+kw==
+  dependencies:
+    "@azure/abort-controller" "^1.0.0"
+    "@azure/core-util" "^1.1.0"
+    tslib "^2.2.0"
+
 "@azure/core-client@^1.3.0", "@azure/core-client@^1.4.0", "@azure/core-client@^1.5.0":
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/@azure/core-client/-/core-client-1.7.3.tgz#f8cb2a1f91e8bc4921fa2e745cfdfda3e6e491a3"
@@ -743,27 +752,33 @@
     "@azure/abort-controller" "^1.0.0"
     tslib "^2.2.0"
 
-"@azure/identity@^2.0.4":
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-2.1.0.tgz#89f0bfc1d1264dfd3d0cb19837c33a9c6706d548"
-  integrity sha512-BPDz1sK7Ul9t0l9YKLEa8PHqWU4iCfhGJ+ELJl6c8CP3TpJt2urNCbm0ZHsthmxRsYoMPbz2Dvzj30zXZVmAFw==
+"@azure/core-util@^1.1.0", "@azure/core-util@^1.6.1":
+  version "1.6.1"
+  resolved "https://registry.yarnpkg.com/@azure/core-util/-/core-util-1.6.1.tgz#fea221c4fa43c26543bccf799beb30c1c7878f5a"
+  integrity sha512-h5taHeySlsV9qxuK64KZxy4iln1BtMYlNt5jbuEFN3UFSAd1EwKg/Gjl5a6tZ/W8t6li3xPnutOx7zbDyXnPmQ==
   dependencies:
     "@azure/abort-controller" "^1.0.0"
-    "@azure/core-auth" "^1.3.0"
+    tslib "^2.2.0"
+
+"@azure/identity@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@azure/identity/-/identity-3.4.1.tgz#18ba48b7421c818ef8116e8eec3c03ec1a62649a"
+  integrity sha512-oQ/r5MBdfZTMIUcY5Ch8G7Vv9aIXDkEYyU4Dfqjim4MQN+LY2uiQ57P1JDopMLeHCsZxM4yy8lEdne3tM9Xhzg==
+  dependencies:
+    "@azure/abort-controller" "^1.0.0"
+    "@azure/core-auth" "^1.5.0"
     "@azure/core-client" "^1.4.0"
     "@azure/core-rest-pipeline" "^1.1.0"
     "@azure/core-tracing" "^1.0.0"
-    "@azure/core-util" "^1.0.0"
+    "@azure/core-util" "^1.6.1"
     "@azure/logger" "^1.0.0"
-    "@azure/msal-browser" "^2.26.0"
-    "@azure/msal-common" "^7.0.0"
-    "@azure/msal-node" "^1.10.0"
+    "@azure/msal-browser" "^3.5.0"
+    "@azure/msal-node" "^2.5.1"
     events "^3.0.0"
     jws "^4.0.0"
     open "^8.0.0"
     stoppable "^1.1.0"
     tslib "^2.2.0"
-    uuid "^8.3.0"
 
 "@azure/keyvault-keys@^4.4.0":
   version "4.7.1"
@@ -789,29 +804,24 @@
   dependencies:
     tslib "^2.2.0"
 
-"@azure/msal-browser@^2.26.0":
-  version "2.37.1"
-  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-2.37.1.tgz#7e3fa7df9c6e74eb1fb640e73ef3b5b4407ee98d"
-  integrity sha512-EoKQISEpIY39Ru1OpWkeFZBcwp6Y0bG81bVmdyy4QJebPPDdVzfm62PSU0XFIRc3bqjZ4PBKBLMYLuo9NZYAow==
+"@azure/msal-browser@^3.5.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-browser/-/msal-browser-3.6.0.tgz#06ad33c82af4f24f2fcf8a8a61a3a1cbe3dd7fad"
+  integrity sha512-FrFBJXRJMyWXjAjg4cUNZwEKktzfzD/YD9+S1kj2ors67hKoveam4aL0bZuCZU/jTiHTn0xDQGQh2ksCMXTXtA==
   dependencies:
-    "@azure/msal-common" "13.1.0"
+    "@azure/msal-common" "14.5.0"
 
-"@azure/msal-common@13.1.0":
-  version "13.1.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-13.1.0.tgz#73a787ec1e7880c30b187cf451404af547d95339"
-  integrity sha512-wj+ULrRB0HTuMmtrMjg8j3guCx32GE2BCPbsMCZkHgL1BZetC3o/Su5UJEQMX1HNc9CrIaQNx5WaKWHygYDe0g==
+"@azure/msal-common@14.5.0":
+  version "14.5.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-14.5.0.tgz#5a891e5f8eaf23f598bdb4e285e938fb606cd716"
+  integrity sha512-Gx5rZbiZV/HiZ2nEKfjfAF/qDdZ4/QWxMvMo2jhIFVz528dVKtaZyFAOtsX2Ak8+TQvRsGCaEfuwJFuXB6tu1A==
 
-"@azure/msal-common@^7.0.0":
-  version "7.6.0"
-  resolved "https://registry.yarnpkg.com/@azure/msal-common/-/msal-common-7.6.0.tgz#b52e97ef540275f72611cff57937dfa0b34cdcca"
-  integrity sha512-XqfbglUTVLdkHQ8F9UQJtKseRr3sSnr9ysboxtoswvaMVaEfvyLtMoHv9XdKUfOc0qKGzNgRFd9yRjIWVepl6Q==
-
-"@azure/msal-node@^1.10.0":
-  version "1.17.3"
-  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-1.17.3.tgz#1a0bbecb0b3e5e63d50ccb27c9cb3bae5a6c1b65"
-  integrity sha512-slsa+388bQQWnWH1V91KL+zV57rIp/0OQFfF0EmVMY8gnEIkAnpWWFUVBTTMbxEyjEFMk5ZW9xiHvHBcYFHzDw==
+"@azure/msal-node@^2.5.1":
+  version "2.6.0"
+  resolved "https://registry.yarnpkg.com/@azure/msal-node/-/msal-node-2.6.0.tgz#44bad20a1523c92d79de24fb225da86abaeedb6c"
+  integrity sha512-RWAWCYYrSldIYC47oWtofIun41e6SB9TBYgGYsezq6ednagwo9ZRFyRsvl1NabmdTkdDDXRAABIdveeN2Gtd8w==
   dependencies:
-    "@azure/msal-common" "13.1.0"
+    "@azure/msal-common" "14.5.0"
     jsonwebtoken "^9.0.0"
     uuid "^8.3.0"
 
@@ -3398,10 +3408,10 @@
     "@jridgewell/resolve-uri" "3.1.0"
     "@jridgewell/sourcemap-codec" "1.4.14"
 
-"@js-joda/core@^5.2.0":
-  version "5.5.3"
-  resolved "https://registry.yarnpkg.com/@js-joda/core/-/core-5.5.3.tgz#defac1f9af382178104ad327af1ec97446039752"
-  integrity sha512-7dqNYwG8gCt4hfg5PKgM7xLEcgSBcx/UgC92OMnhMmvAnq11QzDFPrxUkNR/u5kn17WWLZ8beZ4A3Qrz4pZcmQ==
+"@js-joda/core@^5.5.3":
+  version "5.6.1"
+  resolved "https://registry.yarnpkg.com/@js-joda/core/-/core-5.6.1.tgz#03e2453d877b61c3f593cf031fd18b375bd548b6"
+  integrity sha512-Xla/d7ZMMR6+zRd6lTio0wRZECfcfFJP7GGe9A9L4tDOlD5CX4YcZ4YZle9w58bBYzssojVapI84RraKWDQZRg==
 
 "@jsdevtools/ono@^7.1.3":
   version "7.1.3"
@@ -5154,10 +5164,10 @@
     async "^3.2.1"
     simple-lru-cache "^0.0.2"
 
-"@tediousjs/connection-string@^0.4.1":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@tediousjs/connection-string/-/connection-string-0.4.2.tgz#7bd1c68a7b075439768e85e9fa116b7e9020ec95"
-  integrity sha512-1R9UC7Qc5wief2oJL+c1+d7v1/oPBayL85u8L/jV2DzIKput1TZ8ZUjj2nxQaSfzu210zp0oFWUrYUiUs8NhBQ==
+"@tediousjs/connection-string@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@tediousjs/connection-string/-/connection-string-0.5.0.tgz#9b3d858c040aac6bdf5584bf45370cef5b6522b4"
+  integrity sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==
 
 "@testing-library/dom@^8.1.0":
   version "8.20.0"
@@ -5692,10 +5702,10 @@
   resolved "https://registry.yarnpkg.com/@types/ms/-/ms-0.7.31.tgz#31b7ca6407128a3d2bbc27fe2d21b345397f6197"
   integrity sha512-iiUgKzV9AuaEkZqkOLDIvlQiL6ltuZd9tGcW3gwpnX8JbuiuhFlEGmmFXEXkN50Cvq7Os88IY2v0dkDqXYWVgA==
 
-"@types/mssql@8.1.2":
-  version "8.1.2"
-  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-8.1.2.tgz#00cbe3ce95586e40b47e3744ba02a54695c62de8"
-  integrity sha512-hoDM+mZUClfXu0J1pyVdbhv2Ve0dl0TdagAE3M5rd1slqoVEEHuNObPD+giwtJgyo99CcS58qbF9ektVKdxSfQ==
+"@types/mssql@9.1.4":
+  version "9.1.4"
+  resolved "https://registry.yarnpkg.com/@types/mssql/-/mssql-9.1.4.tgz#d485b06494a76d15b957e0952305c55053bac366"
+  integrity sha512-st2ryK+viraRuptxcGs+66J0RrABytxhGxUlpWcOniNPzpnxIaeNhPJVM3lZn1r+s/6lQARYID6Z+MBoseSD8g==
   dependencies:
     "@types/node" "*"
     "@types/tedious" "*"
@@ -5721,10 +5731,12 @@
   resolved "https://registry.yarnpkg.com/@types/node/-/node-16.9.1.tgz#0611b37db4246c937feef529ddcc018cf8e35708"
   integrity sha512-QpLcX9ZSsq3YYUUnD3nFDY8H7wctAhQj/TFKL8Ya8v5fMm3CFXxo8zStsLAl780ltoYoo1WvKUVGBQK+1ifr7g==
 
-"@types/node@18.17.0":
-  version "18.17.0"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-18.17.0.tgz#35d44267a33dd46b49ee0f73d31b05fd7407e290"
-  integrity sha512-GXZxEtOxYGFchyUzxvKI14iff9KZ2DI+A6a37o6EQevtg6uO9t+aUZKcaC1Te5Ng1OnLM7K9NVVj+FbecD9cJg==
+"@types/node@20.10.0":
+  version "20.10.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.10.0.tgz#16ddf9c0a72b832ec4fcce35b8249cf149214617"
+  integrity sha512-D0WfRmU9TQ8I9PFx9Yc+EBHw+vSpIub4IDvQivcp26PtPrdMGAq5SDcpXEo/epqa/DXotVpekHiLNTg3iaKXBQ==
+  dependencies:
+    undici-types "~5.26.4"
 
 "@types/node@>=4.2.0 < 13", "@types/node@^12.20.52":
   version "12.20.55"
@@ -6084,9 +6096,9 @@
     minipass "^4.0.0"
 
 "@types/tedious@*":
-  version "4.0.9"
-  resolved "https://registry.yarnpkg.com/@types/tedious/-/tedious-4.0.9.tgz#baa3892e45c63d7aac54d7bf5b01385d210ff19e"
-  integrity sha512-ipwFvfy9b2m0gjHsIX0D6NAAwGCKokzf5zJqUZHUGt+7uWVlBIy6n2eyMgiKQ8ChLFVxic/zwQUhjLYNzbHDRA==
+  version "4.0.14"
+  resolved "https://registry.yarnpkg.com/@types/tedious/-/tedious-4.0.14.tgz#868118e7a67808258c05158e9cad89ca58a2aec1"
+  integrity sha512-KHPsfX/FoVbUGbyYvk1q9MMQHLPeRZhRJZdO45Q4YjvFkv4hMNghCWTvy7rdKessBsmtz4euWCWAB6/tVpI1Iw==
   dependencies:
     "@types/node" "*"
 
@@ -7441,14 +7453,14 @@ bl@^4.0.3, bl@^4.1.0:
     inherits "^2.0.4"
     readable-stream "^3.4.0"
 
-bl@^5.0.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/bl/-/bl-5.1.0.tgz#183715f678c7188ecef9fe475d90209400624273"
-  integrity sha512-tv1ZJHLfTDnXE6tMHv73YgSJaWR2AFuPwMntBe7XL/GBFHnT0CLnsHMogfk5+GzCDC5ZWarSCYaIGATZt9dNsQ==
+bl@^6.0.3:
+  version "6.0.9"
+  resolved "https://registry.yarnpkg.com/bl/-/bl-6.0.9.tgz#df8fcb2ef7be2e5ee8f65afa493502914e0d816f"
+  integrity sha512-Vh+M9HMfeTST9rkkQ1utRnOeABNcBO3i0dJMFkenCv7JIp76XWx8uQOGpaXyXVyenrLDZsdAHXbf0Cz18Eb0fw==
   dependencies:
     buffer "^6.0.3"
     inherits "^2.0.4"
-    readable-stream "^3.4.0"
+    readable-stream "^4.2.0"
 
 bl@~0.8.1:
   version "0.8.2"
@@ -8455,6 +8467,11 @@ commander@7.1.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-7.1.0.tgz#f2eaecf131f10e36e07d894698226e36ae0eb5ff"
   integrity sha512-pRxBna3MJe6HKnBGsDyMv8ETbptw3axEdYHoqNh7gu5oDcew8fs0xnivZGm06Ogk8zGAJ9VX+OPEr2GXEQK4dg==
 
+commander@^11.0.0:
+  version "11.1.0"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-11.1.0.tgz#62fdce76006a68e5c1ab3314dc92e800eb83d906"
+  integrity sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==
+
 commander@^2.16.0, commander@^2.19.0, commander@^2.20.0, commander@^2.20.3, commander@^2.5.0, commander@^2.7.1, commander@^2.8.1:
   version "2.20.3"
   resolved "https://registry.yarnpkg.com/commander/-/commander-2.20.3.tgz#fd485e84c03eb4881c20722ba48035e8531aeb33"
@@ -8475,7 +8492,7 @@ commander@^8.3.0:
   resolved "https://registry.yarnpkg.com/commander/-/commander-8.3.0.tgz#4837ea1b2da67b9c616a67afbb0fafee567bca66"
   integrity sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==
 
-commander@^9.1.0, commander@^9.4.0, commander@^9.4.1:
+commander@^9.1.0, commander@^9.4.1:
   version "9.5.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-9.5.0.tgz#bc08d1eb5cedf7ccb797a96199d41c7bc3e60d30"
   integrity sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==
@@ -9412,7 +9429,7 @@ deferred-leveldown@~5.3.0:
     abstract-leveldown "~6.2.1"
     inherits "^2.0.3"
 
-define-data-property@^1.0.1, define-data-property@^1.1.1:
+define-data-property@^1.0.1, define-data-property@^1.1.0, define-data-property@^1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/define-data-property/-/define-data-property-1.1.1.tgz#c35f7cd0ab09883480d12ac5cb213715587800b3"
   integrity sha512-E7uGkTzkk1d0ByLeSc6ZsFS79Axg+m1P/VsgYsxHgiuc3tFSj+MjMIwe90FC4lOAZzNBdY7kkO2P2wKdsQ1vgQ==
@@ -9426,7 +9443,7 @@ define-lazy-prop@^2.0.0:
   resolved "https://registry.yarnpkg.com/define-lazy-prop/-/define-lazy-prop-2.0.0.tgz#3f7ae421129bcaaac9bc74905c98a0009ec9ee7f"
   integrity sha512-Ds09qNh8yw3khSjiJjiUInaGX9xlqZDY7JVryGxdxV7NPeuqQfplOpQ66yJFZut3jLa5zOwkXw1g9EI2uKh4Og==
 
-define-properties@^1.1.3, define-properties@^1.1.4, define-properties@^1.2.0:
+define-properties@^1.1.3, define-properties@^1.1.4, define-properties@^1.2.0, define-properties@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/define-properties/-/define-properties-1.2.1.tgz#10781cc616eb951a80a034bafcaa7377f6af2b6c"
   integrity sha512-8QmQKqEASLd5nx0U1B1okLElbUuuttJ/AnYmRXbbbGDWh6uS208EjD4Xqq/I9wK7u0v6O08XhTWnt5XtEbR6Dg==
@@ -10226,7 +10243,7 @@ error-ex@^1.3.1:
   dependencies:
     is-arrayish "^0.2.1"
 
-es-abstract@^1.17.5, es-abstract@^1.20.4, es-abstract@^1.22.1:
+es-abstract@^1.17.5, es-abstract@^1.22.1:
   version "1.22.3"
   resolved "https://registry.yarnpkg.com/es-abstract/-/es-abstract-1.22.3.tgz#48e79f5573198de6dee3589195727f4f74bc4f32"
   integrity sha512-eiiY8HQeYfYH2Con2berK+To6GrK2RxbPawDkGq4UiCQQfZHb6wX9qQqkbpPqaxQFcl8d9QzZqo0tGE0VcrdwA==
@@ -10271,18 +10288,19 @@ es-abstract@^1.17.5, es-abstract@^1.20.4, es-abstract@^1.22.1:
     unbox-primitive "^1.0.2"
     which-typed-array "^1.1.13"
 
-es-aggregate-error@^1.0.8:
-  version "1.0.9"
-  resolved "https://registry.yarnpkg.com/es-aggregate-error/-/es-aggregate-error-1.0.9.tgz#b50925cdf78c8a634bd766704f6f7825902be3d9"
-  integrity sha512-fvnX40sb538wdU6r4s35cq4EY6Lr09Upj40BEVem4LEsuW8XgQep9yD5Q1U2KftokNp1rWODFJ2qwZSsAjFpbg==
+es-aggregate-error@^1.0.9:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/es-aggregate-error/-/es-aggregate-error-1.0.11.tgz#013d6b205a1875044e8ddb8592aa8bd5b6cb21c5"
+  integrity sha512-DCiZiNlMlbvofET/cE55My387NiLvuGToBEZDdK9U2G3svDCjL8WOgO5Il6lO83nQ8qmag/R9nArdpaFQ/m3lA==
   dependencies:
-    define-properties "^1.1.4"
-    es-abstract "^1.20.4"
+    define-data-property "^1.1.0"
+    define-properties "^1.2.1"
+    es-abstract "^1.22.1"
     function-bind "^1.1.1"
-    functions-have-names "^1.2.3"
-    get-intrinsic "^1.1.3"
+    get-intrinsic "^1.2.1"
     globalthis "^1.0.3"
     has-property-descriptors "^1.0.0"
+    set-function-name "^2.0.1"
 
 es-get-iterator@^1.1.2:
   version "1.1.3"
@@ -16118,17 +16136,17 @@ msgpackr@^1.5.2:
   optionalDependencies:
     msgpackr-extract "^3.0.1"
 
-mssql@9.1.1:
-  version "9.1.1"
-  resolved "https://registry.yarnpkg.com/mssql/-/mssql-9.1.1.tgz#fcec595834db1ff6e446710794f54082fc74ef02"
-  integrity sha512-m0yTx9xzUtTvJpWJHqknUXUDPRnJXZYOOFNygnNIXn1PBkLsC/rkXQdquObd+M0ZPlBhGC00Jg28zG0wCl7VWg==
+mssql@10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/mssql/-/mssql-10.0.1.tgz#96053ae91b96fdc0469b9d8ca34663d448075bdf"
+  integrity sha512-k0Xkav/3OppZs8Kj+FIo7k7ejbcsVNxp5/ePayxfXzuBZhxD/Y/RhIhrtfHyH6FmlJnBQPj7eDI2IN7B0BiSxQ==
   dependencies:
-    "@tediousjs/connection-string" "^0.4.1"
-    commander "^9.4.0"
+    "@tediousjs/connection-string" "^0.5.0"
+    commander "^11.0.0"
     debug "^4.3.3"
     rfdc "^1.3.0"
     tarn "^3.0.2"
-    tedious "^15.0.1"
+    tedious "^16.4.0"
 
 multi-part-lite@^1.0.0:
   version "1.0.0"
@@ -19129,6 +19147,17 @@ readable-stream@^4.0.0:
     events "^3.3.0"
     process "^0.11.10"
 
+readable-stream@^4.2.0:
+  version "4.5.1"
+  resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-4.5.1.tgz#3f2e4e66eab45606ac8f31597b9edb80c13b12ab"
+  integrity sha512-uQjbf34vmf/asGnOHQEw07Q4llgMACQZTWWa4MmICS0IKJoHbLwKCy71H3eR99Dw5iYejc6W+pqZZEeqRtUFAw==
+  dependencies:
+    abort-controller "^3.0.0"
+    buffer "^6.0.3"
+    events "^3.3.0"
+    process "^0.11.10"
+    string_decoder "^1.3.0"
+
 readable-stream@~0.0.2:
   version "0.0.4"
   resolved "https://registry.yarnpkg.com/readable-stream/-/readable-stream-0.0.4.tgz#f32d76e3fb863344a548d79923007173665b3b8d"
@@ -20043,7 +20072,7 @@ set-function-length@^1.1.1:
     gopd "^1.0.1"
     has-property-descriptors "^1.0.0"
 
-set-function-name@^2.0.0:
+set-function-name@^2.0.0, set-function-name@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/set-function-name/-/set-function-name-2.0.1.tgz#12ce38b7954310b9f61faa12701620a0c882793a"
   integrity sha512-tMNCiqYVkXIZgc2Hnoy2IvC/f8ezc5koaRFkCjrpWzGpCd3qbZXPzVy9MAZzK1ch/X0jvSkojys3oqJN0qCmdA==
@@ -20806,7 +20835,7 @@ string.prototype.trimstart@^1.0.7:
     define-properties "^1.2.0"
     es-abstract "^1.22.1"
 
-string_decoder@^1.1.1:
+string_decoder@^1.1.1, string_decoder@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/string_decoder/-/string_decoder-1.3.0.tgz#42f114594a46cf1a8e30b0a84f56c78c3edac21e"
   integrity sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==
@@ -21324,22 +21353,22 @@ tarn@^3.0.1, tarn@^3.0.2:
   resolved "https://registry.yarnpkg.com/tarn/-/tarn-3.0.2.tgz#73b6140fbb881b71559c4f8bfde3d9a4b3d27693"
   integrity sha512-51LAVKUSZSVfI05vjPESNc5vwqqZpbXCsU+/+wxlOrUjk2SnFTt97v9ZgQrD4YmxYW1Px6w2KjaDitCfkvgxMQ==
 
-tedious@^15.0.1:
-  version "15.1.3"
-  resolved "https://registry.yarnpkg.com/tedious/-/tedious-15.1.3.tgz#bbc44da3d284126cbf4cf141088ec743431d9a57"
-  integrity sha512-166EpRm5qknwhEisjZqz/mF7k14fXKJYHRg6XiAXVovd/YkyHJ3SG4Ppy89caPaNFfRr7PVYe+s4dAvKaCMFvw==
+tedious@^16.4.0:
+  version "16.6.1"
+  resolved "https://registry.yarnpkg.com/tedious/-/tedious-16.6.1.tgz#50571aa48c93996676fb44ab43fcd5e7a54d4b3e"
+  integrity sha512-KKSDB1OPrPk0WbMPug9YqRbPl44zMjdL2hFyzLEidr2IkItzpV0ZbzW8VA47QIS2oyWhCU7ifIEQY12n23IRDA==
   dependencies:
-    "@azure/identity" "^2.0.4"
+    "@azure/identity" "^3.4.1"
     "@azure/keyvault-keys" "^4.4.0"
-    "@js-joda/core" "^5.2.0"
-    bl "^5.0.0"
-    es-aggregate-error "^1.0.8"
+    "@js-joda/core" "^5.5.3"
+    bl "^6.0.3"
+    es-aggregate-error "^1.0.9"
     iconv-lite "^0.6.3"
     js-md4 "^0.3.2"
     jsbi "^4.3.0"
     native-duplexpair "^1.0.0"
-    node-abort-controller "^3.0.1"
-    punycode "^2.1.0"
+    node-abort-controller "^3.1.1"
+    punycode "^2.3.0"
     sprintf-js "^1.1.2"
 
 teeny-request@^8.0.0:
