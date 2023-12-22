@@ -88,6 +88,12 @@ exports.createRow = async (apiKey, appId, table, body) => {
   return (await res.json()).data
 }
 
+exports.getRows = async (apiKey, appId, tableId) => {
+  const url = `${URL_TABLE}/${tableId}/rows/search`
+  const res = await request(apiKey, url, "POST", {}, appId)
+  return (await res.json()).data
+}
+
 exports.createTable = async (apiKey, appId, config) => {
   const res = await request(apiKey, URL_TABLE, "POST", config, appId)
   const json = await res.json()
