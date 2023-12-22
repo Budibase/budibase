@@ -38,6 +38,11 @@ exports.createApp = async apiKey => {
   return json.data
 }
 
+exports.getApp = async (apiKey, appId) => {
+  const res = await request(apiKey, `${URL_APP}/${appId}`, "GET")
+  const json = await res.json()
+  return json.data
+}
 exports.searchApps = async apiKey => {
   const res = await request(apiKey, `${URL_APP}/search`, "POST", {})
   const json = await res.json()
@@ -49,10 +54,14 @@ exports.deleteApp = async (apiKey, appId) => {
   return res
 }
 
-exports.getTable = async (apiKey, appId) => {
+exports.getTable = async (apiKey, appId, tableName) => {
   const res = await request(apiKey, URL_SEARCH_TABLE, "POST", {}, appId)
   const json = await res.json()
-  return json.data[0]
+  const table = json.data.find(t => t.name === tableName)
+  if (!table) {
+    throw `Table '${tableName} not found`
+  }
+  return table
 }
 
 exports.createRow = async (apiKey, appId, table, body) => {
