@@ -1,5 +1,11 @@
 #!/bin/node
-const yargs = require("yargs")
+const {
+  createApp,
+  getTable,
+  createRow,
+  createTable,
+  getApp,
+} = require("./utils")
 
 const Chance = require("chance")
 
@@ -8,12 +14,12 @@ const generator = new Chance()
 const STUDENT_COUNT = 500
 const SUBJECT_COUNT = 10
 
-const { apiKey, appId } = require("yargs")
+let { apiKey, appId } = require("yargs")
   .demandOption(["apiKey"])
   .option("appId").argv
 
 const start = Date.now()
-async function batchCreate(apiKey, appId, table, items, batchSize = 1000) {
+async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
   let i = 0
   let errors = 0
 
@@ -62,20 +68,34 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 1000) {
   return rows
 }
 
-async function run() {
-  const app = await createApp(apiKey)
-  console.log(`App created: http://localhost:10000/builder/app/${app._id}`)
+const useExistingApp = !!appId
 
-  const studentsTable = await getTable(apiKey, app._id)
-  if (studentsTable.name !== "Students") {
-    throw 'Fetched table should be "Students"'
+async function upsertTable(appId, tableName, tableData) {
+  if (useExistingApp) {
+    return await getTable(apiKey, appId, tableName)
   }
-  console.log(`Table found: ${studentsTable.name}`)
+
+  const table = await createTable(apiKey, appId, {
+    ...tableData,
+    name: tableName,
+  })
+  return table
+}
+
+async function run() {
+  if (!appId) {
+    const app = appId ? await getApp(apiKey, appId) : await createApp(apiKey)
+    appId = app._id
+  }
+
+  console.log(`App created: http://localhost:10000/builder/app/${appId}`)
+
+  const studentsTable = await getTable(apiKey, appId, "Students")
 
   let studentNumber = studentsTable.schema["Auto ID"].lastID
   const students = await batchCreate(
     apiKey,
-    app._id,
+    appId,
     studentsTable,
     Array.from({ length: STUDENT_COUNT }).map(() => ({
       "Student Number": (++studentNumber).toString(),
@@ -89,27 +109,26 @@ async function run() {
     }))
   )
 
-  const subjectTable = await createTable(apiKey, app._id, {
+  const subjectTable = await upsertTable(appId, "Subjects", {
     schema: {
       Name: {
         name: "Name",
         type: "string",
       },
     },
-    name: "Subjects",
     primaryDisplay: "Name",
   })
 
   const subjects = await batchCreate(
     apiKey,
-    app._id,
+    appId,
     subjectTable,
     Array.from({ length: SUBJECT_COUNT }).map(() => ({
       Name: generator.profession(),
     }))
   )
 
-  const gradesTable = await createTable(apiKey, app._id, {
+  const gradesTable = await upsertTable(appId, "Grades", {
     schema: {
       Score: {
         name: "Score",
@@ -138,12 +157,11 @@ async function run() {
         type: "link",
       },
     },
-    name: "Grades",
   })
 
   await batchCreate(
     apiKey,
-    app._id,
+    appId,
     gradesTable,
     students.flatMap(student =>
       subjects.map(subject => ({
@@ -155,7 +173,7 @@ async function run() {
   )
 
   console.log(
-    `Access the app here: http://localhost:10000/builder/app/${app._id}`
+    `Access the app here: http://localhost:10000/builder/app/${appId}`
   )
 }
 
