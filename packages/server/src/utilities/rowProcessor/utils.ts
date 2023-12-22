@@ -51,7 +51,7 @@ export function processFormulas<T extends Row | Row[]>(
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
 ): T {
   const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
-  if (rows)
+  if (rows) {
     for (let [column, schema] of Object.entries(table.schema)) {
       if (schema.type !== FieldTypes.FORMULA) {
         continue
@@ -70,12 +70,14 @@ export function processFormulas<T extends Row | Row[]>(
       for (let i = 0; i < rows.length; i++) {
         let row = rows[i]
         let context = contextRows ? contextRows[i] : row
+        let formula = schema.formula
         rows[i] = {
           ...row,
-          [column]: processStringSync(schema.formula, context),
+          [column]: processStringSync(formula, context),
         }
       }
     }
+  }
   return Array.isArray(inputRows) ? rows : rows[0]
 }
 

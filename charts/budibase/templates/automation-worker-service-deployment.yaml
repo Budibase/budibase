@@ -1,33 +1,34 @@
+{{- if .Values.services.automationWorkers.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-{{ if .Values.services.worker.deploymentAnnotations }}
-{{- toYaml .Values.services.worker.deploymentAnnotations | indent 4 -}}
+{{ if .Values.services.automationWorkers.deploymentAnnotations }}
+{{- toYaml .Values.services.automationWorkers.deploymentAnnotations | indent 4 -}}
 {{ end }}
   labels:
-    io.kompose.service: worker-service
-{{ if .Values.services.worker.deploymentLabels }}
-{{- toYaml .Values.services.worker.deploymentLabels | indent 4 -}}
+    io.kompose.service: automation-worker-service
+{{ if .Values.services.automationWorkers.deploymentLabels }}
+{{- toYaml .Values.services.automationWorkers.deploymentLabels | indent 4 -}}
 {{ end }}
-  name: worker-service
+  name: automation-worker-service
 spec:
-  replicas: {{ .Values.services.worker.replicaCount }}
+  replicas: {{ .Values.services.automationWorkers.replicaCount }}
   selector:
     matchLabels:
-      io.kompose.service: worker-service
+      io.kompose.service: automation-worker-service
   strategy:
     type: RollingUpdate
   template:
     metadata:
       annotations:
-{{ if .Values.services.worker.templateAnnotations }}
-{{- toYaml .Values.services.worker.templateAnnotations | indent 8 -}}
+{{ if .Values.services.automationWorkers.templateAnnotations }}
+{{- toYaml .Values.services.automationWorkers.templateAnnotations | indent 8 -}}
 {{ end }}
       labels:
-        io.kompose.service: worker-service
-{{ if .Values.services.worker.templateLabels }}
-{{- toYaml .Values.services.worker.templateLabels | indent 8 -}}
+        io.kompose.service: automation-worker-service
+{{ if .Values.services.automationWorkers.templateLabels }}
+{{- toYaml .Values.services.automationWorkers.templateLabels | indent 8 -}}
 {{ end }}
     spec:
       containers:
@@ -36,8 +37,12 @@ spec:
           value: {{ .Values.globals.budibaseEnv }}
         - name: DEPLOYMENT_ENVIRONMENT
           value: "kubernetes"
-        - name: CLUSTER_PORT
-          value: {{ .Values.services.worker.port | quote }}
+        - name: COUCH_DB_URL
+          {{ if .Values.services.couchdb.url }}
+          value: {{ .Values.services.couchdb.url }}
+          {{ else }}
+          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
+          {{ end }}
         {{ if .Values.services.couchdb.enabled }}
         - name: COUCH_DB_USER
           valueFrom:
@@ -50,16 +55,12 @@ spec:
               name: {{ template "couchdb.fullname" . }}
               key: adminPassword
         {{ end }}
-        - name: COUCH_DB_URL
-          {{ if .Values.services.couchdb.url }}
-          value: {{ .Values.services.couchdb.url }}
-          {{ else }}
-          value: http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}
-          {{ end }}
+        - name: ENABLE_ANALYTICS
+          value: {{ .Values.globals.enableAnalytics | quote }}
         - name: API_ENCRYPTION_KEY
           value: {{ .Values.globals.apiEncryptionKey | quote }}
         - name: HTTP_LOGGING
-          value: {{ .Values.services.worker.httpLogging | quote }}
+          value: {{ .Values.services.automationWorkers.httpLogging | quote }}
         - name: INTERNAL_API_KEY
           valueFrom:
             secretKeyRef:
@@ -90,14 +91,14 @@ spec:
             secretKeyRef:
               name: {{ template "budibase.fullname" . }}
               key: objectStoreSecret
-        - name: MINIO_URL
-          value: {{ .Values.services.objectStore.url }}
         - name: CLOUDFRONT_CDN
           value: {{ .Values.services.objectStore.cloudfront.cdn | quote }}
         - name: CLOUDFRONT_PUBLIC_KEY_ID
           value: {{ .Values.services.objectStore.cloudfront.publicKeyId | quote }}
         - name: CLOUDFRONT_PRIVATE_KEY_64
           value: {{ .Values.services.objectStore.cloudfront.privateKey64 | quote }}
+        - name: MINIO_URL
+          value: {{ .Values.services.objectStore.url }}
         - name: PLUGIN_BUCKET_NAME
           value: {{ .Values.services.objectStore.pluginBucketName | quote }}
         - name: APPS_BUCKET_NAME
@@ -107,15 +108,19 @@ spec:
         - name: BACKUPS_BUCKET_NAME
           value: {{ .Values.services.objectStore.backupsBucketName | quote }}
         - name: PORT
-          value: {{ .Values.services.worker.port | quote }}
+          value: {{ .Values.services.automationWorkers.port | quote }}
+        {{ if .Values.services.worker.publicApiRateLimitPerSecond }}
+        - name: API_REQ_LIMIT_PER_SEC
+          value: {{ .Values.globals.automationWorkers.publicApiRateLimitPerSecond | quote }}
+        {{ end }}
         - name: MULTI_TENANCY
           value: {{ .Values.globals.multiTenancy | quote }}
         - name: OFFLINE_MODE
           value: {{ .Values.globals.offlineMode | quote }}
         - name: LOG_LEVEL
-          value: {{ .Values.services.worker.logLevel | quote }}
+          value: {{ .Values.services.automationWorkers.logLevel | quote }}
         - name: REDIS_PASSWORD
-          value: {{ .Values.services.redis.password | quote }}
+          value: {{ .Values.services.redis.password }}
         - name: REDIS_URL
           {{ if .Values.services.redis.url }}
           value: {{ .Values.services.redis.url }}
@@ -124,40 +129,46 @@ spec:
           {{ end }}
         - name: SELF_HOSTED
           value: {{ .Values.globals.selfHosted | quote }}
-        - name: ENABLE_ANALYTICS
-          value: {{ .Values.globals.enableAnalytics | quote }}
         - name: POSTHOG_TOKEN
-          value: {{ .Values.globals.posthogToken }}
+          value: {{ .Values.globals.posthogToken | quote }}
+        - name: WORKER_URL
+          value: http://worker-service:{{ .Values.services.worker.port }}
+        - name: PLATFORM_URL
+          value: {{ .Values.globals.platformUrl | quote }}
         - name: ACCOUNT_PORTAL_URL
           value: {{ .Values.globals.accountPortalUrl | quote }}
         - name: ACCOUNT_PORTAL_API_KEY
           value: {{ .Values.globals.accountPortalApiKey | quote }}
-        - name: PLATFORM_URL
-          value: {{ .Values.globals.platformUrl | quote }}
         - name: COOKIE_DOMAIN
           value: {{ .Values.globals.cookieDomain | quote }}
-        - name: SMTP_FALLBACK_ENABLED
-          value: {{ .Values.globals.smtp.enabled | quote }}
-        - name: SMTP_USER
-          value: {{ .Values.globals.smtp.user | quote }}
-        - name: SMTP_PASSWORD
-          value: {{ .Values.globals.smtp.password | quote }}
-        - name: SMTP_HOST
-          value: {{ .Values.globals.smtp.host | quote }}
-        - name: SMTP_PORT
-          value: {{ .Values.globals.smtp.port | quote }}
-        - name: SMTP_FROM_ADDRESS
-          value: {{ .Values.globals.smtp.from | quote }}
-        - name: APPS_URL
-          value: http://app-service:{{ .Values.services.apps.port }}
+        - name: HTTP_MIGRATIONS
+          value: {{ .Values.globals.httpMigrations | quote }}
         - name: GOOGLE_CLIENT_ID
           value: {{ .Values.globals.google.clientId | quote }}
         - name: GOOGLE_CLIENT_SECRET
           value: {{ .Values.globals.google.secret | quote }}
+        - name: AUTOMATION_MAX_ITERATIONS
+          value: {{ .Values.globals.automationMaxIterations | quote }}
         - name: TENANT_FEATURE_FLAGS
           value: {{ .Values.globals.tenantFeatureFlags | quote }}
         - name: ENCRYPTION_KEY
           value: {{ .Values.globals.bbEncryptionKey | quote }}
+        {{ if .Values.globals.bbAdminUserEmail }}
+        - name: BB_ADMIN_USER_EMAIL
+          value: {{ .Values.globals.bbAdminUserEmail | quote }}
+        {{ end }}
+        {{ if .Values.globals.bbAdminUserPassword }}
+        - name: BB_ADMIN_USER_PASSWORD
+          value: {{ .Values.globals.bbAdminUserPassword | quote }}
+        {{ end }}
+        {{ if .Values.globals.pluginsDir }}
+        - name: PLUGINS_DIR
+          value: {{ .Values.globals.pluginsDir | quote }}
+        {{ end }}
+        {{ if .Values.services.automationWorkers.nodeDebug }}
+        - name: NODE_DEBUG
+          value: {{ .Values.services.automationWorkers.nodeDebug | quote }}
+        {{ end }}
         {{ if .Values.globals.datadogApmEnabled }}
         - name: DD_LOGS_INJECTION
           value: {{ .Values.globals.datadogApmEnabled | quote }}
@@ -182,44 +193,46 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-        {{- range .Values.services.worker.extraEnv }}
+        - name: APP_FEATURES
+          value: "automations"
+        {{- range .Values.services.automationWorkers.extraEnv }}
         - name: {{ .name }}
           value: {{ .value | quote }}
         {{- end }}
-        image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
+
+        image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
-        {{- if .Values.services.worker.startupProbe }}
-        {{- with .Values.services.worker.startupProbe }}
+        {{- if .Values.services.automationWorkers.startupProbe }}
+        {{- with .Values.services.automationWorkers.startupProbe }}
         startupProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        {{- if .Values.services.worker.livenessProbe }}
-        {{- with .Values.services.worker.livenessProbe }}
+        {{- if .Values.services.automationWorkers.livenessProbe }}
+        {{- with .Values.services.automationWorkers.livenessProbe }}
         livenessProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        {{- if .Values.services.worker.readinessProbe }}
-        {{- with .Values.services.worker.readinessProbe }}
+        {{- if .Values.services.automationWorkers.readinessProbe }}
+        {{- with .Values.services.automationWorkers.readinessProbe }}
         readinessProbe:
             {{- toYaml . | nindent 10 }}
         {{- end }}
         {{- end }}
-        name: bbworker
+        name: bbautomationworker
         ports:
-        - containerPort: {{ .Values.services.worker.port }}
-        {{ with .Values.services.worker.resources }}
+        - containerPort: {{ .Values.services.automationWorkers.port }}
+        {{ with .Values.services.automationWorkers.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
-        {{ if .Values.services.worker.command }}
         command:
-        {{- toYaml .Values.services.worker.command | nindent 10 }}
+        {{- toYaml .Values.services.automationWorkers.command | nindent 10 }}
         {{ end }}
-        {{ if .Values.services.worker.args }}
+        {{ if .Values.services.automationWorkers.args }}
         args:
-        {{- toYaml .Values.services.worker.args | nindent 10 }}
+        {{- toYaml .Values.services.automationWorkers.args | nindent 10 }}
         {{ end }}
     {{- with .Values.affinity }}
       affinity:
@@ -231,11 +244,13 @@ spec:
     {{- end }}
       {{ if .Values.schedulerName }}
       schedulerName: {{ .Values.schedulerName | quote }}
-      {{ end }}     
+      {{ end }}    
       {{ if .Values.imagePullSecrets }}
       imagePullSecrets:
       {{- toYaml .Values.imagePullSecrets | nindent 6 }}
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.automationWorkers.command }}}
 status: {}
+{{- end }}

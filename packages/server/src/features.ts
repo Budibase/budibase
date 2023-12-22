@@ -22,3 +22,10 @@ export function automationsEnabled() {
 export function apiEnabled() {
   return featureList.includes(AppFeature.API)
 }
+
+export function printFeatures() {
+  if (!env.APP_FEATURES) {
+    return
+  }
+  console.log(`**** APP FEATURES SET: ${featureList.join(", ")} ****`)
+}

@@ -76,6 +76,18 @@ jobs:
             yarn check:types
           fi
 
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 18.x
+        uses: azure/setup-helm@v3
+      - run: cd charts/budibase && helm lint .
+
   test-libraries:
     runs-on: ubuntu-latest
     steps:
@@ -204,7 +216,7 @@ jobs:
 
   check-pro-submodule:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
+    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
@@ -254,7 +266,7 @@ jobs:
 
   check-accountportal-submodule:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
+    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
