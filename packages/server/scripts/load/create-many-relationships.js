@@ -1,5 +1,5 @@
 #!/bin/node
-const { createApp, getTable, createRow, createTable } = require("./utils")
+const yargs = require("yargs")
 
 const Chance = require("chance")
 
@@ -8,10 +8,9 @@ const generator = new Chance()
 const STUDENT_COUNT = 500
 const SUBJECT_COUNT = 10
 
-if (!process.argv[2]) {
-  console.error("Please specify an API key as script argument.")
-  process.exit(-1)
-}
+const { apiKey, appId } = require("yargs")
+  .demandOption(["apiKey"])
+  .option("appId").argv
 
 const start = Date.now()
 async function batchCreate(apiKey, appId, table, items, batchSize = 1000) {
@@ -64,7 +63,6 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 1000) {
 }
 
 async function run() {
-  const apiKey = process.argv[2]
   const app = await createApp(apiKey)
   console.log(`App created: http://localhost:10000/builder/app/${app._id}`)
 
