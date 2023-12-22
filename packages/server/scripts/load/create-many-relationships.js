@@ -43,10 +43,13 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 100) {
 
   for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
     const item = items[itemIndex]
-    const promise = createSingleRow(item).then(result => {
-      rows.push(result)
-      delete inFlight[itemIndex]
-    })
+    const promise = createSingleRow(item)
+      .then(result => {
+        rows.push(result)
+      })
+      .finally(() => {
+        delete inFlight[itemIndex]
+      })
 
     inFlight[itemIndex] = promise
 
