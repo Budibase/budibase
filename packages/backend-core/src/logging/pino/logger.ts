@@ -5,6 +5,7 @@ import { IdentityType } from "@budibase/types"
 import env from "../../environment"
 import * as context from "../../context"
 import * as correlation from "../correlation"
+import { formats } from "dd-trace/ext"
 
 import { localFileDestination } from "../system"
 

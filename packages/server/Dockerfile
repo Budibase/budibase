@@ -68,9 +68,13 @@ COPY packages/server/builder/ builder/
 COPY packages/server/client/ client/
 
 ARG BUDIBASE_VERSION
+ARG GIT_COMMIT_SHA
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
 ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
+ENV DD_GIT_REPOSITORY_URL=https://github.com/budibase/budibase
+ENV DD_GIT_COMMIT_SHA=$GIT_COMMIT_SHA
+ENV DD_VERSION=$BUDIBASE_VERSION
 
 EXPOSE 4001
 

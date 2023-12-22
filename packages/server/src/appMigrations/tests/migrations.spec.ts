@@ -1,25 +1,53 @@
-import { context } from "@budibase/backend-core"
+import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
-import { MIGRATIONS } from "../migrations"
+import * as migrations from "../migrations"
+import { getAppMigrationVersion } from "../appMigrationMetadata"
 
-describe("migration", () => {
-  // These test is checking that each migration is "idempotent".
-  // We should be able to rerun any migration, with any rerun not modifiying anything. The code should be aware that the migration already ran
-  it("each migration can rerun safely", async () => {
+jest.mock<typeof migrations>("../migrations", () => ({
+  MIGRATIONS: [
+    {
+      id: "20231211101320_test",
+      func: async () => {},
+    },
+  ],
+}))
+
+describe("migrations", () => {
+  it("new apps are created with the latest app migration version set", async () => {
     const config = setup.getConfig()
     await config.init()
 
     await config.doInContext(config.getAppId(), async () => {
-      const db = context.getAppDB()
-      for (const migration of MIGRATIONS) {
-        await migration.func()
-        const docs = await db.allDocs({ include_docs: true })
+      const migrationVersion = await getAppMigrationVersion(config.getAppId())
 
-        await migration.func()
-        const latestDocs = await db.allDocs({ include_docs: true })
-
-        expect(docs).toEqual(latestDocs)
-      }
+      expect(migrationVersion).toEqual("20231211101320_test")
     })
+  })
+
+  it("accessing an app that has no pending migrations will not attach the migrating header", async () => {
+    const config = setup.getConfig()
+    await config.init()
+
+    const appId = config.getAppId()
+
+    const response = await config.api.application.getRaw(appId)
+
+    expect(response.headers[Header.MIGRATING_APP]).toBeUndefined()
+  })
+
+  it("accessing an app that has pending migrations will attach the migrating header", async () => {
+    const config = setup.getConfig()
+    await config.init()
+
+    const appId = config.getAppId()
+
+    migrations.MIGRATIONS.push({
+      id: "20231211105812_new-test",
+      func: async () => {},
+    })
+
+    const response = await config.api.application.getRaw(appId)
+
+    expect(response.headers[Header.MIGRATING_APP]).toEqual(appId)
   })
 })

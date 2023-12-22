@@ -265,6 +265,10 @@ class Orchestrator {
     }
     const start = performance.now()
     for (let step of automation.definition.steps) {
+      let input: any,
+        iterations = 1,
+        iterationCount = 0
+
       if (timeoutFlag) {
         break
       }
@@ -276,10 +280,6 @@ class Orchestrator {
       }
 
       stepCount++
-      let input: any,
-        iterations = 1,
-        iterationCount = 0
-
       if (step.stepId === LOOP_STEP_ID) {
         loopStep = step
         loopStepNumber = stepCount
@@ -294,7 +294,10 @@ class Orchestrator {
         let originalStepInput = cloneDeep(step.inputs)
         // Handle if the user has set a max iteration count or if it reaches the max limit set by us
         if (loopStep && input.binding) {
-          let tempOutput = { items: loopSteps, iterations: iterationCount }
+          let tempOutput = {
+            items: loopSteps,
+            iterations: iterationCount,
+          }
           try {
             loopStep.inputs.binding = automationUtils.typecastForLooping(
               loopStep as LoopStep,

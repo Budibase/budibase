@@ -107,6 +107,7 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4984",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,

@@ -20,6 +20,7 @@ const COLLECTIONS = [
   "string",
   "comparison",
   "object",
+  "uuid",
 ]
 const FILENAME = join(__dirname, "..", "manifest.json")
 const outputJSON = {}

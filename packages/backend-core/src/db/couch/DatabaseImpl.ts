@@ -35,9 +35,6 @@ export function DatabaseWithConnection(
   connection: string,
   opts?: DatabaseOpts
 ) {
-  if (!connection) {
-    throw new Error("Must provide connection details")
-  }
   return new DatabaseImpl(dbName, opts, connection)
 }
 
