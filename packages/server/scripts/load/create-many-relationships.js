@@ -5,6 +5,7 @@ const {
   createRow,
   createTable,
   getApp,
+  getRows,
 } = require("./utils")
 
 const Chance = require("chance")
@@ -122,14 +123,16 @@ async function run() {
     primaryDisplay: "Name",
   })
 
-  const subjects = await batchCreate(
-    apiKey,
-    appId,
-    subjectTable,
-    Array.from({ length: SUBJECT_COUNT }).map(() => ({
-      Name: generator.profession(),
-    }))
-  )
+  const subjects = useExistingApp
+    ? await getRows(apiKey, appId, subjectTable._id)
+    : await batchCreate(
+        apiKey,
+        appId,
+        subjectTable,
+        Array.from({ length: SUBJECT_COUNT }).map(() => ({
+          Name: generator.profession(),
+        }))
+      )
 
   const gradesTable = await upsertTable(appId, "Grades", {
     schema: {
