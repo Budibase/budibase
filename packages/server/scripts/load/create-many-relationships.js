@@ -2,6 +2,7 @@
 const { createApp, getTable, createRow, createTable } = require("./utils")
 
 const Chance = require("chance")
+
 const generator = new Chance()
 
 const STUDENT_COUNT = 500
@@ -13,7 +14,7 @@ if (!process.argv[2]) {
 }
 
 const start = Date.now()
-async function batchCreate(apiKey, appId, table, items, batchSize = 10) {
+async function batchCreate(apiKey, appId, table, items, batchSize = 1000) {
   let i = 0
   let errors = 0
 
@@ -50,6 +51,14 @@ async function batchCreate(apiKey, appId, table, items, batchSize = 10) {
   }
 
   await Promise.all(Object.values(inFlight))
+
+  if (errors) {
+    console.error(
+      `${table.name} - ${errors} creation errored (${
+        (Date.now() - start) / 1000
+      }s)`
+    )
+  }
 
   return rows
 }
