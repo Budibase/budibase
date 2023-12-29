@@ -1,6 +1,6 @@
 import tk from "timekeeper"
 import _ from "lodash"
-import { mocks, structures } from "@budibase/backend-core/tests"
+import { generator, mocks, structures } from "@budibase/backend-core/tests"
 import {
   ScimCreateUserRequest,
   ScimGroupResponse,
@@ -575,8 +575,15 @@ describe("scim", () => {
         beforeAll(async () => {
           groups = []
 
-          for (let i = 0; i < groupCount; i++) {
-            const body = structures.scim.createGroupRequest()
+          const groupNames = generator.unique(
+            () => generator.word(),
+            groupCount
+          )
+
+          for (const groupName of groupNames) {
+            const body = structures.scim.createGroupRequest({
+              displayName: groupName,
+            })
             groups.push(await config.api.scimGroupsAPI.post({ body }))
           }
 
