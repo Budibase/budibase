@@ -1,5 +1,5 @@
-import { cache, context, utils } from "@budibase/backend-core"
-import { resetUpdate } from "../auth"
+import { cache, context, sessions, utils } from "@budibase/backend-core"
+import { loginUser, resetUpdate } from "../auth"
 import { generator, structures } from "@budibase/backend-core/tests"
 import { TestConfiguration } from "../../../tests"
 
@@ -47,6 +47,23 @@ describe("auth", () => {
         await expect(resetUpdate(code, newPassword)).rejects.toThrow(
           "Provided information is not valid, cannot reset password - please try again."
         )
+      })
+    })
+
+    it("updating the password will invalidate all the sessions", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const user = await config.createUser()
+
+        await loginUser(user)
+
+        expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(1)
+
+        const code = await cache.passwordReset.createCode(user._id!, {})
+        const newPassword = generator.hash()
+
+        await resetUpdate(code, newPassword)
+
+        expect(await sessions.getSessionsForUser(user._id!)).toHaveLength(0)
       })
     })
   })
