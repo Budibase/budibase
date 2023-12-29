@@ -183,6 +183,7 @@ const environment = {
     environment[key] = value
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
+  SKIP_APP_MIGRATIONS: process.env.SKIP_APP_MIGRATIONS || false,
 }
 
 // clean up any environment variable edge cases
