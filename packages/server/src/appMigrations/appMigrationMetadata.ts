@@ -33,7 +33,7 @@ export async function getAppMigrationVersion(appId: string): Promise<string> {
   let version
   try {
     metadata = await getFromDB(appId)
-    version = metadata.version
+    version = metadata.version || ""
   } catch (err: any) {
     if (err.status !== 404) {
       throw err
