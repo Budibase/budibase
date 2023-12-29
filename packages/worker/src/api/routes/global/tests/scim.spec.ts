@@ -14,9 +14,14 @@ import { events } from "@budibase/backend-core"
 jest.retryTimes(2, { logErrorsBeforeRetry: true })
 jest.setTimeout(30000)
 
-mocks.licenses.useScimIntegration()
-
 describe("scim", () => {
+  beforeAll(async () => {
+    tk.freeze(mocks.date.MOCK_DATE)
+    mocks.licenses.useScimIntegration()
+
+    await config.setSCIMConfig(true)
+  })
+
   beforeEach(async () => {
     jest.resetAllMocks()
     tk.freeze(mocks.date.MOCK_DATE)
