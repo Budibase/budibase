@@ -18,7 +18,6 @@ import {
   Row,
   LinkDocumentValue,
   FieldType,
-  LinkDocument,
   ContextUser,
 } from "@budibase/types"
 import sdk from "../../sdk"

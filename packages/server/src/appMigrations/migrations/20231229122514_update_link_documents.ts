@@ -1,5 +1,6 @@
-import { SEPARATOR, context } from "@budibase/backend-core"
+import { context } from "@budibase/backend-core"
 import { allLinkDocs } from "../../db/utils"
+import LinkDocumentImpl from "../../db/linkedRows/LinkDocument"
 
 const migration = async () => {
   const linkDocs = await allLinkDocs()
@@ -11,9 +12,14 @@ const migration = async () => {
       continue
     }
 
-    linkDoc.tableId = [linkDoc.doc1.tableId, linkDoc.doc2.tableId]
-      .sort()
-      .join(SEPARATOR)
+    linkDoc.tableId = new LinkDocumentImpl(
+      linkDoc.doc1.tableId,
+      linkDoc.doc1.fieldName,
+      linkDoc.doc1.rowId,
+      linkDoc.doc2.tableId,
+      linkDoc.doc2.fieldName,
+      linkDoc.doc2.rowId
+    ).tableId
     docsToUpdate.push(linkDoc)
   }
 
