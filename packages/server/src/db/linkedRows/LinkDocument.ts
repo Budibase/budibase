@@ -1,6 +1,6 @@
 import { generateLinkID } from "../utils"
 import { FieldTypes } from "../../constants"
-import { LinkDocument } from "@budibase/types"
+import { LinkDocument, SEPARATOR } from "@budibase/types"
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -17,6 +17,7 @@ import { LinkDocument } from "@budibase/types"
 class LinkDocumentImpl implements LinkDocument {
   _id: string
   type: string
+  tableId: string
   doc1: {
     rowId: string
     fieldName: string
@@ -54,7 +55,11 @@ class LinkDocumentImpl implements LinkDocument {
       fieldName: fieldName2,
       rowId: rowId2,
     }
+    this.tableId = [this.doc1.tableId, this.doc2.tableId].sort().join(SEPARATOR)
   }
+  _rev?: string | undefined
+  createdAt?: string | number | undefined
+  updatedAt?: string | undefined
 }
 
 export default LinkDocumentImpl
