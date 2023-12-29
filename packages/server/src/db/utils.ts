@@ -1,5 +1,5 @@
 import newid from "./newid"
-import { db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore } from "@budibase/backend-core"
 import {
   DocumentType,
   FieldSchema,
@@ -7,6 +7,7 @@ import {
   VirtualDocumentType,
   INTERNAL_TABLE_SOURCE_ID,
   DatabaseQueryOpts,
+  LinkDocument,
 } from "@budibase/types"
 import { FieldTypes } from "../constants"
 
@@ -127,8 +128,22 @@ export function generateLinkID(
 /**
  * Gets parameters for retrieving link docs, this is a utility function for the getDocParams function.
  */
-export function getLinkParams(otherProps: any = {}) {
+function getLinkParams(otherProps: Partial<DatabaseQueryOpts> = {}) {
   return getDocParams(DocumentType.LINK, null, otherProps)
+}
+
+/**
+ * Gets all the link docs document from the current app db.
+ */
+export async function allLinkDocs() {
+  const db = context.getAppDB()
+
+  const response = await db.allDocs<LinkDocument>(
+    getLinkParams({
+      include_docs: true,
+    })
+  )
+  return response.rows.map(row => row.doc!)
 }
 
 /**
