@@ -8,6 +8,7 @@ export interface LinkInfo {
 
 export interface LinkDocument extends Document {
   type: string
+  tableId: string
   doc1: LinkInfo
   doc2: LinkInfo
 }
