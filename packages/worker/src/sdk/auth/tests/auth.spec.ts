@@ -24,5 +24,30 @@ describe("auth", () => {
         ).toBeTruthy()
       })
     })
+
+    it("wrong code will not allow to reset the password", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const code = generator.hash()
+        const newPassword = generator.hash()
+
+        await expect(resetUpdate(code, newPassword)).rejects.toThrow(
+          "Provided information is not valid, cannot reset password - please try again."
+        )
+      })
+    })
+
+    it("the same code cannot be used twice", async () => {
+      await context.doInTenant(structures.tenant.id(), async () => {
+        const user = await config.createUser()
+
+        const code = await cache.passwordReset.createCode(user._id!, {})
+        const newPassword = generator.hash()
+
+        await resetUpdate(code, newPassword)
+        await expect(resetUpdate(code, newPassword)).rejects.toThrow(
+          "Provided information is not valid, cannot reset password - please try again."
+        )
+      })
+    })
   })
 })

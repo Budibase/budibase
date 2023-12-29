@@ -32,7 +32,9 @@ export async function getCode(code: string): Promise<PasswordReset> {
   const client = await redis.getPasswordResetClient()
   const value = (await client.get(code)) as PasswordReset | undefined
   if (!value) {
-    throw "Provided information is not valid, cannot reset password - please try again."
+    throw new Error(
+      "Provided information is not valid, cannot reset password - please try again."
+    )
   }
   return value
 }
