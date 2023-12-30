@@ -23,7 +23,6 @@
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
-
   $: collectBlockExists = checkForCollectStep($selectedAutomation)
 
   const disabled = () => {
