@@ -13,7 +13,7 @@ describe("auth", () => {
     ])("%s returns unsuccessful", (_, password) => {
       expect(validatePassword(password as string)).toEqual({
         valid: false,
-        error: "Password invalid. Minimum eight characters",
+        error: "Password invalid. Minimum eight characters.",
       })
     })
   })
