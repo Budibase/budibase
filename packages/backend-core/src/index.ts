@@ -33,12 +33,12 @@ export * as docUpdates from "./docUpdates"
 export * from "./utils/Duration"
 export { SearchParams } from "./db"
 export * as docIds from "./docIds"
+export * as security from "./security"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
 // circular dependencies
 import * as context from "./context"
 import * as _tenancy from "./tenancy"
-export * as security from "./security"
 
 export const tenancy = {
   ..._tenancy,
