@@ -25,7 +25,7 @@ if (!process.env.NO_JS) {
     const vm = require("vm")
     const { setJSRunner } = require("./helpers/javascript")
     /**
-     * Use vm to run JS scripts in a browser Env
+     * Use vm to run JS scripts in a node Env
      */
     setJSRunner((js, context) => {
         context = {
