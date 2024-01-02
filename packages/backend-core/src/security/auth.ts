@@ -1,20 +1,20 @@
-const MIN_LENGTH = 8
-const MAX_LENGTH = 100
+export const PASSWORD_MIN_LENGTH = 8
+export const PASSWORD_MAX_LENGTH = 512
 
 export function validatePassword(
   password: string
 ): { valid: true } | { valid: false; error: string } {
-  if (!password || password.length < MIN_LENGTH) {
+  if (!password || password.length < PASSWORD_MIN_LENGTH) {
     return {
       valid: false,
       error: "Password invalid. Minimum eight characters.",
     }
   }
 
-  if (password.length > MAX_LENGTH) {
+  if (password.length > PASSWORD_MAX_LENGTH) {
     return {
       valid: false,
-      error: "Password invalid. Maximum hundred characters.",
+      error: `Password invalid. Maximum ${PASSWORD_MAX_LENGTH} characters.`,
     }
   }
 
