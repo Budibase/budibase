@@ -1,6 +1,9 @@
 <script>
-  import { currentAsset } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
+  import { currentAsset, store } from "builderStore"
+  import {
+    findClosestMatchingComponent,
+    findComponent,
+  } from "builderStore/componentUtils"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
@@ -20,8 +23,23 @@
     component => component._component.endsWith("/form")
   )
 
+  const resolveDatasource = (currentAsset, componentInstance, form) => {
+    if (!form && componentInstance._id != $store.selectedComponentId) {
+      const block = findComponent(
+        currentAsset.props,
+        $store.selectedComponentId
+      )
+      const def = store.actions.components.getDefinition(block._component)
+      return def?.block === true
+        ? getDatasourceForProvider(currentAsset, block)
+        : {}
+    } else {
+      return getDatasourceForProvider(currentAsset, form)
+    }
+  }
+
   // Get that form's schema
-  $: datasource = getDatasourceForProvider($currentAsset, form)
+  $: datasource = resolveDatasource($currentAsset, componentInstance, form)
   $: formSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
 
   // Get the schema for the relationship field that this picker is using
