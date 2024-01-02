@@ -47,7 +47,7 @@ export function createQueue<T>(
     cleanupInterval = timers.set(cleanup, CLEANUP_PERIOD_MS)
     // fire off an initial cleanup
     cleanup().catch(err => {
-      console.error(`Unable to cleanup automation queue initially - ${err}`)
+      console.error(`Unable to cleanup ${jobQueue} initially - ${err}`)
     })
   }
   return queue
