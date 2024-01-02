@@ -90,9 +90,13 @@ async function run() {
   if (!appId) {
     const app = appId ? await getApp(apiKey, appId) : await createApp(apiKey)
     appId = app._id
-  }
 
-  console.log(`App created: http://localhost:10000/builder/app/${appId}`)
+    console.log(`App created. Url: http://localhost:10000/builder/app/${appId}`)
+  } else {
+    console.log(
+      `App retrieved. Url: http://localhost:10000/builder/app/${appId}`
+    )
+  }
 
   const studentsTable = await getTable(apiKey, appId, "Students")
 
