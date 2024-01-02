@@ -27,6 +27,7 @@ import {
   platform,
   tenancy,
   db,
+  security,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -96,6 +97,11 @@ export const adminUser = async (
 
   if (await platform.tenants.exists(tenantId)) {
     ctx.throw(403, "Organisation already exists.")
+  }
+
+  const passwordValidation = security.validatePassword(password)
+  if (!passwordValidation.valid) {
+    ctx.throw(400, passwordValidation.error)
   }
 
   if (env.MULTI_TENANCY) {
