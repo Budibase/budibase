@@ -24,7 +24,7 @@ describe("auth", () => {
     ])(
       `can use passwords up to ${PASSWORD_MAX_LENGTH} characters in length`,
       password => {
-        expect(validatePassword(password as string)).toEqual({
+        expect(validatePassword(password)).toEqual({
           valid: true,
         })
       }
@@ -32,12 +32,18 @@ describe("auth", () => {
 
     it.each([
       generator.word({ length: PASSWORD_MAX_LENGTH + 1 }),
-      generator.paragraph().substring(0, PASSWORD_MAX_LENGTH + 1),
-    ])("limit password length", password => {
-      expect(validatePassword(password as string)).toEqual({
-        valid: false,
-        error: "Password invalid. Maximum 512 characters.",
-      })
-    })
+      generator
+        .paragraph({ sentences: 50 })
+        .substring(0, PASSWORD_MAX_LENGTH + 1),
+    ])(
+      `passwords cannot have more than ${PASSWORD_MAX_LENGTH} characters`,
+      password => {
+        console.error(password)
+        expect(validatePassword(password)).toEqual({
+          valid: false,
+          error: "Password invalid. Maximum 512 characters.",
+        })
+      }
+    )
   })
 })
