@@ -7,7 +7,7 @@ class ScriptRunner {
 
   constructor(script: string, context: any) {
     const code = `let fn = () => {\n${script}\n}; results.out = fn();`
-    this.vm = new IsolatedVM(8)
+    this.vm = new IsolatedVM({ memoryLimit: 8 })
     this.vm.context = {
       data: context.data,
       params: context.params,
@@ -29,7 +29,7 @@ class IsolatedVM {
   jail: ivm.Reference
   script: any
 
-  constructor(memoryLimit: number) {
+  constructor({ memoryLimit }: { memoryLimit: number }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
     this.jail = this.vm.global
