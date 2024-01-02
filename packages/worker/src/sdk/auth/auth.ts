@@ -85,6 +85,9 @@ export const resetUpdate = async (resetCode: string, password: string) => {
   user.password = password
   user = await userSdk.db.save(user)
 
+  await cache.passwordReset.invalidateCode(resetCode)
+  await sessions.invalidateSessions(userId)
+
   // remove password from the user before sending events
   delete user.password
   await events.user.passwordReset(user)
