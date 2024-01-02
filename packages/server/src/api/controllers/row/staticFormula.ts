@@ -5,8 +5,8 @@ import {
   processFormulas,
 } from "../../../utilities/rowProcessor"
 import { FieldTypes, FormulaTypes } from "../../../constants"
-import { context } from "@budibase/backend-core"
-import { Table, Row } from "@budibase/types"
+import { context, locks } from "@budibase/backend-core"
+import { Table, Row, LockType, LockName } from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import sdk from "../../../sdk"
 import isEqual from "lodash/isEqual"
@@ -149,12 +149,22 @@ export async function finaliseRow(
       await db.put(table)
     } catch (err: any) {
       if (err.status === 409) {
-        const updatedTable = await sdk.tables.getTable(table._id!)
-        let response = processAutoColumn(null, updatedTable, row, {
-          reprocessing: true,
-        })
-        await db.put(response.table)
-        row = response.row
+        // Some conflicts with the autocolumns occurred, we need to refetch the table and recalculate
+        await locks.doWithLock(
+          {
+            type: LockType.AUTO_EXTEND,
+            name: LockName.PROCESS_AUTO_COLUMNS,
+            resource: table._id,
+          },
+          async () => {
+            const latestTable = await sdk.tables.getTable(table._id!)
+            let response = processAutoColumn(null, latestTable, row, {
+              reprocessing: true,
+            })
+            await db.put(response.table)
+            row = response.row
+          }
+        )
       } else {
         throw err
       }

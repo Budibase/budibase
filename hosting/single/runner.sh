@@ -79,7 +79,7 @@ redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
 /bbcouch-runner.sh &
 
 # only start minio if use s3 isn't passed
-if [[ -z "${USE_S3}"]]; then
+if [[ -z "${USE_S3}" ]]; then
   /minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
 fi
 

@@ -76,6 +76,18 @@ jobs:
             yarn check:types
           fi
 
+  helm-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js 18.x
+        uses: azure/setup-helm@v3
+      - run: cd charts/budibase && helm lint .
+
   test-libraries:
     runs-on: ubuntu-latest
     steps:
