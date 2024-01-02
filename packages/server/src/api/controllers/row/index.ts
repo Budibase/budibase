@@ -30,7 +30,7 @@ import { Format } from "../view/exporters"
 
 export * as views from "./views"
 
-function pickApi(tableId: any) {
+function pickApi(tableId: string) {
   if (isExternalTableID(tableId)) {
     return external
   }
@@ -84,9 +84,12 @@ export const save = async (ctx: UserCtx<Row, Row>) => {
     return patch(ctx as UserCtx<PatchRowRequest, PatchRowResponse>)
   }
   const { row, table, squashed } = await quotas.addRow(() =>
-    quotas.addQuery(() => pickApi(tableId).save(ctx), {
-      datasourceId: tableId,
-    })
+    quotas.addQuery(
+      () => sdk.rows.save(tableId, ctx.request.body, ctx.user?._id),
+      {
+        datasourceId: tableId,
+      }
+    )
   )
   ctx.status = 200
   ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:save`, appId, row, table)
