@@ -2107,14 +2107,14 @@
     pouchdb-promise "^6.0.4"
     through2 "^2.0.0"
 
-"@bull-board/api@5.10.2", "@bull-board/api@^5.10.2":
+"@bull-board/api@5.10.2":
   version "5.10.2"
   resolved "https://registry.yarnpkg.com/@bull-board/api/-/api-5.10.2.tgz#ae8ff6918b23897bf879a6ead3683f964374c4b3"
   integrity sha512-Gx98cqN0cryJB35mVKjYsEnD3NxArWY3Xi2E5Wrr17QTVOzWEP4jyDQ/riiapVdnYqc9RSsxCCmdIaNdNPcXlQ==
   dependencies:
     redis-info "^3.0.8"
 
-"@bull-board/koa@^5.10.2":
+"@bull-board/koa@5.10.2":
   version "5.10.2"
   resolved "https://registry.yarnpkg.com/@bull-board/koa/-/koa-5.10.2.tgz#568fc5aea98b674073bba76a9d589acce9ca338a"
   integrity sha512-fVgs2/Y5vqYQGe0Hn5AanricF6TCM9uglxzaxBSDNHHpYIJDl8aLoU6L1/x5/K2fPE16STpSyGhJf+UFEWCQ0A==
@@ -13889,7 +13889,7 @@ jest@29.7.0:
     import-local "^3.0.2"
     jest-cli "^29.7.0"
 
-jimp@^0.22.10:
+jimp@0.22.10:
   version "0.22.10"
   resolved "https://registry.yarnpkg.com/jimp/-/jimp-0.22.10.tgz#2cc3e265a99cdbe69ec60ddd57cbcde6a6cf0519"
   integrity sha512-lCaHIJAgTOsplyJzC1w/laxSxrbSsEBw4byKwXgUdMmh+ayPsnidTblenQm+IvhIs44Gcuvlb6pd2LQ0wcKaKg==
