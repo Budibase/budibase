@@ -126,12 +126,17 @@ export const deleteObjects = async function (ctx: Ctx) {
 }
 
 export const serveApp = async function (ctx: Ctx) {
+  const { appId } = ctx.params
+  if (!appId || !appId.startsWith(DocumentType.APP)) {
+    ctx.throw(404)
+  }
+
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
-  //Public Settings
   const { config } = await configs.getSettingsConfigDoc()
   const branding = await pro.branding.getBrandingConfig(config)
+
   // incase running direct from TS
   let appHbsPath = join(__dirname, "app.hbs")
   if (!fs.existsSync(appHbsPath)) {
