@@ -38,6 +38,7 @@ export * as docIds from "./docIds"
 // circular dependencies
 import * as context from "./context"
 import * as _tenancy from "./tenancy"
+export * as security from "./security"
 
 export const tenancy = {
   ..._tenancy,
