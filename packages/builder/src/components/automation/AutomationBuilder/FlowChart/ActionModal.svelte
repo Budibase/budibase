@@ -19,11 +19,13 @@
   export let lastStep
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
-  let triggerAutomationsEnabled = $licensing.triggerAutomationsEnabled
+  let triggerAutomationsEnabled = true
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
+  let lockedFeatures = [ActionStepID.COLLECT, ActionStepID.TRIGGER]
+
   $: collectBlockExists = checkForCollectStep($selectedAutomation)
 
   const disabled = () => {
@@ -103,9 +105,6 @@
       notifications.error("Error saving automation")
     }
   }
-
-  let lockedFeatures = [ActionStepID.COLLECT, ActionStepID.TRIGGER]
-  $: console.log
 </script>
 
 <ModalContent
