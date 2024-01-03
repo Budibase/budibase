@@ -155,6 +155,7 @@ const automationActions = store => ({
     await store.actions.save(newAutomation)
   },
   test: async (automation, testData) => {
+    console.log(testData)
     const result = await API.testAutomation({
       automationId: automation?._id,
       testData,

@@ -26,7 +26,11 @@ export const definition: AutomationStepSchema = {
       properties: {
         automationId: {
           type: AutomationIOType.STRING,
-          title: "Automation ID to trigger",
+          title: "Automation ID",
+        },
+        timeout: {
+          type: AutomationIOType.NUMBER,
+          title: "Timeout (ms)",
         },
       },
       required: ["automationId"],
@@ -48,8 +52,6 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  console.log("??: " + inputs.automationId)
-  console.log("???DSAASDFAFSDFDSFDS")
   if (!inputs.automationId) {
     return {
       success: false,
@@ -62,7 +64,7 @@ export async function run({ inputs }: AutomationStepInput) {
       automation,
       {
         fields: {},
-        timeout: 120000,
+        timeout: inputs.timeout * 1000 || 120000,
       },
       { getResponses: true }
     )

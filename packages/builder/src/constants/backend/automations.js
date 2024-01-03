@@ -21,6 +21,7 @@ export const ActionStepID = {
   QUERY_ROWS: "QUERY_ROWS",
   LOOP: "LOOP",
   COLLECT: "COLLECT",
+  TRIGGER: "TRIGGER",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: "discord",
   slack: "slack",

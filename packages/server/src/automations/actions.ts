@@ -42,7 +42,7 @@ const ACTION_IMPLS: Record<
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
-  TRIGGER_AUTOMATION: trigger.run,
+  TRIGGER: trigger.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,

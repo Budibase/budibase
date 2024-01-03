@@ -125,6 +125,10 @@ export const createLicensingStore = () => {
       const syncAutomationsEnabled = license.features.includes(
         Constants.Features.SYNC_AUTOMATIONS
       )
+      const triggerAutomationsEnabled = license.features.includes(
+        Constants.Features.SYNC_AUTOMATIONS
+      )
+
       const perAppBuildersEnabled = license.features.includes(
         Constants.Features.APP_BUILDERS
       )
@@ -147,6 +151,7 @@ export const createLicensingStore = () => {
           auditLogsEnabled,
           enforceableSSO,
           syncAutomationsEnabled,
+          triggerAutomationsEnabled,
           isViewPermissionsEnabled,
           perAppBuildersEnabled,
         }
