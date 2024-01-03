@@ -186,9 +186,15 @@ describe("REST Integration", () => {
   })
 
   describe("response", () => {
-    function buildInput(json: any, text: any, header: any) {
+    const contentTypes = ["application/json", "text/plain", "application/xml"]
+    function buildInput(
+      json: any,
+      text: any,
+      header: any,
+      status: number = 200
+    ) {
       return {
-        status: 200,
+        status,
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
@@ -225,6 +231,18 @@ describe("REST Integration", () => {
       expect(output.extra.raw).toEqual(text)
       expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
+
+    test.each(contentTypes)(
+      "should not throw an error on 204 no content",
+      async contentType => {
+        const input = buildInput(undefined, null, contentType, 204)
+        const output = await config.integration.parseResponse(input)
+        expect(output.data).toEqual([])
+        expect(output.extra.raw).toEqual([])
+        expect(output.info.code).toEqual(204)
+        expect(output.extra.headers["content-type"]).toEqual(contentType)
+      }
+    )
   })
 
   describe("authentication", () => {
