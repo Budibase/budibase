@@ -74,14 +74,14 @@ export const reset = async (email: string) => {
  * Perform the user password update if the provided reset code is valid.
  */
 export const resetUpdate = async (resetCode: string, password: string) => {
+  const { userId } = await cache.passwordReset.getCode(resetCode)
+  let user = await userSdk.db.getUser(userId)
+
   const validation = security.validatePassword(password)
   if (!validation.valid) {
     throw new HTTPError(validation.error, 400)
   }
 
-  const { userId } = await cache.passwordReset.getCode(resetCode)
-
-  let user = await userSdk.db.getUser(userId)
   user.password = password
   user = await userSdk.db.save(user)
 

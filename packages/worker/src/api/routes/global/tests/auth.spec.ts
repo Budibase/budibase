@@ -229,7 +229,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "Cannot reset password.",
+            message: "Password change is disabled for this user",
             status: 400,
           })
         }
@@ -261,8 +261,13 @@ describe("/api/global/auth", () => {
             )
 
             // convert to account owner now that password has been requested
-            const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
+            const account: CloudAccount = {
+              ...structures.accounts.ssoAccount(),
+              budibaseUserId: user._id!,
+              email: user.email,
+              tenantId: config.getTenantId(),
+            }
+            mocks.accounts.getAccountByTenantId.mockReturnValueOnce(
               Promise.resolve(account)
             )
 
