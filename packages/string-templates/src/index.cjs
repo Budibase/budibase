@@ -22,19 +22,19 @@ module.exports.setJSRunner = templates.setJSRunner
 module.exports.FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
 
 if (!process.env.NO_JS) {
-    const vm = require("vm")
-    const { setJSRunner } = require("./helpers/javascript")
-    /**
-     * Use vm to run JS scripts in a node Env
-     */
-    setJSRunner((js, context) => {
-        context = {
-            ...context,
-            alert: undefined,
-            setInterval: undefined,
-            setTimeout: undefined,
-        }
-        vm.createContext(context)
-        return vm.runInNewContext(js, context, {timeout: 1000})
-    })
+  const vm = require("vm")
+  const {setJSRunner} = require("./helpers/javascript")
+  /**
+   * Use vm to run JS scripts in a node Env
+   */
+  setJSRunner((js, context) => {
+    context = {
+      ...context,
+      alert: undefined,
+      setInterval: undefined,
+      setTimeout: undefined,
+    }
+    vm.createContext(context)
+    return vm.runInNewContext(js, context, {timeout: 1000})
+  })
 }
