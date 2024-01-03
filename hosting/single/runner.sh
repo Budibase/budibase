@@ -7,7 +7,7 @@ declare -a DOCKER_VARS=("APP_PORT" "APPS_URL" "ARCHITECTURE" "BUDIBASE_ENVIRONME
 [[ -z "${BUDIBASE_ENVIRONMENT}" ]] && export BUDIBASE_ENVIRONMENT=PRODUCTION
 [[ -z "${CLUSTER_PORT}" ]] && export CLUSTER_PORT=80
 [[ -z "${DEPLOYMENT_ENVIRONMENT}" ]] && export DEPLOYMENT_ENVIRONMENT=docker
-[[ -z "${MINIO_URL}" ]] && export MINIO_URL=http://127.0.0.1:9000
+[[ -z "${MINIO_URL}" ]] && [[ -z "${USE_S3}" ]] && export MINIO_URL=http://127.0.0.1:9000
 [[ -z "${NODE_ENV}" ]] && export NODE_ENV=production
 [[ -z "${POSTHOG_TOKEN}" ]] && export POSTHOG_TOKEN=phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU
 [[ -z "${TENANT_FEATURE_FLAGS}" ]] && export TENANT_FEATURE_FLAGS="*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
@@ -77,7 +77,12 @@ mkdir -p ${DATA_DIR}/minio
 chown -R couchdb:couchdb ${DATA_DIR}/couch
 redis-server --requirepass $REDIS_PASSWORD > /dev/stdout 2>&1 &
 /bbcouch-runner.sh &
-/minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
+
+# only start minio if use s3 isn't passed
+if [[ -z "${USE_S3}" ]]; then
+  /minio/minio server --console-address ":9001" ${DATA_DIR}/minio > /dev/stdout 2>&1 &
+fi
+
 /etc/init.d/nginx restart
 if [[ ! -z "${CUSTOM_DOMAIN}" ]]; then
     # Add monthly cron job to renew certbot certificate

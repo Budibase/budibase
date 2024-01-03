@@ -157,12 +157,12 @@ describe("getTenantIDFromCtx", () => {
           TenantResolutionStrategy.PATH,
         ],
       }
-      expect(getTenantIDFromCtx(ctx, mockOpts)).toBeNull()
+      expect(getTenantIDFromCtx(ctx, mockOpts)).toBeUndefined()
       expect(ctx.throw).toBeCalledTimes(1)
       expect(ctx.throw).toBeCalledWith(403, "Tenant id not set")
     })
 
-    it("returns null if allowNoTenant is true", () => {
+    it("returns undefined if allowNoTenant is true", () => {
       const ctx = createCtx({})
       mockOpts = {
         allowNoTenant: true,
@@ -172,7 +172,7 @@ describe("getTenantIDFromCtx", () => {
           TenantResolutionStrategy.PATH,
         ],
       }
-      expect(getTenantIDFromCtx(ctx, mockOpts)).toBeNull()
+      expect(getTenantIDFromCtx(ctx, mockOpts)).toBeUndefined()
     })
   })
 
