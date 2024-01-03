@@ -77,7 +77,7 @@ const publicRouter = new Router({
   prefix: PREFIX,
 })
 
-if (limiter) {
+if (limiter && !env.isDev()) {
   publicRouter.use(limiter)
 }
 
