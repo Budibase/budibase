@@ -21,7 +21,7 @@
     "debug": "yarn build && node --expose-gc --inspect=9223 dist/index.js",
     "run:docker:cluster": "pm2-runtime start pm2.config.js",
     "dev:stack:init": "node ./scripts/dev/manage.js init",
-    "dev:builder": "npm run dev:stack:init && nodemon",
+    "dev": "npm run dev:stack:init && nodemon",
     "dev:built": "yarn run dev:stack:init && yarn run run:docker",
     "test": "bash scripts/test.sh",
     "test:watch": "jest --watch",
@@ -75,26 +75,25 @@
     "@swc/jest": "0.2.27",
     "@trendyol/jest-testcontainers": "2.1.1",
     "@types/jest": "29.5.5",
-    "@types/jsonwebtoken": "8.5.1",
+    "@types/jsonwebtoken": "9.0.3",
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "4.14.200",
-    "@types/node": "18.17.0",
     "@types/node-fetch": "2.6.4",
     "@types/server-destroy": "1.0.1",
-    "@types/supertest": "2.0.12",
+    "@types/supertest": "2.0.14",
     "@types/uuid": "8.3.4",
-    "jest": "29.6.2",
+    "jest": "29.7.0",
     "nodemon": "2.0.15",
     "rimraf": "3.0.2",
-    "supertest": "6.2.2",
+    "supertest": "6.3.3",
     "timekeeper": "2.2.0",
     "typescript": "5.2.2",
     "update-dotenv": "1.1.1"
   },
   "nx": {
     "targets": {
-      "dev:builder": {
+      "dev": {
         "dependsOn": [
           {
             "comment": "Required for pro usage when submodule not loaded",

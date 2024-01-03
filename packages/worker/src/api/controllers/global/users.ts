@@ -26,6 +26,7 @@ import {
   migrations,
   platform,
   tenancy,
+  db,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -185,9 +186,27 @@ export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
 export const search = async (ctx: Ctx<SearchUsersRequest>) => {
   const body = ctx.request.body
 
-  // TODO: for now only one supported search key, string.email
-  if (body?.query && !userSdk.core.isSupportedUserSearch(body.query)) {
-    ctx.throw(501, "Can only search by string.email or equal._id")
+  // TODO: for now only two supported search keys; string.email and equal._id
+  if (body?.query) {
+    // Clean numeric prefixing. This will overwrite duplicate search fields,
+    // but this is fine because we only support a single custom search on
+    // email and id
+    for (let filters of Object.values(body.query)) {
+      if (filters && typeof filters === "object") {
+        for (let [field, value] of Object.entries(filters)) {
+          delete filters[field]
+          const cleanedField = db.removeKeyNumbering(field)
+          if (filters[cleanedField] !== undefined) {
+            ctx.throw(400, "Only 1 filter per field is supported")
+          }
+          filters[cleanedField] = value
+        }
+      }
+    }
+    // Validate we aren't trying to search on any illegal fields
+    if (!userSdk.core.isSupportedUserSearch(body.query)) {
+      ctx.throw(400, "Can only search by string.email or equal._id")
+    }
   }
 
   if (body.paginate === false) {

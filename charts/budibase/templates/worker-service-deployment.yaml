@@ -182,6 +182,10 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
+        {{- range .Values.services.worker.extraEnv }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
         image: budibase/worker:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.worker.startupProbe }}
@@ -208,6 +212,14 @@ spec:
         {{ with .Values.services.worker.resources }}
         resources:
         {{- toYaml . | nindent 10 }}
+        {{ end }}
+        {{ if .Values.services.worker.command }}
+        command:
+        {{- toYaml .Values.services.worker.command | nindent 10 }}
+        {{ end }}
+        {{ if .Values.services.worker.args }}
+        args:
+        {{- toYaml .Values.services.worker.args | nindent 10 }}
         {{ end }}
     {{- with .Values.affinity }}
       affinity:

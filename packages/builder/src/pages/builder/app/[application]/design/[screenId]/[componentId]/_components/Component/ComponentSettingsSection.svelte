@@ -32,6 +32,7 @@
     const generalSettings = settings.filter(
       setting => !setting.section && setting.tag === tag
     )
+
     const customSections = settings.filter(
       setting => setting.section && setting.tag === tag
     )
@@ -151,7 +152,7 @@
   {#if section.visible}
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
-      show={section.collapsed !== true}
+      initiallyShow={section.collapsed !== true}
     >
       {#if section.info}
         <div class="section-info">

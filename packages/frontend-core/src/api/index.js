@@ -1,4 +1,5 @@
 import { Helpers } from "@budibase/bbui"
+import { Header } from "@budibase/shared-core"
 import { ApiVersion } from "../constants"
 import { buildAnalyticsEndpoints } from "./analytics"
 import { buildAppEndpoints } from "./app"
@@ -62,6 +63,11 @@ const defaultAPIClientConfig = {
    * invoked before the actual JS error is thrown up the stack.
    */
   onError: null,
+
+  /**
+   * A function can be passed to be called when an API call returns info about a migration running for a specific app
+   */
+  onMigrationDetected: null,
 }
 
 /**
@@ -133,9 +139,9 @@ export const createAPIClient = config => {
 
     // Build headers
     let headers = { Accept: "application/json" }
-    headers["x-budibase-session-id"] = APISessionID
+    headers[Header.SESSION_ID] = APISessionID
     if (!external) {
-      headers["x-budibase-api-version"] = ApiVersion
+      headers[Header.API_VER] = ApiVersion
     } else {
       headers["x-ms-blob-type"] = "BlockBlob"
     }
@@ -172,6 +178,7 @@ export const createAPIClient = config => {
 
     // Handle response
     if (response.status >= 200 && response.status < 400) {
+      handleMigrations(response)
       try {
         if (parseResponse) {
           return await parseResponse(response)
@@ -188,7 +195,18 @@ export const createAPIClient = config => {
     }
   }
 
-  // Performs an API call to the server and caches the response.
+  const handleMigrations = response => {
+    if (!config.onMigrationDetected) {
+      return
+    }
+    const migration = response.headers.get(Header.MIGRATING_APP)
+
+    if (migration) {
+      config.onMigrationDetected(migration)
+    }
+  }
+
+  // Performs an API call to the server  and caches the response.
   // Future invocation for this URL will return the cached result instead of
   // hitting the server again.
   const makeCachedApiCall = async params => {
@@ -244,7 +262,7 @@ export const createAPIClient = config => {
     getAppID: () => {
       let headers = {}
       config?.attachHeaders(headers)
-      return headers?.["x-budibase-app-id"]
+      return headers?.[Header.APP_ID]
     },
   }
 

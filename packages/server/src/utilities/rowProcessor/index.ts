@@ -1,16 +1,7 @@
 import * as linkRows from "../../db/linkedRows"
-import {
-  FieldTypes,
-  AutoFieldSubTypes,
-  ObjectStoreBuckets,
-} from "../../constants"
+import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
-import {
-  context,
-  db as dbCore,
-  objectStore,
-  utils,
-} from "@budibase/backend-core"
+import { objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
 import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
@@ -22,6 +13,7 @@ import {
 import { isExternalTableID } from "../../integrations/utils"
 
 export * from "./utils"
+export * from "./attachments"
 
 type AutoColumnProcessingOpts = {
   reprocessing?: boolean
@@ -29,27 +21,6 @@ type AutoColumnProcessingOpts = {
 }
 
 const BASE_AUTO_ID = 1
-
-/**
- * Given the old state of the row and the new one after an update, this will
- * find the keys that have been removed in the updated row.
- */
-function getRemovedAttachmentKeys(
-  oldRow: Row,
-  row: Row,
-  attachmentKey: string
-) {
-  if (!oldRow[attachmentKey]) {
-    return []
-  }
-  const oldKeys = oldRow[attachmentKey].map((attachment: any) => attachment.key)
-  // no attachments in new row, all removed
-  if (!row[attachmentKey]) {
-    return oldKeys
-  }
-  const newKeys = row[attachmentKey].map((attachment: any) => attachment.key)
-  return oldKeys.filter((key: string) => newKeys.indexOf(key) === -1)
-}
 
 /**
  * This will update any auto columns that are found on the row/table with the correct information based on
@@ -287,60 +258,4 @@ export async function outputProcessing<T extends Row[] | Row>(
     }
   }
   return (wasArray ? enriched : enriched[0]) as T
-}
-
-/**
- * Clean up any attachments that were attached to a row.
- * @param table The table from which a row is being removed.
- * @param row optional - the row being removed.
- * @param rows optional - if multiple rows being deleted can do this in bulk.
- * @param oldRow optional - if updating a row this will determine the difference.
- * @param oldTable optional - if updating a table, can supply the old table to look for
- * deleted attachment columns.
- * @return When all attachments have been removed this will return.
- */
-export async function cleanupAttachments(
-  table: Table,
-  {
-    row,
-    rows,
-    oldRow,
-    oldTable,
-  }: { row?: Row; rows?: Row[]; oldRow?: Row; oldTable?: Table }
-): Promise<any> {
-  const appId = context.getAppId()
-  if (!dbCore.isProdAppID(appId)) {
-    const prodAppId = dbCore.getProdAppID(appId!)
-    // if prod exists, then don't allow deleting
-    const exists = await dbCore.dbExists(prodAppId)
-    if (exists) {
-      return
-    }
-  }
-  let files: string[] = []
-  function addFiles(row: Row, key: string) {
-    if (row[key]) {
-      files = files.concat(row[key].map((attachment: any) => attachment.key))
-    }
-  }
-  const schemaToUse = oldTable ? oldTable.schema : table.schema
-  for (let [key, schema] of Object.entries(schemaToUse)) {
-    if (schema.type !== FieldTypes.ATTACHMENT) {
-      continue
-    }
-    // old table had this column, new table doesn't - delete it
-    if (rows && oldTable && !table.schema[key]) {
-      rows.forEach(row => addFiles(row, key))
-    } else if (oldRow && row) {
-      // if updating, need to manage the differences
-      files = files.concat(getRemovedAttachmentKeys(oldRow, row, key))
-    } else if (row) {
-      addFiles(row, key)
-    } else if (rows) {
-      rows.forEach(row => addFiles(row, key))
-    }
-  }
-  if (files.length > 0) {
-    await objectStore.deleteFiles(ObjectStoreBuckets.APPS, files)
-  }
 }

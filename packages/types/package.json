@@ -10,14 +10,13 @@
     "prebuild": "rimraf dist/",
     "build": "node ../../scripts/build.js && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
-    "dev:builder": "tsc -p tsconfig.json --watch --preserveWatchOutput",
+    "dev": "tsc -p tsconfig.json --watch --preserveWatchOutput",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "jest": {},
   "devDependencies": {
-    "@budibase/nano": "10.1.3",
+    "@budibase/nano": "10.1.4",
     "@types/koa": "2.13.4",
-    "@types/node": "18.17.0",
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.3",
     "rimraf": "3.0.2",
