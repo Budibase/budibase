@@ -3295,8 +3295,8 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
-        "supportsConditions": false,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "custom"
@@ -3503,8 +3503,8 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
-        "supportsConditions": false,
         "dependsOn": {
           "setting": "optionsSource",
           "value": "custom"
