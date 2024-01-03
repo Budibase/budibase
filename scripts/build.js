@@ -59,6 +59,7 @@ function runBuild(entry, outfile) {
       "pouchdb",
       "bcrypt",
       "bcryptjs",
+      "graphql/*",
     ],
   }
 

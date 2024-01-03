@@ -335,3 +335,11 @@ export function isScim(): boolean {
   const scimCall = context?.isScim
   return !!scimCall
 }
+
+export function getCurrentContext(): ContextMap | undefined {
+  try {
+    return Context.get()
+  } catch (e) {
+    return undefined
+  }
+}
