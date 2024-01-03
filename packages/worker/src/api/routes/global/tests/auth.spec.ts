@@ -263,9 +263,8 @@ describe("/api/global/auth", () => {
             // convert to account owner now that password has been requested
             const account: CloudAccount = {
               ...structures.accounts.ssoAccount(),
-              budibaseUserId: user._id!,
+              budibaseUserId: "budibaseUserId",
               email: user.email,
-              tenantId: config.getTenantId(),
             }
             mocks.accounts.getAccountByTenantId.mockReturnValueOnce(
               Promise.resolve(account)
