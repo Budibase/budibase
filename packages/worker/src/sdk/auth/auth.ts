@@ -74,8 +74,8 @@ export const reset = async (email: string) => {
  */
 export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await cache.passwordReset.getCode(resetCode)
-  let user = await userSdk.db.getUser(userId)
 
+  let user = await userSdk.db.getUser(userId)
   user.password = password
   user = await userSdk.db.save(user)
 
