@@ -1,5 +1,5 @@
 import * as linkRows from "../../../db/linkedRows"
-import { generateRowID, InternalTables } from "../../../db/utils"
+import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
   AttachmentCleanup,
@@ -87,45 +87,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     await userController.updateMetadata(ctx as any)
     return { row: ctx.body as Row, table }
   }
-
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
-    updateFormula: true,
-  })
-}
-
-export async function save(ctx: UserCtx) {
-  let inputs = ctx.request.body
-  inputs.tableId = utils.getTableId(ctx)
-
-  if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
-  }
-
-  // this returns the table and row incase they have been updated
-  const dbTable = await sdk.tables.getTable(inputs.tableId)
-
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
-  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
-
-  const validateResult = await sdk.rows.utils.validate({
-    row,
-    table,
-  })
-
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
-  // make sure link rows are up-to-date
-  row = (await linkRows.updateLinks({
-    eventType: linkRows.EventType.ROW_SAVE,
-    row,
-    tableId: row.tableId,
-    table,
-  })) as Row
 
   return finaliseRow(table, row, {
     oldTable: dbTable,

@@ -227,6 +227,14 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.apps.command }}
+        command:
+        {{- toYaml .Values.services.apps.command | nindent 10 }}
+        {{ end }}
+        {{ if .Values.services.apps.args }}
+        args:
+        {{- toYaml .Values.services.apps.args | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
