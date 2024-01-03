@@ -14,21 +14,18 @@ describe("auth", () => {
     ])("%s returns unsuccessful", (_, password) => {
       expect(validatePassword(password as string)).toEqual({
         valid: false,
-        error: "Password invalid. Minimum eight characters.",
+        error: "Password invalid. Minimum 8 characters.",
       })
     })
 
     it.each([
       generator.word({ length: PASSWORD_MAX_LENGTH }),
       generator.paragraph().substring(0, PASSWORD_MAX_LENGTH),
-    ])(
-      `can use passwords up to ${PASSWORD_MAX_LENGTH} characters in length`,
-      password => {
-        expect(validatePassword(password)).toEqual({
-          valid: true,
-        })
-      }
-    )
+    ])(`can use passwords up to 512 characters in length`, password => {
+      expect(validatePassword(password)).toEqual({
+        valid: true,
+      })
+    })
 
     it.each([
       generator.word({ length: PASSWORD_MAX_LENGTH + 1 }),
