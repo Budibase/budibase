@@ -2,7 +2,6 @@
   export let keybind
   export let padded = false
   export let overlay = false
-  export let action = false
 
   $: parsedKeys = parseKeys(keybind)
 
@@ -20,7 +19,7 @@
 
 <div class="keys" class:padded class:overlay>
   {#each parsedKeys as key}
-    <div class={action ? "action-key" : "key"}>
+    <div class="key">
       {key}
     </div>
   {/each}
@@ -34,18 +33,6 @@
   }
   .keys.padded {
     padding: var(--cell-padding);
-  }
-  .action-key {
-    padding: 2px 6px;
-    font-size: 12px;
-    font-weight: 600;
-    background-color: var(--spectrum-global-color-gray-900);
-    color: var(--spectrum-global-color-blue-600);
-    border-radius: 4px;
-    text-align: center;
-    display: grid;
-    place-items: center;
-    text-transform: uppercase;
   }
   .key {
     padding: 2px 6px;

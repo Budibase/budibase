@@ -128,20 +128,8 @@
     },
   }
 
-  const drawerCommands = [
-    {
-      key: "Mod-Enter",
-      preventDefault: true,
-      run: view => {
-        dispatch("saveCodeEditor", view)
-        return true
-      },
-    },
-  ]
-
   const buildKeymap = () => {
     const baseMap = [
-      ...drawerCommands,
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...historyKeymap,
