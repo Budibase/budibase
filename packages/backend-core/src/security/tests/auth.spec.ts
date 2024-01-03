@@ -35,7 +35,6 @@ describe("auth", () => {
     ])(
       `passwords cannot have more than ${PASSWORD_MAX_LENGTH} characters`,
       password => {
-        console.error(password)
         expect(validatePassword(password)).toEqual({
           valid: false,
           error: "Password invalid. Maximum 512 characters.",
