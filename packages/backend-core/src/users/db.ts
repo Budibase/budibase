@@ -27,7 +27,7 @@ import {
 } from "./utils"
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
-import { security } from ".."
+import { validatePassword } from "../security"
 
 type QuotaUpdateFn = (
   change: number,
@@ -112,7 +112,7 @@ export class UserDB {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
 
-      const passwordValidation = security.validatePassword(password)
+      const passwordValidation = validatePassword(password)
       if (!passwordValidation.valid) {
         throw new HTTPError(passwordValidation.error, 400)
       }
