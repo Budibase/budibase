@@ -7,7 +7,6 @@ import {
   tenancy,
   utils as coreUtils,
   cache,
-  security,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
@@ -76,11 +75,6 @@ export const reset = async (email: string) => {
 export const resetUpdate = async (resetCode: string, password: string) => {
   const { userId } = await cache.passwordReset.getCode(resetCode)
   let user = await userSdk.db.getUser(userId)
-
-  const validation = security.validatePassword(password)
-  if (!validation.valid) {
-    throw new HTTPError(validation.error, 400)
-  }
 
   user.password = password
   user = await userSdk.db.save(user)
