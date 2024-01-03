@@ -57,3 +57,5 @@ import * as db from "./db"
 export const init = (opts: any = {}) => {
   db.init(opts.db)
 }
+
+export function breakingChange() {}
