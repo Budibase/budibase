@@ -1,19 +1,26 @@
 const externalHandlebars = require("./external")
 const helperList = require("@budibase/handlebars-helpers")
 
+let helpers = undefined
+
 module.exports.getHelperList = () => {
+  if (helpers) {
+    return helpers
+  }
+
+  helpers = {}
   let constructed = []
   for (let collection of externalHandlebars.externalCollections) {
     constructed.push(helperList[collection]())
   }
-  const fullMap = {}
   for (let collection of constructed) {
     for (let [key, func] of Object.entries(collection)) {
-      fullMap[key] = func
+      helpers[key] = func
     }
   }
   for (let key of Object.keys(externalHandlebars.addedHelpers)) {
-    fullMap[key] = externalHandlebars.addedHelpers[key]
+    helpers[key] = externalHandlebars.addedHelpers[key]
   }
-  return fullMap
+  Object.freeze(helpers)
+  return helpers
 }
