@@ -71,7 +71,7 @@ export async function run({ inputs }: AutomationStepInput) {
 
     return {
       success: true,
-      value: response,
+      value: response.steps,
     }
   }
 }
