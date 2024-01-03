@@ -11,6 +11,7 @@ import {
   Row,
   Table,
 } from "@budibase/types"
+import tracer from "dd-trace"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -50,35 +51,42 @@ export function processFormulas<T extends Row | Row[]>(
   inputRows: T,
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
 ): T {
-  const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
-  if (rows) {
-    for (let [column, schema] of Object.entries(table.schema)) {
-      if (schema.type !== FieldTypes.FORMULA) {
-        continue
-      }
+  return tracer.trace("processFormulas", {}, span => {
+    const numRows = Array.isArray(inputRows) ? inputRows.length : 1
+    span?.addTags({ table_id: table._id, dynamic, numRows })
+    const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+    if (rows) {
+      for (let [column, schema] of Object.entries(table.schema)) {
+        if (schema.type !== FieldTypes.FORMULA) {
+          continue
+        }
 
-      const isStatic = schema.formulaType === FormulaTypes.STATIC
+        const isStatic = schema.formulaType === FormulaTypes.STATIC
 
-      if (
-        schema.formula == null ||
-        (dynamic && isStatic) ||
-        (!dynamic && !isStatic)
-      ) {
-        continue
-      }
-      // iterate through rows and process formula
-      for (let i = 0; i < rows.length; i++) {
-        let row = rows[i]
-        let context = contextRows ? contextRows[i] : row
-        let formula = schema.formula
-        rows[i] = {
-          ...row,
-          [column]: processStringSync(formula, context),
+        if (
+          schema.formula == null ||
+          (dynamic && isStatic) ||
+          (!dynamic && !isStatic)
+        ) {
+          continue
+        }
+        // iterate through rows and process formula
+        for (let i = 0; i < rows.length; i++) {
+          let row = rows[i]
+          let context = contextRows ? contextRows[i] : row
+          let formula = schema.formula
+          rows[i] = {
+            ...row,
+            [column]: tracer.trace("processStringSync", {}, span => {
+              span?.addTags({ table_id: table._id, column, static: isStatic })
+              return processStringSync(formula, context)
+            }),
+          }
         }
       }
     }
-  }
-  return Array.isArray(inputRows) ? rows : rows[0]
+    return Array.isArray(inputRows) ? rows : rows[0]
+  })
 }
 
 /**
