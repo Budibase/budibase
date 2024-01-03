@@ -19,6 +19,7 @@
   export let lastStep
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
+  let triggerAutomationsEnabled = $licensing.triggerAutomationsEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
@@ -33,6 +34,10 @@
       },
       COLLECT: {
         disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
+        message: collectDisabledMessage(),
+      },
+      TRIGGER: {
+        disabled: !triggerAutomationsEnabled,
         message: collectDisabledMessage(),
       },
     }
@@ -98,6 +103,9 @@
       notifications.error("Error saving automation")
     }
   }
+
+  let lockedFeatures = [ActionStepID.COLLECT, ActionStepID.TRIGGER]
+  $: console.log
 </script>
 
 <ModalContent
@@ -148,7 +156,7 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled && !syncAutomationsEnabled && action.stepId === ActionStepID.COLLECT}
+            {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationsEnabled && lockedFeatures.includes(action.stepId)}
               <div class="tag-color">
                 <Tags>
                   <Tag icon="LockClosed">Business</Tag>

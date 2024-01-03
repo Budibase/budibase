@@ -46,6 +46,8 @@
   }
 
   const testAutomation = async () => {
+    console.log(testData)
+    console.log($selectedAutomation)
     try {
       await automationStore.actions.test($selectedAutomation, testData)
       $automationStore.showTestPanel = true

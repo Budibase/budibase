@@ -9,6 +9,7 @@ export enum Feature {
   BRANDING = "branding",
   SCIM = "scim",
   SYNC_AUTOMATIONS = "syncAutomations",
+  TRIGGER_AUTOMATION = "triggerAutomation",
   APP_BUILDERS = "appBuilders",
   OFFLINE = "offline",
   EXPANDED_PUBLIC_API = "expandedPublicApi",
