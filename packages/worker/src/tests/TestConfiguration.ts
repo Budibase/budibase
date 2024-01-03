@@ -45,7 +45,7 @@ class TestConfiguration {
   tenantId: string
   user?: User
   apiKey?: string
-  userPassword = "test"
+  userPassword = "password"
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
     // default to cloud hosting
