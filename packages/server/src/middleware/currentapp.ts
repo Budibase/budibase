@@ -23,7 +23,7 @@ export default async (ctx: UserCtx, next: any) => {
 
   if (requestAppId) {
     const span = tracer.scope().active()
-    span?.addTags({ app_id: requestAppId })
+    span?.setTag("appId", requestAppId)
   }
 
   // deny access to application preview
@@ -74,6 +74,14 @@ export default async (ctx: UserCtx, next: any) => {
   // nothing more to do
   if (!appId) {
     return next()
+  }
+
+  if (ctx.user) {
+    const span = tracer.scope().active()
+    if (ctx.user._id) {
+      span?.setTag("userId", ctx.user._id)
+    }
+    span?.setTag("tenantId", ctx.user.tenantId)
   }
 
   const userId = ctx.user ? generateUserMetadataID(ctx.user._id!) : undefined

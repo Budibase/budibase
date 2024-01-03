@@ -45,7 +45,7 @@
       }
     } catch (err) {
       submitted = false
-      notifications.error("Unable to reset password")
+      notifications.error(err.message || "Unable to reset password")
     }
   }
 
