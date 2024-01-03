@@ -9,25 +9,10 @@
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
-    "prebuild": "rm -rf prebuilds 2> /dev/null && cp -r ../../node_modules/leveldown/prebuilds prebuilds",
-    "rename": "renamer --find .node --replace .fake 'prebuilds/**'",
     "tsc": "node ../../scripts/build.js",
-    "pkg": "pkg . --out-path build --no-bytecode --public --public-packages \"*\" -C GZip",
-    "build": "yarn prebuild && yarn rename && yarn tsc && yarn pkg && yarn postbuild",
+    "build": "yarn tsc",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
-    "postbuild": "rm -rf prebuilds 2> /dev/null",
     "start": "ts-node ./src/index.ts"
-  },
-  "pkg": {
-    "targets": [
-      "node18-linux",
-      "node18-win",
-      "node18-macos"
-    ],
-    "assets": [
-      "prebuilds/**/*"
-    ],
-    "outputPath": "build"
   },
   "dependencies": {
     "@budibase/backend-core": "0.0.0",
@@ -43,7 +28,6 @@
     "inquirer": "8.0.0",
     "lookpath": "1.1.0",
     "node-fetch": "2.6.7",
-    "pkg": "5.8.0",
     "posthog-node": "1.3.0",
     "pouchdb": "7.3.0",
     "pouchdb-replication-stream": "1.2.9",
@@ -55,7 +39,6 @@
     "@types/jest": "29.5.5",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "^6.4.0",
-    "renamer": "^4.0.0",
     "ts-node": "10.8.1",
     "typescript": "5.2.2"
   }
