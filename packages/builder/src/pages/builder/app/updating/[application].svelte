@@ -33,6 +33,11 @@
 </script>
 
 <div class="loading">
+  <p class="loading-message">
+    🛠️ We are updating the system. <br />Please wait, we will be back in a
+    second!
+  </p>
+
   <Spinner size="20" />
 </div>
 
@@ -40,5 +45,15 @@
   .loading {
     display: flex;
     justify-content: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    height: 100vh;
+    margin: 0;
+  }
+  .loading-message {
+    text-align: center;
+    font-size: 18px;
   }
 </style>
