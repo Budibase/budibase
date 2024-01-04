@@ -18,13 +18,16 @@ export function init() {
             bbCtx.jsExecutionTracker =
               timers.ExecutionTimeTracker.withLimit(perRequestLimit)
           }
-          track = bbCtx.jsExecutionTracker.track.bind(bbCtx.jsExecutionTracker)
           span?.addTags({
             js: {
               limitMS: bbCtx.jsExecutionTracker.limitMs,
               elapsedMS: bbCtx.jsExecutionTracker.elapsedMS,
             },
           })
+          // We call checkLimit() here to prevent paying the cost of creating
+          // a new VM context below when we don't need to.
+          bbCtx.jsExecutionTracker.checkLimit()
+          track = bbCtx.jsExecutionTracker.track.bind(bbCtx.jsExecutionTracker)
         }
       }
 
