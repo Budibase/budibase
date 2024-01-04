@@ -68,9 +68,9 @@
 
   const getStepLabel = ({ stepCount, currentStep }) => {
     if (stepCount <= 1) {
-      return "Details"
+      return "Steps"
     }
-    return `Details (Step ${currentStep + 1}/${stepCount})`
+    return `Steps (${currentStep + 1}/${stepCount})`
   }
 
   const emitCurrentStep = step => {
