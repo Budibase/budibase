@@ -303,6 +303,7 @@
                     bind:getCaretPosition
                     bind:insertAtPos
                     height="100%"
+                    autofocus={autofocusEditor}
                   />
                 </div>
                 <div class="binding-footer">
