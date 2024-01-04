@@ -7,6 +7,8 @@
   const timeoutMs = 60000 // 1 minute
   const loadTime = Date.now()
 
+  let timedOut = false
+
   async function checkMigrationsFinished() {
     setTimeout(async () => {
       const response = await API.getMigrationStatus()
@@ -27,18 +29,23 @@
   checkMigrationsFinished()
 
   function migrationTimeout() {
-    // TODO
-    alert("Something went wrong 💀")
+    timedOut = true
   }
 </script>
 
 <div class="loading">
-  <p class="loading-message">
-    🛠️ We are updating the system. <br />Please wait, we will be back in a
-    second!
-  </p>
+  {#if !timedOut}
+    <p class="loading-message">
+      🛠️ We are updating the system. <br />Please wait, we will be back in a
+      second!
+    </p>
 
-  <Spinner size="20" />
+    <Spinner size="20" />
+  {:else}
+    <p class="loading-message timeout">
+      An error occurred. Please try again later.
+    </p>
+  {/if}
 </div>
 
 <style>
@@ -55,5 +62,8 @@
   .loading-message {
     text-align: center;
     font-size: 18px;
+  }
+  .timeout {
+    color: rgb(196, 46, 46);
   }
 </style>
