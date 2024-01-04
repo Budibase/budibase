@@ -64,6 +64,7 @@
       on:change={event => (tempValue = event.detail)}
       allowJS
       {bindings}
+      autofocusEditor={true}
     />
   </Drawer>
 {/key}

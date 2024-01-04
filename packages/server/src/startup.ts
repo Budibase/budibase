@@ -23,6 +23,7 @@ import { automationsEnabled, printFeatures } from "./features"
 import Koa from "koa"
 import { Server } from "http"
 import { AddressInfo } from "net"
+import * as jsRunner from "./jsRunner"
 
 let STARTUP_RAN = false
 
@@ -152,4 +153,6 @@ export async function startup(app?: Koa, server?: Server) {
       }
     })
   }
+
+  jsRunner.init()
 }

@@ -1,6 +1,5 @@
 import { structures, mocks } from "../../../tests"
 import { env, context } from "@budibase/backend-core"
-import * as users from "../users"
 import { db as userDb } from "../"
 import { CloudAccount } from "@budibase/types"
 

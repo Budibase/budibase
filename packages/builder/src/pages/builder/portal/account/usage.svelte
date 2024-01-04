@@ -15,6 +15,7 @@
   import { DashCard, Usage } from "components/usage"
   import { PlanModel } from "constants"
   import { sdk } from "@budibase/shared-core"
+  import { PlanType } from "@budibase/types"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -106,7 +107,14 @@
   }
 
   const planTitle = () => {
-    return `${capitalise(license?.plan.type)} Plan`
+    const planType = license?.plan.type
+    let planName = license?.plan.type
+    if (planType === PlanType.PREMIUM_PLUS) {
+      planName = "Premium"
+    } else if (planType === PlanType.ENTERPRISE_BASIC) {
+      planName = "Enterprise"
+    }
+    return `${capitalise(planName)} Plan`
   }
 
   const getDaysRemaining = timestamp => {

@@ -6,6 +6,7 @@
   export let value = ""
   export let allowJS = false
   export let allowHelpers = true
+  export let autofocusEditor = false
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -27,5 +28,6 @@
   {value}
   {allowJS}
   {allowHelpers}
+  {autofocusEditor}
   on:change
 />

@@ -257,7 +257,7 @@
 
 <LockedFeature
   title={"Audit Logs"}
-  planType={"Business plan"}
+  planType={"Enterprise plan"}
   description={"View all events that have occurred in your Budibase installation"}
   enabled={$licensing.auditLogsEnabled}
   upgradeButtonClick={async () => {

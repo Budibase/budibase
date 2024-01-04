@@ -1,6 +1,6 @@
 import * as redis from "../redis/init"
 import * as utils from "../utils"
-import { Duration, DurationType } from "../utils"
+import { Duration } from "../utils"
 
 const TTL_SECONDS = Duration.fromHours(1).toSeconds()
 
@@ -32,7 +32,18 @@ export async function getCode(code: string): Promise<PasswordReset> {
   const client = await redis.getPasswordResetClient()
   const value = (await client.get(code)) as PasswordReset | undefined
   if (!value) {
-    throw "Provided information is not valid, cannot reset password - please try again."
+    throw new Error(
+      "Provided information is not valid, cannot reset password - please try again."
+    )
   }
   return value
+}
+
+/**
+ * Given a reset code this will invalidate it.
+ * @param code The code provided via the email link.
+ */
+export async function invalidateCode(code: string): Promise<void> {
+  const client = await redis.getPasswordResetClient()
+  await client.delete(code)
 }
