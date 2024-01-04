@@ -238,4 +238,10 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.worker.ndots }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.services.worker.ndots | quote }}
+      {{ end }}
 status: {}
