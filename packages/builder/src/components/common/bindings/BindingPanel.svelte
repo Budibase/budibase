@@ -45,6 +45,7 @@
   export let valid
   export let allowJS = false
   export let allowHelpers = true
+  export let autofocusEditor = false
 
   const drawerActions = getContext("drawer-actions")
   const bindingDrawerActions = getContext("binding-drawer-actions")
@@ -199,6 +200,7 @@
                   ]}
                   placeholder=""
                   height="100%"
+                  autofocus={autofocusEditor}
                 />
               </div>
               <div class="binding-footer">
@@ -301,6 +303,7 @@
                     bind:getCaretPosition
                     bind:insertAtPos
                     height="100%"
+                    autofocus={autofocusEditor}
                   />
                 </div>
                 <div class="binding-footer">
