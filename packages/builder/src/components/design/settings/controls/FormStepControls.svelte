@@ -36,6 +36,7 @@
       on:click={() => {
         stepAction("previousStep")
       }}
+      tooltip={"Previous step"}
     />
     <ActionButton
       size="S"
@@ -45,6 +46,7 @@
       on:click={() => {
         stepAction("nextStep")
       }}
+      tooltip={"Next step"}
     />
     <ActionButton
       size="S"
@@ -54,6 +56,7 @@
       on:click={() => {
         stepAction("removeStep")
       }}
+      tooltip={"Remove step"}
     />
     <ActionButton
       size="S"
@@ -62,6 +65,7 @@
       on:click={() => {
         stepAction("addStep")
       }}
+      tooltip={"Add step"}
     />
   </div>
 {/if}
