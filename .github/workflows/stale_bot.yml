@@ -16,8 +16,8 @@ jobs:
           days-before-pr-stale: 7
           stale-issue-label: stale
           exempt-pr-labels: pinned,security,roadmap
-
           days-before-pr-close: 7
+          days-before-issue-close: 30
 
       - uses: actions/stale@v8
         with:
@@ -26,6 +26,7 @@ jobs:
           days-before-stale: 30
           only-issue-labels: bug,High priority
           stale-issue-label: warn
+          days-before-close: 30
 
       - uses: actions/stale@v8
         with:
@@ -34,6 +35,7 @@ jobs:
           days-before-stale: 90
           only-issue-labels: bug,Medium priority
           stale-issue-label: warn
+          days-before-close: 30
 
       - uses: actions/stale@v8
         with:
@@ -43,5 +45,4 @@ jobs:
           stale-issue-label: stale
           only-issue-labels: bug
           stale-issue-message: "This issue has been automatically marked as stale because it has not had any activity for six months."
-
           days-before-close: 30
