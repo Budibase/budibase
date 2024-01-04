@@ -2019,6 +2019,15 @@
     "@babel/parser" "^7.22.15"
     "@babel/types" "^7.22.15"
 
+"@babel/template@^7.22.5", "@babel/template@^7.3.3":
+  version "7.22.5"
+  resolved "https://registry.yarnpkg.com/@babel/template/-/template-7.22.5.tgz#0c8c4d944509875849bd0344ff0050756eefc6ec"
+  integrity sha512-X7yV7eiwAxdj9k94NEylvbVHLiVG1nvzCV2EAowhxLTwODV1jl9UzZ48leOC0sH7OnuHrIkllaBgneUykIcZaw==
+  dependencies:
+    "@babel/code-frame" "^7.22.5"
+    "@babel/parser" "^7.22.5"
+    "@babel/types" "^7.22.5"
+
 "@babel/traverse@^7.22.5":
   version "7.23.6"
   resolved "https://registry.yarnpkg.com/@babel/traverse/-/traverse-7.23.6.tgz#b53526a2367a0dd6edc423637f3d2d0f2521abc5"
