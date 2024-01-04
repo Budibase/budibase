@@ -109,7 +109,7 @@ services:
   redis-service:
     restart: unless-stopped
     image: redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
 
