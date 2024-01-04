@@ -138,10 +138,10 @@
       },
     }}
   >
-    {#each enrichedSteps as step, idx}
+    {#each enrichedSteps as step, stepIdx}
       <BlockComponent
         type="formstep"
-        props={{ step: idx + 1, _instanceName: `Step ${idx + 1}` }}
+        props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
       >
         <BlockComponent
           type="container"
@@ -158,7 +158,7 @@
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
           <BlockComponent type="fieldgroup" order={2}>
-            {#each step.fields as field, fieldIdx}
+            {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
               {#if getComponentForField(field)}
                 <BlockComponent
                   type={getComponentForField(field)}
