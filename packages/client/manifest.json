@@ -3295,6 +3295,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3502,6 +3503,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
