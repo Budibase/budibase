@@ -117,7 +117,13 @@ function typeCoercion(filters: SearchFilters, table: Table) {
           continue
         }
         if (column.type === FieldTypes.NUMBER) {
-          searchParam[property] = parseFloat(value)
+          if (key === "oneOf") {
+            value = value.split(",").map(item => parseFloat(item))
+          } else {
+            value = parseFloat(value)
+          }
+          // @ts-ignore
+          filters[key][property] = value
         }
       }
     }

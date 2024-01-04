@@ -174,10 +174,10 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
           return
         }
       }
-      if (type === "number" && typeof value === "string") {
+      if (type === "number" && typeof value === "string" && !isHbs) {
         if (operator === "oneOf") {
           value = value.split(",").map(item => parseFloat(item))
-        } else if (!isHbs) {
+        } else {
           value = parseFloat(value)
         }
       }
