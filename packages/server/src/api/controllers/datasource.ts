@@ -57,17 +57,14 @@ async function getAndMergeDatasource(datasource: Datasource) {
 
 async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(
-    datasource._id!,
-    datasource.entities! as Record<string, Table>
-  )
+  return await connector.buildSchema(datasource._id!, datasource.entities!)
 }
 
 async function buildFilteredSchema(
   datasource: Datasource,
   filter?: string[]
 ): Promise<Schema> {
-  let schema = await buildSchemaHelper(datasource)
+  const schema = await buildSchemaHelper(datasource)
   if (!filter) {
     return schema
   }
