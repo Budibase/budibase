@@ -146,7 +146,45 @@ export function basicAutomation(appId?: string): Automation {
           },
         },
       },
-      steps: [],
+      steps: [
+        {
+          stepId: AutomationActionStepId.SERVER_LOG,
+          name: "Backend log",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          internal: true,
+          features: {
+            LOOPING: true,
+          },
+          inputs: {
+            text: "sdfsdf",
+          },
+          schema: {
+            inputs: {
+              properties: {
+                text: {
+                  type: "string",
+                  title: "Text to log",
+                },
+              },
+              required: ["text"],
+            },
+            outputs: {
+              properties: {
+                success: {
+                  description: "Whether the action was successful",
+                },
+                message: {
+                  description: "What was output",
+                },
+              },
+              required: ["success", "message"],
+            },
+          },
+          id: "y8lkZbeSe",
+        },
+      ],
     },
     type: "automation",
     appId: appId!,

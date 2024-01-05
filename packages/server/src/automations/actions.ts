@@ -105,7 +105,6 @@ export async function getActionDefinitions() {
 
 /* istanbul ignore next */
 export async function getAction(stepId: string) {
-  console.log(stepId)
   if (ACTION_IMPLS[stepId] != null) {
     return ACTION_IMPLS[stepId]
   }

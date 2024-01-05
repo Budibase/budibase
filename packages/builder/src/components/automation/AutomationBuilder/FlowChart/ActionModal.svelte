@@ -19,7 +19,7 @@
   export let lastStep
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
-  let triggerAutomationsEnabled = true
+  let triggerAutomationsEnabled = $licensing.triggerAutomationsEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
