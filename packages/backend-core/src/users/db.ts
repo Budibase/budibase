@@ -2,7 +2,7 @@ import env from "../environment"
 import * as eventHelpers from "./events"
 import * as accountSdk from "../accounts"
 import * as cache from "../cache"
-import { doInTenant, getGlobalDB, getIdentity, getTenantId } from "../context"
+import { getGlobalDB, getIdentity, getTenantId } from "../context"
 import * as dbUtils from "../db"
 import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
@@ -27,6 +27,7 @@ import {
 } from "./utils"
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
+import { validatePassword } from "../security"
 
 type QuotaUpdateFn = (
   change: number,
@@ -110,6 +111,12 @@ export class UserDB {
       if (await UserDB.isPreventPasswordActions(user, account)) {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
+
+      const passwordValidation = validatePassword(password)
+      if (!passwordValidation.valid) {
+        throw new HTTPError(passwordValidation.error, 400)
+      }
+
       hashedPassword = opts.hashPassword ? await hash(password) : password
     } else if (dbUser) {
       hashedPassword = dbUser.password

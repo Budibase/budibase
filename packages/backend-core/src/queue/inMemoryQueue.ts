@@ -15,6 +15,7 @@ function newJob(queue: string, message: any) {
     timestamp: Date.now(),
     queue: queue,
     data: message,
+    opts: {},
   }
 }
 

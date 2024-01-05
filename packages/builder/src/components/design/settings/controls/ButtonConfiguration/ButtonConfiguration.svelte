@@ -34,6 +34,9 @@
   $: canAddButtons = max == null || buttonList.length < max
 
   const sanitizeValue = val => {
+    if (!Array.isArray(val)) {
+      return null
+    }
     return val?.map(button => {
       return button._component ? button : buildPseudoInstance(button)
     })

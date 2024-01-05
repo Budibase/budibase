@@ -17,7 +17,6 @@
   "devDependencies": {
     "@budibase/nano": "10.1.4",
     "@types/koa": "2.13.4",
-    "@types/node": "18.17.0",
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.3",
     "rimraf": "3.0.2",

@@ -39,7 +39,7 @@ const ALL_STRATEGIES = Object.values(TenantResolutionStrategy)
 export const getTenantIDFromCtx = (
   ctx: BBContext,
   opts: GetTenantIdOptions
-): string | null => {
+): string | undefined => {
   // exit early if not multi-tenant
   if (!isMultiTenant()) {
     return DEFAULT_TENANT_ID
@@ -144,5 +144,5 @@ export const getTenantIDFromCtx = (
     ctx.throw(403, "Tenant id not set")
   }
 
-  return null
+  return undefined
 }
