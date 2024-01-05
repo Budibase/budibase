@@ -171,7 +171,6 @@ export default function (
       if (user) {
         tracer.setUser({
           id: user?.id,
-          email: user?.email,
           tenantId: user?.tenantId,
           admin: user?.admin,
           builder: user?.builder,
