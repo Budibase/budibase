@@ -129,7 +129,7 @@
         <BlockComponent type="text" props={{ text: description }} order={1} />
       {/if}
       {#key fields}
-        <BlockComponent type="container">
+        <BlockComponent type="container" order={2}>
           <div class="form-block fields" class:mobile={$context.device.mobile}>
             {#each fields as field, idx}
               {#if getComponentForField(field) && field.active}
@@ -157,7 +157,7 @@
             "margin-top": "16",
           },
         }}
-        order={1}
+        order={3}
       />
     {/if}
   </BlockComponent>
