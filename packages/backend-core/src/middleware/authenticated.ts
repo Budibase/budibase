@@ -170,7 +170,7 @@ export default function (
 
       if (user) {
         tracer.setUser({
-          id: user?.id,
+          id: user?._id,
           tenantId: user?.tenantId,
           admin: user?.admin,
           builder: user?.builder,
