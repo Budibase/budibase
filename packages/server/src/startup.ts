@@ -138,7 +138,11 @@ export async function startup(app?: Koa, server?: Server) {
             bbAdminEmail,
             bbAdminPassword,
             tenantId,
-            { hashPassword: true, requirePassword: true }
+            {
+              hashPassword: true,
+              requirePassword: true,
+              noPasswordValidation: true,
+            }
           )
           // Need to set up an API key for automated integration tests
           if (env.isTest()) {

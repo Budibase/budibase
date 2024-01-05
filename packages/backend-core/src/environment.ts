@@ -166,6 +166,8 @@ const environment = {
   DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
   BLACKLIST_IPS: process.env.BLACKLIST_IPS,
   SERVICE_TYPE: "unknown",
+  PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.
