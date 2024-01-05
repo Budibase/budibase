@@ -1,10 +1,8 @@
 <script>
   import { getContext } from "svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Block from "components/Block.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
   import InnerFormBlock from "./InnerFormBlock.svelte"
   import { Utils } from "@budibase/frontend-core"
+  import FormBlockWrapper from "./FormBlockWrapper.svelte"
 
   export let actionType
   export let dataSource
@@ -71,22 +69,10 @@
   }
 
   let schema
-  let providerId
-  let repeaterId
 
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
-  $: dataProvider = `{{ literal ${safe(providerId)} }}`
-  $: filter = [
-    {
-      field: "_id",
-      operator: "equal",
-      type: "string",
-      value: !rowId ? `{{ ${safe("url")}.${safe("id")} }}` : rowId,
-      valueType: "Binding",
-    },
-  ]
   // We could simply spread $$props into the inner form and append our
   // additions, but that would create svelte warnings about unused props and
   // make maintenance in future more confusing as we typically always have a
@@ -102,11 +88,10 @@
     title,
     description,
     schema,
-    repeaterId,
     notificationOverride,
     buttons:
       buttons ||
-      Utils.buildDynamicButtonConfig({
+      Utils.buildFormBlockButtonConfig({
         _id: $component.id,
         showDeleteButton,
         showSaveButton,
@@ -124,43 +109,6 @@
   }
 </script>
 
-<Block>
-  {#if actionType === "Create"}
-    <BlockComponent
-      type="container"
-      props={{
-        direction: "column",
-        hAlign: "left",
-        vAlign: "stretch",
-      }}
-    >
-      <InnerFormBlock {...innerProps} />
-    </BlockComponent>
-  {:else}
-    <BlockComponent
-      type="dataprovider"
-      context="provider"
-      bind:id={providerId}
-      props={{
-        dataSource,
-        filter,
-        limit: 1,
-        paginate: false,
-      }}
-    >
-      <BlockComponent
-        type="repeater"
-        context="repeater"
-        bind:id={repeaterId}
-        props={{
-          dataProvider,
-          noRowsMessage: noRowsMessage || "We couldn't find a row to display",
-          direction: "column",
-          hAlign: "center",
-        }}
-      >
-        <InnerFormBlock {...innerProps} />
-      </BlockComponent>
-    </BlockComponent>
-  {/if}
-</Block>
+<FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
+  <InnerFormBlock {...innerProps} />
+</FormBlockWrapper>
