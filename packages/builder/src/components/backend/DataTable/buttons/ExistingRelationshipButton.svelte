@@ -1,14 +1,19 @@
 <script>
   import { ActionButton, notifications } from "@budibase/bbui"
   import CreateEditRelationshipModal from "../../Datasources/CreateEditRelationshipModal.svelte"
-  import { datasources } from "../../../../stores/backend"
+  import {
+    datasources,
+    tables as tablesStore,
+  } from "../../../../stores/backend"
   import { createEventDispatcher } from "svelte"
 
   export let table
   const dispatch = createEventDispatcher()
 
   $: datasource = findDatasource(table?._id)
-  $: tables = datasource?.plus ? Object.values(datasource?.entities || {}) : []
+  $: tables = datasource?.plus
+    ? $tablesStore.list.filter(tbl => tbl.sourceId === datasource._id)
+    : []
 
   let modal
 
@@ -28,7 +33,12 @@
   }
 
   const onError = err => {
-    notifications.error(`Error saving relationship info: ${err}`)
+    if (err.err) {
+      err = err.err
+    }
+    notifications.error(
+      `Error saving relationship info: ${err?.message || JSON.stringify(err)}`
+    )
   }
 </script>
 

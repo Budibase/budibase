@@ -131,7 +131,10 @@ class RestIntegration implements IntegrationBase {
     let data, raw, headers
     const contentType = response.headers.get("content-type") || ""
     try {
-      if (contentType.includes("application/json")) {
+      if (response.status === 204) {
+        data = []
+        raw = []
+      } else if (contentType.includes("application/json")) {
         data = await response.json()
         raw = JSON.stringify(data)
       } else if (

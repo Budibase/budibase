@@ -3,8 +3,7 @@
   import IndicatorSet from "./IndicatorSet.svelte"
   import { builderStore, dndIsDragging } from "stores"
 
-  let componentId
-
+  $: componentId = $builderStore.hoverComponentId
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
 
   const onMouseOver = e => {
@@ -24,12 +23,12 @@
     }
 
     if (newId !== componentId) {
-      componentId = newId
+      builderStore.actions.hoverComponent(newId)
     }
   }
 
   const onMouseLeave = () => {
-    componentId = null
+    builderStore.actions.hoverComponent(null)
   }
 
   onMount(() => {

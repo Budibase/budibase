@@ -36,12 +36,14 @@
 
   // Determine selected component ID
   $: selectedComponentId = $store.selectedComponentId
+  $: hoverComponentId = $store.hoverComponentId
 
   $: previewData = {
     appId: $store.appId,
     layout,
     screen,
     selectedComponentId,
+    hoverComponentId,
     theme: $store.theme,
     customTheme: $store.customTheme,
     previewDevice: $store.previewDevice,
@@ -117,6 +119,8 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       $store.selectedComponentId = data.id
+    } else if (type === "hover-component" && data.id) {
+      $store.hoverComponentId = data.id
     } else if (type === "update-prop") {
       await store.actions.components.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {

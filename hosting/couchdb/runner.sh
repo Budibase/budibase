@@ -30,10 +30,18 @@ elif [[ "${TARGETBUILD}" = "single" ]]; then
     # mount, so we use that for all persistent data.
     sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
     sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
+elif [[ "${TARGETBUILD}" = "docker-compose" ]]; then
+    # We remove the database_dir and view_index_dir settings from the local.ini
+    # in docker-compose because it will default to /opt/couchdb/data which is what
+    # our docker-compose was using prior to us switching to using our own CouchDB
+    # image.
+    sed -i "s#^database_dir.*\$##g" /opt/couchdb/etc/local.ini
+    sed -i "s#^view_index_dir.*\$##g" /opt/couchdb/etc/local.ini
+    sed -i "s#^dir=.*\$#dir=/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
 elif [[ -n $KUBERNETES_SERVICE_HOST ]]; then
     # In Kubernetes the directory /opt/couchdb/data has a persistent volume
     # mount for storing database data.
-    sed -i "s#DATA_DIR#/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
+    sed -i "s#^dir=.*\$#dir=/opt/couchdb/data#g" /opt/clouseau/clouseau.ini
 
     # We remove the database_dir and view_index_dir settings from the local.ini
     # in Kubernetes because it will default to /opt/couchdb/data which is what

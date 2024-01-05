@@ -31,8 +31,8 @@ export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = context.getTenantId()
-  if (env.MULTI_TENANCY) {
+  let tenantId: string | undefined = context.getTenantId()
+  if (!env.isDev() && env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
     // e.g. in the case of viewing a public app while already logged-in to another tenant
@@ -41,7 +41,7 @@ export async function resolveAppUrl(ctx: Ctx) {
     })
   }
 
-  // search prod apps for a url that matches
+  // search prod apps for an url that matches
   const apps: App[] = await context.doInTenant(
     tenantId,
     () => getAllApps({ dev: false }) as Promise<App[]>
@@ -96,7 +96,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   }
 
   // look in the path
-  const pathId = parseAppIdFromUrl(ctx.path)
+  const pathId = parseAppIdFromUrlPath(ctx.path)
   if (!appId && pathId) {
     appId = confirmAppId(pathId)
   }
@@ -116,18 +116,21 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // referer header is present from a builder redirect
   const referer = ctx.request.headers.referer
   if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
-    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
     appId = confirmAppId(refererId)
   }
 
   return appId
 }
 
-function parseAppIdFromUrl(url?: string) {
+function parseAppIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
-  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
+  return url
+    .split("?")[0] // Remove any possible query string
+    .split("/")
+    .find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**

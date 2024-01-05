@@ -1,7 +1,9 @@
-Copyright 2019-2021, Budibase Ltd.
+Copyright 2019-2023, Budibase Ltd.
 
 Each Budibase package has its own license, please check the license file in each package.
 
 You can consider Budibase to be GPLv3 licensed overall.
 
 The apps that you build with Budibase do not package any GPLv3 licensed code, thus do not fall under those restrictions.
+
+Budibase ships with Structured Query Server, by The Neighbourhoodie Software GmbH. This license for this can be found at ./SQS_LICENSE

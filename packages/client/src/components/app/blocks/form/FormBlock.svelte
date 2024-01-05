@@ -1,31 +1,32 @@
 <script>
   import { getContext } from "svelte"
-  import BlockComponent from "components/BlockComponent.svelte"
-  import Block from "components/Block.svelte"
-  import { makePropSafe as safe } from "@budibase/string-templates"
   import InnerFormBlock from "./InnerFormBlock.svelte"
+  import { Utils } from "@budibase/frontend-core"
+  import FormBlockWrapper from "./FormBlockWrapper.svelte"
 
   export let actionType
   export let dataSource
   export let size
   export let disabled
   export let fields
+  export let buttons
+  export let buttonPosition
+
   export let title
   export let description
-  export let showDeleteButton
-  export let showSaveButton
-  export let saveButtonLabel
-  export let deleteButtonLabel
   export let rowId
   export let actionUrl
   export let noRowsMessage
   export let notificationOverride
 
-  // Accommodate old config to ensure delete button does not reappear
-  $: deleteLabel = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
-  $: saveLabel = showSaveButton === false ? "" : saveButtonLabel?.trim()
+  // Legacy
+  export let showDeleteButton
+  export let showSaveButton
+  export let saveButtonLabel
+  export let deleteButtonLabel
 
   const { fetchDatasourceSchema } = getContext("sdk")
+  const component = getContext("component")
 
   const convertOldFieldFormat = fields => {
     if (!fields) {
@@ -68,22 +69,10 @@
   }
 
   let schema
-  let providerId
-  let repeaterId
 
   $: formattedFields = convertOldFieldFormat(fields)
   $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
   $: fetchSchema(dataSource)
-  $: dataProvider = `{{ literal ${safe(providerId)} }}`
-  $: filter = [
-    {
-      field: "_id",
-      operator: "equal",
-      type: "string",
-      value: !rowId ? `{{ ${safe("url")}.${safe("id")} }}` : rowId,
-      valueType: "Binding",
-    },
-  ]
   // We could simply spread $$props into the inner form and append our
   // additions, but that would create svelte warnings about unused props and
   // make maintenance in future more confusing as we typically always have a
@@ -98,54 +87,28 @@
     fields: fieldsOrDefault,
     title,
     description,
-    saveButtonLabel: saveLabel,
-    deleteButtonLabel: deleteLabel,
     schema,
-    repeaterId,
     notificationOverride,
+    buttons:
+      buttons ||
+      Utils.buildFormBlockButtonConfig({
+        _id: $component.id,
+        showDeleteButton,
+        showSaveButton,
+        saveButtonLabel,
+        deleteButtonLabel,
+        notificationOverride,
+        actionType,
+        actionUrl,
+        dataSource,
+      }),
+    buttonPosition: buttons ? buttonPosition : "top",
   }
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }
 </script>
 
-<Block>
-  {#if actionType === "Create"}
-    <BlockComponent
-      type="container"
-      props={{
-        direction: "column",
-        hAlign: "left",
-        vAlign: "stretch",
-      }}
-    >
-      <InnerFormBlock {...innerProps} />
-    </BlockComponent>
-  {:else}
-    <BlockComponent
-      type="dataprovider"
-      context="provider"
-      bind:id={providerId}
-      props={{
-        dataSource,
-        filter,
-        limit: 1,
-        paginate: false,
-      }}
-    >
-      <BlockComponent
-        type="repeater"
-        context="repeater"
-        bind:id={repeaterId}
-        props={{
-          dataProvider,
-          noRowsMessage: noRowsMessage || "We couldn't find a row to display",
-          direction: "column",
-          hAlign: "center",
-        }}
-      >
-        <InnerFormBlock {...innerProps} />
-      </BlockComponent>
-    </BlockComponent>
-  {/if}
-</Block>
+<FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
+  <InnerFormBlock {...innerProps} />
+</FormBlockWrapper>

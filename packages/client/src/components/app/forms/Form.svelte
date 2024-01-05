@@ -35,7 +35,7 @@
   let loaded = false
   let schema
   let table
-  let currentStep = writable(getInitialFormStep())
+  let currentStep = getContext("current-step") || writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)

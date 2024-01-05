@@ -161,11 +161,8 @@ export async function preview(ctx: UserCtx) {
         auth: { ...authConfigCtx },
       },
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
-      datasourceId: datasource._id,
-    })
+    const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
     const schemaFields: any = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
@@ -259,14 +256,8 @@ async function execute(
       },
       schema: query.schema,
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
-      runFn,
-      {
-        datasourceId: datasource._id,
-      }
-    )
+    const { rows, pagination, extra, info } = (await Runner.run(inputs)) as any
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

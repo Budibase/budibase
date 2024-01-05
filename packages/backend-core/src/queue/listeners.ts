@@ -87,6 +87,7 @@ enum QueueEventType {
   APP_BACKUP_EVENT = "app-backup-event",
   AUDIT_LOG_EVENT = "audit-log-event",
   SYSTEM_EVENT = "system-event",
+  APP_MIGRATION = "app-migration",
 }
 
 const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
@@ -94,6 +95,7 @@ const EventTypeMap: { [key in JobQueue]: QueueEventType } = {
   [JobQueue.APP_BACKUP]: QueueEventType.APP_BACKUP_EVENT,
   [JobQueue.AUDIT_LOG]: QueueEventType.AUDIT_LOG_EVENT,
   [JobQueue.SYSTEM_EVENT_QUEUE]: QueueEventType.SYSTEM_EVENT,
+  [JobQueue.APP_MIGRATION]: QueueEventType.APP_MIGRATION,
 }
 
 function logging(queue: Queue, jobQueue: JobQueue) {
