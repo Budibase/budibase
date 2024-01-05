@@ -510,9 +510,7 @@ const isContextCompatibleWithComponent = (context, component) => {
   return true
 }
 
-/**
- * Determines the correct category for a given binding.
- */
+// Enrich binding category information for certain components
 const getComponentBindingCategory = (component, context, def) => {
   // Default category to component name
   let icon = def.icon
@@ -520,14 +518,13 @@ const getComponentBindingCategory = (component, context, def) => {
 
   // Form block edge case
   if (component._component.endsWith("formblock")) {
-    let contextCategorySuffix = {
-      form: "Fields",
-      schema: "Row",
+    if (context.type === "form") {
+      category = `${component._instanceName} - Fields`
+      icon = "Form"
+    } else if (context.type === "schema") {
+      category = `${component._instanceName} - Row`
+      icon = "Data"
     }
-    category = `${component._instanceName} - ${
-      contextCategorySuffix[context.type]
-    }`
-    icon = context.type === "form" ? "Form" : "Data"
   }
 
   return {

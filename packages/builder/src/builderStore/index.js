@@ -8,6 +8,7 @@ import { derived, get } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
+import { cloneDeep } from "lodash/fp"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
@@ -69,7 +70,14 @@ export const selectedComponent = derived(
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }
-    return findComponent($selectedScreen?.props, $store.selectedComponentId)
+    const selected = findComponent(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    )
+
+    const clone = selected ? cloneDeep(selected) : selected
+    store.actions.components.migrateSettings(clone)
+    return clone
   }
 )
 

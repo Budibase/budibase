@@ -17,7 +17,6 @@ import {
   basicWebhook,
 } from "./structures"
 import {
-  auth,
   cache,
   constants,
   context,
@@ -218,20 +217,45 @@ class TestConfiguration {
    */
   setEnv(newEnvVars: Partial<typeof env>): () => void {
     const oldEnv = cloneDeep(env)
-    const oldCoreEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
       env._set(key, newEnvVars[key])
-      coreEnv._set(key, newEnvVars[key])
     }
 
     return () => {
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
       }
+    }
+  }
 
-      for (const [key, value] of Object.entries(oldCoreEnv)) {
+  async withCoreEnv(
+    newEnvVars: Partial<typeof coreEnv>,
+    f: () => Promise<void>
+  ) {
+    let cleanup = this.setCoreEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
+    const oldEnv = cloneDeep(env)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      coreEnv._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
         coreEnv._set(key, value)
       }
     }

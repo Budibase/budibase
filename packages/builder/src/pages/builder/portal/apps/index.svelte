@@ -1,6 +1,5 @@
 <script>
   import {
-    banner,
     Heading,
     Layout,
     Button,
@@ -11,7 +10,6 @@
     Notification,
     Body,
     Search,
-    BANNER_TYPES,
   } from "@budibase/bbui"
   import Spinner from "components/common/Spinner.svelte"
   import CreateAppModal from "components/start/CreateAppModal.svelte"
@@ -199,20 +197,6 @@
       }
       if (usersLimitLockAction) {
         usersLimitLockAction()
-      }
-      if (!$admin.isDev) {
-        await banner.show({
-          messages: [
-            {
-              message:
-                "We've updated our pricing - see our website to learn more.",
-              type: BANNER_TYPES.NEUTRAL,
-              extraButtonText: "Learn More",
-              extraButtonAction: () =>
-                window.open("https://budibase.com/pricing"),
-            },
-          ],
-        })
       }
     } catch (error) {
       notifications.error("Error getting init info")

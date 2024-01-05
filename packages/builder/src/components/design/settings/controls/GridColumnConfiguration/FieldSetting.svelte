@@ -49,7 +49,15 @@
     <div class="field-label">{item.label || item.field}</div>
   </div>
   <div class="list-item-right">
-    <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
+    <Toggle
+      on:click={e => {
+        e.stopPropagation()
+      }}
+      on:change={onToggle(item)}
+      text=""
+      value={item.active}
+      thin
+    />
   </div>
 </div>
 

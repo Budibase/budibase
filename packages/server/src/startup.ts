@@ -19,11 +19,15 @@ import * as pro from "@budibase/pro"
 import * as api from "./api"
 import sdk from "./sdk"
 import { initialise as initialiseWebsockets } from "./websockets"
-import { automationsEnabled } from "./features"
+import { automationsEnabled, printFeatures } from "./features"
+import Koa from "koa"
+import { Server } from "http"
+import { AddressInfo } from "net"
+import * as jsRunner from "./jsRunner"
 
 let STARTUP_RAN = false
 
-async function initRoutes(app: any) {
+async function initRoutes(app: Koa) {
   if (!env.isTest()) {
     const plugin = await bullboard.init()
     app.use(plugin)
@@ -48,27 +52,31 @@ async function initPro() {
   })
 }
 
-function shutdown(server?: any) {
+function shutdown(server?: Server) {
   if (server) {
     server.close()
     server.destroy()
   }
 }
 
-export async function startup(app?: any, server?: any) {
+export async function startup(app?: Koa, server?: Server) {
   if (STARTUP_RAN) {
     return
   }
+  printFeatures()
   STARTUP_RAN = true
-  if (server && !env.CLUSTER_MODE) {
+  if (app && server && !env.CLUSTER_MODE) {
     console.log(`Budibase running on ${JSON.stringify(server.address())}`)
-    env._set("PORT", server.address().port)
+    const address = server.address() as AddressInfo
+    env._set("PORT", address.port)
   }
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
   eventInit()
-  initialiseWebsockets(app, server)
+  if (app && server) {
+    initialiseWebsockets(app, server)
+  }
 
   // run migrations on startup if not done via http
   // not recommended in a clustered environment
@@ -145,4 +153,6 @@ export async function startup(app?: any, server?: any) {
       }
     })
   }
+
+  jsRunner.init()
 }
