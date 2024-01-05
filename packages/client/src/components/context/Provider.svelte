@@ -1,9 +1,8 @@
 <script>
   import { getContext, setContext, onDestroy } from "svelte"
   import { dataSourceStore, createContextStore } from "stores"
-  import { ActionTypes } from "constants"
+  import { ActionTypes, ContextScopes } from "constants"
   import { generate } from "shortid"
-  import { ContextScopes } from "constants"
 
   export let data
   export let actions
