@@ -47,16 +47,12 @@
       { label: "False", value: "false" },
     ]}
   />
-{:else if schema.type === "array"}
-  {#if schemaHasOptions(schema)}
-    <Multiselect
-      bind:value={value[field]}
-      options={schema.constraints.inclusion}
-      on:change={e => onChange(e, field)}
-    />
-  {:else}
-    <Input bind:value={value[field]} on:change={e => onChange(e, field)} />
-  {/if}
+{:else if schemaHasOptions(schema) && schema.type === "array"}
+  <Multiselect
+    bind:value={value[field]}
+    options={schema.constraints.inclusion}
+    on:change={e => onChange(e, field)}
+  />
 {:else if schema.type === "longform"}
   <TextArea bind:value={value[field]} on:change={e => onChange(e, field)} />
 {:else if schema.type === "json"}
@@ -87,7 +83,7 @@
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if ["string", "number", "bigint", "barcodeqr"].includes(schema.type)}
+{:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}
