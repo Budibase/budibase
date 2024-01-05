@@ -423,10 +423,14 @@
     }
     const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)
-    fieldElement.focus({ preventScroll: true })
+    if (fieldElement) {
+      fieldElement.focus({ preventScroll: true })
+    }
     const label = document.querySelector(`label[for="${fieldId}"]`)
-    label.style.scrollMargin = "100px"
-    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    if (label) {
+      label.style.scrollMargin = "100px"
+      label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }
   }
 
   // Action context to pass to children

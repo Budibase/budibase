@@ -1,7 +1,7 @@
-import { env } from ".."
+import env from "../environment"
 
-export const PASSWORD_MIN_LENGTH = +(process.env.PASSWORD_MIN_LENGTH || 8)
-export const PASSWORD_MAX_LENGTH = +(process.env.PASSWORD_MAX_LENGTH || 512)
+export const PASSWORD_MIN_LENGTH = +(env.PASSWORD_MIN_LENGTH || 8)
+export const PASSWORD_MAX_LENGTH = +(env.PASSWORD_MAX_LENGTH || 512)
 
 export function validatePassword(
   password: string
