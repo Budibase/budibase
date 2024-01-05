@@ -23,7 +23,6 @@ import {
   getComponentSettings,
   makeComponentUnique,
   findComponentPath,
-  findComponentType,
 } from "../componentUtils"
 import { Helpers } from "@budibase/bbui"
 import { Utils } from "@budibase/frontend-core"
