@@ -45,7 +45,7 @@ export async function getConnector(
 ): Promise<IntegrationBase | DatasourcePlus> {
   const Connector = await getIntegration(datasource.source)
 
-  datasource = await getAndMergeDatasource(datasource)
+  datasource = await mergeAndEnrich(datasource)
 
   // can't enrich if it doesn't have an ID yet
   if (datasource._id) {
@@ -55,17 +55,11 @@ export async function getConnector(
   return new Connector(datasource.config)
 }
 
-async function getAndMergeDatasource(datasource: Datasource) {
-  let existingDatasource: undefined | Datasource
+async function mergeAndEnrich(datasource: Datasource) {
   if (datasource._id) {
-    existingDatasource = await datasources.get(datasource._id)
+    const existingDatasource = await datasources.get(datasource._id)
+
+    datasource = datasources.mergeConfigs(datasource, existingDatasource)
   }
-  let enrichedDatasource = datasource
-  if (existingDatasource) {
-    enrichedDatasource = datasources.mergeConfigs(
-      datasource,
-      existingDatasource
-    )
-  }
-  return await datasources.enrich(enrichedDatasource)
+  return await datasources.enrich(datasource)
 }
