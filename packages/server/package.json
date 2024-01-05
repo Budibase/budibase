@@ -72,6 +72,7 @@
     "google-auth-library": "7.12.0",
     "google-spreadsheet": "3.2.0",
     "ioredis": "5.3.2",
+    "isolated-vm": "^4.6.0",
     "jimp": "0.16.1",
     "joi": "17.6.0",
     "js-yaml": "4.1.0",
@@ -106,7 +107,6 @@
     "to-json-schema": "0.2.5",
     "uuid": "3.3.2",
     "validate.js": "0.13.1",
-    "vm2": "^3.9.19",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0"
   },

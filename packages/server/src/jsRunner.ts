@@ -1,4 +1,5 @@
 import vm from "vm"
+import ivm from "isolated-vm"
 import env from "./environment"
 import { setJSRunner } from "@budibase/string-templates"
 import { context, timers } from "@budibase/backend-core"
@@ -31,18 +32,31 @@ export function init() {
         }
       }
 
-      ctx = {
-        ...ctx,
-        alert: undefined,
-        setInterval: undefined,
-        setTimeout: undefined,
+      const isolate = new ivm.Isolate({ memoryLimit: 64 })
+      const vm = isolate.createContextSync()
+      const jail = vm.global
+      jail.setSync("global", jail.derefInto())
+
+      for (let key in ctx) {
+        let value
+        if (["alert", "setInterval", "setTimeout"].includes(key)) {
+          value = undefined
+        } else {
+          value = ctx[key]
+        }
+        jail.setSync(
+          key,
+          new ivm.ExternalCopy(value).copyInto({ release: true })
+        )
       }
-      vm.createContext(ctx)
-      return track(() =>
-        vm.runInNewContext(js, ctx, {
+
+      const script = isolate.compileScriptSync(js)
+
+      return track(() => {
+        return script.runSync(vm, {
           timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
         })
-      )
+      })
     })
   })
 }
