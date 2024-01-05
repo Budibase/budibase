@@ -159,7 +159,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
   JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
   JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-  WHERE pg_namespace.nspname = '${this.config.schema}';
+  WHERE pg_namespace.nspname = ANY(current_schemas(false))
+  AND pg_table_is_visible(pg_class.oid);
   `
 
   ENUM_VALUES = () => `
@@ -219,8 +220,12 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    await this.client.query(`SET search_path TO "${this.config.schema}"`)
-    this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+    const search_path = this.config.schema
+      .split(",")
+      .map(item => `"${item.trim()}"`)
+    await this.client.query(`SET search_path TO ${search_path.join(",")};`)
+    this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = ANY(current_schemas(false))
+    AND pg_table_is_visible(to_regclass(table_schema || '.' || table_name));`
     this.open = true
   }
 
