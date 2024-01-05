@@ -141,7 +141,7 @@ export async function startup(app?: Koa, server?: Server) {
             {
               hashPassword: true,
               requirePassword: true,
-              noPasswordValidation: true,
+              skipPasswordValidation: true,
             }
           )
           // Need to set up an API key for automated integration tests
