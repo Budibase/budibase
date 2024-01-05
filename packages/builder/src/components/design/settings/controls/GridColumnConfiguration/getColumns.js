@@ -114,7 +114,7 @@ const getColumns = ({
     primary,
     sortable,
     updateSortable: newDraggableList => {
-      onChange(toGridFormat(newDraggableList.concat(primary)))
+      onChange(toGridFormat(newDraggableList.concat(primary || [])))
     },
     update: newEntry => {
       const newDraggableList = draggableList.map(entry => {
