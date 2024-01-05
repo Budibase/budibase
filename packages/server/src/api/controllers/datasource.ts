@@ -14,10 +14,7 @@ import {
   DatasourcePlus,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
-  IntegrationBase,
-  Schema,
   SourceName,
-  Table,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
@@ -28,62 +25,6 @@ import { builderSocket } from "../../websockets"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
 import { isEqual } from "lodash"
 
-async function getConnector(
-  datasource: Datasource
-): Promise<IntegrationBase | DatasourcePlus> {
-  const Connector = await getIntegration(datasource.source)
-  // can't enrich if it doesn't have an ID yet
-  if (datasource._id) {
-    datasource = await sdk.datasources.enrich(datasource)
-  }
-  // Connect to the DB and build the schema
-  return new Connector(datasource.config)
-}
-
-async function getAndMergeDatasource(datasource: Datasource) {
-  let existingDatasource: undefined | Datasource
-  if (datasource._id) {
-    existingDatasource = await sdk.datasources.get(datasource._id)
-  }
-  let enrichedDatasource = datasource
-  if (existingDatasource) {
-    enrichedDatasource = sdk.datasources.mergeConfigs(
-      datasource,
-      existingDatasource
-    )
-  }
-  return await sdk.datasources.enrich(enrichedDatasource)
-}
-
-async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
-  const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(datasource._id!, datasource.entities!)
-}
-
-async function buildFilteredSchema(
-  datasource: Datasource,
-  filter?: string[]
-): Promise<Schema> {
-  const schema = await buildSchemaHelper(datasource)
-  if (!filter) {
-    return schema
-  }
-
-  let filteredSchema: Schema = { tables: {}, errors: {} }
-  for (let key in schema.tables) {
-    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-      filteredSchema.tables[key] = schema.tables[key]
-    }
-  }
-
-  for (let key in schema.errors) {
-    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-      filteredSchema.errors[key] = schema.errors[key]
-    }
-  }
-  return filteredSchema
-}
-
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
 }
@@ -92,8 +33,7 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = await getConnector(enrichedDatasource)
+  const connector = await sdk.datasources.getConnector(datasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
@@ -109,8 +49,9 @@ export async function information(
   ctx: UserCtx<FetchDatasourceInfoRequest, FetchDatasourceInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = (await getConnector(enrichedDatasource)) as DatasourcePlus
+  const connector = (await sdk.datasources.getConnector(
+    datasource
+  )) as DatasourcePlus
   if (!connector.getTableNames) {
     ctx.throw(400, "Table name fetching not supported by datasource")
   }
@@ -125,7 +66,10 @@ export async function buildSchemaFromDb(ctx: UserCtx) {
   const tablesFilter = ctx.request.body.tablesFilter
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
+  const { tables, errors } = await sdk.datasources.buildFilteredSchema(
+    datasource,
+    tablesFilter
+  )
   datasource.entities = tables
 
   setDefaultDisplayColumns(datasource)
@@ -277,7 +221,10 @@ export async function save(
 
   let errors: Record<string, string> = {}
   if (fetchSchema) {
-    const schema = await buildFilteredSchema(datasource, tablesFilter)
+    const schema = await sdk.datasources.buildFilteredSchema(
+      datasource,
+      tablesFilter
+    )
     datasource.entities = schema.tables
     setDefaultDisplayColumns(datasource)
     errors = schema.errors
@@ -381,8 +328,7 @@ export async function query(ctx: UserCtx) {
 
 export async function getExternalSchema(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = await getConnector(enrichedDatasource)
+  const connector = await sdk.datasources.getConnector(datasource)
 
   if (!connector.getExternalSchema) {
     ctx.throw(400, "Datasource does not support exporting external schema")
