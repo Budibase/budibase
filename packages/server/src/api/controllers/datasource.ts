@@ -33,7 +33,10 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  const connector = await sdk.datasources.getConnector(datasource)
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
+    datasource
+  )
+  const connector = await sdk.datasources.getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
@@ -49,8 +52,11 @@ export async function information(
   ctx: UserCtx<FetchDatasourceInfoRequest, FetchDatasourceInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  const connector = (await sdk.datasources.getConnector(
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
     datasource
+  )
+  const connector = (await sdk.datasources.getConnector(
+    enrichedDatasource
   )) as DatasourcePlus
   if (!connector.getTableNames) {
     ctx.throw(400, "Table name fetching not supported by datasource")
@@ -328,7 +334,10 @@ export async function query(ctx: UserCtx) {
 
 export async function getExternalSchema(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
-  const connector = await sdk.datasources.getConnector(datasource)
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
+    datasource
+  )
+  const connector = await sdk.datasources.getConnector(enrichedDatasource)
 
   if (!connector.getExternalSchema) {
     ctx.throw(400, "Datasource does not support exporting external schema")
