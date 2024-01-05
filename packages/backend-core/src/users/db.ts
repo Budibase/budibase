@@ -48,7 +48,7 @@ type CreateAdminUserOpts = {
   ssoId?: string
   hashPassword?: boolean
   requirePassword?: boolean
-  noPasswordValidation?: boolean
+  skipPasswordValidation?: boolean
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
@@ -118,7 +118,7 @@ export class UserDB {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
 
-      if (!opts.noPasswordValidation) {
+      if (!opts.skipPasswordValidation) {
         const passwordValidation = validatePassword(password)
         if (!passwordValidation.valid) {
           throw new HTTPError(passwordValidation.error, 400)
@@ -521,7 +521,7 @@ export class UserDB {
     return await UserDB.save(user, {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
-      noPasswordValidation: opts?.noPasswordValidation,
+      skipPasswordValidation: opts?.skipPasswordValidation,
     })
   }
 
