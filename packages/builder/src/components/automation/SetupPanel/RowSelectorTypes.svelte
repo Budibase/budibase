@@ -1,5 +1,11 @@
 <script>
-  import { Select, DatePicker, Multiselect, TextArea } from "@budibase/bbui"
+  import {
+    Select,
+    DatePicker,
+    Multiselect,
+    TextArea,
+    Input,
+  } from "@budibase/bbui"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
@@ -42,11 +48,15 @@
     ]}
   />
 {:else if schema.type === "array"}
-  <Multiselect
-    bind:value={value[field]}
-    options={schema.constraints.inclusion}
-    on:change={e => onChange(e, field)}
-  />
+  {#if schemaHasOptions(schema)}
+    <Multiselect
+      bind:value={value[field]}
+      options={schema.constraints.inclusion}
+      on:change={e => onChange(e, field)}
+    />
+  {:else}
+    <Input bind:value={value[field]} on:change={e => onChange(e, field)} />
+  {/if}
 {:else if schema.type === "longform"}
   <TextArea bind:value={value[field]} on:change={e => onChange(e, field)} />
 {:else if schema.type === "json"}
