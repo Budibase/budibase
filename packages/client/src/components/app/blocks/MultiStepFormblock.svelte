@@ -14,6 +14,7 @@
 
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
 
   // Set current step context to force child form to use it
   const currentStep = writable(1)
@@ -157,18 +158,23 @@
             <BlockComponent type="heading" props={{ text: step.title }} />
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
-          <BlockComponent type="fieldgroup" order={2}>
-            {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
-              {#if getComponentForField(field)}
-                <BlockComponent
-                  type={getComponentForField(field)}
-                  props={getPropsForField(field)}
-                  order={fieldIdx}
-                  interactive
-                  name={field.field}
-                />
-              {/if}
-            {/each}
+          <BlockComponent type="container" order={2}>
+            <div
+              class="form-block fields"
+              class:mobile={$context.device.mobile}
+            >
+              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
+                {#if getComponentForField(field)}
+                  <BlockComponent
+                    type={getComponentForField(field)}
+                    props={getPropsForField(field)}
+                    order={fieldIdx}
+                    interactive
+                    name={field.field}
+                  />
+                {/if}
+              {/each}
+            </div>
           </BlockComponent>
           <BlockComponent
             type="buttongroup"
@@ -185,3 +191,14 @@
     {/each}
   </BlockComponent>
 </FormBlockWrapper>
+
+<style>
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px 16px;
+  }
+  .fields.mobile :global(.spectrum-Form-item) {
+    grid-column: span 6 !important;
+  }
+</style>
