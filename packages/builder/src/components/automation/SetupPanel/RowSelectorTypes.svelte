@@ -1,11 +1,5 @@
 <script>
-  import {
-    Select,
-    DatePicker,
-    Multiselect,
-    TextArea,
-    Input,
-  } from "@budibase/bbui"
+  import { Select, DatePicker, Multiselect, TextArea } from "@budibase/bbui"
   import LinkedRowSelector from "components/common/LinkedRowSelector.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import ModalBindableInput from "../../common/bindings/ModalBindableInput.svelte"
