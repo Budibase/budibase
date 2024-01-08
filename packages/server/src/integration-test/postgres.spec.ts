@@ -1118,4 +1118,76 @@ describe("postgres integrations", () => {
       })
     })
   })
+
+  describe("Integration compatibility with postgres search_path", () => {
+    let client: Client, pathDatasource: Datasource
+    const schema1 = "test1",
+      schema2 = "test-2"
+
+    beforeAll(async () => {
+      const dsConfig = await databaseTestProviders.postgres.getDsConfig()
+      const dbConfig = dsConfig.config!
+
+      client = new Client(dbConfig)
+      await client.connect()
+      await client.query(`CREATE SCHEMA "${schema1}";`)
+      await client.query(`CREATE SCHEMA "${schema2}";`)
+
+      const pathConfig: any = {
+        ...dsConfig,
+        config: {
+          ...dbConfig,
+          schema: `${schema1}, ${schema2}`,
+        },
+      }
+      pathDatasource = await config.api.datasource.create(pathConfig)
+    })
+
+    afterAll(async () => {
+      await client.query(`DROP SCHEMA "${schema1}" CASCADE;`)
+      await client.query(`DROP SCHEMA "${schema2}" CASCADE;`)
+      await client.end()
+    })
+
+    it("discovers tables from any schema in search path", async () => {
+      await client.query(
+        `CREATE TABLE "${schema1}".table1 (id1 SERIAL PRIMARY KEY);`
+      )
+      await client.query(
+        `CREATE TABLE "${schema2}".table2 (id2 SERIAL PRIMARY KEY);`
+      )
+      const response = await makeRequest("post", "/api/datasources/info", {
+        datasource: pathDatasource,
+      })
+      expect(response.status).toBe(200)
+      expect(response.body.tableNames).toBeDefined()
+      expect(response.body.tableNames).toEqual(
+        expect.arrayContaining(["table1", "table2"])
+      )
+    })
+
+    it("does not mix columns from different tables", async () => {
+      const repeated_table_name = "table_same_name"
+      await client.query(
+        `CREATE TABLE "${schema1}".${repeated_table_name} (id SERIAL PRIMARY KEY, val1 TEXT);`
+      )
+      await client.query(
+        `CREATE TABLE "${schema2}".${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
+      )
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${pathDatasource._id}/schema`,
+        {
+          tablesFilter: [repeated_table_name],
+        }
+      )
+      expect(response.status).toBe(200)
+      expect(
+        response.body.datasource.entities[repeated_table_name].schema
+      ).toBeDefined()
+      const schema =
+        response.body.datasource.entities[repeated_table_name].schema
+      expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
+    })
+  })
 })
