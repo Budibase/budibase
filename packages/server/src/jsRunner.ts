@@ -12,10 +12,13 @@ export function init() {
       const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
       let track: TrackerFn = f => f()
       if (perRequestLimit) {
-        tracer.trace("runJS.setupTracker", {}, span => {
+        tracer.trace<any>("runJS.setupTracker", {}, span => {
           const bbCtx = context.getCurrentContext()
           if (bbCtx) {
             if (!bbCtx.jsExecutionTracker) {
+              span?.addTags({
+                createdExecutionTracker: true,
+              })
               bbCtx.jsExecutionTracker =
                 timers.ExecutionTimeTracker.withLimit(perRequestLimit)
             }
