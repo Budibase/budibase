@@ -1,4 +1,5 @@
 import ClientApp from "./components/ClientApp.svelte"
+import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
   builderStore,
   appStore,
@@ -51,6 +52,13 @@ const loadBudibase = async () => {
   appStore.actions.setAppEmbedded(
     window["##BUDIBASE_APP_EMBEDDED##"] === "true"
   )
+
+  if (window.MIGRATING_APP) {
+    new UpdatingApp({
+      target: window.document.body,
+    })
+    return
+  }
 
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
