@@ -15,6 +15,7 @@
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
+    "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
