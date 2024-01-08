@@ -8,6 +8,7 @@
       "cardsblock",
       "repeaterblock",
       "formblock",
+      "multistepformblock",
       "chartblock",
       "rowexplorer"
     ]

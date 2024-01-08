@@ -109,4 +109,10 @@ spec:
       {{- toYaml .Values.services.proxy.args | nindent 8 }}
       {{ end }}
       volumes:
+      {{ if .Values.services.proxy.ndots }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.services.proxy.ndots | quote }}
+      {{ end }}
 status: {}
