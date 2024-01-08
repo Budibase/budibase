@@ -1,5 +1,5 @@
 <script>
-  import { API } from "api"
+  import { API } from "../api"
 
   export let onMigrationDone
   export let timeoutSeconds = 3 * 60 // 3 minutes
