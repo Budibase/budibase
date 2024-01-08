@@ -81,7 +81,6 @@
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "4.14.200",
-    "@types/node": "18.17.0",
     "@types/node-fetch": "2.6.4",
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",

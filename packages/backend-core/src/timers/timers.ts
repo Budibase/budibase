@@ -50,7 +50,7 @@ export class ExecutionTimeTracker {
     return this.totalTimeMs
   }
 
-  private checkLimit() {
+  checkLimit() {
     if (this.totalTimeMs > this.limitMs) {
       throw new ExecutionTimeoutError(
         `Execution time limit of ${this.limitMs}ms exceeded: ${this.totalTimeMs}ms`
