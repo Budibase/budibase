@@ -30,6 +30,7 @@ async function init() {
     ENABLE_EMAIL_TEST_MODE: "1",
     HTTP_LOGGING: "0",
     VERSION: "0.0.0+local",
+    PASSWORD_MIN_LENGTH: "1",
   }
 
   config = { ...config, ...existingConfig }

@@ -2,7 +2,6 @@ import Redlock from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
-import { logWarn } from "../logging"
 import { utils } from "@budibase/shared-core"
 import { Duration } from "../utils"
 

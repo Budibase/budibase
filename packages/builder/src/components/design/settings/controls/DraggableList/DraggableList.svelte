@@ -13,6 +13,8 @@
   export let draggable = true
   export let focus
 
+  let zoneType = generate()
+
   let store = writable({
     selected: null,
     actions: {
@@ -46,6 +48,7 @@
         return {
           id: listItemKey ? item[listItemKey] : generate(),
           item,
+          type: zoneType,
         }
       })
       .filter(item => item.id)
@@ -83,6 +86,8 @@
     items: draggableItems,
     dropTargetStyle: { outline: "none" },
     dragDisabled: !draggable || inactive,
+    type: zoneType,
+    dropFromOthersDisabled: true,
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
