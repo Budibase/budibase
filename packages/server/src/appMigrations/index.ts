@@ -17,7 +17,7 @@ export const getLatestMigrationId = () =>
     .sort()
     .reverse()[0]
 
-const getTimestamp = (versionId: string) => versionId?.split("_")[0]
+const getTimestamp = (versionId: string) => versionId?.split("_")[0] || ""
 
 export async function checkMissingMigrations(
   ctx: UserCtx,
