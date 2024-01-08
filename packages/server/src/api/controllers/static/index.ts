@@ -135,9 +135,14 @@ const requiresMigration = async (ctx: Ctx) => {
     ctx.throw("AppId could not be found")
   }
 
-  const latestAppliedMigration = await getAppMigrationVersion(appId)
+  const latestMigration = getLatestMigrationId()
+  if (!latestMigration) {
+    return false
+  }
 
-  const requiresMigrations = latestAppliedMigration !== getLatestMigrationId()
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+
+  const requiresMigrations = latestMigrationApplied !== latestMigration
   return requiresMigrations
 }
 
