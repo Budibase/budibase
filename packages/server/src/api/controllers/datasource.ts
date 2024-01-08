@@ -1,9 +1,4 @@
-import {
-  DocumentType,
-  generateDatasourceID,
-  getQueryParams,
-  getTableParams,
-} from "../../db/utils"
+import { getQueryParams, getTableParams } from "../../db/utils"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
@@ -24,7 +19,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
 import { isEqual } from "lodash"
 
 export async function fetch(ctx: UserCtx) {
@@ -209,54 +203,18 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   }
 }
 
-const preSaveAction: Partial<Record<SourceName, any>> = {
-  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
-    await googleSetupCreationAuth(datasource.config as any)
-  },
-}
-
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const db = context.getAppDB()
-  const plus = ctx.request.body.datasource.plus
-  const fetchSchema = ctx.request.body.fetchSchema
-  const tablesFilter = ctx.request.body.tablesFilter
-
-  const datasource = {
-    _id: generateDatasourceID({ plus }),
-    ...ctx.request.body.datasource,
-    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
-  }
-
-  let errors: Record<string, string> = {}
-  if (fetchSchema) {
-    const schema = await sdk.datasources.buildFilteredSchema(
-      datasource,
-      tablesFilter
-    )
-    datasource.entities = schema.tables
-    setDefaultDisplayColumns(datasource)
-    errors = schema.errors
-  }
-
-  if (preSaveAction[datasource.source]) {
-    await preSaveAction[datasource.source](datasource)
-  }
-
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.created(datasource)
-  datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
+  const {
+    datasource: datasourceData,
+    fetchSchema,
+    tablesFilter,
+  } = ctx.request.body
+  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+    fetchSchema,
+    tablesFilter,
+  })
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
