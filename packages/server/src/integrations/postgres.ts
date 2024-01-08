@@ -362,8 +362,8 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         })
       }
 
-      let finalizedTables = finaliseExternalTables(tables, entities)
-      let errors = checkExternalTables(finalizedTables)
+      const finalizedTables = finaliseExternalTables(tables, entities)
+      const errors = checkExternalTables(finalizedTables)
       return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
