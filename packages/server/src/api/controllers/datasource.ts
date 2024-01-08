@@ -8,6 +8,8 @@ import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
+  BuildSchemaFromSourceRequest,
+  BuildSchemaFromSourceResponse,
   CreateDatasourceRequest,
   CreateDatasourceResponse,
   Datasource,
@@ -67,7 +69,9 @@ export async function information(
   }
 }
 
-export async function buildSchemaFromDb(ctx: UserCtx) {
+export async function buildSchemaFromDb(
+  ctx: UserCtx<BuildSchemaFromSourceRequest, BuildSchemaFromSourceResponse>
+) {
   const db = context.getAppDB()
   const tablesFilter = ctx.request.body.tablesFilter
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
