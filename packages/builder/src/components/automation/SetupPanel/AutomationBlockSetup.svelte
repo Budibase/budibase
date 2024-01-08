@@ -51,7 +51,7 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
-  $: console.log(inputData)
+
   let webhookModal
   let drawer
   let fillWidth = true
