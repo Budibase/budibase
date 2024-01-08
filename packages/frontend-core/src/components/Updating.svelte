@@ -29,16 +29,25 @@
   function migrationTimeout() {
     timedOut = true
   }
-
-  $: text = !timedOut ? "System update" : "Something went wrong!"
-  $: subtext = !timedOut
-    ? "Please wait and we will be back in a second!"
-    : "An error occurred, please try again later"
 </script>
 
 <div class="loading" class:timeout={timedOut}>
-  <span class="header">{text}</span>
-  <span class="subtext">{subtext}</span>
+  <span class="header">
+    {#if !timedOut}
+      System update
+    {:else}
+      Something went wrong!
+    {/if}
+  </span>
+  <span class="subtext">
+    {#if !timedOut}
+      Please wait and we will be back in a second!
+    {:else}
+      An error occurred, please try again later.
+      <br />
+      Contact support if the issue persists.
+    {/if}</span
+  >
 </div>
 
 <style>
