@@ -1,4 +1,4 @@
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, events } from "@budibase/backend-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
@@ -14,16 +14,22 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
-import { getDefinitions, getDefinition } from "../../../integrations"
+import {
+  getDefinitions,
+  getDefinition,
+  getIntegration,
+} from "../../../integrations"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
+  generateDatasourceID,
   getDatasourceParams,
   getDatasourcePlusParams,
   getTableParams,
+  DocumentType,
 } from "../../../db/utils"
 import sdk from "../../index"
-import datasource from "../../../api/routes/datasource"
+import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrations/googlesheets"
 
 const ENV_VAR_PREFIX = "env."
 
@@ -272,4 +278,76 @@ export async function getExternalDatasources(): Promise<Datasource[]> {
   )
 
   return externalDatasources.rows.map(r => r.doc!)
+}
+
+export async function save(
+  datasource: Datasource,
+  opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
+): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  const db = context.getAppDB()
+  const plus = datasource.plus
+
+  const fetchSchema = opts?.fetchSchema || false
+  const tablesFilter = opts?.tablesFilter || []
+
+  datasource = {
+    _id: generateDatasourceID({ plus }),
+    ...datasource,
+    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
+  }
+
+  let errors: Record<string, string> = {}
+  if (fetchSchema) {
+    const schema = await sdk.datasources.buildFilteredSchema(
+      datasource,
+      tablesFilter
+    )
+    datasource.entities = schema.tables
+    setDefaultDisplayColumns(datasource)
+    errors = schema.errors
+  }
+
+  if (preSaveAction[datasource.source]) {
+    await preSaveAction[datasource.source](datasource)
+  }
+
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
+  await events.datasource.created(datasource)
+  datasource._rev = dbResp.rev
+
+  // Drain connection pools when configuration is changed
+  if (datasource.source) {
+    const source = await getIntegration(datasource.source)
+    if (source && source.pool) {
+      await source.pool.end()
+    }
+  }
+
+  return { datasource, errors }
+}
+
+const preSaveAction: Partial<Record<SourceName, any>> = {
+  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
+    await googleSetupCreationAuth(datasource.config as any)
+  },
+}
+
+/**
+ * Make sure all datasource entities have a display name selected
+ */
+function setDefaultDisplayColumns(datasource: Datasource) {
+  //
+  for (let entity of Object.values(datasource.entities || {})) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
 }
