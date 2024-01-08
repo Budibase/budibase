@@ -45,7 +45,9 @@
     {:else}
       An error occurred, please try again later.
       <br />
-      Contact support if the issue persists.
+      Contact
+      <a href="https://budibase.com/support/" target="_blank">support</a> if the
+      issue persists.
     {/if}</span
   >
 </div>
@@ -69,5 +71,10 @@
   .subtext {
     font-size: 16px;
     color: var(--grey-7);
+  }
+
+  .subtext a {
+    color: var(--grey-7);
+    font-weight: 700;
   }
 </style>
