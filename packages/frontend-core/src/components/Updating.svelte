@@ -1,18 +1,17 @@
 <script>
-  import * as API from "../api"
-
+  export let isMigrationDone
   export let onMigrationDone
-  export let timeoutSeconds = 3 * 60 // 3 minutes
+  export let timeoutSeconds = 10 // 3 minutes
 
   const loadTime = Date.now()
   let timedOut = false
 
   async function checkMigrationsFinished() {
     setTimeout(async () => {
-      const response = await API.getMigrationStatus()
+      const isMigrated = await isMigrationDone()
 
       const timeoutMs = timeoutSeconds * 1000
-      if (!response.migrated) {
+      if (!isMigrated) {
         if (loadTime + timeoutMs > Date.now()) {
           return checkMigrationsFinished()
         }
