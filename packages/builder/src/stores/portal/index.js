@@ -16,5 +16,6 @@ export { environment } from "./environment"
 export { menu } from "./menu"
 export { auditLogs } from "./auditLogs"
 export { features } from "./features"
+export { navigation } from "./navigation"
 
 export const sideBarCollapsed = writable(false)
