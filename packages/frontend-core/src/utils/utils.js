@@ -116,7 +116,7 @@ export const domDebounce = callback => {
  *
  * @param {any} props
  * */
-export const buildDynamicButtonConfig = props => {
+export const buildFormBlockButtonConfig = props => {
   const {
     _id,
     actionType,
@@ -130,7 +130,6 @@ export const buildDynamicButtonConfig = props => {
   } = props || {}
 
   if (!_id) {
-    console.log("MISSING ID")
     return
   }
   const formId = `${_id}-form`
@@ -228,7 +227,7 @@ export const buildDynamicButtonConfig = props => {
     })
   }
 
-  if (actionType == "Update" && showDeleteButton !== false) {
+  if (actionType === "Update" && showDeleteButton !== false) {
     defaultButtons.push({
       text: deleteText || "Delete",
       _id: Helpers.uuid(),
@@ -240,4 +239,109 @@ export const buildDynamicButtonConfig = props => {
   }
 
   return defaultButtons
+}
+
+export const buildMultiStepFormBlockDefaultProps = props => {
+  const { _id, stepCount, currentStep, actionType, dataSource } = props || {}
+
+  // Sanity check
+  if (!_id || !stepCount) {
+    return
+  }
+
+  const title = `Step {{ [${_id}-form].[__currentStep] }}`
+  const resourceId = dataSource?.resourceId
+  const formId = `${_id}-form`
+  let buttons = []
+
+  // Add previous step button if we aren't the first step
+  if (currentStep !== 0) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Back",
+      type: "secondary",
+      size: "M",
+      onClick: [
+        {
+          parameters: {
+            type: "prev",
+            componentId: formId,
+          },
+          "##eventHandlerType": "Change Form Step",
+        },
+      ],
+    })
+  }
+
+  // Add a next button if we aren't the last step
+  if (currentStep !== stepCount - 1) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Next",
+      type: "cta",
+      size: "M",
+      onClick: [
+        {
+          "##eventHandlerType": "Validate Form",
+          parameters: {
+            componentId: formId,
+          },
+        },
+        {
+          parameters: {
+            type: "next",
+            componentId: formId,
+          },
+          "##eventHandlerType": "Change Form Step",
+        },
+      ],
+    })
+  }
+
+  // Add save button if we are the last step
+  if (actionType !== "View" && currentStep === stepCount - 1) {
+    buttons.push({
+      _id: Helpers.uuid(),
+      _component: "@budibase/standard-components/button",
+      _instanceName: Helpers.uuid(),
+      text: "Save",
+      type: "cta",
+      size: "M",
+      onClick: [
+        {
+          "##eventHandlerType": "Validate Form",
+          parameters: {
+            componentId: formId,
+          },
+        },
+        {
+          "##eventHandlerType": "Save Row",
+          parameters: {
+            tableId: resourceId,
+            providerId: formId,
+          },
+        },
+        // Clear a create form once submitted
+        ...(actionType !== "Create"
+          ? []
+          : [
+              {
+                "##eventHandlerType": "Clear Form",
+                parameters: {
+                  componentId: formId,
+                },
+              },
+            ]),
+      ],
+    })
+  }
+
+  return {
+    buttons,
+    title,
+  }
 }

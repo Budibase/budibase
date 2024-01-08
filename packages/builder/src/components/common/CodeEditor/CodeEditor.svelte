@@ -53,6 +53,7 @@
   export let value = ""
   export let placeholder = null
   export let autocompleteEnabled = true
+  export let autofocus = false
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -239,6 +240,12 @@
       extensions: buildExtensions(baseExtensions),
       parent: textarea,
     })
+  }
+
+  $: {
+    if (autofocus && isEditorInitialised) {
+      editor.focus()
+    }
   }
 
   $: editorHeight = typeof height === "number" ? `${height}px` : height
