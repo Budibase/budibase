@@ -9,7 +9,9 @@ export function createNavigationStore() {
 
   const init = gotoFunc => {
     if (typeof gotoFunc !== "function") {
-      throw new Error(`gotoFunc must be a function, found a "${typeof gotoFunc}" instead`)
+      throw new Error(
+        `gotoFunc must be a function, found a "${typeof gotoFunc}" instead`
+      )
     }
 
     set({
