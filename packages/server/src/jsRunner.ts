@@ -1,4 +1,3 @@
-import vm from "vm"
 import ivm from "isolated-vm"
 import env from "./environment"
 import { setJSRunner } from "@budibase/string-templates"
@@ -8,7 +7,7 @@ import tracer from "dd-trace"
 type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
-  setJSRunner((js: string, ctx: vm.Context) => {
+  setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
       const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
       let track: TrackerFn = f => f()
@@ -44,10 +43,14 @@ export function init() {
         } else {
           value = ctx[key]
         }
-        jail.setSync(
-          key,
-          new ivm.ExternalCopy(value).copyInto({ release: true })
-        )
+
+        if (typeof value === "function") {
+          js = value.toString() + "\n" + js
+          continue
+        } else {
+          value = new ivm.ExternalCopy(value).copyInto({ release: true })
+        }
+        jail.setSync(key, value)
       }
 
       const script = isolate.compileScriptSync(js)
