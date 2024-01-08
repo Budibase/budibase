@@ -6,4 +6,12 @@
   }
 </script>
 
-<Updating {onMigrationDone} />
+<div class="updating">
+  <Updating {onMigrationDone} />
+</div>
+
+<style>
+  .updating {
+    font-family: var(--font-sans);
+  }
+</style>
