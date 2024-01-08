@@ -337,7 +337,7 @@ const preSaveAction: Partial<Record<SourceName, any>> = {
 /**
  * Make sure all datasource entities have a display name selected
  */
-function setDefaultDisplayColumns(datasource: Datasource) {
+export function setDefaultDisplayColumns(datasource: Datasource) {
   //
   for (let entity of Object.values(datasource.entities || {})) {
     if (entity.primaryDisplay) {

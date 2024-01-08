@@ -63,46 +63,20 @@ export async function information(
   }
 }
 
-export async function buildSchemaFromDb(
+export async function buildSchemaFromSource(
   ctx: UserCtx<BuildSchemaFromSourceRequest, BuildSchemaFromSourceResponse>
 ) {
-  const db = context.getAppDB()
+  const datasourceId = ctx.params.datasourceId
   const tablesFilter = ctx.request.body.tablesFilter
-  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables, errors } = await sdk.datasources.buildFilteredSchema(
-    datasource,
+  const { datasource, errors } = await sdk.datasources.buildSchemaFromSource(
+    datasourceId,
     tablesFilter
   )
-  datasource.entities = tables
-
-  setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  datasource._rev = dbResp.rev
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
     errors,
-  }
-}
-
-/**
- * Make sure all datasource entities have a display name selected
- */
-function setDefaultDisplayColumns(datasource: Datasource) {
-  //
-  for (let entity of Object.values(datasource.entities || {})) {
-    if (entity.primaryDisplay) {
-      continue
-    }
-    const notAutoColumn = Object.values(entity.schema).find(
-      schema => !schema.autocolumn
-    )
-    if (notAutoColumn) {
-      entity.primaryDisplay = notAutoColumn.name
-    }
   }
 }
 
