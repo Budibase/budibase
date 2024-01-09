@@ -120,6 +120,7 @@
     "@types/jest": "29.5.5",
     "@types/koa": "2.13.4",
     "@types/koa__router": "8.0.8",
+    "@types/koa-send": "^4.1.6",
     "@types/lodash": "4.14.200",
     "@types/mssql": "9.1.4",
     "@types/node-fetch": "2.6.4",

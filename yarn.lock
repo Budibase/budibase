@@ -5441,7 +5441,7 @@
     "@types/koa" "*"
     "@types/passport" "*"
 
-"@types/koa-send@*":
+"@types/koa-send@*", "@types/koa-send@^4.1.6":
   version "4.1.6"
   resolved "https://registry.yarnpkg.com/@types/koa-send/-/koa-send-4.1.6.tgz#15d90e95e3ccce669a15b6a3c56c3a650a167cea"
   integrity sha512-vgnNGoOJkx7FrF0Jl6rbK1f8bBecqAchKpXtKuXzqIEdXTDO6dsSTjr+eZ5m7ltSjH4K/E7auNJEQCAd0McUPA==
