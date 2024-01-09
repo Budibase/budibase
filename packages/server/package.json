@@ -80,7 +80,7 @@
     "koa": "2.13.4",
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
-    "koa-send": "5.0.0",
+    "koa-send": "5.0.1",
     "koa-useragent": "^4.1.0",
     "koa2-ratelimit": "1.1.1",
     "lodash": "4.17.21",
