@@ -15,6 +15,7 @@ import * as identity from "../context/identity"
 import env from "../environment"
 import { Ctx, EndpointMatcher, SessionCookie } from "@budibase/types"
 import { InvalidAPIKeyError, ErrorCode } from "../errors"
+import tracer from "dd-trace"
 
 const ONE_MINUTE = env.SESSION_UPDATE_PERIOD
   ? parseInt(env.SESSION_UPDATE_PERIOD)
@@ -166,6 +167,16 @@ export default function (
       if (!authenticated) {
         authenticated = false
       }
+
+      if (user) {
+        tracer.setUser({
+          id: user?._id,
+          tenantId: user?.tenantId,
+          budibaseAccess: user?.budibaseAccess,
+          status: user?.status,
+        })
+      }
+
       // isAuthenticated is a function, so use a variable to be able to check authed state
       finalise(ctx, { authenticated, user, internal, version, publicEndpoint })
 
