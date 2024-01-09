@@ -51,7 +51,6 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
-
   let webhookModal
   let drawer
   let fillWidth = true
@@ -145,13 +144,17 @@
       return []
     }
 
-    let allSteps = automation.trigger
-      ? [automation.trigger, ...automation.steps]
-      : [...automation.steps]
+    // Find previous steps to the selected one
+    let allSteps = [...automation.steps]
+
+    if (automation.trigger) {
+      allSteps = [automation.trigger, ...allSteps]
+    }
     let blockIdx = allSteps.findIndex(step => step.id === block.id)
+
+    // Extract all outputs from all previous steps as available bindingsx§x
     let bindings = []
     let loopBlockCount = 0
-
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
       const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
       const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
@@ -172,12 +175,28 @@
     }
 
     const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+      let runtimeName
+
+      /* Begin special cases for generating custom schemas based on triggers */
       if (idx === 0 && automation.trigger?.event === "app:trigger") {
         return `trigger.fields.${name}`
       }
-      return isLoopBlock
-        ? `loop.${name}`
-        : `steps.${idx - loopBlockCount}.${name}`
+
+      if (
+        (idx === 0 && automation.trigger?.event === "row:update") ||
+        automation.trigger?.event === "row:save"
+      ) {
+        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+      }
+      /* end special cases */
+      if (isLoopBlock) {
+        runtimeName = `loop.${name}`
+      } else if (block.name.startsWith("JS")) {
+        runtimeName = `steps[${idx - loopBlockCount}].${name}`
+      } else {
+        runtimeName = `steps.${idx - loopBlockCount}.${name}`
+      }
+      return idx === 0 ? `trigger.${name}` : runtimeName
     }
 
     const determineCategoryName = (idx, isLoopBlock, bindingName) => {
@@ -221,12 +240,11 @@
       let isLoopBlock =
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
         allSteps.some(x => x.blockToLoop === block.id)
-      let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
+      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
       let bindingName =
         automation.stepNames?.[allSteps[idx - loopBlockCount].id]
 
       if (isLoopBlock) {
-        // Reset schema to only include 'currentItem' for loop blocks
         schema = {
           currentItem: {
             type: "string",
@@ -243,7 +261,22 @@
           ])
         )
       }
-
+      if (
+        (idx === 0 && automation.trigger.event === "row:update") ||
+        (idx === 0 && automation.trigger.event === "row:save")
+      ) {
+        let table = $tables.list.find(
+          table => table._id === automation.trigger.inputs.tableId
+        )
+        // We want to generate our own schema for the bindings from the table schema itself
+        for (const key in table?.schema) {
+          schema[key] = {
+            type: table.schema[key].type,
+          }
+        }
+        // remove the original binding
+        delete schema.row
+      }
       let icon =
         idx === 0
           ? automation.trigger.icon
@@ -251,7 +284,6 @@
           ? "Reuse"
           : allSteps[idx].icon
 
-      // Continue if the previous block was a loop block to skip bindings from the block that the loop is attached to
       if (wasLoopBlock) {
         loopBlockCount++
         continue
@@ -265,13 +297,17 @@
     // Environment bindings
     if ($licensing.environmentVariablesEnabled) {
       bindings = bindings.concat(
-        getEnvironmentBindings().map(binding => ({
-          ...binding,
-          display: { ...binding.display, rank: 98 },
-        }))
+        getEnvironmentBindings().map(binding => {
+          return {
+            ...binding,
+            display: {
+              ...binding.display,
+              rank: 98,
+            },
+          }
+        })
       )
     }
-
     return bindings
   }
   function lookForFilters(properties) {
