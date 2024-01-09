@@ -18,6 +18,7 @@ const createBuilderStore = () => {
     hiddenComponentIds: [],
     usedPlugins: null,
     eventResolvers: {},
+    metadata: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
@@ -122,6 +123,12 @@ const createBuilderStore = () => {
         componentId,
         parentType,
       })
+    },
+    setMetadata: metadata => {
+      store.update(state => ({
+        ...state,
+        metadata,
+      }))
     },
   }
   return {

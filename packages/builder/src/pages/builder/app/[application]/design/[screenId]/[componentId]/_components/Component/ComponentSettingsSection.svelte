@@ -32,21 +32,19 @@
     const generalSettings = settings.filter(
       setting => !setting.section && setting.tag === tag
     )
-
     const customSections = settings.filter(
       setting => setting.section && setting.tag === tag
     )
-    let sections = [
-      ...(generalSettings?.length
-        ? [
-            {
-              name: "General",
-              settings: generalSettings,
-            },
-          ]
-        : []),
-      ...(customSections || []),
-    ]
+    let sections = []
+    if (generalSettings.length) {
+      sections.push({
+        name: "General",
+        settings: generalSettings,
+      })
+    }
+    if (customSections.length) {
+      sections = sections.concat(customSections)
+    }
 
     // Filter out settings which shouldn't be rendered
     sections.forEach(section => {
@@ -153,6 +151,7 @@
     <DetailSummary
       name={showSectionTitle ? section.name : ""}
       initiallyShow={section.collapsed !== true}
+      collapsible={section.name !== "General"}
     >
       {#if section.info}
         <div class="section-info">
@@ -172,6 +171,7 @@
               control={getComponentForSetting(setting)}
               label={setting.label}
               labelHidden={setting.labelHidden}
+              wide={setting.wide}
               key={setting.key}
               value={componentInstance[setting.key]}
               defaultValue={setting.defaultValue}
@@ -208,7 +208,7 @@
     </DetailSummary>
   {/if}
 {/each}
-{#if componentDefinition?.block && !tag}
+{#if componentDefinition?.block && !tag && componentDefinition.ejectable !== false}
   <DetailSummary name="Eject" collapsible={false}>
     <EjectBlockButton />
   </DetailSummary>

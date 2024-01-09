@@ -25,7 +25,6 @@
 </script>
 
 <div class="options-wrap">
-  <div />
   <div><ActionButton on:click={drawer.show}>Define Options</ActionButton></div>
 </div>
 <Drawer bind:this={drawer} title="Options" on:drawerHide on:drawerShow>
