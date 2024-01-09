@@ -122,75 +122,78 @@
   }
 </script>
 
-<FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
-  <BlockComponent
-    type="form"
-    context="form"
-    props={{
-      dataSource,
-      actionType: actionType === "Create" ? "Create" : "Update",
-      readonly: actionType === "View",
-    }}
-    styles={{
-      normal: {
-        width: "600px",
-        "margin-left": "auto",
-        "margin-right": "auto",
-      },
-    }}
-  >
-    {#each enrichedSteps as step, stepIdx}
-      <BlockComponent
-        type="formstep"
-        props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
-      >
+{#key $currentStep}
+  <FormBlockWrapper {actionType} {dataSource} {rowId} {noRowsMessage}>
+    <BlockComponent
+      type="form"
+      context="form"
+      props={{
+        dataSource,
+        actionType: actionType === "Create" ? "Create" : "Update",
+        readonly: actionType === "View",
+      }}
+      styles={{
+        normal: {
+          width: "600px",
+          "margin-left": "auto",
+          "margin-right": "auto",
+        },
+      }}
+    >
+      {`Current step internal ${$currentStep + ""}`}
+      {#each enrichedSteps as step, stepIdx}
         <BlockComponent
-          type="container"
-          props={{
-            gap: "M",
-            direction: "column",
-            hAlign: "stretch",
-            vAlign: "top",
-            size: "shrink",
-          }}
+          type="formstep"
+          props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
         >
-          <BlockComponent type="container" order={0}>
-            <BlockComponent type="heading" props={{ text: step.title }} />
-          </BlockComponent>
-          <BlockComponent type="text" props={{ text: step.desc }} order={1} />
-          <BlockComponent type="container" order={2}>
-            <div
-              class="form-block fields"
-              class:mobile={$context.device.mobile}
-            >
-              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
-                {#if getComponentForField(field)}
-                  <BlockComponent
-                    type={getComponentForField(field)}
-                    props={getPropsForField(field)}
-                    order={fieldIdx}
-                    interactive
-                    name={field.field}
-                  />
-                {/if}
-              {/each}
-            </div>
-          </BlockComponent>
           <BlockComponent
-            type="buttongroup"
-            props={{ buttons: step.buttons }}
-            styles={{
-              normal: {
-                "margin-top": "16px",
-              },
+            type="container"
+            props={{
+              gap: "M",
+              direction: "column",
+              hAlign: "stretch",
+              vAlign: "top",
+              size: "shrink",
             }}
-            order={3}
-          />
+          >
+            <BlockComponent type="container" order={0}>
+              <BlockComponent type="heading" props={{ text: step.title }} />
+            </BlockComponent>
+            <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+            <BlockComponent type="container" order={2}>
+              <div
+                class="form-block fields"
+                class:mobile={$context.device.mobile}
+              >
+                {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
+                  {#if getComponentForField(field)}
+                    <BlockComponent
+                      type={getComponentForField(field)}
+                      props={getPropsForField(field)}
+                      order={fieldIdx}
+                      interactive
+                      name={field.field}
+                    />
+                  {/if}
+                {/each}
+              </div>
+            </BlockComponent>
+            <BlockComponent
+              type="buttongroup"
+              props={{ buttons: step.buttons }}
+              styles={{
+                normal: {
+                  "margin-top": "16px",
+                },
+              }}
+              order={3}
+            />
+          </BlockComponent>
         </BlockComponent>
-      </BlockComponent>
-    {/each}
-  </BlockComponent>
-</FormBlockWrapper>
+      {/each}
+    </BlockComponent>
+  </FormBlockWrapper>
+{/key}
 
 <style>
   .fields {
