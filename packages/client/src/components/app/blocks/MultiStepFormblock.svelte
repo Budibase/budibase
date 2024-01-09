@@ -140,7 +140,6 @@
         },
       }}
     >
-      {`Current step internal ${$currentStep + ""}`}
       {#each enrichedSteps as step, stepIdx}
         <BlockComponent
           type="formstep"
