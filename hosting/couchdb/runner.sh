@@ -76,6 +76,6 @@ done
 
 # CouchDB needs the `_users` and `_replicator` databases to exist before it will
 # function correctly, so we create them here.
-curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@localhost:5984/_users
-curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@localhost:5984/_replicator
+curl -X PUT -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" http://localhost:5984/_users
+curl -X PUT -u "${COUCHDB_USER}:${COUCHDB_PASSWORD}" http://localhost:5984/_replicator
 sleep infinity
