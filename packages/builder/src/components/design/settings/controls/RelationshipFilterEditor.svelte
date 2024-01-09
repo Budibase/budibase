@@ -50,4 +50,4 @@
   $: schema = linkedTable?.schema
 </script>
 
-<FilterEditor on:change {...$$props} {schema} />
+<FilterEditor on:change {...$$props} {schema} on:drawerHide on:drawerShow />

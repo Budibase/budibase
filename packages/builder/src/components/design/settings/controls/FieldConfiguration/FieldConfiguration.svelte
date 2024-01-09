@@ -14,6 +14,7 @@
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
+  export let bindings
   export let value
 
   const dispatch = createEventDispatcher()
@@ -28,7 +29,9 @@
 
   let selectAll = true
 
-  $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
+  $: resolvedBindings =
+    bindings || getBindableProperties($selectedScreen, componentInstance._id)
+
   $: actionType = componentInstance.actionType
   let componentBindings = []
 
@@ -39,7 +42,10 @@
     )
   }
 
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: datasource =
+    componentInstance.dataSource ||
+    getDatasourceForProvider($currentAsset, componentInstance)
+
   $: resourceId = datasource?.resourceId || datasource?.tableId
 
   $: if (!isEqual(value, cachedValue)) {
@@ -179,7 +185,7 @@
       listType={FieldSetting}
       listTypeProps={{
         componentBindings,
-        bindings,
+        bindings: resolvedBindings,
       }}
     />
   {/if}

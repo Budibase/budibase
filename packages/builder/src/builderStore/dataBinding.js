@@ -465,8 +465,8 @@ const filterCategoryByContext = (component, context) => {
   const { _component } = component
   if (_component.endsWith("formblock")) {
     if (
-      (component.actionType == "Create" && context.type === "schema") ||
-      (component.actionType == "View" && context.type === "form")
+      (component.actionType === "Create" && context.type === "schema") ||
+      (component.actionType === "View" && context.type === "form")
     ) {
       return false
     }
@@ -474,20 +474,21 @@ const filterCategoryByContext = (component, context) => {
   return true
 }
 
+// Enrich binding category information for certain components
 const getComponentBindingCategory = (component, context, def) => {
   let icon = def.icon
   let category = component._instanceName
 
   if (component._component.endsWith("formblock")) {
-    let contextCategorySuffix = {
-      form: "Fields",
-      schema: "Row",
+    if (context.type === "form") {
+      category = `${component._instanceName} - Fields`
+      icon = "Form"
+    } else if (context.type === "schema") {
+      category = `${component._instanceName} - Row`
+      icon = "Data"
     }
-    category = `${component._instanceName} - ${
-      contextCategorySuffix[context.type]
-    }`
-    icon = context.type === "form" ? "Form" : "Data"
   }
+
   return {
     icon,
     category,
