@@ -1,6 +1,11 @@
-import { SearchQuery, SearchQueryOperators } from "@budibase/types"
-import { runLuceneQuery } from "../filters"
-import { expect, describe, it } from "vitest"
+import {
+  SearchQuery,
+  SearchQueryOperators,
+  FieldType,
+  SearchFilter,
+} from "@budibase/types"
+import { buildLuceneQuery, runLuceneQuery } from "../filters"
+import { expect, describe, it, test } from "vitest"
 
 describe("runLuceneQuery", () => {
   const docs = [
@@ -166,5 +171,187 @@ describe("runLuceneQuery", () => {
       label: null,
     })
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
+  })
+
+  test.each([[523, 259], "523,259"])(
+    "should return rows with matches on numeric oneOf filter",
+    input => {
+      let query = buildQuery("oneOf", {
+        customer_id: input,
+      })
+      expect(runLuceneQuery(docs, query).map(row => row.customer_id)).toEqual([
+        259, 523,
+      ])
+    }
+  )
+})
+
+describe("buildLuceneQuery", () => {
+  it("should return a basic search query template if the input is not an array", () => {
+    const filter: any = "NOT_AN_ARRAY"
+    expect(buildLuceneQuery(filter)).toEqual({
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {},
+      notEqual: {},
+      empty: {},
+      notEmpty: {},
+      contains: {},
+      notContains: {},
+      oneOf: {},
+      containsAny: {},
+    })
+  })
+
+  it("should parseFloat if the type is a number, but the value is a numeric string", () => {
+    const filter: SearchFilter[] = [
+      {
+        operator: SearchQueryOperators.EQUAL,
+        field: "customer_id",
+        type: FieldType.NUMBER,
+        value: "1212",
+      },
+      {
+        operator: SearchQueryOperators.ONE_OF,
+        field: "customer_id",
+        type: FieldType.NUMBER,
+        value: "1000,1212,3400",
+      },
+    ]
+    expect(buildLuceneQuery(filter)).toEqual({
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {
+        customer_id: 1212,
+      },
+      notEqual: {},
+      empty: {},
+      notEmpty: {},
+      contains: {},
+      notContains: {},
+      oneOf: {
+        customer_id: [1000, 1212, 3400],
+      },
+      containsAny: {},
+    })
+  })
+
+  it("should not parseFloat if the type is a number, but the value is a handlebars binding string", () => {
+    const filter: SearchFilter[] = [
+      {
+        operator: SearchQueryOperators.EQUAL,
+        field: "customer_id",
+        type: FieldType.NUMBER,
+        value: "{{ customer_id }}",
+      },
+      {
+        operator: SearchQueryOperators.ONE_OF,
+        field: "customer_id",
+        type: FieldType.NUMBER,
+        value: "{{ list_of_customer_ids }}",
+      },
+    ]
+    expect(buildLuceneQuery(filter)).toEqual({
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {
+        customer_id: "{{ customer_id }}",
+      },
+      notEqual: {},
+      empty: {},
+      notEmpty: {},
+      contains: {},
+      notContains: {},
+      oneOf: {
+        customer_id: "{{ list_of_customer_ids }}",
+      },
+      containsAny: {},
+    })
+  })
+
+  it("should cast string to boolean if the type is boolean", () => {
+    const filter: SearchFilter[] = [
+      {
+        operator: SearchQueryOperators.EQUAL,
+        field: "a",
+        type: FieldType.BOOLEAN,
+        value: "not_true",
+      },
+      {
+        operator: SearchQueryOperators.NOT_EQUAL,
+        field: "b",
+        type: FieldType.BOOLEAN,
+        value: "not_true",
+      },
+      {
+        operator: SearchQueryOperators.EQUAL,
+        field: "c",
+        type: FieldType.BOOLEAN,
+        value: "true",
+      },
+    ]
+    expect(buildLuceneQuery(filter)).toEqual({
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {
+        b: true,
+        c: true,
+      },
+      notEqual: {
+        a: true,
+      },
+      empty: {},
+      notEmpty: {},
+      contains: {},
+      notContains: {},
+      oneOf: {},
+      containsAny: {},
+    })
+  })
+
+  it("should split the string for contains operators", () => {
+    const filter: SearchFilter[] = [
+      {
+        operator: SearchQueryOperators.CONTAINS,
+        field: "description",
+        type: FieldType.ARRAY,
+        value: "Large box,Heavy box,Small box",
+      },
+      {
+        operator: SearchQueryOperators.NOT_CONTAINS,
+        field: "description",
+        type: FieldType.ARRAY,
+        value: "Large box,Heavy box,Small box",
+      },
+      {
+        operator: SearchQueryOperators.CONTAINS_ANY,
+        field: "description",
+        type: FieldType.ARRAY,
+        value: "Large box,Heavy box,Small box",
+      },
+    ]
+    expect(buildLuceneQuery(filter)).toEqual({
+      string: {},
+      fuzzy: {},
+      range: {},
+      equal: {},
+      notEqual: {},
+      empty: {},
+      notEmpty: {},
+      contains: {
+        description: ["Large box", "Heavy box", "Small box"],
+      },
+      notContains: {
+        description: ["Large box", "Heavy box", "Small box"],
+      },
+      oneOf: {},
+      containsAny: {
+        description: ["Large box", "Heavy box", "Small box"],
+      },
+    })
   })
 })

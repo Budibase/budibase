@@ -103,8 +103,7 @@ function typeCoercion(filters: SearchFilters, table: Table) {
     return filters
   }
   for (let key of Object.keys(filters)) {
-    // @ts-ignore
-    const searchParam = filters[key]
+    const searchParam = filters[key as keyof SearchFilters]
     if (typeof searchParam === "object") {
       for (let [property, value] of Object.entries(searchParam)) {
         // We need to strip numerical prefixes here, so that we can look up
@@ -117,7 +116,13 @@ function typeCoercion(filters: SearchFilters, table: Table) {
           continue
         }
         if (column.type === FieldTypes.NUMBER) {
-          searchParam[property] = parseFloat(value)
+          if (key === "oneOf") {
+            searchParam[property] = value
+              .split(",")
+              .map(item => parseFloat(item))
+          } else {
+            searchParam[property] = parseFloat(value)
+          }
         }
       }
     }

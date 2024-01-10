@@ -9,6 +9,7 @@ const {
   findDoubleHbsInstances,
 } = require("./utilities")
 const { convertHBSBlock } = require("./conversion")
+const javascript = require("./helpers/javascript")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -361,6 +362,8 @@ module.exports.findHBSBlocks = string => {
 module.exports.doesContainString = (template, string) => {
   return exports.doesContainStrings(template, [string])
 }
+
+module.exports.setJSRunner = javascript.setJSRunner
 
 module.exports.convertToJS = hbs => {
   const blocks = exports.findHBSBlocks(hbs)
