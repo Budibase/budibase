@@ -12,51 +12,49 @@ export function init() {
       const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
       let track: TrackerFn = f => f()
       if (perRequestLimit) {
-        tracer.trace<any>("runJS.setupTracker", {}, span => {
-          const bbCtx = context.getCurrentContext()
-          if (bbCtx) {
-            if (!bbCtx.jsExecutionTracker) {
-              span?.addTags({
-                createdExecutionTracker: true,
-              })
-              bbCtx.jsExecutionTracker =
-                timers.ExecutionTimeTracker.withLimit(perRequestLimit)
-            }
+        const bbCtx = tracer.trace("runJS.getCurrentContext", {}, span =>
+          context.getCurrentContext()
+        )
+        if (bbCtx) {
+          if (!bbCtx.jsExecutionTracker) {
             span?.addTags({
-              js: {
-                limitMS: bbCtx.jsExecutionTracker.limitMs,
-                elapsedMS: bbCtx.jsExecutionTracker.elapsedMS,
-              },
+              createdExecutionTracker: true,
             })
-            // We call checkLimit() here to prevent paying the cost of creating
-            // a new VM context below when we don't need to.
-            bbCtx.jsExecutionTracker.checkLimit()
-            track = bbCtx.jsExecutionTracker.track.bind(
-              bbCtx.jsExecutionTracker
+            bbCtx.jsExecutionTracker = tracer.trace(
+              "runJS.createExecutionTimeTracker",
+              {},
+              span => timers.ExecutionTimeTracker.withLimit(perRequestLimit)
             )
           }
-        })
+          span?.addTags({
+            js: {
+              limitMS: bbCtx.jsExecutionTracker.limitMs,
+              elapsedMS: bbCtx.jsExecutionTracker.elapsedMS,
+            },
+          })
+          // We call checkLimit() here to prevent paying the cost of creating
+          // a new VM context below when we don't need to.
+          tracer.trace("runJS.checkLimitAndBind", {}, span => {
+            bbCtx.jsExecutionTracker!.checkLimit()
+            track = bbCtx.jsExecutionTracker!.track.bind(
+              bbCtx.jsExecutionTracker
+            )
+          })
+        }
       }
 
-      ctx = tracer.trace("runJS.ctxClone", {}, span => {
-        return {
-          ...ctx,
-          alert: undefined,
-          setInterval: undefined,
-          setTimeout: undefined,
-        }
-      })
+      ctx = {
+        ...ctx,
+        alert: undefined,
+        setInterval: undefined,
+        setTimeout: undefined,
+      }
 
-      tracer.trace("runJS.vm.createContext", {}, span => {
-        vm.createContext(ctx)
-      })
-
+      vm.createContext(ctx)
       return track(() =>
-        tracer.trace("runJS.vm.runInNewContext", {}, span =>
-          vm.runInNewContext(js, ctx, {
-            timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
-          })
-        )
+        vm.runInNewContext(js, ctx, {
+          timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
+        })
       )
     })
   })
