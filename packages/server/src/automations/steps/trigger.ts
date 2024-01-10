@@ -7,6 +7,7 @@ import {
   AutomationFeature,
   AutomationResults,
   Automation,
+  AutomationCustomIOType,
 } from "@budibase/types"
 import * as triggers from "../triggers"
 import { db as dbCore, context } from "@budibase/backend-core"
@@ -24,9 +25,17 @@ export const definition: AutomationStepSchema = {
   schema: {
     inputs: {
       properties: {
-        automationId: {
-          type: AutomationIOType.STRING,
-          title: "Automation ID",
+        automation: {
+          type: AutomationIOType.OBJECT,
+          properties: {
+            automationId: {
+              type: AutomationIOType.STRING,
+              customType: AutomationCustomIOType.AUTOMATION,
+            },
+          },
+          customType: AutomationCustomIOType.AUTOMATION_FIELDS,
+          title: "automatioFields",
+          required: ["automationId"],
         },
         timeout: {
           type: AutomationIOType.NUMBER,
@@ -52,18 +61,20 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  if (!inputs.automationId) {
+  const { automationId, ...fieldParams } = inputs.automation
+
+  if (!inputs.automation.automationId) {
     return {
       success: false,
     }
   } else {
     const db = context.getAppDB()
-    let automation = await db.get<Automation>(inputs.automationId)
+    let automation = await db.get<Automation>(inputs.automation.automationId)
 
     const response: AutomationResults = await triggers.externalTrigger(
       automation,
       {
-        fields: {},
+        fields: { ...fieldParams },
         timeout: inputs.timeout * 1000 || 120000,
       },
       { getResponses: true }
