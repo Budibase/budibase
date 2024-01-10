@@ -1,9 +1,9 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore, dndIsDragging } from "stores"
+  import { builderStore, dndIsDragging, hoverStore } from "stores"
 
-  $: componentId = $builderStore.hoverComponentId
+  $: componentId = $hoverStore.hoveredComponentId
   $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
 
   const onMouseOver = e => {
@@ -23,12 +23,12 @@
     }
 
     if (newId !== componentId) {
-      builderStore.actions.hoverComponent(newId)
+      hoverStore.actions.hoverComponent(newId)
     }
   }
 
   const onMouseLeave = () => {
-    builderStore.actions.hoverComponent(null)
+    hoverStore.actions.hoverComponent(null)
   }
 
   onMount(() => {
