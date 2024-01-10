@@ -5,6 +5,9 @@
     Drawer,
     Button,
     notifications,
+    AbsTooltip,
+    Icon,
+    Body,
   } from "@budibase/bbui"
   import { selectedScreen, store } from "builderStore"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
@@ -15,6 +18,9 @@
   } from "builderStore/dataBinding"
 
   export let componentInstance
+  export let componentDefinition
+  export let iconTooltip
+  export let componentTitle
 
   let tempValue
   let drawer
@@ -23,6 +29,8 @@
     $selectedScreen,
     $store.selectedComponentId
   )
+
+  $: icon = componentDefinition?.icon
 
   const openDrawer = () => {
     tempValue = runtimeToReadableBinding(
@@ -54,7 +62,19 @@
 {#key componentInstance?._id}
   <Drawer bind:this={drawer} title="Custom CSS">
     <svelte:fragment slot="description">
-      Custom CSS overrides all other component styles.
+      <div class="header">
+        Your CSS will overwrite styles for:
+        {#if icon}
+          <AbsTooltip type="info" text={iconTooltip}>
+            <Icon
+              color={`var(--spectrum-global-color-gray-600)`}
+              size="S"
+              name={icon}
+            />
+          </AbsTooltip>
+          <Body size="S"><b>{componentTitle || ""}</b></Body>
+        {/if}
+      </div>
     </svelte:fragment>
     <Button cta slot="buttons" on:click={save}>Save</Button>
     <svelte:component
@@ -68,3 +88,13 @@
     />
   </Drawer>
 {/key}
+
+<style>
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+</style>
