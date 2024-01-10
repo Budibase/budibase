@@ -1,4 +1,5 @@
 import ClientApp from "./components/ClientApp.svelte"
+import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
   builderStore,
   appStore,
@@ -52,6 +53,13 @@ const loadBudibase = async () => {
     window["##BUDIBASE_APP_EMBEDDED##"] === "true"
   )
 
+  if (window.MIGRATING_APP) {
+    new UpdatingApp({
+      target: window.document.body,
+    })
+    return
+  }
+
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
     await environmentStore.actions.fetchEnvironment()
@@ -78,6 +86,8 @@ const loadBudibase = async () => {
       }
     } else if (type === "hover-component") {
       hoverStore.actions.hoverComponent(data)
+    } else if (type === "builder-meta") {
+      builderStore.actions.setMetadata(data)
     }
   }
 

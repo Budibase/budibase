@@ -12,11 +12,19 @@ export function init() {
       const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
       let track: TrackerFn = f => f()
       if (perRequestLimit) {
-        const bbCtx = context.getCurrentContext()
+        const bbCtx = tracer.trace("runJS.getCurrentContext", {}, span =>
+          context.getCurrentContext()
+        )
         if (bbCtx) {
           if (!bbCtx.jsExecutionTracker) {
-            bbCtx.jsExecutionTracker =
-              timers.ExecutionTimeTracker.withLimit(perRequestLimit)
+            span?.addTags({
+              createdExecutionTracker: true,
+            })
+            bbCtx.jsExecutionTracker = tracer.trace(
+              "runJS.createExecutionTimeTracker",
+              {},
+              span => timers.ExecutionTimeTracker.withLimit(perRequestLimit)
+            )
           }
           span?.addTags({
             js: {
@@ -26,8 +34,12 @@ export function init() {
           })
           // We call checkLimit() here to prevent paying the cost of creating
           // a new VM context below when we don't need to.
-          bbCtx.jsExecutionTracker.checkLimit()
-          track = bbCtx.jsExecutionTracker.track.bind(bbCtx.jsExecutionTracker)
+          tracer.trace("runJS.checkLimitAndBind", {}, span => {
+            bbCtx.jsExecutionTracker!.checkLimit()
+            track = bbCtx.jsExecutionTracker!.track.bind(
+              bbCtx.jsExecutionTracker
+            )
+          })
         }
       }
 
@@ -37,6 +49,7 @@ export function init() {
         setInterval: undefined,
         setTimeout: undefined,
       }
+
       vm.createContext(ctx)
       return track(() =>
         vm.runInNewContext(js, ctx, {
