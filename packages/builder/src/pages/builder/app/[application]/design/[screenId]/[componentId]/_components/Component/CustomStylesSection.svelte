@@ -62,7 +62,6 @@
     <svelte:fragment slot="description">
       <div class="header">
         Your CSS will overwrite styles for:
-        <span />
         {#if icon}
           <AbsTooltip type="info" text={iconTooltip}>
             <Icon
