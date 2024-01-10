@@ -108,7 +108,6 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
-          icon={componentDefinition?.icon}
           iconTooltip={componentName}
           componentTitle={title}
         />

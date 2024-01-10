@@ -18,7 +18,7 @@
   } from "builderStore/dataBinding"
 
   export let componentInstance
-  export let icon
+  export let componentDefinition
   export let iconTooltip
   export let componentTitle
 
@@ -29,6 +29,8 @@
     $selectedScreen,
     $store.selectedComponentId
   )
+
+  $: icon = componentDefinition?.icon
 
   const openDrawer = () => {
     tempValue = runtimeToReadableBinding(
