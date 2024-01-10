@@ -8,6 +8,7 @@
 
   export let clientLibPath
   export let usedPlugins
+  export let appMigrating
 </script>
 
 <svelte:head>
@@ -110,6 +111,11 @@
   <script type="application/javascript">
     window.INIT_TIME = Date.now()
   </script>
+  {#if appMigrating}
+    <script type="application/javascript">
+      window.MIGRATING_APP = true
+    </script>
+  {/if}
   <script type="application/javascript" src={clientLibPath}>
   </script>
   <!-- Custom components need inserted after the core client library -->

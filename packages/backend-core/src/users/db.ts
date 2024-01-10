@@ -2,7 +2,7 @@ import env from "../environment"
 import * as eventHelpers from "./events"
 import * as accountSdk from "../accounts"
 import * as cache from "../cache"
-import { doInTenant, getGlobalDB, getIdentity, getTenantId } from "../context"
+import { getGlobalDB, getIdentity, getTenantId } from "../context"
 import * as dbUtils from "../db"
 import { EmailUnavailableError, HTTPError } from "../errors"
 import * as platform from "../platform"
@@ -27,6 +27,7 @@ import {
 } from "./utils"
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
+import { validatePassword } from "../security"
 
 type QuotaUpdateFn = (
   change: number,
@@ -42,6 +43,12 @@ type GroupFns = {
   addUsers: GroupUpdateFn
   getBulk: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
+}
+type CreateAdminUserOpts = {
+  ssoId?: string
+  hashPassword?: boolean
+  requirePassword?: boolean
+  skipPasswordValidation?: boolean
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
@@ -110,6 +117,14 @@ export class UserDB {
       if (await UserDB.isPreventPasswordActions(user, account)) {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
+
+      if (!opts.skipPasswordValidation) {
+        const passwordValidation = validatePassword(password)
+        if (!passwordValidation.valid) {
+          throw new HTTPError(passwordValidation.error, 400)
+        }
+      }
+
       hashedPassword = opts.hashPassword ? await hash(password) : password
     } else if (dbUser) {
       hashedPassword = dbUser.password
@@ -482,7 +497,7 @@ export class UserDB {
     email: string,
     password: string,
     tenantId: string,
-    opts?: { ssoId?: string; hashPassword?: boolean; requirePassword?: boolean }
+    opts?: CreateAdminUserOpts
   ) {
     const user: User = {
       email: email,
@@ -506,6 +521,7 @@ export class UserDB {
     return await UserDB.save(user, {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
+      skipPasswordValidation: opts?.skipPasswordValidation,
     })
   }
 

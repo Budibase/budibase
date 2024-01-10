@@ -85,7 +85,6 @@ const INITIAL_FRONTEND_STATE = {
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
-  hoverComponentId: null,
 
   // Client state
   selectedComponentInstance: null,
@@ -93,6 +92,9 @@ const INITIAL_FRONTEND_STATE = {
   // Onboarding
   onboarding: false,
   tourNodes: null,
+
+  // UI state
+  hoveredComponentId: null,
 }
 
 export const getFrontendStore = () => {
@@ -610,12 +612,12 @@ export const getFrontendStore = () => {
           // Use default config if the 'buttons' prop has never been initialised
           if (!("buttons" in enrichedComponent)) {
             enrichedComponent["buttons"] =
-              Utils.buildDynamicButtonConfig(enrichedComponent)
+              Utils.buildFormBlockButtonConfig(enrichedComponent)
             migrated = true
           } else if (enrichedComponent["buttons"] == null) {
             // Ignore legacy config if 'buttons' has been reset by 'resetOn'
             const { _id, actionType, dataSource } = enrichedComponent
-            enrichedComponent["buttons"] = Utils.buildDynamicButtonConfig({
+            enrichedComponent["buttons"] = Utils.buildFormBlockButtonConfig({
               _id,
               actionType,
               dataSource,
@@ -1289,15 +1291,14 @@ export const getFrontendStore = () => {
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
 
-          // Can be a single string or array of strings
-          const resetFields = settings.filter(setting => {
-            return (
+          // Reset dependent fields
+          settings.forEach(setting => {
+            const needsReset =
               name === setting.resetOn ||
               (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
-            )
-          })
-          resetFields?.forEach(setting => {
-            component[setting.key] = null
+            if (needsReset) {
+              component[setting.key] = setting.defaultValue || null
+            }
           })
 
           if (
@@ -1413,6 +1414,18 @@ export const getFrontendStore = () => {
           state.selectedComponentId = newParentDefinition._id
           return state
         })
+      },
+      hover: (componentId, notifyClient = true) => {
+        if (componentId === get(store).hoveredComponentId) {
+          return
+        }
+        store.update(state => {
+          state.hoveredComponentId = componentId
+          return state
+        })
+        if (notifyClient) {
+          store.actions.preview.sendEvent("hover-component", componentId)
+        }
       },
     },
     links: {

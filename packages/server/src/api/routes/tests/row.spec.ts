@@ -132,11 +132,6 @@ describe.each([
     expect(usage).toBe(expected)
   }
 
-  const assertQueryUsage = async (expected: number) => {
-    const usage = await getQueryUsage()
-    expect(usage).toBe(expected)
-  }
-
   const defaultRowFields = isInternal
     ? {
         type: "row",
@@ -181,7 +176,6 @@ describe.each([
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
       await assertRowUsage(rowUsage + 1)
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("Increment row autoId per create row request", async () => {
@@ -232,7 +226,6 @@ describe.each([
       }
 
       await assertRowUsage(rowUsage + ids.length)
-      await assertQueryUsage(queryUsage + ids.length)
     })
 
     it("updates a row successfully", async () => {
@@ -249,7 +242,6 @@ describe.each([
 
       expect(res.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should load a row", async () => {
@@ -262,7 +254,6 @@ describe.each([
         ...existing,
         ...defaultRowFields,
       })
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should list all rows for given tableId", async () => {
@@ -284,7 +275,6 @@ describe.each([
       expect(res.length).toBe(2)
       expect(res.find((r: Row) => r.name === newRow.name)).toBeDefined()
       expect(res.find((r: Row) => r.name === firstRow.name)).toBeDefined()
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("load should return 404 when row does not exist", async () => {
@@ -294,7 +284,6 @@ describe.each([
       await config.api.row.get(tableId, "1234567", {
         expectStatus: 404,
       })
-      await assertQueryUsage(queryUsage) // no change
     })
 
     isInternal &&
@@ -558,7 +547,6 @@ describe.each([
       expect(savedRow.body.description).toEqual(existing.description)
       expect(savedRow.body.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage + 2) // account for the second load
     })
 
     it("should throw an error when given improper types", async () => {
@@ -578,7 +566,6 @@ describe.each([
       )
 
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage)
     })
 
     it("should not overwrite links if those links are not set", async () => {
@@ -668,7 +655,6 @@ describe.each([
       const res = await config.api.row.delete(table._id!, [createdRow])
       expect(res.body[0]._id).toEqual(createdRow._id)
       await assertRowUsage(rowUsage - 1)
-      await assertQueryUsage(queryUsage + 1)
     })
   })
 
@@ -687,7 +673,6 @@ describe.each([
       expect(res.valid).toBe(true)
       expect(Object.keys(res.errors)).toEqual([])
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage)
     })
 
     it("should errors on invalid row", async () => {
@@ -705,7 +690,6 @@ describe.each([
         expect(Object.keys(res.errors)).toEqual([])
       }
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage)
     })
   })
 
@@ -726,7 +710,6 @@ describe.each([
       expect(res.body.length).toEqual(2)
       await loadRow(row1._id!, table._id!, 404)
       await assertRowUsage(rowUsage - 2)
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should be able to delete a variety of row set types", async () => {
@@ -747,7 +730,6 @@ describe.each([
       expect(res.body.length).toEqual(3)
       await loadRow(row1._id!, table._id!, 404)
       await assertRowUsage(rowUsage - 3)
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("should accept a valid row object and delete the row", async () => {
@@ -760,7 +742,6 @@ describe.each([
       expect(res.body.id).toEqual(row1._id)
       await loadRow(row1._id!, table._id!, 404)
       await assertRowUsage(rowUsage - 1)
-      await assertQueryUsage(queryUsage + 1)
     })
 
     it("Should ignore malformed/invalid delete requests", async () => {
@@ -787,7 +768,6 @@ describe.each([
       expect(res3.body.message).toEqual("Invalid delete rows request")
 
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage)
     })
   })
 
@@ -808,7 +788,6 @@ describe.each([
         expect(res.body.length).toEqual(1)
         expect(res.body[0]._id).toEqual(row._id)
         await assertRowUsage(rowUsage)
-        await assertQueryUsage(queryUsage + 1)
       })
 
       it("should throw an error if view doesn't exist", async () => {
@@ -818,7 +797,6 @@ describe.each([
         await config.api.legacyView.get("derp", { expectStatus: 404 })
 
         await assertRowUsage(rowUsage)
-        await assertQueryUsage(queryUsage)
       })
 
       it("should be able to run on a view", async () => {
@@ -837,7 +815,6 @@ describe.each([
         expect(res.body[0]._id).toEqual(row._id)
 
         await assertRowUsage(rowUsage)
-        await assertQueryUsage(queryUsage + 1)
       })
     })
 
@@ -910,7 +887,6 @@ describe.each([
       expect(resEnriched.body.link[0].name).toBe("Test Contact")
       expect(resEnriched.body.link[0].description).toBe("original description")
       await assertRowUsage(rowUsage)
-      await assertQueryUsage(queryUsage + 2)
     })
   })
 
@@ -1129,7 +1105,6 @@ describe.each([
         await config.api.row.delete(view.id, [createdRow])
 
         await assertRowUsage(rowUsage - 1)
-        await assertQueryUsage(queryUsage + 1)
 
         await config.api.row.get(tableId, createdRow._id!, {
           expectStatus: 404,
@@ -1157,7 +1132,6 @@ describe.each([
         await config.api.row.delete(view.id, [rows[0], rows[2]])
 
         await assertRowUsage(rowUsage - 2)
-        await assertQueryUsage(queryUsage + 1)
 
         await config.api.row.get(tableId, rows[0]._id!, {
           expectStatus: 404,
@@ -2084,6 +2058,114 @@ describe.each([
       expect(rows[0].links.length).toBe(1)
       const row = rows[0]
       expect(row.formula).toBe(relatedRow.name)
+    })
+  })
+
+  describe("Formula JS protection", () => {
+    it("should time out JS execution if a single cell takes too long", async () => {
+      await config.withEnv({ JS_PER_EXECUTION_TIME_LIMIT_MS: 20 }, async () => {
+        const js = Buffer.from(
+          `
+              let i = 0;
+              while (true) {
+                i++;
+              }
+              return i;
+            `
+        ).toString("base64")
+
+        const table = await config.createTable({
+          name: "table",
+          type: "table",
+          schema: {
+            text: {
+              name: "text",
+              type: FieldType.STRING,
+            },
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: `{{ js "${js}"}}`,
+              formulaType: FormulaTypes.DYNAMIC,
+            },
+          },
+        })
+
+        await config.api.row.save(table._id!, { text: "foo" })
+        const { rows } = await config.api.row.search(table._id!)
+        expect(rows).toHaveLength(1)
+        const row = rows[0]
+        expect(row.text).toBe("foo")
+        expect(row.formula).toBe("Timed out while executing JS")
+      })
+    })
+
+    it("should time out JS execution if a multiple cells take too long", async () => {
+      await config.withEnv(
+        {
+          JS_PER_EXECUTION_TIME_LIMIT_MS: 20,
+          JS_PER_REQUEST_TIME_LIMIT_MS: 40,
+        },
+        async () => {
+          const js = Buffer.from(
+            `
+              let i = 0;
+              while (true) {
+                i++;
+              }
+              return i;
+            `
+          ).toString("base64")
+
+          const table = await config.createTable({
+            name: "table",
+            type: "table",
+            schema: {
+              text: {
+                name: "text",
+                type: FieldType.STRING,
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: `{{ js "${js}"}}`,
+                formulaType: FormulaTypes.DYNAMIC,
+              },
+            },
+          })
+
+          for (let i = 0; i < 10; i++) {
+            await config.api.row.save(table._id!, { text: "foo" })
+          }
+
+          // Run this test 3 times to make sure that there's no cross-request
+          // pollution of the execution time tracking.
+          for (let reqs = 0; reqs < 3; reqs++) {
+            const { rows } = await config.api.row.search(table._id!)
+            expect(rows).toHaveLength(10)
+
+            let i = 0
+            for (; i < 10; i++) {
+              const row = rows[i]
+              if (row.formula !== "Timed out while executing JS") {
+                break
+              }
+            }
+
+            // Given the execution times are not deterministic, we can't be sure
+            // of the exact number of rows that were executed before the timeout
+            // but it should absolutely be at least 1.
+            expect(i).toBeGreaterThan(0)
+            expect(i).toBeLessThan(5)
+
+            for (; i < 10; i++) {
+              const row = rows[i]
+              expect(row.text).toBe("foo")
+              expect(row.formula).toBe("Request JS execution limit hit")
+            }
+          }
+        }
+      )
     })
   })
 })

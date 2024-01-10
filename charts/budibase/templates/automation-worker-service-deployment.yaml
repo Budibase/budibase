@@ -227,6 +227,14 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.automationWorkers.command }}
+        command:
+        {{- toYaml .Values.services.automationWorkers.command | nindent 10 }}
+        {{ end }}
+        {{ if .Values.services.automationWorkers.args }}
+        args:
+        {{- toYaml .Values.services.automationWorkers.args | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -244,5 +252,11 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.automationWorkers.ndots }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.services.automationWorkers.ndots | quote }}
+      {{ end }}
 status: {}
 {{- end }}

@@ -122,10 +122,10 @@ export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
     ctx.body = {
       message: "password reset successfully.",
     }
-  } catch (err) {
+  } catch (err: any) {
     console.warn(err)
     // hide any details of the error for security
-    ctx.throw(400, "Cannot reset password.")
+    ctx.throw(400, err.message || "Cannot reset password.")
   }
 }
 
