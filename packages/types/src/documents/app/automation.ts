@@ -28,6 +28,8 @@ export enum AutomationCustomIOType {
   TRIGGER_SCHEMA = "triggerSchema",
   CRON = "cron",
   WEBHOOK_URL = "webhookUrl",
+  AUTOMATION = "automation",
+  AUTOMATION_FIELDS = "automationFields",
 }
 
 export enum AutomationTriggerStepId {
