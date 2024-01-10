@@ -5,7 +5,9 @@ import {
   Schema,
 } from "@budibase/types"
 import * as datasources from "./datasources"
+import tableSdk from "../tables"
 import { getIntegration } from "../../../integrations"
+import { context } from "@budibase/backend-core"
 
 export async function buildFilteredSchema(
   datasource: Datasource,
@@ -59,4 +61,25 @@ export async function getAndMergeDatasource(datasource: Datasource) {
     datasource = datasources.mergeConfigs(datasource, existingDatasource)
   }
   return await datasources.enrich(datasource)
+}
+
+export async function buildSchemaFromSource(
+  datasourceId: string,
+  tablesFilter?: string[]
+) {
+  const db = context.getAppDB()
+
+  const datasource = await datasources.get(datasourceId)
+
+  const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
+  datasource.entities = tables
+
+  datasources.setDefaultDisplayColumns(datasource)
+  const dbResp = await db.put(tableSdk.populateExternalTableSchemas(datasource))
+  datasource._rev = dbResp.rev
+
+  return {
+    datasource,
+    errors,
+  }
 }

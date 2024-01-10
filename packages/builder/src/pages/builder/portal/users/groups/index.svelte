@@ -97,7 +97,7 @@
       <Heading size="M">Groups</Heading>
       {#if !$licensing.groupsEnabled}
         <Tags>
-          <Tag icon="LockClosed">Business</Tag>
+          <Tag icon="LockClosed">Enterpise</Tag>
         </Tags>
       {/if}
     </div>
