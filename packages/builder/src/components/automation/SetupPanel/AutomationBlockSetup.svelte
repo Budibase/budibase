@@ -256,7 +256,7 @@
 
       if (idx === 0 && automation.trigger?.event === "app:trigger") {
         schema = Object.fromEntries(
-          Object.keys(automation.trigger.inputs.fields).map(key => [
+          Object.keys(automation.trigger.inputs.fields || []).map(key => [
             key,
             { type: automation.trigger.inputs.fields[key] },
           ])
