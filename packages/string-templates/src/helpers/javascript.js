@@ -1,5 +1,5 @@
 const { atob } = require("../utilities")
-const { cloneDeep } = require("lodash/fp")
+const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
 const { getHelperList } = require("./list")
 
