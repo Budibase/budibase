@@ -32,8 +32,15 @@
       await store.actions.components.paste(component, "below")
     },
     ["Ctrl+e"]: component => {
-      componentToEject = component
-      confirmEjectDialog.show()
+      const definition = store.actions.components.getDefinition(
+        component._component
+      )
+      const isBlock = definition?.block === true
+      const canEject = !(definition?.ejectable === false)
+      if (isBlock && canEject) {
+        componentToEject = component
+        confirmEjectDialog.show()
+      }
     },
     ["Ctrl+Enter"]: () => {
       $goto(`./:componentId/new`)
