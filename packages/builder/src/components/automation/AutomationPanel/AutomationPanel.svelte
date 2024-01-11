@@ -30,6 +30,8 @@
       return lowerA > lowerB ? 1 : -1
     })
 
+  $: showNoResults = searchString && !filteredAutomations.length
+
   onMount(async () => {
     try {
       await automationStore.actions.fetch()
@@ -53,18 +55,18 @@
     />
   </div>
   <div class="side-bar-nav">
-    {#if filteredAutomations.length}
-      {#each filteredAutomations as automation}
-        <NavItem
-          text={automation.name}
-          selected={automation._id === selectedAutomationId}
-          on:click={() => selectAutomation(automation._id)}
-          selectedBy={$userSelectedResourceMap[automation._id]}
-        >
-          <EditAutomationPopover {automation} />
-        </NavItem>
-      {/each}
-    {:else}
+    {#each filteredAutomations as automation}
+      <NavItem
+        text={automation.name}
+        selected={automation._id === selectedAutomationId}
+        on:click={() => selectAutomation(automation._id)}
+        selectedBy={$userSelectedResourceMap[automation._id]}
+      >
+        <EditAutomationPopover {automation} />
+      </NavItem>
+    {/each}
+
+    {#if showNoResults}
       <Layout paddingY="none" paddingX="L">
         <div class="no-results">
           There aren't any automations matching that name
