@@ -31,13 +31,6 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  checkSetup(): Promise<DocumentScope<any>> {
-    return tracer.trace("db.checkSetup", span => {
-      span?.addTags({ db_name: this.name })
-      return this.db.checkSetup()
-    })
-  }
-
   get<T extends Document>(id?: string | undefined): Promise<T> {
     return tracer.trace("db.get", span => {
       span?.addTags({ db_name: this.name, doc_id: id })
