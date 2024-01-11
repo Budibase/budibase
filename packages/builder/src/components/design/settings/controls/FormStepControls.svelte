@@ -23,7 +23,7 @@
         stepAction("addStep")
       }}
     >
-      Add Step
+      Add step
     </ActionButton>
   </div>
 {:else}
