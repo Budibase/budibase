@@ -143,100 +143,104 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
     oneOf: {},
     containsAny: {},
   }
-  if (Array.isArray(filter)) {
-    filter.forEach(expression => {
-      let { operator, field, type, value, externalType, onEmptyFilter } =
-        expression
-      const isHbs =
-        typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
-      // Parse all values into correct types
-      if (operator === "allOr") {
-        query.allOr = true
+
+  if (!Array.isArray(filter)) {
+    return query
+  }
+
+  filter.forEach(expression => {
+    let { operator, field, type, value, externalType, onEmptyFilter } =
+      expression
+    const isHbs =
+      typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
+    // Parse all values into correct types
+    if (operator === "allOr") {
+      query.allOr = true
+      return
+    }
+    if (onEmptyFilter) {
+      query.onEmptyFilter = onEmptyFilter
+      return
+    }
+    if (
+      type === "datetime" &&
+      !isHbs &&
+      operator !== "empty" &&
+      operator !== "notEmpty"
+    ) {
+      // Ensure date value is a valid date and parse into correct format
+      if (!value) {
         return
       }
-      if (onEmptyFilter) {
-        query.onEmptyFilter = onEmptyFilter
+      try {
+        value = new Date(value).toISOString()
+      } catch (error) {
         return
       }
-      if (
-        type === "datetime" &&
-        !isHbs &&
-        operator !== "empty" &&
-        operator !== "notEmpty"
+    }
+    if (type === "number" && typeof value === "string" && !isHbs) {
+      if (operator === "oneOf") {
+        value = value.split(",").map(item => parseFloat(item))
+      } else {
+        value = parseFloat(value)
+      }
+    }
+    if (type === "boolean") {
+      value = `${value}`?.toLowerCase() === "true"
+    }
+    if (
+      ["contains", "notContains", "containsAny"].includes(operator) &&
+      type === "array" &&
+      typeof value === "string"
+    ) {
+      value = value.split(",")
+    }
+    if (operator.startsWith("range") && query.range) {
+      const minint =
+        SqlNumberTypeRangeMap[
+          externalType as keyof typeof SqlNumberTypeRangeMap
+        ]?.min || Number.MIN_SAFE_INTEGER
+      const maxint =
+        SqlNumberTypeRangeMap[
+          externalType as keyof typeof SqlNumberTypeRangeMap
+        ]?.max || Number.MAX_SAFE_INTEGER
+      if (!query.range[field]) {
+        query.range[field] = {
+          low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
+          high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
+        }
+      }
+      if ((operator as any) === "rangeLow" && value != null && value !== "") {
+        query.range[field].low = value
+      } else if (
+        (operator as any) === "rangeHigh" &&
+        value != null &&
+        value !== ""
       ) {
-        // Ensure date value is a valid date and parse into correct format
-        if (!value) {
-          return
-        }
-        try {
-          value = new Date(value).toISOString()
-        } catch (error) {
-          return
-        }
+        query.range[field].high = value
       }
-      if (type === "number" && typeof value === "string") {
-        if (operator === "oneOf") {
-          value = value.split(",").map(item => parseFloat(item))
-        } else if (!isHbs) {
-          value = parseFloat(value)
-        }
-      }
+    } else if (query[operator] && operator !== "onEmptyFilter") {
       if (type === "boolean") {
-        value = `${value}`?.toLowerCase() === "true"
-      }
-      if (
-        ["contains", "notContains", "containsAny"].includes(operator) &&
-        type === "array" &&
-        typeof value === "string"
-      ) {
-        value = value.split(",")
-      }
-      if (operator.startsWith("range") && query.range) {
-        const minint =
-          SqlNumberTypeRangeMap[
-            externalType as keyof typeof SqlNumberTypeRangeMap
-          ]?.min || Number.MIN_SAFE_INTEGER
-        const maxint =
-          SqlNumberTypeRangeMap[
-            externalType as keyof typeof SqlNumberTypeRangeMap
-          ]?.max || Number.MAX_SAFE_INTEGER
-        if (!query.range[field]) {
-          query.range[field] = {
-            low: type === "number" ? minint : "0000-00-00T00:00:00.000Z",
-            high: type === "number" ? maxint : "9999-00-00T00:00:00.000Z",
-          }
-        }
-        if ((operator as any) === "rangeLow" && value != null && value !== "") {
-          query.range[field].low = value
-        } else if (
-          (operator as any) === "rangeHigh" &&
-          value != null &&
-          value !== ""
-        ) {
-          query.range[field].high = value
-        }
-      } else if (query[operator] && operator !== "onEmptyFilter") {
-        if (type === "boolean") {
-          // Transform boolean filters to cope with null.
-          // "equals false" needs to be "not equals true"
-          // "not equals false" needs to be "equals true"
-          if (operator === "equal" && value === false) {
-            query.notEqual = query.notEqual || {}
-            query.notEqual[field] = true
-          } else if (operator === "notEqual" && value === false) {
-            query.equal = query.equal || {}
-            query.equal[field] = true
-          } else {
-            query[operator] = query[operator] || {}
-            query[operator]![field] = value
-          }
+        // Transform boolean filters to cope with null.
+        // "equals false" needs to be "not equals true"
+        // "not equals false" needs to be "equals true"
+        if (operator === "equal" && value === false) {
+          query.notEqual = query.notEqual || {}
+          query.notEqual[field] = true
+        } else if (operator === "notEqual" && value === false) {
+          query.equal = query.equal || {}
+          query.equal[field] = true
         } else {
           query[operator] = query[operator] || {}
           query[operator]![field] = value
         }
+      } else {
+        query[operator] = query[operator] || {}
+        query[operator]![field] = value
       }
-    })
-  }
+    }
+  })
+
   return query
 }
 
