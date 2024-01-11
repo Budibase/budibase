@@ -81,14 +81,14 @@
     ["Ctrl+ArrowLeft"]: (component) => {
       componentTreeNodesStore.collapseNode(component._id);
 
-      const collapseChilren = (component) => {
+      const collapseChildren = (component) => {
         (component._children ?? []).forEach(child => {
           componentTreeNodesStore.collapseNode(child._id);
-          collapseChilren(child);
+          collapseChildren(child);
         });
       };
 
-      collapseChilren(component);
+      collapseChildren(component);
     },
     ["Escape"]: () => {
       if ($isActive(`./:componentId/new`)) {
