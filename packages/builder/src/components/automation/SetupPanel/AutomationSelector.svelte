@@ -21,9 +21,10 @@
   }
   $: if (value?.automationId == null) value = { automationId: "" }
 
-  $: automationFields = $automationStore.automations.find(
-    automation => automation._id === value?.automationId
-  )?.definition?.trigger?.inputs?.fields
+  $: automationFields =
+    $automationStore.automations.find(
+      automation => automation._id === value?.automationId
+    )?.definition?.trigger?.inputs?.fields || []
 
   $: filteredAutomations = $automationStore.automations.filter(
     automation =>
