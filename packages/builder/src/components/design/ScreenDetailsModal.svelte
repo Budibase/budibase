@@ -13,6 +13,7 @@
   const appPrefix = "/app"
   let touched = false
   let error
+  let modal
 
   $: appUrl = screenUrl
     ? `${window.location.origin}${appPrefix}${screenUrl}`
@@ -50,6 +51,7 @@
 </script>
 
 <ModalContent
+  bind:this={modal}
   size="M"
   title={"Screen details"}
   {confirmText}
@@ -58,15 +60,17 @@
   cancelText={"Back"}
   disabled={!screenUrl || error || !touched}
 >
-  <Input
-    label="Enter a URL for the new screen"
-    {error}
-    bind:value={screenUrl}
-    on:change={routeChanged}
-  />
-  <div class="app-server" title={appUrl}>
-    {appUrl}
-  </div>
+  <form on:submit|preventDefault={() => modal.confirm()}>
+    <Input
+      label="Enter a URL for the new screen"
+      {error}
+      bind:value={screenUrl}
+      on:change={routeChanged}
+    />
+    <div class="app-server" title={appUrl}>
+      {appUrl}
+    </div>
+  </form>
 </ModalContent>
 
 <style>
