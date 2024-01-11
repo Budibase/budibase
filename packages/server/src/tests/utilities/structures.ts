@@ -21,7 +21,9 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
+  AutomationIOType,
 } from "@budibase/types"
+import { bool } from "joi"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -164,7 +166,7 @@ export function basicAutomation(appId?: string): Automation {
             inputs: {
               properties: {
                 text: {
-                  type: "string",
+                  type: AutomationIOType.STRING,
                   title: "Text to log",
                 },
               },
@@ -183,6 +185,7 @@ export function basicAutomation(appId?: string): Automation {
             },
           },
           id: "y8lkZbeSe",
+          type: AutomationStepType.ACTION,
         },
       ],
     },
