@@ -33,7 +33,7 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
   })
 }
 
-type DBCall = () => Promise<any>
+type DBCall<T> = () => Promise<T>
 
 export function DatabaseWithConnection(
   dbName: string,
@@ -107,8 +107,8 @@ export class DatabaseImpl implements Database {
   }
 
   // this function fetches the DB and handles if DB creation is needed
-  private async performCall(
-    call: (db: Nano.DocumentScope<any>) => Promise<DBCall> | DBCall
+  private async performCall<T>(
+    call: (db: Nano.DocumentScope<any>) => Promise<DBCall<T>> | DBCall<T>
   ): Promise<any> {
     const db = this.getDb()
     const fnc = await call(db)
