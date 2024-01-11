@@ -148,6 +148,38 @@ export function basicAutomation(appId?: string): Automation {
           },
         },
       },
+      steps: [],
+    },
+    type: "automation",
+    appId: appId!,
+  }
+}
+
+export function serverLogAutomation(appId?: string): Automation {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: {},
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
       steps: [
         {
           stepId: AutomationActionStepId.SERVER_LOG,
