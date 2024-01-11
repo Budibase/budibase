@@ -21,14 +21,16 @@ describe("Test triggering an automation from another automation", () => {
     let automation = serverLogAutomation()
     let newAutomation = await config.createAutomation(automation)
 
-    const inputs: any = { automationId: newAutomation._id, timeout: 12000 }
+    const inputs: any = {
+      automation: { automationId: newAutomation._id, timeout: 12000 },
+    }
     const res = await setup.runStep(setup.actions.TRIGGER.stepId, inputs)
     // Check if the SERVER_LOG step was successful
     expect(res.value[1].outputs.success).toBe(true)
   })
 
   it("should fail gracefully if the automation id is incorrect", async () => {
-    const inputs: any = { automationId: null, timeout: 12000 }
+    const inputs: any = { automation: { automationId: null, timeout: 12000 } }
     const res = await setup.runStep(setup.actions.TRIGGER.stepId, inputs)
     expect(res.success).toBe(false)
   })

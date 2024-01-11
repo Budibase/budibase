@@ -192,30 +192,9 @@ export function serverLogAutomation(appId?: string): Automation {
             LOOPING: true,
           },
           inputs: {
-            text: "sdfsdf",
+            text: "log statement",
           },
-          schema: {
-            inputs: {
-              properties: {
-                text: {
-                  type: AutomationIOType.STRING,
-                  title: "Text to log",
-                },
-              },
-              required: ["text"],
-            },
-            outputs: {
-              properties: {
-                success: {
-                  description: "Whether the action was successful",
-                },
-                message: {
-                  description: "What was output",
-                },
-              },
-              required: ["success", "message"],
-            },
-          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
           id: "y8lkZbeSe",
           type: AutomationStepType.ACTION,
         },
