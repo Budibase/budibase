@@ -39,10 +39,10 @@ describe("license management", () => {
     let premiumPriceId = null
     let businessPriceId = ""
     for (const plan of planBody) {
-      if (plan.type === PlanType.PREMIUM) {
+      if (plan.type === PlanType.PREMIUM_PLUS) {
         premiumPriceId = plan.prices[0].priceId
       }
-      if (plan.type === PlanType.BUSINESS) {
+      if (plan.type === PlanType.ENTERPRISE_BASIC) {
         businessPriceId = plan.prices[0].priceId
       }
     }
@@ -97,7 +97,7 @@ describe("license management", () => {
       await config.loginAsAccount(createAccountRequest)
       await config.api.stripe.linkStripeCustomer(account.accountId, customer.id)
       const [_, selfBodyPremium] = await config.api.accounts.self()
-      expect(selfBodyPremium.license.plan.type).toBe(PlanType.PREMIUM)
+      expect(selfBodyPremium.license.plan.type).toBe(PlanType.PREMIUM_PLUS)
 
       // Create portal session - Check URL
       const [portalRes, portalSessionBody] =
@@ -109,7 +109,7 @@ describe("license management", () => {
 
       // License updated to Business
       const [selfRes, selfBodyBusiness] = await config.api.accounts.self()
-      expect(selfBodyBusiness.license.plan.type).toBe(PlanType.BUSINESS)
+      expect(selfBodyBusiness.license.plan.type).toBe(PlanType.ENTERPRISE_BASIC)
     })
   })
 })
