@@ -44,6 +44,12 @@ type GroupFns = {
   getBulk: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
 }
+type CreateAdminUserOpts = {
+  ssoId?: string
+  hashPassword?: boolean
+  requirePassword?: boolean
+  skipPasswordValidation?: boolean
+}
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -112,9 +118,11 @@ export class UserDB {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
 
-      const passwordValidation = validatePassword(password)
-      if (!passwordValidation.valid) {
-        throw new HTTPError(passwordValidation.error, 400)
+      if (!opts.skipPasswordValidation) {
+        const passwordValidation = validatePassword(password)
+        if (!passwordValidation.valid) {
+          throw new HTTPError(passwordValidation.error, 400)
+        }
       }
 
       hashedPassword = opts.hashPassword ? await hash(password) : password
@@ -489,7 +497,7 @@ export class UserDB {
     email: string,
     password: string,
     tenantId: string,
-    opts?: { ssoId?: string; hashPassword?: boolean; requirePassword?: boolean }
+    opts?: CreateAdminUserOpts
   ) {
     const user: User = {
       email: email,
@@ -513,6 +521,7 @@ export class UserDB {
     return await UserDB.save(user, {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
+      skipPasswordValidation: opts?.skipPasswordValidation,
     })
   }
 
