@@ -188,7 +188,8 @@
       ) {
         if (name !== "id" && name !== "revision") return `trigger.row.${name}`
       }
-      /* end special cases */
+      /* End special cases for generating custom schemas based on triggers */
+
       if (isLoopBlock) {
         runtimeName = `loop.${name}`
       } else if (block.name.startsWith("JS")) {
