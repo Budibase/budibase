@@ -172,11 +172,8 @@ export default function (
         tracer.setUser({
           id: user?._id,
           tenantId: user?.tenantId,
-          admin: user?.admin,
-          builder: user?.builder,
           budibaseAccess: user?.budibaseAccess,
           status: user?.status,
-          roles: user?.roles,
         })
       }
 
