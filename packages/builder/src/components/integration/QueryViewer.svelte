@@ -105,13 +105,22 @@
     }
   }
 
+  function isObject(test) {
+    return (
+      typeof test === "object" &&
+      !Array.isArray(test) &&
+      test !== null &&
+      !(test instanceof Date)
+    )
+  }
+
   // Replace arrays with nested schema
   function getFinalizedSchema() {
     let schema =
       Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema
 
     for (let key in schema) {
-      if (schema[key] === "array") {
+      if (schema[key] === "array" && rows.some(row => isObject(row[key]))) {
         schema[key] = {
           schema: {
             schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
