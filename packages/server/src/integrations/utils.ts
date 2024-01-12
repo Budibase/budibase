@@ -93,9 +93,7 @@ export enum SqlClient {
 }
 
 export function isExternalTableID(tableId: string) {
-  return (
-    tableId.includes(DocumentType.DATASOURCE) && !tableId.startsWith("query")
-  )
+  return tableId.includes(DocumentType.DATASOURCE)
 }
 
 export function isInternalTableID(tableId: string) {

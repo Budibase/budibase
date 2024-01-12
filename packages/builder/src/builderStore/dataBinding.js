@@ -380,7 +380,10 @@ const getProviderContextBindings = (asset, dataProviders) => {
         table = info.table
 
         // Determine what to prefix bindings with
-        if (datasource.type === "jsonarray") {
+        if (
+          datasource.type === "jsonarray" ||
+          datasource.type === "queryarray"
+        ) {
           // For JSON arrays, use the array name as the readable prefix
           const split = datasource.label.split(".")
           readablePrefix = split[split.length - 1]
@@ -842,12 +845,15 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // "jsonarray" datasources are arrays inside JSON fields
     else if (type === "jsonarray") {
-      if (datasource.tableId?.startsWith("query")) {
-        const queries = get(queriesStores).list
-        table = queries.find(query => query._id === datasource.tableId)
-      } else {
-        table = tables.find(table => table._id === datasource.tableId)
-      }
+      table = tables.find(table => table._id === datasource.tableId)
+      let tableSchema = table?.schema
+      schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
+    }
+
+    // "queryarray" datasources are arrays inside JSON responses
+    else if (type === "queryarray") {
+      const queries = get(queriesStores).list
+      table = queries.find(query => query._id === datasource.tableId)
       let tableSchema = table?.schema
       schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
     }

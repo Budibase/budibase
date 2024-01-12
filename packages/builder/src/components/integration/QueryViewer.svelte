@@ -126,7 +126,7 @@
             ),
             type: "json",
           },
-          type: "jsonarray",
+          type: "queryarray",
         }
       }
     }

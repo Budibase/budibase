@@ -42,6 +42,7 @@
 
   const dispatch = createEventDispatcher()
   const arrayTypes = ["attachment", "array"]
+  const jsonArrayTypes = ["jsonarray", "queryarray"]
 
   let anchorRight, dropdownRight
   let drawer
@@ -125,7 +126,7 @@
       }
     })
   $: jsonArrays = bindings
-    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .filter(x => jsonArrayTypes.includes(x.fieldSchema?.type))
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding, tableId } = binding
       const { name, type, prefixKeys } = binding.fieldSchema
@@ -136,7 +137,7 @@
         fieldType: type,
         tableId,
         prefixKeys,
-        type: "jsonarray",
+        type,
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })
