@@ -1,11 +1,10 @@
 import { generateQueryID } from "../../../db/utils"
-import { BaseQueryVerbs, FieldTypes } from "../../../constants"
+import { FieldTypes } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
 import env from "../../../environment"
-import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
@@ -15,18 +14,6 @@ import { ValidQueryNameRegex } from "@budibase/shared-core"
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
 })
-
-// simple function to append "readable" to all read queries
-function enrichQueries(input: any) {
-  const wasArray = Array.isArray(input)
-  const queries = wasArray ? input : [input]
-  for (let query of queries) {
-    if (query.queryVerb === BaseQueryVerbs.READ) {
-      query.readable = true
-    }
-  }
-  return wasArray ? queries : queries[0]
-}
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.queries.fetch()
