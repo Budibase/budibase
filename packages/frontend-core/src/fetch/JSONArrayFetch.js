@@ -6,7 +6,12 @@ export default class JSONArrayFetch extends FieldFetch {
     // JSON arrays need their table definitions fetched.
     // We can then extract their schema as a subset of the table schema.
     try {
-      const table = await this.API.fetchTableDefinition(datasource.tableId)
+      let table
+      if (datasource.tableId?.startsWith("query")) {
+        table = await this.API.fetchQueryDefinition(datasource.tableId)
+      } else {
+        table = await this.API.fetchTableDefinition(datasource.tableId)
+      }
       const schema = getJSONArrayDatasourceSchema(table?.schema, datasource)
       return { schema }
     } catch (error) {

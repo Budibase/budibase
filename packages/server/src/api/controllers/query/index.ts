@@ -131,6 +131,42 @@ export async function preview(ctx: UserCtx) {
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
+  function getSchemaFields(rows: any, keys: any) {
+    const schemaFields: any = {}
+    const nestedSchemaFields: any = {}
+    if (rows?.length > 0) {
+      for (let key of [...new Set(keys)] as string[]) {
+        const field = rows[0][key]
+        let type = typeof field,
+          fieldType = FieldTypes.STRING
+        if (field)
+          switch (type) {
+            case "boolean":
+              schemaFields[key] = FieldTypes.BOOLEAN
+              break
+            case "object":
+              if (field instanceof Date) {
+                fieldType = FieldTypes.DATETIME
+              } else if (Array.isArray(field)) {
+                fieldType = FieldTypes.ARRAY
+                nestedSchemaFields[`${key}`] = getSchemaFields(
+                  field,
+                  Object.keys(field[0])
+                ).schemaFields
+              } else {
+                fieldType = FieldTypes.JSON
+              }
+              break
+            case "number":
+              fieldType = FieldTypes.NUMBER
+              break
+          }
+        schemaFields[key] = fieldType
+      }
+    }
+    return { schemaFields, nestedSchemaFields }
+  }
+
   try {
     const inputs: QueryEvent = {
       appId: ctx.appId,
@@ -150,33 +186,8 @@ export async function preview(ctx: UserCtx) {
     }
 
     const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
-    const schemaFields: any = {}
-    if (rows?.length > 0) {
-      for (let key of [...new Set(keys)] as string[]) {
-        const field = rows[0][key]
-        let type = typeof field,
-          fieldType = FieldTypes.STRING
-        if (field)
-          switch (type) {
-            case "boolean":
-              schemaFields[key] = FieldTypes.BOOLEAN
-              break
-            case "object":
-              if (field instanceof Date) {
-                fieldType = FieldTypes.DATETIME
-              } else if (Array.isArray(field)) {
-                fieldType = FieldTypes.ARRAY
-              } else {
-                fieldType = FieldTypes.JSON
-              }
-              break
-            case "number":
-              fieldType = FieldTypes.NUMBER
-              break
-          }
-        schemaFields[key] = fieldType
-      }
-    }
+    const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
+
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
       for (let key of Object.keys(schemaFields)) {
@@ -191,6 +202,7 @@ export async function preview(ctx: UserCtx) {
     ctx.body = {
       rows,
       schemaFields,
+      nestedSchemaFields,
       info,
       extra,
     }

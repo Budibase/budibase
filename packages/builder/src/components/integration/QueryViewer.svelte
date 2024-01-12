@@ -40,6 +40,7 @@
   let schemaType
 
   let autoSchema = {}
+  let nestedSchemaFields = {}
   let rows = []
 
   const parseQuery = query => {
@@ -82,13 +83,14 @@
         return
       }
 
+      nestedSchemaFields = response.nestedSchemaFields
+
       if (Object.keys(newQuery.schema).length === 0) {
         // Assign this to a variable instead of directly to the newQuery.schema so that a user
         // can change the table they're querying and have the schema update until they first
         // edit it
         autoSchema = response.schema
       }
-
       rows = response.rows
 
       notifications.success("Query executed successfully")
@@ -103,16 +105,42 @@
     }
   }
 
+  // Replace arrays with nested schema
+  function getFinalizedSchema() {
+    let schema =
+      Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema
+
+    for (let key in schema) {
+      if (schema[key] === "array") {
+        schema[key] = {
+          schema: {
+            schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
+              (acc, [nestedKey, nestedType]) => {
+                acc[nestedKey] = {
+                  name: nestedKey,
+                  type: nestedType,
+                }
+                return acc
+              },
+              {}
+            ),
+            type: "json",
+          },
+          type: "jsonarray",
+        }
+      }
+    }
+
+    return schema
+  }
+
   async function saveQuery() {
     try {
       showSidePanel = true
       loading = true
       const response = await queries.save(newQuery.datasourceId, {
         ...newQuery,
-        schema:
-          Object.keys(newQuery.schema).length === 0
-            ? autoSchema
-            : newQuery.schema,
+        schema: getFinalizedSchema(),
       })
 
       notifications.success("Query saved successfully")
