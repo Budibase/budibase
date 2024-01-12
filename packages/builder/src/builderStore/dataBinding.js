@@ -842,7 +842,12 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
 
     // "jsonarray" datasources are arrays inside JSON fields
     else if (type === "jsonarray") {
-      table = tables.find(table => table._id === datasource.tableId)
+      if (datasource.tableId?.startsWith("query")) {
+        const queries = get(queriesStores).list
+        table = queries.find(query => query._id === datasource.tableId)
+      } else {
+        table = tables.find(table => table._id === datasource.tableId)
+      }
       let tableSchema = table?.schema
       schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
     }
