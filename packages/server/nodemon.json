@@ -7,7 +7,7 @@
     "../shared-core",
     "../string-templates"
   ],
-  "ext": "js,ts,json",
+  "ext": "js,ts,json,svelte",
   "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js", "../*/dist/**/*"],
   "exec": "yarn build && node --no-node-snapshot ./dist/index.js"
 }
