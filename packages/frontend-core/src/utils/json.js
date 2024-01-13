@@ -119,3 +119,36 @@ const extractJSONSchemaKeys = (jsonSchema, squashObjects = false) => {
   })
   return keys
 }
+
+const isObject = test => {
+  return (
+    typeof test === "object" &&
+    !Array.isArray(test) &&
+    test !== null &&
+    !(test instanceof Date)
+  )
+}
+
+export const generateQueryArraySchemas = (schema, nestedSchemaFields) => {
+  for (let key in schema) {
+    if (schema[key] === "queryarray" && isObject(nestedSchemaFields[key])) {
+      schema[key] = {
+        schema: {
+          schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
+            (acc, [nestedKey, nestedType]) => {
+              acc[nestedKey] = {
+                name: nestedKey,
+                type: nestedType,
+              }
+              return acc
+            },
+            {}
+          ),
+          type: "json",
+        },
+        type: "queryarray",
+      }
+    }
+  }
+  return schema
+}

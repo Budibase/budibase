@@ -855,7 +855,12 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
       const queries = get(queriesStores).list
       table = queries.find(query => query._id === datasource.tableId)
       let tableSchema = table?.schema
-      schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
+      let nestedSchemaFields = table?.nestedSchemaFields
+      schema = JSONUtils.generateQueryArraySchemas(
+        tableSchema,
+        nestedSchemaFields
+      )
+      schema = JSONUtils.getJSONArrayDatasourceSchema(schema, datasource)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus
