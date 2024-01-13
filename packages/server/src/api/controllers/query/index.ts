@@ -148,7 +148,7 @@ export async function preview(ctx: UserCtx) {
               if (field instanceof Date) {
                 fieldType = FieldTypes.DATETIME
               } else if (Array.isArray(field)) {
-                fieldType = FieldTypes.ARRAY
+                fieldType = FieldTypes.QUERY_ARRAY
                 nestedSchemaFields[`${key}`] = getSchemaFields(
                   field,
                   Object.keys(field[0])

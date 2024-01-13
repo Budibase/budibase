@@ -105,51 +105,17 @@
     }
   }
 
-  function isObject(test) {
-    return (
-      typeof test === "object" &&
-      !Array.isArray(test) &&
-      test !== null &&
-      !(test instanceof Date)
-    )
-  }
-
-  // Replace arrays with nested schema
-  function getFinalizedSchema() {
-    let schema =
-      Object.keys(newQuery.schema).length === 0 ? autoSchema : newQuery.schema
-
-    for (let key in schema) {
-      if (schema[key] === "array" && rows.some(row => isObject(row[key]))) {
-        schema[key] = {
-          schema: {
-            schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
-              (acc, [nestedKey, nestedType]) => {
-                acc[nestedKey] = {
-                  name: nestedKey,
-                  type: nestedType,
-                }
-                return acc
-              },
-              {}
-            ),
-            type: "json",
-          },
-          type: "queryarray",
-        }
-      }
-    }
-
-    return schema
-  }
-
   async function saveQuery() {
     try {
       showSidePanel = true
       loading = true
       const response = await queries.save(newQuery.datasourceId, {
         ...newQuery,
-        schema: getFinalizedSchema(),
+        schema:
+          Object.keys(newQuery.schema).length === 0
+            ? autoSchema
+            : newQuery.schema,
+        nestedSchemaFields,
       })
 
       notifications.success("Query saved successfully")
