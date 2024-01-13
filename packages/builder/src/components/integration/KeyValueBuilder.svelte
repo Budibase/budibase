@@ -112,7 +112,12 @@
         on:blur={changed}
       />
       {#if options}
-        <Select bind:value={field.value} on:change={changed} {options} />
+        <Select
+          readonly={field.value === "queryarray"}
+          bind:value={field.value}
+          on:change={changed}
+          {options}
+        />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}
