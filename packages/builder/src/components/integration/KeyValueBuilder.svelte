@@ -114,12 +114,7 @@
       {#if field.value === "queryarray"}
         <Select readonly={true} value="Array" options={["Array"]} />
       {:else if options}
-        <Select
-          readonly={field.value === "queryarray"}
-          bind:value={field.value}
-          on:change={changed}
-          {options}
-        />
+        <Select bind:value={field.value} on:change={changed} {options} />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}
