@@ -35,7 +35,6 @@ export default class QueryArrayFetch extends FieldFetch {
         }
       }
     }
-    console.log("SCHEMA ", schema)
     return schema
   }
 
