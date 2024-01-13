@@ -269,7 +269,6 @@ export const SchemaTypeOptions = [
   { label: "Number", value: "number" },
   { label: "Boolean", value: "boolean" },
   { label: "Datetime", value: "datetime" },
-  { label: "Array", value: "queryarray" },
 ]
 
 export const RawRestBodyTypes = {
