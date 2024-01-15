@@ -44,7 +44,11 @@
   })
 
   const onChange = value => {
-    if (type === "link" && value && hasValidLinks(value)) {
+    if (
+      (type === "link" || type === "bb_reference") &&
+      value &&
+      hasValidLinks(value)
+    ) {
       currentVal = value.split(",")
     } else if (type === "array" && value && hasValidOptions(value)) {
       currentVal = value.split(",")
@@ -95,6 +99,7 @@
     date: isValidDate,
     datetime: isValidDate,
     link: hasValidLinks,
+    bb_reference: hasValidLinks,
     array: hasValidOptions,
     longform: value => !isJSBinding(value),
     json: value => !isJSBinding(value),

@@ -65,7 +65,6 @@
     "@types/cookies": "0.7.8",
     "@types/jest": "29.5.5",
     "@types/lodash": "4.14.200",
-    "@types/node": "18.17.0",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.0",
     "@types/redlock": "4.0.3",

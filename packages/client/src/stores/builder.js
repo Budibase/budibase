@@ -8,7 +8,6 @@ const createBuilderStore = () => {
     inBuilder: false,
     screen: null,
     selectedComponentId: null,
-    hoverComponentId: null,
     editMode: false,
     previewId: null,
     theme: null,
@@ -18,22 +17,13 @@ const createBuilderStore = () => {
     hiddenComponentIds: [],
     usedPlugins: null,
     eventResolvers: {},
+    metadata: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,
   }
   const store = writable(initialState)
   const actions = {
-    hoverComponent: id => {
-      if (id === get(store).hoverComponentId) {
-        return
-      }
-      store.update(state => ({
-        ...state,
-        hoverComponentId: id,
-      }))
-      eventStore.actions.dispatchEvent("hover-component", { id })
-    },
     selectComponent: id => {
       if (id === get(store).selectedComponentId) {
         return
@@ -122,6 +112,12 @@ const createBuilderStore = () => {
         componentId,
         parentType,
       })
+    },
+    setMetadata: metadata => {
+      store.update(state => ({
+        ...state,
+        metadata,
+      }))
     },
   }
   return {
