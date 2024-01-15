@@ -163,6 +163,12 @@
               "@budibase/backend-core"
             ],
             "target": "build"
+          },
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build:esbuild"
           }
         ]
       },
