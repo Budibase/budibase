@@ -3,10 +3,10 @@ import env from "./environment"
 import { setJSRunner } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
-import { readFileSync } from "fs"
+import fs from "fs"
 
-const helpersSource = readFileSync(
-  "node_modules/@budibase/string-templates/dist/bundle.mjs",
+const helpersSource = fs.readFileSync(
+  `${require.resolve("@budibase/string-templates/index-helpers")}`,
   "utf8"
 )
 

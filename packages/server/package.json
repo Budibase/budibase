@@ -181,6 +181,16 @@
             "target": "build"
           }
         ]
+      },
+      "test": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build:esbuild"
+          }
+        ]
       }
     }
   }

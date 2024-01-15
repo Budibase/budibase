@@ -11,7 +11,8 @@
       "require": "./src/index.cjs",
       "import": "./dist/bundle.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./index-helpers": "./dist/index-helpers.bundled.js"
   },
   "files": [
     "dist",
