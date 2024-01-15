@@ -19,7 +19,7 @@
   export let lastStep
 
   let syncAutomationsEnabled = $licensing.syncAutomationsEnabled
-  let triggerAutomationsEnabled = $licensing.triggerAutomationsEnabled
+  let triggerAutomationRunEnabled = $licensing.triggerAutomationRunEnabled
   let collectBlockAllowedSteps = [TriggerStepID.APP, TriggerStepID.WEBHOOK]
   let selectedAction
   let actionVal
@@ -38,8 +38,8 @@
         disabled: !lastStep || !syncAutomationsEnabled || collectBlockExists,
         message: collectDisabledMessage(),
       },
-      TRIGGER: {
-        disabled: !triggerAutomationsEnabled,
+      TRIGGER_AUTOMATION_RUN: {
+        disabled: !triggerAutomationRunEnabled,
         message: collectDisabledMessage(),
       },
     }
@@ -155,7 +155,7 @@
           <div class="item-body">
             <Icon name={action.icon} />
             <Body size="XS">{action.name}</Body>
-            {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationsEnabled && lockedFeatures.includes(action.stepId)}
+            {#if isDisabled && !syncAutomationsEnabled && !triggerAutomationRunEnabled && lockedFeatures.includes(action.stepId)}
               <div class="tag-color">
                 <Tags>
                   <Tag icon="LockClosed">Premium</Tag>

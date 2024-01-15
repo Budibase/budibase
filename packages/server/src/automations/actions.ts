@@ -15,7 +15,7 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
-import * as trigger from "./steps/trigger"
+import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
   AutomationStepSchema,
@@ -42,7 +42,7 @@ const ACTION_IMPLS: Record<
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
-  TRIGGER: trigger.run,
+  TRIGGER: triggerAutomationRun.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
@@ -64,7 +64,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
     QUERY_ROWS: queryRow.definition,
     LOOP: loop.definition,
     COLLECT: collect.definition,
-    TRIGGER: trigger.definition,
+    TRIGGER: triggerAutomationRun.definition,
     // these used to be lowercase step IDs, maintain for backwards compat
     discord: discord.definition,
     slack: slack.definition,
