@@ -33,7 +33,7 @@ export function init() {
         }
       }
 
-      const global = bbCtx.jsContext.global
+      const global = bbCtx.jsContext!.global
       for (const [key, value] of Object.entries(ctx)) {
         if (typeof value === "function") {
           // Can't copy functions into the isolate, so we just ignore them
@@ -43,7 +43,7 @@ export function init() {
       }
 
       const script = bbCtx.jsIsolate.compileScriptSync(js)
-      return script.runSync(bbCtx.jsContext, {
+      return script.runSync(bbCtx.jsContext!, {
         timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
       })
     })
