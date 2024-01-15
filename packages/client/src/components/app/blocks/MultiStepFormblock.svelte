@@ -11,6 +11,8 @@
   export let noRowsMessage
   export let steps
   export let dataSource
+  export let buttonPosition = "bottom"
+  export let size
 
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
@@ -127,6 +129,7 @@
     type="form"
     context="form"
     props={{
+      size,
       dataSource,
       actionType: actionType === "Create" ? "Create" : "Update",
       readonly: actionType === "View",
@@ -154,8 +157,33 @@
             size: "shrink",
           }}
         >
-          <BlockComponent type="container" order={0}>
-            <BlockComponent type="heading" props={{ text: step.title }} />
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "column",
+              gap: "S",
+            }}
+            order={0}
+          >
+            <BlockComponent
+              type="container"
+              props={{
+                direction: "row",
+                hAlign: "stretch",
+                vAlign: "center",
+                gap: "M",
+                wrap: true,
+              }}
+              order={0}
+            >
+              <BlockComponent type="heading" props={{ text: step.title }} />
+              {#if buttonPosition === "top"}
+                <BlockComponent
+                  type="buttongroup"
+                  props={{ buttons: step.buttons }}
+                />
+              {/if}
+            </BlockComponent>
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
           <BlockComponent type="container" order={2}>
@@ -176,16 +204,13 @@
               {/each}
             </div>
           </BlockComponent>
-          <BlockComponent
-            type="buttongroup"
-            props={{ buttons: step.buttons }}
-            styles={{
-              normal: {
-                "margin-top": "16px",
-              },
-            }}
-            order={3}
-          />
+          {#if buttonPosition === "bottom"}
+            <BlockComponent
+              type="buttongroup"
+              props={{ buttons: step.buttons }}
+              order={3}
+            />
+          {/if}
         </BlockComponent>
       </BlockComponent>
     {/each}
