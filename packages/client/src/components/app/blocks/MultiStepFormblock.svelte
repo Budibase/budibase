@@ -177,7 +177,7 @@
               order={0}
             >
               <BlockComponent type="heading" props={{ text: step.title }} />
-              {#if buttonPosition == "top"}
+              {#if buttonPosition === "top"}
                 <BlockComponent
                   type="buttongroup"
                   props={{ buttons: step.buttons }}
