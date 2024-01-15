@@ -6085,15 +6085,44 @@
             "key": "steps",
             "nested": true,
             "labelHidden": true,
-            "resetOn": [
-              "dataSource",
-              "actionType"
-            ],
-            "defaultValue": [
-              {}
-            ]
+            "resetOn": ["dataSource", "actionType"],
+            "defaultValue": [{}]
           }
         ]
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Button position",
+        "key": "buttonPosition",
+        "options": [
+          {
+            "label": "Bottom",
+            "value": "bottom"
+          },
+          {
+            "label": "Top",
+            "value": "top"
+          }
+        ],
+        "defaultValue": "bottom"
       }
     ],
     "actions": [
