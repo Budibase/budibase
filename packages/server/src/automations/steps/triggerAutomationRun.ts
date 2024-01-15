@@ -4,7 +4,6 @@ import {
   AutomationStepInput,
   AutomationStepType,
   AutomationIOType,
-  AutomationFeature,
   AutomationResults,
   Automation,
   AutomationCustomIOType,

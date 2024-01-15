@@ -23,7 +23,6 @@ import {
   TableSourceType,
   AutomationIOType,
 } from "@budibase/types"
-import { bool } from "joi"
 
 const { BUILTIN_ROLE_IDS } = roles
 
