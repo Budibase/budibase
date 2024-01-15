@@ -24,7 +24,10 @@
   let selectedAction
   let actionVal
   let actions = Object.entries($automationStore.blockDefinitions.ACTION)
-  let lockedFeatures = [ActionStepID.COLLECT, ActionStepID.TRIGGER]
+  let lockedFeatures = [
+    ActionStepID.COLLECT,
+    ActionStepID.TRIGGER_AUTOMATION_RUN,
+  ]
 
   $: collectBlockExists = checkForCollectStep($selectedAutomation)
 
