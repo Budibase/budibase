@@ -18,8 +18,8 @@ export function init() {
         bbCtx.jsIsolate = new ivm.Isolate({ memoryLimit: 64 })
         bbCtx.jsContext = bbCtx.jsIsolate.createContextSync()
         const helpersModule = bbCtx.jsIsolate.compileModuleSync(helpersSource)
-        helpersModule.instantiateSync(bbCtx.jsContext, () => {
-          throw new Error("No imports allowed")
+        helpersModule.instantiateSync(bbCtx.jsContext, specifier => {
+          throw new Error(`No imports allowed. Required: ${specifier}`)
         })
       }
 
