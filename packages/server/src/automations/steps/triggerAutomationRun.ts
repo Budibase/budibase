@@ -20,7 +20,7 @@ export const definition: AutomationStepSchema = {
   type: AutomationStepType.ACTION,
   internal: true,
   features: {},
-  stepId: AutomationActionStepId.TRIGGER,
+  stepId: AutomationActionStepId.TRIGGER_AUTOMATION_RUN,
   inputs: {},
   schema: {
     inputs: {
