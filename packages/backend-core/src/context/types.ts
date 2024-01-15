@@ -10,6 +10,6 @@ export type ContextMap = {
   isScim?: boolean
   automationId?: string
   isMigrating?: boolean
-  jsIsolate: Isolate
-  jsContext: Context
+  jsIsolate?: Isolate
+  jsContext?: Context
 }
