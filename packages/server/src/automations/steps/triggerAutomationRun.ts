@@ -12,7 +12,7 @@ import * as triggers from "../triggers"
 import { db as dbCore, context } from "@budibase/backend-core"
 
 export const definition: AutomationStepSchema = {
-  name: "Trigger Automation",
+  name: "Trigger an automation",
   tagline: "Triggers an automation synchronously",
   icon: "Sync",
   description: "Triggers an automation synchronously",
