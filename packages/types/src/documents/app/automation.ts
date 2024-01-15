@@ -63,7 +63,7 @@ export enum AutomationActionStepId {
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
-  TRIGGER = "TRIGGER",
+  TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
