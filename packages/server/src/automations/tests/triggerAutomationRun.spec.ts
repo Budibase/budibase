@@ -24,7 +24,10 @@ describe("Test triggering an automation from another automation", () => {
     const inputs: any = {
       automation: { automationId: newAutomation._id, timeout: 12000 },
     }
-    const res = await setup.runStep(setup.actions.TRIGGER.stepId, inputs)
+    const res = await setup.runStep(
+      setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
+      inputs
+    )
     // Check if the SERVER_LOG step was successful
     expect(res.value[1].outputs.success).toBe(true)
   })
