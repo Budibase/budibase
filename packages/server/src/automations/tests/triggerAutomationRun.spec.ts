@@ -34,7 +34,10 @@ describe("Test triggering an automation from another automation", () => {
 
   it("should fail gracefully if the automation id is incorrect", async () => {
     const inputs: any = { automation: { automationId: null, timeout: 12000 } }
-    const res = await setup.runStep(setup.actions.TRIGGER.stepId, inputs)
+    const res = await setup.runStep(
+      setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
+      inputs
+    )
     expect(res.success).toBe(false)
   })
 })
