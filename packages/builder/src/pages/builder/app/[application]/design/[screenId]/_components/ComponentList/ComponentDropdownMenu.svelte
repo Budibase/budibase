@@ -87,7 +87,7 @@
     Paste
   </MenuItem>
 
-  {#if component._children.length > 0}
+  {#if component?._children?.length}
     <MenuItem
       icon="TreeExpand"
       keyBind="!ArrowRight"
