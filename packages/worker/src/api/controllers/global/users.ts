@@ -388,6 +388,7 @@ export const inviteAccept = async (
         type: LockType.AUTO_EXTEND,
         name: LockName.PROCESS_USER_INVITE,
         resource: inviteCode,
+        systemLock: true,
       },
       async () => {
         // info is an extension of the user object that was stored by global
