@@ -20,7 +20,7 @@
     "manifest.json"
   ],
   "scripts": {
-    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm",
+    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
     "build": "yarn build:esbuild && tsc && rollup -c",
     "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && rollup -cw\"",
     "test": "jest",
