@@ -425,6 +425,6 @@ export const inviteAccept = async (
       ctx.throw(400, err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, "Unable to create new user, invitation invalid.")
+    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
   }
 }
