@@ -16,6 +16,10 @@ export enum AutoFieldSubTypes {
   AUTO_ID = "autoID",
 }
 
+export enum ArrayFieldSubTypes {
+  QUERY = "query",
+}
+
 export enum FormulaTypes {
   STATIC = "static",
   DYNAMIC = "dynamic",

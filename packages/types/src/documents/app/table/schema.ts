@@ -2,6 +2,7 @@
 // column size, position and whether it can be viewed
 import { FieldSubtype, FieldType } from "../row"
 import {
+  ArrayFieldSubTypes,
   AutoFieldSubTypes,
   AutoReason,
   FormulaTypes,
@@ -78,6 +79,11 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
     toTable: string
     toKey: string
   }
+}
+
+export interface ArrayFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ARRAY
+  subtype?: ArrayFieldSubTypes.QUERY
 }
 
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
@@ -161,6 +167,7 @@ export type FieldSchema =
   | NumberFieldMetadata
   | LongFormFieldMetadata
   | BBReferenceFieldMetadata
+  | ArrayFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema

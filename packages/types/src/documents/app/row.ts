@@ -7,7 +7,6 @@ export enum FieldType {
   NUMBER = "number",
   BOOLEAN = "boolean",
   ARRAY = "array",
-  QUERY_ARRAY = "queryarray",
   DATETIME = "datetime",
   ATTACHMENT = "attachment",
   LINK = "link",

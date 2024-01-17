@@ -8,7 +8,17 @@ import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { ConfigType, Query, UserCtx, SessionCookie } from "@budibase/types"
+import {
+  ConfigType,
+  Query,
+  UserCtx,
+  SessionCookie,
+  FieldSchema,
+  ArrayFieldMetadata,
+  ArrayFieldSubTypes,
+  QueryResponse,
+  TableSchema,
+} from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -131,37 +141,66 @@ export async function preview(ctx: UserCtx) {
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
-  function getSchemaFields(rows: any, keys: any) {
-    const schemaFields: any = {}
-    const nestedSchemaFields: any = {}
+  function getSchemaFields(
+    rows: any[],
+    keys: string[]
+  ): {
+    schemaFields: TableSchema
+    nestedSchemaFields: {
+      [key: string]: TableSchema
+    }
+  } {
+    const schemaFields: TableSchema = {}
+    const nestedSchemaFields: {
+      [key: string]: TableSchema
+    } = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
         const field = rows[0][key]
         let type = typeof field,
-          fieldType = FieldTypes.STRING
+          fieldSchema: FieldSchema = {
+            name: key,
+            type: FieldTypes.STRING,
+          }
         if (field)
           switch (type) {
             case "boolean":
-              schemaFields[key] = FieldTypes.BOOLEAN
+              fieldSchema = {
+                name: key,
+                type: FieldTypes.BOOLEAN,
+              }
               break
             case "object":
               if (field instanceof Date) {
-                fieldType = FieldTypes.DATETIME
+                fieldSchema = {
+                  name: key,
+                  type: FieldTypes.DATETIME,
+                }
               } else if (Array.isArray(field)) {
-                fieldType = FieldTypes.QUERY_ARRAY
-                nestedSchemaFields[`${key}`] = getSchemaFields(
+                fieldSchema = {
+                  name: key,
+                  type: FieldTypes.ARRAY,
+                  subtype: ArrayFieldSubTypes.QUERY,
+                } as ArrayFieldMetadata
+                nestedSchemaFields[key] = getSchemaFields(
                   field,
                   Object.keys(field[0])
                 ).schemaFields
               } else {
-                fieldType = FieldTypes.JSON
+                fieldSchema = {
+                  name: key,
+                  type: FieldTypes.JSON,
+                }
               }
               break
             case "number":
-              fieldType = FieldTypes.NUMBER
+              fieldSchema = {
+                name: key,
+                type: FieldTypes.NUMBER,
+              }
               break
           }
-        schemaFields[key] = fieldType
+        schemaFields[key] = fieldSchema
       }
     }
     return { schemaFields, nestedSchemaFields }
@@ -185,8 +224,17 @@ export async function preview(ctx: UserCtx) {
       },
     }
 
-    const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
+    const { rows, keys, info, extra } = (await Runner.run(
+      inputs
+    )) as QueryResponse
     const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
+    // const flatSchemaFields = Object.values(schemaFields || {}).reduce(
+    //   (acc: any, fieldSchema: FieldSchema): any => {
+    //     acc[fieldSchema.name] = fieldSchema.type
+    //     return acc
+    //   },
+    //   {}
+    // )
 
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {

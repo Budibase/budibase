@@ -111,7 +111,7 @@
         bind:value={field.name}
         on:blur={changed}
       />
-      {#if field.value === "queryarray"}
+      {#if field.value === "array"}
         <Select readonly={true} value="Array" options={["Array"]} />
       {:else if options}
         <Select bind:value={field.value} on:change={changed} {options} />

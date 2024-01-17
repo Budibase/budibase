@@ -136,10 +136,11 @@ export const generateQueryArraySchemas = (schema, nestedSchemaFields) => {
       schema[key] = {
         schema: {
           schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
-            (acc, [nestedKey, nestedType]) => {
+            (acc, [nestedKey, fieldSchema]) => {
               acc[nestedKey] = {
                 name: nestedKey,
-                type: nestedType,
+                type: fieldSchema.type,
+                subtype: fieldSchema.subtype,
               }
               return acc
             },

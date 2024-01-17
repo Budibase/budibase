@@ -16,6 +16,14 @@ export interface QueryParameter {
   default: string
 }
 
+export interface QueryResponse {
+  rows: any[]
+  keys: string[]
+  info: any
+  extra: any
+  pagination: any
+}
+
 export interface RestQueryFields {
   path: string
   queryString?: string
