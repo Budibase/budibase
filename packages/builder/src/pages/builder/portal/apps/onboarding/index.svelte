@@ -51,7 +51,7 @@
       goToApp()
     } catch (e) {
       loading = false
-      notifications.error("There was a problem creating your app")
+      notifications.error(e.message || "There was a problem creating your app")
     }
   }
 </script>

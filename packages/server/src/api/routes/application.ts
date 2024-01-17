@@ -16,7 +16,7 @@ router
   )
   .post(
     "/api/applications",
-    authorized(permissions.GLOBAL_BUILDER),
+    authorized(permissions.CREATOR),
     applicationValidator(),
     controller.create
   )

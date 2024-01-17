@@ -10,6 +10,7 @@ const marked = require("marked")
  * https://github.com/budibase/handlebars-helpers
  */
 const { join } = require("path")
+
 const DIRECTORY = join(__dirname, "..", "..", "..")
 const COLLECTIONS = [
   "math",
@@ -19,6 +20,7 @@ const COLLECTIONS = [
   "string",
   "comparison",
   "object",
+  "uuid",
 ]
 const FILENAME = join(__dirname, "..", "manifest.json")
 const outputJSON = {}

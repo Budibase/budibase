@@ -25,7 +25,7 @@ if [[ $(curl -s -w "%{http_code}\n" http://localhost:4002/health -o /dev/null) -
     healthy=false
 fi
 
-if [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/ -o /dev/null) -ne 200 ]]; then
+if [[ $(curl -s -w "%{http_code}\n" http://localhost:5984/_up -o /dev/null) -ne 200 ]]; then
     echo 'ERROR: CouchDB is not running';
     healthy=false
 fi

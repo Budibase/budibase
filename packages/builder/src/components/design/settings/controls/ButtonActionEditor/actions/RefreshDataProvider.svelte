@@ -1,14 +1,16 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { currentAsset, componentStore } from "stores/builder"
-  import { getActionProviderComponents } from "builder/dataBinding"
+  import { getActionProviders } from "builder/dataBinding"
 
   export let parameters
+  export let nested
 
-  $: actionProviders = getActionProviderComponents(
+  $: actionProviders = getActionProviders(
     $currentAsset,
     $componentStore.selectedComponentId,
-    "RefreshDatasource"
+    "RefreshDatasource",
+    { includeSelf: nested }
   )
 </script>
 
@@ -17,8 +19,8 @@
   <Select
     bind:value={parameters.componentId}
     options={actionProviders}
-    getOptionLabel={x => x._instanceName}
-    getOptionValue={x => x._id}
+    getOptionLabel={x => x.readableBinding}
+    getOptionValue={x => x.runtimeBinding}
   />
 </div>
 

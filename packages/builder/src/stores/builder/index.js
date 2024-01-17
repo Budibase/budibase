@@ -13,7 +13,7 @@ import {
   currentAsset,
   sortedScreens,
 } from "./screens.js"
-import { builderStore, screensHeight } from "./builder.js"
+import { builderStore } from "./builder.js"
 import { previewStore } from "./preview.js"
 import {
   automationStore,
@@ -55,7 +55,6 @@ export {
   sortedScreens,
   userStore,
   isOnlyUser,
-  screensHeight,
   deploymentStore,
   selectedComponent,
   selectedComponentPath,

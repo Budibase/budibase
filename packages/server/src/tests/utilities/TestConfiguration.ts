@@ -17,7 +17,6 @@ import {
   basicWebhook,
 } from "./structures"
 import {
-  auth,
   cache,
   constants,
   context,
@@ -56,6 +55,7 @@ import {
 
 import API from "./api"
 import { cloneDeep } from "lodash"
+import jwt, { Secret } from "jsonwebtoken"
 
 mocks.licenses.init(pro)
 
@@ -137,6 +137,10 @@ class TestConfiguration {
   }
 
   getAppId() {
+    if (!this.appId) {
+      throw "appId has not been initialised properly"
+    }
+
     return this.appId
   }
 
@@ -213,20 +217,45 @@ class TestConfiguration {
    */
   setEnv(newEnvVars: Partial<typeof env>): () => void {
     const oldEnv = cloneDeep(env)
-    const oldCoreEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
       env._set(key, newEnvVars[key])
-      coreEnv._set(key, newEnvVars[key])
     }
 
     return () => {
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
       }
+    }
+  }
 
-      for (const [key, value] of Object.entries(oldCoreEnv)) {
+  async withCoreEnv(
+    newEnvVars: Partial<typeof coreEnv>,
+    f: () => Promise<void>
+  ) {
+    let cleanup = this.setCoreEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
+    const oldEnv = cloneDeep(env)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      coreEnv._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
         coreEnv._set(key, value)
       }
     }
@@ -264,7 +293,7 @@ class TestConfiguration {
     admin = false,
     email = this.defaultUserValues.email,
     roles,
-  }: any = {}) {
+  }: any = {}): Promise<User> {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
@@ -387,7 +416,7 @@ class TestConfiguration {
         sessionId: "sessionid",
         tenantId: this.getTenantId(),
       }
-      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -408,7 +437,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId,
     }
-    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
     const headers: any = {
       Accept: "application/json",
@@ -510,22 +539,23 @@ class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = null
-    await context.doInAppContext(null, async () => {
-      this.app = await this._req(
+    this.app = await context.doInTenant(this.tenantId!, async () => {
+      const app = await this._req(
         { name: appName },
         null,
         controllers.app.create
       )
-      this.appId = this.app?.appId!
+      this.appId = app.appId!
+      return app
     })
-    return await context.doInAppContext(this.appId, async () => {
+    return await context.doInAppContext(this.getAppId(), async () => {
       // create production app
       this.prodApp = await this.publish()
 
       this.allApps.push(this.prodApp)
       this.allApps.push(this.app)
 
-      return this.app
+      return this.app!
     })
   }
 
@@ -537,7 +567,7 @@ class TestConfiguration {
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get(dbCore.DocumentType.APP_METADATA)
+      return await db.get<App>(dbCore.DocumentType.APP_METADATA)
     })
   }
 
@@ -816,7 +846,7 @@ class TestConfiguration {
   }
 
   async getAutomationLogs() {
-    return context.doInAppContext(this.appId, async () => {
+    return context.doInAppContext(this.getAppId(), async () => {
       const now = new Date()
       return await pro.sdk.automations.logs.logSearch({
         startDate: new Date(now.getTime() - 100000).toISOString(),

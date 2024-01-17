@@ -51,23 +51,17 @@
     <UndoRedoControl store={automationHistoryStore} />
   </div>
   <div class="controls">
-    <div class="buttons">
-      <Icon hoverable size="M" name="Play" />
-      <div
-        on:click={() => {
-          testDataModal.show()
-        }}
-      >
-        Run test
-      </div>
+    <div
+      on:click={() => {
+        testDataModal.show()
+      }}
+      class="buttons"
+    >
+      <Icon size="M" name="Play" />
+      <div>Run test</div>
     </div>
     <div class="buttons">
-      <Icon
-        disabled={!$automationStore.testResults}
-        hoverable
-        size="M"
-        name="Multiple"
-      />
+      <Icon disabled={!$automationStore.testResults} size="M" name="Multiple" />
       <div
         class:disabled={!$automationStore.testResults}
         on:click={() => {

@@ -1,9 +1,12 @@
 <script>
-  import { Button, Layout } from "@budibase/bbui"
+  import { Layout } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
   import { datasources } from "stores/builder"
+  import NavHeader from "components/common/NavHeader.svelte"
+
+  let searchValue
 
   $: {
     // If we ever don't have any data other than the users table, prompt the
@@ -18,10 +21,17 @@
 <!-- routify:options index=1 -->
 <div class="data">
   {#if !$isActive("./new")}
-    <Panel title="Sources" borderRight>
-      <Layout paddingX="L" paddingY="XL" gap="S">
-        <Button cta on:click={() => $goto("./new")}>Add source</Button>
-        <DatasourceNavigator />
+    <Panel borderRight borderBottomHeader={false}>
+      <span class="panel-title-content" slot="panel-title-content">
+        <NavHeader
+          title="Sources"
+          placeholder="Search for sources"
+          bind:value={searchValue}
+          onAdd={() => $goto("./new")}
+        />
+      </span>
+      <Layout paddingX="L" paddingY="none" gap="S">
+        <DatasourceNavigator searchTerm={searchValue} />
       </Layout>
     </Panel>
   {/if}
@@ -50,5 +60,9 @@
     align-items: stretch;
     flex: 1 1 auto;
     z-index: 1;
+  }
+
+  .panel-title-content {
+    display: contents;
   }
 </style>

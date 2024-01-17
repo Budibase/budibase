@@ -1,4 +1,5 @@
 import { default as MySQLIntegration, bindingTypeCoerce } from "../mysql"
+
 jest.mock("mysql2")
 
 class TestConfiguration {

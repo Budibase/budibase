@@ -15,7 +15,7 @@
   $: style = getStyle(width, selectedUser)
 
   const getStyle = (width, selectedUser) => {
-    let style = `flex: 0 0 ${width}px;`
+    let style = width === "auto" ? "width: auto;" : `flex: 0 0 ${width}px;`
     if (selectedUser) {
       style += `--user-color:${selectedUser.color};`
     }

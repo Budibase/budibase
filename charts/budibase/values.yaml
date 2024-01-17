@@ -1,56 +1,32 @@
-# Default values for budibase.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-image:
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
-
+# -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
+# -- Override the name of the deploymen. Defaults to {{ .Chart.Name }}.
 nameOverride: ""
-# fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # -- Specifies whether a service account should be created
   create: true
-  # Annotations to add to the service account
+  # -- Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
+  # -- The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-podAnnotations: {}
-
-podSecurityContext:
-  {}
-  # fsGroup: 2000
-
-securityContext:
-  {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
-
 service:
+  # -- Service type for the service that points to the main Budibase proxy pod.
   type: ClusterIP
+  # -- Port to expose on the service.
   port: 10000
 
 ingress:
+  # -- Whether to create an Ingress resource pointing to the Budibase proxy.
   enabled: true
-  aws: false
-  nginx: true
-  certificateArn: ""
+  # -- What ingress class to use.
   className: ""
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/client-max-body-size: 150M
-    nginx.ingress.kubernetes.io/proxy-body-size: 50m
+  # -- Standard hosts block for the Ingress resource. Defaults to pointing to the Budibase proxy.
   hosts:
-    - host: # change if using custom domain
+    # @ignore
+    - host:
       paths:
         - path: /
           pathType: Prefix
@@ -60,361 +36,504 @@ ingress:
               port:
                 number: 10000
 
-autoscaling:
+awsAlbIngress:
+  # -- Whether to create an ALB Ingress resource pointing to the Budibase proxy. Requires the AWS ALB Ingress Controller.
   enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  # -- If you're wanting to use HTTPS, you'll need to create an ACM certificate and specify the ARN here.
+  certificateArn: ""
 
-nodeSelector: {}
-
+# -- Sets the tolerations for all pods created by this chart. Should not ordinarily need to be changed.
+# See <https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/> for more information
+# on tolerations.
 tolerations: []
 
+# -- Sets the affinity for all pods created by this chart. Should not ordinarily
+# need to be changed.  See
+# <https://kubernetes.io/docs/tasks/configure-pod-container/assign-pods-nodes-using-node-affinity/>
+# for more information on affinity.
 affinity: {}
 
 globals:
-  appVersion: "" # Use as an override to .Chart.AppVersion
+  # -- The version of Budibase to deploy. Defaults to what's specified by {{ .Chart.AppVersion }}.
+  # Ends up being used as the image version tag for the apps, proxy, and worker images.
+  appVersion: ""
+  # -- Sets the environment variable BUDIBASE_ENVIRONMENT for the apps and worker pods. Should not
+  # ordinarily need to be changed.
   budibaseEnv: PRODUCTION
+  # -- Sets what feature flags are enabled and for which tenants. Should not ordinarily need to be
+  # changed.
   tenantFeatureFlags: "*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR"
+  # -- Whether to enable analytics or not. You can read more about our analytics here:
+  # <https://docs.budibase.com/docs/analytics>.
   enableAnalytics: "1"
+  # @ignore (only used if enableAnalytics is set to 1)
   posthogToken: "phc_bIjZL7oh2GEUd2vqvTBH8WvrX0fWTFQMs6H5KQxiUxU"
-  selfHosted: "1" # set to 0 for budibase cloud environment, set to 1 for self-hosted setup
-  multiTenancy: "0" # set to 0 to disable multiple orgs, set to 1 to enable multiple orgs
-  offlineMode: "0" # set to 1 to enable offline mode
+  # @ignore (should not normally need to be changed, we only set this to "0"
+  # when deploying to our Cloud environment)
+  selfHosted: "1"
+  # @ignore (doesn't work out of the box for self-hosted users, only meant for Budicloud)
+  multiTenancy: "0"
+  # @ignore (only currently used to determine whether to fetch licenses offline or not, should
+  # not normally need to be changed, and only applies to Enterprise customers)
+  offlineMode: "0"
+  # @ignore (only needs to be set in our cloud environment)
   accountPortalUrl: ""
+  # @ignore (only needs to be set in our cloud environment)
   accountPortalApiKey: ""
+  # -- Sets the domain attribute of the cookie that Budibase uses to store session information.
+  # See <https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies#define_where_cookies_are_sent>
+  # for details on why you might want to set this.
   cookieDomain: ""
+  # -- Set the `platformUrl` binding. You can also do this in Settings > Organisation if you are
+  # self-hosting.
   platformUrl: ""
+  # -- Whether or not to enable doing data migrations over the HTTP API. If this is set to "0",
+  # migrations are run on startup. You shouldn't ordinarily need to change this.
   httpMigrations: "0"
+  # -- Google OAuth settings. These can also be set in the Budibase UI, see
+  # <https://docs.budibase.com/docs/sso-with-google> for details.
   google:
+    # -- Client ID of your Google OAuth app.
     clientId: ""
+    # -- Client secret of your Google OAuth app.
     secret: ""
+  # -- The maximum number of iterations allows for an automation loop step. You can read more about
+  # looping here: <https://docs.budibase.com/docs/looping>.
   automationMaxIterations: "200"
 
-  createSecrets: true # creates an internal API key, JWT secrets and redis password for you
+  # -- Create an internal API key, JWT secret, object store access key and
+  # secret, and store them in a Kubernetes `Secret`.
+  createSecrets: true
 
-  # if createSecrets is set to false, you can hard-code your secrets here
+  # -- Used for encrypting API keys and environment variables when stored in the database.
+  # You don't need to set this if `createSecrets` is true.
   apiEncryptionKey: ""
+  # -- API key used for internal Budibase API calls. You don't need to set this
+  # if `createSecrets` is true.
   internalApiKey: ""
+  # -- Secret used for signing JWTs. You don't need to set this if `createSecrets` is true.
   jwtSecret: ""
-  cdnUrl: ""
-  # fallback values used during live rotation
+
+  # -- A fallback value for `internalApiKey`. If you're rotating your encryption key, you can
+  # set this to the old value for the duration of the rotation.
   internalApiKeyFallback: ""
+  # -- A fallback value for `jwtSecret`. If you're rotating your JWT secret, you can set this
+  # to the old value for the duration of the rotation.
   jwtSecretFallback: ""
 
   smtp:
+    # -- Whether to enable SMTP or not.
     enabled: false
-
-#  globalAgentHttpProxy:
-#  globalAgentHttpsProxy:
-#  globalAgentNoProxy:
+    # -- The hostname of your SMTP server.
+    host: ""
+    # -- The port of your SMTP server.
+    port: "587"
+    # -- The email address to use in the "From:" field of emails sent by Budibase.
+    from: ""
+    # -- The username to use when authenticating with your SMTP server.
+    user: ""
+    # -- The password to use when authenticating with your SMTP server.
+    password: ""
 
 services:
-  budibaseVersion: latest
+  # -- The DNS suffix to use for service discovery. You only need to change this
+  # if you've configured your cluster to use a different DNS suffix.
   dns: cluster.local
-  # tlsRejectUnauthorized: 0
 
   proxy:
+    # @ignore (you shouldn't need to change this)
     port: 10000
+    # -- The number of proxy replicas to run.
     replicaCount: 1
+    # @ignore (you should never need to change this)
     upstreams:
       apps: "http://app-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.apps.port }}"
       worker: "http://worker-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.worker.port }}"
       minio: "http://minio-service.{{ .Release.Namespace }}.svc.{{ .Values.services.dns }}:{{ .Values.services.objectStore.port }}"
       couchdb: "http://{{ .Release.Name }}-svc-couchdb:{{ .Values.services.couchdb.port }}"
+    # -- The resources to use for proxy pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
     resources: {}
+    # -- Startup probe configuration for proxy pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     startupProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 10000
         scheme: HTTP
+      # @ignore
       failureThreshold: 30
+      # @ignore
       periodSeconds: 3
+    # -- Readiness probe configuration for proxy pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     readinessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 10000
         scheme: HTTP
+      # @ignore
       periodSeconds: 3
+      # @ignore
       failureThreshold: 1
+    # -- Liveness probe configuration for proxy pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     livenessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 10000
         scheme: HTTP
+      # @ignore
       failureThreshold: 3
+      # @ignore
       periodSeconds: 5
-  #    annotations:
-  #      co.elastic.logs/module: nginx
-  #      co.elastic.logs/fileset.stdout: access
-  #      co.elastic.logs/fileset.stderr: error
+    autoscaling:
+      # -- Whether to enable horizontal pod autoscaling for the proxy service.
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      # -- Target CPU utilization percentage for the proxy service. Note that
+      # for autoscaling to work, you will need to have metrics-server
+      # configured, and resources set for the proxy pods.
+      targetCPUUtilizationPercentage: 80
 
   apps:
+    # @ignore (you shouldn't need to change this)
     port: 4002
+    # -- The number of apps replicas to run.
     replicaCount: 1
+    # -- The log level for the apps service.
     logLevel: info
+    # -- Whether or not to log HTTP requests to the apps service.
     httpLogging: 1
+    # -- The resources to use for apps pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for apps pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
+    # -- Startup probe configuration for apps pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     startupProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4002
         scheme: HTTP
+      # @ignore
       failureThreshold: 30
+      # @ignore
       periodSeconds: 3
+    # -- Readiness probe configuration for apps pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     readinessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4002
         scheme: HTTP
+      # @ignore
       periodSeconds: 3
+      # @ignore
       failureThreshold: 1
+    # -- Liveness probe configuration for apps pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     livenessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4002
         scheme: HTTP
+      # @ignore
       failureThreshold: 3
+      # @ignore
       periodSeconds: 5
-  #    nodeDebug: "" # set the value of NODE_DEBUG
-  #    annotations:
-  #      co.elastic.logs/multiline.type: pattern
-  #      co.elastic.logs/multiline.pattern: '^[[:space:]]'
-  #      co.elastic.logs/multiline.negate: false
-  #      co.elastic.logs/multiline.match: after
+    autoscaling:
+      # -- Whether to enable horizontal pod autoscaling for the apps service.
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      # -- Target CPU utilization percentage for the apps service. Note that for
+      # autoscaling to work, you will need to have metrics-server configured,
+      # and resources set for the apps pods.
+      targetCPUUtilizationPercentage: 80
+
+  automationWorkers:
+    # -- Whether or not to enable the automation worker service. If you disable this,
+    # automations will be processed by the apps service.
+    enabled: true
+    # @ignore (you shouldn't need to change this)
+    port: 4002
+    # -- The number of automation worker replicas to run.
+    replicaCount: 1
+    # -- The log level for the automation worker service.
+    logLevel: info
+    # -- The resources to use for automation worker pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
+    resources: {}
+    # -- Extra environment variables to set for automation worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
+    # -- Startup probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    startupProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      failureThreshold: 30
+      # @ignore
+      periodSeconds: 3
+    # -- Readiness probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    readinessProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      periodSeconds: 3
+      # @ignore
+      failureThreshold: 1
+    # -- Liveness probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    livenessProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      failureThreshold: 3
+      # @ignore
+      periodSeconds: 30
+    autoscaling:
+      # -- Whether to enable horizontal pod autoscaling for the apps service.
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      # -- Target CPU utilization percentage for the automation worker service.
+      # Note that for autoscaling to work, you will need to have metrics-server
+      # configured, and resources set for the automation worker pods.
+      targetCPUUtilizationPercentage: 80
+
   worker:
+    # @ignore (you shouldn't need to change this)
     port: 4003
+    # -- The number of worker replicas to run.
     replicaCount: 1
+    # -- The log level for the worker service.
     logLevel: info
+    # -- Whether or not to log HTTP requests to the worker service.
     httpLogging: 1
+    # -- The resources to use for worker pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
+    # -- Startup probe configuration for worker pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     startupProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4003
         scheme: HTTP
+      # @ignore
       failureThreshold: 30
+      # @ignore
       periodSeconds: 3
+    # -- Readiness probe configuration for worker pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     readinessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4003
         scheme: HTTP
+      # @ignore
       periodSeconds: 3
+      # @ignore
       failureThreshold: 1
+    # -- Liveness probe configuration for worker pods. You shouldn't need to
+    # change this, but if you want to you can find more information here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
     livenessProbe:
+      # @ignore
       httpGet:
         path: /health
         port: 4003
         scheme: HTTP
+      # @ignore
       failureThreshold: 3
+      # @ignore
       periodSeconds: 5
-  #    annotations:
-  #      co.elastic.logs/multiline.type: pattern
-  #      co.elastic.logs/multiline.pattern: '^[[:space:]]'
-  #      co.elastic.logs/multiline.negate: false
-  #      co.elastic.logs/multiline.match: after
+    autoscaling:
+      # -- Whether to enable horizontal pod autoscaling for the worker service.
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      # -- Target CPU utilization percentage for the worker service. Note that
+      # for autoscaling to work, you will need to have metrics-server
+      # configured, and resources set for the worker pods.
+      targetCPUUtilizationPercentage: 80
 
   couchdb:
+    # -- Whether or not to spin up a CouchDB instance in your cluster. True by
+    # default, and the configuration for the CouchDB instance is under the
+    # `couchdb` key at the root of this file. You can see what options are
+    # available to you by looking at the official CouchDB Helm chart:
+    # <https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
     enabled: true
     # url: "" # only change if pointing to existing couch server
     # user: "" # only change if pointing to existing couch server
     # password: "" # only change if pointing to existing couch server
     port: 5984
     backup:
+      # -- Whether or not to enable periodic CouchDB backups. This works by replicating
+      # to another CouchDB instance.
       enabled: false
-      # target couchDB instance to back up to
+      # -- Target couchDB instance to back up to, either a hostname or an IP address.
       target: ""
-      # backup interval in seconds
+      # -- Backup interval in seconds
       interval: ""
+      # -- The resources to use for CouchDB backup pods. See
+      # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+      # for more information on how to set these.
       resources: {}
 
   redis:
-    enabled: true # disable if using external redis
+    # -- Whether or not to deploy a Redis pod into your cluster.
+    enabled: true
+    # -- Port to expose Redis on.
     port: 6379
+    # @ignore (you should leave this as 1, we don't support clustering Redis)
     replicaCount: 1
-    url: "" # only change if pointing to existing redis cluster and enabled: false
-    password: "budibase" # recommended to override if using built-in redis
+    # -- If you choose to run Redis externally to this chart, you can specify the
+    # connection details here.
+    url: ""
+    # -- The password to use when connecting to Redis. It's recommended that you change
+    # this from the default if you're running Redis in-cluster.
+    password: "budibase"
+    # -- How much persistent storage to allocate to Redis.
     storage: 100Mi
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.
+    # -- If defined, storageClassName: <storageClass> If set to "-",
+    # storageClassName: "", which disables dynamic provisioning If undefined
+    # (the default) or set to null, no storageClassName spec is set, choosing
+    # the default provisioner.
     storageClass: ""
+    # -- The resources to use for Redis pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
     resources: {}
 
   objectStore:
-    # Set to false if using another object store such as S3
+    # -- Set to false if using another object store, such as S3. You will need
+    # to set `services.objectStore.url` to point to your bucket if you do this.
     minio: true
+    # -- Whether to enable the Minio web console or not. If you're exposing
+    # Minio to the Internet (via a custom Ingress record, for example), you
+    # should set this to false. If you're only exposing Minio to your cluster,
+    # you can leave this as true.
     browser: true
+    # @ignore
     port: 9000
+    # @ignore (you should leave this as 1, we don't support clustering Minio)
     replicaCount: 1
-    accessKey: "" # AWS_ACCESS_KEY if using S3 or existing minio access key
-    secretKey: "" # AWS_SECRET_ACCESS_KEY if using S3 or existing minio secret
-    region: "" # AWS_REGION if using S3 or existing minio secret
-    url: "http://minio-service:9000" # only change if pointing to existing minio cluster or S3 and minio: false
+    # -- AWS_ACCESS_KEY if using S3
+    accessKey: ""
+    # -- AWS_SECRET_ACCESS_KEY if using S3
+    secretKey: ""
+    # -- AWS_REGION if using S3
+    region: ""
+    # -- URL to use for object storage. Only change this if you're using an
+    # external object store, such as S3. Remember to set `minio: false` if you
+    # do this.
+    url: "http://minio-service:9000"
+    # -- How much storage to give Minio in its PersistentVolumeClaim.
     storage: 100Mi
-    ## If defined, storageClassName: <storageClass>
-    ## If set to "-", storageClassName: "", which disables dynamic provisioning
-    ## If undefined (the default) or set to null, no storageClassName spec is
-    ##   set, choosing the default provisioner.
+    # -- If defined, storageClassName: <storageClass> If set to "-",
+    # storageClassName: "", which disables dynamic provisioning If undefined
+    # (the default) or set to null, no storageClassName spec is set, choosing
+    # the default provisioner.
     storageClass: ""
+    # -- The resources to use for Minio pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
     resources: {}
     cloudfront:
-      # Set the url of a distribution to enable cloudfront
+      # -- Set the url of a distribution to enable cloudfront.
       cdn: ""
-      # ID of public key stored in cloudfront
+      # -- ID of public key stored in cloudfront.
       publicKeyId: ""
-      # Base64 encoded private key for the above public key
+      # -- Base64 encoded private key for the above public key.
       privateKey64: ""
 
-# Override values in couchDB subchart
+# Override values in couchDB subchart. We're only specifying the values we're changing.
+# If you want to see all of the available values, see:
+#   https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb
 couchdb:
-  ## clusterSize is the initial size of the CouchDB cluster.
+  # -- The number of replicas to run in the CouchDB cluster. We set this to
+  # 1 by default to make things simpler, but you can set it to 3 if you need
+  # a high-availability CouchDB cluster.
   clusterSize: 1
-  allowAdminParty: false
 
-  # Secret Management
-  createAdminSecret: true
-
-  # adminUsername: budibase
-  # adminPassword: budibase
-  # adminHash: -pbkdf2-this_is_not_necessarily_secure_either
-  # cookieAuthSecret: admin
-
-  ## When enabled, will deploy a networkpolicy that allows CouchDB pods to
-  ## communicate with each other for clustering and ingress on port 5984
-  networkPolicy:
-    enabled: true
-
-  # Use a service account
-  serviceAccount:
-    enabled: true
-    create: true
-  # name:
-  # imagePullSecrets:
-  # - name: myimagepullsecret
-
-  ## The storage volume used by each Pod in the StatefulSet. If a
-  ## persistentVolume is not enabled, the Pods will use `emptyDir` ephemeral
-  ## local storage. Setting the storageClass attribute to "-" disables dynamic
-  ## provisioning of Persistent Volumes; leaving it unset will invoke the default
-  ## provisioner.
-  persistentVolume:
-    enabled: false
-    accessModes:
-      - ReadWriteOnce
-    size: 10Gi
-    storageClass: ""
-
-  ## The CouchDB image
+  # -- We use a custom CouchDB image for running Budibase and we don't support
+  # using any other CouchDB image. You shouldn't change this, and if you do we
+  # can't guarantee that Budibase will work.
   image:
-    repository: couchdb
-    tag: 3.1.1
-    pullPolicy: IfNotPresent
-
-  ## Experimental integration with Lucene-powered fulltext search
-  enableSearch: true
-  searchImage:
-    repository: kocolosk/couchdb-search
-    tag: 0.2.0
-    pullPolicy: IfNotPresent
-
-  initImage:
-    repository: busybox
-    tag: latest
+    # @ignore
+    repository: budibase/couchdb
+    # @ignore
+    tag: v3.2.1
+    # @ignore
     pullPolicy: Always
 
-  ## CouchDB is happy to spin up cluster nodes in parallel, but if you encounter
-  ## problems you can try setting podManagementPolicy to the StatefulSet default
-  ## `OrderedReady`
-  podManagementPolicy: Parallel
+  # @ignore
+  # This should remain false. We ship Clouseau ourselves as part of the
+  # budibase/couchdb image, and it's not possible to disable it because it's a
+  # core part of the Budibase experience.
+  enableSearch: false
 
-  ## Optional pod annotations
-  annotations: {}
-
-  ## Optional tolerations
-  tolerations: []
-
-  affinity: {}
-
-  service:
-    # annotations:
-    enabled: true
-    type: ClusterIP
-    externalPort: 5984
-
-  ## An Ingress resource can provide name-based virtual hosting and TLS
-  ## termination among other things for CouchDB deployments which are accessed
-  ## from outside the Kubernetes cluster.
-  ## ref: https://kubernetes.io/docs/concepts/services-networking/ingress/
-  ingress:
-    enabled: false
-    hosts:
-      - chart-example.local
-    path: /
-    annotations:
-      []
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-    tls:
-      # Secrets must be manually created in the namespace.
-      # - secretName: chart-example-tls
-      #   hosts:
-      #     - chart-example.local
-
-  ## Optional resource requests and limits for the CouchDB container
-  ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
-  resources:
-    {}
-    # requests:
-    #  cpu: 100m
-    #  memory: 128Mi
-    # limits:
-    #  cpu: 56
-    #  memory: 256Gi
-
-  ## erlangFlags is a map that is passed to the Erlang VM as flags using the
-  ## ERL_FLAGS env. `name` and `setcookie` flags are minimally required to
-  ## establish connectivity between cluster nodes.
-  ## ref: http://erlang.org/doc/man/erl.html#init_flags
-  erlangFlags:
-    name: couchdb
-    setcookie: monster
-
-  ## couchdbConfig will override default CouchDB configuration settings.
-  ## The contents of this map are reformatted into a .ini file laid down
-  ## by a ConfigMap object.
-  ## ref: http://docs.couchdb.org/en/latest/config/index.html
   couchdbConfig:
     couchdb:
-      uuid: budibase-couchdb # REQUIRED: Unique identifier for this CouchDB server instance
-    # cluster:
-    #   q: 8 # Create 8 shards for each database
-    chttpd:
-      bind_address: any
-      # chttpd.require_valid_user disables all the anonymous requests to the port
-      # 5984 when is set to true.
-      require_valid_user: false
-
-  # Kubernetes local cluster domain.
-  # This is used to generate FQDNs for peers when joining the CouchDB cluster.
-  dns:
-    clusterDomainSuffix: cluster.local
-
-  ## Configure liveness and readiness probe values
-  ## Ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
-  # FOR COUCHDB
-  livenessProbe:
-    failureThreshold: 3
-    initialDelaySeconds: 0
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
-  readinessProbe:
-    failureThreshold: 3
-    initialDelaySeconds: 0
-    periodSeconds: 10
-    successThreshold: 1
-    timeoutSeconds: 1
+      # -- Unique identifier for this CouchDB server instance. You shouldn't need
+      # to change this.
+      uuid: budibase-couchdb

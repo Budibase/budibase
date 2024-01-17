@@ -1,8 +1,7 @@
 <script>
   import { StatusLight } from "@budibase/bbui"
-  import { RoleUtils } from "@budibase/frontend-core"
+  import { RoleUtils, Constants } from "@budibase/frontend-core"
   import { roles } from "stores/builder"
-  import { Constants } from "@budibase/frontend-core"
   import { capitalise } from "helpers"
 
   export let value
@@ -15,6 +14,10 @@
   }
 </script>
 
-<StatusLight square color={RoleUtils.getRoleColour(value)}>
-  {getRoleLabel(value)}
-</StatusLight>
+{#if value === Constants.Roles.CREATOR}
+  Can edit
+{:else}
+  <StatusLight square color={RoleUtils.getRoleColour(value)}>
+    Can use as {getRoleLabel(value)}
+  </StatusLight>
+{/if}

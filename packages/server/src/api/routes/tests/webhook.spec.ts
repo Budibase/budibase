@@ -2,6 +2,7 @@ import { Webhook } from "@budibase/types"
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { mocks } from "@budibase/backend-core/tests"
+
 const { basicWebhook, basicAutomation, collectAutomation } = setup.structures
 
 describe("/webhooks", () => {

@@ -35,6 +35,17 @@ describe("/api/applications/:appId/sync", () => {
       })
     })
 
+    it("should reject an upload with a malicious uppercase file extension", async () => {
+      await config.withEnv({ SELF_HOSTED: undefined }, async () => {
+        let resp = (await config.api.attachment.process(
+          "OHNO.EXE",
+          Buffer.from([0]),
+          { expectStatus: 400 }
+        )) as unknown as APIError
+        expect(resp.message).toContain("invalid extension")
+      })
+    })
+
     it("should reject an upload with no file", async () => {
       let resp = (await config.api.attachment.process(
         undefined as any,

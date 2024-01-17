@@ -8,10 +8,12 @@
     userSelectedResourceMap,
     selectedComponent,
     selectedComponentPath,
+    builderStore,
   } from "stores/builder"
   import {
     findComponentPath,
     getComponentText,
+    getComponentName,
   } from "stores/builder/components/utils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
@@ -88,6 +90,8 @@
     }
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
+
+  const hover = builderStore.hover
 </script>
 
 <ul>
@@ -108,8 +112,12 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
+        hovering={$builderStore.hoveredComponentId === component._id}
+        on:mouseenter={() => hover(component._id)}
+        on:mouseleave={() => hover(null)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
+        iconTooltip={getComponentName(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
         selected={$componentStore.selectedComponentId === component._id}

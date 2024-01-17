@@ -1,7 +1,7 @@
 <script>
   import { automationStore } from "stores/builder"
-  import { notifications } from "@budibase/bbui"
   import {
+    notifications,
     Input,
     InlineAlert,
     ModalContent,

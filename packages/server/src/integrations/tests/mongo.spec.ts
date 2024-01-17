@@ -1,5 +1,7 @@
 const mongo = require("mongodb")
+
 import { default as MongoDBIntegration } from "../mongodb"
+
 jest.mock("mongodb")
 
 class TestConfiguration {

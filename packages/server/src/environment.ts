@@ -1,5 +1,6 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
+
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
@@ -32,6 +33,7 @@ const environment = {
   REDIS_PASSWORD: process.env.REDIS_PASSWORD,
   REDIS_CLUSTERED: process.env.REDIS_CLUSTERED,
   HTTP_MIGRATIONS: process.env.HTTP_MIGRATIONS,
+  CLUSTER_MODE: process.env.CLUSTER_MODE,
   API_REQ_LIMIT_PER_SEC: process.env.API_REQ_LIMIT_PER_SEC,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
@@ -57,15 +59,22 @@ const environment = {
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
   DISABLE_AUTOMATION_LOGS: process.env.DISABLE_AUTOMATION_LOGS,
+  DISABLE_RATE_LIMITING: process.env.DISABLE_RATE_LIMITING,
   MULTI_TENANCY: process.env.MULTI_TENANCY,
   ENABLE_ANALYTICS: process.env.ENABLE_ANALYTICS,
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
+  JS_PER_EXECUTION_TIME_LIMIT_MS:
+    parseIntSafe(process.env.JS_PER_EXECUTION_TIME_LIMIT_MS) || 1000,
+  JS_PER_REQUEST_TIME_LIMIT_MS: parseIntSafe(
+    process.env.JS_PER_REQUEST_TIME_LIMIT_MS
+  ),
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
@@ -84,6 +93,7 @@ const environment = {
   },
   TOP_LEVEL_PATH:
     process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
+  APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
 }
 
 // threading can cause memory issues with node-ts in development

@@ -12,6 +12,13 @@ on:
       - master
   pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      run_as_oss:
+        type: boolean
+        required: false
+        description: Force running checks as if it was an OSS contributor
+        default: false
 
 env:
   BRANCH: ${{ github.event.pull_request.head.ref }}
@@ -19,50 +26,41 @@ env:
   PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
   NX_BASE_BRANCH: origin/${{ github.base_ref }}
   USE_NX_AFFECTED: ${{ github.event_name == 'pull_request' }}
+  IS_OSS_CONTRIBUTOR: ${{ inputs.run_as_oss == true || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase') }}
 
 jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
-          fetch-depth: 0
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
@@ -78,27 +76,33 @@ jobs:
             yarn check:types
           fi
 
-  test-libraries:
+  helm-lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
         with:
           fetch-depth: 0
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
+        uses: azure/setup-helm@v3
+      - run: cd charts/budibase && helm lint .
+
+  test-libraries:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -107,33 +111,22 @@ jobs:
           else
             yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
           fi
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
 
   test-worker:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
-          fetch-depth: 0
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
@@ -143,33 +136,21 @@ jobs:
             yarn test --scope=@budibase/worker
           fi
 
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
-
   test-server:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
-        with:
-          fetch-depth: 0
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test server
         run: |
@@ -178,12 +159,6 @@ jobs:
           else
             yarn test --scope=@budibase/server
           fi
-
-      - uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN || github.token }} # not required for public repos
-          name: codecov-umbrella
-          verbose: true
 
   test-pro:
     runs-on: ubuntu-latest
@@ -196,11 +171,11 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -213,24 +188,23 @@ jobs:
   integration-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo and submodules
+      - name: Checkout repo
         uses: actions/checkout@v3
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
         with:
-          submodules: true
+          submodules: ${{ env.IS_OSS_CONTRIBUTOR == 'false' }}
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-      - name: Checkout repo only
-        uses: actions/checkout@v3
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != 'Budibase/budibase'
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          cache: "yarn"
+          node-version: 20.x
+          cache: yarn
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
+      - name: Build backend-core for OSS contributor (required for pro)
+        if: ${{ env.IS_OSS_CONTRIBUTOR == 'true' }}
+        run: yarn build --scope @budibase/backend-core
       - name: Run tests
         run: |
           cd qa-core
@@ -242,7 +216,7 @@ jobs:
 
   check-pro-submodule:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
+    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
     steps:
       - name: Checkout repo and submodules
         uses: actions/checkout@v3
@@ -284,7 +258,57 @@ jobs:
 
             if (submoduleCommit !== baseCommit) {
               console.error('Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.');
-              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/develop/docs/getting_started.md')
+              console.error('Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/master/docs/getting_started.md')
+              process.exit(1);
+            } else {
+              console.log('All good, the submodule had been merged and setup correctly!')
+            }
+
+  check-accountportal-submodule:
+    runs-on: ubuntu-latest
+    if: inputs.run_as_oss != true  && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase')
+    steps:
+      - name: Checkout repo and submodules
+        uses: actions/checkout@v3
+        with:
+          submodules: true
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-depth: 0
+
+      - name: Check account portal commit
+        id: get_accountportal_commits
+        run: |
+          cd packages/account-portal
+          accountportal_commit=$(git rev-parse HEAD)
+
+          branch="${{ github.base_ref || github.ref_name  }}"
+          echo "Running on branch '$branch' (base_ref=${{ github.base_ref }}, ref_name=${{ github.head_ref }})"
+
+          base_commit=$(git rev-parse origin/master)
+
+          if [[ ! -z $base_commit ]]; then
+            echo "target_branch=$branch"
+            echo "target_branch=$branch" >> "$GITHUB_OUTPUT"
+            echo "accountportal_commit=$accountportal_commit"
+            echo "accountportal_commit=$accountportal_commit" >> "$GITHUB_OUTPUT"
+            echo "base_commit=$base_commit"
+            echo "base_commit=$base_commit" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nothing to do - branch to branch merge."
+          fi
+
+      - name: Check submodule merged to base branch
+        if: ${{ steps.get_accountportal_commits.outputs.base_commit != '' }}
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const submoduleCommit = '${{ steps.get_accountportal_commits.outputs.accountportal_commit }}';
+            const baseCommit = '${{ steps.get_accountportal_commits.outputs.base_commit }}';
+
+            if (submoduleCommit !== baseCommit) {
+              console.error('Submodule commit does not match the latest commit on the "${{ steps.get_accountportal_commits.outputs.target_branch }}" branch.');
+              console.error('Refer to the account portal repo to merge your changes: https://github.com/Budibase/account-portal/blob/master/docs/index.md')
               process.exit(1);
             } else {
               console.log('All good, the submodule had been merged and setup correctly!')

@@ -15,7 +15,7 @@ import {
 import {
   buildExternalTableId,
   checkExternalTables,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   getSqlQuery,
   SqlClient,
@@ -30,6 +30,7 @@ import {
   Result,
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -249,14 +250,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn) {
-    if (this.isBooleanType(column)) {
-      return { type: FieldTypes.BOOLEAN }
-    }
-
-    return convertSqlType(column.type)
-  }
-
   /**
    * Fetches the tables from the oracle table and assigns them to the datasource.
    * @param datasourceId - datasourceId to fetch
@@ -301,13 +294,15 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           const columnName = oracleColumn.name
           let fieldSchema = table.schema[columnName]
           if (!fieldSchema) {
-            fieldSchema = {
+            fieldSchema = generateColumnDefinition({
               autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
               name: columnName,
-              constraints: {
-                presence: false,
-              },
-              ...this.internalConvertType(oracleColumn),
+              presence: false,
+              externalType: oracleColumn.type,
+            })
+
+            if (this.isBooleanType(oracleColumn)) {
+              fieldSchema.type = FieldTypes.BOOLEAN
             }
 
             table.schema[columnName] = fieldSchema

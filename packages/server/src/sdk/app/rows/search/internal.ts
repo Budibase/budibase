@@ -110,7 +110,7 @@ export async function exportRows(
 
   let rows: Row[] = []
   let schema = table.schema
-
+  let headers
   // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
@@ -119,6 +119,7 @@ export async function exportRows(
         rows[i][column] = result[i][column]
       }
     }
+    headers = columns
   } else {
     rows = result
   }
@@ -127,7 +128,7 @@ export async function exportRows(
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
-      content: csv(Object.keys(rows[0]), exportRows),
+      content: csv(headers ?? Object.keys(rows[0]), exportRows),
     }
   } else if (format === Format.JSON) {
     return {
@@ -185,8 +186,8 @@ export async function fetchView(
       group: !!group,
     })
   } else {
-    const tableId = viewInfo.meta.tableId
-    const data = await fetchRaw(tableId)
+    const tableId = viewInfo.meta!.tableId
+    const data = await fetchRaw(tableId!)
     response = await inMemoryViews.runView(
       viewInfo,
       calculation as string,
@@ -200,7 +201,7 @@ export async function fetchView(
     response.rows = response.rows.map(row => row.doc)
     let table: Table
     try {
-      table = await sdk.tables.getTable(viewInfo.meta.tableId)
+      table = await sdk.tables.getTable(viewInfo.meta!.tableId)
     } catch (err) {
       throw new Error("Unable to retrieve view table.")
     }

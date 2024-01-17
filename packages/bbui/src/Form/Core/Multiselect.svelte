@@ -6,7 +6,6 @@
   export let id = null
   export let placeholder = null
   export let disabled = false
-  export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -84,7 +83,6 @@
 <Picker
   on:loadMore
   {id}
-  {error}
   {disabled}
   {readonly}
   {fieldText}

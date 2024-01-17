@@ -2,11 +2,19 @@ name: deploy-featurebranch
 
 on:
   pull_request:
-    branches:
-      - master
+    types: [
+        labeled,
+        # default types below (https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request)
+        opened,
+        synchronize,
+        reopened,
+      ]
 
 jobs:
   release:
+    if: |
+      (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase') &&
+      contains(github.event.pull_request.labels.*.name, 'feature-branch')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3

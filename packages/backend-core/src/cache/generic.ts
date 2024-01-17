@@ -1,6 +1,6 @@
-const BaseCache = require("./base")
+import BaseCache from "./base"
 
-const GENERIC = new BaseCache.default()
+const GENERIC = new BaseCache()
 
 export enum CacheKey {
   CHECKLIST = "checklist",
@@ -18,13 +18,15 @@ export enum TTL {
   ONE_DAY = 86400,
 }
 
-function performExport(funcName: string) {
-  return (...args: any) => GENERIC[funcName](...args)
-}
-
-export const keys = performExport("keys")
-export const get = performExport("get")
-export const store = performExport("store")
-export const destroy = performExport("delete")
-export const withCache = performExport("withCache")
-export const bustCache = performExport("bustCache")
+export const keys = (...args: Parameters<typeof GENERIC.keys>) =>
+  GENERIC.keys(...args)
+export const get = (...args: Parameters<typeof GENERIC.get>) =>
+  GENERIC.get(...args)
+export const store = (...args: Parameters<typeof GENERIC.store>) =>
+  GENERIC.store(...args)
+export const destroy = (...args: Parameters<typeof GENERIC.delete>) =>
+  GENERIC.delete(...args)
+export const withCache = (...args: Parameters<typeof GENERIC.withCache>) =>
+  GENERIC.withCache(...args)
+export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
+  GENERIC.bustCache(...args)

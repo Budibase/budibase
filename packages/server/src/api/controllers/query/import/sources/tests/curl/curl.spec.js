@@ -1,13 +1,13 @@
 const { Curl } = require("../../curl")
 const fs = require("fs")
-const path = require('path')
+const path = require("path")
 
-const getData = (file) => {
+const getData = file => {
   return fs.readFileSync(path.join(__dirname, `./data/${file}.txt`), "utf8")
 }
 
 describe("Curl Import", () => {
-  let curl 
+  let curl
 
   beforeEach(() => {
     curl = new Curl()
@@ -28,7 +28,7 @@ describe("Curl Import", () => {
     expect(supported).toBe(false)
   })
 
-  const init = async (file) => {
+  const init = async file => {
     await curl.isSupported(getData(file))
   }
 
@@ -37,10 +37,9 @@ describe("Curl Import", () => {
     const info = await curl.getInfo()
     expect(info.name).toBe("example.com")
   })
-  
+
   describe("Returns queries", () => {
-    
-    const getQueries = async (file) => {
+    const getQueries = async file => {
       await init(file)
       const queries = await curl.getQueries()
       expect(queries.length).toBe(1)
@@ -58,7 +57,7 @@ describe("Curl Import", () => {
       await testVerb("put", "update")
       await testVerb("delete", "delete")
       await testVerb("patch", "patch")
-    }) 
+    })
 
     const testPath = async (file, urlPath) => {
       const queries = await getQueries(file)
@@ -66,8 +65,8 @@ describe("Curl Import", () => {
     }
 
     it("populates path", async () => {
-        await testPath("get", "http://example.com/")
-        await testPath("path", "http://example.com/paths/abc")
+      await testPath("get", "http://example.com/")
+      await testPath("path", "http://example.com/paths/abc")
     })
 
     const testHeaders = async (file, headers) => {
@@ -77,7 +76,10 @@ describe("Curl Import", () => {
 
     it("populates headers", async () => {
       await testHeaders("get", {})
-      await testHeaders("headers", { "x-bb-header-1" : "123", "x-bb-header-2" : "456"} )
+      await testHeaders("headers", {
+        "x-bb-header-1": "123",
+        "x-bb-header-2": "456",
+      })
     })
 
     const testQuery = async (file, queryString) => {
@@ -91,12 +93,14 @@ describe("Curl Import", () => {
 
     const testBody = async (file, body) => {
       const queries = await getQueries(file)
-      expect(queries[0].fields.requestBody).toStrictEqual(JSON.stringify(body, null, 2))
+      expect(queries[0].fields.requestBody).toStrictEqual(
+        JSON.stringify(body, null, 2)
+      )
     }
 
     it("populates body", async () => {
       await testBody("get", undefined)
-      await testBody("post", { "key" : "val" })
+      await testBody("post", { key: "val" })
       await testBody("empty-body", {})
     })
   })

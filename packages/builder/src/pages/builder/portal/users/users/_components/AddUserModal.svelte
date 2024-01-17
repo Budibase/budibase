@@ -29,7 +29,6 @@
     },
   ]
   $: hasError = userData.find(x => x.error != null)
-
   $: userCount = $licensing.userCount + userData.length
   $: reached = licensing.usersLimitReached(userCount)
   $: exceeded = licensing.usersLimitExceeded(userCount)
@@ -98,7 +97,7 @@
         align-items: center;
         flex-direction: row;"
       >
-        <div style="width: 90%">
+        <div style="flex: 1 1 auto;">
           <InputDropdown
             inputType="email"
             bind:inputValue={input.email}

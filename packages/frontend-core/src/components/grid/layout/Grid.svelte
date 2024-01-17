@@ -48,6 +48,7 @@
   export let fixedRowHeight = null
   export let notifySuccess = null
   export let notifyError = null
+  export let buttons = null
 
   // Unique identifier for DOM nodes inside this instance
   const rand = Math.random()
@@ -99,6 +100,7 @@
     fixedRowHeight,
     notifySuccess,
     notifyError,
+    buttons,
   })
 
   // Set context for children to consume

@@ -7,7 +7,9 @@ export enum PlanType {
   /** @deprecated */
   PREMIUM = "premium",
   PREMIUM_PLUS = "premium_plus",
+  /** @deprecated */
   BUSINESS = "business",
+  ENTERPRISE_BASIC = "enterprise_basic",
   ENTERPRISE = "enterprise",
 }
 

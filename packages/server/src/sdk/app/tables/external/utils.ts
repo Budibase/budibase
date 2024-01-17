@@ -1,5 +1,6 @@
 import {
   Datasource,
+  FieldType,
   ManyToManyRelationshipFieldMetadata,
   ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
@@ -42,10 +43,13 @@ export function cleanupRelationships(
       for (let [relatedKey, relatedSchema] of Object.entries(
         relatedTable.schema
       )) {
-        if (
-          relatedSchema.type === FieldTypes.LINK &&
-          relatedSchema.fieldName === foreignKey
-        ) {
+        if (relatedSchema.type !== FieldType.LINK) {
+          continue
+        }
+        // if they both have the same field name it will appear as if it needs to be removed,
+        // don't cleanup in this scenario
+        const sameFieldNameForBoth = relatedSchema.name === schema.name
+        if (relatedSchema.fieldName === foreignKey && !sameFieldNameForBoth) {
           delete relatedTable.schema[relatedKey]
         }
       }

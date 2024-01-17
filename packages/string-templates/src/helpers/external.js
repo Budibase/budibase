@@ -16,6 +16,7 @@ const EXTERNAL_FUNCTION_COLLECTIONS = [
   "comparison",
   "object",
   "regex",
+  "uuid",
 ]
 
 const ADDED_HELPERS = {

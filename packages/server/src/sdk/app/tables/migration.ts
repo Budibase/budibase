@@ -17,7 +17,6 @@ import sdk from "../../../sdk"
 import { isExternalTableID } from "../../../integrations/utils"
 import { EventType, updateLinks } from "../../../db/linkedRows"
 import { cloneDeep } from "lodash"
-import { isInternalColumnName } from "@budibase/backend-core/src/db"
 
 export interface MigrationResult {
   tablesUpdated: Table[]
@@ -36,7 +35,7 @@ export async function migrate(
     throw new BadRequestError(`Column name cannot be empty`)
   }
 
-  if (isInternalColumnName(newColumn.name)) {
+  if (dbCore.isInternalColumnName(newColumn.name)) {
     throw new BadRequestError(`Column name cannot be a reserved column name`)
   }
 

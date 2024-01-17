@@ -1,13 +1,4 @@
-import { ViewFilter } from "@budibase/types"
-
-type ViewTemplateOpts = {
-  field: string
-  tableId: string
-  groupBy: string
-  filters: ViewFilter[]
-  calculation: string
-  groupByMulti: boolean
-}
+import { ViewFilter, ViewTemplateOpts, DBView } from "@budibase/types"
 
 const TOKEN_MAP: Record<string, string> = {
   EQUALS: "===",
@@ -146,7 +137,7 @@ function parseEmitExpression(field: string, groupBy: string) {
 export default function (
   { field, tableId, groupBy, filters = [], calculation }: ViewTemplateOpts,
   groupByMulti?: boolean
-) {
+): DBView {
   // first filter can't have a conjunction
   if (filters && filters.length > 0 && filters[0].conjunction) {
     delete filters[0].conjunction

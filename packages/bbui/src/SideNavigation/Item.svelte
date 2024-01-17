@@ -1,7 +1,9 @@
 <script>
   import { getContext } from "svelte"
+
   const multilevel = getContext("sidenav-type")
   import Badge from "../Badge/Badge.svelte"
+
   export let href = ""
   export let external = false
   export let heading = ""

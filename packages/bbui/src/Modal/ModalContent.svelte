@@ -40,7 +40,7 @@
     loading = false
   }
 
-  async function confirm() {
+  export async function confirm() {
     loading = true
     if (!onConfirm || (await onConfirm()) !== keepOpen) {
       hide()

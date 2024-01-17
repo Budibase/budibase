@@ -16,7 +16,6 @@
   export let id = null
   export let placeholder = "Choose an option or type"
   export let disabled = false
-  export let error = null
   export let secondaryOptions = []
   export let primaryOptions = []
   export let secondaryFieldText = ""
@@ -105,14 +104,9 @@
   }
 </script>
 
-<div
-  class="spectrum-InputGroup"
-  class:is-invalid={!!error}
-  class:is-disabled={disabled}
->
+<div class="spectrum-InputGroup" class:is-disabled={disabled}>
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
-    class:is-invalid={!!error}
     class:is-disabled={disabled}
     class:is-focused={focus}
     class:is-full-width={!secondaryOptions.length}

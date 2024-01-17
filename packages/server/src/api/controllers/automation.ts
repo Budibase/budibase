@@ -13,7 +13,7 @@ import {
 import { deleteEntityMetadata } from "../../utilities"
 import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
-import { context, cache, events } from "@budibase/backend-core"
+import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
 import {
   App,
@@ -24,7 +24,6 @@ import {
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
-import { db as dbCore } from "@budibase/backend-core"
 import { builderSocket } from "../../websockets"
 
 async function getActionDefinitions() {

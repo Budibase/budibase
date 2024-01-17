@@ -1,5 +1,9 @@
 const TestConfig = require("../../tests/utilities/TestConfiguration")
-const { basicRow, basicLinkedRow, basicTable } = require("../../tests/utilities/structures")
+const {
+  basicRow,
+  basicLinkedRow,
+  basicTable,
+} = require("../../tests/utilities/structures")
 const LinkController = require("../linkedRows/LinkController").default
 const { context } = require("@budibase/backend-core")
 const { RelationshipType } = require("../../constants")
@@ -16,7 +20,10 @@ describe("test the link controller", () => {
 
   beforeEach(async () => {
     const { _id } = await config.createTable()
-    table2 = await config.createLinkedTable(RelationshipType.MANY_TO_MANY, ["link", "link2"])
+    table2 = await config.createLinkedTable(RelationshipType.MANY_TO_MANY, [
+      "link",
+      "link2",
+    ])
     // update table after creating link
     table1 = await config.getTable(_id)
   })
@@ -41,15 +48,23 @@ describe("test the link controller", () => {
 
   async function createLinkedRow(linkField = "link", t1 = table1, t2 = table2) {
     const row = await config.createRow(basicRow(t2._id))
-    const { _id } = await config.createRow(basicLinkedRow(t1._id, row._id, linkField))
+    const { _id } = await config.createRow(
+      basicLinkedRow(t1._id, row._id, linkField)
+    )
     return config.getRow(t1._id, _id)
   }
 
   it("should be able to confirm if two table schemas are equal", async () => {
     const controller = await createLinkController(table1)
-    let equal = controller.areLinkSchemasEqual(table2.schema.link, table2.schema.link)
+    let equal = controller.areLinkSchemasEqual(
+      table2.schema.link,
+      table2.schema.link
+    )
     expect(equal).toEqual(true)
-    equal = controller.areLinkSchemasEqual(table1.schema.link, table2.schema.link)
+    equal = controller.areLinkSchemasEqual(
+      table1.schema.link,
+      table2.schema.link
+    )
     expect(equal).toEqual(false)
   })
 
@@ -57,17 +72,42 @@ describe("test the link controller", () => {
     const controller = await createLinkController(table1)
     // empty case
     let output = controller.handleRelationshipType({}, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipType.MANY_TO_MANY }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_MANY)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipType.MANY_TO_ONE }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipType.ONE_TO_MANY)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipType.MANY_TO_ONE)
-    output = controller.handleRelationshipType({ relationshipType: RelationshipType.ONE_TO_MANY }, {})
-    expect(output.linkedField.relationshipType).toEqual(RelationshipType.MANY_TO_ONE)
-    expect(output.linkerField.relationshipType).toEqual(RelationshipType.ONE_TO_MANY)
+    expect(output.linkedField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_MANY
+    )
+    expect(output.linkerField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_MANY
+    )
+    output = controller.handleRelationshipType(
+      { relationshipType: RelationshipType.MANY_TO_MANY },
+      {}
+    )
+    expect(output.linkedField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_MANY
+    )
+    expect(output.linkerField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_MANY
+    )
+    output = controller.handleRelationshipType(
+      { relationshipType: RelationshipType.MANY_TO_ONE },
+      {}
+    )
+    expect(output.linkedField.relationshipType).toEqual(
+      RelationshipType.ONE_TO_MANY
+    )
+    expect(output.linkerField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_ONE
+    )
+    output = controller.handleRelationshipType(
+      { relationshipType: RelationshipType.ONE_TO_MANY },
+      {}
+    )
+    expect(output.linkedField.relationshipType).toEqual(
+      RelationshipType.MANY_TO_ONE
+    )
+    expect(output.linkerField.relationshipType).toEqual(
+      RelationshipType.ONE_TO_MANY
+    )
   })
 
   it("should be able to delete a row", async () => {
@@ -100,7 +140,7 @@ describe("test the link controller", () => {
   it("should throw an error when validating a table which is invalid", async () => {
     const controller = await createLinkController(table1)
     const copyTable = {
-      ...table1
+      ...table1,
     }
     copyTable.schema.otherTableLink = {
       type: "link",
@@ -114,7 +154,9 @@ describe("test the link controller", () => {
       error = err
     }
     expect(error).toBeDefined()
-    expect(error.message).toEqual("Cannot re-use the linked column name for a linked table.")
+    expect(error.message).toEqual(
+      "Cannot re-use the linked column name for a linked table."
+    )
   })
 
   it("should be able to remove a link when saving/updating the row", async () => {
@@ -183,7 +225,10 @@ describe("test the link controller", () => {
 
   it("shouldn't allow one to many having many relationships against it", async () => {
     const firstTable = await config.createTable()
-    const { _id } = await config.createLinkedTable(RelationshipType.MANY_TO_ONE, ["link"])
+    const { _id } = await config.createLinkedTable(
+      RelationshipType.MANY_TO_ONE,
+      ["link"]
+    )
     const linkTable = await config.getTable(_id)
     // an initial row to link around
     const row = await createLinkedRow("link", linkTable, firstTable)

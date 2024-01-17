@@ -51,6 +51,8 @@ import {
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { sdk as sharedCoreSDK } from "@budibase/shared-core"
+import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -335,6 +337,12 @@ async function performAppCreate(ctx: UserCtx) {
       await createApp(appId)
     }
 
+    // Initialise the app migration version as the latest one
+    await appMigrations.updateAppMigrationMetadata({
+      appId,
+      version: appMigrations.getLatestMigrationId(),
+    })
+
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
@@ -393,6 +401,12 @@ async function appPostCreate(ctx: UserCtx, app: App) {
         throw err
       }
     }
+  }
+
+  // If the user is a creator, we need to give them access to the new app
+  if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
+    const user = await users.UserDB.getUser(ctx.user._id!)
+    await users.addAppBuilder(user, app.appId)
   }
 }
 

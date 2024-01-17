@@ -270,7 +270,6 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
-            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -2699,6 +2698,22 @@
       }
     ]
   },
+  "labelfield": {
+    "name": "Text Field",
+    "icon": "Text",
+    "editable": true,
+    "size": {
+      "width": 400,
+      "height": 32
+    },
+    "settings": [
+      {
+        "type": "plainText",
+        "label": "Label",
+        "key": "label"
+      }
+    ]
+  },
   "stringfield": {
     "name": "Text Field",
     "icon": "Text",
@@ -2731,6 +2746,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -2864,6 +2884,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -2959,6 +2984,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3177,6 +3207,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "boolean",
         "label": "Autocomplete",
         "key": "autocomplete",
@@ -3260,6 +3295,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3335,6 +3371,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3462,6 +3503,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3561,6 +3603,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3657,6 +3704,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -3801,6 +3853,11 @@
         "supportsConditions": false
       },
       {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
         "type": "event",
         "label": "On change",
         "key": "onChange",
@@ -3894,6 +3951,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "boolean",
@@ -4147,6 +4209,11 @@
       },
       {
         "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "text",
         "label": "Extensions",
         "key": "extensions"
       },
@@ -4247,6 +4314,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -4355,6 +4427,11 @@
         "label": "Default value",
         "key": "defaultValue",
         "supportsConditions": false
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",
@@ -4802,7 +4879,7 @@
   },
   "chartblock": {
     "block": true,
-    "name": "Chart block",
+    "name": "Chart Block",
     "icon": "GraphPie",
     "hasChildren": false,
     "settings": [
@@ -5292,7 +5369,7 @@
   },
   "tableblock": {
     "block": true,
-    "name": "Table block",
+    "name": "Table Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -5538,7 +5615,7 @@
   },
   "cardsblock": {
     "block": true,
-    "name": "Cards block",
+    "name": "Cards Block",
     "icon": "PersonalizationField",
     "styles": ["size"],
     "size": {
@@ -5718,7 +5795,7 @@
   },
   "repeaterblock": {
     "block": true,
-    "name": "Repeater block",
+    "name": "Repeater Block",
     "icon": "ViewList",
     "illegalChildren": ["section"],
     "hasChildren": true,
@@ -5958,6 +6035,164 @@
       }
     ]
   },
+  "multistepformblock": {
+    "name": "Multi-step Form Block",
+    "icon": "AssetsAdded",
+    "block": true,
+    "hasChildren": false,
+    "ejectable": false,
+    "size": {
+      "width": 400,
+      "height": 400
+    },
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "radio",
+        "label": "Type",
+        "key": "actionType",
+        "options": ["Create", "Update", "View"],
+        "defaultValue": "Create"
+      },
+      {
+        "section": true,
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        },
+        "name": "Row ID",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "No rows found",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "stepConfiguration",
+            "key": "steps",
+            "nested": true,
+            "labelHidden": true,
+            "resetOn": [
+              "dataSource",
+              "actionType"
+            ],
+            "defaultValue": [
+              {}
+            ]
+          }
+        ]
+      }
+    ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
+      },
+      {
+        "type": "ChangeFormStep",
+        "suffix": "form"
+      }
+    ],
+    "context": [
+      {
+        "type": "form",
+        "suffix": "form"
+      },
+      {
+        "type": "static",
+        "suffix": "form",
+        "values": [
+          {
+            "label": "Value",
+            "key": "__value",
+            "type": "object"
+          },
+          {
+            "label": "Valid",
+            "key": "__valid",
+            "type": "boolean"
+          },
+          {
+            "label": "Current Step",
+            "key": "__currentStep",
+            "type": "number"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "__currentStepValid",
+            "type": "boolean"
+          }
+        ]
+      }
+    ]
+  },
+  "multistepformblockstep": {
+    "name": "Multi-step Form Block Step",
+    "settings": [
+      {
+        "type": "formStepControls",
+        "label": "Steps",
+        "key": "steps"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "nested": true
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "desc",
+        "nested": true
+      },
+      {
+        "type": "fieldConfiguration",
+        "key": "fields",
+        "nested": true
+      },
+      {
+        "type": "buttonConfiguration",
+        "label": "Buttons",
+        "key": "buttons",
+        "wide": true,
+        "nested": true
+      }
+    ]
+  },
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
@@ -5982,25 +6217,13 @@
         "defaultValue": "Create"
       },
       {
-        "type": "text",
-        "label": "Title",
-        "key": "title",
-        "nested": true
-      },
-      {
-        "type": "text",
-        "label": "Description",
-        "key": "description",
-        "nested": true
-      },
-      {
         "section": true,
         "dependsOn": {
           "setting": "actionType",
           "value": "Create",
           "invert": true
         },
-        "name": "Row details",
+        "name": "Row ID",
         "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
         "settings": [
           {
@@ -6020,8 +6243,20 @@
       },
       {
         "section": true,
-        "name": "Fields",
+        "name": "Details",
         "settings": [
+          {
+            "type": "text",
+            "label": "Title",
+            "key": "title",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "Description",
+            "key": "description",
+            "nested": true
+          },
           {
             "type": "fieldConfiguration",
             "key": "fields",
@@ -6038,53 +6273,31 @@
         ]
       },
       {
+        "tag": "style",
+        "type": "select",
+        "label": "Button position",
+        "key": "buttonPosition",
+        "options": [
+          {
+            "label": "Bottom",
+            "value": "bottom"
+          },
+          {
+            "label": "Top",
+            "value": "top"
+          }
+        ],
+        "defaultValue": "bottom"
+      },
+      {
         "section": true,
         "name": "Buttons",
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "View",
-          "invert": true
-        },
         "settings": [
           {
-            "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save button",
+            "type": "buttonConfiguration",
+            "key": "buttons",
             "nested": true,
-            "defaultValue": "Save"
-          },
-          {
-            "type": "text",
-            "key": "deleteButtonLabel",
-            "label": "Delete button",
-            "nested": true,
-            "defaultValue": "Delete",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
-          },
-          {
-            "type": "url",
-            "label": "Navigate after button press",
-            "key": "actionUrl",
-            "placeholder": "Choose a screen",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Hide notifications",
-            "key": "notificationOverride",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "resetOn": ["actionType", "dataSource"]
           }
         ]
       },
@@ -6104,6 +6317,24 @@
           }
         ],
         "defaultValue": "spectrum--medium"
+      }
+    ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
       }
     ],
     "context": [
@@ -6217,7 +6448,7 @@
     }
   },
   "gridblock": {
-    "name": "Grid block",
+    "name": "Grid Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -6230,19 +6461,6 @@
         "label": "Data",
         "key": "table",
         "required": true
-      },
-      {
-        "type": "columns/grid",
-        "label": "Columns",
-        "key": "columns",
-        "dependsOn": [
-          "table",
-          {
-            "setting": "table.type",
-            "value": "custom",
-            "invert": true
-          }
-        ]
       },
       {
         "type": "filter",
@@ -6339,8 +6557,42 @@
         "label": "High contrast",
         "key": "stripeRows",
         "defaultValue": false
+      },
+      {
+        "section": true,
+        "name": "Columns",
+        "settings": [
+          {
+            "type": "columns/grid",
+            "key": "columns",
+            "nested": true,
+            "resetOn": "table"
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Buttons",
+        "settings": [
+          {
+            "type": "buttonConfiguration",
+            "key": "buttons",
+            "nested": true,
+            "max": 3,
+            "context": [
+              {
+                "label": "Clicked row",
+                "key": "row"
+              }
+            ]
+          }
+        ]
       }
-    ]
+    ],
+    "context": {
+      "type": "schema"
+    },
+    "actions": ["RefreshDatasource"]
   },
   "bbreferencefield": {
     "devComment": "As bb reference is only used for user subtype for now, we are using user for icon and labels",
@@ -6374,6 +6626,11 @@
         "type": "text",
         "label": "Default value",
         "key": "defaultValue"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
       },
       {
         "type": "event",

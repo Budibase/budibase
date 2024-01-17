@@ -10,7 +10,6 @@
   export let id = null
   export let disabled = false
   export let readonly = false
-  export let error = null
   export let enableTime = true
   export let value = null
   export let placeholder = null
@@ -188,7 +187,6 @@
     <div
       id={flatpickrId}
       class:is-disabled={disabled || readonly}
-      class:is-invalid={!!error}
       class="flatpickr spectrum-InputGroup spectrum-Datepicker"
       class:is-focused={open}
       aria-readonly="false"
@@ -199,17 +197,7 @@
         on:click={flatpickr?.open}
         class="spectrum-Textfield spectrum-InputGroup-textfield"
         class:is-disabled={disabled}
-        class:is-invalid={!!error}
       >
-        {#if !!error}
-          <svg
-            class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-            focusable="false"
-            aria-hidden="true"
-          >
-            <use xlink:href="#spectrum-icon-18-Alert" />
-          </svg>
-        {/if}
         <input
           {disabled}
           {readonly}
@@ -227,7 +215,6 @@
         class="spectrum-Picker spectrum-Picker--sizeM spectrum-InputGroup-button"
         tabindex="-1"
         class:is-disabled={disabled}
-        class:is-invalid={!!error}
         on:click={flatpickr?.open}
       >
         <svg

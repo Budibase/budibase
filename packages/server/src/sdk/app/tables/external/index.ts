@@ -136,6 +136,8 @@ export async function save(
     schema.main = true
   }
 
+  // add in the new table for relationship purposes
+  tables[tableToSave.name] = tableToSave
   cleanupRelationships(tableToSave, tables, oldTable)
 
   const operation = tableId ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE

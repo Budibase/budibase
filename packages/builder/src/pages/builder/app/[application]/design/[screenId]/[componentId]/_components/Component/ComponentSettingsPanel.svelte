@@ -10,7 +10,7 @@
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
   import { notifications } from "@budibase/bbui"
-  import { getComponentText } from "stores/builder/components/utils"
+  import { getComponentName } from "stores/builder/components/utils"
   import {
     getBindableProperties,
     getComponentBindableProperties,
@@ -47,17 +47,25 @@
 
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
+
+  $: componentName = getComponentName(componentInstance)
 </script>
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition?.icon} borderLeft wide>
+    <Panel
+      {title}
+      icon={componentDefinition?.icon}
+      iconTooltip={componentName}
+      borderLeft
+      wide
+    >
       <span class="panel-title-content" slot="panel-title-content">
         <input
           class="input"
           value={title}
           {title}
-          placeholder={getComponentText(componentInstance)}
+          placeholder={componentName}
           on:keypress={e => {
             if (e.key.toLowerCase() === "enter") {
               e.target.blur()
@@ -104,6 +112,8 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
+          iconTooltip={componentName}
+          componentTitle={title}
         />
       {/if}
       {#if section == "conditions"}

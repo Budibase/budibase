@@ -1,6 +1,7 @@
 const { processString, processObject, isValid } = require("../src/index.cjs")
 const tableJson = require("./examples/table.json")
 const dayjs = require("dayjs")
+const { UUID_REGEX } = require("./constants")
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -266,10 +267,7 @@ describe("test the string helpers", () => {
   })
 
   it("should allow use of the ellipsis helper", async () => {
-    const output = await processString(
-      "{{ ellipsis \"adfasdfasdfasf\" 7 }}",
-      {},
-    )
+    const output = await processString('{{ ellipsis "adfasdfasdfasf" 7 }}', {})
     expect(output).toBe("adfasdf…")
   })
 })
@@ -478,5 +476,12 @@ describe("Cover a few complex use cases", () => {
     }
     const output = await processObject(input, context)
     expect(output.dataProvider).toBe("%5B%221%22%2C%221%22%5D")
+  })
+})
+
+describe("uuid", () => {
+  it("should be able to generate a UUID", async () => {
+    const output = await processString("{{ uuid }}", {})
+    expect(output).toMatch(UUID_REGEX)
   })
 })

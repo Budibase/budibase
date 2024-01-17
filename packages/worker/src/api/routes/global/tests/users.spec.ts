@@ -1,10 +1,11 @@
 import { InviteUsersResponse, User } from "@budibase/types"
 
-jest.mock("nodemailer")
 import { TestConfiguration, mocks, structures } from "../../../../tests"
-const sendMailMock = mocks.email.mock()
 import { events, tenancy, accounts as _accounts } from "@budibase/backend-core"
 import * as userSdk from "../../../../sdk/users"
+
+jest.mock("nodemailer")
+const sendMailMock = mocks.email.mock()
 
 const accounts = jest.mocked(_accounts)
 
@@ -54,6 +55,24 @@ describe("/api/global/users", () => {
       expect(events.user.invited).toBeCalledTimes(0)
     })
 
+    it("should not invite the same user twice", async () => {
+      const email = structures.users.newEmail()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      jest.clearAllMocks()
+
+      const { code, res } = await config.api.users.sendUserInvite(
+        sendMailMock,
+        email,
+        400
+      )
+
+      expect(res.body.message).toBe(`Unavailable`)
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(code).toBeUndefined()
+      expect(events.user.invited).toBeCalledTimes(0)
+    })
+
     it("should be able to create new user from invite", async () => {
       const email = structures.users.newEmail()
       const { code } = await config.api.users.sendUserInvite(
@@ -92,6 +111,23 @@ describe("/api/global/users", () => {
     it("should not be able to generate an invitation for existing user", async () => {
       const request = [{ email: config.user!.email, userInfo: {} }]
 
+      const res = await config.api.users.sendMultiUserInvite(request)
+
+      const body = res.body as InviteUsersResponse
+      expect(body.successful.length).toBe(0)
+      expect(body.unsuccessful.length).toBe(1)
+      expect(body.unsuccessful[0].reason).toBe("Unavailable")
+      expect(sendMailMock).toHaveBeenCalledTimes(0)
+      expect(events.user.invited).toBeCalledTimes(0)
+    })
+
+    it("should not be able to generate an invitation for user that has already been invited", async () => {
+      const email = structures.users.newEmail()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      jest.clearAllMocks()
+
+      const request = [{ email: email, userInfo: {} }]
       const res = await config.api.users.sendMultiUserInvite(request)
 
       const body = res.body as InviteUsersResponse
@@ -554,6 +590,15 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should be able to search by email with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { string: { ["999:email"]: user.email } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
+
     it("should be able to search by _id", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -563,13 +608,52 @@ describe("/api/global/users", () => {
       expect(response.body.data[0]._id).toBe(user._id)
     })
 
+    it("should be able to search by _id with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { equal: { ["1:_id"]: user._id } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should throw an error when using multiple filters on the same field", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["1:email"]: user.email,
+              ["2:email"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("should throw an error when using multiple filters on the same field without prefixes", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["_id"]: user.email,
+              ["999:_id"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
     it("should throw an error when unimplemented options used", async () => {
       const user = await config.createUser()
       await config.api.users.searchUsers(
         {
           query: { equal: { firstName: user.firstName } },
         },
-        { status: 501 }
+        { status: 400 }
       )
     })
 
@@ -631,6 +715,27 @@ describe("/api/global/users", () => {
       const response = await config.api.users.deleteUser(user._id!, 400)
 
       expect(response.body.message).toBe("Unable to delete self.")
+    })
+  })
+
+  describe("POST /api/global/users/onboard", () => {
+    it("should successfully onboard a user", async () => {
+      const response = await config.api.users.onboardUser([
+        { email: structures.users.newEmail(), userInfo: {} },
+      ])
+      expect(response.successful.length).toBe(1)
+      expect(response.unsuccessful.length).toBe(0)
+    })
+
+    it("should not onboard a user who has been invited", async () => {
+      const email = structures.users.newEmail()
+      await config.api.users.sendUserInvite(sendMailMock, email)
+
+      const response = await config.api.users.onboardUser([
+        { email, userInfo: {} },
+      ])
+      expect(response.successful.length).toBe(0)
+      expect(response.unsuccessful.length).toBe(1)
     })
   })
 })

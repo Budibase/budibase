@@ -27,6 +27,7 @@
     appStore,
     deploymentStore,
     initialise,
+    sortedScreens,
   } from "stores/builder"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
@@ -55,7 +56,7 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: canPublish = !publishing && loaded
+  $: canPublish = !publishing && loaded && $sortedScreens.length > 0
   $: lastDeployed = getLastDeployedString($deploymentStore)
 
   const initialiseApp = async () => {
@@ -176,7 +177,12 @@
 
     <div class="app-action-button preview">
       <div class="app-action">
-        <ActionButton quiet icon="PlayCircle" on:click={previewApp}>
+        <ActionButton
+          disabled={$sortedScreens.length === 0}
+          quiet
+          icon="PlayCircle"
+          on:click={previewApp}
+        >
           Preview
         </ActionButton>
       </div>

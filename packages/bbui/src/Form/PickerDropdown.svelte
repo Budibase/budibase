@@ -26,6 +26,7 @@
   export let secondaryOptions = []
   export let searchTerm
   export let showClearIcon = true
+  export let helpText = null
 
   let primaryLabel
   let secondaryLabel
@@ -93,7 +94,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <PickerDropdown
     {searchTerm}
     {autocomplete}

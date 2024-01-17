@@ -75,10 +75,12 @@ export function getRedisConnectionDetails() {
   }
   const [host, port] = url.split(":")
 
+  const portNumber = parseInt(port)
   return {
     host,
     password,
-    port: parseInt(port),
+    // assume default port for redis if invalid found
+    port: isNaN(portNumber) ? 6379 : portNumber,
   }
 }
 

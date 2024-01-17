@@ -11,6 +11,7 @@
   export let validation
   export let defaultValue
   export let onChange
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -42,6 +43,7 @@
   {disabled}
   {readonly}
   {validation}
+  {helpText}
   defaultValue={isTruthy(defaultValue)}
   type="boolean"
   bind:fieldState

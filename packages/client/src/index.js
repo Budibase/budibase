@@ -1,4 +1,5 @@
 import ClientApp from "./components/ClientApp.svelte"
+import UpdatingApp from "./components/UpdatingApp.svelte"
 import {
   builderStore,
   appStore,
@@ -7,6 +8,7 @@ import {
   environmentStore,
   dndStore,
   eventStore,
+  hoverStore,
 } from "./stores"
 import loadSpectrumIcons from "@budibase/bbui/spectrum-icons-rollup.js"
 import { get } from "svelte/store"
@@ -15,6 +17,7 @@ import { initWebsocket } from "./websocket.js"
 // Provide svelte and svelte/internal as globals for custom components
 import * as svelte from "svelte"
 import * as internal from "svelte/internal"
+
 window.svelte_internal = internal
 window.svelte = svelte
 
@@ -50,6 +53,13 @@ const loadBudibase = async () => {
     window["##BUDIBASE_APP_EMBEDDED##"] === "true"
   )
 
+  if (window.MIGRATING_APP) {
+    new UpdatingApp({
+      target: window.document.body,
+    })
+    return
+  }
+
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
     await environmentStore.actions.fetchEnvironment()
@@ -74,6 +84,10 @@ const loadBudibase = async () => {
       } else {
         dndStore.actions.reset()
       }
+    } else if (type === "hover-component") {
+      hoverStore.actions.hoverComponent(data)
+    } else if (type === "builder-meta") {
+      builderStore.actions.setMetadata(data)
     }
   }
 

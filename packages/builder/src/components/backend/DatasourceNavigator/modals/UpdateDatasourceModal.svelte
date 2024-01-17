@@ -1,8 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { datasources, integrations } from "stores/builder"
-  import { notifications } from "@budibase/bbui"
-  import { Input, ModalContent, Modal } from "@budibase/bbui"
+  import { notifications, Input, ModalContent, Modal } from "@budibase/bbui"
   import { integrationForDatasource } from "stores/selectors"
 
   let error = ""

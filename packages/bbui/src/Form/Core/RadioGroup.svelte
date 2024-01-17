@@ -6,7 +6,6 @@
   export let direction = "vertical"
   export let value = null
   export let options = []
-  export let error = null
   export let disabled = false
   export let readonly = false
   export let getOptionLabel = option => option
@@ -40,7 +39,6 @@
       <div
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
-        class:is-invalid={!!error}
         class:readonly
       >
         <input

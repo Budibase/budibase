@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:20-slim
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -18,12 +18,12 @@ ENV TOP_LEVEL_PATH=/
 
 # handle node-gyp
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends g++ make python3
+    && apt-get install -y --no-install-recommends g++ make python3 jq
 RUN yarn global add pm2
 
 # Install client for oracle datasource
 RUN apt-get install unzip libaio1
-COPY scripts/integrations/oracle/ scripts/integrations/oracle/
+COPY packages/server/scripts/integrations/oracle/ scripts/integrations/oracle/
 RUN /bin/bash -e scripts/integrations/oracle/instantclient/linux/x86-64/install.sh 
 
 # Install postgres client for pg_dump utils
@@ -35,18 +35,46 @@ RUN apt update && apt upgrade -y \
     && apt install postgresql-client-15 -y \
     && apt remove software-properties-common apt-transport-https curl gpg -y
 
+WORKDIR /
 
-COPY package.json .
-COPY dist/yarn.lock .
-RUN yarn install --production=true --network-timeout 1000000 \
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+
+
+WORKDIR /string-templates
+COPY packages/string-templates/package.json package.json
+RUN ../scripts/removeWorkspaceDependencies.sh package.json
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000
+COPY packages/string-templates .
+
+
+WORKDIR /app
+COPY packages/server/package.json .
+COPY packages/server/dist/yarn.lock .
+RUN cd ../string-templates && yarn link && cd - && yarn link @budibase/string-templates
+
+COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
+RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
+RUN ./scripts/removeWorkspaceDependencies.sh  package.json
+
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000 \
     # Remove unneeded data from file system to reduce image size
-    && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python \
+    && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python jq \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
 
-COPY dist/ dist/
-COPY docker_run.sh .
-COPY builder/ builder/
-COPY client/ client/
+COPY packages/server/dist/ dist/
+COPY packages/server/docker_run.sh .
+COPY packages/server/builder/ builder/
+COPY packages/server/client/ client/
+
+ARG BUDIBASE_VERSION
+ARG GIT_COMMIT_SHA
+# Ensuring the version argument is sent
+RUN test -n "$BUDIBASE_VERSION"
+ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
+ENV DD_GIT_REPOSITORY_URL=https://github.com/budibase/budibase
+ENV DD_GIT_COMMIT_SHA=$GIT_COMMIT_SHA
+ENV DD_VERSION=$BUDIBASE_VERSION
 
 EXPOSE 4001
 

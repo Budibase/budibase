@@ -22,7 +22,6 @@
   export let handleFileTooLarge = null
   export let handleTooManyFiles = null
   export let gallery = true
-  export let error = null
   export let fileTags = []
   export let maximum = null
   export let extensions = "*"
@@ -54,7 +53,7 @@
   $: {
     if (selectedImage?.url) {
       selectedUrl = selectedImage?.url
-    } else if (selectedImage) {
+    } else if (selectedImage && isImage) {
       try {
         let reader = new FileReader()
         reader.readAsDataURL(selectedImage)
@@ -222,7 +221,6 @@
   {#if showDropzone}
     <div
       class="spectrum-Dropzone"
-      class:is-invalid={!!error}
       class:disabled
       role="region"
       tabindex="0"
@@ -350,9 +348,6 @@
   .gallery,
   .spectrum-Dropzone {
     user-select: none;
-  }
-  .spectrum-Dropzone.is-invalid {
-    border-color: var(--spectrum-global-color-red-400);
   }
   input[type="file"] {
     display: none;

@@ -86,11 +86,11 @@ describe("Test that the object processing works correctly", () => {
   })
 
   it("check objects get converted to string JSON automatically", async () => {
-    const row = {a: 1}
+    const row = { a: 1 }
     const output = await processString("{{ trigger.row }}", {
       trigger: {
         row,
-      }
+      },
     })
     expect(JSON.parse(output)).toEqual(row)
   })
@@ -108,9 +108,9 @@ describe("Test that the object processing works correctly", () => {
 
 describe("check returning objects", () => {
   it("should handle an array of objects", async () => {
-    const json = [{a: 1},{a: 2}]
+    const json = [{ a: 1 }, { a: 2 }]
     const output = await processString("{{ testing }}", {
-      testing: json
+      testing: json,
     })
     expect(output).toEqual(JSON.stringify(json))
   })
@@ -164,9 +164,12 @@ describe("check manifest", () => {
 describe("check full stops that are safe", () => {
   it("should allow using an escaped full stop", async () => {
     const data = {
-      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": { "persons.firstname": "1" }
+      "c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI": {
+        "persons.firstname": "1",
+      },
     }
-    const template = "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
+    const template =
+      "{{ [c53a4a604fa754d33baaafd5bca4d3658-YXuUBqt5vI].[persons.firstname] }}"
     const output = await processString(template, data)
     expect(output).toEqual("1")
   })
@@ -195,7 +198,9 @@ describe("check that disabling escaping function works", () => {
   })
 
   it("should work for two statements", () => {
-    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+    expect(disableEscaping("{{ name }} welcome to {{ platform }}")).toEqual(
+      "{{{ name }}} welcome to {{{ platform }}}"
+    )
   })
 
   it("shouldn't convert triple braces", () => {
@@ -203,11 +208,15 @@ describe("check that disabling escaping function works", () => {
   })
 
   it("should work with a combination", () => {
-    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual("{{{ name }}} welcome to {{{ platform }}}")
+    expect(disableEscaping("{{ name }} welcome to {{{ platform }}}")).toEqual(
+      "{{{ name }}} welcome to {{{ platform }}}"
+    )
   })
 
   it("should work with multiple escaped", () => {
-    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual("{{{ name }}} welcome to {{{ name }}}")
+    expect(disableEscaping("{{ name }} welcome to {{ name }}")).toEqual(
+      "{{{ name }}} welcome to {{{ name }}}"
+    )
   })
 })
 
@@ -217,13 +226,20 @@ describe("check find hbs blocks function", () => {
   })
 
   it("should find two", () => {
-    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual(["{{ hello }}", "{{{ name }}}"])
+    expect(findHBSBlocks("{{ hello }} there {{{ name }}}")).toEqual([
+      "{{ hello }}",
+      "{{{ name }}}",
+    ])
   })
 })
 
 describe("should leave HBS blocks if not found using option", () => {
   it("should replace one, leave one", async () => {
-    const output = await processString("{{ a }}, {{ b }}", { b: 1 }, { onlyFound: true })
+    const output = await processString(
+      "{{ a }}, {{ b }}",
+      { b: 1 },
+      { onlyFound: true }
+    )
     expect(output).toBe("{{ a }}, 1")
   })
 })

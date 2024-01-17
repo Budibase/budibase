@@ -1,14 +1,26 @@
 import { generateUserFlagID, InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
 import { context } from "@budibase/backend-core"
-import { Ctx, UserCtx } from "@budibase/types"
+import {
+  ContextUserMetadata,
+  Ctx,
+  FetchUserMetadataResponse,
+  FindUserMetadataResponse,
+  Flags,
+  SetFlagRequest,
+  UserCtx,
+  UserMetadata,
+} from "@budibase/types"
 import sdk from "../../sdk"
+import { DocumentInsertResponse } from "@budibase/nano"
 
-export async function fetchMetadata(ctx: Ctx) {
+export async function fetchMetadata(ctx: Ctx<void, FetchUserMetadataResponse>) {
   ctx.body = await sdk.users.fetchMetadata()
 }
 
-export async function updateSelfMetadata(ctx: UserCtx) {
+export async function updateSelfMetadata(
+  ctx: UserCtx<UserMetadata, DocumentInsertResponse>
+) {
   // overwrite the ID with current users
   ctx.request.body._id = ctx.user?._id
   // make sure no stale rev
@@ -18,19 +30,21 @@ export async function updateSelfMetadata(ctx: UserCtx) {
   await updateMetadata(ctx)
 }
 
-export async function updateMetadata(ctx: UserCtx) {
+export async function updateMetadata(
+  ctx: UserCtx<UserMetadata, DocumentInsertResponse>
+) {
   const db = context.getAppDB()
   const user = ctx.request.body
-  // this isn't applicable to the user
-  delete user.roles
-  const metadata = {
+  const metadata: ContextUserMetadata = {
     tableId: InternalTables.USER_METADATA,
     ...user,
   }
+  // this isn't applicable to the user
+  delete metadata.roles
   ctx.body = await db.put(metadata)
 }
 
-export async function destroyMetadata(ctx: UserCtx) {
+export async function destroyMetadata(ctx: UserCtx<void, { message: string }>) {
   const db = context.getAppDB()
   try {
     const dbUser = await sdk.users.get(ctx.params.id)
@@ -43,11 +57,15 @@ export async function destroyMetadata(ctx: UserCtx) {
   }
 }
 
-export async function findMetadata(ctx: UserCtx) {
-  ctx.body = await getFullUser(ctx, ctx.params.id)
+export async function findMetadata(
+  ctx: UserCtx<void, FindUserMetadataResponse>
+) {
+  ctx.body = await getFullUser(ctx.params.id)
 }
 
-export async function setFlag(ctx: UserCtx) {
+export async function setFlag(
+  ctx: UserCtx<SetFlagRequest, { message: string }>
+) {
   const userId = ctx.user?._id
   const { flag, value } = ctx.request.body
   if (!flag) {
@@ -55,9 +73,9 @@ export async function setFlag(ctx: UserCtx) {
   }
   const flagDocId = generateUserFlagID(userId!)
   const db = context.getAppDB()
-  let doc
+  let doc: Flags
   try {
-    doc = await db.get<any>(flagDocId)
+    doc = await db.get<Flags>(flagDocId)
   } catch (err) {
     doc = { _id: flagDocId }
   }
@@ -66,13 +84,13 @@ export async function setFlag(ctx: UserCtx) {
   ctx.body = { message: "Flag set successfully" }
 }
 
-export async function getFlags(ctx: UserCtx) {
+export async function getFlags(ctx: UserCtx<void, Flags>) {
   const userId = ctx.user?._id
   const docId = generateUserFlagID(userId!)
   const db = context.getAppDB()
-  let doc
+  let doc: Flags
   try {
-    doc = await db.get(docId)
+    doc = await db.get<Flags>(docId)
   } catch (err) {
     doc = { _id: docId }
   }

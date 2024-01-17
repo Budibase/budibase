@@ -14,9 +14,8 @@ import {
   makeComponentUnique,
 } from "../components/utils"
 import { getComponentFieldOptions } from "helpers/formFields"
-import { tables } from "stores/builder"
 import { selectedScreen } from "../screens"
-import { screenStore, appStore, previewStore } from "stores/builder"
+import { screenStore, appStore, previewStore, tables } from "stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "builder/dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
@@ -76,7 +75,14 @@ export class ComponentStore extends BudiStore {
         if (!$selectedScreen || !$store.selectedComponentId) {
           return null
         }
-        return findComponent($selectedScreen?.props, $store.selectedComponentId)
+        const selected = findComponent(
+          $selectedScreen?.props,
+          $store.selectedComponentId
+        )
+
+        const clone = selected ? cloneDeep(selected) : selected
+        this.migrateSettings(clone)
+        return clone
       }
     )
 
@@ -174,6 +180,43 @@ export class ComponentStore extends BudiStore {
 
     // Finally try an external table
     return validTables.find(table => table.sourceType === DB_TYPE_EXTERNAL)
+  }
+
+  /**
+   * Takes an enriched component instance and applies any required migration
+   * logic
+   * @param {object} enrichedComponent
+   * @returns {object} migrated Component
+   */
+  migrateSettings(enrichedComponent) {
+    const componentPrefix = "@budibase/standard-components"
+    let migrated = false
+
+    if (enrichedComponent?._component == `${componentPrefix}/formblock`) {
+      // Use default config if the 'buttons' prop has never been initialised
+      if (!("buttons" in enrichedComponent)) {
+        enrichedComponent["buttons"] =
+          Utils.buildFormBlockButtonConfig(enrichedComponent)
+        migrated = true
+      } else if (enrichedComponent["buttons"] == null) {
+        // Ignore legacy config if 'buttons' has been reset by 'resetOn'
+        const { _id, actionType, dataSource } = enrichedComponent
+        enrichedComponent["buttons"] = Utils.buildFormBlockButtonConfig({
+          _id,
+          actionType,
+          dataSource,
+        })
+        migrated = true
+      }
+
+      // Ensure existing Formblocks position their buttons at the top.
+      if (!("buttonPosition" in enrichedComponent)) {
+        enrichedComponent["buttonPosition"] = "top"
+        migrated = true
+      }
+    }
+
+    return migrated
   }
 
   /**
@@ -310,6 +353,9 @@ export class ComponentStore extends BudiStore {
       screen: get(selectedScreen),
       useDefaultValues: true,
     })
+
+    // Migrate nested component settings
+    this.migrateSettings(instance)
 
     // Add any extra properties the component needs
     let extras = {}
@@ -451,7 +497,16 @@ export class ComponentStore extends BudiStore {
       if (!component) {
         return false
       }
-      return patchFn(component, screen)
+
+      // Mutates the fetched component with updates
+      const patchResult = patchFn(component, screen)
+
+      // Mutates the component with any required settings updates
+      const migrated = this.migrateSettings(component)
+
+      // Returning an explicit false signifies that we should skip this
+      // update. If we migrated something, ensure we never skip.
+      return migrated ? null : patchResult
     }
     await screenStore.patch(patchScreen, screenId)
   }
@@ -880,9 +935,14 @@ export class ComponentStore extends BudiStore {
       const settings = getComponentSettings(component._component)
       const updatedSetting = settings.find(setting => setting.key === name)
 
-      const resetFields = settings.filter(setting => name === setting.resetOn)
-      resetFields?.forEach(setting => {
-        component[setting.key] = null
+      // Reset dependent fields
+      settings.forEach(setting => {
+        const needsReset =
+          name === setting.resetOn ||
+          (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
+        if (needsReset) {
+          component[setting.key] = setting.defaultValue || null
+        }
       })
 
       if (
@@ -902,6 +962,7 @@ export class ComponentStore extends BudiStore {
         })
       }
       component[name] = value
+      return true
     }
   }
 

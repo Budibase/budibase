@@ -4,6 +4,7 @@ import authorized from "../../middleware/authorized"
 import { paramResource, bodyResource } from "../../middleware/resourceId"
 import { permissions } from "@budibase/backend-core"
 import { tableValidator } from "./utils/validators"
+
 const { BUILDER, PermissionLevel, PermissionType } = permissions
 
 const router: Router = new Router()

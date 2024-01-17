@@ -2,15 +2,15 @@
   import { Icon, Popover, Layout } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
   import { cloneDeep } from "lodash/fp"
-  import { createEventDispatcher } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  import { getContext } from "svelte"
 
   export let anchor
   export let componentInstance
   export let componentBindings
   export let bindings
   export let parseSettings
+  export let disabled
 
   const draggable = getContext("draggable")
   const dispatch = createEventDispatcher()

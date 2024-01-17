@@ -19,7 +19,7 @@ async function populateFromDB(appId: string) {
   return doWithDB(
     appId,
     (db: Database) => {
-      return db.get(DocumentType.APP_METADATA)
+      return db.get<App>(DocumentType.APP_METADATA)
     },
     { skip_setup: true }
   )

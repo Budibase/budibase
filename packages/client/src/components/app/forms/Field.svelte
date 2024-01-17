@@ -1,6 +1,7 @@
 <script>
   import Placeholder from "../Placeholder.svelte"
   import { getContext, onDestroy } from "svelte"
+  import { Icon } from "@budibase/bbui"
 
   export let label
   export let field
@@ -13,6 +14,7 @@
   export let readonly = false
   export let validation
   export let span = 6
+  export let helpText = null
 
   // Get contexts
   const formContext = getContext("form")
@@ -97,7 +99,14 @@
     {:else}
       <slot />
       {#if fieldState.error}
-        <div class="error">{fieldState.error}</div>
+        <div class="error">
+          <Icon name="Alert" />
+          <span>{fieldState.error}</span>
+        </div>
+      {:else if helpText}
+        <div class="helpText">
+          <Icon name="HelpOutline" /> <span>{helpText}</span>
+        </div>
       {/if}
     {/if}
   </div>
@@ -127,14 +136,45 @@
     position: relative;
     width: 100%;
   }
+
+  .error :global(svg),
+  .helpText :global(svg) {
+    width: 13px;
+    margin-right: 6px;
+  }
+
   .error {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+  .error :global(svg) {
+    color: var(
+      --spectrum-semantic-negative-color-default,
+      var(--spectrum-global-color-red-500)
+    );
+  }
+  .error span {
     color: var(
       --spectrum-semantic-negative-color-default,
       var(--spectrum-global-color-red-500)
     );
     font-size: var(--spectrum-global-dimension-font-size-75);
-    margin-top: var(--spectrum-global-dimension-size-75);
   }
+
+  .helpText {
+    display: flex;
+    margin-top: var(--spectrum-global-dimension-size-75);
+    align-items: center;
+  }
+  .helpText :global(svg) {
+    color: var(--spectrum-global-color-gray-600);
+  }
+  .helpText span {
+    color: var(--spectrum-global-color-gray-800);
+    font-size: var(--spectrum-global-dimension-font-size-75);
+  }
+
   .spectrum-FieldLabel--right,
   .spectrum-FieldLabel--left {
     padding-right: var(--spectrum-global-dimension-size-200);

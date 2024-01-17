@@ -1,4 +1,5 @@
 import { default as MSSQLIntegration } from "../microsoftSqlServer"
+
 jest.mock("mssql")
 
 class TestConfiguration {

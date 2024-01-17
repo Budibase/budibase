@@ -18,6 +18,7 @@ import {
   SelectableDatabase,
   getRedisConnectionDetails,
 } from "./utils"
+import { logAlert } from "../logging"
 import * as timers from "../timers"
 
 const RETRY_PERIOD_MS = 2000
@@ -28,7 +29,6 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 // for testing just generate the client once
 let CLOSED = false
 let CLIENTS: { [key: number]: any } = {}
-0
 let CONNECTED = false
 
 // mock redis always connected
@@ -40,21 +40,16 @@ function pickClient(selectDb: number): any {
   return CLIENTS[selectDb]
 }
 
-function connectionError(
-  selectDb: number,
-  timeout: NodeJS.Timeout,
-  err: Error | string
-) {
+function connectionError(timeout: NodeJS.Timeout, err: Error | string) {
   // manually shut down, ignore errors
   if (CLOSED) {
     return
   }
-  pickClient(selectDb).disconnect()
   CLOSED = true
   // always clear this on error
   clearTimeout(timeout)
   CONNECTED = false
-  console.error("Redis connection failed - " + err)
+  logAlert("Redis connection failed", err)
   setTimeout(() => {
     init()
   }, RETRY_PERIOD_MS)
@@ -80,11 +75,7 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   // start the timer - only allowed 5 seconds to connect
   timeout = setTimeout(() => {
     if (!CONNECTED) {
-      connectionError(
-        selectDb,
-        timeout,
-        "Did not successfully connect in timeout"
-      )
+      connectionError(timeout, "Did not successfully connect in timeout")
     }
   }, STARTUP_TIMEOUT_MS)
 
@@ -107,12 +98,13 @@ function init(selectDb = DEFAULT_SELECT_DB) {
       // allow the process to exit
       return
     }
-    connectionError(selectDb, timeout, err)
+    connectionError(timeout, err)
   })
   client.on("error", (err: Error) => {
-    connectionError(selectDb, timeout, err)
+    connectionError(timeout, err)
   })
   client.on("connect", () => {
+    console.log(`Connected to Redis DB: ${selectDb}`)
     clearTimeout(timeout)
     CONNECTED = true
   })

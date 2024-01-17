@@ -251,9 +251,19 @@ class LinkController {
         // find the docs that need to be deleted
         let toDeleteDocs = thisFieldLinkDocs
           .filter(doc => {
-            let correctDoc =
-              doc.doc1.fieldName === fieldName ? doc.doc2 : doc.doc1
-            return rowField.indexOf(correctDoc.rowId) === -1
+            let correctDoc
+            if (
+              doc.doc1.tableId === table._id! &&
+              doc.doc1.fieldName === fieldName
+            ) {
+              correctDoc = doc.doc2
+            } else if (
+              doc.doc2.tableId === table._id! &&
+              doc.doc2.fieldName === fieldName
+            ) {
+              correctDoc = doc.doc1
+            }
+            return correctDoc && rowField.indexOf(correctDoc.rowId) === -1
           })
           .map(doc => {
             return { ...doc, _deleted: true }

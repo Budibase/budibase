@@ -1,10 +1,17 @@
 <script>
-  import { Body, Button, Heading, Layout, notifications } from "@budibase/bbui"
+  import {
+    Body,
+    Button,
+    Heading,
+    Layout,
+    notifications,
+    FancyForm,
+    FancyInput,
+  } from "@budibase/bbui"
   import { goto, params } from "@roxi/routify"
   import { auth, organisation } from "stores/portal"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { FancyForm, FancyInput } from "@budibase/bbui"
   import { onMount } from "svelte"
   import { handleError, passwordsMatch } from "./_components/utils"
 
@@ -38,7 +45,7 @@
       }
     } catch (err) {
       submitted = false
-      notifications.error("Unable to reset password")
+      notifications.error(err.message || "Unable to reset password")
     }
   }
 

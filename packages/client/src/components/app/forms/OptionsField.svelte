@@ -2,6 +2,7 @@
   import { CoreSelect, CoreRadioGroup } from "@budibase/bbui"
   import Field from "./Field.svelte"
   import { getOptions } from "./optionsParser"
+
   export let field
   export let label
   export let placeholder
@@ -20,6 +21,7 @@
   export let onChange
   export let sort = true
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -51,6 +53,7 @@
   {validation}
   {defaultValue}
   {span}
+  {helpText}
   type="options"
   bind:fieldState
   bind:fieldApi

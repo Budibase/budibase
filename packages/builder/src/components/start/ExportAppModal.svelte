@@ -13,7 +13,7 @@
   export let app
   export let published
   let includeInternalTablesRows = true
-  let encypt = true
+  let encrypt = true
 
   let password = null
   const validation = createValidationStore()
@@ -27,9 +27,9 @@
   $: stepConfig = {
     [Step.CONFIG]: {
       title: published ? "Export published app" : "Export latest app",
-      confirmText: encypt ? "Continue" : exportButtonText,
+      confirmText: encrypt ? "Continue" : exportButtonText,
       onConfirm: () => {
-        if (!encypt) {
+        if (!encrypt) {
           exportApp()
         } else {
           currentStep = Step.SET_PASSWORD
@@ -46,7 +46,7 @@
         if (!$validation.valid) {
           return keepOpen
         }
-        exportApp(password)
+        await exportApp(password)
       },
       isValid: $validation.valid,
     },
@@ -109,13 +109,13 @@
         text="Export rows from internal tables"
         bind:value={includeInternalTablesRows}
       />
-      <Toggle text="Encrypt my export" bind:value={encypt} />
+      <Toggle text="Encrypt my export" bind:value={encrypt} />
     </Body>
-    {#if !encypt}
-      <InlineAlert
-        header="Do not share your budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."
-      />
-    {/if}
+    <InlineAlert
+      header={encrypt
+        ? "Please note Budibase does not encrypt attachments during the export process to ensure efficient export of large attachments."
+        : "Do not share your Budibase application exports publicly as they may contain sensitive information such as database credentials or secret keys."}
+    />
   {/if}
   {#if currentStep === Step.SET_PASSWORD}
     <Input

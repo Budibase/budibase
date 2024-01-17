@@ -6,12 +6,12 @@ import {
   sessions,
   tenancy,
   utils as coreUtils,
+  cache,
 } from "@budibase/backend-core"
 import { PlatformLogoutOpts, User } from "@budibase/types"
 import jwt from "jsonwebtoken"
 import * as userSdk from "../users"
 import * as emails from "../../utilities/email"
-import * as redis from "../../utilities/redis"
 import { EmailTemplatePurpose } from "../../constants"
 
 // LOGIN / LOGOUT
@@ -73,11 +73,14 @@ export const reset = async (email: string) => {
  * Perform the user password update if the provided reset code is valid.
  */
 export const resetUpdate = async (resetCode: string, password: string) => {
-  const { userId } = await redis.checkResetPasswordCode(resetCode)
+  const { userId } = await cache.passwordReset.getCode(resetCode)
 
   let user = await userSdk.db.getUser(userId)
   user.password = password
   user = await userSdk.db.save(user)
+
+  await cache.passwordReset.invalidateCode(resetCode)
+  await sessions.invalidateSessions(userId)
 
   // remove password from the user before sending events
   delete user.password

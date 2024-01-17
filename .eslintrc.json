@@ -19,6 +19,7 @@
     "bundle.js"
   ],
   "extends": ["eslint:recommended"],
+  "plugins": ["import", "eslint-plugin-local-rules"],
   "overrides": [
     {
       "files": ["**/*.svelte"],
@@ -30,7 +31,6 @@
         "sourceType": "module",
         "allowImportExportEverywhere": true
       }
-
     },
     {
       "files": ["**/*.ts"],
@@ -42,13 +42,25 @@
         "no-case-declarations": "off",
         "no-useless-escape": "off",
         "no-undef": "off",
-        "no-prototype-builtins": "off"
+        "no-prototype-builtins": "off",
+        "local-rules/no-budibase-imports": "error"
       }
     }
   ],
   "rules": {
     "no-self-assign": "off",
-    "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_", "destructuredArrayIgnorePattern": "^_" }]
+    "no-unused-vars": [
+      "error",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "destructuredArrayIgnorePattern": "^_"
+      }
+    ],
+    "import/no-relative-packages": "error",
+    "import/export": "error",
+    "import/no-duplicates": "error",
+    "import/newline-after-import": "error"
   },
   "globals": {
     "GeolocationPositionError": true

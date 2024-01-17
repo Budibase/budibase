@@ -1,10 +1,13 @@
 <script>
-  import { findClosestMatchingComponent } from "stores/builder/components/utils"
+  import {
+    findClosestMatchingComponent,
+    findComponent,
+  } from "stores/builder/components/utils"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "builder/dataBinding"
-  import { tables, currentAsset } from "stores/builder"
+  import { tables, currentAsset, componentStore } from "stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 
   export let componentInstance
@@ -19,8 +22,23 @@
     component => component._component.endsWith("/form")
   )
 
+  const resolveDatasource = (currentAsset, componentInstance, form) => {
+    if (!form && componentInstance._id != $componentStore.selectedComponentId) {
+      const block = findComponent(
+        currentAsset.props,
+        $componentStore.selectedComponentId
+      )
+      const def = componentStore.getDefinition(block._component)
+      return def?.block === true
+        ? getDatasourceForProvider(currentAsset, block)
+        : {}
+    } else {
+      return getDatasourceForProvider(currentAsset, form)
+    }
+  }
+
   // Get that form's schema
-  $: datasource = getDatasourceForProvider($currentAsset, form)
+  $: datasource = resolveDatasource($currentAsset, componentInstance, form)
   $: formSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
 
   // Get the schema for the relationship field that this picker is using
@@ -31,4 +49,4 @@
   $: schema = linkedTable?.schema
 </script>
 
-<FilterEditor on:change {...$$props} {schema} />
+<FilterEditor on:change {...$$props} {schema} on:drawerHide on:drawerShow />

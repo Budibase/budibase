@@ -9,18 +9,18 @@
     Heading,
     Icon,
   } from "@budibase/bbui"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, onMount, getContext } from "svelte"
   import {
     isValid,
     decodeJSBinding,
     encodeJSBinding,
+    convertToJS,
   } from "@budibase/string-templates"
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builder/dataBinding"
 
-  import { convertToJS } from "@budibase/string-templates"
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
@@ -32,7 +32,6 @@
     hbInsert,
     jsInsert,
   } from "../CodeEditor"
-  import { getContext } from "svelte"
   import BindingPicker from "./BindingPicker.svelte"
 
   const dispatch = createEventDispatcher()
@@ -46,6 +45,7 @@
   export let valid
   export let allowJS = false
   export let allowHelpers = true
+  export let autofocusEditor = false
 
   const drawerActions = getContext("drawer-actions")
   const bindingDrawerActions = getContext("binding-drawer-actions")
@@ -200,6 +200,7 @@
                   ]}
                   placeholder=""
                   height="100%"
+                  autofocus={autofocusEditor}
                 />
               </div>
               <div class="binding-footer">
@@ -302,6 +303,7 @@
                     bind:getCaretPosition
                     bind:insertAtPos
                     height="100%"
+                    autofocus={autofocusEditor}
                   />
                 </div>
                 <div class="binding-footer">

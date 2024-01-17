@@ -3,7 +3,7 @@ import { Cookie } from "../../../constants"
 import * as configs from "../../../configs"
 import * as cache from "../../../cache"
 import * as utils from "../../../utils"
-import { UserCtx, SSOProfile } from "@budibase/types"
+import { UserCtx, SSOProfile, DatasourceAuthCookie } from "@budibase/types"
 import { ssoSaveUserNoOp } from "../sso/sso"
 
 const GoogleStrategy = require("passport-google-oauth").OAuth2Strategy
@@ -58,7 +58,14 @@ export async function postAuth(
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
   let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
-  const authStateCookie = utils.getCookie(ctx, Cookie.DatasourceAuth)
+  const authStateCookie = utils.getCookie<{ appId: string }>(
+    ctx,
+    Cookie.DatasourceAuth
+  )
+
+  if (!authStateCookie) {
+    throw new Error("Unable to fetch datasource auth cookie")
+  }
 
   return passport.authenticate(
     new GoogleStrategy(

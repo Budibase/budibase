@@ -1,5 +1,6 @@
 <script>
   import "@spectrum-css/actiongroup/dist/index-vars.css"
+
   export let vertical = false
   export let justified = false
   export let quiet = false

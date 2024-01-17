@@ -14,7 +14,7 @@
   import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
-  let loaded = $apps.length != null
+  let loaded = !!$apps?.length
 
   onMount(async () => {
     try {
@@ -34,7 +34,7 @@
       }
 
       // Go to new app page if no apps exists
-      if (!$apps.length && sdk.users.isGlobalBuilder($auth.user)) {
+      if (!$apps.length && sdk.users.hasBuilderPermissions($auth.user)) {
         $redirect("./onboarding")
       }
     } catch (error) {

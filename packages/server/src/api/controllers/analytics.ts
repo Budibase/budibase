@@ -1,7 +1,6 @@
-import { events } from "@budibase/backend-core"
+import { events, context } from "@budibase/backend-core"
 import { AnalyticsPingRequest, App, PingSource } from "@budibase/types"
 import { DocumentType, isDevAppID } from "../../db/utils"
-import { context } from "@budibase/backend-core"
 
 export const isEnabled = async (ctx: any) => {
   const enabled = await events.analytics.enabled()

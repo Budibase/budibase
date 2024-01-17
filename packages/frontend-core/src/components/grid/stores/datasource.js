@@ -55,11 +55,20 @@ export const deriveStores = context => {
 
       // Apply whitelist if specified
       if ($columnWhitelist?.length) {
-        Object.keys(enrichedSchema).forEach(key => {
-          if (!$columnWhitelist.includes(key)) {
-            delete enrichedSchema[key]
+        const sortedColumns = {}
+
+        $columnWhitelist.forEach((columnKey, idx) => {
+          const enrichedColumn = enrichedSchema[columnKey]
+          if (enrichedColumn) {
+            sortedColumns[columnKey] = {
+              ...enrichedColumn,
+              order: idx,
+              visible: true,
+            }
           }
         })
+
+        return sortedColumns
       }
 
       return enrichedSchema

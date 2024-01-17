@@ -1,7 +1,7 @@
 import { Knex, knex } from "knex"
 import { db as dbCore } from "@budibase/backend-core"
 import { QueryOptions } from "../../definitions/datasource"
-import { isIsoDateString, SqlClient } from "../utils"
+import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
   Operation,
@@ -11,7 +11,6 @@ import {
   SortDirection,
 } from "@budibase/types"
 import environment from "../../environment"
-import { isValidFilter } from "../utils"
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)

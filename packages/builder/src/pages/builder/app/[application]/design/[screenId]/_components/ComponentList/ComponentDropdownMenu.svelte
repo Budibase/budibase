@@ -7,6 +7,7 @@
   $: definition = componentStore.getDefinition(component?._component)
   $: noPaste = !$componentStore.componentToPaste
   $: isBlock = definition?.block === true
+  $: canEject = !(definition?.ejectable === false)
 
   const keyboardEvent = (key, ctrlKey = false) => {
     document.dispatchEvent(
@@ -32,7 +33,7 @@
   >
     Delete
   </MenuItem>
-  {#if isBlock}
+  {#if isBlock && canEject}
     <MenuItem
       icon="Export"
       keyBind="Ctrl+E"
