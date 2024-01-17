@@ -2,11 +2,10 @@
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables, datasources } from "stores/builder"
+  import { tables, datasources, builderStore } from "stores/builder"
   import { goto } from "@roxi/routify"
   import { DEFAULT_BB_DATASOURCE_ID, DB_TYPE_EXTERNAL } from "constants/backend"
   import { onMount } from "svelte"
-  import { builderStore } from "stores/builder"
 
   let modal
 

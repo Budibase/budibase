@@ -23,6 +23,7 @@ import {
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
 import BudiStore from "../BudiStore"
+import { Utils } from "@budibase/frontend-core"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: [],

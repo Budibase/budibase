@@ -6,8 +6,9 @@ import {
   themeStore,
   navigationStore,
   deploymentStore,
+  datasources,
+  tables,
 } from "stores/builder"
-import { datasources, tables } from "stores/builder"
 import { get } from "svelte/store"
 import { auth, apps } from "stores/portal"
 import { screenStore } from "./screens"

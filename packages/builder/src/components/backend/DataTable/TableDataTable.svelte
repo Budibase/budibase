@@ -1,10 +1,9 @@
 <script>
-  import { datasources, tables, integrations } from "stores/builder"
+  import { datasources, tables, integrations, appStore } from "stores/builder"
   import EditRolesButton from "./buttons/EditRolesButton.svelte"
   import { TableNames } from "constants"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
-  import { appStore } from "stores/builder"
   import GridAddColumnModal from "components/backend/DataTable/modals/grid/GridCreateColumnModal.svelte"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
   import GridEditUserModal from "components/backend/DataTable/modals/grid/GridEditUserModal.svelte"

@@ -1,9 +1,8 @@
 <script>
   import { syncURLToState } from "helpers/urlStateSync"
-  import { tables } from "stores/builder"
+  import { tables, builderStore } from "stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { builderStore } from "stores/builder"
 
   $: tableId = $tables.selectedTableId
   $: builderStore.selectResource(tableId)

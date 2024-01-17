@@ -1,4 +1,4 @@
-import { writable, get } from "svelte/store"
+import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import BudiStore from "./BudiStore"

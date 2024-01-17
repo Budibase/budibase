@@ -2,7 +2,15 @@
   import { goto, isActive, params } from "@roxi/routify"
   import { Layout } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
-  import { datasources, queries, tables, views, viewsV2 } from "stores/builder"
+  import {
+    datasources,
+    queries,
+    tables,
+    views,
+    viewsV2,
+    userSelectedResourceMap,
+    database,
+  } from "stores/builder"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -14,7 +22,6 @@
   } from "helpers/data/utils"
   import IntegrationIcon from "./IntegrationIcon.svelte"
   import { TableNames } from "constants"
-  import { userSelectedResourceMap, database } from "stores/builder"
   import { enrichDatasources } from "./datasourceUtils"
   import { onMount } from "svelte"
 
