@@ -99,7 +99,7 @@ export async function run({ inputs }: AutomationStepInput) {
     } else {
       result = false
     }
-    return { success: true, result }
+    return { success: true, result, refValue: field, comparisonValue: value }
   } catch (err) {
     return { success: false, result: false }
   }

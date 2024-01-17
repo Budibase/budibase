@@ -22,6 +22,7 @@ export enum LockName {
   QUOTA_USAGE_EVENT = "quota_usage_event",
   APP_MIGRATION = "app_migrations",
   PROCESS_AUTO_COLUMNS = "process_auto_columns",
+  PROCESS_USER_INVITE = "process_user_invite",
 }
 
 export type LockOptions = {
