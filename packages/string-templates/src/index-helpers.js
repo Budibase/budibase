@@ -7,7 +7,7 @@ const externalCollections = {
   number: require("@budibase/handlebars-helpers/lib/number"),
   // url: require("@budibase/handlebars-helpers/lib/url"),
   string: require("@budibase/handlebars-helpers/lib/string"),
-  // comparison: require("@budibase/handlebars-helpers/lib/comparison"),
+  comparison: require("@budibase/handlebars-helpers/lib/comparison"),
   object: require("@budibase/handlebars-helpers/lib/object"),
   regex: require("@budibase/handlebars-helpers/lib/regex"),
   // uuid: require("@budibase/handlebars-helpers/lib/uuid"),
