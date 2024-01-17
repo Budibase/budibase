@@ -1,44 +1,117 @@
 <script>
-  import AutomationList from "./AutomationList.svelte"
   import CreateAutomationModal from "./CreateAutomationModal.svelte"
-  import { Modal, Icon } from "@budibase/bbui"
-  import Panel from "components/design/Panel.svelte"
+  import { Modal, notifications, Layout } from "@budibase/bbui"
+  import NavHeader from "components/common/NavHeader.svelte"
+  import { onMount } from "svelte"
+  import {
+    automationStore,
+    selectedAutomation,
+    userSelectedResourceMap,
+  } from "builderStore"
+  import NavItem from "components/common/NavItem.svelte"
+  import EditAutomationPopover from "./EditAutomationPopover.svelte"
 
   export let modal
   export let webhookModal
+  let searchString
+
+  $: selectedAutomationId = $selectedAutomation?._id
+
+  $: filteredAutomations = $automationStore.automations
+    .filter(automation => {
+      return (
+        !searchString ||
+        automation.name.toLowerCase().includes(searchString.toLowerCase())
+      )
+    })
+    .sort((a, b) => {
+      const lowerA = a.name.toLowerCase()
+      const lowerB = b.name.toLowerCase()
+      return lowerA > lowerB ? 1 : -1
+    })
+
+  $: showNoResults = searchString && !filteredAutomations.length
+
+  onMount(async () => {
+    try {
+      await automationStore.actions.fetch()
+    } catch (error) {
+      notifications.error("Error getting automations list")
+    }
+  })
+
+  function selectAutomation(id) {
+    automationStore.actions.select(id)
+  }
 </script>
 
-<Panel title="Automations" borderRight noHeaderBorder titleCSS={false}>
-  <span class="panel-title-content" slot="panel-title-content">
-    <div class="header">
-      <div>Automations</div>
-      <div on:click={modal.show} class="add-automation-button">
-        <Icon name="Add" />
-      </div>
-    </div>
-  </span>
-  <AutomationList />
-</Panel>
+<div class="side-bar">
+  <div class="side-bar-controls">
+    <NavHeader
+      title="Automations"
+      placeholder="Search for automation"
+      bind:value={searchString}
+      onAdd={() => modal.show()}
+    />
+  </div>
+  <div class="side-bar-nav">
+    {#each filteredAutomations as automation}
+      <NavItem
+        text={automation.name}
+        selected={automation._id === selectedAutomationId}
+        on:click={() => selectAutomation(automation._id)}
+        selectedBy={$userSelectedResourceMap[automation._id]}
+      >
+        <EditAutomationPopover {automation} />
+      </NavItem>
+    {/each}
+
+    {#if showNoResults}
+      <Layout paddingY="none" paddingX="L">
+        <div class="no-results">
+          There aren't any automations matching that name
+        </div>
+      </Layout>
+    {/if}
+  </div>
+</div>
 
 <Modal bind:this={modal}>
   <CreateAutomationModal {webhookModal} />
 </Modal>
 
 <style>
-  .header {
+  .side-bar {
+    flex: 0 0 260px;
     display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    border-right: var(--border-light);
+    background: var(--spectrum-global-color-gray-100);
+    overflow: hidden;
+    transition: margin-left 300ms ease-out;
+  }
+  @media (max-width: 640px) {
+    .side-bar {
+      margin-left: -262px;
+    }
+  }
+
+  .side-bar-controls {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-m);
+    gap: var(--spacing-l);
+    padding: 0 var(--spacing-l);
+  }
+  .side-bar-nav {
+    flex: 1 1 auto;
+    overflow: auto;
+    overflow-x: hidden;
   }
 
-  .add-automation-button {
-    margin-left: 130px;
-    color: var(--grey-7);
-    cursor: pointer;
-  }
-
-  .add-automation-button:hover {
-    color: var(--ink);
+  .no-results {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

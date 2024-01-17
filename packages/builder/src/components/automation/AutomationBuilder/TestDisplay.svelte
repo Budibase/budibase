@@ -1,7 +1,8 @@
 <script>
-  import { Icon, Divider, Tabs, Tab, TextArea, Label } from "@budibase/bbui"
+  import { Icon, Divider, Tabs, Tab, Label } from "@budibase/bbui"
   import FlowItemHeader from "./FlowChart/FlowItemHeader.svelte"
   import { ActionStepID } from "constants/backend/automations"
+  import { JsonView } from "@zerodevx/svelte-json-view"
 
   export let automation
   export let testResults
@@ -12,13 +13,6 @@
 
   function prepTestResults(results) {
     return results?.steps.filter(x => x.stepId !== ActionStepID.LOOP || [])
-  }
-
-  function textArea(results, message) {
-    if (!results) {
-      return message
-    }
-    return JSON.stringify(results, null, 2)
   }
 
   $: filteredResults = prepTestResults(testResults)
@@ -71,26 +65,34 @@
           {/if}
 
           <div class="tabs">
-            <Tabs noHorizPadding selected="Input">
+            <Tabs quiet noHorizPadding selected="Input">
               <Tab title="Input">
-                <TextArea
-                  minHeight="160px"
-                  disabled
-                  value={textArea(filteredResults?.[idx]?.inputs, "No input")}
-                />
+                <div class="wrap">
+                  {#if filteredResults?.[idx]?.inputs}
+                    <JsonView depth={2} json={filteredResults?.[idx]?.inputs} />
+                  {:else}
+                    No input
+                  {/if}
+                </div>
               </Tab>
               <Tab title="Output">
-                <TextArea
-                  minHeight="160px"
-                  disabled
-                  value={textArea(filteredResults?.[idx]?.outputs, "No output")}
-                />
+                <div class="wrap">
+                  {#if filteredResults?.[idx]?.inputs}
+                    <JsonView
+                      depth={2}
+                      json={filteredResults?.[idx]?.outputs}
+                    />
+                  {:else}
+                    No input
+                  {/if}
+                </div>
               </Tab>
             </Tabs>
           </div>
         {/if}
       {/if}
     </div>
+
     {#if blocks.length - 1 !== idx}
       <div class="separator" />
     {/if}
@@ -104,6 +106,33 @@
     overflow: auto;
   }
 
+  .wrap {
+    font-family: monospace;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    font-size: 12px;
+    max-height: 160px; /* Adjusted max-height */
+    height: 160px;
+    --jsonPaddingLeft: 20px;
+    --jsonborderleft: 20px;
+    overflow: auto;
+    overflow: overlay;
+    overflow-x: hidden;
+    padding-left: var(--spacing-s);
+    padding-top: var(--spacing-xl);
+    border-radius: 4px;
+  }
+
+  .wrap::-webkit-scrollbar {
+    width: 7px; /* width of the scrollbar */
+  }
+
+  .wrap::-webkit-scrollbar-track {
+    background: transparent; /* transparent track */
+  }
   .tabs {
     display: flex;
     flex-direction: column;
