@@ -28,6 +28,7 @@
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
+  import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
@@ -348,7 +349,8 @@
       value.customType !== "code" &&
       value.customType !== "queryParams" &&
       value.customType !== "cron" &&
-      value.customType !== "triggerSchema"
+      value.customType !== "triggerSchema" &&
+      value.customType !== "automationFields"
     )
   }
 
@@ -482,6 +484,12 @@
             <CronBuilder
               on:change={e => onChange(e, key)}
               value={inputData[key]}
+            />
+          {:else if value.customType === "automationFields"}
+            <AutomationSelector
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+              {bindings}
             />
           {:else if value.customType === "queryParams"}
             <QueryParamSelector
