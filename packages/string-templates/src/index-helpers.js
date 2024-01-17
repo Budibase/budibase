@@ -1,4 +1,4 @@
-// import { addedHelpers } from "./helpers/external"
+const { date, duration } = require("./helpers/date")
 
 // https://github.com/evanw/esbuild/issues/56
 const externalCollections = {
@@ -11,6 +11,11 @@ const externalCollections = {
   object: require("@budibase/handlebars-helpers/lib/object"),
   regex: require("@budibase/handlebars-helpers/lib/regex"),
   // uuid: require("@budibase/handlebars-helpers/lib/uuid"),
+}
+
+const addedHelpers = {
+  date: date,
+  duration: duration,
 }
 
 let helpers = undefined
@@ -26,9 +31,9 @@ const getHelperList = () => {
       helpers[key] = func
     }
   }
-  // for (let key of Object.keys(addedHelpers)) {
-  //   helpers[key] = addedHelpers[key]
-  // }
+  for (let key of Object.keys(addedHelpers)) {
+    helpers[key] = addedHelpers[key]
+  }
   return helpers
 }
 
