@@ -55,6 +55,7 @@
           noRowsMessage: noRowsMessage || "We couldn't find a row to display",
           direction: "column",
           hAlign: "center",
+          nested: true,
         }}
       >
         <slot />

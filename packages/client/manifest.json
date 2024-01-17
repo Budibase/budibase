@@ -5602,7 +5602,38 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "suffix": "provider",
+      "values": [
+        {
+          "label": "Rows",
+          "key": "rows",
+          "type": "array"
+        },
+        {
+          "label": "Extra Info",
+          "key": "info",
+          "type": "string"
+        },
+        {
+          "label": "Rows Length",
+          "key": "rowsLength",
+          "type": "number"
+        },
+        {
+          "label": "Schema",
+          "key": "schema",
+          "type": "object"
+        },
+        {
+          "label": "Page Number",
+          "key": "pageNumber",
+          "type": "number"
+        }
+      ]
+    }
   },
   "cardsblock": {
     "block": true,
@@ -6151,6 +6182,10 @@
       {
         "type": "form",
         "suffix": "form"
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
       },
       {
         "type": "static",

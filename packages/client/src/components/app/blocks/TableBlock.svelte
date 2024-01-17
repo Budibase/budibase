@@ -231,6 +231,7 @@
           paginate,
           limit: rowCount,
         }}
+        context="provider"
         order={1}
       >
         <BlockComponent

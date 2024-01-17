@@ -9,6 +9,7 @@
   export let hAlign
   export let vAlign
   export let gap
+  export let nested = false
 
   const { Provider, ContextScopes } = getContext("sdk")
   const component = getContext("component")
@@ -22,7 +23,10 @@
     <Placeholder />
   {:else if rows.length > 0}
     {#each rows as row, index}
-      <Provider data={{ ...row, index }} scope={ContextScopes.Local}>
+      <Provider
+        data={{ ...row, index }}
+        scope={nested ? ContextScopes.Global : ContextScopes.Local}
+      >
         <slot />
       </Provider>
     {/each}
