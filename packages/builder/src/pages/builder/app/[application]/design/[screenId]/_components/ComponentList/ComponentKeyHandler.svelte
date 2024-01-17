@@ -5,7 +5,7 @@
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import componentTreeNodesStore from 'stores/portal/componentTreeNodesStore';
+  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   let confirmDeleteDialog
   let confirmEjectDialog
@@ -60,35 +60,35 @@
     ["ArrowDown"]: () => {
       store.actions.components.selectNext()
     },
-    ["ArrowRight"]: (component) => {
-      componentTreeNodesStore.expandNode(component._id);
+    ["ArrowRight"]: component => {
+      componentTreeNodesStore.expandNode(component._id)
     },
-    ["ArrowLeft"]: (component) => {
-      componentTreeNodesStore.collapseNode(component._id);
+    ["ArrowLeft"]: component => {
+      componentTreeNodesStore.collapseNode(component._id)
     },
-    ["Ctrl+ArrowRight"]: (component) => {
-      componentTreeNodesStore.expandNode(component._id);
+    ["Ctrl+ArrowRight"]: component => {
+      componentTreeNodesStore.expandNode(component._id)
 
-      const expandChildren = (component) => {
+      const expandChildren = component => {
         (component._children ?? []).forEach(child => {
-          componentTreeNodesStore.expandNode(child._id);
-          expandChildren(child);
-        });
-      };
+          componentTreeNodesStore.expandNode(child._id)
+          expandChildren(child)
+        })
+      }
 
-      expandChildren(component);
+      expandChildren(component)
     },
-    ["Ctrl+ArrowLeft"]: (component) => {
-      componentTreeNodesStore.collapseNode(component._id);
+    ["Ctrl+ArrowLeft"]: component => {
+      componentTreeNodesStore.collapseNode(component._id)
 
-      const collapseChildren = (component) => {
+      const collapseChildren = component => {
         (component._children ?? []).forEach(child => {
-          componentTreeNodesStore.collapseNode(child._id);
-          collapseChildren(child);
-        });
-      };
+          componentTreeNodesStore.collapseNode(child._id)
+          collapseChildren(child)
+        })
+      }
 
-      collapseChildren(component);
+      collapseChildren(component)
     },
     ["Escape"]: () => {
       if ($isActive(`./:componentId/new`)) {

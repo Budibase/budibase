@@ -17,13 +17,12 @@
   } from "builderStore/componentUtils"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
-  import { getContext } from 'svelte';
-  import componentTreeNodesStore from 'stores/portal/componentTreeNodesStore';
+  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   export let components = []
   export let level = 0
 
-  $: openNodes = $componentTreeNodesStore;
+  $: openNodes = $componentTreeNodesStore
 
   $: filteredComponents = components?.filter(component => {
     return (

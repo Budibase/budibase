@@ -2,36 +2,35 @@ import { createSessionStorageStore } from "@budibase/frontend-core"
 
 const baseStore = createSessionStorageStore("openNodes", {})
 
-const toggleNode = (componentId) => {
+const toggleNode = componentId => {
   baseStore.update(openNodes => {
-    openNodes[`nodeOpen-${componentId}`] = !openNodes[`nodeOpen-${componentId}`];
+    openNodes[`nodeOpen-${componentId}`] = !openNodes[`nodeOpen-${componentId}`]
 
-    return openNodes;
-  });
+    return openNodes
+  })
 }
 
-const expandNode = (componentId) => {
+const expandNode = componentId => {
   baseStore.update(openNodes => {
-    openNodes[`nodeOpen-${componentId}`] = true;
+    openNodes[`nodeOpen-${componentId}`] = true
 
-    return openNodes;
-  });
+    return openNodes
+  })
 }
 
-const collapseNode = (componentId) => {
+const collapseNode = componentId => {
   baseStore.update(openNodes => {
-    openNodes[`nodeOpen-${componentId}`] = false;
+    openNodes[`nodeOpen-${componentId}`] = false
 
-    return openNodes;
-  });
+    return openNodes
+  })
 }
-
 
 const store = {
   subscribe: baseStore.subscribe,
   toggleNode,
   expandNode,
-  collapseNode
-};
+  collapseNode,
+}
 
-export default store;
+export default store

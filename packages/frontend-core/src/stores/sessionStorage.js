@@ -6,7 +6,7 @@ export const createSessionStorageStore = (sessionStorageKey, initialValue) => {
     hydrate()
 
     // Listen for session storage changes and keep store in sync
-    const storageListener = ({ key }, ...rest) => {
+    const storageListener = ({ key }) => {
       return key === sessionStorageKey && hydrate()
     }
 

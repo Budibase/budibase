@@ -1,7 +1,5 @@
 <script>
   import { notifications, Icon, Body } from "@budibase/bbui"
-  import { writable } from 'svelte/store';
-  import { setContext } from 'svelte';
   import { isActive, goto } from "@roxi/routify"
   import {
     store,
