@@ -1,13 +1,17 @@
 <script>
   import { syncURLToState } from "helpers/urlStateSync"
-  import { builderStore, screenStore, selectedScreen } from "stores/builder"
+  import {
+    builderStore,
+    screenStore,
+    selectedScreen,
+    componentStore,
+  } from "stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
   import { findComponent } from "stores/builder/components/utils"
   import ComponentSettingsPanel from "./_components/Component/ComponentSettingsPanel.svelte"
   import NavigationPanel from "./_components/Navigation/index.svelte"
   import ScreenSettingsPanel from "./_components/Screen/index.svelte"
-  import { componentStore } from "stores/builder"
 
   $: componentId = $componentStore.selectedComponentId
   $: builderStore.selectResource(componentId)

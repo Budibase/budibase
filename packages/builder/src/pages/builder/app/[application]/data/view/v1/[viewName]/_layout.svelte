@@ -1,9 +1,8 @@
 <script>
-  import { views } from "stores/builder"
+  import { views, builderStore } from "stores/builder"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { builderStore } from "stores/builder"
 
   $: name = $views.selectedViewName
   $: builderStore.selectResource(name)
