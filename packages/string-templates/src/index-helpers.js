@@ -3,7 +3,7 @@
 // https://github.com/evanw/esbuild/issues/56
 const externalCollections = {
   math: require("@budibase/handlebars-helpers/lib/math"),
-  // array: require("@budibase/handlebars-helpers/lib/array"),
+  array: require("@budibase/handlebars-helpers/lib/array"),
   number: require("@budibase/handlebars-helpers/lib/number"),
   // url: require("@budibase/handlebars-helpers/lib/url"),
   // string: require("@budibase/handlebars-helpers/lib/string"),
