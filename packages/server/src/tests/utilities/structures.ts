@@ -21,6 +21,7 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
+  AutomationIOType,
 } from "@budibase/types"
 
 const { BUILTIN_ROLE_IDS } = roles
@@ -147,6 +148,56 @@ export function basicAutomation(appId?: string): Automation {
         },
       },
       steps: [],
+    },
+    type: "automation",
+    appId: appId!,
+  }
+}
+
+export function serverLogAutomation(appId?: string): Automation {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: {},
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [
+        {
+          stepId: AutomationActionStepId.SERVER_LOG,
+          name: "Backend log",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          internal: true,
+          features: {
+            LOOPING: true,
+          },
+          inputs: {
+            text: "log statement",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+          id: "y8lkZbeSe",
+          type: AutomationStepType.ACTION,
+        },
+      ],
     },
     type: "automation",
     appId: appId!,
