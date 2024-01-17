@@ -5,12 +5,12 @@ import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import fs from "fs"
 
-const helpersSource = fs.readFileSync(
-  `${require.resolve("@budibase/string-templates/index-helpers")}`,
-  "utf8"
-)
-
 export function init() {
+  const helpersSource = fs.readFileSync(
+    `${require.resolve("@budibase/string-templates/index-helpers")}`,
+    "utf8"
+  )
+
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
       const bbCtx = context.getCurrentContext()!
