@@ -1,4 +1,5 @@
 import { componentStore } from "."
+import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
   decodeJSBinding,
@@ -238,6 +239,10 @@ export const makeComponentUnique = component => {
 }
 
 export const getComponentText = component => {
+  if (component == null) {
+    return ""
+  }
+
   if (component?._instanceName) {
     return component._instanceName
   }
@@ -245,4 +250,17 @@ export const getComponentText = component => {
     component._component.replace("@budibase/standard-components/", "") ||
     "component"
   return capitalise(type)
+}
+
+export const getComponentName = component => {
+  if (component == null) {
+    return ""
+  }
+
+  const components = get(componentStore)?.components || {}
+  const componentDefinition = components[component._component] || {}
+  const name =
+    componentDefinition.friendlyName || componentDefinition.name || ""
+
+  return name
 }

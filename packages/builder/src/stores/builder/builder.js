@@ -2,6 +2,7 @@ import { writable, get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import BudiStore from "./BudiStore"
+import { previewStore } from "./preview.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 
 export const INITIAL_BUILDER_STATE = {
@@ -13,13 +14,26 @@ export const INITIAL_BUILDER_STATE = {
   tourNodes: null,
   tourKey: null,
   tourStepKey: null,
+  hoveredComponentId: null,
 }
 
 export class BuilderStore extends BudiStore {
   constructor() {
     super({ ...INITIAL_BUILDER_STATE })
 
+    this.init = this.init.bind(this)
+    this.refresh = this.refresh.bind(this)
+    this.reset = this.reset.bind(this)
+    this.highlightSetting = this.highlightSetting.bind(this)
+    this.propertyFocus = this.propertyFocus.bind(this)
+    this.hover = this.hover.bind(this)
+    this.hideBuilderSidePanel = this.hideBuilderSidePanel.bind(this)
+    this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
+    this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
+    this.selectResource = this.selectResource.bind(this)
+    this.registerTourNode = this.registerTourNode.bind(this)
     this.destroyTourNode = this.destroyTourNode.bind(this)
+    this.startBuilderOnboarding = this.startBuilderOnboarding.bind(this)
 
     this.websocket
   }
@@ -127,8 +141,20 @@ export class BuilderStore extends BudiStore {
       tourKey: tourKey,
     }))
   }
+
+  hover(componentId, notifyClient = true) {
+    const store = get(this.store)
+    if (componentId === store.hoveredComponentId) {
+      return
+    }
+    this.update(state => {
+      state.hoveredComponentId = componentId
+      return state
+    })
+    if (notifyClient) {
+      previewStore.sendEvent("hover-component", componentId)
+    }
+  }
 }
 
 export const builderStore = new BuilderStore()
-
-export const screensHeight = writable("210px")

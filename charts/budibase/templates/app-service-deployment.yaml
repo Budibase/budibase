@@ -2,12 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert
-    kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.apps.deploymentAnnotations }}
 {{- toYaml .Values.services.apps.deploymentAnnotations | indent 4 -}}
 {{ end }}
-  creationTimestamp: null
   labels:
     io.kompose.service: app-service
 {{ if .Values.services.apps.deploymentLabels }}
@@ -24,12 +21,9 @@ spec:
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert
-        kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.apps.templateAnnotations }}
 {{- toYaml .Values.services.apps.templateAnnotations | indent 8 -}}
 {{ end }}
-      creationTimestamp: null
       labels:
         io.kompose.service: app-service
 {{ if .Values.services.apps.templateLabels }}
@@ -198,7 +192,14 @@ spec:
         - name: NODE_TLS_REJECT_UNAUTHORIZED
           value: {{ .Values.services.tlsRejectUnauthorized }}
         {{ end }}
-
+        {{- if .Values.services.automationWorkers.enabled }}
+        - name: APP_FEATURES
+          value: "api"
+        {{- end }}
+        {{- range .Values.services.apps.extraEnv }}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        {{- end }}
         image: budibase/apps:{{ .Values.globals.appVersion | default .Chart.AppVersion }}
         imagePullPolicy: Always
         {{- if .Values.services.apps.startupProbe }}
@@ -226,6 +227,14 @@ spec:
         resources:
         {{- toYaml . | nindent 10 }}
         {{ end }}
+        {{ if .Values.services.apps.command }}
+        command:
+        {{- toYaml .Values.services.apps.command | nindent 10 }}
+        {{ end }}
+        {{ if .Values.services.apps.args }}
+        args:
+        {{- toYaml .Values.services.apps.args | nindent 10 }}
+        {{ end }}
     {{- with .Values.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
@@ -243,4 +252,10 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.apps.ndots }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.services.apps.ndots | quote }}
+      {{ end }}
 status: {}

@@ -236,7 +236,7 @@
     {#if enrichedApps.length}
       <Layout noPadding gap="L">
         <div class="title">
-          {#if $auth.user && sdk.users.isGlobalBuilder($auth.user)}
+          {#if $auth.user && sdk.users.canCreateApps($auth.user)}
             <div class="buttons">
               <Button
                 size="M"

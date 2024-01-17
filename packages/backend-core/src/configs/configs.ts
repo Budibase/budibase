@@ -17,7 +17,6 @@ import { DocumentType, SEPARATOR } from "../constants"
 import { CacheKey, TTL, withCache } from "../cache"
 import * as context from "../context"
 import env from "../environment"
-import environment from "../environment"
 
 // UTILS
 
@@ -181,10 +180,10 @@ export async function getGoogleDatasourceConfig(): Promise<
 }
 
 export function getDefaultGoogleConfig(): GoogleInnerConfig | undefined {
-  if (environment.GOOGLE_CLIENT_ID && environment.GOOGLE_CLIENT_SECRET) {
+  if (env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET) {
     return {
-      clientID: environment.GOOGLE_CLIENT_ID!,
-      clientSecret: environment.GOOGLE_CLIENT_SECRET!,
+      clientID: env.GOOGLE_CLIENT_ID!,
+      clientSecret: env.GOOGLE_CLIENT_SECRET!,
       activated: true,
     }
   }

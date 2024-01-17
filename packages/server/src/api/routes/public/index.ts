@@ -27,51 +27,59 @@ interface KoaRateLimitOptions {
 }
 
 const PREFIX = "/api/public/v1"
-// allow a lot more requests when in test
-const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
 
-function getApiLimitPerSecond(): number {
-  if (!env.API_REQ_LIMIT_PER_SEC) {
-    return DEFAULT_API_REQ_LIMIT_PER_SEC
-  }
-  return parseInt(env.API_REQ_LIMIT_PER_SEC)
-}
+// type can't be known - untyped libraries
+let limiter: any, rateLimitStore: any
+if (!env.DISABLE_RATE_LIMITING) {
+  // allow a lot more requests when in test
+  const DEFAULT_API_REQ_LIMIT_PER_SEC = env.isTest() ? 100 : 10
 
-let rateLimitStore: any = null
-if (!env.isTest()) {
-  const { password, host, port } = redis.utils.getRedisConnectionDetails()
-  let options: KoaRateLimitOptions = {
-    socket: {
-      host: host,
-      port: port,
-    },
+  function getApiLimitPerSecond(): number {
+    if (!env.API_REQ_LIMIT_PER_SEC) {
+      return DEFAULT_API_REQ_LIMIT_PER_SEC
+    }
+    return parseInt(env.API_REQ_LIMIT_PER_SEC)
   }
 
-  if (password) {
-    options.password = password
-  }
+  if (!env.isTest()) {
+    const { password, host, port } = redis.utils.getRedisConnectionDetails()
+    let options: KoaRateLimitOptions = {
+      socket: {
+        host: host,
+        port: port,
+      },
+    }
 
-  if (!env.REDIS_CLUSTERED) {
-    // Can't set direct redis db in clustered env
-    options.database = SelectableDatabase.RATE_LIMITING
+    if (password) {
+      options.password = password
+    }
+
+    if (!env.REDIS_CLUSTERED) {
+      // Can't set direct redis db in clustered env
+      options.database = SelectableDatabase.RATE_LIMITING
+    }
+    rateLimitStore = new Stores.Redis(options)
+    RateLimit.defaultOptions({
+      store: rateLimitStore,
+    })
   }
-  rateLimitStore = new Stores.Redis(options)
-  RateLimit.defaultOptions({
-    store: rateLimitStore,
+  // rate limiting, allows for 2 requests per second
+  limiter = RateLimit.middleware({
+    interval: { sec: 1 },
+    // per ip, per interval
+    max: getApiLimitPerSecond(),
   })
+} else {
+  console.log("**** PUBLIC API RATE LIMITING DISABLED ****")
 }
-// rate limiting, allows for 2 requests per second
-const limiter = RateLimit.middleware({
-  interval: { sec: 1 },
-  // per ip, per interval
-  max: getApiLimitPerSecond(),
-})
 
 const publicRouter = new Router({
   prefix: PREFIX,
 })
 
-publicRouter.use(limiter)
+if (limiter && !env.isDev()) {
+  publicRouter.use(limiter)
+}
 
 function addMiddleware(
   endpoints: any,

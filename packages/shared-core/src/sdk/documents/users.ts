@@ -25,6 +25,10 @@ export function isGlobalBuilder(user: User | ContextUser): boolean {
   return (isBuilder(user) && !hasAppBuilderPermissions(user)) || isAdmin(user)
 }
 
+export function canCreateApps(user: User | ContextUser): boolean {
+  return isGlobalBuilder(user) || hasCreatorPermissions(user)
+}
+
 // alias for hasAdminPermission, currently do the same thing
 // in future whether someone has admin permissions and whether they are
 // an admin for a specific resource could be separated
@@ -66,7 +70,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
+    _.find(x => x === "CREATOR"),
     x => !!x
   )(user)
 }
@@ -76,7 +80,11 @@ export function hasBuilderPermissions(user?: User | ContextUser): boolean {
   if (!user) {
     return false
   }
-  return user.builder?.global || hasAppBuilderPermissions(user)
+  return (
+    user.builder?.global ||
+    hasAppBuilderPermissions(user) ||
+    hasCreatorPermissions(user)
+  )
 }
 
 // checks if a user is capable of being an admin
@@ -87,13 +95,21 @@ export function hasAdminPermissions(user?: User | ContextUser): boolean {
   return !!user.admin?.global
 }
 
+export function hasCreatorPermissions(user?: User | ContextUser): boolean {
+  if (!user) {
+    return false
+  }
+  return !!user.builder?.creator
+}
+
 export function isCreator(user?: User | ContextUser): boolean {
   if (!user) {
     return false
   }
   return (
-    isGlobalBuilder(user) ||
+    isGlobalBuilder(user!) ||
     hasAdminPermissions(user) ||
+    hasCreatorPermissions(user) ||
     hasAppBuilderPermissions(user) ||
     hasAppCreatorPermissions(user)
   )

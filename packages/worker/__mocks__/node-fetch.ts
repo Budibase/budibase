@@ -1,4 +1,5 @@
 import fs from "fs"
+
 module FetchMock {
   const fetch = jest.requireActual("node-fetch")
 

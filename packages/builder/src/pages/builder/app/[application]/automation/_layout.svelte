@@ -114,7 +114,7 @@
   }
 
   .setup {
-    padding-top: var(--spectrum-global-dimension-size-200);
+    padding-top: 9px;
     border-left: var(--border-light);
     display: flex;
     flex-direction: column;

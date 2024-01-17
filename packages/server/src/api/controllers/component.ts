@@ -1,8 +1,7 @@
 import { DocumentType } from "../../db/utils"
-import { App, Plugin } from "@budibase/types"
+import { App, Plugin, UserCtx } from "@budibase/types"
 import { db as dbCore, context, tenancy } from "@budibase/backend-core"
 import { getComponentLibraryManifest } from "../../utilities/fileSystem"
-import { UserCtx } from "@budibase/types"
 
 export async function fetchAppComponentDefinitions(ctx: UserCtx) {
   try {

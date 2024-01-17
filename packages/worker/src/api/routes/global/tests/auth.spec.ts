@@ -7,6 +7,7 @@ import {
   structures,
   generator,
 } from "../../../../tests"
+
 const sendMailMock = mocks.email.mock()
 import { events, constants } from "@budibase/backend-core"
 import { Response } from "superagent"
@@ -228,7 +229,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "Cannot reset password.",
+            message: "Password change is disabled for this user",
             status: 400,
           })
         }
@@ -260,8 +261,12 @@ describe("/api/global/auth", () => {
             )
 
             // convert to account owner now that password has been requested
-            const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
+            const account: CloudAccount = {
+              ...structures.accounts.ssoAccount(),
+              budibaseUserId: "budibaseUserId",
+              email: user.email,
+            }
+            mocks.accounts.getAccountByTenantId.mockReturnValueOnce(
               Promise.resolve(account)
             )
 

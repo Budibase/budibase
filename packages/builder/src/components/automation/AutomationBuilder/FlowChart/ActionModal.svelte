@@ -152,7 +152,7 @@
             {#if isDisabled && !syncAutomationsEnabled && action.stepId === ActionStepID.COLLECT}
               <div class="tag-color">
                 <Tags>
-                  <Tag icon="LockClosed">Business</Tag>
+                  <Tag icon="LockClosed">Premium</Tag>
                 </Tags>
               </div>
             {:else if isDisabled}

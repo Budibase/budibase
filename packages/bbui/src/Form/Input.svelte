@@ -15,6 +15,7 @@
   export let quiet = false
   export let autofocus
   export let autocomplete
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -23,7 +24,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <TextField
     {updateOnChange}
     {error}

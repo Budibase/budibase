@@ -6,17 +6,20 @@
     screenStore,
     componentStore,
     userSelectedResourceMap,
+    builderStore,
   } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
-  import { dndStore } from "./dndStore.js"
+  import { dndStore, DropPosition } from "./dndStore.js"
   import ScreenslotDropdownMenu from "./ScreenslotDropdownMenu.svelte"
   import DNDPositionIndicator from "./DNDPositionIndicator.svelte"
-  import { DropPosition } from "./dndStore"
   import ComponentKeyHandler from "./ComponentKeyHandler.svelte"
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
 
   let scrolling = false
+
+  $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
+  $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
 
   const toNewComponentRoute = () => {
     if ($isActive(`./:componentId/new`)) {
@@ -38,6 +41,8 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  const hover = builderStore.hover
 </script>
 
 <div class="components">
@@ -63,18 +68,18 @@
             on:click={() => {
               componentStore.select(`${$screenStore.selectedScreenId}-screen`)
             }}
-            id={`component-screen`}
-            selectedBy={$userSelectedResourceMap[
-              `${$screenStore.selectedScreenId}-screen`
-            ]}
+            hovering={$builderStore.hoveredComponentId === screenComponentId}
+            on:mouseenter={() => hover(screenComponentId)}
+            on:mouseleave={() => hover(null)}
+            id="component-screen"
+            selectedBy={$userSelectedResourceMap[screenComponentId]}
           >
             <ScreenslotDropdownMenu component={$selectedScreen?.props} />
           </NavItem>
           <NavItem
             text="Navigation"
             indentLevel={0}
-            selected={$componentStore.selectedComponentId ===
-              `${$screenStore.selectedScreenId}-navigation`}
+            selected={$componentStore.selectedComponentId === navComponentId}
             opened
             scrollable
             icon={$selectedScreen?.showNavigation
@@ -86,10 +91,11 @@
                 `${$screenStore.selectedScreenId}-navigation`
               )
             }}
-            id={`component-nav`}
-            selectedBy={$userSelectedResourceMap[
-              `${$screenStore.selectedScreenId}-navigation`
-            ]}
+            hovering={$builderStore.hoveredComponentId === navComponentId}
+            on:mouseenter={() => hover(navComponentId)}
+            on:mouseleave={() => hover(null)}
+            id="component-nav"
+            selectedBy={$userSelectedResourceMap[navComponentId]}
           />
           <ComponentTree
             level={0}

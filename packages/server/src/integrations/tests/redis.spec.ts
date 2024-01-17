@@ -1,4 +1,5 @@
 const Redis = require("ioredis-mock")
+
 import { default as RedisIntegration } from "../redis"
 
 class TestConfiguration {
@@ -82,6 +83,23 @@ describe("Redis Integration", () => {
     await config.integration.command(body)
     expect(config.integration.client.pipeline).toHaveBeenCalledWith([
       ["set", "foo", '"bar"'],
+      ["get", "foo"],
+    ])
+  })
+
+  it("calls the pipeline method with double quoted phrase values", async () => {
+    const body = {
+      json: 'SET foo "What a wonderful world!"\nGET foo',
+    }
+
+    // ioredis-mock doesn't support pipelines
+    config.integration.client.pipeline = jest.fn(() => ({
+      exec: jest.fn(() => [[]]),
+    }))
+
+    await config.integration.command(body)
+    expect(config.integration.client.pipeline).toHaveBeenCalledWith([
+      ["set", "foo", '"What a wonderful world!"'],
       ["get", "foo"],
     ])
   })

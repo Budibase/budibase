@@ -16,6 +16,7 @@
   export let autofocus
   export let variables
   export let showModal
+  export let helpText = null
   export let environmentVariablesEnabled
   export let handleUpgradePanel
   const dispatch = createEventDispatcher()
@@ -25,7 +26,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <EnvDropdown
     {updateOnChange}
     {error}

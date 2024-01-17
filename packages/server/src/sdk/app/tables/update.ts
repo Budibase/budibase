@@ -8,6 +8,7 @@ import { DocumentInsertResponse } from "@budibase/nano"
 import * as external from "./external"
 import * as internal from "./internal"
 import { cloneDeep } from "lodash"
+
 export * as external from "./external"
 export * as internal from "./internal"
 

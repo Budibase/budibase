@@ -1,4 +1,5 @@
 import { default as AirtableIntegration } from "../airtable"
+
 jest.mock("airtable")
 
 class TestConfiguration {

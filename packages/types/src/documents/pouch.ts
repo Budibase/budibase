@@ -1,17 +1,19 @@
+import { Document } from "../"
+
 export interface RowValue {
   rev: string
   deleted: boolean
 }
 
-export interface RowResponse<T> {
+export interface RowResponse<T extends Document> {
   id: string
   key: string
   error: string
   value: T | RowValue
-  doc?: T | any
+  doc?: T
 }
 
-export interface AllDocsResponse<T> {
+export interface AllDocsResponse<T extends Document> {
   offset: number
   total_rows: number
   rows: RowResponse<T>[]

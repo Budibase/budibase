@@ -133,6 +133,8 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       componentStore.select(data.id)
+    } else if (type === "hover-component") {
+      builderStore.hover(data.id, false)
     } else if (type === "update-prop") {
       await componentStore.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {

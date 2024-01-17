@@ -16,7 +16,7 @@ import {
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
@@ -149,8 +149,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private index: number = 1
   private open: boolean
 
-  COLUMNS_SQL!: string
-
   PRIMARY_KEYS_SQL = () => `
   SELECT pg_namespace.nspname table_schema
      , pg_class.relname table_name
@@ -159,7 +157,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   JOIN pg_index ON pg_class.oid = pg_index.indrelid AND pg_index.indisprimary
   JOIN pg_attribute ON pg_attribute.attrelid = pg_class.oid AND pg_attribute.attnum = ANY(pg_index.indkey)
   JOIN pg_namespace ON pg_namespace.oid = pg_class.relnamespace
-  WHERE pg_namespace.nspname = '${this.config.schema}';
+  WHERE pg_namespace.nspname = ANY(current_schemas(false))
+  AND pg_table_is_visible(pg_class.oid);
+  `
+
+  ENUM_VALUES = () => `
+  SELECT t.typname,  
+      e.enumlabel
+  FROM pg_type t 
+  JOIN pg_enum e on t.oid = e.enumtypid  
+  JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+  `
+
+  COLUMNS_SQL = () => `
+    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
+      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
   `
 
   constructor(config: PostgresConfig) {
@@ -211,8 +223,10 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (!this.config.schema) {
       this.config.schema = "public"
     }
-    await this.client.query(`SET search_path TO "${this.config.schema}"`)
-    this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = '${this.config.schema}'`
+    const search_path = this.config.schema
+      .split(",")
+      .map(item => `"${item.trim()}"`)
+    await this.client.query(`SET search_path TO ${search_path.join(",")};`)
     this.open = true
   }
 
@@ -299,9 +313,21 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
     try {
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
 
       const tables: { [key: string]: Table } = {}
+
+      // Fetch enum values
+      const enumsResponse = await this.client.query(this.ENUM_VALUES())
+      const enumValues = enumsResponse.rows?.reduce((acc, row) => {
+        if (!acc[row.typname]) {
+          return {
+            [row.typname]: [row.enumlabel],
+          }
+        }
+        acc[row.typname].push(row.enumlabel)
+        return acc
+      }, {})
 
       for (let column of columnsResponse.rows) {
         const tableName: string = column.table_name
@@ -333,20 +359,17 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
           column.is_generated && column.is_generated !== "NEVER"
         const isAuto: boolean = hasNextVal || identity || isGenerated
         const required = column.is_nullable === "NO"
-        const constraints = {
-          presence: required && !hasDefault && !isGenerated,
-        }
-        tables[tableName].schema[columnName] = {
+        tables[tableName].schema[columnName] = generateColumnDefinition({
           autocolumn: isAuto,
           name: columnName,
-          constraints,
-          ...convertSqlType(column.data_type),
+          presence: required && !hasDefault && !isGenerated,
           externalType: column.data_type,
-        }
+          options: enumValues?.[column.udt_name],
+        })
       }
 
-      let finalizedTables = finaliseExternalTables(tables, entities)
-      let errors = checkExternalTables(finalizedTables)
+      const finalizedTables = finaliseExternalTables(tables, entities)
+      const errors = checkExternalTables(finalizedTables)
       return { tables: finalizedTables, errors }
     } catch (err) {
       // @ts-ignore
@@ -360,7 +383,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     try {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
       const names = columnsResponse.rows.map(row => row.table_name)
       return [...new Set(names)]
     } finally {

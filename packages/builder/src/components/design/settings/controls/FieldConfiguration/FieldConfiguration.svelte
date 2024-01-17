@@ -1,4 +1,5 @@
 <script>
+  import { Toggle } from "@budibase/bbui"
   import { cloneDeep, isEqual } from "lodash/fp"
   import {
     getDatasourceForProvider,
@@ -6,16 +7,18 @@
     getBindableProperties,
     getComponentBindableProperties,
   } from "builder/dataBinding"
+  import { selectedScreen, currentAsset, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
-  import { selectedScreen, currentAsset, componentStore } from "stores/builder"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
 
   export let componentInstance
+  export let bindings
   export let value
 
   const dispatch = createEventDispatcher()
+
   let sanitisedFields
   let fieldList
   let schema
@@ -24,7 +27,11 @@
   let sanitisedValue
   let unconfigured
 
-  $: bindings = getBindableProperties($selectedScreen, componentInstance._id)
+  let selectAll = true
+
+  $: resolvedBindings =
+    bindings || getBindableProperties($selectedScreen, componentInstance._id)
+
   $: actionType = componentInstance.actionType
   let componentBindings = []
 
@@ -35,7 +42,10 @@
     )
   }
 
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: datasource =
+    componentInstance.dataSource ||
+    getDatasourceForProvider($currentAsset, componentInstance)
+
   $: resourceId = datasource?.resourceId || datasource?.tableId
 
   $: if (!isEqual(value, cachedValue)) {
@@ -144,30 +154,64 @@
     dispatch("change", getValidColumns(parentFieldsUpdated, options))
   }
 
-  const listUpdated = e => {
-    const parsedColumns = getValidColumns(e.detail, options)
+  const listUpdated = columns => {
+    const parsedColumns = getValidColumns(columns, options)
     dispatch("change", parsedColumns)
   }
 </script>
 
 <div class="field-configuration">
+  <div class="toggle-all">
+    <span>Fields</span>
+    <Toggle
+      on:change={() => {
+        let update = fieldList.map(field => ({
+          ...field,
+          active: selectAll,
+        }))
+        listUpdated(update)
+      }}
+      text=""
+      bind:value={selectAll}
+      thin
+    />
+  </div>
   {#if fieldList?.length}
     <DraggableList
-      on:change={listUpdated}
+      on:change={e => listUpdated(e.detail)}
       on:itemChange={processItemUpdate}
       items={fieldList}
       listItemKey={"_id"}
       listType={FieldSetting}
       listTypeProps={{
         componentBindings,
-        bindings,
+        bindings: resolvedBindings,
       }}
     />
   {/if}
 </div>
 
 <style>
+  .field-configuration {
+    padding-top: 8px;
+  }
   .field-configuration :global(.spectrum-ActionButton) {
     width: 100%;
+  }
+  .toggle-all {
+    display: flex;
+    justify-content: space-between;
+  }
+  .toggle-all :global(.spectrum-Switch) {
+    margin-right: 0px;
+    padding-right: calc(var(--spacing-s) - 1px);
+    min-height: unset;
+  }
+  .toggle-all :global(.spectrum-Switch .spectrum-Switch-switch) {
+    margin-top: 0px;
+  }
+  .toggle-all span {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: 12px;
   }
 </style>

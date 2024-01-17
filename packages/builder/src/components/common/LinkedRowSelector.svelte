@@ -7,7 +7,9 @@
 
   export let schema
   export let linkedRows = []
-
+  export let useLabel = true
+  export let linkedTableId
+  export let label
   const dispatch = createEventDispatcher()
 
   let rows = []
@@ -16,8 +18,8 @@
   $: linkedIds = (Array.isArray(linkedRows) ? linkedRows : [])?.map(
     row => row?._id || row
   )
-  $: label = capitalise(schema.name)
-  $: linkedTableId = schema.tableId
+  $: label = label || capitalise(schema.name)
+  $: linkedTableId = linkedTableId || schema.tableId
   $: linkedTable = $tables.list.find(table => table._id === linkedTableId)
   $: fetchRows(linkedTableId)
 
@@ -51,17 +53,17 @@
       linkedIds = e.detail ? [e.detail] : []
       dispatch("change", linkedIds)
     }}
-    {label}
+    label={useLabel ? label : null}
     sort
   />
 {:else}
   <Multiselect
-    bind:value={linkedIds}
-    {label}
+    value={linkedIds}
+    label={useLabel ? label : null}
     options={rows}
     getOptionLabel={getPrettyName}
     getOptionValue={row => row._id}
     sort
-    on:change={() => dispatch("change", linkedIds)}
+    on:change
   />
 {/if}

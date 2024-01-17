@@ -5,6 +5,7 @@ import {
   User,
   CreateAdminUserRequest,
   SearchQuery,
+  InviteUsersResponse,
 } from "@budibase/types"
 import structures from "../structures"
 import { generator } from "@budibase/backend-core/tests"
@@ -100,7 +101,7 @@ export class UserAPI extends TestAPI {
     if (!request) {
       request = {
         email: structures.email(),
-        password: generator.string(),
+        password: generator.string({ length: 8 }),
         tenantId: structures.tenant.id(),
       }
     }
@@ -175,5 +176,25 @@ export class UserAPI extends TestAPI {
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
+  }
+
+  onboardUser = async (
+    req: InviteUsersRequest
+  ): Promise<InviteUsersResponse> => {
+    const resp = await this.request
+      .post(`/api/global/users/onboard`)
+      .send(req)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+
+    if (resp.status !== 200) {
+      throw new Error(
+        `request failed with status ${resp.status} and body ${JSON.stringify(
+          resp.body
+        )}`
+      )
+    }
+
+    return resp.body as InviteUsersResponse
   }
 }

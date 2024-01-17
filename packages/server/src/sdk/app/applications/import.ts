@@ -91,7 +91,7 @@ async function getImportableDocuments(db: Database) {
   // map the responses to the document itself
   let documents: Document[] = []
   for (let response of await Promise.all(docPromises)) {
-    documents = documents.concat(response.rows.map(row => row.doc))
+    documents = documents.concat(response.rows.map(row => row.doc!))
   }
   // remove the _rev, stops it being written
   documents.forEach(doc => {

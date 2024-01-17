@@ -10,6 +10,7 @@
   export let readonly = false
   export let defaultValue = ""
   export let onChange
+  export let helpText = null
 
   const component = getContext("component")
   const validation = [
@@ -52,6 +53,7 @@
   {readonly}
   {validation}
   {defaultValue}
+  {helpText}
   type="json"
   bind:fieldState
   bind:fieldApi

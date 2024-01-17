@@ -56,7 +56,7 @@
     {/if}
     {#key history}
       <div class="history">
-        <TestDisplay testResults={history} width="100%" />
+        <TestDisplay testResults={history} width="320px" />
       </div>
     {/key}
   </Layout>

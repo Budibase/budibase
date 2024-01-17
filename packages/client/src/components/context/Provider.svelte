@@ -45,12 +45,13 @@
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource
         if (type === ActionTypes.RefreshDatasource) {
-          const { dataSource } = metadata || {}
-          dataSourceStore.actions.registerDataSource(
-            dataSource,
-            instanceId,
-            callback
-          )
+          if (metadata?.dataSource) {
+            dataSourceStore.actions.registerDataSource(
+              metadata.dataSource,
+              instanceId,
+              callback
+            )
+          }
         }
       })
     }

@@ -6,7 +6,6 @@
   export let placeholder = null
   export let type = "text"
   export let disabled = false
-  export let error = null
   export let id = null
   export let readonly = false
   export let updateOnChange = true
@@ -21,7 +20,7 @@
   let focus = false
 
   const updateValue = newValue => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     if (type === "number") {
@@ -32,14 +31,14 @@
   }
 
   const onFocus = () => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     focus = true
   }
 
   const onBlur = event => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     focus = false
@@ -47,14 +46,14 @@
   }
 
   const onInput = event => {
-    if (readonly || !updateOnChange) {
+    if (readonly || !updateOnChange || disabled) {
       return
     }
     updateValue(event.target.value)
   }
 
   const updateValueOnEnter = event => {
-    if (readonly) {
+    if (readonly || disabled) {
       return
     }
     if (event.key === "Enter") {
@@ -70,6 +69,7 @@
   }
 
   onMount(() => {
+    if (disabled) return
     focus = autofocus
     if (focus) field.focus()
   })
@@ -78,19 +78,9 @@
 <div
   class="spectrum-Textfield"
   class:spectrum-Textfield--quiet={quiet}
-  class:is-invalid={!!error}
   class:is-disabled={disabled}
   class:is-focused={focus}
 >
-  {#if error}
-    <svg
-      class="spectrum-Icon spectrum-Icon--sizeM spectrum-Textfield-validationIcon"
-      focusable="false"
-      aria-hidden="true"
-    >
-      <use xlink:href="#spectrum-icon-18-Alert" />
-    </svg>
-  {/if}
   <input
     bind:this={field}
     {disabled}
@@ -118,5 +108,17 @@
 <style>
   .spectrum-Textfield {
     width: 100%;
+  }
+
+  input::placeholder {
+    color: var(--grey-7);
+  }
+
+  input:hover::placeholder {
+    color: var(--grey-7) !important;
+  }
+
+  input:focus::placeholder {
+    color: var(--grey-7) !important;
   }
 </style>

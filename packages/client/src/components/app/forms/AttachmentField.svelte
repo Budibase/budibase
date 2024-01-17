@@ -13,6 +13,7 @@
   export let onChange
   export let maximum = undefined
   export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -76,6 +77,7 @@
   {readonly}
   {validation}
   {span}
+  {helpText}
   type="attachment"
   bind:fieldState
   bind:fieldApi

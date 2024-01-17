@@ -117,7 +117,7 @@ write.push(
  * /applications/{appId}/publish:
  *   post:
  *     operationId: appPublish
- *     summary: Unpublish an application
+ *     summary: Publish an application
  *     tags:
  *       - applications
  *     parameters:

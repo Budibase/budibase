@@ -12,6 +12,7 @@ import * as helpers from "./helpers"
 
 import tk from "timekeeper"
 import { View } from "@budibase/types"
+
 const timestamp = new Date().toISOString()
 tk.freeze(timestamp)
 

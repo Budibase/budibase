@@ -10,6 +10,7 @@ import {
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
 import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
+
 const { newid } = utils
 
 function newTestApiKey() {

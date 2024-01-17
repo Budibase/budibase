@@ -1,6 +1,7 @@
 <script>
   import { getContext, onMount, createEventDispatcher } from "svelte"
   import Portal from "svelte-portal"
+
   export let title
   export let icon = ""
   export let id

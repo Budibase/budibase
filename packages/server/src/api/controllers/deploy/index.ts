@@ -106,7 +106,6 @@ export async function fetchDeployments(ctx: any) {
     }
     ctx.body = Object.values(deployments.history).reverse()
   } catch (err) {
-    console.error(err)
     ctx.body = []
   }
 }

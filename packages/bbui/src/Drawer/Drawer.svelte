@@ -3,8 +3,7 @@
   import Button from "../Button/Button.svelte"
   import Body from "../Typography/Body.svelte"
   import Heading from "../Typography/Heading.svelte"
-  import { setContext } from "svelte"
-  import { createEventDispatcher } from "svelte"
+  import { setContext, createEventDispatcher } from "svelte"
   import { generate } from "shortid"
 
   export let title

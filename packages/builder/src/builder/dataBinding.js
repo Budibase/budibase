@@ -33,6 +33,12 @@ const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
 const CAPTURE_VAR_INSIDE_JS = /\$\("([^")]+)"\)/g
 const CAPTURE_HBS_TEMPLATE = /{{[\S\s]*?}}/g
 
+const UpdateReferenceAction = {
+  ADD: "add",
+  DELETE: "delete",
+  MOVE: "move",
+}
+
 /**
  * Gets all bindable data context fields and instance fields.
  */
@@ -232,7 +238,12 @@ export const getContextProviderComponents = (
 /**
  * Gets all data provider components above a component.
  */
-export const getActionProviderComponents = (asset, componentId, actionType) => {
+export const getActionProviders = (
+  asset,
+  componentId,
+  actionType,
+  options = { includeSelf: false }
+) => {
   if (!asset || !componentId) {
     return []
   }
@@ -240,13 +251,30 @@ export const getActionProviderComponents = (asset, componentId, actionType) => {
   // Get the component tree leading up to this component, ignoring the component
   // itself
   const path = findComponentPath(asset.props, componentId)
-  path.pop()
+  if (!options?.includeSelf) {
+    path.pop()
+  }
 
-  // Filter by only data provider components
-  return path.filter(component => {
+  // Find matching contexts and generate bindings
+  let providers = []
+  path.forEach(component => {
     const def = componentStore.getDefinition(component._component)
-    return def?.actions?.includes(actionType)
+    const actions = (def?.actions || []).map(action => {
+      return typeof action === "string" ? { type: action } : action
+    })
+    const action = actions.find(x => x.type === actionType)
+    if (action) {
+      let runtimeBinding = component._id
+      if (action.suffix) {
+        runtimeBinding += `-${action.suffix}`
+      }
+      providers.push({
+        readableBinding: component._instanceName,
+        runtimeBinding,
+      })
+    }
   })
+  return providers
 }
 
 /**
@@ -441,8 +469,8 @@ const filterCategoryByContext = (component, context) => {
   const { _component } = component
   if (_component.endsWith("formblock")) {
     if (
-      (component.actionType == "Create" && context.type === "schema") ||
-      (component.actionType == "View" && context.type === "form")
+      (component.actionType === "Create" && context.type === "schema") ||
+      (component.actionType === "View" && context.type === "form")
     ) {
       return false
     }
@@ -450,20 +478,21 @@ const filterCategoryByContext = (component, context) => {
   return true
 }
 
+// Enrich binding category information for certain components
 const getComponentBindingCategory = (component, context, def) => {
   let icon = def.icon
   let category = component._instanceName
 
   if (component._component.endsWith("formblock")) {
-    let contextCategorySuffix = {
-      form: "Fields",
-      schema: "Row",
+    if (context.type === "form") {
+      category = `${component._instanceName} - Fields`
+      icon = "Form"
+    } else if (context.type === "schema") {
+      category = `${component._instanceName} - Row`
+      icon = "Data"
     }
-    category = `${component._instanceName} - ${
-      contextCategorySuffix[context.type]
-    }`
-    icon = context.type === "form" ? "Form" : "Data"
   }
+
   return {
     icon,
     category,
@@ -1071,17 +1100,18 @@ export const removeBindings = (obj, replacement = "Invalid binding") => {
  * When converting from readable to runtime it can sometimes add too many square brackets,
  * this makes sure that doesn't happen.
  */
-const shouldReplaceBinding = (currentValue, convertFrom, convertTo) => {
-  if (!currentValue?.includes(convertFrom)) {
+const shouldReplaceBinding = (currentValue, from, convertTo, binding) => {
+  if (!currentValue?.includes(from)) {
     return false
   }
   if (convertTo === "readableBinding") {
-    return true
+    // Dont replace if the value already matches the readable binding
+    return currentValue.indexOf(binding.readableBinding) === -1
   }
   // remove all the spaces, if the input is surrounded by spaces e.g. [ Auto ID ] then
   // this makes sure it is detected
   const noSpaces = currentValue.replace(/\s+/g, "")
-  const fromNoSpaces = convertFrom.replace(/\s+/g, "")
+  const fromNoSpaces = from.replace(/\s+/g, "")
   const invalids = [
     `[${fromNoSpaces}]`,
     `"${fromNoSpaces}"`,
@@ -1133,8 +1163,11 @@ const bindingReplacement = (
     // in the search, working from longest to shortest so always use best match first
     let searchString = newBoundValue
     for (let from of convertFromProps) {
-      if (isJS || shouldReplaceBinding(newBoundValue, from, convertTo)) {
-        const binding = bindableProperties.find(el => el[convertFrom] === from)
+      const binding = bindableProperties.find(el => el[convertFrom] === from)
+      if (
+        isJS ||
+        shouldReplaceBinding(newBoundValue, from, convertTo, binding)
+      ) {
         let idx
         do {
           // see if any instances of this binding exist in the search string
@@ -1202,4 +1235,82 @@ export const runtimeToReadableBinding = (
     textWithBindings,
     "readableBinding"
   )
+}
+
+/**
+ * Used to update binding references for automation or action steps
+ *
+ * @param obj - The object to be updated
+ * @param originalIndex - The original index of the step being moved. Not applicable to add/delete.
+ * @param modifiedIndex - The new index of the step being modified
+ * @param action - Used to determine if a step is being added, deleted or moved
+ * @param label - The binding text that describes the steps
+ */
+export const updateReferencesInObject = ({
+  obj,
+  modifiedIndex,
+  action,
+  label,
+  originalIndex,
+}) => {
+  const stepIndexRegex = new RegExp(`{{\\s*${label}\\.(\\d+)\\.`, "g")
+  const updateActionStep = (str, index, replaceWith) =>
+    str.replace(`{{ ${label}.${index}.`, `{{ ${label}.${replaceWith}.`)
+  for (const key in obj) {
+    if (typeof obj[key] === "string") {
+      let matches
+      while ((matches = stepIndexRegex.exec(obj[key])) !== null) {
+        const referencedStep = parseInt(matches[1])
+        if (
+          action === UpdateReferenceAction.ADD &&
+          referencedStep >= modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep + 1
+          )
+        } else if (
+          action === UpdateReferenceAction.DELETE &&
+          referencedStep > modifiedIndex
+        ) {
+          obj[key] = updateActionStep(
+            obj[key],
+            referencedStep,
+            referencedStep - 1
+          )
+        } else if (action === UpdateReferenceAction.MOVE) {
+          if (referencedStep === originalIndex) {
+            obj[key] = updateActionStep(obj[key], referencedStep, modifiedIndex)
+          } else if (
+            modifiedIndex <= referencedStep &&
+            modifiedIndex < originalIndex
+          ) {
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep + 1
+            )
+          } else if (
+            modifiedIndex >= referencedStep &&
+            modifiedIndex > originalIndex
+          ) {
+            obj[key] = updateActionStep(
+              obj[key],
+              referencedStep,
+              referencedStep - 1
+            )
+          }
+        }
+      }
+    } else if (typeof obj[key] === "object" && obj[key] !== null) {
+      updateReferencesInObject({
+        obj: obj[key],
+        modifiedIndex,
+        action,
+        label,
+        originalIndex,
+      })
+    }
+  }
 }

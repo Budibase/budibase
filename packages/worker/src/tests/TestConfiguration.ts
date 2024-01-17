@@ -7,10 +7,13 @@ mocks.licenses.init(mocks.pro)
 mocks.licenses.useUnlimited()
 
 import * as dbConfig from "../db"
+
 dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
+
 const supertest = require("supertest")
+
 import { Config } from "../constants"
 import {
   users,
@@ -32,6 +35,8 @@ import {
   ConfigType,
 } from "@budibase/types"
 import API from "./api"
+import jwt, { Secret } from "jsonwebtoken"
+import cloneDeep from "lodash/fp/cloneDeep"
 
 class TestConfiguration {
   server: any
@@ -40,7 +45,7 @@ class TestConfiguration {
   tenantId: string
   user?: User
   apiKey?: string
-  userPassword = "test"
+  userPassword = "password"
 
   constructor(opts: { openServer: boolean } = { openServer: true }) {
     // default to cloud hosting
@@ -206,7 +211,7 @@ class TestConfiguration {
       sessionId: "sessionid",
       tenantId: user.tenantId,
     }
-    const authCookie = auth.jwt.sign(authToken, coreEnv.JWT_SECRET)
+    const authCookie = jwt.sign(authToken, coreEnv.JWT_SECRET as Secret)
     return {
       Accept: "application/json",
       ...this.cookieHeader([`${constants.Cookie.Auth}=${authCookie}`]),
@@ -234,6 +239,34 @@ class TestConfiguration {
 
   adminOnlyResponse = () => {
     return { message: "Admin user only endpoint.", status: 403 }
+  }
+
+  async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
+    let cleanup = this.setEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setEnv(newEnvVars: Partial<typeof env>): () => void {
+    const oldEnv = cloneDeep(env)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      env._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
+        env._set(key, value)
+      }
+    }
   }
 
   // USERS
@@ -324,7 +357,7 @@ class TestConfiguration {
   // CONFIGS - OIDC
 
   getOIDConfigCookie(configId: string) {
-    const token = auth.jwt.sign(configId, coreEnv.JWT_SECRET)
+    const token = jwt.sign(configId, coreEnv.JWT_SECRET as Secret)
     return this.cookieHeader([[`${constants.Cookie.OIDC_CONFIG}=${token}`]])
   }
 

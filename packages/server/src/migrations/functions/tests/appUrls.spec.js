@@ -10,7 +10,7 @@ describe("run", () => {
     await config.init()
   })
 
-  afterAll(config.end)  
+  afterAll(config.end)
 
   it("runs successfully", async () => {
     const app = await config.createApp("testApp")

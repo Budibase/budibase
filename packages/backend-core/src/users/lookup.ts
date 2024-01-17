@@ -6,6 +6,7 @@ import {
 } from "@budibase/types"
 import * as dbUtils from "../db"
 import { ViewName } from "../constants"
+import { getExistingInvites } from "../cache/invite"
 
 /**
  * Apply a system-wide search on emails:
@@ -25,6 +26,9 @@ export async function searchExistingEmails(emails: string[]) {
 
   const existingAccounts = await getExistingAccounts(emails)
   matchedEmails.push(...existingAccounts.map(account => account.email))
+
+  const invitedEmails = await getExistingInvites(emails)
+  matchedEmails.push(...invitedEmails.map(invite => invite.email))
 
   return [...new Set(matchedEmails.map(email => email.toLowerCase()))]
 }

@@ -1,5 +1,5 @@
 const { atob } = require("../utilities")
-const { cloneDeep } = require("lodash/fp")
+const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
 const { getHelperList } = require("./list")
 
@@ -56,6 +56,12 @@ module.exports.processJS = (handlebars, context) => {
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error) {
+    if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
+      return "Timed out while executing JS"
+    }
+    if (error.name === "ExecutionTimeoutError") {
+      return "Request JS execution limit hit"
+    }
     return "Error while executing JS"
   }
 }

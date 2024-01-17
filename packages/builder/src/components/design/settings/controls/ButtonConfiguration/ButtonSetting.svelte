@@ -9,11 +9,33 @@
   export let bindings
   export let anchor
   export let removeButton
-  export let canRemove
+  export let nested
 
   $: readableText = isJSBinding(item.text)
     ? "(JavaScript function)"
     : runtimeToReadableBinding([...bindings, componentBindings], item.text)
+
+  // If this is a nested setting (for example inside a grid or form block) then
+  // we need to mark all the settings of the actual buttons as nested too, to
+  // allow us to reference context provided by the block.
+  // We will need to update this in future if the normal button component
+  // gets broken into multiple settings sections, as we assume a flat array.
+  const updatedNestedFlags = settings => {
+    if (!nested || !settings?.length) {
+      return settings
+    }
+    let newSettings = settings.map(setting => ({
+      ...setting,
+      nested: true,
+    }))
+    // We need to prevent bindings for the button names because of how grid
+    // blocks work. This is an edge case but unavoidable.
+    let name = newSettings.find(x => x.key === "text")
+    if (name) {
+      name.disableBindings = true
+    }
+    return newSettings
+  }
 </script>
 
 <div class="list-item-body">
@@ -24,16 +46,19 @@
       {componentBindings}
       {bindings}
       on:change
+      parseSettings={updatedNestedFlags}
     />
     <div class="field-label">{readableText || "Button"}</div>
   </div>
   <div class="list-item-right">
     <Icon
-      disabled={!canRemove}
       size="S"
       name="Close"
       hoverable
-      on:click={() => removeButton(item._id)}
+      on:click={e => {
+        e.stopPropagation()
+        removeButton(item._id)
+      }}
     />
   </div>
 </div>

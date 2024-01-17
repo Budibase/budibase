@@ -5,14 +5,7 @@ const { execSync } = require("child_process")
 let version = "0.0.0"
 const localPro = fs.existsSync("packages/pro/src")
 if (!localPro) {
-  const branchName = execSync("git rev-parse --abbrev-ref HEAD")
-    .toString()
-    .trim()
-  if (branchName === "master") {
-    version = "latest"
-  } else {
-    version = "develop"
-  }
+  version = "latest"
 }
 
 // Get the list of workspaces with mismatched dependencies

@@ -3,6 +3,7 @@ import * as controller from "../../controllers/global/templates"
 import { TemplatePurpose, TemplateType } from "../../../constants"
 import { auth as authCore } from "@budibase/backend-core"
 import Joi from "joi"
+
 const { adminOnly, joiValidator } = authCore
 
 const router: Router = new Router()

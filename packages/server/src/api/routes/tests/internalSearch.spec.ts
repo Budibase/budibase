@@ -1,4 +1,5 @@
 const nodeFetch = require("node-fetch")
+
 nodeFetch.mockSearch()
 import { SearchParams } from "@budibase/backend-core"
 import * as search from "../../../sdk/app/rows/search/internalSearch"

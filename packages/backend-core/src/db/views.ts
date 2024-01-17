@@ -7,12 +7,19 @@ import {
 } from "../constants"
 import { getGlobalDB } from "../context"
 import { doWithDB } from "./"
-import { AllDocsResponse, Database, DatabaseQueryOpts } from "@budibase/types"
+import {
+  AllDocsResponse,
+  Database,
+  DatabaseQueryOpts,
+  Document,
+  DesignDocument,
+  DBView,
+} from "@budibase/types"
 import env from "../environment"
 
 const DESIGN_DB = "_design/database"
 
-function DesignDoc() {
+function DesignDoc(): DesignDocument {
   return {
     _id: DESIGN_DB,
     // view collation information, read before writing any complex views:
@@ -21,20 +28,14 @@ function DesignDoc() {
   }
 }
 
-interface DesignDocument {
-  views: any
-}
-
 async function removeDeprecated(db: Database, viewName: ViewName) {
-  // @ts-ignore
   if (!DeprecatedViews[viewName]) {
     return
   }
   try {
     const designDoc = await db.get<DesignDocument>(DESIGN_DB)
-    // @ts-ignore
     for (let deprecatedNames of DeprecatedViews[viewName]) {
-      delete designDoc.views[deprecatedNames]
+      delete designDoc.views?.[deprecatedNames]
     }
     await db.put(designDoc)
   } catch (err) {
@@ -43,18 +44,18 @@ async function removeDeprecated(db: Database, viewName: ViewName) {
 }
 
 export async function createView(
-  db: any,
+  db: Database,
   viewJs: string,
   viewName: string
 ): Promise<void> {
   let designDoc
   try {
-    designDoc = (await db.get(DESIGN_DB)) as DesignDocument
+    designDoc = await db.get<DesignDocument>(DESIGN_DB)
   } catch (err) {
     // no design doc, make one
     designDoc = DesignDoc()
   }
-  const view = {
+  const view: DBView = {
     map: viewJs,
   }
   designDoc.views = {
@@ -109,7 +110,7 @@ export interface QueryViewOptions {
   arrayResponse?: boolean
 }
 
-export async function queryViewRaw<T>(
+export async function queryViewRaw<T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   db: Database,
@@ -137,18 +138,16 @@ export async function queryViewRaw<T>(
   }
 }
 
-export const queryView = async <T>(
+export const queryView = async <T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   db: Database,
   createFunc: any,
   opts?: QueryViewOptions
-): Promise<T[] | T | undefined> => {
+): Promise<T[] | T> => {
   const response = await queryViewRaw<T>(viewName, params, db, createFunc, opts)
   const rows = response.rows
-  const docs = rows.map((row: any) =>
-    params.include_docs ? row.doc : row.value
-  )
+  const docs = rows.map(row => (params.include_docs ? row.doc! : row.value))
 
   // if arrayResponse has been requested, always return array regardless of length
   if (opts?.arrayResponse) {
@@ -198,11 +197,11 @@ export const createPlatformUserView = async () => {
   await createPlatformView(viewJs, ViewName.PLATFORM_USERS_LOWERCASE)
 }
 
-export const queryPlatformView = async <T>(
+export const queryPlatformView = async <T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   opts?: QueryViewOptions
-): Promise<T[] | T | undefined> => {
+): Promise<T[] | T> => {
   const CreateFuncByName: any = {
     [ViewName.ACCOUNT_BY_EMAIL]: createPlatformAccountEmailView,
     [ViewName.PLATFORM_USERS_LOWERCASE]: createPlatformUserView,
@@ -220,7 +219,7 @@ const CreateFuncByName: any = {
   [ViewName.USER_BY_APP]: createUserAppView,
 }
 
-export const queryGlobalView = async <T>(
+export const queryGlobalView = async <T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   db?: Database,
@@ -231,10 +230,10 @@ export const queryGlobalView = async <T>(
     db = getGlobalDB()
   }
   const createFn = CreateFuncByName[viewName]
-  return queryView(viewName, params, db!, createFn, opts)
+  return queryView<T>(viewName, params, db!, createFn, opts)
 }
 
-export async function queryGlobalViewRaw<T>(
+export async function queryGlobalViewRaw<T extends Document>(
   viewName: ViewName,
   params: DatabaseQueryOpts,
   opts?: QueryViewOptions

@@ -18,6 +18,7 @@ export const createStores = context => {
   const previousFocusedRowId = writable(null)
   const gridFocused = writable(false)
   const isDragging = writable(false)
+  const buttonColumnWidth = writable(0)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -51,6 +52,7 @@ export const createStores = context => {
     rowHeight,
     gridFocused,
     isDragging,
+    buttonColumnWidth,
     selectedRows: {
       ...selectedRows,
       actions: {

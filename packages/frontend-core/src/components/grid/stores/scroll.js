@@ -20,8 +20,15 @@ export const createStores = () => {
 }
 
 export const deriveStores = context => {
-  const { rows, visibleColumns, stickyColumn, rowHeight, width, height } =
-    context
+  const {
+    rows,
+    visibleColumns,
+    stickyColumn,
+    rowHeight,
+    width,
+    height,
+    buttonColumnWidth,
+  } = context
 
   // Memoize store primitives
   const stickyColumnWidth = derived(stickyColumn, $col => $col?.width || 0, 0)
@@ -40,9 +47,10 @@ export const deriveStores = context => {
 
   // Derive horizontal limits
   const contentWidth = derived(
-    [visibleColumns, stickyColumnWidth],
-    ([$visibleColumns, $stickyColumnWidth]) => {
-      let width = GutterWidth + Padding + $stickyColumnWidth
+    [visibleColumns, stickyColumnWidth, buttonColumnWidth],
+    ([$visibleColumns, $stickyColumnWidth, $buttonColumnWidth]) => {
+      const space = Math.max(Padding, $buttonColumnWidth - 1)
+      let width = GutterWidth + space + $stickyColumnWidth
       $visibleColumns.forEach(col => {
         width += col.width
       })

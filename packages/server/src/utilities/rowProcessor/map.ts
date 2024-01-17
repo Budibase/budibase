@@ -46,23 +46,23 @@ export const TYPE_TRANSFORM_MAP: any = {
     parse: parseArrayString,
   },
   [FieldTypes.STRING]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.BARCODEQR]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.FORMULA]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.LONGFORM]: {
-    "": "",
-    [null]: "",
+    "": null,
+    [null]: null,
     [undefined]: undefined,
   },
   [FieldTypes.NUMBER]: {
@@ -70,6 +70,11 @@ export const TYPE_TRANSFORM_MAP: any = {
     [null]: null,
     [undefined]: undefined,
     parse: n => parseFloat(n),
+  },
+  [FieldTypes.BIGINT]: {
+    "": null,
+    [null]: null,
+    [undefined]: undefined,
   },
   [FieldTypes.DATETIME]: {
     "": null,

@@ -179,7 +179,7 @@ export class ScreenStore extends BudiStore {
    * screen id to ensure that it is selected in the builder
    *
    * @param {object} screen
-   * @returns
+   * @returns {object}
    */
   async saveScreen(screen) {
     const appState = get(appStore)
@@ -263,6 +263,7 @@ export class ScreenStore extends BudiStore {
     let clone = cloneDeep(screen)
     const result = patchFn(clone)
 
+    // An explicit false result means skip this change
     if (result === false) {
       return
     }

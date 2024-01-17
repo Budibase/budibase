@@ -16,6 +16,7 @@
   export let beepFrequency
   export let customFrequency
   export let preferredCamera
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -38,6 +39,7 @@
   {validation}
   {defaultValue}
   {type}
+  {helpText}
   bind:fieldState
   bind:fieldApi
 >

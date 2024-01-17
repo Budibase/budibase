@@ -11,6 +11,7 @@
   export let step = 1
   export let disabled = false
   export let error = null
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -19,6 +20,6 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <Slider {disabled} {value} {min} {max} {step} on:change={onChange} />
 </Field>

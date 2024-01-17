@@ -1,6 +1,7 @@
 import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import env from "../../../../environment"
 import supertest from "supertest"
+
 export * as structures from "../../../../tests/utilities/structures"
 
 function user() {

@@ -1,4 +1,5 @@
 import { default as ElasticSearchIntegration } from "../elasticsearch"
+
 jest.mock("@elastic/elasticsearch")
 
 class TestConfiguration {

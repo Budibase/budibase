@@ -1,0 +1,35 @@
+name: OSS contributor checks
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 8,16 * * 1-5" # on weekdays at 8am and 4pm
+
+jobs:
+  run-checks:
+    name: Publish server and worker docker images
+    uses: ./.github/workflows/budibase_ci.yml
+    with:
+      run_as_oss: true
+    secrets: inherit
+
+  notify-error:
+    needs: ["run-checks"]
+    if: ${{ failure() }}
+    name: Notify error
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set commit SHA
+        id: set_sha
+        run: echo "::set-output name=sha::$(git rev-parse --short ${{ github.sha }})"
+
+      - name: Notify error
+        uses: tsickert/discord-webhook@v5.3.0
+        with:
+          webhook-url: ${{ secrets.OSS_CHECKS_WEBHOOK_URL }}
+          embed-title: 🚨 OSS checks failed in master
+          embed-url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          embed-description: |
+            Git sha: `${{ steps.set_sha.outputs.sha }}`

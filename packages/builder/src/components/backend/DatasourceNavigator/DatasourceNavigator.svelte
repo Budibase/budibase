@@ -1,5 +1,6 @@
 <script>
   import { goto, isActive, params } from "@roxi/routify"
+  import { Layout } from "@budibase/bbui"
   import { BUDIBASE_INTERNAL_DB_ID } from "constants/backend"
   import { datasources, queries, tables, views, viewsV2 } from "stores/builder"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
@@ -14,8 +15,11 @@
   import IntegrationIcon from "./IntegrationIcon.svelte"
   import { TableNames } from "constants"
   import { userSelectedResourceMap, database } from "stores/builder"
+  import { enrichDatasources } from "./datasourceUtils"
+  import { onMount } from "svelte"
 
-  let openDataSources = []
+  export let searchTerm
+  let toggledDatasources = {}
 
   $: enrichedDataSources = enrichDatasources(
     $datasources,
@@ -25,52 +29,9 @@
     $queries,
     $views,
     $viewsV2,
-    openDataSources
+    toggledDatasources,
+    searchTerm
   )
-  $: openDataSource = enrichedDataSources.find(x => x.open)
-  $: {
-    // Ensure the open datasource is always actually open
-    if (openDataSource) {
-      openNode(openDataSource)
-    }
-  }
-
-  const enrichDatasources = (
-    datasources,
-    params,
-    isActive,
-    tables,
-    queries,
-    views,
-    viewsV2,
-    openDataSources
-  ) => {
-    if (!datasources?.list?.length) {
-      return []
-    }
-    return datasources.list.map(datasource => {
-      const selected =
-        isActive("./datasource") &&
-        datasources.selectedDatasourceId === datasource._id
-      const open = openDataSources.includes(datasource._id)
-      const containsSelected = containsActiveEntity(
-        datasource,
-        params,
-        isActive,
-        tables,
-        queries,
-        views,
-        viewsV2
-      )
-      const onlySource = datasources.list.length === 1
-      return {
-        ...datasource,
-        selected,
-        containsSelected,
-        open: selected || open || containsSelected || onlySource,
-      }
-    })
-  }
 
   function selectDatasource(datasource) {
     openNode(datasource)
@@ -84,102 +45,42 @@
     }
   }
 
-  function closeNode(datasource) {
-    openDataSources = openDataSources.filter(id => datasource._id !== id)
-  }
-
   function openNode(datasource) {
-    if (!openDataSources.includes(datasource._id)) {
-      openDataSources = [...openDataSources, datasource._id]
-    }
+    toggledDatasources[datasource._id] = true
   }
 
   function toggleNode(datasource) {
-    const isOpen = openDataSources.includes(datasource._id)
-    if (isOpen) {
-      closeNode(datasource)
-    } else {
-      openNode(datasource)
-    }
+    toggledDatasources[datasource._id] = !datasource.open
   }
 
-  const containsActiveEntity = (
-    datasource,
-    params,
-    isActive,
-    tables,
-    queries,
-    views,
-    viewsV2
-  ) => {
-    // Check for being on a datasource page
-    if (params.datasourceId === datasource._id) {
-      return true
-    }
+  const appUsersTableName = "App users"
+  $: showAppUsersTable =
+    !searchTerm ||
+    appUsersTableName.toLowerCase().indexOf(searchTerm.toLowerCase()) > -1
 
-    // Check for hardcoded datasource edge cases
-    if (
-      isActive("./datasource/bb_internal") &&
-      datasource._id === "bb_internal"
-    ) {
-      return true
+  onMount(() => {
+    if ($tables.selected) {
+      toggledDatasources[$tables.selected.sourceId] = true
     }
-    if (
-      isActive("./datasource/datasource_internal_bb_default") &&
-      datasource._id === "datasource_internal_bb_default"
-    ) {
-      return true
-    }
+  })
 
-    // Check for a matching query
-    if (params.queryId) {
-      const query = queries.list?.find(q => q._id === params.queryId)
-      return datasource._id === query?.datasourceId
-    }
-
-    // If there are no entities it can't contain anything
-    if (!datasource.entities) {
-      return false
-    }
-
-    // Get a list of table options
-    let options = datasource.entities
-    if (!Array.isArray(options)) {
-      options = Object.values(options)
-    }
-
-    // Check for a matching table
-    if (params.tableId) {
-      const selectedTable = tables.selected?._id
-      return options.find(x => x._id === selectedTable) != null
-    }
-
-    // Check for a matching view
-    const selectedView = views.selected?.name
-    const viewTable = options.find(table => {
-      return table.views?.[selectedView] != null
-    })
-    if (viewTable) {
-      return true
-    }
-
-    // Check for a matching viewV2
-    const viewV2Table = options.find(x => x._id === viewsV2.selected?.tableId)
-    return viewV2Table != null
-  }
+  $: showNoResults =
+    searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
 </script>
 
 {#if $database?._id}
   <div class="hierarchy-items-container">
-    <NavItem
-      icon="UserGroup"
-      text="App users"
-      selected={$isActive("./table/:tableId") &&
-        $tables.selected?._id === TableNames.USERS}
-      on:click={() => selectTable(TableNames.USERS)}
-      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
-    />
-    {#each enrichedDataSources as datasource}
+    {#if showAppUsersTable}
+      <NavItem
+        icon="UserGroup"
+        text={appUsersTableName}
+        selected={$isActive("./table/:tableId") &&
+          $tables.selected?._id === TableNames.USERS}
+        on:click={() => selectTable(TableNames.USERS)}
+        selectedBy={$userSelectedResourceMap[TableNames.USERS]}
+      />
+    {/if}
+    {#each enrichedDataSources.filter(ds => ds.show) as datasource}
       <NavItem
         border
         text={datasource.name}
@@ -203,8 +104,8 @@
       </NavItem>
 
       {#if datasource.open}
-        <TableNavigator sourceId={datasource._id} {selectTable} />
-        {#each $queries.list.filter(query => query.datasourceId === datasource._id) as query}
+        <TableNavigator tables={datasource.tables} {selectTable} />
+        {#each datasource.queries as query}
           <NavItem
             indentLevel={1}
             icon="SQLQuery"
@@ -221,6 +122,13 @@
         {/each}
       {/if}
     {/each}
+    {#if showNoResults}
+      <Layout paddingY="none" paddingX="L">
+        <div class="no-results">
+          There aren't any datasources matching that name
+        </div>
+      </Layout>
+    {/if}
   </div>
 {/if}
 
@@ -232,5 +140,9 @@
     display: grid;
     place-items: center;
     flex: 0 0 24px;
+  }
+
+  .no-results {
+    color: var(--spectrum-global-color-gray-600);
   }
 </style>

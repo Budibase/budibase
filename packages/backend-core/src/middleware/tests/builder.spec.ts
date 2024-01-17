@@ -5,6 +5,7 @@ import { structures } from "../../../tests"
 import { ContextUser, ServiceType } from "@budibase/types"
 import { doInAppContext } from "../../context"
 import env from "../../environment"
+
 env._set("SERVICE_TYPE", ServiceType.APPS)
 
 const appId = "app_aaa"

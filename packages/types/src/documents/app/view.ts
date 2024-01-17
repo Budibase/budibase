@@ -1,5 +1,24 @@
 import { SearchFilter, SortOrder, SortType } from "../../api"
 import { UIFieldMetadata } from "./table"
+import { Document } from "../document"
+import { DBView } from "../../sdk"
+
+export type ViewTemplateOpts = {
+  field: string
+  tableId: string
+  groupBy: string
+  filters: ViewFilter[]
+  schema: any
+  calculation: string
+  groupByMulti?: boolean
+}
+
+export interface InMemoryView extends Document {
+  view: DBView
+  name: string
+  tableId: string
+  groupBy?: string
+}
 
 export interface View {
   name?: string
@@ -10,7 +29,7 @@ export interface View {
   calculation?: ViewCalculation
   map?: string
   reduce?: any
-  meta?: Record<string, any>
+  meta?: ViewTemplateOpts
 }
 
 export interface ViewV2 {

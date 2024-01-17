@@ -15,6 +15,7 @@
     getEventContextBindings,
     getActionBindings,
     makeStateBinding,
+    updateReferencesInObject,
   } from "builder/dataBinding"
   import { cloneDeep } from "lodash/fp"
 
@@ -30,6 +31,7 @@
 
   let actionQuery
   let selectedAction = actions?.length ? actions[0] : null
+  let originalActionIndex
 
   const setUpdateActions = actions => {
     return actions
@@ -115,6 +117,14 @@
     if (isSelected) {
       selectedAction = actions?.length ? actions[0] : null
     }
+
+    // Update action binding references
+    updateReferencesInObject({
+      obj: actions,
+      modifiedIndex: index,
+      action: "delete",
+      label: "actions",
+    })
   }
 
   const toggleActionList = () => {
@@ -137,6 +147,7 @@
 
   const selectAction = action => () => {
     selectedAction = action
+    originalActionIndex = actions.findIndex(item => item.id === action.id)
   }
 
   const onAddAction = actionType => {
@@ -146,9 +157,29 @@
 
   function handleDndConsider(e) {
     actions = e.detail.items
+
+    // set the initial index of the action being dragged
+    if (e.detail.info.trigger === "draggedEntered") {
+      originalActionIndex = actions.findIndex(
+        action => action.id === e.detail.info.id
+      )
+    }
   }
   function handleDndFinalize(e) {
     actions = e.detail.items
+
+    // Update action binding references
+    updateReferencesInObject({
+      obj: actions,
+      modifiedIndex: actions.findIndex(
+        action => action.id === e.detail.info.id
+      ),
+      action: "move",
+      label: "actions",
+      originalIndex: originalActionIndex,
+    })
+
+    originalActionIndex = -1
   }
 
   const getAllBindings = (actionBindings, eventContextBindings, actions) => {
@@ -289,7 +320,7 @@
   </Layout>
   <Layout noPadding>
     {#if selectedActionComponent && !showAvailableActions}
-      {#key selectedAction.id}
+      {#key (selectedAction.id, originalActionIndex)}
         <div class="selected-action-container">
           <svelte:component
             this={selectedActionComponent}

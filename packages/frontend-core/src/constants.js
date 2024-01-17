@@ -20,42 +20,31 @@ export const TableNames = {
 export const BudibaseRoles = {
   AppUser: "appUser",
   Developer: "developer",
+  Creator: "creator",
   Admin: "admin",
 }
 
 export const BudibaseRoleOptionsOld = [
-  { label: "Developer", value: BudibaseRoles.Developer },
-  { label: "Member", value: BudibaseRoles.AppUser },
-  { label: "Admin", value: BudibaseRoles.Admin },
+  {
+    label: "Developer",
+    value: BudibaseRoles.Developer,
+  },
 ]
 export const BudibaseRoleOptions = [
-  { label: "Member", value: BudibaseRoles.AppUser },
-  { label: "Admin", value: BudibaseRoles.Admin },
-]
-
-export const BudibaseRoleOptionsNew = [
   {
-    label: "Admin",
-    value: "admin",
+    label: "Account admin",
+    value: BudibaseRoles.Admin,
     subtitle: "Has full access to all apps and settings in your account",
   },
   {
-    label: "Member",
-    value: "appUser",
-    subtitle: "Can only view apps they have access to",
+    label: "Creator",
+    value: BudibaseRoles.Creator,
+    subtitle: "Can create and edit apps they have access to",
   },
-]
-
-export const BuilderRoleDescriptions = [
   {
+    label: "App user",
     value: BudibaseRoles.AppUser,
-    icon: "User",
-    label: "App user - Only has access to published apps",
-  },
-  {
-    value: BudibaseRoles.Admin,
-    icon: "Draw",
-    label: "Admin - Full access",
+    subtitle: "Can only use published apps they have access to",
   },
 ]
 

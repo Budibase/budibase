@@ -9,6 +9,7 @@ mocks.fetch.enable()
 // mock all dates to 2020-01-01T00:00:00.000Z
 // use tk.reset() to use real dates in individual tests
 import tk from "timekeeper"
+
 tk.freeze(mocks.date.MOCK_DATE)
 
 if (!process.env.DEBUG) {

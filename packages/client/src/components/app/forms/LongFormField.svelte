@@ -13,6 +13,7 @@
   export let defaultValue = ""
   export let format = "auto"
   export let onChange
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -62,6 +63,7 @@
   {readonly}
   {validation}
   {defaultValue}
+  {helpText}
   type="longform"
   bind:fieldState
   bind:fieldApi

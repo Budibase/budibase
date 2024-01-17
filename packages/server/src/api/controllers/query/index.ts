@@ -9,7 +9,7 @@ import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { ConfigType, Query, UserCtx } from "@budibase/types"
+import { ConfigType, Query, UserCtx, SessionCookie } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -113,7 +113,7 @@ function getOAuthConfigCookieId(ctx: UserCtx) {
 }
 
 function getAuthConfig(ctx: UserCtx) {
-  const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
+  const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
@@ -161,11 +161,8 @@ export async function preview(ctx: UserCtx) {
         auth: { ...authConfigCtx },
       },
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
-      datasourceId: datasource._id,
-    })
+    const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
     const schemaFields: any = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
@@ -259,14 +256,8 @@ async function execute(
       },
       schema: query.schema,
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
-      runFn,
-      {
-        datasourceId: datasource._id,
-      }
-    )
+    const { rows, pagination, extra, info } = (await Runner.run(inputs)) as any
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

@@ -15,6 +15,7 @@
   const BYTES_IN_MB = 1000000
   const FILE_SIZE_LIMIT = BYTES_IN_MB * 5
   const MAX_USERS_UPLOAD_LIMIT = 1000
+
   export let createUsersFromCsv
 
   let files = []
@@ -22,13 +23,16 @@
   let userEmails = []
   let userGroups = []
   let usersRole = null
-  $: invalidEmails = []
 
+  $: invalidEmails = []
   $: userCount = $licensing.userCount + userEmails.length
   $: exceed = licensing.usersLimitExceeded(userCount)
-
   $: importDisabled =
     !userEmails.length || !validEmails(userEmails) || !usersRole || exceed
+  $: roleOptions = Constants.BudibaseRoleOptions.map(option => ({
+    ...option,
+    label: `${option.label} - ${option.subtitle}`,
+  }))
 
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
@@ -100,10 +104,7 @@
       users. Upgrade your plan to add more users
     </div>
   {/if}
-  <RadioGroup
-    bind:value={usersRole}
-    options={Constants.BuilderRoleDescriptions}
-  />
+  <RadioGroup bind:value={usersRole} options={roleOptions} />
 
   {#if $licensing.groupsEnabled}
     <Multiselect

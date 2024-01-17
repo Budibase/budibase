@@ -1,5 +1,7 @@
 const AWS = require("aws-sdk")
+
 import { default as S3Integration } from "../s3"
+
 jest.mock("aws-sdk")
 
 class TestConfiguration {

@@ -10,12 +10,16 @@ import {
   DatabaseDeleteIndexOpts,
   Document,
   isDocument,
+  RowResponse,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
 import { getPouchDB } from "./pouchDB"
 import { WriteStream, ReadStream } from "fs"
 import { newid } from "../../docIds/newid"
+import { DDInstrumentedDatabase } from "../instrumentation"
+
+const DATABASE_NOT_FOUND = "Database does not exist."
 
 function buildNano(couchInfo: { url: string; cookie: string }) {
   return Nano({
@@ -29,15 +33,15 @@ function buildNano(couchInfo: { url: string; cookie: string }) {
   })
 }
 
+type DBCall<T> = () => Promise<T>
+
 export function DatabaseWithConnection(
   dbName: string,
   connection: string,
   opts?: DatabaseOpts
 ) {
-  if (!connection) {
-    throw new Error("Must provide connection details")
-  }
-  return new DatabaseImpl(dbName, opts, connection)
+  const db = new DatabaseImpl(dbName, opts, connection)
+  return new DDInstrumentedDatabase(db)
 }
 
 export class DatabaseImpl implements Database {
@@ -48,10 +52,7 @@ export class DatabaseImpl implements Database {
 
   private readonly couchInfo = getCouchInfo()
 
-  constructor(dbName?: string, opts?: DatabaseOpts, connection?: string) {
-    if (dbName == null) {
-      throw new Error("Database name cannot be undefined.")
-    }
+  constructor(dbName: string, opts?: DatabaseOpts, connection?: string) {
     this.name = dbName
     this.pouchOpts = opts || {}
     if (connection) {
@@ -81,7 +82,11 @@ export class DatabaseImpl implements Database {
     return this.instanceNano || DatabaseImpl.nano
   }
 
-  async checkSetup() {
+  private getDb() {
+    return this.nano().db.use(this.name)
+  }
+
+  private async checkAndCreateDb() {
     let shouldCreate = !this.pouchOpts?.skip_setup
     // check exists in a lightweight fashion
     let exists = await this.exists()
@@ -98,45 +103,84 @@ export class DatabaseImpl implements Database {
         }
       }
     }
-    return this.nano().db.use(this.name)
+    return this.getDb()
   }
 
-  private async updateOutput(fnc: any) {
+  // this function fetches the DB and handles if DB creation is needed
+  private async performCall<T>(
+    call: (db: Nano.DocumentScope<any>) => Promise<DBCall<T>> | DBCall<T>
+  ): Promise<any> {
+    const db = this.getDb()
+    const fnc = await call(db)
     try {
       return await fnc()
     } catch (err: any) {
-      if (err.statusCode) {
+      if (err.statusCode === 404 && err.reason === DATABASE_NOT_FOUND) {
+        await this.checkAndCreateDb()
+        return await this.performCall(call)
+      } else if (err.statusCode) {
         err.status = err.statusCode
       }
       throw err
     }
   }
 
-  async get<T>(id?: string): Promise<T | any> {
-    const db = await this.checkSetup()
-    if (!id) {
-      throw new Error("Unable to get doc without a valid _id.")
+  async get<T extends Document>(id?: string): Promise<T> {
+    return this.performCall(db => {
+      if (!id) {
+        throw new Error("Unable to get doc without a valid _id.")
+      }
+      return () => db.get(id)
+    })
+  }
+
+  async getMultiple<T extends Document>(
+    ids: string[],
+    opts?: { allowMissing?: boolean }
+  ): Promise<T[]> {
+    // get unique
+    ids = [...new Set(ids)]
+    const response = await this.allDocs<T>({
+      keys: ids,
+      include_docs: true,
+    })
+    const rowUnavailable = (row: RowResponse<T>) => {
+      // row is deleted - key lookup can return this
+      if (row.doc == null || ("deleted" in row.value && row.value.deleted)) {
+        return true
+      }
+      return row.error === "not_found"
     }
-    return this.updateOutput(() => db.get(id))
+
+    const rows = response.rows.filter(row => !rowUnavailable(row))
+    const someMissing = rows.length !== response.rows.length
+    // some were filtered out - means some missing
+    if (!opts?.allowMissing && someMissing) {
+      const missing = response.rows.filter(row => rowUnavailable(row))
+      const missingIds = missing.map(row => row.key).join(", ")
+      throw new Error(`Unable to get documents: ${missingIds}`)
+    }
+    return rows.map(row => row.doc!)
   }
 
   async remove(idOrDoc: string | Document, rev?: string) {
-    const db = await this.checkSetup()
-    let _id: string
-    let _rev: string
+    return this.performCall(db => {
+      let _id: string
+      let _rev: string
 
-    if (isDocument(idOrDoc)) {
-      _id = idOrDoc._id!
-      _rev = idOrDoc._rev!
-    } else {
-      _id = idOrDoc
-      _rev = rev!
-    }
+      if (isDocument(idOrDoc)) {
+        _id = idOrDoc._id!
+        _rev = idOrDoc._rev!
+      } else {
+        _id = idOrDoc
+        _rev = rev!
+      }
 
-    if (!_id || !_rev) {
-      throw new Error("Unable to remove doc without a valid _id and _rev.")
-    }
-    return this.updateOutput(() => db.destroy(_id, _rev))
+      if (!_id || !_rev) {
+        throw new Error("Unable to remove doc without a valid _id and _rev.")
+      }
+      return () => db.destroy(_id, _rev)
+    })
   }
 
   async post(document: AnyDocument, opts?: DatabasePutOpts) {
@@ -150,43 +194,49 @@ export class DatabaseImpl implements Database {
     if (!document._id) {
       throw new Error("Cannot store document without _id field.")
     }
-    const db = await this.checkSetup()
-    if (!document.createdAt) {
-      document.createdAt = new Date().toISOString()
-    }
-    document.updatedAt = new Date().toISOString()
-    if (opts?.force && document._id) {
-      try {
-        const existing = await this.get(document._id)
-        if (existing) {
-          document._rev = existing._rev
-        }
-      } catch (err: any) {
-        if (err.status !== 404) {
-          throw err
+    return this.performCall(async db => {
+      if (!document.createdAt) {
+        document.createdAt = new Date().toISOString()
+      }
+      document.updatedAt = new Date().toISOString()
+      if (opts?.force && document._id) {
+        try {
+          const existing = await this.get(document._id)
+          if (existing) {
+            document._rev = existing._rev
+          }
+        } catch (err: any) {
+          if (err.status !== 404) {
+            throw err
+          }
         }
       }
-    }
-    return this.updateOutput(() => db.insert(document))
+      return () => db.insert(document)
+    })
   }
 
   async bulkDocs(documents: AnyDocument[]) {
-    const db = await this.checkSetup()
-    return this.updateOutput(() => db.bulk({ docs: documents }))
+    return this.performCall(db => {
+      return () => db.bulk({ docs: documents })
+    })
   }
 
-  async allDocs<T>(params: DatabaseQueryOpts): Promise<AllDocsResponse<T>> {
-    const db = await this.checkSetup()
-    return this.updateOutput(() => db.list(params))
+  async allDocs<T extends Document>(
+    params: DatabaseQueryOpts
+  ): Promise<AllDocsResponse<T>> {
+    return this.performCall(db => {
+      return () => db.list(params)
+    })
   }
 
-  async query<T>(
+  async query<T extends Document>(
     viewName: string,
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
-    const db = await this.checkSetup()
-    const [database, view] = viewName.split("/")
-    return this.updateOutput(() => db.view(database, view, params))
+    return this.performCall(db => {
+      const [database, view] = viewName.split("/")
+      return () => db.view(database, view, params)
+    })
   }
 
   async destroy() {
@@ -203,8 +253,9 @@ export class DatabaseImpl implements Database {
   }
 
   async compact() {
-    const db = await this.checkSetup()
-    return this.updateOutput(() => db.compact())
+    return this.performCall(db => {
+      return () => db.compact()
+    })
   }
 
   // All below functions are in-frequently called, just utilise PouchDB

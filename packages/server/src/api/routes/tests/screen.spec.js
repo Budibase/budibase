@@ -36,7 +36,7 @@ describe("/screens", () => {
   })
 
   describe("save", () => {
-    const saveScreen = async (screen) => {
+    const saveScreen = async screen => {
       const res = await request
         .post(`/api/screens`)
         .send(screen)

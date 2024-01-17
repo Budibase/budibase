@@ -5,7 +5,7 @@ export const buildViewV2Endpoints = API => ({
    */
   fetchDefinition: async viewId => {
     return await API.get({
-      url: `/api/v2/views/${viewId}`,
+      url: `/api/v2/views/${encodeURIComponent(viewId)}`,
     })
   },
   /**
@@ -24,7 +24,7 @@ export const buildViewV2Endpoints = API => ({
    */
   update: async view => {
     return await API.put({
-      url: `/api/v2/views/${view.id}`,
+      url: `/api/v2/views/${encodeURIComponent(view.id)}`,
       body: view,
     })
   },
@@ -50,7 +50,7 @@ export const buildViewV2Endpoints = API => ({
     sortType,
   }) => {
     return await API.post({
-      url: `/api/v2/views/${viewId}/search`,
+      url: `/api/v2/views/${encodeURIComponent(viewId)}/search`,
       body: {
         query,
         paginate,
@@ -67,6 +67,8 @@ export const buildViewV2Endpoints = API => ({
    * @param viewId the id of the view
    */
   delete: async viewId => {
-    return await API.delete({ url: `/api/v2/views/${viewId}` })
+    return await API.delete({
+      url: `/api/v2/views/${encodeURIComponent(viewId)}`,
+    })
   },
 })

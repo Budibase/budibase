@@ -1,8 +1,7 @@
 <script>
-  import { Icon, notifications } from "@budibase/bbui"
+  import { Icon, notifications, ModalContent } from "@budibase/bbui"
   import { automationStore, selectedAutomation } from "stores/builder"
   import WebhookDisplay from "./WebhookDisplay.svelte"
-  import { ModalContent } from "@budibase/bbui"
   import { onMount, onDestroy } from "svelte"
 
   const POLL_RATE_MS = 2500

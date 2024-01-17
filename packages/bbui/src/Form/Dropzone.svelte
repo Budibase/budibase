@@ -17,6 +17,7 @@
   export let fileTags = []
   export let maximum = undefined
   export let compact = false
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -25,7 +26,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <CoreDropzone
     {error}
     {disabled}

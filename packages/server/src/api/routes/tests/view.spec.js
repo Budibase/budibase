@@ -31,18 +31,18 @@ describe("/views", () => {
   beforeAll(async () => {
     await config.init()
   })
-  
-  beforeEach(async() => {
+
+  beforeEach(async () => {
     table = await config.createTable(priceTable())
   })
 
-  const saveView = async (view) => {
+  const saveView = async view => {
     const viewToSave = {
       name: "TestView",
       field: "Price",
       calculation: "stats",
       tableId: table._id,
-      ...view
+      ...view,
     }
     return request
       .post(`/api/views`)
@@ -53,7 +53,6 @@ describe("/views", () => {
   }
 
   describe("create", () => {
-
     it("returns a success message when the view is successfully created", async () => {
       const res = await saveView()
       expect(res.body.tableId).toBe(table._id)
@@ -81,11 +80,13 @@ describe("/views", () => {
 
       const res = await saveView({
         calculation: null,
-        filters: [{
-          value: "1",
-          condition: "EQUALS",
-          key: "price"
-        }],
+        filters: [
+          {
+            value: "1",
+            condition: "EQUALS",
+            key: "price",
+          },
+        ],
       })
 
       expect(res.body.tableId).toBe(table._id)
@@ -199,18 +200,26 @@ describe("/views", () => {
     })
 
     it("updates a view filter", async () => {
-      await saveView({ filters: [{
-        value: "1",
-        condition: "EQUALS",
-        key: "price"
-      }] })
+      await saveView({
+        filters: [
+          {
+            value: "1",
+            condition: "EQUALS",
+            key: "price",
+          },
+        ],
+      })
       jest.clearAllMocks()
 
-      await saveView({ filters: [{
-        value: "2",
-        condition: "EQUALS",
-        key: "price"
-      }] })
+      await saveView({
+        filters: [
+          {
+            value: "2",
+            condition: "EQUALS",
+            key: "price",
+          },
+        ],
+      })
 
       expect(events.view.created).not.toBeCalled()
       expect(events.view.updated).toBeCalledTimes(1)
@@ -223,11 +232,15 @@ describe("/views", () => {
     })
 
     it("deletes a view filter", async () => {
-      await saveView({ filters: [{
-        value: "1",
-        condition: "EQUALS",
-        key: "price"
-      }] })
+      await saveView({
+        filters: [
+          {
+            value: "1",
+            condition: "EQUALS",
+            key: "price",
+          },
+        ],
+      })
       jest.clearAllMocks()
 
       await saveView({ filters: [] })
@@ -344,7 +357,6 @@ describe("/views", () => {
   })
 
   describe("exportView", () => {
-
     beforeEach(() => {
       jest.clearAllMocks()
     })
@@ -362,14 +374,14 @@ describe("/views", () => {
         .expect(200)
     }
 
-    const assertJsonExport = (res) => {
+    const assertJsonExport = res => {
       const rows = JSON.parse(res.text)
       expect(rows.length).toBe(1)
       expect(rows[0].name).toBe("test-name")
       expect(rows[0].description).toBe("ùúûü")
     }
 
-    const assertCSVExport = (res) => {
+    const assertCSVExport = res => {
       expect(res.text).toBe(`"name","description"\n"test-name","ùúûü"`)
     }
 

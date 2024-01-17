@@ -1,13 +1,8 @@
 import * as linkRows from "../../../db/linkedRows"
-import {
-  generateRowID,
-  getMultiIDParams,
-  getTableIDFromRowID,
-  InternalTables,
-} from "../../../db/utils"
+import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
-  cleanupAttachments,
+  AttachmentCleanup,
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
@@ -84,53 +79,14 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     table,
   })) as Row
   // check if any attachments removed
-  await cleanupAttachments(table, { oldRow, row })
+  await AttachmentCleanup.rowUpdate(table, { row, oldRow })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
     ctx.request.body = row as any
-    await userController.updateMetadata(ctx)
+    await userController.updateMetadata(ctx as any)
     return { row: ctx.body as Row, table }
   }
-
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
-    updateFormula: true,
-  })
-}
-
-export async function save(ctx: UserCtx) {
-  let inputs = ctx.request.body
-  inputs.tableId = utils.getTableId(ctx)
-
-  if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
-  }
-
-  // this returns the table and row incase they have been updated
-  const dbTable = await sdk.tables.getTable(inputs.tableId)
-
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
-  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
-
-  const validateResult = await sdk.rows.utils.validate({
-    row,
-    table,
-  })
-
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
-  // make sure link rows are up to date
-  row = (await linkRows.updateLinks({
-    eventType: linkRows.EventType.ROW_SAVE,
-    row,
-    tableId: row.tableId,
-    table,
-  })) as Row
 
   return finaliseRow(table, row, {
     oldTable: dbTable,
@@ -170,7 +126,7 @@ export async function destroy(ctx: UserCtx) {
     tableId,
   })
   // remove any attachments that were on the row from object storage
-  await cleanupAttachments(table, { row })
+  await AttachmentCleanup.rowDelete(table, [row])
   // remove any static formula
   await updateRelatedFormula(table, row)
 
@@ -221,7 +177,7 @@ export async function bulkDestroy(ctx: UserCtx) {
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
-  await cleanupAttachments(table, { rows: processedRows })
+  await AttachmentCleanup.rowDelete(table, processedRows)
   await updateRelatedFormula(table, processedRows)
   await Promise.all(updates)
   return { response: { ok: true }, rows: processedRows }
@@ -233,17 +189,18 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
-  let response = await Promise.all([
+  const [table, row, links] = await Promise.all([
     sdk.tables.getTable(tableId),
     utils.findRow(ctx, tableId, rowId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
-  const table = response[0] as Table
-  const row = response[1] as Row
-  const linkVals = response[2] as LinkDocumentValue[]
+  const linkVals = links as LinkDocumentValue[]
+
   // look up the actual rows based on the ids
-  const params = getMultiIDParams(linkVals.map(linkVal => linkVal.id))
-  let linkedRows = (await db.allDocs(params)).rows.map(row => row.doc)
+  let linkedRows = await db.getMultiple<Row>(
+    linkVals.map(linkVal => linkVal.id),
+    { allowMissing: true }
+  )
 
   // get the linked tables
   const linkTableIds = getLinkedTableIDs(table as Table)

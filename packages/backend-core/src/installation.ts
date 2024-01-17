@@ -1,7 +1,6 @@
 import { newid } from "./utils"
 import * as events from "./events"
-import { StaticDatabases } from "./db"
-import { doWithDB } from "./db"
+import { StaticDatabases, doWithDB } from "./db"
 import { Installation, IdentityType, Database } from "@budibase/types"
 import * as context from "./context"
 import semver from "semver"

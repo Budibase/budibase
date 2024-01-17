@@ -1,5 +1,8 @@
 <script>
-  import { RelationshipType } from "constants/backend"
+  import {
+    RelationshipType,
+    PrettyRelationshipDefinitions,
+  } from "constants/backend"
   import {
     keepOpen,
     Button,
@@ -8,13 +11,12 @@
     Select,
     Detail,
     Body,
+    Helpers,
   } from "@budibase/bbui"
   import { tables } from "stores/builder"
-  import { Helpers } from "@budibase/bbui"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
-  import { PrettyRelationshipDefinitions } from "constants/backend"
 
   export let save
   export let datasource
@@ -32,6 +34,10 @@
     [RelationshipType.MANY_TO_ONE]: {
       part1: PrettyRelationshipDefinitions.MANY,
       part2: PrettyRelationshipDefinitions.ONE,
+    },
+    [RelationshipType.ONE_TO_MANY]: {
+      part1: PrettyRelationshipDefinitions.ONE,
+      part2: PrettyRelationshipDefinitions.MANY,
     },
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
@@ -58,7 +64,7 @@
   let fromPrimary, fromForeign, fromColumn, toColumn
 
   let throughId, throughToKey, throughFromKey
-  let isManyToMany, isManyToOne, relationshipType
+  let relationshipType
   let hasValidated = false
 
   $: fromId = null
@@ -85,8 +91,9 @@
   $: valid =
     getErrorCount(errors) === 0 && allRequiredAttributesSet(relationshipType)
   $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
-  $: isManyToOne = relationshipType === RelationshipType.MANY_TO_ONE
-
+  $: isManyToOne =
+    relationshipType === RelationshipType.MANY_TO_ONE ||
+    relationshipType === RelationshipType.ONE_TO_MANY
   function getTable(id) {
     return plusTables.find(table => table._id === id)
   }

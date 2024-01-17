@@ -1,5 +1,5 @@
 <script>
-  import { Modal, keepOpen } from "@budibase/bbui"
+  import { Modal, keepOpen, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { IntegrationTypes } from "constants/backend"
   import GoogleAuthPrompt from "./GoogleAuthPrompt.svelte"
@@ -11,7 +11,6 @@
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "stores/selectors"
-  import { notifications } from "@budibase/bbui"
 
   export let loading = false
   const store = createDatasourceCreationStore()

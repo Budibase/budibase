@@ -1,8 +1,4 @@
-import {
-  CreateUserParams,
-  SearchInputParams,
-  User,
-} from "@budibase/server/api/controllers/public/mapping/types"
+import { CreateUserParams, SearchInputParams, User } from "../../../types"
 import { Response } from "node-fetch"
 import BudibasePublicAPIClient from "../BudibasePublicAPIClient"
 import * as fixtures from "../../fixtures"

@@ -41,6 +41,7 @@
   }
 
   .content {
+    width: 100vw;
     display: flex;
     flex-direction: row;
     justify-content: flex-start;

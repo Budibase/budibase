@@ -1,0 +1,117 @@
+{{ template "chart.header" . }}
+{{ template "chart.description" . }}
+
+## Prerequisites
+
+- `helm` v3 or above
+- Kubernetes 1.4+
+- A storage controller (if you want to use persistent storage)
+- An ingress controller (if you want to define an `Ingress` resource)
+- `metrics-server` (if you want to make use of horizontal pod autoscaling)
+
+## Chart dependencies
+
+This chart depends on the official Apache CouchDB chart. You can see its
+documentation here:
+<https://github.com/apache/couchdb-helm/tree/couchdb-4.3.0/couchdb>.
+
+## Upgrading
+
+### `2.x` to `3.0.0`
+
+We made a number of breaking changes in this release to make the chart more
+idiomatic and easier to use.
+
+1. We no longer bundle `ingress-nginx`. If you were relying on this to supply
+   an ingress controller to your cluster, you will now need to deploy that
+   separately. You'll find guidance for that here:
+   <https://kubernetes.github.io/ingress-nginx/>.
+2. We've upgraded the version of the [CouchDB chart](https://github.com/apache/couchdb-helm)
+   we use from `3.3.4` to `4.3.0`. The primary motivation for this was to align
+   the CouchDB chart used with the CouchDB version used, which has also updated
+   from 3.1.1 to 3.2.1. Additionally, we're moving away from the official CouchDB
+   to one we're building ourselves.
+3. We've separated out the supplied AWS ALB ingress resource for those deploying
+   into EKS. Where previously you enabled this by setting `ingress.enabled: false`
+   and `ingress.aws: true`, you now set `awsAlbIngress.enabled: true` and all
+   configuration for it is under `awsAlbIngress`.
+4. The `HorizontalPodAutoscaler` that was configured at `hpa.enabled: true` has
+   been split into 3 separate HPAs, one for each of `apps`, `worker`, and `proxy`.
+   They are configured at `services.{apps,worker,proxy}.autoscaling`.
+
+## Installing
+
+To install the chart from our repository:
+
+```console
+$ helm repo add budibase https://budibase.github.io/budibase/
+$ helm repo update
+$ helm install --create-namespace --namespace budibase budibase budibase/budibase
+```
+
+To install the chart from this repo:
+
+```console
+$ git clone git@github.com:budibase/budibase.git
+$ cd budibase/charts/budibase
+$ helm install --create-namespace --namespace budibase budibase .
+```
+
+## Example minimal configuration
+
+Here's an example `values.yaml` that would get a Budibase instance running in a home
+cluster using an nginx ingress controller and NFS as cluster storage (basically one of our
+staff's homelabs).
+
+<details>
+
+```yaml
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - host: budibase.local # set this to whatever DNS name you'd use
+      paths:
+        - backend:
+            service:
+              name: proxy-service
+              port:
+                number: 10000
+          path: /
+          pathType: Prefix
+
+couchdb:
+  persistentVolume:
+    enabled: true
+    storageClass: "nfs-client"
+  adminPassword: admin
+
+services:
+  objectStore:
+    storageClass: "nfs-client"
+  redis:
+    storageClass: "nfs-client"
+```
+
+If you wanted to use this when bringing up Budibase in your own cluster, you could save it
+to your hard disk and run the following:
+
+```console
+$ helm install --create-namespace --namespace budibase budibase . -f values.yaml
+```
+
+</details>
+
+## Configuring
+
+{{ template "chart.valuesTable" . }}
+
+## Uninstalling
+
+To uninstall the chart, assuming you named the release `budibase` (both commands in the installation section do so):
+
+```console
+$ helm uninstall --namespace budibase budibase
+```
+
+{{ template "helm-docs.versionFooter" . }}

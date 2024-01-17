@@ -25,12 +25,12 @@ const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
 // utility function to stop this repetition - permissions always stored under roles
 async function getAllDBRoles(db: Database) {
-  const body = await db.allDocs(
+  const body = await db.allDocs<Role>(
     getRoleParams(null, {
       include_docs: true,
     })
   )
-  return body.rows.map(row => row.doc)
+  return body.rows.map(row => row.doc!)
 }
 
 async function updatePermissionOnRole(
@@ -79,7 +79,7 @@ async function updatePermissionOnRole(
     ) {
       rolePermissions[resourceId] =
         typeof rolePermissions[resourceId] === "string"
-          ? [rolePermissions[resourceId]]
+          ? [rolePermissions[resourceId] as unknown as string]
           : []
     }
     // handle the removal/updating the role which has this permission first

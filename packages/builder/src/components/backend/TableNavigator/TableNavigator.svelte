@@ -1,6 +1,6 @@
 <script>
   import {
-    tables,
+    tables as tablesStore,
     views,
     viewsV2,
     userSelectedResourceMap,
@@ -12,14 +12,10 @@
   import NavItem from "components/common/NavItem.svelte"
   import { goto, isActive } from "@roxi/routify"
 
-  export let sourceId
+  export let tables
   export let selectTable
 
-  $: sortedTables = $tables.list
-    .filter(
-      table => table.sourceId === sourceId && table._id !== TableNames.USERS
-    )
-    .sort(alphabetical)
+  $: sortedTables = tables.sort(alphabetical)
 
   const alphabetical = (a, b) => {
     return a.name?.toLowerCase() > b.name?.toLowerCase() ? 1 : -1
@@ -42,7 +38,7 @@
         icon={table._id === TableNames.USERS ? "UserGroup" : "Table"}
         text={table.name}
         selected={$isActive("./table/:tableId") &&
-          $tables.selected?._id === table._id}
+          $tablesStore.selected?._id === table._id}
         on:click={() => selectTable(table._id)}
         selectedBy={$userSelectedResourceMap[table._id]}
       >
@@ -58,7 +54,7 @@
           selected={isViewActive(view, $isActive, $views, $viewsV2)}
           on:click={() => {
             if (view.version === 2) {
-              $goto(`./view/v2/${view.id}`)
+              $goto(`./view/v2/${encodeURIComponent(view.id)}`)
             } else {
               $goto(`./view/v1/${encodeURIComponent(name)}`)
             }

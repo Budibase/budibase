@@ -1,4 +1,4 @@
-import { getMultiIDParams, getGlobalIDFromUserMetadataID } from "../db/utils"
+import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import {
   roles,
   db as dbCore,
@@ -71,69 +71,65 @@ export async function processUser(
   return user
 }
 
-export async function getCachedSelf(ctx: UserCtx, appId: string) {
+export async function getCachedSelf(
+  ctx: UserCtx,
+  appId: string
+): Promise<ContextUser> {
   // this has to be tenant aware, can't depend on the context to find it out
   // running some middlewares before the tenancy causes context to break
   const user = await cache.user.getUser(ctx.user?._id!)
   return processUser(user, { appId })
 }
 
-export async function getRawGlobalUser(userId: string) {
+export async function getRawGlobalUser(userId: string): Promise<User> {
   const db = tenancy.getGlobalDB()
   return db.get<User>(getGlobalIDFromUserMetadataID(userId))
 }
 
-export async function getGlobalUser(userId: string) {
+export async function getGlobalUser(userId: string): Promise<ContextUser> {
   const appId = context.getAppId()
   let user = await getRawGlobalUser(userId)
   return processUser(user, { appId })
 }
 
-export async function getGlobalUsers(
-  userIds?: string[],
-  opts?: { noProcessing?: boolean }
-) {
-  const appId = context.getAppId()
+export async function getRawGlobalUsers(userIds?: string[]): Promise<User[]> {
   const db = tenancy.getGlobalDB()
-  let globalUsers
+  let globalUsers: User[]
   if (userIds) {
-    globalUsers = (await db.allDocs(getMultiIDParams(userIds))).rows.map(
-      row => row.doc
-    )
+    globalUsers = await db.getMultiple<User>(userIds, { allowMissing: true })
   } else {
     globalUsers = (
-      await db.allDocs(
+      await db.allDocs<User>(
         dbCore.getGlobalUserParams(null, {
           include_docs: true,
         })
       )
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
   }
-  globalUsers = globalUsers
+  return globalUsers
     .filter(user => user != null)
     .map(user => {
       delete user.password
       delete user.forceResetPassword
       return user
     })
+}
 
-  if (opts?.noProcessing || !appId) {
-    return globalUsers
-  } else {
-    // pass in the groups, meaning we don't actually need to retrieve them for
-    // each user individually
-    const allGroups = await groups.fetch()
-    return Promise.all(
-      globalUsers.map(user => processUser(user, { groups: allGroups }))
-    )
-  }
+export async function getGlobalUsers(
+  userIds?: string[]
+): Promise<ContextUser[]> {
+  const users = await getRawGlobalUsers(userIds)
+  const allGroups = await groups.fetch()
+  return Promise.all(
+    users.map(user => processUser(user, { groups: allGroups }))
+  )
 }
 
 export async function getGlobalUsersFromMetadata(users: ContextUser[]) {
   const globalUsers = await getGlobalUsers(users.map(user => user._id!))
   return users.map(user => {
     const globalUser = globalUsers.find(
-      globalUser => globalUser && user._id?.includes(globalUser._id)
+      globalUser => globalUser && user._id?.includes(globalUser._id!)
     )
     return {
       ...globalUser,

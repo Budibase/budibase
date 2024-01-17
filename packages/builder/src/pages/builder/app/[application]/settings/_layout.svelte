@@ -4,8 +4,6 @@
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
   import { isOnlyUser } from "stores/builder"
-  import { auth } from "stores/portal"
-  import { sdk } from "@budibase/shared-core"
 
   let deleteModal
 </script>
@@ -46,24 +44,22 @@
             url={$url("./version")}
             active={$isActive("./version")}
           />
-          {#if sdk.users.isGlobalBuilder($auth.user)}
-            <div class="delete-action">
-              <AbsTooltip
-                position={TooltipPosition.Bottom}
-                text={$isOnlyUser
-                  ? null
-                  : "Unavailable - another user is editing this app"}
-              >
-                <SideNavItem
-                  text="Delete app"
-                  disabled={!$isOnlyUser}
-                  on:click={() => {
-                    deleteModal.show()
-                  }}
-                />
-              </AbsTooltip>
-            </div>
-          {/if}
+          <div class="delete-action">
+            <AbsTooltip
+              position={TooltipPosition.Bottom}
+              text={$isOnlyUser
+                ? null
+                : "Unavailable - another user is editing this app"}
+            >
+              <SideNavItem
+                text="Delete app"
+                disabled={!$isOnlyUser}
+                on:click={() => {
+                  deleteModal.show()
+                }}
+              />
+            </AbsTooltip>
+          </div>
         </SideNav>
         <slot />
       </Content>

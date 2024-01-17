@@ -98,17 +98,19 @@ function updateContext(updates: ContextMap): ContextMap {
   return context
 }
 
-async function newContext(updates: ContextMap, task: any) {
+async function newContext<T>(updates: ContextMap, task: () => T) {
+  guardMigration()
+
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
   return Context.run(context, task)
 }
 
-export async function doInAutomationContext(params: {
+export async function doInAutomationContext<T>(params: {
   appId: string
   automationId: string
-  task: any
-}): Promise<any> {
+  task: () => T
+}): Promise<T> {
   const tenantId = getTenantIDFromAppID(params.appId)
   return newContext(
     {
@@ -132,7 +134,7 @@ export async function doInContext(appId: string, task: any): Promise<any> {
 }
 
 export async function doInTenant<T>(
-  tenantId: string | null,
+  tenantId: string | undefined,
   task: () => T
 ): Promise<T> {
   // make sure default always selected in single tenancy
@@ -144,31 +146,35 @@ export async function doInTenant<T>(
   return newContext(updates, task)
 }
 
-export async function doInAppContext(
-  appId: string | null,
-  task: any
-): Promise<any> {
-  if (!appId && !env.isTest()) {
+export async function doInAppContext<T>(
+  appId: string,
+  task: () => T
+): Promise<T> {
+  return _doInAppContext(appId, task)
+}
+
+async function _doInAppContext<T>(
+  appId: string,
+  task: () => T,
+  extraContextSettings?: ContextMap
+): Promise<T> {
+  if (!appId) {
     throw new Error("appId is required")
   }
 
-  let updates: ContextMap
-  if (!appId) {
-    updates = { appId: "" }
-  } else {
-    const tenantId = getTenantIDFromAppID(appId)
-    updates = { appId }
-    if (tenantId) {
-      updates.tenantId = tenantId
-    }
+  const tenantId = getTenantIDFromAppID(appId)
+  const updates: ContextMap = { appId, ...extraContextSettings }
+  if (tenantId) {
+    updates.tenantId = tenantId
   }
+
   return newContext(updates, task)
 }
 
-export async function doInIdentityContext(
+export async function doInIdentityContext<T>(
   identity: IdentityContext,
-  task: any
-): Promise<any> {
+  task: () => T
+): Promise<T> {
   if (!identity) {
     throw new Error("identity is required")
   }
@@ -180,6 +186,24 @@ export async function doInIdentityContext(
     context.tenantId = identity.tenantId
   }
   return newContext(context, task)
+}
+
+function guardMigration() {
+  const context = Context.get()
+  if (context?.isMigrating) {
+    throw new Error(
+      "The context cannot be changed, a migration is currently running"
+    )
+  }
+}
+
+export async function doInAppMigrationContext<T>(
+  appId: string,
+  task: () => T
+): Promise<T> {
+  return _doInAppContext(appId, task, {
+    isMigrating: true,
+  })
 }
 
 export function getIdentity(): IdentityContext | undefined {
@@ -276,6 +300,9 @@ export function getAuditLogsDB(): Database {
  */
 export function getAppDB(opts?: any): Database {
   const appId = getAppId()
+  if (!appId) {
+    throw new Error("Unable to retrieve app DB - no app ID.")
+  }
   return getDB(appId, opts)
 }
 
@@ -307,4 +334,12 @@ export function isScim(): boolean {
   const context = Context.get()
   const scimCall = context?.isScim
   return !!scimCall
+}
+
+export function getCurrentContext(): ContextMap | undefined {
+  try {
+    return Context.get()
+  } catch (e) {
+    return undefined
+  }
 }
