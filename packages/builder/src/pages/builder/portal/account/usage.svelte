@@ -100,12 +100,6 @@
     cancelAt = license?.billing?.subscription?.cancelAt
   }
 
-  const capitalise = string => {
-    if (string) {
-      return string.charAt(0).toUpperCase() + string.slice(1)
-    }
-  }
-
   const getDaysRemaining = timestamp => {
     if (!timestamp) {
       return
