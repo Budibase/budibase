@@ -329,6 +329,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         operation === Operation.CREATE
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
+      this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(

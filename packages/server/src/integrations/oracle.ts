@@ -368,6 +368,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       const options: ExecuteOptions = { autoCommit: true }
       const bindings: BindParameters = query.bindings || []
 
+      this.log(query.sql, bindings)
       return await connection.execute<T>(query.sql, bindings, options)
     } finally {
       if (connection) {
