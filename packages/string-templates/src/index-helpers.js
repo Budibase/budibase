@@ -5,7 +5,7 @@ const externalCollections = {
   math: require("@budibase/handlebars-helpers/lib/math"),
   array: require("@budibase/handlebars-helpers/lib/array"),
   number: require("@budibase/handlebars-helpers/lib/number"),
-  // url: require("@budibase/handlebars-helpers/lib/url"),
+  url: require("@budibase/handlebars-helpers/lib/url"),
   string: require("@budibase/handlebars-helpers/lib/string"),
   comparison: require("@budibase/handlebars-helpers/lib/comparison"),
   object: require("@budibase/handlebars-helpers/lib/object"),
@@ -37,4 +37,4 @@ const getHelperList = () => {
   return helpers
 }
 
-export default getHelperList()
+module.exports = getHelperList()
