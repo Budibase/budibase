@@ -11,9 +11,12 @@
   export let noRowsMessage
   export let steps
   export let dataSource
+  export let buttonPosition = "bottom"
+  export let size
 
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
 
   // Set current step context to force child form to use it
   const currentStep = writable(1)
@@ -126,6 +129,7 @@
     type="form"
     context="form"
     props={{
+      size,
       dataSource,
       actionType: actionType === "Create" ? "Create" : "Update",
       readonly: actionType === "View",
@@ -153,35 +157,73 @@
             size: "shrink",
           }}
         >
-          <BlockComponent type="container" order={0}>
-            <BlockComponent type="heading" props={{ text: step.title }} />
-          </BlockComponent>
-          <BlockComponent type="text" props={{ text: step.desc }} order={1} />
-          <BlockComponent type="fieldgroup" order={2}>
-            {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
-              {#if getComponentForField(field)}
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "column",
+              gap: "S",
+            }}
+            order={0}
+          >
+            <BlockComponent
+              type="container"
+              props={{
+                direction: "row",
+                hAlign: "stretch",
+                vAlign: "center",
+                gap: "M",
+                wrap: true,
+              }}
+              order={0}
+            >
+              <BlockComponent type="heading" props={{ text: step.title }} />
+              {#if buttonPosition === "top"}
                 <BlockComponent
-                  type={getComponentForField(field)}
-                  props={getPropsForField(field)}
-                  order={fieldIdx}
-                  interactive
-                  name={field.field}
+                  type="buttongroup"
+                  props={{ buttons: step.buttons }}
                 />
               {/if}
-            {/each}
+            </BlockComponent>
           </BlockComponent>
-          <BlockComponent
-            type="buttongroup"
-            props={{ buttons: step.buttons }}
-            styles={{
-              normal: {
-                "margin-top": "16px",
-              },
-            }}
-            order={3}
-          />
+          <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+          <BlockComponent type="container" order={2}>
+            <div
+              class="form-block fields"
+              class:mobile={$context.device.mobile}
+            >
+              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
+                {#if getComponentForField(field)}
+                  <BlockComponent
+                    type={getComponentForField(field)}
+                    props={getPropsForField(field)}
+                    order={fieldIdx}
+                    interactive
+                    name={field.field}
+                  />
+                {/if}
+              {/each}
+            </div>
+          </BlockComponent>
+          {#if buttonPosition === "bottom"}
+            <BlockComponent
+              type="buttongroup"
+              props={{ buttons: step.buttons }}
+              order={3}
+            />
+          {/if}
         </BlockComponent>
       </BlockComponent>
     {/each}
   </BlockComponent>
 </FormBlockWrapper>
+
+<style>
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px 16px;
+  }
+  .fields.mobile :global(.spectrum-Form-item) {
+    grid-column: span 6 !important;
+  }
+</style>

@@ -27,6 +27,7 @@ export {
   dndIsDragging,
 } from "./dnd"
 export { sidePanelStore } from "./sidePanel"
+export { hoverStore } from "./hover"
 
 // Context stores are layered and duplicated, so it is not a singleton
 export { createContextStore } from "./context"
