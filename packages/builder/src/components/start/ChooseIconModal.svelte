@@ -49,6 +49,7 @@
       return
     }
     try {
+      console.log(app.instance._id)
       await apps.update(app.instance._id, {
         icon: { name, color },
       })
