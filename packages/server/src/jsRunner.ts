@@ -4,26 +4,50 @@ import { setJSRunner } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import fs from "fs"
+import url from "url"
 
 export function init() {
   const helpersSource = fs.readFileSync(
     `${require.resolve("@budibase/string-templates/index-helpers")}`,
     "utf8"
   )
-
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
-      const bbCtx = context.getCurrentContext()!
-      let { jsContext, jsIsolate } = bbCtx
-      // if (!jsIsolate) {
-      jsIsolate = new ivm.Isolate({ memoryLimit: 64 })
-      jsContext = jsIsolate.createContextSync()
-      const helpersModule = jsIsolate.compileModuleSync(helpersSource)
+      const bbCtx = context.getCurrentContext() || {}
+      let { jsIsolate = new ivm.Isolate({ memoryLimit: 64 }) } = bbCtx
+      let { jsContext = jsIsolate.createContextSync() } = bbCtx
 
+      const injectedRequire = `const require = function(val){
+        switch (val) {
+          case "url": 
+            return {
+              resolve: (...params) => urlResolveCb(...params),
+              parse: (...params) => urlParseCb(...params),
+            }
+        }
+      };`
+
+      const global = jsContext.global
+      global.setSync(
+        "urlResolveCb",
+        new ivm.Callback((...params: Parameters<typeof url.resolve>) =>
+          url.resolve(...params)
+        )
+      )
+
+      global.setSync(
+        "urlParseCb",
+        new ivm.Callback((...params: Parameters<typeof url.parse>) =>
+          url.parse(...params)
+        )
+      )
+
+      const helpersModule = jsIsolate.compileModuleSync(
+        `${injectedRequire};${helpersSource}`
+      )
       helpersModule.instantiateSync(jsContext, specifier => {
         throw new Error(`No imports allowed. Required: ${specifier}`)
       })
-      // }
 
       const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
       if (perRequestLimit) {
@@ -34,8 +58,6 @@ export function init() {
           )
         }
       }
-
-      const global = jsContext!.global
 
       for (const [key, value] of Object.entries(ctx)) {
         if (key === "helpers") {
@@ -50,7 +72,7 @@ export function init() {
         {}
       )
 
-      script.instantiateSync(jsContext!, specifier => {
+      script.instantiateSync(jsContext, specifier => {
         if (specifier === "compiled_module") {
           return helpersModule
         }
