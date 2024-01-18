@@ -66,7 +66,7 @@
     "cookies": "0.8.0",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
-    "dd-trace": "3.13.2",
+    "dd-trace": "5.0.0",
     "dotenv": "8.2.0",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
