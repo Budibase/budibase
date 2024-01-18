@@ -66,6 +66,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
+    "@zerodevx/svelte-json-view": "^1.0.7",
     "codemirror": "^5.59.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",
