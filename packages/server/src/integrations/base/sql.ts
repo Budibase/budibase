@@ -671,6 +671,18 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     }
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
+
+  log(query: string, values?: any[]) {
+    if (!environment.ENABLE_SQL_LOGGING) {
+      return
+    }
+    const sqlClient = this.getSqlClient()
+    let string = `[SQL] [${sqlClient.toUpperCase()}] query="${query}"`
+    if (values) {
+      string += ` values="${values.join(", ")}"`
+    }
+    console.log(string)
+  }
 }
 
 export default SqlQueryBuilder
