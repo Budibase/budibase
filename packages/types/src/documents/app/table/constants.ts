@@ -16,8 +16,8 @@ export enum AutoFieldSubTypes {
   AUTO_ID = "autoID",
 }
 
-export enum ArrayFieldSubTypes {
-  QUERY = "query",
+export enum JsonFieldSubTypes {
+  ARRAY = "array",
 }
 
 export enum FormulaTypes {

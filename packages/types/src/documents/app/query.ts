@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import { TableSchema } from "./table"
 
 export interface Query extends Document {
   datasourceId: string
@@ -6,9 +7,13 @@ export interface Query extends Document {
   parameters: QueryParameter[]
   fields: RestQueryFields | any
   transformer: string | null
-  schema: Record<string, { name?: string; type: string }>
+  schema: TableSchema
   readable: boolean
   queryVerb: string
+}
+
+export interface QueryPreview extends Omit<Query, "_id"> {
+  queryId: string
 }
 
 export interface QueryParameter {

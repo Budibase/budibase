@@ -7,18 +7,19 @@ import { invalidateDynamicVariables } from "../../../threads/utils"
 import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { QueryEvent } from "../../../threads/definitions"
 import {
   ConfigType,
   Query,
   UserCtx,
   SessionCookie,
   FieldSchema,
-  ArrayFieldMetadata,
-  ArrayFieldSubTypes,
+  JsonFieldMetadata,
+  JsonFieldSubTypes,
   QueryResponse,
   TableSchema,
+  QueryPreview,
 } from "@budibase/types"
+import { QueryEvent } from "../../../threads/definitions"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -72,7 +73,7 @@ export { _import as import }
 
 export async function save(ctx: UserCtx) {
   const db = context.getAppDB()
-  const query = ctx.request.body
+  const query: Query = ctx.request.body
 
   // Validate query name
   if (!query?.name.match(ValidQueryNameRegex)) {
@@ -88,7 +89,6 @@ export async function save(ctx: UserCtx) {
   } else {
     eventFn = () => events.query.updated(datasource, query)
   }
-
   const response = await db.put(query)
   await eventFn()
   query._rev = response.rev
@@ -121,7 +121,7 @@ export async function preview(ctx: UserCtx) {
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     ctx.request.body.datasourceId
   )
-  const query = ctx.request.body
+  const query: QueryPreview = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
   const { fields, parameters, queryVerb, transformer, queryId, schema } = query
@@ -179,9 +179,9 @@ export async function preview(ctx: UserCtx) {
               } else if (Array.isArray(field)) {
                 fieldSchema = {
                   name: key,
-                  type: FieldTypes.ARRAY,
-                  subtype: ArrayFieldSubTypes.QUERY,
-                } as ArrayFieldMetadata
+                  type: FieldTypes.JSON,
+                  subtype: JsonFieldSubTypes.ARRAY,
+                } as JsonFieldMetadata
                 nestedSchemaFields[key] = getSchemaFields(
                   field,
                   Object.keys(field[0])
@@ -228,19 +228,12 @@ export async function preview(ctx: UserCtx) {
       inputs
     )) as QueryResponse
     const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
-    // const flatSchemaFields = Object.values(schemaFields || {}).reduce(
-    //   (acc: any, fieldSchema: FieldSchema): any => {
-    //     acc[fieldSchema.name] = fieldSchema.type
-    //     return acc
-    //   },
-    //   {}
-    // )
 
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
       for (let key of Object.keys(schemaFields)) {
         if (existingSchema[key]?.type) {
-          schemaFields[key] = existingSchema[key].type
+          schemaFields[key] = existingSchema[key]
         }
       }
     }
