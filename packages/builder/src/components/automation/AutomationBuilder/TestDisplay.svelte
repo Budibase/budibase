@@ -35,7 +35,6 @@
       }
     }
   }
-  $: console.log(filteredResults?.[0]?.outputs)
 </script>
 
 <div class="container">
