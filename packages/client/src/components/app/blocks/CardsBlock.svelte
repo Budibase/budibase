@@ -88,7 +88,7 @@
     <BlockComponent
       type="form"
       bind:id={formId}
-      props={{ dataSource, disableValidation: true }}
+      props={{ dataSource, disableSchemaValidation: true }}
     >
       {#if title || enrichedSearchColumns?.length || showTitleButton}
         <BlockComponent

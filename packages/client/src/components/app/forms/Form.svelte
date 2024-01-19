@@ -14,7 +14,7 @@
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
-  export let disableValidation = false
+  export let disableSchemaValidation = false
 
   // Not exposed as a builder setting. Used internally to allow searching on
   // auto columns.
@@ -103,7 +103,7 @@
       {schema}
       {table}
       {initialValues}
-      {disableValidation}
+      {disableSchemaValidation}
       {editAutoColumns}
       {currentStep}
     >

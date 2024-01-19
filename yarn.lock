@@ -6290,6 +6290,11 @@
     js-yaml "^3.10.0"
     tslib "^2.4.0"
 
+"@zerodevx/svelte-json-view@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@zerodevx/svelte-json-view/-/svelte-json-view-1.0.7.tgz#abf3efa71dedcb3e9d16bc9cc61d5ea98c8d00b1"
+  integrity sha512-yW0MV+9BCKOwzt3h86y3xDqYdI5st+Rxk+L5pa0Utq7nlPD+VvxyhL7R1gJoLxQvWwjyAvY/fyUCFTdwDyI14w==
+
 "@zkochan/js-yaml@0.0.6":
   version "0.0.6"
   resolved "https://registry.yarnpkg.com/@zkochan/js-yaml/-/js-yaml-0.0.6.tgz#975f0b306e705e28b8068a07737fa46d3fc04826"
