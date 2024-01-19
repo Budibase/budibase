@@ -3,6 +3,27 @@ import { processStringSync } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import { getQueryParams, isProdAppID } from "../../../db/utils"
 import { BaseQueryVerbs } from "../../../constants"
+import { Query, QuerySchema } from "@budibase/types"
+
+function updateSchema(query: Query) {
+  if (!query.schema) {
+    return query
+  }
+  const schema: Record<string, QuerySchema> = {}
+  for (let key of Object.keys(query.schema)) {
+    if (typeof query.schema[key] === "string") {
+      schema[key] = { type: query.schema[key] as string, name: key }
+    } else {
+      schema[key] = query.schema[key] as QuerySchema
+    }
+  }
+  query.schema = schema
+  return query
+}
+
+function updateSchemas(queries: Query[]) {
+  return queries.map(query => updateSchema(query))
+}
 
 // simple function to append "readable" to all read queries
 function enrichQueries(input: any) {
@@ -25,7 +46,7 @@ export async function find(queryId: string) {
     delete query.fields
     delete query.parameters
   }
-  return query
+  return updateSchema(query)
 }
 
 export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
@@ -37,12 +58,11 @@ export async function fetch(opts: { enrich: boolean } = { enrich: true }) {
     })
   )
 
-  const queries = body.rows.map((row: any) => row.doc)
+  let queries = body.rows.map((row: any) => row.doc)
   if (opts.enrich) {
-    return enrichQueries(queries)
-  } else {
-    return queries
+    queries = await enrichQueries(queries)
   }
+  return updateSchemas(queries)
 }
 
 export async function enrichContext(

@@ -1,15 +1,21 @@
 import { generateQueryID } from "../../../db/utils"
-import { BaseQueryVerbs, FieldTypes } from "../../../constants"
+import { BaseQueryVerbs } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
 import env from "../../../environment"
-import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
 import { QueryEvent } from "../../../threads/definitions"
-import { ConfigType, Query, UserCtx, SessionCookie } from "@budibase/types"
+import {
+  ConfigType,
+  Query,
+  UserCtx,
+  SessionCookie,
+  QuerySchema,
+  FieldType,
+} from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -163,28 +169,32 @@ export async function preview(ctx: UserCtx) {
     }
 
     const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
-    const schemaFields: any = {}
+    const schemaFields: Record<string, QuerySchema> = {}
+    const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
+      type,
+      name,
+    })
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
         const field = rows[0][key]
         let type = typeof field,
-          fieldType = FieldTypes.STRING
+          fieldType = makeQuerySchema(FieldType.STRING, key)
         if (field)
           switch (type) {
             case "boolean":
-              schemaFields[key] = FieldTypes.BOOLEAN
+              schemaFields[key] = makeQuerySchema(FieldType.BOOLEAN, key)
               break
             case "object":
               if (field instanceof Date) {
-                fieldType = FieldTypes.DATETIME
+                fieldType = makeQuerySchema(FieldType.DATETIME, key)
               } else if (Array.isArray(field)) {
-                fieldType = FieldTypes.ARRAY
+                fieldType = makeQuerySchema(FieldType.ARRAY, key)
               } else {
-                fieldType = FieldTypes.JSON
+                fieldType = makeQuerySchema(FieldType.JSON, key)
               }
               break
             case "number":
-              fieldType = FieldTypes.NUMBER
+              fieldType = makeQuerySchema(FieldType.NUMBER, key)
               break
           }
         schemaFields[key] = fieldType
