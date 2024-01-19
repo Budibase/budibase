@@ -127,4 +127,12 @@ describe("Test that the string processing works correctly", () => {
       "return `average: ${var1} add: ${var2}`;",
     ])
   })
+
+  it("should handle uuids", () => {
+    const response = convertToJS("This is: {{ uuid }}")
+    checkLines(response, [
+      "const var1 = helpers.uuid();",
+      "return `This is: ${var1}`;",
+    ])
+  })
 })
