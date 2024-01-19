@@ -147,7 +147,7 @@
       bind:id={formId}
       props={{
         dataSource,
-        disableValidation: true,
+        disableSchemaValidation: true,
         editAutoColumns: true,
         size,
       }}
