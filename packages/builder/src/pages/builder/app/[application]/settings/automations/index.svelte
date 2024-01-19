@@ -169,13 +169,13 @@
 <Layout noPadding>
   <Layout gap="XS" noPadding>
     <Heading>Automations</Heading>
-    <Body>See your automation history and edit advanced settings</Body>
+    <Body size="S">See your automation history and edit advanced settings</Body>
   </Layout>
   <Divider />
 
   <Layout gap="XS" noPadding>
     <Heading size="XS">Chain automations</Heading>
-    <Body>Allow automations to trigger from other automations</Body>
+    <Body size="S">Allow automations to trigger from other automations</Body>
     <div class="setting-spacing">
       <Toggle
         text={"Enable chaining"}
@@ -190,7 +190,7 @@
   <Divider />
   <Layout gap="XS" noPadding>
     <Heading size="XS">History</Heading>
-    <Body>Free plan stores up to 1 day of automation history</Body>
+    <Body size="S">Free plan stores up to 1 day of automation history</Body>
   </Layout>
   <div class="controls">
     <div class="search">
