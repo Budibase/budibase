@@ -10,7 +10,7 @@ const externalCollections = {
   comparison: require("@budibase/handlebars-helpers/lib/comparison"),
   object: require("@budibase/handlebars-helpers/lib/object"),
   regex: require("@budibase/handlebars-helpers/lib/regex"),
-  // uuid: require("@budibase/handlebars-helpers/lib/uuid"),
+  uuid: require("@budibase/handlebars-helpers/lib/uuid"),
 }
 
 const addedHelpers = {

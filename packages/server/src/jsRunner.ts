@@ -5,6 +5,7 @@ import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import fs from "fs"
 import url from "url"
+import crypto from "crypto"
 
 export function init() {
   const helpersSource = fs.readFileSync(
@@ -45,7 +46,25 @@ export function init() {
       const helpersModule = jsIsolate.compileModuleSync(
         `${injectedRequire};${helpersSource}`
       )
+
+      const cryptoModule = jsIsolate.compileModuleSync(`export default {
+        randomUUID: cryptoRandomUUIDCb,
+      }`)
+      cryptoModule.instantiateSync(jsContext, specifier => {
+        throw new Error(`No imports allowed. Required: ${specifier}`)
+      })
+
+      global.setSync(
+        "cryptoRandomUUIDCb",
+        new ivm.Callback((...params: Parameters<typeof crypto.randomUUID>) => {
+          return crypto.randomUUID(...params)
+        })
+      )
+
       helpersModule.instantiateSync(jsContext, specifier => {
+        if (specifier === "crypto") {
+          return cryptoModule
+        }
         throw new Error(`No imports allowed. Required: ${specifier}`)
       })
 
