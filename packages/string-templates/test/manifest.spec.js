@@ -1,6 +1,9 @@
 const fs = require("fs")
 const { processString } = require("../src/index.cjs")
 
+const tk = require("timekeeper")
+tk.freeze("2021-01-21T12:00:00")
+
 const manifest = JSON.parse(
   fs.readFileSync(require.resolve("../manifest.json"), "utf8")
 )
