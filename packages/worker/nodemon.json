@@ -8,6 +8,6 @@
     "../string-templates"
   ],
   "ext": "js,ts,json",
-  "ignore": ["src/**/*.spec.ts", "src/**/*.spec.js", "../*/dist/**/*"],
+  "ignore": ["**/*.spec.ts", "**/*.spec.js", "../*/dist/**/*"],
   "exec": "yarn build && node --no-node-snapshot dist/index.js"
 }
