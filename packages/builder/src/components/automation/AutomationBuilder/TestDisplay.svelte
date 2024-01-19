@@ -35,6 +35,7 @@
       }
     }
   }
+  $: console.log(filteredResults?.[0]?.outputs)
 </script>
 
 <div class="container">
@@ -77,7 +78,7 @@
               </Tab>
               <Tab title="Output">
                 <div class="wrap">
-                  {#if filteredResults?.[idx]?.inputs}
+                  {#if filteredResults?.[idx]?.outputs}
                     <JsonView
                       depth={2}
                       json={filteredResults?.[idx]?.outputs}
