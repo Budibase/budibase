@@ -26,9 +26,10 @@ describe("manifest", () => {
     it.each(examples)("%s - %s", async (collection, func) => {
       const example = manifest[collection][func].example
 
-      const [hbs, js] = example.split("->").map(x => x.trim())
+      let [hbs, js] = example.split("->").map(x => x.trim())
+      hbs = hbs.replace(/'\[1, 2, 3\]'/, "array")
 
-      expect(await processString(hbs)).toEqual(js)
+      expect(await processString(hbs, { array: [1, 2, 3] })).toEqual(js)
     })
   })
 })
