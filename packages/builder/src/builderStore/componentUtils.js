@@ -92,14 +92,7 @@ export const findAllMatchingComponents = (rootComponent, selector) => {
 }
 
 /**
- * Recurses through the component tree and finds all components.
- */
-export const findAllComponents = rootComponent => {
-  return findAllMatchingComponents(rootComponent, () => true)
-}
-
-/**
- * Finds the closest parent component which matches certain criteria
+ * Finds the closes parent component which matches certain criteria
  */
 export const findClosestMatchingComponent = (
   rootComponent,
