@@ -29,7 +29,7 @@
           type,
           quiet,
           disabled,
-          size,
+          size: size || "M",
         }}
       />
     {/each}
