@@ -6,6 +6,14 @@ jest.mock("@budibase/handlebars-helpers/lib/math", () => {
     random: () => 10,
   }
 })
+jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
+  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/uuid")
+
+  return {
+    ...actual,
+    uuid: () => "f34ebc66-93bd-4f7c-b79b-92b5569138bc",
+  }
+})
 
 const fs = require("fs")
 const { processString } = require("../src/index.cjs")
