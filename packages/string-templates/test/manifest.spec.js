@@ -27,9 +27,20 @@ describe("manifest", () => {
       const example = manifest[collection][func].example
 
       let [hbs, js] = example.split("->").map(x => x.trim())
-      hbs = hbs.replace(/\[1, 2, 3\]/, "array")
+      hbs = hbs.replace(/\[1, 2, 3\]/, "array3")
+      hbs = hbs.replace(/\[1, 2, 3, 4\]/, "array4")
 
-      expect(await processString(hbs, { array: [1, 2, 3] })).toEqual(js)
+      if (js === undefined) {
+        // The function has no return value
+        return
+      }
+
+      expect(
+        await processString(hbs, {
+          array3: [1, 2, 3],
+          array4: [1, 2, 3, 4],
+        })
+      ).toEqual(js)
     })
   })
 })
