@@ -126,7 +126,7 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "{{ sum [1, 2, 3] }} -> 6",
+      "example": "{{ sum 1 2 3 }} -> 6",
       "description": "<p>Returns the sum of all numbers in the given array.</p>\n"
     }
   },
