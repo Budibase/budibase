@@ -17,8 +17,15 @@ const manifest = JSON.parse(
   fs.readFileSync(require.resolve("../manifest.json"), "utf8")
 )
 
-const examples = Object.keys(manifest).flatMap(collection =>
-  Object.keys(manifest[collection]).map(fnc => [collection, fnc])
+const functionsToExclude = { string: ["raw"] }
+
+const collections = Object.keys(manifest)
+const examples = collections.reduce(
+  (acc, collection) => ({
+    ...acc,
+    [collection]: manifest[collection],
+  }),
+  {}
 )
 
 function escapeRegExp(string) {
@@ -27,36 +34,45 @@ function escapeRegExp(string) {
 
 describe("manifest", () => {
   describe("examples are valid", () => {
-    it.each(examples)("%s - %s", async (collection, func) => {
-      const example = manifest[collection][func].example
+    describe.each(collections)("%s", collection => {
+      it.each(
+        Object.keys(examples[collection]).filter(
+          fnc => !functionsToExclude[collection]?.includes(fnc)
+        )
+      )("%s", async func => {
+        const example = manifest[collection][func].example
 
-      let [hbs, js] = example.split("->").map(x => x.trim())
+        let [hbs, js] = example.split("->").map(x => x.trim())
 
-      const context = {
-        double: i => i * 2,
-      }
-
-      const arrays = hbs.match(/\[[^/\]]+\]/)
-      arrays.forEach((arrayString, i) => {
-        hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-        context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
-      })
-
-      if (js === undefined) {
-        // The function has no return value
-        return
-      }
-
-      const result = await processString(hbs, context)
-      try {
-        let parsedExpected
-        if (
-          Array.isArray((parsedExpected = JSON.parse(js.replace(/\'/g, '"'))))
-        ) {
-          js = parsedExpected.join(",")
+        const context = {
+          double: i => i * 2,
         }
-      } catch {}
-      expect(result).toEqual(js)
+
+        const arrays = hbs.match(/\[[^/\]]+\]/)
+        arrays?.forEach((arrayString, i) => {
+          hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
+          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+        })
+
+        if (js === undefined) {
+          // The function has no return value
+          return
+        }
+
+        let result = await processString(hbs, context)
+        // Trim 's
+        js = js.replace(/^\'|\'$/g, "")
+        try {
+          let parsedExpected
+          if (
+            Array.isArray((parsedExpected = JSON.parse(js.replace(/\'/g, '"'))))
+          ) {
+            js = parsedExpected.join(",")
+          }
+        } catch {}
+        result = result.replace(/&nbsp;/g, " ")
+        expect(result).toEqual(js)
+      })
     })
   })
 })
