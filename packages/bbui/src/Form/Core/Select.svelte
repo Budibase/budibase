@@ -23,8 +23,6 @@
   export let footer = null
   export let open = false
   export let tag = null
-  export let customPopoverOffsetBelow
-  export let customPopoverMaxHeight
   export let searchTerm = null
   export let loading
 
@@ -90,8 +88,6 @@
   {autocomplete}
   {sort}
   {tag}
-  {customPopoverOffsetBelow}
-  {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
   isOptionSelected={option => option === value}
