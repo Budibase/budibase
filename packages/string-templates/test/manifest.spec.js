@@ -28,13 +28,17 @@ const manifest = JSON.parse(
 const functionsToExclude = { string: ["raw"] }
 
 const collections = Object.keys(manifest)
-const examples = collections.reduce(
-  (acc, collection) => ({
-    ...acc,
-    [collection]: manifest[collection],
-  }),
-  {}
-)
+const examples = collections.reduce((acc, collection) => {
+  const functions = Object.keys(manifest[collection]).filter(
+    fnc =>
+      !functionsToExclude[collection]?.includes(fnc) &&
+      manifest[collection][fnc].example
+  )
+  if (functions.length) {
+    acc[collection] = functions
+  }
+  return acc
+}, {})
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
@@ -42,12 +46,8 @@ function escapeRegExp(string) {
 
 describe("manifest", () => {
   describe("examples are valid", () => {
-    describe.each(collections)("%s", collection => {
-      it.each(
-        Object.keys(examples[collection]).filter(
-          fnc => !functionsToExclude[collection]?.includes(fnc)
-        )
-      )("%s", async func => {
+    describe.each(Object.keys(examples))("%s", collection => {
+      it.each(examples[collection])("%s", async func => {
         const example = manifest[collection][func].example
 
         let [hbs, js] = example.split("->").map(x => x.trim())
