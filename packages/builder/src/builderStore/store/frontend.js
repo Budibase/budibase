@@ -709,10 +709,9 @@ export const getFrontendStore = () => {
           else {
             if (setting.type === "dataProvider") {
               // Validate data provider exists, or else clear it
-              const treeId = parent?._id || component._id
-              const path = findComponentPath(screen?.props, treeId)
-              const providers = path.filter(component =>
-                component._component?.endsWith("/dataprovider")
+              const providers = findAllMatchingComponents(
+                screen?.props,
+                component => component._component?.endsWith("/dataprovider")
               )
               // Validate non-empty values
               const valid = providers?.some(dp => value.includes?.(dp._id))
@@ -734,6 +733,16 @@ export const getFrontendStore = () => {
           return null
         }
 
+        // Find all existing components of this type so that we can give this
+        // component a unique name
+        const screen = get(selectedScreen).props
+        const otherComponents = findAllMatchingComponents(
+          screen,
+          x => x._component === definition.component && x._id !== screen._id
+        )
+        let name = definition.friendlyName || definition.name
+        name = `${name} ${otherComponents.length + 1}`
+
         // Generate basic component structure
         let instance = {
           _id: Helpers.uuid(),
@@ -743,7 +752,7 @@ export const getFrontendStore = () => {
             hover: {},
             active: {},
           },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          _instanceName: name,
           ...presetProps,
         }
 
