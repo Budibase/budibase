@@ -21,26 +21,32 @@ const examples = Object.keys(manifest).flatMap(collection =>
   Object.keys(manifest[collection]).map(fnc => [collection, fnc])
 )
 
+function escapeRegExp(string) {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
+}
+
 describe("manifest", () => {
   describe("examples are valid", () => {
     it.each(examples)("%s - %s", async (collection, func) => {
       const example = manifest[collection][func].example
 
       let [hbs, js] = example.split("->").map(x => x.trim())
-      hbs = hbs.replace(/\[1, 2, 3\]/, "array3")
-      hbs = hbs.replace(/\[1, 2, 3, 4\]/, "array4")
+
+      const context = {}
+
+      const arrays = hbs.match(/\[[^/\]]+\]/)
+      arrays.forEach((arrayString, i) => {
+        hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
+        context[`array${i}`] = JSON.parse(arrayString)
+      })
 
       if (js === undefined) {
         // The function has no return value
         return
       }
 
-      expect(
-        await processString(hbs, {
-          array3: [1, 2, 3],
-          array4: [1, 2, 3, 4],
-        })
-      ).toEqual(js)
+      const result = await processString(hbs, context)
+      expect(result).toEqual(js)
     })
   })
 })
