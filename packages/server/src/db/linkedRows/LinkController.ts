@@ -440,7 +440,7 @@ class LinkController {
         if (field.type === FieldTypes.LINK && field.fieldName) {
           const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
-          await this._db.put(linkedTable)
+          field.tableRev = (await this._db.put(linkedTable)).rev
         }
       } catch (err: any) {
         logging.logWarn(err?.message, err)
