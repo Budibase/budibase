@@ -231,6 +231,7 @@
         notifications.info("Request did not return any data")
       } else {
         response.info = response.info || { code: 200 }
+        console.log(response)
         schema = response.schema
         notifications.success("Request sent successfully")
       }
