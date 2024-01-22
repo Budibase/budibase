@@ -1,11 +1,11 @@
 import { PlanType } from "@budibase/types"
-  
+
 export function getFormattedPlanName(userPlanType) {
-  let planName = "Free";
+  let planName = "Free"
   if (userPlanType === PlanType.PREMIUM_PLUS) {
-    planName = "Premium";
+    planName = "Premium"
   } else if (userPlanType === PlanType.ENTERPRISE_BASIC) {
-    planName = "Enterprise";
+    planName = "Enterprise"
   }
-  return `${planName} Plan`;
+  return `${planName} Plan`
 }
