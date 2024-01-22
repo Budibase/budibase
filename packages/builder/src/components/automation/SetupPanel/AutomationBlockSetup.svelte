@@ -184,7 +184,8 @@
       }
 
       if (
-        (idx === 0 && automation.trigger?.event === "row:update") ||
+        idx === 0 &&
+        automation.trigger?.event === "row:update" &&
         automation.trigger?.event === "row:save"
       ) {
         if (name !== "id" && name !== "revision") return `trigger.row.${name}`
