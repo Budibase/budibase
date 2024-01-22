@@ -1,5 +1,6 @@
 <script>
   import {
+    getContextProviderComponents,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "builderStore/dataBinding"
@@ -29,7 +30,6 @@
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "builderStore/componentUtils"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
@@ -75,13 +75,12 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = findAllComponents($currentAsset.props)
-    .filter(component => {
-      return (
-        component._component?.endsWith("/dataprovider") &&
-        component._id !== $store.selectedComponentId
-      )
-    })
+  $: contextProviders = getContextProviderComponents(
+    $currentAsset,
+    $store.selectedComponentId
+  )
+  $: dataProviders = contextProviders
+    .filter(component => component._component?.endsWith("/dataprovider"))
     .map(provider => ({
       label: provider._instanceName,
       name: provider._instanceName,
