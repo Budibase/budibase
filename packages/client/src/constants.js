@@ -12,5 +12,10 @@ export const ActionTypes = {
   ScrollTo: "ScrollTo",
 }
 
+export const ContextScopes = {
+  Local: "local",
+  Global: "global",
+}
+
 export const DNDPlaceholderID = "dnd-placeholder"
 export const ScreenslotType = "screenslot"
