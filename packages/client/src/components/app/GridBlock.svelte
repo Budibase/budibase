@@ -19,36 +19,7 @@
   export let onRowClick = null
   export let buttons = null
 
-  const context = getContext("context")
-  const component = getContext("component")
-  const {
-    styleable,
-    API,
-    builderStore,
-    notificationStore,
-    enrichButtonActions,
-    ActionTypes,
-    createContextStore,
-    Provider,
-  } = getContext("sdk")
-
-  let grid
-
-  $: columnWhitelist = parsedColumns
-    ?.filter(col => col.active)
-    ?.map(col => col.field)
-  $: schemaOverrides = getSchemaOverrides(parsedColumns)
-  $: enrichedButtons = enrichButtons(buttons)
-  $: parsedColumns = getParsedColumns(columns)
-  $: actions = [
-    {
-      type: ActionTypes.RefreshDatasource,
-      callback: () => grid?.getContext()?.rows.actions.refreshData(),
-      metadata: { dataSource: table },
-    },
-  ]
-
-  // Parses columns to fix older formats
+  // parses columns to fix older formats
   const getParsedColumns = columns => {
     // If the first element has an active key all elements should be in the new format
     if (columns?.length && columns[0]?.active !== undefined) {
@@ -61,6 +32,28 @@
       active: true,
     }))
   }
+
+  $: parsedColumns = getParsedColumns(columns)
+
+  const context = getContext("context")
+  const component = getContext("component")
+  const {
+    styleable,
+    API,
+    builderStore,
+    notificationStore,
+    enrichButtonActions,
+    ActionTypes,
+    createContextStore,
+  } = getContext("sdk")
+
+  let grid
+
+  $: columnWhitelist = parsedColumns
+    ?.filter(col => col.active)
+    ?.map(col => col.field)
+  $: schemaOverrides = getSchemaOverrides(parsedColumns)
+  $: enrichedButtons = enrichButtons(buttons)
 
   const getSchemaOverrides = columns => {
     let overrides = {}
@@ -85,6 +78,11 @@
         const id = get(component).id
         const gridContext = createContextStore(context)
         gridContext.actions.provideData(id, row)
+        gridContext.actions.provideAction(
+          id,
+          ActionTypes.RefreshDatasource,
+          () => grid?.getContext()?.rows.actions.refreshData()
+        )
         const fn = enrichButtonActions(settings.onClick, get(gridContext))
         return await fn?.({ row })
       },
@@ -96,31 +94,29 @@
   use:styleable={$component.styles}
   class:in-builder={$builderStore.inBuilder}
 >
-  <Provider {actions}>
-    <Grid
-      bind:this={grid}
-      datasource={table}
-      {API}
-      {stripeRows}
-      {initialFilter}
-      {initialSortColumn}
-      {initialSortOrder}
-      {fixedRowHeight}
-      {columnWhitelist}
-      {schemaOverrides}
-      canAddRows={allowAddRows}
-      canEditRows={allowEditRows}
-      canDeleteRows={allowDeleteRows}
-      canEditColumns={false}
-      canExpandRows={false}
-      canSaveSchema={false}
-      showControls={false}
-      notifySuccess={notificationStore.actions.success}
-      notifyError={notificationStore.actions.error}
-      buttons={enrichedButtons}
-      on:rowclick={e => onRowClick?.({ row: e.detail })}
-    />
-  </Provider>
+  <Grid
+    bind:this={grid}
+    datasource={table}
+    {API}
+    {stripeRows}
+    {initialFilter}
+    {initialSortColumn}
+    {initialSortOrder}
+    {fixedRowHeight}
+    {columnWhitelist}
+    {schemaOverrides}
+    canAddRows={allowAddRows}
+    canEditRows={allowEditRows}
+    canDeleteRows={allowDeleteRows}
+    canEditColumns={false}
+    canExpandRows={false}
+    canSaveSchema={false}
+    showControls={false}
+    notifySuccess={notificationStore.actions.success}
+    notifyError={notificationStore.actions.error}
+    buttons={enrichedButtons}
+    on:rowclick={e => onRowClick?.({ row: e.detail })}
+  />
 </div>
 
 <style>
