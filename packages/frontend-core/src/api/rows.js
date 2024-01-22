@@ -19,12 +19,11 @@ export const buildRowEndpoints = API => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   saveRow: async (row, suppressErrors = false) => {
-    const resourceId = row?._viewId || row?.tableId
-    if (!resourceId) {
+    if (!row?.tableId) {
       return
     }
     return await API.post({
-      url: `/api/${resourceId}/rows`,
+      url: `/api/${row._viewId || row.tableId}/rows`,
       body: row,
       suppressErrors,
     })
@@ -36,12 +35,11 @@ export const buildRowEndpoints = API => ({
    * @param suppressErrors whether or not to suppress error notifications
    */
   patchRow: async (row, suppressErrors = false) => {
-    const resourceId = row?._viewId || row?.tableId
-    if (!resourceId) {
+    if (!row?.tableId && !row?._viewId) {
       return
     }
     return await API.patch({
-      url: `/api/${resourceId}/rows`,
+      url: `/api/${row._viewId || row.tableId}/rows`,
       body: row,
       suppressErrors,
     })
