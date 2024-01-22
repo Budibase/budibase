@@ -6124,23 +6124,6 @@
       {
         "tag": "style",
         "type": "select",
-        "label": "Size",
-        "key": "size",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ],
-        "defaultValue": "spectrum--medium"
-      },
-      {
-        "tag": "style",
-        "type": "select",
         "label": "Button position",
         "key": "buttonPosition",
         "options": [
@@ -6154,6 +6137,23 @@
           }
         ],
         "defaultValue": "bottom"
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
       }
     ],
     "actions": [
