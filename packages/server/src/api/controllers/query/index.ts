@@ -169,7 +169,7 @@ export async function preview(ctx: UserCtx) {
     }
 
     const { rows, keys, info, extra } = (await Runner.run(inputs)) as any
-    const schemaFields: Record<string, QuerySchema> = {}
+    const previewSchema: Record<string, QuerySchema> = {}
     const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
       type,
       name,
@@ -178,33 +178,33 @@ export async function preview(ctx: UserCtx) {
       for (let key of [...new Set(keys)] as string[]) {
         const field = rows[0][key]
         let type = typeof field,
-          fieldType = makeQuerySchema(FieldType.STRING, key)
+          fieldMetadata = makeQuerySchema(FieldType.STRING, key)
         if (field)
           switch (type) {
             case "boolean":
-              schemaFields[key] = makeQuerySchema(FieldType.BOOLEAN, key)
+              fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
               break
             case "object":
               if (field instanceof Date) {
-                fieldType = makeQuerySchema(FieldType.DATETIME, key)
+                fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
               } else if (Array.isArray(field)) {
-                fieldType = makeQuerySchema(FieldType.ARRAY, key)
+                fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
               } else {
-                fieldType = makeQuerySchema(FieldType.JSON, key)
+                fieldMetadata = makeQuerySchema(FieldType.JSON, key)
               }
               break
             case "number":
-              fieldType = makeQuerySchema(FieldType.NUMBER, key)
+              fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
               break
           }
-        schemaFields[key] = fieldType
+        previewSchema[key] = fieldMetadata
       }
     }
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
-      for (let key of Object.keys(schemaFields)) {
+      for (let key of Object.keys(previewSchema)) {
         if (existingSchema[key]?.type) {
-          schemaFields[key] = existingSchema[key].type
+          previewSchema[key] = existingSchema[key].type
         }
       }
     }
@@ -213,7 +213,7 @@ export async function preview(ctx: UserCtx) {
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields,
+      schema: previewSchema,
       info,
       extra,
     }
