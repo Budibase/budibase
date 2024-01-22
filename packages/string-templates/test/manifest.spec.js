@@ -32,12 +32,14 @@ describe("manifest", () => {
 
       let [hbs, js] = example.split("->").map(x => x.trim())
 
-      const context = {}
+      const context = {
+        double: i => i * 2,
+      }
 
       const arrays = hbs.match(/\[[^/\]]+\]/)
       arrays.forEach((arrayString, i) => {
         hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-        context[`array${i}`] = JSON.parse(arrayString)
+        context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
       })
 
       if (js === undefined) {
@@ -46,6 +48,14 @@ describe("manifest", () => {
       }
 
       const result = await processString(hbs, context)
+      try {
+        let parsedExpected
+        if (
+          Array.isArray((parsedExpected = JSON.parse(js.replace(/\'/g, '"'))))
+        ) {
+          js = parsedExpected.join(",")
+        }
+      } catch {}
       expect(result).toEqual(js)
     })
   })
