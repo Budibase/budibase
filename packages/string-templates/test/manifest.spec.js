@@ -1,3 +1,12 @@
+jest.mock("@budibase/handlebars-helpers/lib/math", () => {
+  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
+
+  return {
+    ...actual,
+    random: () => 10,
+  }
+})
+
 const fs = require("fs")
 const { processString } = require("../src/index.cjs")
 
