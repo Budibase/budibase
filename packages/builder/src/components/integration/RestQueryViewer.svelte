@@ -33,7 +33,7 @@
     PaginationTypes,
     RawRestBodyTypes,
     RestBodyTypes as bodyTypes,
-    SchemaTypeOptions,
+    SchemaTypeOptionsExpanded,
   } from "constants/backend"
   import JSONPreview from "components/integration/JSONPreview.svelte"
   import AccessLevelSelect from "components/integration/AccessLevelSelect.svelte"
@@ -161,7 +161,7 @@
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
-    newQuery.schema = restUtils.fieldsToSchema(schema)
+    newQuery.schema = schema
 
     return newQuery
   }
@@ -231,7 +231,14 @@
         notifications.info("Request did not return any data")
       } else {
         response.info = response.info || { code: 200 }
-        console.log(response)
+        // if existing schema, copy over what it is
+        if (schema) {
+          for (let [name, field] of Object.entries(schema)) {
+            if (response.schema[name]) {
+              response.schema[name] = field
+            }
+          }
+        }
         schema = response.schema
         notifications.success("Request sent successfully")
       }
@@ -387,6 +394,7 @@
 
   onMount(async () => {
     query = getSelectedQuery()
+    schema = query.schema
 
     try {
       // Clear any unsaved changes to the datasource
@@ -417,7 +425,6 @@
       query.fields.path = `${datasource.config.url}/${path ? path : ""}`
     }
     url = buildUrl(query.fields.path, breakQs)
-    schema = restUtils.schemaToFields(query.schema)
     requestBindings = restUtils.queryParametersToKeyValue(query.parameters)
     authConfigId = getAuthConfigId()
     if (!query.fields.disabledHeaders) {
@@ -683,10 +690,11 @@
                   bind:object={schema}
                   name="schema"
                   headings
-                  options={SchemaTypeOptions}
+                  options={SchemaTypeOptionsExpanded}
                   menuItems={schemaMenuItems}
                   showMenu={!schemaReadOnly}
                   readOnly={schemaReadOnly}
+                  compare={(option, value) => option.type === value.type}
                 />
               </Tab>
             {/if}
