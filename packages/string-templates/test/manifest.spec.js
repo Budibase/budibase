@@ -27,7 +27,7 @@ describe("manifest", () => {
       const example = manifest[collection][func].example
 
       let [hbs, js] = example.split("->").map(x => x.trim())
-      hbs = hbs.replace(/'\[1, 2, 3\]'/, "array")
+      hbs = hbs.replace(/\[1, 2, 3\]/, "array")
 
       expect(await processString(hbs, { array: [1, 2, 3] })).toEqual(js)
     })
