@@ -94,7 +94,7 @@ export async function setTestFlag(id: string) {
 }
 
 export async function checkTestFlag(id: string) {
-  const flag = await flagClient.get(id)
+  const flag = await flagClient?.get(id)
   return !!(flag && flag.testing)
 }
 
