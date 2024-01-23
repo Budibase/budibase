@@ -40,6 +40,18 @@ function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
 }
 
+function tryParseJson(str) {
+  if (typeof str !== "string") {
+    return
+  }
+
+  try {
+    return JSON.parse(str.replace(/\'/g, '"'))
+  } catch (e) {
+    return
+  }
+}
+
 describe("manifest", () => {
   describe("examples are valid", () => {
     describe.each(Object.keys(examples))("%s", collection => {
@@ -67,18 +79,15 @@ describe("manifest", () => {
         let result = await processString(hbs, context)
         // Trim 's
         js = js.replace(/^\'|\'$/g, "")
-        try {
-          let parsedExpected
-          if (
-            Array.isArray((parsedExpected = JSON.parse(js.replace(/\'/g, '"'))))
-          ) {
+        if ((parsedExpected = tryParseJson(js))) {
+          if (Array.isArray(parsedExpected)) {
             if (typeof parsedExpected[0] === "object") {
               js = JSON.stringify(parsedExpected)
             } else {
               js = parsedExpected.join(",")
             }
           }
-        } catch {}
+        }
         result = result.replace(/&nbsp;/g, " ")
         expect(result).toEqual(js)
       })
