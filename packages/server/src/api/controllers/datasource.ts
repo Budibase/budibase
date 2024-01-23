@@ -9,8 +9,11 @@ import {
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  Document,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FieldType,
+  RelationshipFieldMetadata,
   SourceName,
   UpdateDatasourceResponse,
   UserCtx,
@@ -218,9 +221,26 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
     []
   )
 
+  function updateRevisions(deletedLinks: RelationshipFieldMetadata[]) {
+    for (const link of deletedLinks) {
+      datasourceTableDocs.forEach((doc: Document) => {
+        if (doc._id === link.tableId) {
+          doc._rev = link.tableRev
+        }
+      })
+    }
+  }
+
   // Destroy the tables.
   for (const table of datasourceTableDocs) {
-    await sdk.tables.internal.destroy(table)
+    const deleted = await sdk.tables.internal.destroy(table)
+    // Update the revisions of any tables that remain to be deleted
+    const deletedLinks: RelationshipFieldMetadata[] = Object.values(
+      deleted.table.schema
+    )
+      .filter(field => field.type === FieldType.LINK)
+      .map(field => field as RelationshipFieldMetadata)
+    updateRevisions(deletedLinks)
   }
 }
 
