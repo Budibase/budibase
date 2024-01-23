@@ -25,14 +25,10 @@ const manifest = JSON.parse(
   fs.readFileSync(require.resolve("../manifest.json"), "utf8")
 )
 
-const functionsToExclude = { string: ["raw"] }
-
 const collections = Object.keys(manifest)
 const examples = collections.reduce((acc, collection) => {
   const functions = Object.keys(manifest[collection]).filter(
-    fnc =>
-      !functionsToExclude[collection]?.includes(fnc) &&
-      manifest[collection][fnc].example
+    fnc => manifest[collection][fnc].example
   )
   if (functions.length) {
     acc[collection] = functions
