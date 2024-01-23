@@ -15,7 +15,7 @@
   import { DashCard, Usage } from "components/usage"
   import { PlanModel } from "constants"
   import { sdk } from "@budibase/shared-core"
-  import { PlanType } from "@budibase/types"
+  import { getFormattedPlanName } from "helpers/planTitle"
 
   let staticUsage = []
   let monthlyUsage = []
@@ -98,23 +98,6 @@
 
   const setCancelAt = () => {
     cancelAt = license?.billing?.subscription?.cancelAt
-  }
-
-  const capitalise = string => {
-    if (string) {
-      return string.charAt(0).toUpperCase() + string.slice(1)
-    }
-  }
-
-  const planTitle = () => {
-    const planType = license?.plan.type
-    let planName = license?.plan.type
-    if (planType === PlanType.PREMIUM_PLUS) {
-      planName = "Premium"
-    } else if (planType === PlanType.ENTERPRISE_BASIC) {
-      planName = "Enterprise"
-    }
-    return `${capitalise(planName)} Plan`
   }
 
   const getDaysRemaining = timestamp => {
@@ -227,7 +210,7 @@
 
     <DashCard
       description="YOUR CURRENT PLAN"
-      title={planTitle()}
+      title={getFormattedPlanName(license?.plan.type)}
       {primaryActionText}
       primaryAction={showButton ? goToAccountPortal : undefined}
       {textRows}
