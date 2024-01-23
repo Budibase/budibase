@@ -21,6 +21,7 @@ interface BaseRelationshipFieldMetadata
   main?: boolean
   fieldName: string
   tableId: string
+  tableRev?: string
   subtype?: AutoFieldSubTypes.CREATED_BY | AutoFieldSubTypes.UPDATED_BY
 }
 
