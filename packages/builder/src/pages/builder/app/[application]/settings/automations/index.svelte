@@ -8,6 +8,8 @@
     Body,
     Heading,
     Divider,
+    Toggle,
+    notifications,
   } from "@budibase/bbui"
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
@@ -16,7 +18,7 @@
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
-  import { auth, licensing, admin } from "stores/portal"
+  import { auth, licensing, admin, apps } from "stores/portal"
   import { Constants } from "@budibase/frontend-core"
   import Portal from "svelte-portal"
 
@@ -35,9 +37,13 @@
   let timeRange = null
   let loaded = false
 
+  $: app = $apps.find(app => app.devId === $store.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
+  $: isCloud = $admin.cloud
+
+  $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
 
   const timeOptions = [
     { value: "90-d", label: "Past 90 days" },
@@ -124,6 +130,18 @@
     sidePanel.open()
   }
 
+  async function save({ detail }) {
+    try {
+      await apps.update($store.appId, {
+        automations: {
+          chainAutomations: detail,
+        },
+      })
+    } catch (error) {
+      notifications.error("Error updating automation chaining setting")
+    }
+  }
+
   onMount(async () => {
     await automationStore.actions.fetch()
     const params = new URLSearchParams(window.location.search)
@@ -150,11 +168,30 @@
 
 <Layout noPadding>
   <Layout gap="XS" noPadding>
-    <Heading>Automation History</Heading>
-    <Body>View the automations your app has executed</Body>
+    <Heading>Automations</Heading>
+    <Body size="S">See your automation history and edit advanced settings</Body>
   </Layout>
   <Divider />
 
+  <Layout gap="XS" noPadding>
+    <Heading size="XS">Chain automations</Heading>
+    <Body size="S">Allow automations to trigger from other automations</Body>
+    <div class="setting-spacing">
+      <Toggle
+        text={"Enable chaining"}
+        on:change={e => {
+          save(e)
+        }}
+        value={chainAutomations}
+      />
+    </div>
+  </Layout>
+
+  <Divider />
+  <Layout gap="XS" noPadding>
+    <Heading size="XS">History</Heading>
+    <Body size="S">Free plan stores up to 1 day of automation history</Body>
+  </Layout>
   <div class="controls">
     <div class="search">
       <div class="select">
@@ -237,6 +274,9 @@
 {/if}
 
 <style>
+  .setting-spacing {
+    padding-top: var(--spacing-s);
+  }
   .controls {
     display: flex;
     flex-direction: row;
