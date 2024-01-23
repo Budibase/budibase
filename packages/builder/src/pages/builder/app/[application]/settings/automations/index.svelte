@@ -37,7 +37,7 @@
   let timeRange = null
   let loaded = false
 
-  $: app = $apps.find(app => app.devId === $store.appId)
+  $: app = $apps.find(app => app.devId === $store.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)

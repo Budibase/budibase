@@ -4,6 +4,8 @@ import env from "../environment"
 import { Table, Row, DocumentType, App } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
+const MAX_AUTOMATIONS_ALLOWED = 5
+
 class AutomationEmitter {
   chainCount: number
   metadata: { automationChainCount: number }
@@ -21,9 +23,9 @@ class AutomationEmitter {
     let chainAutomations = appMetadata?.automations?.chainAutomations
 
     if (chainAutomations === true) {
-      return 5
+      return MAX_AUTOMATIONS_ALLOWED
     } else if (chainAutomations === undefined && env.SELF_HOSTED) {
-      return 5
+      return MAX_AUTOMATIONS_ALLOWED
     } else {
       return 0
     }
