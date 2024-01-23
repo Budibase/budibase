@@ -72,7 +72,11 @@ describe("manifest", () => {
           if (
             Array.isArray((parsedExpected = JSON.parse(js.replace(/\'/g, '"'))))
           ) {
-            js = parsedExpected.join(",")
+            if (typeof parsedExpected[0] === "object") {
+              js = JSON.stringify(parsedExpected)
+            } else {
+              js = parsedExpected.join(",")
+            }
           }
         } catch {}
         result = result.replace(/&nbsp;/g, " ")
