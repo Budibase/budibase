@@ -118,6 +118,8 @@ function getCommentInfo(file, func) {
   return docs
 }
 
+const excludeFunctions = { string: ["raw"] }
+
 /**
  * This script is very specific to purpose, parsing the handlebars-helpers files to attempt to get information about them.
  */
@@ -136,7 +138,8 @@ function run() {
       // skip built in functions and ones seen already
       if (
         HelperFunctionBuiltin.indexOf(name) !== -1 ||
-        foundNames.indexOf(name) !== -1
+        foundNames.indexOf(name) !== -1 ||
+        excludeFunctions[collection]?.includes(name)
       ) {
         continue
       }
