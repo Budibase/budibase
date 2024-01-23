@@ -23,6 +23,7 @@ export interface App extends Document {
   automationErrors?: AppMetadataErrors
   icon?: AppIcon
   features?: AppFeatures
+  automations?: AutomationSettings
 }
 
 export interface AppInstance {
@@ -67,4 +68,8 @@ export interface AppIcon {
 export interface AppFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
+}
+
+export interface AutomationSettings {
+  chainAutomations?: boolean
 }
