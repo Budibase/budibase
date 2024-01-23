@@ -50,6 +50,7 @@ describe("manifest", () => {
 
         const context = {
           double: i => i * 2,
+          isString: x => typeof x === "string",
         }
 
         const arrays = hbs.match(/\[[^/\]]+\]/)
