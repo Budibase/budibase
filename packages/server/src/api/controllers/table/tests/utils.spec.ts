@@ -1,5 +1,5 @@
 import { FieldType } from "@budibase/types"
-import { AutoFieldSubTypes } from "../../../../constants"
+import { AutoFieldSubType } from "../../../../constants"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { importToRows } from "../utils"
 
@@ -22,7 +22,7 @@ describe("utils", () => {
             autoId: {
               name: "autoId",
               type: FieldType.NUMBER,
-              subtype: AutoFieldSubTypes.AUTO_ID,
+              subtype: AutoFieldSubType.AUTO_ID,
               autocolumn: true,
               constraints: {
                 type: FieldType.NUMBER,
@@ -69,7 +69,7 @@ describe("utils", () => {
             autoId: {
               name: "autoId",
               type: FieldType.NUMBER,
-              subtype: AutoFieldSubTypes.AUTO_ID,
+              subtype: AutoFieldSubType.AUTO_ID,
               autocolumn: true,
               constraints: {
                 type: FieldType.NUMBER,
