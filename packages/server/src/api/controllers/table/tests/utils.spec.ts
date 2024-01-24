@@ -1,5 +1,4 @@
-import { FieldType } from "@budibase/types"
-import { AutoFieldSubType } from "../../../../constants"
+import { AutoFieldSubType, FieldType } from "@budibase/types"
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import { importToRows } from "../utils"
 

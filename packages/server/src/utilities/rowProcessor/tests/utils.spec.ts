@@ -1,6 +1,11 @@
 import { fixAutoColumnSubType } from "../utils"
-import { AutoFieldDefaultNames, AutoFieldSubType } from "../../../constants"
-import { FieldSchema, FieldType, RelationshipType } from "@budibase/types"
+import { AutoFieldDefaultNames } from "../../../constants"
+import {
+  AutoFieldSubType,
+  FieldSchema,
+  FieldType,
+  RelationshipType,
+} from "@budibase/types"
 
 describe("rowProcessor utility", () => {
   describe("fixAutoColumnSubType", () => {
