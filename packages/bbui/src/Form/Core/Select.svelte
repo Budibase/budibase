@@ -12,6 +12,7 @@
   export let getOptionIcon = () => null
   export let getOptionColour = () => null
   export let getOptionSubtitle = () => null
+  export let compare = (option, value) => option === value
   export let useOptionIconImage = false
   export let isOptionEnabled
   export let readonly = false
@@ -37,8 +38,8 @@
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex(
-      (option, idx) => getOptionValue(option, idx) === value
+    const index = options.findIndex((option, idx) =>
+      compare(getOptionValue(option, idx), value)
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
@@ -90,7 +91,7 @@
   {tag}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
-  isOptionSelected={option => option === value}
+  isOptionSelected={option => compare(option, value)}
   onSelectOption={selectOption}
   {loading}
 />
