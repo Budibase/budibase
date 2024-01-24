@@ -132,7 +132,11 @@
 <div class="scanner-video-wrapper">
   {#if value && !manualMode}
     <div class="scanner-value field-display">
-      <StatusLight positive />
+      {#if validator?.(value)}
+        <StatusLight negative />
+      {:else}
+        <StatusLight positive />
+      {/if}
       {value}
     </div>
   {/if}
@@ -188,9 +192,14 @@
       </div>
       {#if cameraEnabled === true}
         <div class="code-wrap">
-          {#if value}
+          {#if value && !validator?.(value)}
             <div class="scanner-value">
               <StatusLight positive />
+              {value}
+            </div>
+          {:else if value && validator?.(value)}
+            <div class="scanner-value">
+              <StatusLight negative />
               {value}
             </div>
           {:else}
