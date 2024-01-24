@@ -42,7 +42,7 @@
     }
     const index = options.findIndex((option, idx) => {
       const opt = getOptionValue(option, idx)
-      return compare ? compare(opt, value) : opt === value
+      return typeof compare === "function" ? compare(opt, value) : opt === value
     })
     return index !== -1 ? getAttribute(options[index], index) : null
   }
