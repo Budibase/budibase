@@ -1,4 +1,3 @@
-import { FormulaType } from "../../../constants"
 import { clearColumns } from "./utils"
 import { doesContainStrings } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
@@ -7,6 +6,7 @@ import uniq from "lodash/uniq"
 import { updateAllFormulasInTable } from "../row/staticFormula"
 import { context } from "@budibase/backend-core"
 import {
+  FormulaType,
   FieldSchema,
   FieldType,
   FormulaFieldMetadata,

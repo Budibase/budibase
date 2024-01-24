@@ -6,12 +6,6 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
-export {
-  RelationshipType,
-  AutoFieldSubType,
-  FormulaType,
-} from "@budibase/types"
-
 export enum FilterTypes {
   STRING = "string",
   FUZZY = "fuzzy",
