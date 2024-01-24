@@ -14,6 +14,7 @@
   export let value
   export let disabled = false
   export let allowManualEntry = false
+  export let autoConfirm = false
   export let scanButtonText = "Scan code"
   export let beepOnScan = false
   export let beepFrequency = 2637
@@ -41,6 +42,9 @@
         beep()
       }
       dispatch("change", decodedText)
+      if (autoConfirm) {
+        camModal?.hide()
+      }
     }
   }
 

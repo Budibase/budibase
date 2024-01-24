@@ -11,6 +11,7 @@
   export let defaultValue = ""
   export let onChange
   export let allowManualEntry
+  export let autoConfirm
   export let scanButtonText
   export let beepOnScan
   export let beepFrequency
@@ -49,6 +50,7 @@
       on:change={handleUpdate}
       disabled={fieldState.disabled || fieldState.readonly}
       {allowManualEntry}
+      {autoConfirm}
       scanButtonText={scanText}
       {beepOnScan}
       {beepFrequency}
