@@ -278,6 +278,9 @@ class TestConfiguration {
     if (params) {
       request.params = params
     }
+    request.throw = (status: number, message: string) => {
+      throw new Error(`Error ${status} - ${message}`)
+    }
     return this.doInContext(appId, async () => {
       await controlFunc(request)
       return request.body
