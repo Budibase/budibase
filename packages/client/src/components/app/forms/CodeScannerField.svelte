@@ -56,6 +56,7 @@
       {beepFrequency}
       {customFrequency}
       {preferredCamera}
+      validator={fieldState.validator}
     />
   {/if}
 </Field>

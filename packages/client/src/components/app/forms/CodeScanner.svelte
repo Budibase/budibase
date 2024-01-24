@@ -20,6 +20,7 @@
   export let beepFrequency = 2637
   export let customFrequency = 1046
   export let preferredCamera = "environment"
+  export let validator
 
   const dispatch = createEventDispatcher()
 
@@ -42,7 +43,7 @@
         beep()
       }
       dispatch("change", decodedText)
-      if (autoConfirm) {
+      if (autoConfirm && !validator?.(decodedText)) {
         camModal?.hide()
       }
     }
