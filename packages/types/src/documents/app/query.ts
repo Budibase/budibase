@@ -1,12 +1,17 @@
 import { Document } from "../document"
 
+export interface QuerySchema {
+  name?: string
+  type: string
+}
+
 export interface Query extends Document {
   datasourceId: string
   name: string
   parameters: QueryParameter[]
   fields: RestQueryFields | any
   transformer: string | null
-  schema: Record<string, { name?: string; type: string }>
+  schema: Record<string, QuerySchema | string>
   readable: boolean
   queryVerb: string
 }

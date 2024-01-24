@@ -1,26 +1,6 @@
 import { IntegrationTypes } from "constants/backend"
 import { findHBSBlocks } from "@budibase/string-templates"
 
-export function schemaToFields(schema) {
-  const response = {}
-  if (schema && typeof schema === "object") {
-    for (let [field, value] of Object.entries(schema)) {
-      response[field] = value?.type || "string"
-    }
-  }
-  return response
-}
-
-export function fieldsToSchema(fields) {
-  const response = {}
-  if (fields && typeof fields === "object") {
-    for (let [name, type] of Object.entries(fields)) {
-      response[name] = { name, type }
-    }
-  }
-  return response
-}
-
 export function breakQueryString(qs) {
   if (!qs) {
     return {}
@@ -184,10 +164,8 @@ export const parseToCsv = (headers, rows) => {
 export default {
   breakQueryString,
   buildQueryString,
-  fieldsToSchema,
   flipHeaderState,
   keyValueToQueryParameters,
   parseToCsv,
   queryParametersToKeyValue,
-  schemaToFields,
 }
