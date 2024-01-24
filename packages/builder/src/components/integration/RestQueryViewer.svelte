@@ -97,9 +97,7 @@
   $: schemaReadOnly = !responseSuccess
   $: variablesReadOnly = !responseSuccess
   $: showVariablesTab = shouldShowVariables(dynamicVariables, variablesReadOnly)
-  $: hasSchema =
-    Object.keys(schema || {}).length !== 0 ||
-    Object.keys(query?.schema || {}).length !== 0
+  $: hasSchema = Object.keys(schema || {}).length !== 0
 
   $: runtimeUrlQueries = readableToRuntimeMap(mergedBindings, breakQs)
 
