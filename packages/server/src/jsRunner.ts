@@ -74,16 +74,6 @@ export function init() {
           throw new Error(`No imports allowed. Required: ${specifier}`)
         })
 
-        const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
-        if (perRequestLimit) {
-          const cpuMs = Number(jsIsolate.cpuTime) / 1e6
-          if (cpuMs > perRequestLimit) {
-            throw new Error(
-              `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
-            )
-          }
-        }
-
         for (const [key, value] of Object.entries(ctx)) {
           if (key === "helpers") {
             // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
@@ -96,6 +86,16 @@ export function init() {
       }
 
       let { jsIsolate, jsContext, helpersModule } = bbCtx.isolateRefs!
+
+      const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
+      if (perRequestLimit) {
+        const cpuMs = Number(jsIsolate.cpuTime) / 1e6
+        if (cpuMs > perRequestLimit) {
+          throw new Error(
+            `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+          )
+        }
+      }
 
       const script = jsIsolate.compileModuleSync(
         `import helpers from "compiled_module";${js};cb(run());`,
