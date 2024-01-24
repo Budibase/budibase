@@ -172,22 +172,6 @@
         }
       }
     }
-    if (!savingColumn && !originalName) {
-      let highestNumber = 0
-      Object.keys(table.schema).forEach(columnName => {
-        const columnNumber = extractColumnNumber(columnName)
-        if (columnNumber > highestNumber) {
-          highestNumber = columnNumber
-        }
-        return highestNumber
-      })
-
-      if (highestNumber >= 1) {
-        editableColumn.name = `Column 0${highestNumber + 1}`
-      } else {
-        editableColumn.name = "Column 01"
-      }
-    }
 
     if (!savingColumn) {
       editableColumn.fieldId = makeFieldId(
@@ -387,11 +371,6 @@
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-  }
-
-  function extractColumnNumber(columnName) {
-    const match = columnName.match(/Column (\d+)/)
-    return match ? parseInt(match[1]) : 0
   }
 
   function getAllowedTypes() {
