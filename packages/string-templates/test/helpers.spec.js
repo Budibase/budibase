@@ -61,10 +61,10 @@ describe("test the array helpers", () => {
   })
 
   it("should allow use of the before helper", async () => {
-    const output = await processString("{{before array 2}}", {
+    const output = await processString("{{before array 3}}", {
       array,
     })
-    expect(output).toBe("hi,person,how")
+    expect(output).toBe("hi,person")
   })
 
   it("should allow use of the filter helper", async () => {
