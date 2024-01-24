@@ -1,5 +1,5 @@
 import { fixAutoColumnSubType } from "../utils"
-import { AutoFieldDefaultNames, AutoFieldSubTypes } from "../../../constants"
+import { AutoFieldDefaultNames, AutoFieldSubType } from "../../../constants"
 import { FieldSchema, FieldType, RelationshipType } from "@budibase/types"
 
 describe("rowProcessor utility", () => {
@@ -20,37 +20,37 @@ describe("rowProcessor utility", () => {
     it("updates the schema with the correct subtype", async () => {
       schema.name = AutoFieldDefaultNames.CREATED_BY
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
-        AutoFieldSubTypes.CREATED_BY
+        AutoFieldSubType.CREATED_BY
       )
       schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.UPDATED_BY
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
-        AutoFieldSubTypes.UPDATED_BY
+        AutoFieldSubType.UPDATED_BY
       )
       schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.CREATED_AT
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
-        AutoFieldSubTypes.CREATED_AT
+        AutoFieldSubType.CREATED_AT
       )
       schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.UPDATED_AT
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
-        AutoFieldSubTypes.UPDATED_AT
+        AutoFieldSubType.UPDATED_AT
       )
       schema.subtype = undefined
 
       schema.name = AutoFieldDefaultNames.AUTO_ID
       expect(fixAutoColumnSubType(schema).subtype).toEqual(
-        AutoFieldSubTypes.AUTO_ID
+        AutoFieldSubType.AUTO_ID
       )
       schema.subtype = undefined
     })
 
     it("returns the column if subtype exists", async () => {
-      schema.subtype = AutoFieldSubTypes.CREATED_BY
+      schema.subtype = AutoFieldSubType.CREATED_BY
       schema.name = AutoFieldDefaultNames.CREATED_AT
       expect(fixAutoColumnSubType(schema)).toEqual(schema)
     })
