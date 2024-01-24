@@ -7,18 +7,22 @@ import fs from "fs"
 import url from "url"
 import crypto from "crypto"
 
+const helpersSource = fs.readFileSync(
+  `${require.resolve("@budibase/string-templates/index-helpers")}`,
+  "utf8"
+)
+
 export function init() {
-  const helpersSource = fs.readFileSync(
-    `${require.resolve("@budibase/string-templates/index-helpers")}`,
-    "utf8"
-  )
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
-      const bbCtx = context.getCurrentContext() || {}
-      let { jsIsolate = new ivm.Isolate({ memoryLimit: 64 }) } = bbCtx
-      let { jsContext = jsIsolate.createContextSync() } = bbCtx
+      const bbCtx = context.getCurrentContext()!
 
-      const injectedRequire = `const require = function(val){
+      const isolateRefs = bbCtx.isolateRefs
+      if (!isolateRefs) {
+        const jsIsolate = new ivm.Isolate({ memoryLimit: 64 })
+        const jsContext = jsIsolate.createContextSync()
+
+        const injectedRequire = `const require = function(val){
         switch (val) {
           case "url": 
             return {
@@ -28,63 +32,70 @@ export function init() {
         }
       };`
 
-      const global = jsContext.global
-      global.setSync(
-        "urlResolveCb",
-        new ivm.Callback((...params: Parameters<typeof url.resolve>) =>
-          url.resolve(...params)
+        const global = jsContext.global
+        global.setSync(
+          "urlResolveCb",
+          new ivm.Callback((...params: Parameters<typeof url.resolve>) =>
+            url.resolve(...params)
+          )
         )
-      )
 
-      global.setSync(
-        "urlParseCb",
-        new ivm.Callback((...params: Parameters<typeof url.parse>) =>
-          url.parse(...params)
+        global.setSync(
+          "urlParseCb",
+          new ivm.Callback((...params: Parameters<typeof url.parse>) =>
+            url.parse(...params)
+          )
         )
-      )
 
-      const helpersModule = jsIsolate.compileModuleSync(
-        `${injectedRequire};${helpersSource}`
-      )
+        const helpersModule = jsIsolate.compileModuleSync(
+          `${injectedRequire};${helpersSource}`
+        )
 
-      const cryptoModule = jsIsolate.compileModuleSync(`export default {
+        const cryptoModule = jsIsolate.compileModuleSync(`export default {
         randomUUID: cryptoRandomUUIDCb,
       }`)
-      cryptoModule.instantiateSync(jsContext, specifier => {
-        throw new Error(`No imports allowed. Required: ${specifier}`)
-      })
-
-      global.setSync(
-        "cryptoRandomUUIDCb",
-        new ivm.Callback((...params: Parameters<typeof crypto.randomUUID>) => {
-          return crypto.randomUUID(...params)
+        cryptoModule.instantiateSync(jsContext, specifier => {
+          throw new Error(`No imports allowed. Required: ${specifier}`)
         })
-      )
 
-      helpersModule.instantiateSync(jsContext, specifier => {
-        if (specifier === "crypto") {
-          return cryptoModule
-        }
-        throw new Error(`No imports allowed. Required: ${specifier}`)
-      })
-
-      const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
-      if (perRequestLimit) {
-        const cpuMs = Number(jsIsolate.cpuTime) / 1e6
-        if (cpuMs > perRequestLimit) {
-          throw new Error(
-            `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+        global.setSync(
+          "cryptoRandomUUIDCb",
+          new ivm.Callback(
+            (...params: Parameters<typeof crypto.randomUUID>) => {
+              return crypto.randomUUID(...params)
+            }
           )
+        )
+
+        helpersModule.instantiateSync(jsContext, specifier => {
+          if (specifier === "crypto") {
+            return cryptoModule
+          }
+          throw new Error(`No imports allowed. Required: ${specifier}`)
+        })
+
+        const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
+        if (perRequestLimit) {
+          const cpuMs = Number(jsIsolate.cpuTime) / 1e6
+          if (cpuMs > perRequestLimit) {
+            throw new Error(
+              `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+            )
+          }
         }
+
+        for (const [key, value] of Object.entries(ctx)) {
+          if (key === "helpers") {
+            // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
+            continue
+          }
+          global.setSync(key, value)
+        }
+
+        bbCtx.isolateRefs = { jsContext, jsIsolate, helpersModule }
       }
 
-      for (const [key, value] of Object.entries(ctx)) {
-        if (key === "helpers") {
-          // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
-          continue
-        }
-        global.setSync(key, value)
-      }
+      let { jsIsolate, jsContext, helpersModule } = bbCtx.isolateRefs!
 
       const script = jsIsolate.compileModuleSync(
         `import helpers from "compiled_module";${js};cb(run());`,
@@ -100,7 +111,7 @@ export function init() {
       })
 
       let result
-      global.setSync(
+      jsContext.global.setSync(
         "cb",
         new ivm.Callback((value: any) => {
           result = value
