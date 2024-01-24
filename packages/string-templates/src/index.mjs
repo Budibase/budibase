@@ -37,3 +37,5 @@ if (process && !process.env.NO_JS) {
     return vm.runInNewContext(js, context, { timeout: 1000 })
   })
 }
+
+export * from "./errors.js"

@@ -35,3 +35,8 @@ if (!process.env.NO_JS) {
     return vm.run(js)
   })
 }
+
+const errors = require("./errors")
+for (const error in errors) {
+  module.exports[error] = errors[error]
+}

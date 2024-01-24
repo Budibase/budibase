@@ -394,3 +394,8 @@ module.exports.convertToJS = hbs => {
 }
 
 module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
+
+const errors = require("./errors")
+for (const error in errors) {
+  module.exports[error] = errors[error]
+}
