@@ -12,6 +12,13 @@ const helpersSource = fs.readFileSync(
   "utf8"
 )
 
+class ExecutionTimeoutError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ExecutionTimeoutError"
+  }
+}
+
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
@@ -91,7 +98,7 @@ export function init() {
       if (perRequestLimit) {
         const cpuMs = Number(jsIsolate.cpuTime) / 1e6
         if (cpuMs > perRequestLimit) {
-          throw new Error(
+          throw new ExecutionTimeoutError(
             `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
           )
         }
