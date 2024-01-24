@@ -1,4 +1,4 @@
-import { QuerySchema } from "@budibase/types"
+import { QuerySchema, Row } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
 
@@ -14,6 +14,14 @@ export interface QueryEvent {
   environmentVariables?: Record<string, string>
   ctx?: any
   schema?: Record<string, QuerySchema | string>
+}
+
+export interface QueryResponse {
+  rows: Row[]
+  keys: string[]
+  info: any
+  extra: any
+  pagination: any
 }
 
 export interface QueryVariable {

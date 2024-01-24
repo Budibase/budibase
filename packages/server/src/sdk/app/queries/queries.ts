@@ -5,7 +5,7 @@ import { getQueryParams, isProdAppID } from "../../../db/utils"
 import { BaseQueryVerbs } from "../../../constants"
 import { Query, QuerySchema } from "@budibase/types"
 
-function updateSchema(query: Query) {
+function updateSchema(query: Query): Query {
   if (!query.schema) {
     return query
   }
@@ -21,7 +21,7 @@ function updateSchema(query: Query) {
   return query
 }
 
-function updateSchemas(queries: Query[]) {
+function updateSchemas(queries: Query[]): Query[] {
   return queries.map(query => updateSchema(query))
 }
 
