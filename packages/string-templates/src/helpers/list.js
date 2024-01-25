@@ -21,6 +21,17 @@ module.exports.getHelperList = () => {
   for (let key of Object.keys(externalHandlebars.addedHelpers)) {
     helpers[key] = externalHandlebars.addedHelpers[key]
   }
+
+  helpers = adjustJsHelpers(helpers)
   Object.freeze(helpers)
   return helpers
+}
+
+function adjustJsHelpers(helpers) {
+  const result = { ...helpers }
+
+  result.avg = function (...params) {
+    return helpers.avg(...params, {})
+  }
+  return result
 }
