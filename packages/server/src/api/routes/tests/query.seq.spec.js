@@ -235,9 +235,9 @@ describe("/queries", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual({
-        a: "string",
-        b: "number",
+      expect(res.body.schema).toEqual({
+        a: { type: "string", name: "a" },
+        b: { type: "number", name: "b" },
       })
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
@@ -300,10 +300,10 @@ describe("/queries", () => {
         queryString: "test={{ variable2 }}",
       })
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual({
-        opts: "json",
-        url: "string",
-        value: "string",
+      expect(res.body.schema).toEqual({
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
+        value: { type: "string", name: "value" },
       })
       expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
     })
@@ -314,10 +314,10 @@ describe("/queries", () => {
         path: "www.google.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual({
-        opts: "json",
-        url: "string",
-        value: "string",
+      expect(res.body.schema).toEqual({
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
+        value: { type: "string", name: "value" },
       })
       expect(res.body.rows[0].url).toContain("doctype%20html")
     })
@@ -337,10 +337,10 @@ describe("/queries", () => {
         path: "www.failonce.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual({
-        fails: "number",
-        opts: "json",
-        url: "string",
+      expect(res.body.schema).toEqual({
+        fails: { type: "number", name: "fails" },
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
       })
       expect(res.body.rows[0].fails).toEqual(1)
     })
