@@ -12,6 +12,7 @@
   export let getOptionIcon = () => null
   export let getOptionColour = () => null
   export let getOptionSubtitle = () => null
+  export let compare = null
   export let useOptionIconImage = false
   export let isOptionEnabled
   export let readonly = false
@@ -34,13 +35,19 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
+  function compareOptionAndValue(option, value) {
+    return typeof compare === "function"
+      ? compare(option, value)
+      : option === value
+  }
+
   const getFieldAttribute = (getAttribute, value, options) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex(
-      (option, idx) => getOptionValue(option, idx) === value
+    const index = options.findIndex((option, idx) =>
+      compareOptionAndValue(getOptionValue(option, idx), value)
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
@@ -94,7 +101,7 @@
   {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
-  isOptionSelected={option => option === value}
+  isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}
 />
