@@ -15,24 +15,14 @@ module.exports.getHelperList = () => {
   }
   for (let collection of constructed) {
     for (let [key, func] of Object.entries(collection)) {
-      helpers[key] = func
+      // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
+      helpers[key] = (...props) => func(...props, {})
     }
   }
   for (let key of Object.keys(externalHandlebars.addedHelpers)) {
     helpers[key] = externalHandlebars.addedHelpers[key]
   }
 
-  helpers = adjustJsHelpers(helpers)
   Object.freeze(helpers)
   return helpers
-}
-
-// Some helpers depend on handlebars injecting some parameters. This function adjust the helpers when required
-function adjustJsHelpers(helpers) {
-  const result = { ...helpers }
-
-  result.avg = function (...params) {
-    return helpers.avg(...params, {})
-  }
-  return result
 }
