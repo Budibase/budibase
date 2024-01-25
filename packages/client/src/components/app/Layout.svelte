@@ -34,6 +34,7 @@
   export let navWidth
   export let pageWidth
   export let logoLinkUrl
+  export let openLogoLinkInNewTab
 
   export let embedded = false
 
@@ -151,6 +152,16 @@
     }
     return style
   }
+
+  const getSanitizedUrl = (url, openInNewTab) => {
+    if (!isInternal(url)) {
+      return ensureExternal(url)
+    }
+    if (openInNewTab) {
+      return `#${url}`
+    }
+    return url
+  }
 </script>
 
 <div
@@ -193,19 +204,17 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  {#if logoLinkUrl && isInternal(logoLinkUrl)}
+                  {#if logoLinkUrl && isInternal(logoLinkUrl) && !openLogoLinkInNewTab}
                     <a
-                      class={FieldTypes.LINK}
-                      href={logoLinkUrl}
+                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
                       use:linkable
-                      use:active={logoLinkUrl}
                     >
                       <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                     </a>
                   {:else if logoLinkUrl}
                     <a
-                      class={FieldTypes.LINK}
-                      href={ensureExternal(logoLinkUrl)}
+                      target={openLogoLinkInNewTab ? "_blank" : "_self"}
+                      href={getSanitizedUrl(logoLinkUrl, openLogoLinkInNewTab)}
                     >
                       <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
                     </a>

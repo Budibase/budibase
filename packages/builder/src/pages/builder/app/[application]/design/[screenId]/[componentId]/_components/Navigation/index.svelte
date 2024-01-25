@@ -179,6 +179,13 @@
             on:change={e => update("logoLinkUrl", e.detail)}
             options={screenRouteOptions}
           />
+          <div class="label">
+            <Label size="M">New tab</Label>
+          </div>
+          <Checkbox
+            value={!!$store.navigation.openLogoLinkInNewTab}
+            on:change={e => update("openLogoLinkInNewTab", !!e.detail)}
+          />
         {/if}
       </div>
     </div>
