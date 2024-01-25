@@ -33,6 +33,7 @@
   export let navTextColor
   export let navWidth
   export let pageWidth
+  export let logoLinkUrl
 
   export let embedded = false
 
@@ -192,7 +193,25 @@
               {/if}
               <div class="logo">
                 {#if !hideLogo}
-                  <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                  {#if logoLinkUrl && isInternal(logoLinkUrl)}
+                    <a
+                      class={FieldTypes.LINK}
+                      href={logoLinkUrl}
+                      use:linkable
+                      use:active={logoLinkUrl}
+                    >
+                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                    </a>
+                  {:else if logoLinkUrl}
+                    <a
+                      class={FieldTypes.LINK}
+                      href={ensureExternal(logoLinkUrl)}
+                    >
+                      <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                    </a>
+                  {:else}
+                    <img src={logoUrl || "/builder/bblogo.png"} alt={title} />
+                  {/if}
                 {/if}
                 {#if !hideTitle && title}
                   <Heading size="S">{title}</Heading>
