@@ -1,8 +1,8 @@
-const redis = require("../redis/init")
-const { v4: uuidv4 } = require("uuid")
-const { logWarn } = require("../logging")
-
+import * as redis from "../redis/init"
+import { v4 as uuidv4 } from "uuid"
+import { logWarn } from "../logging"
 import env from "../environment"
+import { Duration } from "../utils"
 import {
   Session,
   ScannedSession,
@@ -10,8 +10,10 @@ import {
   CreateSession,
 } from "@budibase/types"
 
-// a week in seconds
-const EXPIRY_SECONDS = 86400 * 7
+// a week expiry is the default
+const EXPIRY_SECONDS = env.SESSION_EXPIRY_SECONDS
+  ? parseInt(env.SESSION_EXPIRY_SECONDS)
+  : Duration.fromDays(7).toSeconds()
 
 function makeSessionID(userId: string, sessionId: string) {
   return `${userId}/${sessionId}`
