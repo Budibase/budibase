@@ -1,7 +1,12 @@
 <script>
   import { notifications, Icon, Body } from "@budibase/bbui"
   import { isActive, goto } from "@roxi/routify"
-  import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
+  import {
+    store,
+    selectedScreen,
+    userSelectedResourceMap,
+    hoverStore,
+  } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
@@ -36,7 +41,7 @@
     scrolling = e.target.scrollTop !== 0
   }
 
-  const hover = store.actions.components.hover
+  const hover = hoverStore.actions.update
 </script>
 
 <div class="components">
@@ -60,7 +65,7 @@
             icon="WebPage"
             on:drop={onDrop}
             on:click={() => ($store.selectedComponentId = screenComponentId)}
-            hovering={$store.hoveredComponentId === screenComponentId}
+            hovering={$hoverStore.componentId === screenComponentId}
             on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-screen"
@@ -79,7 +84,7 @@
               : "VisibilityOff"}
             on:drop={onDrop}
             on:click={() => ($store.selectedComponentId = navComponentId)}
-            hovering={$store.hoveredComponentId === navComponentId}
+            hovering={$hoverStore.componentId === navComponentId}
             on:mouseenter={() => hover(navComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-nav"
