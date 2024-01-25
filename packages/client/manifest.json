@@ -6663,7 +6663,8 @@
       }
     ],
     "context": {
-      "type": "schema"
+      "type": "schema",
+      "scope": "local"
     },
     "actions": ["RefreshDatasource"]
   },
