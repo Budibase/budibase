@@ -3966,6 +3966,12 @@
       },
       {
         "type": "boolean",
+        "label": "Auto confirm",
+        "key": "autoConfirm",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Play sound on scan",
         "key": "beepOnScan",
         "defaultValue": false
