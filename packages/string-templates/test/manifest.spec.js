@@ -16,10 +16,20 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
 })
 
 const fs = require("fs")
-const { processString } = require("../src/index.cjs")
+const {
+  processString,
+  convertToJS,
+  processStringSync,
+  encodeJSBinding,
+} = require("../src/index.cjs")
 
 const tk = require("timekeeper")
+
 tk.freeze("2021-01-21T12:00:00")
+
+const processJS = (js, context) => {
+  return processStringSync(encodeJSBinding(js), context)
+}
 
 const manifest = JSON.parse(
   fs.readFileSync(require.resolve("../manifest.json"), "utf8")
@@ -90,6 +100,30 @@ describe("manifest", () => {
         })
 
         let result = await processString(hbs, context)
+        result = result.replace(/&nbsp;/g, " ")
+        expect(result).toEqual(js)
+      })
+    })
+  })
+
+  describe("can be parsed and run as js", () => {
+    describe.each(Object.keys(examples))("%s", collection => {
+      it.each(examples[collection])("%s", async (_, hbs, js) => {
+        const context = {
+          double: i => i * 2,
+          isString: x => typeof x === "string",
+        }
+
+        const arrays = hbs.match(/\[[^/\]]+\]/)
+        arrays?.forEach((arrayString, i) => {
+          hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
+          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+        })
+
+        let convertedJs = convertToJS(hbs)
+        convertedJs = convertedJs.replace(/\n/g, "\n")
+
+        let result = processJS(convertedJs, context)
         result = result.replace(/&nbsp;/g, " ")
         expect(result).toEqual(js)
       })
