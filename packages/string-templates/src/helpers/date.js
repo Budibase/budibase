@@ -115,7 +115,7 @@ module.exports.duration = (str, pattern, format) => {
   setLocale(config.str, config.pattern)
 
   const duration = dayjs.duration(config.str, config.pattern)
-  if (!isOptions(format)) {
+  if (format && !isOptions(format)) {
     return duration.format(format)
   } else {
     return duration.humanize()

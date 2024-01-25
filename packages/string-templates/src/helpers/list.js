@@ -27,6 +27,7 @@ module.exports.getHelperList = () => {
   return helpers
 }
 
+// Some helpers depend on handlebars injecting some parameters. This function adjust the helpers when required
 function adjustJsHelpers(helpers) {
   const result = { ...helpers }
 
