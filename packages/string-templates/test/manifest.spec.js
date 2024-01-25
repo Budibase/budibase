@@ -27,10 +27,32 @@ const manifest = JSON.parse(
 
 const collections = Object.keys(manifest)
 const examples = collections.reduce((acc, collection) => {
-  const functions = Object.keys(manifest[collection]).filter(
-    fnc => manifest[collection][fnc].example
-  )
-  if (functions.length) {
+  const functions = Object.entries(manifest[collection])
+    .filter(([_, details]) => details.example)
+    .map(([name, details]) => {
+      const example = details.example
+      let [hbs, js] = example.split("->").map(x => x.trim())
+      if (!js) {
+        // The function has no return value
+        return
+      }
+
+      // Trim 's
+      js = js.replace(/^\'|\'$/g, "")
+      if ((parsedExpected = tryParseJson(js))) {
+        if (Array.isArray(parsedExpected)) {
+          if (typeof parsedExpected[0] === "object") {
+            js = JSON.stringify(parsedExpected)
+          } else {
+            js = parsedExpected.join(",")
+          }
+        }
+      }
+      return [name, hbs, js]
+    })
+    .filter(x => !!x)
+
+  if (Object.keys(functions).length) {
     acc[collection] = functions
   }
   return acc
@@ -55,11 +77,7 @@ function tryParseJson(str) {
 describe("manifest", () => {
   describe("examples are valid", () => {
     describe.each(Object.keys(examples))("%s", collection => {
-      it.each(examples[collection])("%s", async func => {
-        const example = manifest[collection][func].example
-
-        let [hbs, js] = example.split("->").map(x => x.trim())
-
+      it.each(examples[collection])("%s", async (_, hbs, js) => {
         const context = {
           double: i => i * 2,
           isString: x => typeof x === "string",
@@ -71,23 +89,7 @@ describe("manifest", () => {
           context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
         })
 
-        if (js === undefined) {
-          // The function has no return value
-          return
-        }
-
         let result = await processString(hbs, context)
-        // Trim 's
-        js = js.replace(/^\'|\'$/g, "")
-        if ((parsedExpected = tryParseJson(js))) {
-          if (Array.isArray(parsedExpected)) {
-            if (typeof parsedExpected[0] === "object") {
-              js = JSON.stringify(parsedExpected)
-            } else {
-              js = parsedExpected.join(",")
-            }
-          }
-        }
         result = result.replace(/&nbsp;/g, " ")
         expect(result).toEqual(js)
       })
