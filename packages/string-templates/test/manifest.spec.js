@@ -121,7 +121,6 @@ describe("manifest", () => {
         })
 
         let convertedJs = convertToJS(hbs)
-        convertedJs = convertedJs.replace(/\n/g, "\n")
 
         let result = processJS(convertedJs, context)
         result = result.replace(/&nbsp;/g, " ")
