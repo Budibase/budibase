@@ -239,7 +239,6 @@
       bind:searchTerm
       loading={$fetch.loading}
       bind:open
-      customPopoverMaxHeight={400}
     />
   {/if}
 </Field>
