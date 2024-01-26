@@ -364,6 +364,7 @@ const getContextBindings = (asset, componentId) => {
  * Generates a set of bindings for a given component context
  */
 const generateComponentContextBindings = (asset, componentContext) => {
+  console.log("Hello ")
   const { component, definition, contexts } = componentContext
   if (!component || !definition || !contexts?.length) {
     return []
@@ -456,15 +457,11 @@ const generateComponentContextBindings = (asset, componentContext) => {
         context,
         definition
       )
-
-      // Temporarily append scope for debugging
-      const scope = `[${(context.scope || "global").toUpperCase()}]`
-
       // Create the binding object
       bindings.push({
         type: "context",
         runtimeBinding,
-        readableBinding: `${scope} ${readableBinding}`,
+        readableBinding: `${readableBinding}`,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -475,7 +472,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         category: bindingCategory.category,
         icon: bindingCategory.icon,
         display: {
-          name: `${scope} ${fieldSchema.name || key}`,
+          name: `${fieldSchema.name || key}`,
           type: fieldSchema.type,
         },
       })
