@@ -1,5 +1,6 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { Duration, TemporalUnit } from "node-duration"
 import env from "../../../environment"
 
 let container: StartedTestContainer | undefined
@@ -15,7 +16,9 @@ export async function getDsConfig(): Promise<Datasource> {
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .withWaitStrategy(
-          Wait.forLogMessage("database system is ready to accept connections")
+          Wait.forLogMessage(
+            "PostgreSQL init process complete; ready for start up."
+          ).withStartupTimeout(new Duration(2, TemporalUnit.SECONDS))
         )
         .start()
     }
