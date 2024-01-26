@@ -587,7 +587,7 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(
+  async upsertTable(
     config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
@@ -614,7 +614,7 @@ class TestConfiguration {
     if (!config.sourceId) {
       config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async createExternalTable(
@@ -629,7 +629,7 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async getTable(tableId?: string) {
