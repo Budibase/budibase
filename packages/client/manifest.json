@@ -6696,6 +6696,17 @@
         "defaultValue": false
       },
       {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
+      },
+      {
         "type": "select",
         "label": "Layout",
         "key": "span",
