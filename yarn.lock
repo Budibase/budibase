@@ -4977,13 +4977,6 @@
   resolved "https://registry.yarnpkg.com/@tediousjs/connection-string/-/connection-string-0.5.0.tgz#9b3d858c040aac6bdf5584bf45370cef5b6522b4"
   integrity sha512-7qSgZbincDDDFyRweCIEvZULFAw5iz/DeunhvuxpL31nfntX3P4Yd4HkHBRg9H8CdqY1e5WFN1PZIz/REL9MVQ==
 
-"@testcontainers/postgresql@10.6.0":
-  version "10.6.0"
-  resolved "https://registry.yarnpkg.com/@testcontainers/postgresql/-/postgresql-10.6.0.tgz#dfeff325130ab0ed4fd0dbd5dbe5847cddb435d9"
-  integrity sha512-gHYpsXkVLpCkJ0jg7xE5n8pogTNvw2LyhkXeJm04raH1yz020jcHAB2a1tRW1J2D8mM8WhFH+xH6pzH2ZggFdg==
-  dependencies:
-    testcontainers "^10.6.0"
-
 "@testing-library/dom@^8.1.0":
   version "8.20.0"
   resolved "https://registry.yarnpkg.com/@testing-library/dom/-/dom-8.20.0.tgz#914aa862cef0f5e89b98cc48e3445c4c921010f6"
