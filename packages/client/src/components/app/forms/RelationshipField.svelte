@@ -108,16 +108,13 @@
     }
   }
 
-  $: forceFetchRows(filter, fieldApi)
+  $: forceFetchRows(filter)
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
   const forceFetchRows = async () => {
-    if (!fieldApi) {
-      return
-    }
     // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
     optionsObj = {}
-    fieldApi.setValue([])
+    fieldApi?.setValue([])
     selectedValue = []
     debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
   }
