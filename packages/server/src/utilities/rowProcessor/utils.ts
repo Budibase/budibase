@@ -1,15 +1,13 @@
-import {
-  AutoFieldDefaultNames,
-  AutoFieldSubTypes,
-  FieldTypes,
-  FormulaTypes,
-} from "../../constants"
+import { AutoFieldDefaultNames } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
 import {
   AutoColumnFieldMetadata,
   FieldSchema,
   Row,
   Table,
+  FormulaType,
+  AutoFieldSubType,
+  FieldType,
 } from "@budibase/types"
 import tracer from "dd-trace"
 
@@ -30,15 +28,15 @@ export function fixAutoColumnSubType(
   }
   // the columns which get auto generated
   if (column.name.endsWith(AutoFieldDefaultNames.CREATED_BY)) {
-    column.subtype = AutoFieldSubTypes.CREATED_BY
+    column.subtype = AutoFieldSubType.CREATED_BY
   } else if (column.name.endsWith(AutoFieldDefaultNames.UPDATED_BY)) {
-    column.subtype = AutoFieldSubTypes.UPDATED_BY
+    column.subtype = AutoFieldSubType.UPDATED_BY
   } else if (column.name.endsWith(AutoFieldDefaultNames.CREATED_AT)) {
-    column.subtype = AutoFieldSubTypes.CREATED_AT
+    column.subtype = AutoFieldSubType.CREATED_AT
   } else if (column.name.endsWith(AutoFieldDefaultNames.UPDATED_AT)) {
-    column.subtype = AutoFieldSubTypes.UPDATED_AT
+    column.subtype = AutoFieldSubType.UPDATED_AT
   } else if (column.name.endsWith(AutoFieldDefaultNames.AUTO_ID)) {
-    column.subtype = AutoFieldSubTypes.AUTO_ID
+    column.subtype = AutoFieldSubType.AUTO_ID
   }
   return column
 }
@@ -57,11 +55,11 @@ export function processFormulas<T extends Row | Row[]>(
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
     if (rows) {
       for (let [column, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldTypes.FORMULA) {
+        if (schema.type !== FieldType.FORMULA) {
           continue
         }
 
-        const isStatic = schema.formulaType === FormulaTypes.STATIC
+        const isStatic = schema.formulaType === FormulaType.STATIC
 
         if (
           schema.formula == null ||
@@ -100,7 +98,7 @@ export function processDates<T extends Row | Row[]>(
   let rows = Array.isArray(inputRows) ? inputRows : [inputRows]
   let datesWithTZ: string[] = []
   for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.DATETIME) {
+    if (schema.type !== FieldType.DATETIME) {
       continue
     }
     if (!schema.timeOnly && !schema.ignoreTimezones) {
