@@ -618,7 +618,7 @@ class TestConfiguration {
   async createExternalTable(
     config?: TableToBuild,
     options = { skipReassigning: false }
-  ) {
+  ): Promise<Table> {
     if (config != null && config._id) {
       delete config._id
     }
@@ -627,7 +627,16 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
-    return this.updateTable(config, options)
+    const table = await this.api.table.create({
+      ...config,
+      sourceType: config.sourceType || TableSourceType.INTERNAL,
+      sourceId: config.sourceId || INTERNAL_TABLE_SOURCE_ID,
+    })
+    if (!options.skipReassigning) {
+      this.table = table
+    }
+
+    return table
   }
 
   async getTable(tableId?: string) {
