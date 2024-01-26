@@ -1,29 +1,23 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
-import { Duration, TemporalUnit } from "node-duration"
-import env from "../../../environment"
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from "@testcontainers/postgresql"
 
-let container: StartedTestContainer | undefined
-
-const isMac = process.platform === "darwin"
+let container: StartedPostgreSqlContainer | undefined
 
 export async function getDsConfig(): Promise<Datasource> {
   try {
     if (!container) {
-      // postgres 15-bullseye safer bet on Linux
-      const version = isMac ? undefined : "15-bullseye"
-      container = await new GenericContainer("postgres", version)
+      const pgContainer = new PostgreSqlContainer()
+      container = await pgContainer
+        .withUsername("postgres")
+        .withPassword("password")
         .withExposedPorts(5432)
-        .withEnv("POSTGRES_PASSWORD", "password")
-        .withWaitStrategy(
-          Wait.forLogMessage(
-            "PostgreSQL init process complete; ready for start up."
-          ).withStartupTimeout(new Duration(2, TemporalUnit.SECONDS))
-        )
         .start()
     }
-    const host = container.getContainerIpAddress()
-    const port = container.getMappedPort(5432)
+    const host = container!.getHost()
+    const port = container!.getMappedPort(5432)
 
     return {
       type: "datasource_plus",
