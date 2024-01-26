@@ -1,23 +1,24 @@
 import { Datasource, SourceName } from "@budibase/types"
-import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
-} from "@testcontainers/postgresql"
+import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 
-let container: StartedPostgreSqlContainer | undefined
+let container: StartedTestContainer | undefined
 
 export async function getDsConfig(): Promise<Datasource> {
   try {
     if (!container) {
-      const pgContainer = new PostgreSqlContainer()
-      container = await pgContainer
-        .withUsername("postgres")
-        .withPassword("password")
+      container = await new GenericContainer("postgres:16.1-bullseye")
         .withExposedPorts(5432)
+        .withEnvironment({ POSTGRES_PASSWORD: "password" })
+        .withWaitStrategy(
+          Wait.forLogMessage(
+            "database system is ready to accept connections",
+            2
+          )
+        )
         .start()
     }
-    const host = container!.getHost()
-    const port = container!.getMappedPort(5432)
+    const host = container.getHost()
+    const port = container.getMappedPort(5432)
 
     return {
       type: "datasource_plus",
