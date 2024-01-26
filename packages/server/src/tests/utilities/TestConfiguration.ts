@@ -682,9 +682,9 @@ class TestConfiguration {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
-    const tableId = (config && config.tableId) || this.table._id
+    const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
-    return this._req(config, { tableId }, controllers.row.save)
+    return this.api.row.save(tableId, config)
   }
 
   async getRow(tableId: string, rowId: string): Promise<Row> {
