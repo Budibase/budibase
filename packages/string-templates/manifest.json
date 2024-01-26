@@ -163,7 +163,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#eachIndex [1, 2, 3]}} {{item}} is {{index}} {{/eachIndex}}",
+      "example": "{{#eachIndex [1, 2, 3]}} {{item}} is {{index}} {{/eachIndex}} -> ' 1 is 0  2 is 1  3 is 2 '",
       "description": "<p>Iterates the array, listing an item and the index of it.</p>\n"
     },
     "filter": {
@@ -173,7 +173,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#filter [1, 2, 3] 2}}2 Found{{else}}2 not found{{/filter}}",
+      "example": "{{#filter [1, 2, 3] 2}}2 Found{{else}}2 not found{{/filter}} -> 2 Found",
       "description": "<p>Block helper that filters the given array and renders the block for values that evaluate to <code>true</code>, otherwise the inverse block is returned.</p>\n"
     },
     "first": {
@@ -190,7 +190,7 @@
         "array"
       ],
       "numArgs": 1,
-      "example": "{{#forEach [{ 'name': 'John' }] }} {{ name }} {{/forEach}}",
+      "example": "{{#forEach [{ 'name': 'John' }] }} {{ name }} {{/forEach}} -> ' John '",
       "description": "<p>Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - <code>index</code> - <code>total</code> - <code>isFirst</code> - <code>isLast</code> Also, <code>@index</code> is exposed as a private variable, and additional private variables may be defined as hash arguments.</p>\n"
     },
     "inArray": {
@@ -327,7 +327,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{ withAfter [1, 2, 3] 1 }} {{this}} {{/withAfter}}",
+      "example": "{{#withAfter [1, 2, 3] 1 }} {{this}} {{/withAfter}} -> ' 2  3 '",
       "description": "<p>Use the items in the array <em>after</em> the specified index as context inside a block. Opposite of <a href=\"#withBefore\">withBefore</a>.</p>\n"
     },
     "withBefore": {
@@ -337,7 +337,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{ withBefore [1, 2, 3] 2 }} {{this}} {{/withBefore}}",
+      "example": "{{#withBefore [1, 2, 3] 2 }} {{this}} {{/withBefore}} -> ' 1 '",
       "description": "<p>Use the items in the array <em>before</em> the specified index as context inside a block. Opposite of <a href=\"#withAfter\">withAfter</a>.</p>\n"
     },
     "withFirst": {
@@ -462,7 +462,7 @@
         "precision"
       ],
       "numArgs": 2,
-      "example": "{{toPrecision '1.1234' 2}}",
+      "example": "{{toPrecision '1.1234' 2}} -> 1.1",
       "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n"
     }
   },
@@ -825,7 +825,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#and great magnificent}}both{{else}}no{{/and}}",
+      "example": "{{#and great magnificent}}both{{else}}no{{/and}} -> no",
       "description": "<p>Helper that renders the block if <strong>both</strong> of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression.</p>\n"
     },
     "compare": {
@@ -847,7 +847,7 @@
         "options"
       ],
       "numArgs": 4,
-      "example": "{{#contains ['a', 'b', 'c'] 'd'}} This will not be rendered. {{else}} This will be rendered. {{/contains}}",
+      "example": "{{#contains ['a', 'b', 'c'] 'd'}} This will not be rendered. {{else}} This will be rendered. {{/contains}} -> ' This will be rendered. '",
       "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n"
     },
     "default": {
