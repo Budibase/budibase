@@ -634,7 +634,7 @@ class TestConfiguration {
 
   async getTable(tableId?: string) {
     tableId = tableId || this.table!._id!
-    return this._req(null, { tableId }, controllers.table.find)
+    return this.api.table.get(tableId)
   }
 
   async createLinkedTable(
