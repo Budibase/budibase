@@ -688,14 +688,14 @@ class TestConfiguration {
   }
 
   async getRow(tableId: string, rowId: string): Promise<Row> {
-    return this._req(null, { tableId, rowId }, controllers.row.find)
+    return this.api.row.get(tableId, rowId)
   }
 
   async getRows(tableId: string) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    return this._req(null, { tableId }, controllers.row.fetch)
+    return this.api.row.fetch(tableId)
   }
 
   async searchRows(tableId: string, searchParams: SearchFilters = {}) {
