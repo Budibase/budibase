@@ -138,6 +138,7 @@ Or use Budibase Cloud if you don't need to self-host, and would like to get star
 - [Kubernetes](https://docs.budibase.com/docs/kubernetes-k8s)
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
+- [RepoCloud 1-click deployment](https://repocloud.io/details/?app_id=84)
 
 
 ### [Get started with Budibase Cloud](https://budibase.com)
