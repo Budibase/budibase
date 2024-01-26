@@ -4,9 +4,15 @@ import {
   processAutoColumn,
   processFormulas,
 } from "../../../utilities/rowProcessor"
-import { FieldTypes, FormulaTypes } from "../../../constants"
 import { context, locks } from "@budibase/backend-core"
-import { Table, Row, LockType, LockName } from "@budibase/types"
+import {
+  Table,
+  Row,
+  LockType,
+  LockName,
+  FormulaType,
+  FieldType,
+} from "@budibase/types"
 import * as linkRows from "../../../db/linkedRows"
 import sdk from "../../../sdk"
 import isEqual from "lodash/isEqual"
@@ -35,7 +41,7 @@ export async function updateRelatedFormula(
     let relatedRows: Record<string, Row[]> = {}
     for (let [key, field] of Object.entries(enrichedRow)) {
       const columnDefinition = table.schema[key]
-      if (columnDefinition && columnDefinition.type === FieldTypes.LINK) {
+      if (columnDefinition && columnDefinition.type === FieldType.LINK) {
         const relatedTableId = columnDefinition.tableId!
         if (!relatedRows[relatedTableId]) {
           relatedRows[relatedTableId] = []
@@ -63,8 +69,8 @@ export async function updateRelatedFormula(
       for (let column of Object.values(relatedTable!.schema)) {
         // needs updated in related rows
         if (
-          column.type === FieldTypes.FORMULA &&
-          column.formulaType === FormulaTypes.STATIC
+          column.type === FieldType.FORMULA &&
+          column.formulaType === FormulaType.STATIC
         ) {
           // re-enrich rows for all the related, don't update the related formula for them
           promises = promises.concat(

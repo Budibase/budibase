@@ -1,10 +1,16 @@
 import * as linkRows from "../../db/linkedRows"
-import { FieldTypes, AutoFieldSubTypes } from "../../constants"
 import { processFormulas, fixAutoColumnSubType } from "./utils"
 import { objectStore, utils } from "@budibase/backend-core"
 import { InternalTables } from "../../db/utils"
 import { TYPE_TRANSFORM_MAP } from "./map"
-import { FieldSubtype, Row, RowAttachment, Table } from "@budibase/types"
+import {
+  FieldType,
+  AutoFieldSubType,
+  FieldSubtype,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import {
   processInputBBReferences,
@@ -54,25 +60,25 @@ export function processAutoColumn(
       schema = fixAutoColumnSubType(schema)
     }
     switch (schema.subtype) {
-      case AutoFieldSubTypes.CREATED_BY:
+      case AutoFieldSubType.CREATED_BY:
         if (creating && shouldUpdateUserFields && userId) {
           row[key] = [userId]
         }
         break
-      case AutoFieldSubTypes.CREATED_AT:
+      case AutoFieldSubType.CREATED_AT:
         if (creating) {
           row[key] = now
         }
         break
-      case AutoFieldSubTypes.UPDATED_BY:
+      case AutoFieldSubType.UPDATED_BY:
         if (shouldUpdateUserFields && userId) {
           row[key] = [userId]
         }
         break
-      case AutoFieldSubTypes.UPDATED_AT:
+      case AutoFieldSubType.UPDATED_AT:
         row[key] = now
         break
-      case AutoFieldSubTypes.AUTO_ID:
+      case AutoFieldSubType.AUTO_ID:
         if (creating) {
           schema.lastID = !schema.lastID ? BASE_AUTO_ID : schema.lastID + 1
           row[key] = schema.lastID
@@ -134,7 +140,7 @@ export async function inputProcessing(
       continue
     }
     // remove any formula values, they are to be generated
-    if (field.type === FieldTypes.FORMULA) {
+    if (field.type === FieldType.FORMULA) {
       delete clonedRow[key]
     }
     // otherwise coerce what is there to correct types
@@ -143,7 +149,7 @@ export async function inputProcessing(
     }
 
     // remove any attachment urls, they are generated on read
-    if (field.type === FieldTypes.ATTACHMENT) {
+    if (field.type === FieldType.ATTACHMENT) {
       const attachments = clonedRow[key]
       if (attachments?.length) {
         attachments.forEach((attachment: RowAttachment) => {
@@ -152,7 +158,7 @@ export async function inputProcessing(
       }
     }
 
-    if (field.type === FieldTypes.BB_REFERENCE && value) {
+    if (field.type === FieldType.BB_REFERENCE && value) {
       clonedRow[key] = await processInputBBReferences(
         value,
         field.subtype as FieldSubtype
@@ -214,7 +220,7 @@ export async function outputProcessing<T extends Row[] | Row>(
 
   // process complex types: attachements, bb references...
   for (let [property, column] of Object.entries(table.schema)) {
-    if (column.type === FieldTypes.ATTACHMENT) {
+    if (column.type === FieldType.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
@@ -227,7 +233,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       }
     } else if (
       !opts.skipBBReferences &&
-      column.type == FieldTypes.BB_REFERENCE
+      column.type == FieldType.BB_REFERENCE
     ) {
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
