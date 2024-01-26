@@ -1,14 +1,15 @@
-const TestConfig = require("../../tests/utilities/TestConfiguration")
-const { basicTable } = require("../../tests/utilities/structures")
-const linkUtils = require("../linkedRows/linkUtils")
-const { context } = require("@budibase/backend-core")
+import TestConfig from "../../tests/utilities/TestConfiguration"
+import { basicTable } from "../../tests/utilities/structures"
+import * as linkUtils from "../linkedRows/linkUtils"
+import { context } from "@budibase/backend-core"
+import { FieldType, RelationshipType, Table } from "@budibase/types"
 
 describe("test link functionality", () => {
   const config = new TestConfig()
-  let appId
+  let appId: string
 
   describe("getLinkedTable", () => {
-    let table
+    let table: Table
     beforeAll(async () => {
       const app = await config.init()
       appId = app.appId
@@ -17,15 +18,15 @@ describe("test link functionality", () => {
 
     it("should be able to retrieve a linked table from a list", async () => {
       await context.doInAppContext(appId, async () => {
-        const retrieved = await linkUtils.getLinkedTable(table._id, [table])
+        const retrieved = await linkUtils.getLinkedTable(table._id!, [table])
         expect(retrieved._id).toBe(table._id)
       })
     })
 
     it("should be able to retrieve a table from DB and update list", async () => {
-      const tables = []
+      const tables: Table[] = []
       await context.doInAppContext(appId, async () => {
-        const retrieved = await linkUtils.getLinkedTable(table._id, tables)
+        const retrieved = await linkUtils.getLinkedTable(table._id!, tables)
         expect(retrieved._id).toBe(table._id)
         expect(tables[0]).toBeDefined()
       })
@@ -35,9 +36,11 @@ describe("test link functionality", () => {
   describe("getRelatedTableForField", () => {
     let link = basicTable()
     link.schema.link = {
+      name: "link",
+      relationshipType: RelationshipType.ONE_TO_MANY,
       fieldName: "otherLink",
       tableId: "tableID",
-      type: "link",
+      type: FieldType.LINK,
     }
 
     it("should get the field from the table directly", () => {
