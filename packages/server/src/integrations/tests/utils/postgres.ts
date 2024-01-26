@@ -15,9 +15,7 @@ export async function getDsConfig(): Promise<Datasource> {
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .withWaitStrategy(
-          Wait.forLogMessage(
-            "PostgreSQL init process complete; ready for start up."
-          )
+          Wait.forLogMessage("database system is ready to accept connections")
         )
         .start()
     }
