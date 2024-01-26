@@ -20604,24 +20604,7 @@ test-exclude@^6.0.0:
     glob "^7.1.4"
     minimatch "^3.0.4"
 
-testcontainers@4.7.0:
-  version "4.7.0"
-  resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-4.7.0.tgz#5a9a864b1b0cc86984086dcc737c2f5e73490cf3"
-  integrity sha512-5SrG9RMfDRRZig34fDZeMcGD5i3lHCOJzn0kjouyK4TiEWjZB3h7kCk8524lwNRHROFE1j6DGjceonv/5hl5ag==
-  dependencies:
-    "@types/dockerode" "^2.5.34"
-    byline "^5.0.0"
-    debug "^4.1.1"
-    docker-compose "^0.23.5"
-    dockerode "^3.2.1"
-    get-port "^5.1.1"
-    glob "^7.1.6"
-    node-duration "^1.0.4"
-    slash "^3.0.0"
-    stream-to-array "^2.3.0"
-    tar-fs "^2.1.0"
-
-testcontainers@^10.6.0:
+testcontainers@10.6.0:
   version "10.6.0"
   resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-10.6.0.tgz#205ad9148e68ff5c43a6209a30b12965acbe89d8"
   integrity sha512-FDJ3o3J8IMu1V7Uc6lNZ2MAD8+BV4HdpR/Vf5mHtgYHKdn6k1EbGFwtnvVNOxanJ99FCjf/EU8eA5ZQ4yjlsGA==
@@ -20641,6 +20624,23 @@ testcontainers@^10.6.0:
     ssh-remote-port-forward "^1.0.4"
     tar-fs "^3.0.4"
     tmp "^0.2.1"
+
+testcontainers@4.7.0:
+  version "4.7.0"
+  resolved "https://registry.yarnpkg.com/testcontainers/-/testcontainers-4.7.0.tgz#5a9a864b1b0cc86984086dcc737c2f5e73490cf3"
+  integrity sha512-5SrG9RMfDRRZig34fDZeMcGD5i3lHCOJzn0kjouyK4TiEWjZB3h7kCk8524lwNRHROFE1j6DGjceonv/5hl5ag==
+  dependencies:
+    "@types/dockerode" "^2.5.34"
+    byline "^5.0.0"
+    debug "^4.1.1"
+    docker-compose "^0.23.5"
+    dockerode "^3.2.1"
+    get-port "^5.1.1"
+    glob "^7.1.6"
+    node-duration "^1.0.4"
+    slash "^3.0.0"
+    stream-to-array "^2.3.0"
+    tar-fs "^2.1.0"
 
 text-extensions@^1.0.0:
   version "1.9.0"

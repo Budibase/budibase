@@ -114,7 +114,7 @@
     "@babel/preset-env": "7.16.11",
     "@swc/core": "1.3.71",
     "@swc/jest": "0.2.27",
-    "@trendyol/jest-estcontainers": "2.1.1",
+    "@trendyol/jest-testcontainers": "2.1.1",
     "@types/global-agent": "2.1.1",
     "@types/google-spreadsheet": "3.1.5",
     "@types/jest": "29.5.5",
