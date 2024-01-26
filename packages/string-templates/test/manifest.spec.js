@@ -58,7 +58,7 @@ const examples = collections.reduce((acc, collection) => {
           }
         }
       }
-      return [name, hbs, js]
+      return [name, { hbs, js }]
     })
     .filter(x => !!x)
 
@@ -87,7 +87,7 @@ function tryParseJson(str) {
 describe("manifest", () => {
   describe("examples are valid", () => {
     describe.each(Object.keys(examples))("%s", collection => {
-      it.each(examples[collection])("%s", async (_, hbs, js) => {
+      it.each(examples[collection])("%s", async (_, { hbs, js }) => {
         const context = {
           double: i => i * 2,
           isString: x => typeof x === "string",
@@ -108,7 +108,7 @@ describe("manifest", () => {
 
   describe("can be parsed and run as js", () => {
     describe.each(Object.keys(examples))("%s", collection => {
-      it.each(examples[collection])("%s", async (_, hbs, js) => {
+      it.each(examples[collection])("%s", async (_, { hbs, js }) => {
         const context = {
           double: i => i * 2,
           isString: x => typeof x === "string",
