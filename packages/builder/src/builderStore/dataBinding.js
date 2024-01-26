@@ -1104,7 +1104,6 @@ export const getAllStateVariables = () => {
       }
     })
   })
-  console.log("STATE BINDINGS ", Array.from(bindingSet))
   return Array.from(bindingSet)
 }
 
