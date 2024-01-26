@@ -6507,7 +6507,8 @@
     ],
     "context": {
       "type": "schema",
-      "suffix": "repeater"
+      "suffix": "repeater",
+      "scope": "local"
     }
   },
   "grid": {
