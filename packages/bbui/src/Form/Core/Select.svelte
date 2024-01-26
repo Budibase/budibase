@@ -12,7 +12,7 @@
   export let getOptionIcon = () => null
   export let getOptionColour = () => null
   export let getOptionSubtitle = () => null
-  export let compare = null
+  export let compare = (option, value) => option === value
   export let useOptionIconImage = false
   export let isOptionEnabled
   export let readonly = false
@@ -45,7 +45,7 @@
       return ""
     }
     const index = options.findIndex((option, idx) =>
-      compareOptionAndValue(getOptionValue(option, idx), value)
+      compare(getOptionValue(option, idx), value)
     )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
