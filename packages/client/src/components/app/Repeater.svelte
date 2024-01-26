@@ -2,7 +2,6 @@
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
   import Container from "./Container.svelte"
-  import { ContextScopes } from "constants"
 
   export let dataProvider
   export let noRowsMessage
@@ -10,7 +9,6 @@
   export let hAlign
   export let vAlign
   export let gap
-  export let scope = ContextScopes.Local
 
   const { Provider } = getContext("sdk")
   const component = getContext("component")
@@ -24,7 +22,7 @@
     <Placeholder />
   {:else if rows.length > 0}
     {#each rows as row, index}
-      <Provider data={{ ...row, index }} {scope}>
+      <Provider data={{ ...row, index }}>
         <slot />
       </Provider>
     {/each}

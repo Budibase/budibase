@@ -137,7 +137,7 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "{{ after [1, 2, 3] 1}} -> [3]",
+      "example": "{{ after ['a', 'b', 'c', 'd'] 2}} -> ['c', 'd']",
       "description": "<p>Returns all of the items in an array after the specified index. Opposite of <a href=\"#before\">before</a>.</p>\n"
     },
     "arrayify": {
@@ -154,7 +154,7 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "{{ before [1, 2, 3] 2}} -> [1, 2]",
+      "example": "{{ before ['a', 'b', 'c', 'd'] 3}} -> ['a', 'b']",
       "description": "<p>Return all of the items in the collection before the specified count. Opposite of <a href=\"#after\">after</a>.</p>\n"
     },
     "eachIndex": {
@@ -182,7 +182,7 @@
         "n"
       ],
       "numArgs": 2,
-      "example": "{{first [1, 2, 3, 4] 2}} -> [1, 2]",
+      "example": "{{first [1, 2, 3, 4] 2}} -> 1,2",
       "description": "<p>Returns the first item, or first <code>n</code> items of an array.</p>\n"
     },
     "forEach": {
@@ -200,7 +200,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#inArray [1, 2, 3] 2}} 2 exists {{else}} 2 does not exist {{/inArray}} -> 2 exists",
+      "example": "{{#inArray [1, 2, 3] 2}} 2 exists {{else}} 2 does not exist {{/inArray}} -> ' 2 exists '",
       "description": "<p>Block helper that renders the block if an array has the given <code>value</code>. Optionally specify an inverse block to render when the array does not have the given value.</p>\n"
     },
     "isArray": {
@@ -226,7 +226,7 @@
         "separator"
       ],
       "numArgs": 2,
-      "example": "{{join [1, 2, 3]}} -> '1, 2, 3'",
+      "example": "{{join [1, 2, 3]}} -> 1, 2, 3",
       "description": "<p>Join all elements of array into a string, optionally using a given separator.</p>\n"
     },
     "equalsLength": {
@@ -236,7 +236,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{equalsLength '[1,2,3]' 3}} -> true",
+      "example": "{{equalsLength [1, 2, 3] 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "last": {
@@ -253,7 +253,7 @@
         "value"
       ],
       "numArgs": 1,
-      "example": "{{length '[1, 2, 3]'}} -> 3",
+      "example": "{{length [1, 2, 3]}} -> 3",
       "description": "<p>Returns the length of the given string or array.</p>\n"
     },
     "lengthEqual": {
@@ -263,7 +263,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{equalsLength '[1,2,3]' 3}} -> true",
+      "example": "{{equalsLength [1, 2, 3] 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
     },
     "map": {
@@ -299,7 +299,7 @@
         "provided"
       ],
       "numArgs": 3,
-      "example": "{{#some [1, 'b', 3] isString}} string found {{else}} No string found {{/some}} -> string found",
+      "example": "{{#some [1, \"b\", 3] isString}} string found {{else}} No string found {{/some}} -> ' string found '",
       "description": "<p>Block helper that returns the block if the callback returns true for some value in the given array.</p>\n"
     },
     "sort": {
@@ -317,7 +317,7 @@
         "props"
       ],
       "numArgs": 2,
-      "example": "{{ sortBy [{a: 'zzz'}, {a: 'aaa'}] 'a' }} -> [{'a':'aaa'}, {'a':'zzz'}]",
+      "example": "{{ sortBy [{'a': 'zzz'}, {'a': 'aaa'}] 'a' }} -> [{'a':'aaa'},{'a':'zzz'}]",
       "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
     },
     "withAfter": {
@@ -347,7 +347,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{ withFirst [1, 2, 3] }} {{this}} {{/withFirst}}",
+      "example": "{{#withFirst [1, 2, 3] }}{{this}}{{/withFirst}} -> 1",
       "description": "<p>Use the first item in a collection inside a handlebars block expression. Opposite of <a href=\"#withLast\">withLast</a>.</p>\n"
     },
     "withGroup": {
@@ -357,7 +357,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#withGroup [1, 2, 3, 4] 2}} {{#each this}} {{.}} {{each}} <br> {{/withGroup}} -> 1,2<br> 3,4<br>",
+      "example": "{{#withGroup [1, 2, 3, 4] 2}}{{#each this}}{{.}}{{/each}}<br>{{/withGroup}} -> 12<br>34<br>",
       "description": "<p>Block helper that groups array elements by given group <code>size</code>.</p>\n"
     },
     "withLast": {
@@ -367,7 +367,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#withLast [1, 2, 3, 4]}} {{this}} {{/withLast}} -> 4",
+      "example": "{{#withLast [1, 2, 3, 4]}}{{this}}{{/withLast}} -> 4",
       "description": "<p>Use the last item or <code>n</code> items in an array as context inside a block. Opposite of <a href=\"#withFirst\">withFirst</a>.</p>\n"
     },
     "withSort": {
@@ -377,7 +377,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#withSort ['b', 'a', 'c']}} {{this}} {{/withSort}} -> abc",
+      "example": "{{#withSort ['b', 'a', 'c']}}{{this}}{{/withSort}} -> abc",
       "description": "<p>Block helper that sorts a collection and exposes the sorted collection as context inside the block.</p>\n"
     },
     "unique": {
@@ -386,7 +386,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#each (unique ['a', 'a', 'c', 'b', 'e', 'e']) }} {{.}} {{/each}} -> acbe",
+      "example": "{{#each (unique ['a', 'a', 'c', 'b', 'e', 'e']) }}{{.}}{{/each}} -> acbe",
       "description": "<p>Block helper that return an array with all duplicate values removed. Best used along with a <a href=\"#each\">each</a> helper.</p>\n"
     }
   },
@@ -396,7 +396,7 @@
         "number"
       ],
       "numArgs": 1,
-      "example": "{{ bytes 1386 }} -> 1.4Kb",
+      "example": "{{ bytes 1386 1 }} -> 1.4 kB",
       "description": "<p>Format a number to it&#39;s equivalent in bytes. If a string is passed, it&#39;s length will be formatted and returned. <strong>Examples:</strong> - <code>&#39;foo&#39; =&gt; 3 B</code> - <code>13661855 =&gt; 13.66 MB</code> - <code>825399 =&gt; 825.39 kB</code> - <code>1396 =&gt; 1.4 kB</code></p>\n"
     },
     "addCommas": {
@@ -430,7 +430,7 @@
         "fractionDigits"
       ],
       "numArgs": 2,
-      "example": "{{ toExponential 10123 2 }} -> 101e+4",
+      "example": "{{ toExponential 10123 2 }} -> 1.01e+4",
       "description": "<p>Returns a string representing the given number in exponential notation.</p>\n"
     },
     "toFixed": {
@@ -472,7 +472,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ encodeURI 'https://myurl?Hello There' }} -> https://myurl?Hello%20There",
+      "example": "{{ encodeURI 'https://myurl?Hello There' }} -> https%3A%2F%2Fmyurl%3FHello%20There",
       "description": "<p>Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.</p>\n"
     },
     "escape": {
@@ -480,7 +480,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ escape 'https://myurl?Hello+There' }} -> https://myurl?Hello%20There",
+      "example": "{{ escape 'https://myurl?Hello+There' }} -> https%3A%2F%2Fmyurl%3FHello%2BThere",
       "description": "<p>Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc.</p>\n"
     },
     "decodeURI": {
@@ -488,7 +488,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ decodeURI 'https://myurl?Hello%20There' }} -> https://myurl?=Hello There",
+      "example": "{{ decodeURI 'https://myurl?Hello%20There' }} -> https://myurl?Hello There",
       "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n"
     },
     "urlResolve": {
@@ -513,7 +513,7 @@
         "url"
       ],
       "numArgs": 1,
-      "example": "{{ stripQueryString 'https://myurl/api/test?foo=bar' }} -> 'https://myurl/api/test'",
+      "example": "{{ stripQuerystring 'https://myurl/api/test?foo=bar' }} -> 'https://myurl/api/test'",
       "description": "<p>Strip the query string from the given <code>url</code>.</p>\n"
     },
     "stripProtocol": {
@@ -521,7 +521,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{ stripProtocol 'https://myurl/api/test' }} -> 'myurl/api/test'",
+      "example": "{{ stripProtocol 'https://myurl/api/test' }} -> '//myurl/api/test'",
       "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n"
     }
   },
@@ -573,7 +573,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{ chop ' ABC '}} -> 'ABC'",
+      "example": "{{ chop ' ABC '}} -> ABC",
       "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n"
     },
     "dashcase": {
@@ -606,7 +606,7 @@
         "length"
       ],
       "numArgs": 2,
-      "example": "{{ellipsis 'foo bar baz', 7}} -> foo bar…",
+      "example": "{{ellipsis 'foo bar baz' 7}} -> foo bar…",
       "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
     },
     "hyphenate": {
@@ -675,14 +675,6 @@
       "example": "{{prepend 'bar' 'foo-'}} -> foo-bar",
       "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n"
     },
-    "raw": {
-      "args": [
-        "options"
-      ],
-      "numArgs": 1,
-      "example": "{{{{#raw}}}} {{foo}} {{{{/raw}}}} -> {{foo}}",
-      "description": "<p>Render a block without processing mustache templates inside the block.</p>\n"
-    },
     "remove": {
       "args": [
         "str",
@@ -698,7 +690,7 @@
         "substring"
       ],
       "numArgs": 2,
-      "example": "{{remove 'a b a b a b' 'a'}} ->  b a b a b",
+      "example": "{{removeFirst 'a b a b a b' 'a'}} -> ' b a b a b'",
       "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n"
     },
     "replace": {
@@ -718,7 +710,7 @@
         "b"
       ],
       "numArgs": 3,
-      "example": "{{replace 'a b a b a b' 'a' 'z'}} -> z b a b a b",
+      "example": "{{replaceFirst 'a b a b a b' 'a' 'z'}} -> z b a b a b",
       "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n"
     },
     "sentence": {
@@ -752,7 +744,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#startsWith 'Goodbye' 'Hello, world!'}} Yep {{else}} Nope {{/startsWith}} -> Nope",
+      "example": "{{#startsWith 'Goodbye' 'Hello, world!'}}Yep{{else}}Nope{{/startsWith}} -> Nope",
       "description": "<p>Tests whether a string begins with the given prefix.</p>\n"
     },
     "titleize": {
@@ -760,7 +752,7 @@
         "str"
       ],
       "numArgs": 1,
-      "example": "{{#titleize 'this is title case' }} -> This Is Title Case",
+      "example": "{{titleize 'this is title case' }} -> This Is Title Case",
       "description": "<p>Title case the given string.</p>\n"
     },
     "trim": {
@@ -784,7 +776,7 @@
         "string"
       ],
       "numArgs": 1,
-      "example": "{{trimRight '  ABC ' }} ->  '  ABC '",
+      "example": "{{trimRight '  ABC ' }} ->  '  ABC'",
       "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n"
     },
     "truncate": {
@@ -804,7 +796,7 @@
         "suffix"
       ],
       "numArgs": 3,
-      "example": "{{truncateWords 'foo bar baz' 1 }} -> foo",
+      "example": "{{truncateWords 'foo bar baz' 1 }} -> foo…",
       "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n"
     },
     "upcase": {
@@ -844,7 +836,7 @@
         "options"
       ],
       "numArgs": 4,
-      "example": "{{compare 10 '<' 5 }} -> true",
+      "example": "{{compare 10 '<' 5 }} -> false",
       "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n"
     },
     "contains": {
@@ -874,7 +866,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#eq 3 3}} equal{{else}} not equal{{/eq}} -> equal",
+      "example": "{{#eq 3 3}}equal{{else}}not equal{{/eq}} -> equal",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "gt": {
@@ -884,7 +876,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#gt 4 3}} greater than{{else}} not greater than{{/gt}} -> greater than",
+      "example": "{{#gt 4 3}} greater than{{else}} not greater than{{/gt}} -> ' greater than'",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "gte": {
@@ -894,7 +886,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#gte 4 3}} greater than or equal{{else}} not greater than{{/gte}} -> greater than or equal",
+      "example": "{{#gte 4 3}} greater than or equal{{else}} not greater than{{/gte}} -> ' greater than or equal'",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "has": {
@@ -904,7 +896,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#has 'foobar' 'foo'}} has it{{else}} doesn't{{/has}} -> has it",
+      "example": "{{#has 'foobar' 'foo'}}has it{{else}}doesn't{{/has}} -> has it",
       "description": "<p>Block helper that renders a block if <code>value</code> has <code>pattern</code>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "isFalsey": {
@@ -931,7 +923,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#ifEven 2}} even {{else}} odd {{/ifEven}} -> even",
+      "example": "{{#ifEven 2}} even {{else}} odd {{/ifEven}} -> ' even '",
       "description": "<p>Return true if the given value is an even number.</p>\n"
     },
     "ifNth": {
@@ -941,8 +933,8 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#ifNth 10 2}} remainder {{else}} no remainder {{/ifNth}} -> remainder",
-      "description": "<p>Conditionally renders a block if the remainder is zero when <code>a</code> operand is divided by <code>b</code>. If an inverse block is specified it will be rendered when the remainder is <strong>not zero</strong>.</p>\n"
+      "example": "{{#ifNth 2 10}}remainder{{else}}no remainder{{/ifNth}} -> remainder",
+      "description": "<p>Conditionally renders a block if the remainder is zero when <code>b</code> operand is divided by <code>a</code>. If an inverse block is specified it will be rendered when the remainder is <strong>not zero</strong>.</p>\n"
     },
     "ifOdd": {
       "args": [
@@ -950,7 +942,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#ifOdd 3}} odd {{else}} even {{/ifOdd}} -> odd",
+      "example": "{{#ifOdd 3}}odd{{else}}even{{/ifOdd}} -> odd",
       "description": "<p>Block helper that renders a block if <code>value</code> is <strong>an odd number</strong>. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "is": {
@@ -960,7 +952,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#is 3 3}} is {{else}} is not {{/is}} -> is",
+      "example": "{{#is 3 3}} is {{else}} is not {{/is}} -> ' is '",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#eq\">eq</a> but does not do strict equality.</p>\n"
     },
     "isnt": {
@@ -970,7 +962,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#isnt 3 3}} isnt {{else}} is {{/isnt}} -> is",
+      "example": "{{#isnt 3 3}} isnt {{else}} is {{/isnt}} -> ' is '",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>not equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#unlesseq\">unlessEq</a> but does not use strict equality for comparisons.</p>\n"
     },
     "lt": {
@@ -979,7 +971,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#lt 2 3}} less than {{else}} more than or equal {{/lt}} -> less than",
+      "example": "{{#lt 2 3}} less than {{else}} more than or equal {{/lt}} -> ' less than '",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "lte": {
@@ -989,7 +981,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#lte 2 3}} less than or equal {{else}} more than {{/lte}} -> less than or equal",
+      "example": "{{#lte 2 3}} less than or equal {{else}} more than {{/lte}} -> ' less than or equal '",
       "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
     },
     "neither": {
@@ -999,7 +991,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#neither null null}} both falsey {{else}} both not falsey {{/neither}} -> both falsey",
+      "example": "{{#neither null null}}both falsey{{else}}both not falsey{{/neither}} -> both falsey",
       "description": "<p>Block helper that renders a block if <strong>neither of</strong> the given values are truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "not": {
@@ -1008,7 +1000,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#not undefined }} falsey {{else}} not falsey {{/not}} -> falsey",
+      "example": "{{#not undefined }}falsey{{else}}not falsey{{/not}} -> falsey",
       "description": "<p>Returns true if <code>val</code> is falsey. Works as a block or inline helper.</p>\n"
     },
     "or": {
@@ -1017,7 +1009,7 @@
         "options"
       ],
       "numArgs": 2,
-      "example": "{{#or 1 2 undefined }} at least one truthy {{else}} all falsey {{/or}} -> at least one truthy",
+      "example": "{{#or 1 2 undefined }} at least one truthy {{else}} all falsey {{/or}} -> ' at least one truthy '",
       "description": "<p>Block helper that renders a block if <strong>any of</strong> the given values is truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
     },
     "unlessEq": {
@@ -1027,7 +1019,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#unlessEq 2 1 }} not equal {{else}} equal {{/unlessEq}} -> not equal",
+      "example": "{{#unlessEq 2 1 }} not equal {{else}} equal {{/unlessEq}} -> ' not equal '",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is equal to <code>b</code></strong>.</p>\n"
     },
     "unlessGt": {
@@ -1037,7 +1029,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#unlessGt 20 1 }} not greater than {{else}} greater than {{/unlessGt}} -> greater than",
+      "example": "{{#unlessGt 20 1 }} not greater than {{else}} greater than {{/unlessGt}} -> ' greater than '",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than <code>b</code></strong>.</p>\n"
     },
     "unlessLt": {
@@ -1047,7 +1039,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#unlessLt 20 1 }} greater than or equal {{else}} less than {{/unlessLt}} -> greater than or equal",
+      "example": "{{#unlessLt 20 1 }}greater than or equal{{else}}less than{{/unlessLt}} -> greater than or equal",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than <code>b</code></strong>.</p>\n"
     },
     "unlessGteq": {
@@ -1057,7 +1049,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#unlessGteq 20 1 }} less than {{else}} greater than or equal to {{/unlessGteq}} -> greater than or equal to",
+      "example": "{{#unlessGteq 20 1 }} less than {{else}}greater than or equal to{{/unlessGteq}} -> greater than or equal to",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than or equal to <code>b</code></strong>.</p>\n"
     },
     "unlessLteq": {
@@ -1067,7 +1059,7 @@
         "options"
       ],
       "numArgs": 3,
-      "example": "{{#unlessLteq 20 1 }} greater than {{else}} less than or equal to {{/unlessLteq}} -> greater than",
+      "example": "{{#unlessLteq 20 1 }} greater than {{else}} less than or equal to {{/unlessLteq}} -> ' greater than '",
       "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n"
     }
   },
@@ -1204,7 +1196,7 @@
         "durationType"
       ],
       "numArgs": 2,
-      "example": "{{duration timeLeft \"seconds\"}} -> a few seconds",
+      "example": "{{duration 8 \"seconds\"}} -> a few seconds",
       "description": "<p>Produce a humanized duration left/until given an amount of time and the type of time measurement.</p>\n"
     }
   }

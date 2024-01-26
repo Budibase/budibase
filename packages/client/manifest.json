@@ -573,6 +573,7 @@
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "JourneyData",
     "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "size": {
       "width": 400,
@@ -710,12 +711,10 @@
     ],
     "context": [
       {
-        "type": "schema",
-        "scope": "local"
+        "type": "schema"
       },
       {
         "type": "static",
-        "scope": "local",
         "values": [
           {
             "label": "Row index",
@@ -1565,6 +1564,7 @@
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
+    "requiredAncestors": ["dataprovider"],
     "size": {
       "width": 600,
       "height": 400
@@ -1727,6 +1727,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -1880,6 +1881,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2045,6 +2047,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2174,6 +2177,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -2303,6 +2307,7 @@
       "width": 600,
       "height": 400
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "text",
@@ -3966,6 +3971,12 @@
       },
       {
         "type": "boolean",
+        "label": "Auto confirm",
+        "key": "autoConfirm",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Play sound on scan",
         "key": "beepOnScan",
         "defaultValue": false
@@ -4076,6 +4087,7 @@
       "width": 400,
       "height": 320
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",
@@ -4631,6 +4643,7 @@
     "name": "Table",
     "icon": "Table",
     "illegalChildren": ["section"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": true,
     "showEmptyState": false,
     "size": {
@@ -4721,6 +4734,7 @@
     "name": "Date Range",
     "icon": "Calendar",
     "styles": ["size"],
+    "requiredAncestors": ["dataprovider"],
     "hasChildren": false,
     "size": {
       "width": 200,
@@ -4828,6 +4842,7 @@
       "width": 100,
       "height": 35
     },
+    "requiredAncestors": ["dataprovider"],
     "settings": [
       {
         "type": "dataProvider",
@@ -5602,38 +5617,7 @@
           }
         ]
       }
-    ],
-    "context": {
-      "type": "static",
-      "suffix": "provider",
-      "values": [
-        {
-          "label": "Rows",
-          "key": "rows",
-          "type": "array"
-        },
-        {
-          "label": "Extra Info",
-          "key": "info",
-          "type": "string"
-        },
-        {
-          "label": "Rows Length",
-          "key": "rowsLength",
-          "type": "number"
-        },
-        {
-          "label": "Schema",
-          "key": "schema",
-          "type": "object"
-        },
-        {
-          "label": "Page Number",
-          "key": "pageNumber",
-          "type": "number"
-        }
-      ]
-    }
+    ]
   },
   "cardsblock": {
     "block": true,
@@ -6036,8 +6020,7 @@
       },
       {
         "type": "schema",
-        "suffix": "repeater",
-        "scope": "local"
+        "suffix": "repeater"
       }
     ]
   },
@@ -6182,10 +6165,6 @@
       {
         "type": "form",
         "suffix": "form"
-      },
-      {
-        "type": "schema",
-        "suffix": "repeater"
       },
       {
         "type": "static",
@@ -6502,23 +6481,6 @@
       "type": "schema",
       "suffix": "repeater"
     }
-  },
-  "grid": {
-    "name": "Grid",
-    "icon": "ViewGrid",
-    "hasChildren": true,
-    "settings": [
-      {
-        "type": "number",
-        "key": "cols",
-        "label": "Columns"
-      },
-      {
-        "type": "number",
-        "key": "rows",
-        "label": "Rows"
-      }
-    ]
   },
   "gridblock": {
     "name": "Grid Block",

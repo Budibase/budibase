@@ -1,23 +1,20 @@
 <script>
   import { getContext, setContext, onDestroy } from "svelte"
   import { dataSourceStore, createContextStore } from "stores"
-  import { ActionTypes, ContextScopes } from "constants"
+  import { ActionTypes } from "constants"
   import { generate } from "shortid"
 
   export let data
   export let actions
   export let key
-  export let scope = ContextScopes.Global
 
-  let context = getContext("context")
+  // Clone and create new data context for this component tree
+  const context = getContext("context")
   const component = getContext("component")
-  const providerKey = key || $component.id
+  const newContext = createContextStore(context)
+  setContext("context", newContext)
 
-  // Create a new layer of context if we are only locally scoped
-  if (scope === ContextScopes.Local) {
-    context = createContextStore(context)
-    setContext("context", context)
-  }
+  const providerKey = key || $component.id
 
   // Generate a permanent unique ID for this component and use it to register
   // any datasource actions
@@ -33,7 +30,7 @@
   const provideData = newData => {
     const dataKey = JSON.stringify(newData)
     if (dataKey !== lastDataKey) {
-      context.actions.provideData(providerKey, newData, scope)
+      newContext.actions.provideData(providerKey, newData)
       lastDataKey = dataKey
     }
   }
@@ -43,7 +40,7 @@
     if (actionsKey !== lastActionsKey) {
       lastActionsKey = actionsKey
       newActions?.forEach(({ type, callback, metadata }) => {
-        context.actions.provideAction(providerKey, type, callback, scope)
+        newContext.actions.provideAction(providerKey, type, callback)
 
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource

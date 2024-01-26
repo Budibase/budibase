@@ -1,16 +1,15 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
-  import { currentAsset } from "builderStore"
-  import { findAllMatchingComponents } from "builderStore/componentUtils"
+  import { currentAsset, store } from "builderStore"
+  import { findComponentPath } from "builderStore/componentUtils"
 
   export let value
 
   const getValue = component => `{{ literal ${makePropSafe(component._id)} }}`
 
-  $: providers = findAllMatchingComponents($currentAsset?.props, c =>
-    c._component?.endsWith("/dataprovider")
-  )
+  $: path = findComponentPath($currentAsset?.props, $store.selectedComponentId)
+  $: providers = path.filter(c => c._component?.endsWith("/dataprovider"))
 </script>
 
 <Select
