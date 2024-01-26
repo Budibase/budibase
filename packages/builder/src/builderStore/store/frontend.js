@@ -92,9 +92,6 @@ const INITIAL_FRONTEND_STATE = {
   // Onboarding
   onboarding: false,
   tourNodes: null,
-
-  // UI state
-  hoveredComponentId: null,
 }
 
 export const getFrontendStore = () => {
@@ -1414,18 +1411,6 @@ export const getFrontendStore = () => {
           state.selectedComponentId = newParentDefinition._id
           return state
         })
-      },
-      hover: (componentId, notifyClient = true) => {
-        if (componentId === get(store).hoveredComponentId) {
-          return
-        }
-        store.update(state => {
-          state.hoveredComponentId = componentId
-          return state
-        })
-        if (notifyClient) {
-          store.actions.preview.sendEvent("hover-component", componentId)
-        }
       },
     },
     links: {

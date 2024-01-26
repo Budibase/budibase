@@ -24,8 +24,6 @@
   export let footer = null
   export let open = false
   export let tag = null
-  export let customPopoverOffsetBelow
-  export let customPopoverMaxHeight
   export let searchTerm = null
   export let loading
 
@@ -35,15 +33,20 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
+  function compareOptionAndValue(option, value) {
+    return typeof compare === "function"
+      ? compare(option, value)
+      : option === value
+  }
+
   const getFieldAttribute = (getAttribute, value, options) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex((option, idx) => {
-      const opt = getOptionValue(option, idx)
-      return typeof compare === "function" ? compare(opt, value) : opt === value
-    })
+    const index = options.findIndex((option, idx) =>
+      compareOptionAndValue(getOptionValue(option, idx), value)
+    )
     return index !== -1 ? getAttribute(options[index], index) : null
   }
 
@@ -92,11 +95,9 @@
   {autocomplete}
   {sort}
   {tag}
-  {customPopoverOffsetBelow}
-  {customPopoverMaxHeight}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
-  isOptionSelected={option => compare(option, value)}
+  isOptionSelected={option => compareOptionAndValue(option, value)}
   onSelectOption={selectOption}
   {loading}
 />
