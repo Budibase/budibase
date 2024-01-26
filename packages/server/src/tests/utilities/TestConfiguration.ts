@@ -27,6 +27,18 @@ import {
   sessions,
   tenancy,
 } from "@budibase/backend-core"
+import {
+  app as appController,
+  deploy as deployController,
+  role as roleController,
+  automation as automationController,
+  webhook as webhookController,
+  query as queryController,
+  screen as screenController,
+  layout as layoutController,
+  view as viewController,
+} from "./controllers"
+
 import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
@@ -543,11 +555,7 @@ class TestConfiguration {
     // clear any old app
     this.appId = null
     this.app = await context.doInTenant(this.tenantId!, async () => {
-      const app = await this._req(
-        { name: appName },
-        null,
-        controllers.app.create
-      )
+      const app = await this._req({ name: appName }, null, appController.create)
       this.appId = app.appId!
       return app
     })
@@ -563,7 +571,7 @@ class TestConfiguration {
   }
 
   async publish() {
-    await this._req(null, null, controllers.deploy.publishApp)
+    await this._req(null, null, deployController.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
@@ -578,7 +586,7 @@ class TestConfiguration {
     const response = await this._req(
       null,
       { appId: this.appId },
-      controllers.app.unpublish
+      appController.unpublish
     )
     this.prodAppId = null
     this.prodApp = null
@@ -712,7 +720,7 @@ class TestConfiguration {
 
   async createRole(config?: any) {
     config = config || basicRole()
-    return this._req(config, null, controllers.role.save)
+    return this._req(config, null, roleController.save)
   }
 
   // VIEW
@@ -725,7 +733,7 @@ class TestConfiguration {
       tableId: this.table!._id,
       name: generator.guid(),
     }
-    return this._req(view, null, controllers.view.v1.save)
+    return this._req(view, null, viewController.v1.save)
   }
 
   async createView(
@@ -755,13 +763,13 @@ class TestConfiguration {
       delete config._rev
     }
     this.automation = (
-      await this._req(config, null, controllers.automation.create)
+      await this._req(config, null, automationController.create)
     ).automation
     return this.automation
   }
 
   async getAllAutomations() {
-    return this._req(null, null, controllers.automation.fetch)
+    return this._req(null, null, automationController.fetch)
   }
 
   async deleteAutomation(automation?: any) {
@@ -772,7 +780,7 @@ class TestConfiguration {
     return this._req(
       null,
       { id: automation._id, rev: automation._rev },
-      controllers.automation.destroy
+      automationController.destroy
     )
   }
 
@@ -781,7 +789,8 @@ class TestConfiguration {
       throw "Must create an automation before creating webhook."
     }
     config = config || basicWebhook(this.automation._id)
-    return (await this._req(config, null, controllers.webhook.save)).webhook
+
+    return (await this._req(config, null, webhookController.save)).webhook
   }
 
   // DATASOURCE
@@ -888,21 +897,21 @@ class TestConfiguration {
       throw "No datasource created for query."
     }
     config = config || basicQuery(this.datasource!._id!)
-    return this._req(config, null, controllers.query.save)
+    return this._req(config, null, queryController.save)
   }
 
   // SCREEN
 
   async createScreen(config?: any) {
     config = config || basicScreen()
-    return this._req(config, null, controllers.screen.save)
+    return this._req(config, null, screenController.save)
   }
 
   // LAYOUT
 
   async createLayout(config?: any) {
     config = config || basicLayout()
-    return await this._req(config, null, controllers.layout.save)
+    return await this._req(config, null, layoutController.save)
   }
 }
 
