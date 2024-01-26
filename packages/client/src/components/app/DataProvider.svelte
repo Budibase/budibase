@@ -71,7 +71,7 @@
     datasource: dataSource || {},
     schema,
     rowsLength: $fetch.rows.length,
-    pageNumber: $fetch.pageNumber + 1,
+
     // Undocumented properties. These aren't supposed to be used in builder
     // bindings, but are used internally by other components
     id: $component?.id,

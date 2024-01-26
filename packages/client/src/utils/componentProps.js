@@ -23,6 +23,16 @@ export const propsAreSame = (a, b) => {
  * Data bindings are enriched, and button actions are enriched.
  */
 export const enrichProps = (props, context, settingsDefinitionMap) => {
+  // Create context of all bindings and data contexts
+  // Duplicate the closest context as "data" which the builder requires
+  const totalContext = {
+    ...context,
+
+    // This is only required for legacy bindings that used "data" rather than a
+    // component ID.
+    data: context[context.closestComponentId],
+  }
+
   // We want to exclude any button actions from enrichment at this stage.
   // Extract top level button action settings.
   let normalProps = { ...props }
@@ -39,13 +49,13 @@ export const enrichProps = (props, context, settingsDefinitionMap) => {
   let rawConditions = normalProps._conditions
 
   // Enrich all props except button actions
-  let enrichedProps = enrichDataBindings(normalProps, context)
+  let enrichedProps = enrichDataBindings(normalProps, totalContext)
 
   // Enrich button actions.
   // Actions are enriched into a function at this stage, but actual data
   // binding enrichment is done dynamically at runtime.
   Object.keys(actionProps).forEach(prop => {
-    enrichedProps[prop] = enrichButtonActions(actionProps[prop], context)
+    enrichedProps[prop] = enrichButtonActions(actionProps[prop], totalContext)
   })
 
   // Conditions
@@ -56,7 +66,7 @@ export const enrichProps = (props, context, settingsDefinitionMap) => {
         // action
         condition.settingValue = enrichButtonActions(
           rawConditions[idx].settingValue,
-          context
+          totalContext
         )
 
         // Since we can't compare functions, we need to assume that conditions

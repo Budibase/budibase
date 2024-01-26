@@ -21,7 +21,6 @@
   export let editAutoColumns = false
 
   const context = getContext("context")
-  const component = getContext("component")
   const { API, fetchDatasourceSchema } = getContext("sdk")
 
   const getInitialFormStep = () => {
@@ -39,47 +38,28 @@
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)
-  $: initialValues = getInitialValues(
-    actionType,
-    dataSource,
-    $component.path,
-    $context
-  )
+  $: initialValues = getInitialValues(actionType, dataSource, $context)
   $: resetKey = Helpers.hashString(
     schemaKey + JSON.stringify(initialValues) + disabled + readonly
   )
 
   // Returns the closes data context which isn't a built in context
-  const getInitialValues = (type, dataSource, path, context) => {
+  const getInitialValues = (type, dataSource, context) => {
     // Only inherit values for update forms
     if (type !== "Update") {
       return {}
     }
     // Only inherit values for forms targeting internal tables
-    const dsType = dataSource?.type
-    if (dsType !== "table" && dsType !== "viewV2") {
+    if (!dataSource?.tableId) {
       return {}
     }
-    // Look up the component tree and find something that is provided by an
-    // ancestor that matches our datasource. This is for backwards compatibility
-    // as previously we could use the "closest" context.
-    for (let id of path.reverse().slice(1)) {
-      // Check for matching view datasource
-      if (
-        dataSource.type === "viewV2" &&
-        context[id]?._viewId === dataSource.id
-      ) {
-        return context[id]
-      }
-      // Check for matching table datasource
-      if (
-        dataSource.type === "table" &&
-        context[id]?.tableId === dataSource.tableId
-      ) {
-        return context[id]
-      }
+    // Don't inherit values representing built in contexts
+    if (["user", "url"].includes(context.closestComponentId)) {
+      return {}
     }
-    return {}
+    // Always inherit the closest datasource
+    const closestContext = context[`${context.closestComponentId}`] || {}
+    return closestContext || {}
   }
 
   // Fetches the form schema from this form's dataSource
