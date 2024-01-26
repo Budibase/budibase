@@ -799,18 +799,14 @@ class TestConfiguration {
     datasource: Datasource
   }): Promise<Datasource> {
     config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
-    this.datasource = response.datasource
+    const response = await this.api.datasource.create(config.datasource)
+    this.datasource = response
     return this.datasource!
   }
 
   async updateDatasource(datasource: Datasource): Promise<Datasource> {
-    const response = await this._req(
-      datasource,
-      { datasourceId: datasource._id },
-      controllers.datasource.update
-    )
-    this.datasource = response.datasource
+    const response = await this.api.datasource.update(datasource)
+    this.datasource = response
     return this.datasource!
   }
 
