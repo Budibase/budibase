@@ -33,20 +33,15 @@
   $: fieldIcon = getFieldAttribute(getOptionIcon, value, options)
   $: fieldColour = getFieldAttribute(getOptionColour, value, options)
 
-  function compareOptionAndValue(option, value) {
-    return typeof compare === "function"
-      ? compare(option, value)
-      : option === value
-  }
-
   const getFieldAttribute = (getAttribute, value, options) => {
     // Wait for options to load if there is a value but no options
     if (!options?.length) {
       return ""
     }
-    const index = options.findIndex((option, idx) =>
-      compare(getOptionValue(option, idx), value)
-    )
+    const index = options.findIndex((option, idx) => {
+      const opt = getOptionValue(option, idx)
+      return typeof compare === "function" ? compare(opt, value) : opt === value
+    })
     return index !== -1 ? getAttribute(options[index], index) : null
   }
 
@@ -97,7 +92,7 @@
   {tag}
   isPlaceholder={value == null || value === ""}
   placeholderOption={placeholder === false ? null : placeholder}
-  isOptionSelected={option => compareOptionAndValue(option, value)}
+  isOptionSelected={option => compare(option, value)}
   onSelectOption={selectOption}
   {loading}
 />
