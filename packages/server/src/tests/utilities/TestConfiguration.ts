@@ -39,7 +39,6 @@ import {
   view as viewController,
 } from "./controllers"
 
-import * as controllers from "./controllers"
 import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
@@ -56,7 +55,7 @@ import {
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
-  SearchFilters,
+  SearchParams,
   SourceName,
   Table,
   TableSourceType,
@@ -706,14 +705,11 @@ class TestConfiguration {
     return this.api.row.fetch(tableId)
   }
 
-  async searchRows(tableId: string, searchParams: SearchFilters = {}) {
+  async searchRows(tableId: string, searchParams?: SearchParams) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    const body = {
-      query: searchParams,
-    }
-    return this._req(body, { tableId }, controllers.row.search)
+    return this.api.row.search(tableId, searchParams)
   }
 
   // ROLE
