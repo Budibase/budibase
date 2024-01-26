@@ -9,9 +9,7 @@ const isMac = process.platform === "darwin"
 export async function getDsConfig(): Promise<Datasource> {
   try {
     if (!container) {
-      // postgres 15-bullseye safer bet on Linux
-      const version = isMac ? undefined : "15-bullseye"
-      container = await new GenericContainer("postgres", version)
+      container = await new GenericContainer("postgres", "latest")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .withWaitStrategy(
