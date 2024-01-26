@@ -592,9 +592,11 @@ class TestConfiguration {
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    config.sourceType = config.sourceType || TableSourceType.INTERNAL
-    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
-    const response = await this._req(config, null, controllers.table.save)
+    const response = await this.api.table.save({
+      ...config,
+      sourceType: config.sourceType || TableSourceType.INTERNAL,
+      sourceId: config.sourceId || INTERNAL_TABLE_SOURCE_ID,
+    })
     if (!skipReassigning) {
       this.table = response
     }
@@ -618,7 +620,7 @@ class TestConfiguration {
   async createExternalTable(
     config?: TableToBuild,
     options = { skipReassigning: false }
-  ): Promise<Table> {
+  ) {
     if (config != null && config._id) {
       delete config._id
     }
@@ -627,16 +629,7 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
-    const table = await this.api.table.create({
-      ...config,
-      sourceType: config.sourceType || TableSourceType.INTERNAL,
-      sourceId: config.sourceId || INTERNAL_TABLE_SOURCE_ID,
-    })
-    if (!options.skipReassigning) {
-      this.table = table
-    }
-
-    return table
+    return this.updateTable(config, options)
   }
 
   async getTable(tableId?: string) {
