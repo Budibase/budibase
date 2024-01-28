@@ -29,6 +29,7 @@
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
+  import { onMount } from "svelte"
 
   export let application
   export let loaded
@@ -55,6 +56,15 @@
     $store.upgradableVersion !== $store.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
   $: lastDeployed = getLastDeployedString($deploymentStore)
+
+  onMount(() => {
+    const interval = setInterval(() => {
+      lastDeployed = getLastDeployedString($deploymentStore)
+    }, 60 * 1000)
+    return () => {
+      clearInterval(interval)
+    }
+  })
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($store.devId)

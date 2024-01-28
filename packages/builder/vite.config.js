@@ -89,7 +89,11 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       dedupe: ["@roxi/routify"],
-      alias: [
+      alias: [ 
+        {
+          find: "fs",
+          replacement: "node:fs",
+        }, 
         {
           find: "assets",
           replacement: path.resolve("./assets"),
