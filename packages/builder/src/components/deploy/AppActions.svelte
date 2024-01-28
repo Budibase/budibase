@@ -57,6 +57,7 @@
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
   $: lastDeployed = getLastDeployedString($deploymentStore)
 
+  // Fixes "Last Published"
   onMount(() => {
     const interval = setInterval(() => {
       lastDeployed = getLastDeployedString($deploymentStore)
