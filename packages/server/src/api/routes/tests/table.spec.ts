@@ -1,6 +1,6 @@
 import { context, events } from "@budibase/backend-core"
 import {
-  AutoFieldSubTypes,
+  AutoFieldSubType,
   FieldSubtype,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -205,7 +205,7 @@ describe("/tables", () => {
           autoId: {
             name: "id",
             type: FieldType.NUMBER,
-            subtype: AutoFieldSubTypes.AUTO_ID,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
             constraints: {
               type: "number",
