@@ -45,17 +45,6 @@ describe("/queries", () => {
     await setupTest()
   })
 
-  async function createInvalidIntegration() {
-    const datasource = await config.createDatasource({
-      datasource: {
-        ...basicDatasource().datasource,
-        source: "INVALID_INTEGRATION" as SourceName,
-      },
-    })
-    const query = await config.createQuery()
-    return { datasource, query }
-  }
-
   const createQuery = async (query: Query) => {
     return request
       .post(`/api/queries`)
@@ -278,14 +267,15 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      let error
-      try {
-        await createInvalidIntegration()
-      } catch (err) {
-        error = err
-      }
-      expect(error).toBeDefined()
-      expect(error.message).toBe("No datasource implementation found.")
+      const response = await config.api.datasource.create(
+        {
+          ...basicDatasource().datasource,
+          source: "INVALID_INTEGRATION" as SourceName,
+        },
+        { expectStatus: 500, rawResponse: true }
+      )
+
+      expect(response.body.message).toBe("No datasource implementation found.")
     })
   })
 

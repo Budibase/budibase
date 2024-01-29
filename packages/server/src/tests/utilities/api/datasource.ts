@@ -2,20 +2,23 @@ import {
   CreateDatasourceRequest,
   Datasource,
   VerifyDatasourceRequest,
-  VerifyDatasourceResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
+import supertest from "supertest"
 
 export class DatasourceAPI extends TestAPI {
   constructor(config: TestConfiguration) {
     super(config)
   }
 
-  create = async (
+  create = async <B extends boolean>(
     config: Datasource,
-    { expectStatus } = { expectStatus: 200 }
-  ): Promise<Datasource> => {
+    {
+      expectStatus,
+      rawResponse,
+    }: { expectStatus?: number; rawResponse?: B } = {}
+  ): Promise<B extends false ? Datasource : supertest.Response> => {
     const body: CreateDatasourceRequest = {
       datasource: config,
       tablesFilter: [],
@@ -25,8 +28,11 @@ export class DatasourceAPI extends TestAPI {
       .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return result.body.datasource as Datasource
+      .expect(expectStatus || 200)
+    if (rawResponse) {
+      return result as any
+    }
+    return result.body.datasource
   }
 
   update = async (
