@@ -794,11 +794,11 @@ class TestConfiguration {
 
   async createDatasource(config?: {
     datasource: Datasource
-  }): Promise<Datasource> {
+  }): Promise<Datasource & Required<Pick<Datasource, "_id">>> {
     config = config || basicDatasource()
     const response = await this.api.datasource.create(config.datasource)
     this.datasource = response
-    return this.datasource!
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
   async updateDatasource(datasource: Datasource): Promise<Datasource> {
