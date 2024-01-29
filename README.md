@@ -171,7 +171,7 @@ Environment setup instructions are available for [Debian](https://github.com/Bud
 A good place to start contributing is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### How the repository is organized
-Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that makeup Budibase.
+Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
 
 - [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client-side svelte application.
 
