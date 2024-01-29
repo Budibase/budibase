@@ -1,4 +1,5 @@
 import {
+  FieldType,
   DatasourceFieldType,
   Integration,
   Operation,
@@ -21,7 +22,6 @@ import {
   SqlClient,
 } from "./utils"
 import Sql from "./base/sql"
-import { FieldTypes } from "../constants"
 import {
   BindParameters,
   Connection,
@@ -302,7 +302,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
             })
 
             if (this.isBooleanType(oracleColumn)) {
-              fieldSchema.type = FieldTypes.BOOLEAN
+              fieldSchema.type = FieldType.BOOLEAN
             }
 
             table.schema[columnName] = fieldSchema
