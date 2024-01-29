@@ -424,7 +424,7 @@ class InternalBuilder {
   knexWithAlias(
     knex: Knex,
     endpoint: { entityId: string; alias?: string; schema?: string }
-  ): { query: KnexQuery; name: string } {
+  ): { query: KnexQuery; aliased: string } {
     const tableName = endpoint.entityId
     const alias = endpoint.alias
     const aliased = alias ? alias : tableName
@@ -433,7 +433,7 @@ class InternalBuilder {
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
-    return { query, name: aliased }
+    return { query, aliased }
   }
 
   create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
@@ -493,7 +493,7 @@ class InternalBuilder {
     }
     // start building the query
 
-    let { query, name: aliased } = this.knexWithAlias(knex, endpoint)
+    let { query, aliased } = this.knexWithAlias(knex, endpoint)
     query = query.limit(foundLimit)
     if (foundOffset) {
       query = query.offset(foundOffset)
@@ -522,9 +522,9 @@ class InternalBuilder {
 
   update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, body, filters } = json
-    let { query } = this.knexWithAlias(knex, endpoint)
+    let { query, aliased } = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
-    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
+    query = this.addFilters(query, filters, { tableName: aliased })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -535,7 +535,7 @@ class InternalBuilder {
 
   delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
     const { endpoint, filters } = json
-    let { query, name: aliased } = this.knexWithAlias(knex, endpoint)
+    let { query, aliased } = this.knexWithAlias(knex, endpoint)
     query = this.addFilters(query, filters, { tableName: aliased })
     // mysql can't use returning
     if (opts.disableReturning) {
