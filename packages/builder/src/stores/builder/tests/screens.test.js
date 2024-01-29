@@ -8,9 +8,10 @@ import {
   getScreenFixture,
   getComponentFixture,
   COMPONENT_DEFINITIONS,
-  componentMap,
+  componentDefinitionMap,
   getScreenDocId,
   getPluginFixture,
+  componentsToNested,
 } from "./fixtures"
 
 const COMP_PREFIX = "@budibase/standard-components"
@@ -173,7 +174,7 @@ describe("Screens store", () => {
     const defSpy = vi
       .spyOn(componentStore, "getDefinition")
       .mockImplementation(comp => {
-        const defMap = componentMap()
+        const defMap = componentDefinitionMap()
         return defMap[comp]
       })
 
@@ -198,23 +199,14 @@ describe("Screens store", () => {
     components.push(formTwo)
 
     //Take the array and turn it into a deeply nested tree
-    let nested
-    do {
-      const current = components.pop()
-      if (!nested) {
-        nested = current
-        continue
-      }
-      current.addChild(nested)
-      nested = current
-    } while (components.length)
+    let nested = componentsToNested(components)
 
     coreScreen.addChild(nested)
 
     const defSpy = vi
       .spyOn(componentStore, "getDefinition")
       .mockImplementation(comp => {
-        const defMap = componentMap()
+        const defMap = componentDefinitionMap()
         return defMap[comp]
       })
 

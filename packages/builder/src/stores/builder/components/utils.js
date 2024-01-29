@@ -1,4 +1,4 @@
-import { componentStore } from "."
+import { componentStore } from "stores/builder"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
@@ -132,50 +132,6 @@ const searchComponentTree = (rootComponent, matchComponent) => {
     }
   }
   return null
-}
-
-/**
- * Searches a component's definition for a setting matching a certain predicate.
- * These settings are cached because they cannot change at run time.
- */
-let componentSettingCache = {}
-export const getComponentSettings = componentType => {
-  if (!componentType) {
-    return []
-  }
-
-  // Ensure whole component name is used
-  if (
-    !componentType.startsWith("plugin/") &&
-    !componentType.startsWith("@budibase")
-  ) {
-    componentType = `@budibase/standard-components/${componentType}`
-  }
-
-  // Check if we have cached this type already
-  if (componentSettingCache[componentType]) {
-    return componentSettingCache[componentType]
-  }
-
-  // Otherwise get the settings and cache them
-  const def = componentStore.getDefinition(componentType)
-  let settings = []
-  if (def) {
-    settings = def.settings?.filter(setting => !setting.section) ?? []
-    def.settings
-      ?.filter(setting => setting.section)
-      .forEach(section => {
-        settings = settings.concat(
-          (section.settings || []).map(setting => ({
-            ...setting,
-            section: section.name,
-          }))
-        )
-      })
-  }
-  componentSettingCache[componentType] = settings
-
-  return settings
 }
 
 /**
