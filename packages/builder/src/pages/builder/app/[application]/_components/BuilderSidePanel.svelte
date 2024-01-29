@@ -392,6 +392,10 @@
   }
 
   const openInviteFlow = () => {
+    // prevent email from getting overwritten if changes are made
+    if (!email) {
+      email = query
+    }
     $licensing.userLimitReached
       ? userLimitReachedModal.show()
       : (invitingFlow = true)
