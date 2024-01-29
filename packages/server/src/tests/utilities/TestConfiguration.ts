@@ -62,6 +62,7 @@ import {
   User,
   UserRoles,
   View,
+  WithRequired,
 } from "@budibase/types"
 
 import API from "./api"
@@ -794,17 +795,19 @@ class TestConfiguration {
 
   async createDatasource(config?: {
     datasource: Datasource
-  }): Promise<Datasource & Required<Pick<Datasource, "_id">>> {
+  }): Promise<WithRequired<Datasource, "_id">> {
     config = config || basicDatasource()
     const response = await this.api.datasource.create(config.datasource)
     this.datasource = response
     return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async updateDatasource(datasource: Datasource): Promise<Datasource> {
+  async updateDatasource(
+    datasource: Datasource
+  ): Promise<WithRequired<Datasource, "_id">> {
     const response = await this.api.datasource.update(datasource)
     this.datasource = response
-    return this.datasource!
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
   async restDatasource(cfg?: any) {
@@ -819,6 +822,7 @@ class TestConfiguration {
 
   async dynamicVariableDatasource() {
     let datasource = await this.restDatasource()
+
     const basedOnQuery = await this.createQuery({
       ...basicQuery(datasource._id!),
       fields: {

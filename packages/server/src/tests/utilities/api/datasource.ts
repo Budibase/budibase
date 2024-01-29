@@ -12,7 +12,7 @@ export class DatasourceAPI extends TestAPI {
     super(config)
   }
 
-  create = async <B extends boolean>(
+  create = async <B extends boolean = false>(
     config: Datasource,
     {
       expectStatus,
