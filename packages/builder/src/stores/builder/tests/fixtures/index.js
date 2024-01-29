@@ -2,6 +2,12 @@ import { v4 } from "uuid"
 import { Component } from "builder/store/screenTemplates/utils/Component"
 import { Screen } from "builder/store/screenTemplates/utils/Screen"
 import { get } from "svelte/store"
+import {
+  BUDIBASE_INTERNAL_DB_ID,
+  DB_TYPE_INTERNAL,
+  DB_TYPE_EXTERNAL,
+  DEFAULT_BB_DATASOURCE_ID,
+} from "constants/backend"
 
 const getDocId = () => {
   return v4().replace(/-/g, "")
@@ -22,20 +28,90 @@ export const getComponentFixture = type => {
   return new Component(type)
 }
 
+// Sample Definitions
 export const COMPONENT_DEFINITIONS = {
   form: {
     name: "Form",
-    icon: "Form",
     hasChildren: true,
     illegalChildren: ["section", "form", "formblock"],
   },
   formblock: {
     name: "Form Block",
     block: true,
+    settings: [
+      {
+        type: "table",
+        key: "dataSource",
+      },
+    ],
   },
   container: {
     name: "Container",
   },
+  rowexplorer: {
+    name: "Row Explorer",
+    settings: [
+      {
+        // combo unique to the row explorer
+        type: "multifield",
+        selectAllFields: true,
+        key: "detailFields",
+      },
+    ],
+  },
+  dataprovider: {
+    name: "Data Provider",
+    settings: [
+      {
+        type: "dataSource",
+      },
+    ],
+  },
+  table: {
+    name: "Table",
+    settings: [
+      {
+        type: "dataProvider",
+        key: "dataProvider",
+      },
+    ],
+  },
+  stringfield: {
+    name: "Text Field",
+    settings: [
+      {
+        type: "field/string",
+        key: "field",
+      },
+    ],
+  },
+}
+
+// Sample plugin definitions
+export const PLUGIN_DEFINITIONS = {
+  "budi-video": {
+    component: "plugin/budi-video",
+    description: "Embedded video component. ",
+    friendlyName: "Budi Video",
+    icon: "VideoOutline",
+    name: "budi-video",
+  },
+}
+
+// Take a component array and turn it into a deeply nested tree
+export const componentsToNested = components => {
+  let nested
+  do {
+    const current = components.pop()
+    if (!nested) {
+      nested = current
+      continue
+    }
+    //review this for the empty
+    current.addChild(nested)
+    nested = current
+  } while (components.length)
+  return nested
 }
 
 export const getFakeScreenPatch = store => {
@@ -48,10 +124,18 @@ export const getFakeScreenPatch = store => {
   }
 }
 
-export const componentMap = () => {
+export const componentDefinitionMap = () => {
   return Object.keys(COMPONENT_DEFINITIONS).reduce((acc, key) => {
     const def = COMPONENT_DEFINITIONS[key]
     acc[`@budibase/standard-components/${key}`] = def
+    return acc
+  }, {})
+}
+
+export const pluginDefinitionMap = () => {
+  return Object.keys(PLUGIN_DEFINITIONS).reduce((acc, key) => {
+    const def = PLUGIN_DEFINITIONS[key]
+    acc[`plugin/${key}`] = def
     return acc
   }, {})
 }
@@ -145,15 +229,56 @@ export const clientFeaturesResp = {
   sidePanel: true,
 }
 
-export const fetchDefinitionsResp = {
-  "@budibase/standard-components/text": {
-    component: "@budibase/standard-components/text",
+export const userTableDoc = {
+  _id: "ta_users",
+  type: "table",
+  name: "Users",
+  schema: {},
+}
+
+export const sampleTableDoc = {
+  _id: "ta_bb_employee",
+  type: "table",
+  name: "Employees",
+  sourceId: DEFAULT_BB_DATASOURCE_ID,
+  sourceType: DB_TYPE_INTERNAL,
+  primaryDisplay: "First Name",
+  schema: {
+    "First Name": {
+      name: "First Name",
+      type: "string",
+    },
+    "Last Name": {
+      name: "Last Name",
+      type: "string",
+    },
   },
-  "plugin/budi-video": {
-    component: "plugin/budi-video",
+}
+
+export const internalTableDoc = {
+  _id: "ta_db5ac9e254da415899adcec21a025b3f",
+  tableId: "ta_db5ac9e254da415899adcec21a025b3f",
+  type: "table",
+  name: "Media",
+  sourceId: BUDIBASE_INTERNAL_DB_ID,
+  sourceType: DB_TYPE_INTERNAL,
+  schema: {
+    MediaTitle: {
+      name: "MediaTitle",
+      type: "string",
+    },
+    MediaVersion: {
+      name: "MediaVersion",
+      type: "string",
+    },
   },
-  "plugin/budi-audio": {
-    component: "plugin/budi-audio",
-  },
-  features: clientFeaturesResp,
+}
+
+export const externalTableDoc = {
+  type: "table",
+  _id: "datasource_plus_c5e6ae7fbe534da6917c44b284c54b45__Tester",
+  name: "Tester",
+  sourceId: "datasource_plus_c5e6ae7fbe534da6917c44b284c54b45",
+  sourceType: DB_TYPE_EXTERNAL,
+  sql: true,
 }

@@ -4,7 +4,6 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
-  getComponentSettings,
 } from "stores/builder/components/utils"
 import {
   currentAsset,
@@ -281,7 +280,7 @@ export const getActionProviders = (
  * Gets a datasource object for a certain data provider component
  */
 export const getDatasourceForProvider = (asset, component) => {
-  const settings = getComponentSettings(component?._component)
+  const settings = componentStore.getComponentSettings(component?._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
   const dataProviderSetting = settings.find(setting => {
@@ -706,7 +705,7 @@ export const getEventContextBindings = ({
   const definition =
     componentDefinition ?? componentStore.getDefinition(component?._component)
 
-  const settings = getComponentSettings(component?._component)
+  const settings = componentStore.getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
 
   if (eventSetting?.context?.length) {
@@ -1011,7 +1010,7 @@ export const buildFormSchema = (component, asset) => {
   }
 
   // Otherwise find all field component children
-  const settings = getComponentSettings(component._component)
+  const settings = componentStore.getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
   )
@@ -1037,7 +1036,7 @@ export const getAllStateVariables = () => {
   let eventSettings = []
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
-      const settings = getComponentSettings(component._component)
+      const settings = componentStore.getComponentSettings(component._component)
       settings
         .filter(setting => setting.type === "event")
         .forEach(setting => {

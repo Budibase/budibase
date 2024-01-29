@@ -5,20 +5,20 @@ import { Helpers } from "@budibase/bbui"
 import analytics, { Events } from "analytics"
 import { makePropSafe as safe } from "@budibase/string-templates"
 import {
-  getComponentSettings,
   findComponentPath,
   findClosestMatchingComponent,
   findComponent,
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
-} from "../components/utils"
+} from "stores/builder/components/utils"
 import { getComponentFieldOptions } from "helpers/formFields"
 import { selectedScreen } from "../screens"
 import { screenStore, appStore, previewStore, tables } from "stores/builder"
 import { buildFormSchema, getSchemaForDatasource } from "builder/dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
+  DEFAULT_BB_DATASOURCE_ID,
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
@@ -26,10 +26,11 @@ import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
 
 export const INITIAL_COMPONENTS_STATE = {
-  components: [],
+  components: {},
   customComponents: [],
   selectedComponentId: null,
   componentToPaste: null,
+  settingsCache: {},
 }
 
 export class ComponentStore extends BudiStore {
@@ -63,6 +64,9 @@ export class ComponentStore extends BudiStore {
     this.updateSetting = this.updateSetting.bind(this)
     this.updateComponentSetting = this.updateComponentSetting.bind(this)
     this.addParent = this.addParent.bind(this)
+    this.isCached = this.isCached.bind(this)
+    this.cacheSettings = this.cacheSettings.bind(this)
+    this.getComponentSettings = this.getComponentSettings.bind(this)
 
     this.selected = derived(
       [this.store, selectedScreen],
@@ -112,14 +116,14 @@ export class ComponentStore extends BudiStore {
    */
   async refreshDefinitions(appId) {
     if (!appId) {
-      appId = get(this.store).appId
+      return
     }
 
     // Fetch definitions and filter out custom component definitions so we
     // can flag them
     const components = await API.fetchComponentLibDefinitions(appId)
-    const customComponents = Object.keys(components).filter(name =>
-      name.startsWith("plugin/")
+    const customComponents = Object.keys(components).filter(key =>
+      key.startsWith("plugin/")
     )
 
     // Update store
@@ -136,17 +140,17 @@ export class ComponentStore extends BudiStore {
   }
 
   /**
-   *
-   * @param {string} componentName
+   * Retrieve the component definition object
+   * @param {string} componentType
    * @example
    * '@budibase/standard-components/container'
    * @returns {object}
    */
-  getDefinition(componentName) {
-    if (!componentName) {
+  getDefinition(componentType) {
+    if (!componentType) {
       return null
     }
-    return get(this.store).components[componentName]
+    return get(this.store).components[componentType]
   }
 
   /**
@@ -160,7 +164,7 @@ export class ComponentStore extends BudiStore {
     // Try to use their own internal table first
     let table = validTables.find(table => {
       return (
-        table.sourceId !== BUDIBASE_INTERNAL_DB_ID &&
+        table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
         table.sourceType === DB_TYPE_INTERNAL
       )
     })
@@ -171,7 +175,7 @@ export class ComponentStore extends BudiStore {
     // Then try sample data
     table = validTables.find(table => {
       return (
-        table.sourceId === BUDIBASE_INTERNAL_DB_ID &&
+        table.sourceId === DEFAULT_BB_DATASOURCE_ID &&
         table.sourceType === DB_TYPE_INTERNAL
       )
     })
@@ -231,7 +235,7 @@ export class ComponentStore extends BudiStore {
       return
     }
     const defaultDS = this.getDefaultDatasource()
-    const settings = getComponentSettings(component._component)
+    const settings = this.getComponentSettings(component._component)
     const { parent, screen, useDefaultValues } = opts || {}
     const treeId = parent?._id || component._id
     if (!screen) {
@@ -933,7 +937,7 @@ export class ComponentStore extends BudiStore {
         return false
       }
 
-      const settings = getComponentSettings(component._component)
+      const settings = this.getComponentSettings(component._component)
       const updatedSetting = settings.find(setting => setting.key === name)
 
       // Reset dependent fields
@@ -1056,6 +1060,82 @@ export class ComponentStore extends BudiStore {
       state.selectedComponentId = newParentDefinition._id
       return state
     })
+  }
+
+  /**
+   * Check if the components settings have been cached
+   * @param {string} componentType
+   * @example
+   * '@budibase/standard-components/container'
+   * @returns {boolean}
+   */
+  isCached(componentType) {
+    const settings = get(this.store).settingsCache
+    return componentType in settings
+  }
+
+  /**
+   * Cache component settings
+   * @param {string} componentType
+   * @param {object} definition
+   * @example
+   * '@budibase/standard-components/container'
+   * @returns {boolean}
+   */
+  cacheSettings(componentType, definition) {
+    let settings = []
+    if (definition && componentType) {
+      settings = definition.settings?.filter(setting => !setting.section) ?? []
+      definition.settings
+        ?.filter(setting => setting.section)
+        .forEach(section => {
+          settings = settings.concat(
+            (section.settings || []).map(setting => ({
+              ...setting,
+              section: section.name,
+            }))
+          )
+        })
+      this.update(state => ({
+        ...state,
+        settingsCache: {
+          ...state.settingsCache,
+          [componentType]: settings,
+        },
+      }))
+    }
+  }
+
+  /**
+   * Retrieve an array of the component settings.
+   * These settings are cached because they cannot change at run time.
+   *
+   * Searches a component's definition for a setting matching a certain predicate.
+   * @param {string} componentType
+   * @example
+   * '@budibase/standard-components/container'
+   * @returns {Array<object>}
+   */
+  getComponentSettings(componentType) {
+    if (!componentType) {
+      return []
+    }
+
+    // Ensure whole component name is used
+    if (
+      !componentType.startsWith("plugin/") &&
+      !componentType.startsWith("@budibase")
+    ) {
+      componentType = `@budibase/standard-components/${componentType}`
+    }
+
+    if (this.isCached(componentType)) {
+      return get(this.store).settingsCache[componentType]
+    } else {
+      const def = this.getDefinition(componentType)
+      this.cacheSettings(componentType, def)
+      return get(this.store).settingsCache[componentType]
+    }
   }
 }
 
