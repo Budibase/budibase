@@ -695,7 +695,8 @@ class TestConfiguration {
   }
 
   async getRow(tableId: string, rowId: string): Promise<Row> {
-    return this.api.row.get(tableId, rowId)
+    const res = await this.api.row.get(tableId, rowId)
+    return res.body
   }
 
   async getRows(tableId: string) {
