@@ -1,7 +1,6 @@
-import { CouchFindOptions, Table, Row } from "@budibase/types"
+import { FieldType, CouchFindOptions, Table, Row } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
 import { DocumentType, SEPARATOR } from "../../../db/utils"
-import { FieldTypes } from "../../../constants"
 
 // default limit - seems to work well for performance
 export const FIND_LIMIT = 25
@@ -31,7 +30,7 @@ export async function getRowsWithAttachments(appId: string, table: Table) {
   const db = dbCore.getDB(appId)
   const attachmentCols: string[] = []
   for (let [key, column] of Object.entries(table.schema)) {
-    if (column.type === FieldTypes.ATTACHMENT) {
+    if (column.type === FieldType.ATTACHMENT) {
       attachmentCols.push(key)
     }
   }

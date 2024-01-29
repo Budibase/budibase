@@ -1,4 +1,5 @@
 import {
+  FieldType,
   Operation,
   RelationshipType,
   RenameColumn,
@@ -14,7 +15,6 @@ import {
   setStaticSchemas,
 } from "../../../../api/controllers/table/utils"
 import { cloneDeep } from "lodash/fp"
-import { FieldTypes } from "../../../../constants"
 import { makeTableRequest } from "../../../../api/controllers/table/ExternalRequest"
 import {
   isRelationshipSetup,
@@ -78,7 +78,7 @@ export async function save(
 
   // check if relations need setup
   for (let schema of Object.values(tableToSave.schema)) {
-    if (schema.type !== FieldTypes.LINK || isRelationshipSetup(schema)) {
+    if (schema.type !== FieldType.LINK || isRelationshipSetup(schema)) {
       continue
     }
     const schemaTableId = schema.tableId

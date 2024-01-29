@@ -7,7 +7,7 @@ import {
   TableSourceType,
   FieldType,
   Table,
-  AutoFieldSubTypes,
+  AutoFieldSubType,
 } from "@budibase/types"
 
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
@@ -117,7 +117,7 @@ describe("sdk >> rows >> internal", () => {
           id: {
             name: "id",
             type: FieldType.AUTO,
-            subtype: AutoFieldSubTypes.AUTO_ID,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
             lastID: 0,
           },
@@ -181,7 +181,7 @@ describe("sdk >> rows >> internal", () => {
           id: {
             name: "id",
             type: FieldType.AUTO,
-            subtype: AutoFieldSubTypes.AUTO_ID,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
             lastID: 0,
           },
