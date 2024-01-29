@@ -309,7 +309,8 @@ export async function getCreatorCount() {
   let creators = 0
   async function iterate(startPage?: string) {
     const page = await paginatedUsers({ bookmark: startPage })
-    creators += page.data.filter(isCreator).length
+    const creatorsEval = await Promise.all(page.data.map(isCreator))
+    creators += creatorsEval.filter(creator => !!creator).length
     if (page.hasNextPage) {
       await iterate(page.nextPage)
     }

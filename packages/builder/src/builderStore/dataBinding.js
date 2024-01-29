@@ -1035,11 +1035,48 @@ export const getAllStateVariables = () => {
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = getComponentSettings(component._component)
-      settings
-        .filter(setting => setting.type === "event")
-        .forEach(setting => {
-          eventSettings.push(component[setting.key])
-        })
+
+      const parseEventSettings = (settings, comp) => {
+        settings
+          .filter(setting => setting.type === "event")
+          .forEach(setting => {
+            eventSettings.push(comp[setting.key])
+          })
+      }
+
+      const parseComponentSettings = (settings, component) => {
+        // Parse the nested button configurations
+        settings
+          .filter(setting => setting.type === "buttonConfiguration")
+          .forEach(setting => {
+            const buttonConfig = component[setting.key]
+
+            if (Array.isArray(buttonConfig)) {
+              buttonConfig.forEach(button => {
+                const nestedSettings = getComponentSettings(button._component)
+                parseEventSettings(nestedSettings, button)
+              })
+            }
+          })
+
+        parseEventSettings(settings, component)
+      }
+
+      // Parse the base component settings
+      parseComponentSettings(settings, component)
+
+      // Parse step configuration
+      const stepSetting = settings.find(
+        setting => setting.type === "stepConfiguration"
+      )
+      const steps = stepSetting ? component[stepSetting.key] : []
+      const stepDefinition = getComponentSettings(
+        "@budibase/standard-components/multistepformblockstep"
+      )
+
+      steps.forEach(step => {
+        parseComponentSettings(stepDefinition, step)
+      })
     })
   })
 

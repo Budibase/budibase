@@ -3971,6 +3971,12 @@
       },
       {
         "type": "boolean",
+        "label": "Auto confirm",
+        "key": "autoConfirm",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
         "label": "Play sound on scan",
         "key": "beepOnScan",
         "defaultValue": false
@@ -6101,23 +6107,6 @@
       {
         "tag": "style",
         "type": "select",
-        "label": "Size",
-        "key": "size",
-        "options": [
-          {
-            "label": "Medium",
-            "value": "spectrum--medium"
-          },
-          {
-            "label": "Large",
-            "value": "spectrum--large"
-          }
-        ],
-        "defaultValue": "spectrum--medium"
-      },
-      {
-        "tag": "style",
-        "type": "select",
         "label": "Button position",
         "key": "buttonPosition",
         "options": [
@@ -6131,6 +6120,23 @@
           }
         ],
         "defaultValue": "bottom"
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
       }
     ],
     "actions": [

@@ -108,8 +108,16 @@
     }
   }
 
+  $: forceFetchRows(filter)
   $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
+  const forceFetchRows = async () => {
+    // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
+    optionsObj = {}
+    fieldApi?.setValue([])
+    selectedValue = []
+    debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
+  }
   const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
@@ -228,7 +236,6 @@
       bind:searchTerm
       loading={$fetch.loading}
       bind:open
-      customPopoverMaxHeight={400}
     />
   {/if}
 </Field>
