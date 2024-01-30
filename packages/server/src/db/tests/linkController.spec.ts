@@ -324,7 +324,7 @@ describe("test the link controller", () => {
       name: "link",
       autocolumn: true,
     }
-    await config.updateTable(table)
+    await config.upsertTable(table)
   })
 
   it("should be able to remove a linked field from a table, even if the linked table does not exist", async () => {
