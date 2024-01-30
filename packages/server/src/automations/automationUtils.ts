@@ -128,15 +128,20 @@ export function substituteLoopStep(hbsString: string, substitute: string) {
 }
 
 export function stringSplit(value: string | string[]) {
-  if (value == null || Array.isArray(value)) {
-    return value || []
+  if (value == null) {
+    return []
   }
-  if (value.split("\n").length > 1) {
-    value = value.split("\n")
-  } else {
-    value = value.split(",")
+  if (Array.isArray(value)) {
+    return value
   }
-  return value
+  if (typeof value !== "string") {
+    throw new Error(`Unable to split value of type ${typeof value}: ${value}`)
+  }
+  const splitOnNewLine = value.split("\n")
+  if (splitOnNewLine.length > 1) {
+    return splitOnNewLine
+  }
+  return value.split(",")
 }
 
 export function typecastForLooping(input: LoopInput) {
