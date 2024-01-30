@@ -1,9 +1,9 @@
 import * as rowController from "../../api/controllers/row"
 import * as tableController from "../../api/controllers/table"
-import { FieldTypes } from "../../constants"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
+  FieldType,
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationFeature,
@@ -115,7 +115,7 @@ function typeCoercion(filters: SearchFilters, table: Table) {
         if (!column || typeof value !== "string") {
           continue
         }
-        if (column.type === FieldTypes.NUMBER) {
+        if (column.type === FieldType.NUMBER) {
           if (key === "oneOf") {
             searchParam[property] = value
               .split(",")
@@ -148,11 +148,11 @@ export async function run({ inputs, appId }: AutomationStepInput) {
     }
   }
   const table = await getTable(appId, tableId)
-  let sortType = FieldTypes.STRING
+  let sortType = FieldType.STRING
   if (table && table.schema && table.schema[sortColumn] && sortColumn) {
     const fieldType = table.schema[sortColumn].type
     sortType =
-      fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING
+      fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
   const ctx: any = buildCtx(appId, null, {
     params: {

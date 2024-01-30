@@ -28,7 +28,7 @@ jobs:
         run: |
           echo "Ref is not master, you must run this job from master."
           exit 1
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
     needs: [tag-release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: peter-evans/repository-dispatch@v2
         with:

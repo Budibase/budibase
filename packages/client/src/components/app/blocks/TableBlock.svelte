@@ -147,7 +147,7 @@
       bind:id={formId}
       props={{
         dataSource,
-        disableValidation: true,
+        disableSchemaValidation: true,
         editAutoColumns: true,
         size,
       }}
@@ -231,6 +231,7 @@
           paginate,
           limit: rowCount,
         }}
+        context="provider"
         order={1}
       >
         <BlockComponent

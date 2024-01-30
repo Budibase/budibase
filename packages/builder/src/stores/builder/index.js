@@ -14,6 +14,7 @@ import {
   sortedScreens,
 } from "./screens.js"
 import { builderStore } from "./builder.js"
+import { hoverStore } from "./hover.js"
 import { previewStore } from "./preview.js"
 import {
   automationStore,
@@ -68,6 +69,7 @@ export {
   sortedIntegrations,
   queries,
   flags,
+  hoverStore,
 }
 
 export const reset = () => {

@@ -8,7 +8,7 @@
     userSelectedResourceMap,
     selectedComponent,
     selectedComponentPath,
-    builderStore,
+    hoverStore,
   } from "stores/builder"
   import {
     findComponentPath,
@@ -91,7 +91,7 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const hover = builderStore.hover
+  const hover = hoverStore.hover
 </script>
 
 <ul>
@@ -112,7 +112,7 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
-        hovering={$builderStore.hoveredComponentId === component._id}
+        hovering={$hoverStore.componentId === component._id}
         on:mouseenter={() => hover(component._id)}
         on:mouseleave={() => hover(null)}
         text={getComponentText(component)}

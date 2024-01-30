@@ -16,7 +16,7 @@
 
   export let table
 
-  let editorModal
+  let editorModal, editTableNameModal
   let confirmDeleteDialog
   let error = ""
 
@@ -100,18 +100,21 @@
 
 <Modal bind:this={editorModal} on:show={initForm}>
   <ModalContent
+    bind:this={editTableNameModal}
     title="Edit Table"
     confirmText="Save"
     onConfirm={save}
     disabled={updatedName === originalName || error}
   >
-    <Input
-      label="Table Name"
-      thin
-      bind:value={updatedName}
-      on:input={checkValid}
-      {error}
-    />
+    <form on:submit|preventDefault={() => editTableNameModal.confirm()}>
+      <Input
+        label="Table Name"
+        thin
+        bind:value={updatedName}
+        on:input={checkValid}
+        {error}
+      />
+    </form>
   </ModalContent>
 </Modal>
 <ConfirmDialog

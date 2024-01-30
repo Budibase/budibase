@@ -24,7 +24,7 @@ import { getAction } from "utils/getAction"
 import Provider from "components/context/Provider.svelte"
 import Block from "components/Block.svelte"
 import BlockComponent from "components/BlockComponent.svelte"
-import { ActionTypes } from "./constants"
+import { ActionTypes, ContextScopes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
@@ -56,6 +56,7 @@ export default {
   linkable,
   getAction,
   fetchDatasourceSchema,
+  ContextScopes,
   getAPIKey,
   enrichButtonActions,
   processStringSync,

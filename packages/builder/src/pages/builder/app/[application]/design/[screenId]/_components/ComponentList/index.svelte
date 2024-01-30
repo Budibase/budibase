@@ -6,7 +6,7 @@
     screenStore,
     componentStore,
     userSelectedResourceMap,
-    builderStore,
+    hoverStore,
   } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
@@ -42,7 +42,7 @@
     scrolling = e.target.scrollTop !== 0
   }
 
-  const hover = builderStore.hover
+  const hover = hoverStore.hover
 </script>
 
 <div class="components">
@@ -68,7 +68,7 @@
             on:click={() => {
               componentStore.select(`${$screenStore.selectedScreenId}-screen`)
             }}
-            hovering={$builderStore.hoveredComponentId === screenComponentId}
+            hovering={$hoverStore.componentId === screenComponentId}
             on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-screen"
@@ -91,7 +91,7 @@
                 `${$screenStore.selectedScreenId}-navigation`
               )
             }}
-            hovering={$builderStore.hoveredComponentId === navComponentId}
+            hovering={$hoverStore.componentId === navComponentId}
             on:mouseenter={() => hover(navComponentId)}
             on:mouseleave={() => hover(null)}
             id="component-nav"
