@@ -3,6 +3,8 @@ const helperList = require("@budibase/handlebars-helpers")
 
 let helpers = undefined
 
+const helpersToRemove = ["sortBy"]
+
 module.exports.getHelperList = () => {
   if (helpers) {
     return helpers
@@ -23,6 +25,9 @@ module.exports.getHelperList = () => {
     helpers[key] = externalHandlebars.addedHelpers[key]
   }
 
+  for (const toRemove of helpersToRemove) {
+    delete helpers[toRemove]
+  }
   Object.freeze(helpers)
   return helpers
 }
