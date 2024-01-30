@@ -1,5 +1,4 @@
 import tk from "timekeeper"
-tk.freeze(Date.now())
 
 // Mock out postgres for this
 jest.mock("pg")
@@ -20,9 +19,12 @@ jest.mock("@budibase/backend-core", () => {
 import * as setup from "./utilities"
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import { checkCacheForDynamicVariable } from "../../../threads/utils"
+
 const { basicQuery, basicDatasource } = setup.structures
 import { events, db as dbCore } from "@budibase/backend-core"
 import { Datasource, Query, SourceName } from "@budibase/types"
+
+tk.freeze(Date.now())
 
 const mockIsProdAppID = dbCore.isProdAppID as jest.MockedFunction<
   typeof dbCore.isProdAppID

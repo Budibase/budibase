@@ -21,9 +21,8 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  AutomationIOType,
+  Query,
 } from "@budibase/types"
-import { Query } from "@budibase/types"
 
 const { BUILTIN_ROLE_IDS } = roles
 
