@@ -10,8 +10,8 @@ const marked = require("marked")
  * https://github.com/budibase/handlebars-helpers
  */
 const { join } = require("path")
+const path = require("path")
 
-const DIRECTORY = join(__dirname, "..", "..", "..")
 const COLLECTIONS = [
   "math",
   "array",
@@ -128,7 +128,7 @@ function run() {
   const foundNames = []
   for (let collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
-      `${DIRECTORY}/node_modules/${HELPER_LIBRARY}/lib/${collection}.js`,
+      `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
       "utf8"
     )
     const collectionInfo = {}
