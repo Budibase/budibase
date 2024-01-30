@@ -683,3 +683,110 @@ describe("SQL query builder", () => {
     })
   })
 })
+
+describe("Captures of real examples", () => {
+  const limit = 5000
+
+  it("should handle filtering by relationship", () => {
+    const queryJson = {
+      endpoint: {
+        datasourceId: "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
+        entityId: "products",
+        operation: "READ",
+        alias: "a",
+      },
+      resource: {
+        fields: [
+          "a.productname",
+          "a.productid",
+          "b.executorid",
+          "b.taskname",
+          "b.taskid",
+          "b.completed",
+          "b.qaid",
+        ],
+      },
+      filters: {
+        equal: {
+          "1:tasks.taskname": "assembling",
+        },
+        onEmptyFilter: "all",
+      },
+      sort: {
+        productname: {
+          direction: "ASCENDING",
+        },
+      },
+      paginate: {
+        limit: 100,
+        page: 1,
+      },
+      relationships: [
+        {
+          tableName: "tasks",
+          column: "tasks",
+          through: "products_tasks",
+          from: "productid",
+          to: "taskid",
+          fromPrimary: "productid",
+          toPrimary: "taskid",
+          aliases: {
+            products_tasks: "c",
+            tasks: "b",
+            products: "a",
+          },
+        },
+      ],
+      meta: {
+        table: {
+          type: "table",
+          _id: "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products",
+          primary: ["productid"],
+          name: "a",
+          schema: {
+            productname: {
+              type: "string",
+              externalType: "character varying",
+              autocolumn: false,
+              name: "productname",
+              constraints: {
+                presence: false,
+              },
+            },
+            productid: {
+              type: "number",
+              externalType: "integer",
+              autocolumn: true,
+              name: "productid",
+              constraints: {
+                presence: false,
+              },
+            },
+            tasks: {
+              tableId:
+                "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
+              name: "tasks",
+              relationshipType: "many-to-many",
+              fieldName: "taskid",
+              through:
+                "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products_tasks",
+              throughFrom: "taskid",
+              throughTo: "productid",
+              type: "link",
+              main: true,
+              _id: "ca6862d9ba09146dd8a68e3b5b7055a09",
+            },
+          },
+          sourceId: "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
+          sourceType: "external",
+          primaryDisplay: "productname",
+        },
+      },
+    }
+    let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
+    expect(query).toEqual({
+      bindings: [100, "assembling", limit],
+      sql: `select "a"."productname" as "a.productname", "a"."productid" as "a.productid", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" left join "products_tasks" as "c" on "a"."productid" = "c"."productid" left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 order by "a"."productname" asc limit $3`,
+    })
+  })
+})
