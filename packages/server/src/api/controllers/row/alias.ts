@@ -113,7 +113,7 @@ export default class AliasTables {
       }
       json.meta.tables = aliasedTables
     }
-    json.endpoint.alias = this.getAlias(json.endpoint.entityId)
+    json.tableAliases = this.tableAliases
     const response = await getDatasourceAndQuery(json)
     return this.reverse(response)
   }

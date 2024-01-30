@@ -1,5 +1,7 @@
-const Sql = require("../base/sql").default
-const { SqlClient } = require("../utils")
+import { SqlClient } from "../utils"
+import Sql from "../base/sql"
+import { QueryJson } from "@budibase/types"
+import { join } from "path"
 
 const TABLE_NAME = "test"
 
@@ -17,7 +19,7 @@ function generateReadJson({
   filters,
   sort,
   paginate,
-}: any = {}) {
+}: any = {}): QueryJson {
   return {
     endpoint: endpoint(table || TABLE_NAME, "READ"),
     resource: {
@@ -30,7 +32,7 @@ function generateReadJson({
       table: {
         name: table || TABLE_NAME,
         primary: ["id"],
-      },
+      } as any,
     },
   }
 }
@@ -687,102 +689,12 @@ describe("SQL query builder", () => {
 describe("Captures of real examples", () => {
   const limit = 5000
 
+  function getJson(name: string): QueryJson {
+    return require(join(__dirname, "sqlQueryJson", name)) as QueryJson
+  }
+
   it("should handle filtering by relationship", () => {
-    const queryJson = {
-      endpoint: {
-        datasourceId: "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-        entityId: "products",
-        operation: "READ",
-        alias: "a",
-      },
-      resource: {
-        fields: [
-          "a.productname",
-          "a.productid",
-          "b.executorid",
-          "b.taskname",
-          "b.taskid",
-          "b.completed",
-          "b.qaid",
-        ],
-      },
-      filters: {
-        equal: {
-          "1:tasks.taskname": "assembling",
-        },
-        onEmptyFilter: "all",
-      },
-      sort: {
-        productname: {
-          direction: "ASCENDING",
-        },
-      },
-      paginate: {
-        limit: 100,
-        page: 1,
-      },
-      relationships: [
-        {
-          tableName: "tasks",
-          column: "tasks",
-          through: "products_tasks",
-          from: "productid",
-          to: "taskid",
-          fromPrimary: "productid",
-          toPrimary: "taskid",
-          aliases: {
-            products_tasks: "c",
-            tasks: "b",
-            products: "a",
-          },
-        },
-      ],
-      meta: {
-        table: {
-          type: "table",
-          _id: "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products",
-          primary: ["productid"],
-          name: "a",
-          schema: {
-            productname: {
-              type: "string",
-              externalType: "character varying",
-              autocolumn: false,
-              name: "productname",
-              constraints: {
-                presence: false,
-              },
-            },
-            productid: {
-              type: "number",
-              externalType: "integer",
-              autocolumn: true,
-              name: "productid",
-              constraints: {
-                presence: false,
-              },
-            },
-            tasks: {
-              tableId:
-                "datasource_plus_8066e56456784eb2a00129d31be5c3e7__tasks",
-              name: "tasks",
-              relationshipType: "many-to-many",
-              fieldName: "taskid",
-              through:
-                "datasource_plus_8066e56456784eb2a00129d31be5c3e7__products_tasks",
-              throughFrom: "taskid",
-              throughTo: "productid",
-              type: "link",
-              main: true,
-              _id: "ca6862d9ba09146dd8a68e3b5b7055a09",
-            },
-          },
-          sourceId: "datasource_plus_8066e56456784eb2a00129d31be5c3e7",
-          sourceType: "external",
-          primaryDisplay: "productname",
-        },
-      },
-    }
+    const queryJson = getJson(`filterByRelationship.json`)
     let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
     expect(query).toEqual({
       bindings: [100, "assembling", limit],

@@ -67,7 +67,6 @@ export interface RelationshipsJson {
   fromPrimary?: string
   toPrimary?: string
   tableName: string
-  aliases?: Record<string, string>
   column: string
 }
 
@@ -75,7 +74,6 @@ export interface QueryJson {
   endpoint: {
     datasourceId: string
     entityId: string
-    alias?: string
     operation: Operation
     schema?: string
   }
@@ -96,6 +94,7 @@ export interface QueryJson {
     idFilter?: SearchFilters
   }
   relationships?: RelationshipsJson[]
+  tableAliases?: Record<string, string>
 }
 
 export interface SqlQuery {
