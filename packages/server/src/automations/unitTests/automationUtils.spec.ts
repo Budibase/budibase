@@ -33,32 +33,20 @@ describe("automationUtils", () => {
   describe("typeCastForLooping", () => {
     it("should parse to correct type", () => {
       expect(
-        typecastForLooping({
-          inputs: { option: LoopStepType.ARRAY, binding: [1, 2, 3] },
-        } as LoopStep)
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: [1, 2, 3] })
       ).toEqual([1, 2, 3])
       expect(
-        typecastForLooping({
-          inputs: { option: LoopStepType.ARRAY, binding: "[1,2,3]" },
-        } as LoopStep)
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: "[1,2,3]" })
       ).toEqual([1, 2, 3])
       expect(
-        typecastForLooping({
-          inputs: { option: LoopStepType.STRING, binding: [1, 2, 3] },
-        } as LoopStep)
+        typecastForLooping({ option: LoopStepType.STRING, binding: [1, 2, 3] })
       ).toEqual("1,2,3")
     })
     it("should handle null values", () => {
       // expect it to handle where the binding is null
-      expect(
-        typecastForLooping({
-          inputs: { option: LoopStepType.ARRAY },
-        } as LoopStep)
-      ).toEqual(null)
+      expect(typecastForLooping({ option: LoopStepType.ARRAY })).toEqual(null)
       expect(() =>
-        typecastForLooping({
-          inputs: { option: LoopStepType.ARRAY, binding: "test" },
-        } as LoopStep)
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: "test" })
       ).toThrow()
     })
   })

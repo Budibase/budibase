@@ -23,6 +23,7 @@ import {
 } from "@budibase/types"
 import {
   AutomationContext,
+  LoopInput,
   LoopStep,
   TriggerOutput,
 } from "../definitions/automations"
@@ -254,7 +255,7 @@ class Orchestrator {
         this._context.env = await sdkUtils.getEnvironmentVariables()
         let automation = this._automation
         let stopped = false
-        let loopStep: AutomationStep | undefined = undefined
+        let loopStep: LoopStep | undefined = undefined
 
         let stepCount = 0
         let loopStepNumber: any = undefined
@@ -309,7 +310,7 @@ class Orchestrator {
 
             stepCount++
             if (step.stepId === LOOP_STEP_ID) {
-              loopStep = step
+              loopStep = step as LoopStep
               loopStepNumber = stepCount
               continue
             }
@@ -329,7 +330,7 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep as LoopStep
+                    loopStep.inputs as LoopInput
                   )
                 } catch (err) {
                   this.updateContextAndOutput(
@@ -345,7 +346,7 @@ class Orchestrator {
                   loopStep = undefined
                   break
                 }
-                let item = []
+                let item: any[] = []
                 if (
                   typeof loopStep.inputs.binding === "string" &&
                   loopStep.inputs.option === "String"
@@ -396,7 +397,8 @@ class Orchestrator {
 
                 if (
                   index === env.AUTOMATION_MAX_ITERATIONS ||
-                  index === parseInt(loopStep.inputs.iterations)
+                  (loopStep.inputs.iterations &&
+                    index === parseInt(loopStep.inputs.iterations))
                 ) {
                   this.updateContextAndOutput(
                     loopStepNumber,
