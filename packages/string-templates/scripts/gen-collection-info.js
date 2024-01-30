@@ -115,7 +115,8 @@ function getCommentInfo(file, func) {
     docs.example = docs.example.replace("product", "multiply")
   }
   docs.description = blocks[0].trim()
-  docs.requiresBlock = docs.tags.some(el => el.title === "block")
+  docs.acceptsBlock = docs.tags.some(el => el.title === "block")
+  docs.acceptsInline = docs.tags.some(el => el.title === "inline")
   return docs
 }
 
@@ -160,7 +161,7 @@ function run() {
         numArgs: args.length,
         example: jsDocInfo.example || undefined,
         description: jsDocInfo.description,
-        requiresBlock: jsDocInfo.requiresBlock,
+        requiresBlock: jsDocInfo.acceptsBlock && !jsDocInfo.acceptsInline,
       })
     }
     outputJSON[collection] = collectionInfo

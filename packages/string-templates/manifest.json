@@ -264,7 +264,7 @@
       "numArgs": 2,
       "example": "{{equalsLength [1, 2, 3] 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n",
-      "requiresBlock": true
+      "requiresBlock": false
     },
     "last": {
       "args": [
@@ -293,7 +293,7 @@
       "numArgs": 2,
       "example": "{{equalsLength [1, 2, 3] 3}} -> true",
       "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n",
-      "requiresBlock": true
+      "requiresBlock": false
     },
     "map": {
       "args": [
@@ -906,7 +906,7 @@
       "numArgs": 2,
       "example": "{{uppercase 'aBcDef'}} -> ABCDEF",
       "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n",
-      "requiresBlock": true
+      "requiresBlock": false
     }
   },
   "comparison": {
@@ -931,7 +931,7 @@
       "numArgs": 4,
       "example": "{{compare 10 '<' 5 }} -> false",
       "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n",
-      "requiresBlock": true
+      "requiresBlock": false
     },
     "contains": {
       "args": [
