@@ -43,19 +43,17 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
-  let binding = loopStep.inputs.binding
+  const binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
   try {
-    if (typeof binding === "string") {
-      binding = JSON.parse(binding)
+    const json = typeof binding === "string" ? JSON.parse(binding) : binding
+    if (Array.isArray(json)) {
+      return json.length
     }
   } catch (err) {
     // ignore error - wasn't able to parse
-  }
-  if (Array.isArray(binding)) {
-    return binding.length
   }
   if (typeof binding === "string") {
     return automationUtils.stringSplit(binding).length
@@ -614,7 +612,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   })
 }
 
-export function executeSynchronously(job: Job) {
+export async function executeInThread(job: Job<AutomationData>) {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
@@ -626,10 +624,10 @@ export function executeSynchronously(job: Job) {
     }, job.data.event.timeout || 12000)
   })
 
-  return context.doInAppContext(appId, async () => {
+  return await context.doInAppContext(appId, async () => {
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
-    return context.doInEnvironmentContext(envVars, async () => {
+    return await context.doInEnvironmentContext(envVars, async () => {
       const automationOrchestrator = new Orchestrator(job)
       return await Promise.race([
         automationOrchestrator.execute(),
