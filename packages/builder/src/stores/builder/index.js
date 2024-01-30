@@ -116,7 +116,7 @@ export const initialise = async pkg => {
   layoutStore.syncAppLayouts(pkg)
 
   // required for api comms
-  database.syncAppDatabase(pkg)
+  database.syncAppDatabase(application)
 
   resetBuilderHistory()
 
