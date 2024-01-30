@@ -21,7 +21,7 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  AutomationIOType,
+  Query,
 } from "@budibase/types"
 
 const { BUILTIN_ROLE_IDS } = roles
@@ -360,7 +360,7 @@ export function basicDatasource(): { datasource: Datasource } {
   }
 }
 
-export function basicQuery(datasourceId: string) {
+export function basicQuery(datasourceId: string): Query {
   return {
     datasourceId: datasourceId,
     name: "New Query",
@@ -368,6 +368,8 @@ export function basicQuery(datasourceId: string) {
     fields: {},
     schema: {},
     queryVerb: "read",
+    transformer: null,
+    readable: true,
   }
 }
 
