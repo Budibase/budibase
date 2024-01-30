@@ -21,8 +21,9 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
-  AutomationIOType,
+  Query,
 } from "@budibase/types"
+import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -204,10 +205,13 @@ export function serverLogAutomation(appId?: string): Automation {
   }
 }
 
-export function loopAutomation(tableId: string, loopOpts?: any): Automation {
+export function loopAutomation(
+  tableId: string,
+  loopOpts?: LoopInput
+): Automation {
   if (!loopOpts) {
     loopOpts = {
-      option: "Array",
+      option: LoopStepType.ARRAY,
       binding: "{{ steps.1.rows }}",
     }
   }
@@ -360,7 +364,7 @@ export function basicDatasource(): { datasource: Datasource } {
   }
 }
 
-export function basicQuery(datasourceId: string) {
+export function basicQuery(datasourceId: string): Query {
   return {
     datasourceId: datasourceId,
     name: "New Query",
@@ -368,6 +372,8 @@ export function basicQuery(datasourceId: string) {
     fields: {},
     schema: {},
     queryVerb: "read",
+    transformer: null,
+    readable: true,
   }
 }
 
