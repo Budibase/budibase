@@ -13,7 +13,7 @@ export class TableAPI extends TestAPI {
     super(config)
   }
 
-  create = async (
+  save = async (
     data: SaveTableRequest,
     { expectStatus } = { expectStatus: 200 }
   ): Promise<SaveTableResponse> => {

@@ -5,7 +5,7 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import { Row } from "@budibase/types"
-import { LoopStep, LoopStepType, LoopInput } from "../definitions/automations"
+import { LoopInput, LoopStep, LoopStepType } from "../definitions/automations"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
@@ -144,12 +144,12 @@ export function stringSplit(value: string | string[]) {
   return value.split(",")
 }
 
-export function typecastForLooping(loopStep: LoopStep, input: LoopInput) {
+export function typecastForLooping(input: LoopInput) {
   if (!input || !input.binding) {
     return null
   }
   try {
-    switch (loopStep.inputs.option) {
+    switch (input.option) {
       case LoopStepType.ARRAY:
         if (typeof input.binding === "string") {
           return JSON.parse(input.binding)
