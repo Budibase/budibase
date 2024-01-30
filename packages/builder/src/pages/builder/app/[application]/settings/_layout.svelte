@@ -15,9 +15,9 @@
       <Content showMobileNav>
         <SideNav slot="side-nav">
           <SideNavItem
-            text="Automation History"
-            url={$url("./automation-history")}
-            active={$isActive("./automation-history")}
+            text="Automations"
+            url={$url("./automations")}
+            active={$isActive("./automations")}
           />
           <SideNavItem
             text="Backups"

@@ -13,6 +13,7 @@
     Icon,
   } from "@budibase/bbui"
   import { capitalise } from "helpers"
+  import { getFormattedPlanName } from "helpers/planTitle"
   import { get } from "svelte/store"
 
   export let resourceId
@@ -99,7 +100,9 @@
     {#if requiresPlanToModify}
       <span class="lock-tag">
         <Tags>
-          <Tag icon="LockClosed">{capitalise(requiresPlanToModify)}</Tag>
+          <Tag icon="LockClosed"
+            >{getFormattedPlanName(requiresPlanToModify)}</Tag
+          >
         </Tags>
       </span>
     {/if}

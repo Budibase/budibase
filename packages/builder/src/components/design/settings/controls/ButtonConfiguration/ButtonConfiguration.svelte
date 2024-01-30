@@ -5,6 +5,7 @@
   import { Helpers } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
   import { getEventContextBindings } from "builder/dataBinding"
+  import { cloneDeep, isEqual } from "lodash/fp"
 
   export let componentInstance
   export let componentBindings
@@ -17,8 +18,13 @@
   const dispatch = createEventDispatcher()
 
   let focusItem
+  let cachedValue
 
-  $: buttonList = sanitizeValue(value) || []
+  $: if (!isEqual(value, cachedValue)) {
+    cachedValue = cloneDeep(value)
+  }
+
+  $: buttonList = sanitizeValue(cachedValue) || []
   $: buttonCount = buttonList.length
   $: eventContextBindings = getEventContextBindings({
     componentInstance,

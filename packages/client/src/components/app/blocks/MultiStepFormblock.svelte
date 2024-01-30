@@ -1,5 +1,6 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
+  import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
@@ -41,7 +42,7 @@
   let schema
 
   $: fetchSchema(dataSource)
-  $: enrichedSteps = enrichSteps(steps, schema, $component.id)
+  $: enrichedSteps = enrichSteps(steps, schema, $component.id, $currentStep)
   $: updateCurrentStep(enrichedSteps, $builderStore, $component)
 
   const updateCurrentStep = (steps, builderStore, component) => {
@@ -115,6 +116,7 @@
         dataSource,
       })
       return {
+        _stepId: Helpers.uuid(),
         fields: getDefaultFields(fields || [], schema),
         title: title ?? defaultProps.title,
         desc,
@@ -142,7 +144,7 @@
       },
     }}
   >
-    {#each enrichedSteps as step, stepIdx}
+    {#each enrichedSteps as step, stepIdx (step._stepId)}
       <BlockComponent
         type="formstep"
         props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
@@ -186,12 +188,13 @@
             </BlockComponent>
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+
           <BlockComponent type="container" order={2}>
             <div
               class="form-block fields"
               class:mobile={$context.device.mobile}
             >
-              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
+              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${fieldIdx}`)}
                 {#if getComponentForField(field)}
                   <BlockComponent
                     type={getComponentForField(field)}

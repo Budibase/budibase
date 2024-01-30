@@ -43,7 +43,7 @@
       },
       TRIGGER_AUTOMATION_RUN: {
         disabled: !triggerAutomationRunEnabled,
-        message: collectDisabledMessage(),
+        message: "Please upgrade to a paid plan",
       },
     }
   }
