@@ -292,7 +292,6 @@
         loopBlockCount++
         continue
       }
-      console.log(schema)
       Object.entries(schema).forEach(([name, value]) =>
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       )
