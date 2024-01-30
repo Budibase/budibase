@@ -11,6 +11,7 @@ export function handlebarsCompletions() {
       label: helperName,
       displayText: helperName,
       description: helperConfig.description,
+      requiresBlock: helperConfig.requiresBlock,
     }))
   )
 }
