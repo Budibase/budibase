@@ -71,6 +71,10 @@
       await auth.getSelf()
       await admin.init()
 
+      if ($admin.maintenance.length > 0) {
+        $redirect("./maintenance")
+      }
+
       if ($auth.user) {
         await licensing.init()
       }

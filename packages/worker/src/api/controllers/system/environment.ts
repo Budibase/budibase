@@ -1,10 +1,18 @@
-import { Ctx } from "@budibase/types"
+import { Ctx, MaintenanceType } from "@budibase/types"
 import env from "../../../environment"
 import { env as coreEnv } from "@budibase/backend-core"
 import nodeFetch from "node-fetch"
 
+// When we come to move to SQS fully and move away from Clouseau, we will need
+// to flip this to true (or remove it entirely). This will then be used to
+// determine if we should show the maintenance page that links to the SQS
+// migration docs.
+const sqsRequired = false
+
 let sqsAvailable: boolean
 async function isSqsAvailable() {
+  // We cache this value for the duration of the Node process because we don't
+  // want every page load to be making this relatively expensive check.
   if (sqsAvailable !== undefined) {
     return sqsAvailable
   }
@@ -21,6 +29,10 @@ async function isSqsAvailable() {
   }
 }
 
+async function isSqsMissing() {
+  return sqsRequired && !(await isSqsAvailable())
+}
+
 export const fetch = async (ctx: Ctx) => {
   ctx.body = {
     multiTenancy: !!env.MULTI_TENANCY,
@@ -33,8 +45,9 @@ export const fetch = async (ctx: Ctx) => {
   }
 
   if (env.SELF_HOSTED) {
-    ctx.body.infrastructure = {
-      sqs: await isSqsAvailable(),
+    ctx.body.maintenance = []
+    if (await isSqsMissing()) {
+      ctx.body.maintenance.push({ type: MaintenanceType.SQS_MISSING })
     }
   }
 }
