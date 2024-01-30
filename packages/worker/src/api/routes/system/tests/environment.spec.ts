@@ -40,9 +40,7 @@ describe("/api/system/environment", () => {
           multiTenancy: true,
           baseUrl: "http://localhost:10000",
           offlineMode: false,
-          infrastructure: {
-            sqs: false,
-          },
+          maintenance: [],
         })
       })
     })
