@@ -47,9 +47,8 @@ function getLoopIterations(loopStep: LoopStep) {
   if (!binding) {
     return 0
   }
-  const isString = typeof binding === "string"
   try {
-    if (isString) {
+    if (typeof binding === "string") {
       binding = JSON.parse(binding)
     }
   } catch (err) {
@@ -58,7 +57,7 @@ function getLoopIterations(loopStep: LoopStep) {
   if (Array.isArray(binding)) {
     return binding.length
   }
-  if (isString) {
+  if (typeof binding === "string") {
     return automationUtils.stringSplit(binding).length
   }
   return 0
@@ -256,7 +255,7 @@ class Orchestrator {
         this._context.env = await sdkUtils.getEnvironmentVariables()
         let automation = this._automation
         let stopped = false
-        let loopStep: AutomationStep | undefined = undefined
+        let loopStep: LoopStep | undefined = undefined
 
         let stepCount = 0
         let loopStepNumber: any = undefined
@@ -311,7 +310,7 @@ class Orchestrator {
 
             stepCount++
             if (step.stepId === LOOP_STEP_ID) {
-              loopStep = step
+              loopStep = step as LoopStep
               loopStepNumber = stepCount
               continue
             }
@@ -331,7 +330,6 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep as LoopStep,
                     loopStep.inputs as LoopInput
                   )
                 } catch (err) {
@@ -348,7 +346,7 @@ class Orchestrator {
                   loopStep = undefined
                   break
                 }
-                let item = []
+                let item: any[] = []
                 if (
                   typeof loopStep.inputs.binding === "string" &&
                   loopStep.inputs.option === "String"
@@ -399,7 +397,8 @@ class Orchestrator {
 
                 if (
                   index === env.AUTOMATION_MAX_ITERATIONS ||
-                  index === parseInt(loopStep.inputs.iterations)
+                  (loopStep.inputs.iterations &&
+                    index === parseInt(loopStep.inputs.iterations))
                 ) {
                   this.updateContextAndOutput(
                     loopStepNumber,
