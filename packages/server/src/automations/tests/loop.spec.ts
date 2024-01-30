@@ -44,4 +44,12 @@ describe("Attempt to run a basic loop automation", () => {
     })
     expect(resp.steps[2].outputs.iterations).toBe(3)
   })
+
+  it("test a loop with a binding that returns an integer", async () => {
+    const resp = await runLoop({
+      option: LoopStepType.ARRAY,
+      binding: "{{ 1 }}",
+    })
+    expect(resp.steps[2].outputs.iterations).toBe(1)
+  })
 })
