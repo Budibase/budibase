@@ -58,8 +58,8 @@ const examples = collections.reduce((acc, collection) => {
           }
         }
       }
-      const hasHbsBody = details.isBlock
-      return [name, { hbs, js, hasHbsBody }]
+      const requiresHbsBody = details.requiresBlock
+      return [name, { hbs, js, requiresHbsBody }]
     })
     .filter(x => !!x)
 
@@ -110,7 +110,9 @@ describe("manifest", () => {
   describe("can be parsed and run as js", () => {
     describe.each(Object.keys(examples))("%s", collection => {
       it.each(
-        examples[collection].filter(([_, { hasHbsBody }]) => !hasHbsBody)
+        examples[collection].filter(
+          ([_, { requiresHbsBody }]) => !requiresHbsBody
+        )
       )("%s", async (_, { hbs, js }) => {
         const context = {
           double: i => i * 2,
