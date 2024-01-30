@@ -23,7 +23,6 @@ import {
 } from "@budibase/types"
 import {
   AutomationContext,
-  LoopInput,
   LoopStep,
   TriggerOutput,
 } from "../definitions/automations"
@@ -47,9 +46,8 @@ function getLoopIterations(loopStep: LoopStep) {
   if (!binding) {
     return 0
   }
-  const isString = typeof binding === "string"
   try {
-    if (isString) {
+    if (typeof binding === "string") {
       binding = JSON.parse(binding)
     }
   } catch (err) {
@@ -58,7 +56,7 @@ function getLoopIterations(loopStep: LoopStep) {
   if (Array.isArray(binding)) {
     return binding.length
   }
-  if (isString) {
+  if (typeof binding === "string") {
     return automationUtils.stringSplit(binding).length
   }
   return 0
@@ -331,8 +329,7 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep as LoopStep,
-                    loopStep.inputs as LoopInput
+                    loopStep as LoopStep
                   )
                 } catch (err) {
                   this.updateContextAndOutput(
