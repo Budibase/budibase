@@ -11,7 +11,7 @@ export interface LoopStep extends AutomationStep {
 
 export interface LoopInput {
   option: LoopStepType
-  binding: string[] | string
+  binding?: string[] | string | number[]
 }
 
 export interface TriggerOutput {
