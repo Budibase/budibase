@@ -158,6 +158,7 @@ export const getFrontendStore = () => {
           ...INITIAL_FRONTEND_STATE.features,
           ...application.features,
         },
+        automations: application.automations || {},
         icon: application.icon || {},
         initialised: true,
       }))
