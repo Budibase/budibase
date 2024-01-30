@@ -3,8 +3,7 @@ import { writable } from "svelte/store"
 export const createDatabaseStore = () => {
   const store = writable({})
 
-  const syncAppDatabase = pkg => {
-    const { application } = pkg
+  const syncAppDatabase = application => {
     store.set({ ...application.instance })
   }
 
