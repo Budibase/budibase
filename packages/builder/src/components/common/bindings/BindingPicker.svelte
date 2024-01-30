@@ -47,9 +47,10 @@
     })
   $: filteredHelpers = helpers?.filter(helper => {
     return (
-      !search ||
-      helper.label.match(searchRgx) ||
-      helper.description.match(searchRgx)
+      (!search ||
+        helper.label.match(searchRgx) ||
+        helper.description.match(searchRgx)) &&
+      (mode.name !== "javascript" || !helper.requiresBlock)
     )
   })
 
