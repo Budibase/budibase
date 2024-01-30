@@ -6,14 +6,14 @@ export enum LoopStepType {
 }
 
 export interface LoopStep extends AutomationStep {
-  inputs: {
-    option: LoopStepType
-    [key: string]: any
-  }
+  inputs: LoopInput
 }
 
 export interface LoopInput {
-  binding: string[] | string
+  option: LoopStepType
+  binding?: string[] | string | number[]
+  iterations?: string
+  failure?: any
 }
 
 export interface TriggerOutput {
