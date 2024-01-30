@@ -6,7 +6,8 @@
       ],
       "numArgs": 1,
       "example": "{{ abs 12012.1000 }} -> 12012.1",
-      "description": "<p>Return the magnitude of <code>a</code>.</p>\n"
+      "description": "<p>Return the magnitude of <code>a</code>.</p>\n",
+      "isBlock": false
     },
     "add": {
       "args": [
@@ -15,7 +16,8 @@
       ],
       "numArgs": 2,
       "example": "{{ add 1 2 }} -> 3",
-      "description": "<p>Return the sum of <code>a</code> plus <code>b</code>.</p>\n"
+      "description": "<p>Return the sum of <code>a</code> plus <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "avg": {
       "args": [
@@ -23,7 +25,8 @@
       ],
       "numArgs": 1,
       "example": "{{ avg 1 2 3 4 5 }} -> 3",
-      "description": "<p>Returns the average of all numbers in the given array.</p>\n"
+      "description": "<p>Returns the average of all numbers in the given array.</p>\n",
+      "isBlock": false
     },
     "ceil": {
       "args": [
@@ -31,7 +34,8 @@
       ],
       "numArgs": 1,
       "example": "{{ ceil 1.2 }} -> 2",
-      "description": "<p>Get the <code>Math.ceil()</code> of the given value.</p>\n"
+      "description": "<p>Get the <code>Math.ceil()</code> of the given value.</p>\n",
+      "isBlock": false
     },
     "divide": {
       "args": [
@@ -40,7 +44,8 @@
       ],
       "numArgs": 2,
       "example": "{{ divide 10 5 }} -> 2",
-      "description": "<p>Divide <code>a</code> by <code>b</code></p>\n"
+      "description": "<p>Divide <code>a</code> by <code>b</code></p>\n",
+      "isBlock": false
     },
     "floor": {
       "args": [
@@ -48,7 +53,8 @@
       ],
       "numArgs": 1,
       "example": "{{ floor 1.2 }} -> 1",
-      "description": "<p>Get the <code>Math.floor()</code> of the given value.</p>\n"
+      "description": "<p>Get the <code>Math.floor()</code> of the given value.</p>\n",
+      "isBlock": false
     },
     "minus": {
       "args": [
@@ -57,7 +63,8 @@
       ],
       "numArgs": 2,
       "example": "{{ subtract 10 5 }} -> 5",
-      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n"
+      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "modulo": {
       "args": [
@@ -66,7 +73,8 @@
       ],
       "numArgs": 2,
       "example": "{{ modulo 10 5 }} -> 0",
-      "description": "<p>Get the remainder of a division operation.</p>\n"
+      "description": "<p>Get the remainder of a division operation.</p>\n",
+      "isBlock": false
     },
     "multiply": {
       "args": [
@@ -75,7 +83,8 @@
       ],
       "numArgs": 2,
       "example": "{{ multiply 10 5 }} -> 50",
-      "description": "<p>Multiply number <code>a</code> by number <code>b</code>.</p>\n"
+      "description": "<p>Multiply number <code>a</code> by number <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "plus": {
       "args": [
@@ -84,7 +93,8 @@
       ],
       "numArgs": 2,
       "example": "{{ plus 10 5 }} -> 15",
-      "description": "<p>Add <code>a</code> by <code>b</code>.</p>\n"
+      "description": "<p>Add <code>a</code> by <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "random": {
       "args": [
@@ -93,7 +103,8 @@
       ],
       "numArgs": 2,
       "example": "{{ random 0 20 }} -> 10",
-      "description": "<p>Generate a random number between two values</p>\n"
+      "description": "<p>Generate a random number between two values</p>\n",
+      "isBlock": false
     },
     "remainder": {
       "args": [
@@ -102,7 +113,8 @@
       ],
       "numArgs": 2,
       "example": "{{ remainder 10 6 }} -> 4",
-      "description": "<p>Get the remainder when <code>a</code> is divided by <code>b</code>.</p>\n"
+      "description": "<p>Get the remainder when <code>a</code> is divided by <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "round": {
       "args": [
@@ -110,7 +122,8 @@
       ],
       "numArgs": 1,
       "example": "{{ round 10.3 }} -> 10",
-      "description": "<p>Round the given number.</p>\n"
+      "description": "<p>Round the given number.</p>\n",
+      "isBlock": false
     },
     "subtract": {
       "args": [
@@ -119,7 +132,8 @@
       ],
       "numArgs": 2,
       "example": "{{ subtract 10 5 }} -> 5",
-      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n"
+      "description": "<p>Return the product of <code>a</code> minus <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "sum": {
       "args": [
@@ -127,7 +141,8 @@
       ],
       "numArgs": 1,
       "example": "{{ sum [1, 2, 3] }} -> 6",
-      "description": "<p>Returns the sum of all numbers in the given array.</p>\n"
+      "description": "<p>Returns the sum of all numbers in the given array.</p>\n",
+      "isBlock": false
     }
   },
   "array": {
@@ -138,7 +153,8 @@
       ],
       "numArgs": 2,
       "example": "{{ after ['a', 'b', 'c', 'd'] 2}} -> ['c', 'd']",
-      "description": "<p>Returns all of the items in an array after the specified index. Opposite of <a href=\"#before\">before</a>.</p>\n"
+      "description": "<p>Returns all of the items in an array after the specified index. Opposite of <a href=\"#before\">before</a>.</p>\n",
+      "isBlock": false
     },
     "arrayify": {
       "args": [
@@ -146,7 +162,8 @@
       ],
       "numArgs": 1,
       "example": "{{ arrayify 'foo' }} -> ['foo']",
-      "description": "<p>Cast the given <code>value</code> to an array.</p>\n"
+      "description": "<p>Cast the given <code>value</code> to an array.</p>\n",
+      "isBlock": false
     },
     "before": {
       "args": [
@@ -155,7 +172,8 @@
       ],
       "numArgs": 2,
       "example": "{{ before ['a', 'b', 'c', 'd'] 3}} -> ['a', 'b']",
-      "description": "<p>Return all of the items in the collection before the specified count. Opposite of <a href=\"#after\">after</a>.</p>\n"
+      "description": "<p>Return all of the items in the collection before the specified count. Opposite of <a href=\"#after\">after</a>.</p>\n",
+      "isBlock": false
     },
     "eachIndex": {
       "args": [
@@ -164,7 +182,8 @@
       ],
       "numArgs": 2,
       "example": "{{#eachIndex [1, 2, 3]}} {{item}} is {{index}} {{/eachIndex}} -> ' 1 is 0  2 is 1  3 is 2 '",
-      "description": "<p>Iterates the array, listing an item and the index of it.</p>\n"
+      "description": "<p>Iterates the array, listing an item and the index of it.</p>\n",
+      "isBlock": true
     },
     "filter": {
       "args": [
@@ -174,7 +193,8 @@
       ],
       "numArgs": 3,
       "example": "{{#filter [1, 2, 3] 2}}2 Found{{else}}2 not found{{/filter}} -> 2 Found",
-      "description": "<p>Block helper that filters the given array and renders the block for values that evaluate to <code>true</code>, otherwise the inverse block is returned.</p>\n"
+      "description": "<p>Block helper that filters the given array and renders the block for values that evaluate to <code>true</code>, otherwise the inverse block is returned.</p>\n",
+      "isBlock": true
     },
     "first": {
       "args": [
@@ -183,15 +203,18 @@
       ],
       "numArgs": 2,
       "example": "{{first [1, 2, 3, 4] 2}} -> 1,2",
-      "description": "<p>Returns the first item, or first <code>n</code> items of an array.</p>\n"
+      "description": "<p>Returns the first item, or first <code>n</code> items of an array.</p>\n",
+      "isBlock": false
     },
     "forEach": {
       "args": [
-        "array"
+        "array",
+        "options"
       ],
-      "numArgs": 1,
+      "numArgs": 2,
       "example": "{{#forEach [{ 'name': 'John' }] }} {{ name }} {{/forEach}} -> ' John '",
-      "description": "<p>Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - <code>index</code> - <code>total</code> - <code>isFirst</code> - <code>isLast</code> Also, <code>@index</code> is exposed as a private variable, and additional private variables may be defined as hash arguments.</p>\n"
+      "description": "<p>Iterates over each item in an array and exposes the current item in the array as context to the inner block. In addition to the current array item, the helper exposes the following variables to the inner block: - <code>index</code> - <code>total</code> - <code>isFirst</code> - <code>isLast</code> Also, <code>@index</code> is exposed as a private variable, and additional private variables may be defined as hash arguments.</p>\n",
+      "isBlock": true
     },
     "inArray": {
       "args": [
@@ -201,7 +224,8 @@
       ],
       "numArgs": 3,
       "example": "{{#inArray [1, 2, 3] 2}} 2 exists {{else}} 2 does not exist {{/inArray}} -> ' 2 exists '",
-      "description": "<p>Block helper that renders the block if an array has the given <code>value</code>. Optionally specify an inverse block to render when the array does not have the given value.</p>\n"
+      "description": "<p>Block helper that renders the block if an array has the given <code>value</code>. Optionally specify an inverse block to render when the array does not have the given value.</p>\n",
+      "isBlock": true
     },
     "isArray": {
       "args": [
@@ -209,7 +233,8 @@
       ],
       "numArgs": 1,
       "example": "{{isArray [1, 2]}} -> true",
-      "description": "<p>Returns true if <code>value</code> is an es5 array.</p>\n"
+      "description": "<p>Returns true if <code>value</code> is an es5 array.</p>\n",
+      "isBlock": false
     },
     "itemAt": {
       "args": [
@@ -218,7 +243,8 @@
       ],
       "numArgs": 2,
       "example": "{{itemAt [1, 2, 3] 1}} -> 2",
-      "description": "<p>Returns the item from <code>array</code> at index <code>idx</code>.</p>\n"
+      "description": "<p>Returns the item from <code>array</code> at index <code>idx</code>.</p>\n",
+      "isBlock": false
     },
     "join": {
       "args": [
@@ -227,17 +253,18 @@
       ],
       "numArgs": 2,
       "example": "{{join [1, 2, 3]}} -> 1, 2, 3",
-      "description": "<p>Join all elements of array into a string, optionally using a given separator.</p>\n"
+      "description": "<p>Join all elements of array into a string, optionally using a given separator.</p>\n",
+      "isBlock": false
     },
     "equalsLength": {
       "args": [
         "value",
-        "length",
-        "options"
+        "length"
       ],
-      "numArgs": 3,
+      "numArgs": 2,
       "example": "{{equalsLength [1, 2, 3] 3}} -> true",
-      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
+      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n",
+      "isBlock": true
     },
     "last": {
       "args": [
@@ -246,7 +273,8 @@
       ],
       "numArgs": 2,
       "example": "{{last [1, 2, 3]}} -> 3",
-      "description": "<p>Returns the last item, or last <code>n</code> items of an array or string. Opposite of <a href=\"#first\">first</a>.</p>\n"
+      "description": "<p>Returns the last item, or last <code>n</code> items of an array or string. Opposite of <a href=\"#first\">first</a>.</p>\n",
+      "isBlock": false
     },
     "length": {
       "args": [
@@ -254,17 +282,18 @@
       ],
       "numArgs": 1,
       "example": "{{length [1, 2, 3]}} -> 3",
-      "description": "<p>Returns the length of the given string or array.</p>\n"
+      "description": "<p>Returns the length of the given string or array.</p>\n",
+      "isBlock": false
     },
     "lengthEqual": {
       "args": [
         "value",
-        "length",
-        "options"
+        "length"
       ],
-      "numArgs": 3,
+      "numArgs": 2,
       "example": "{{equalsLength [1, 2, 3] 3}} -> true",
-      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n"
+      "description": "<p>Returns true if the the length of the given <code>value</code> is equal to the given <code>length</code>. Can be used as a block or inline helper.</p>\n",
+      "isBlock": true
     },
     "map": {
       "args": [
@@ -273,7 +302,8 @@
       ],
       "numArgs": 2,
       "example": "{{map [1, 2, 3] double}} -> [2, 4, 6]",
-      "description": "<p>Returns a new array, created by calling <code>function</code> on each element of the given <code>array</code>. For example,</p>\n"
+      "description": "<p>Returns a new array, created by calling <code>function</code> on each element of the given <code>array</code>. For example,</p>\n",
+      "isBlock": false
     },
     "pluck": {
       "args": [
@@ -282,7 +312,8 @@
       ],
       "numArgs": 2,
       "example": "{{pluck [{ 'name': 'Bob' }] 'name' }} -> ['Bob']",
-      "description": "<p>Map over the given object or array or objects and create an array of values from the given <code>prop</code>. Dot-notation may be used (as a string) to get nested properties.</p>\n"
+      "description": "<p>Map over the given object or array or objects and create an array of values from the given <code>prop</code>. Dot-notation may be used (as a string) to get nested properties.</p>\n",
+      "isBlock": false
     },
     "reverse": {
       "args": [
@@ -290,7 +321,8 @@
       ],
       "numArgs": 1,
       "example": "{{reverse [1, 2, 3]}} -> [3, 2, 1]",
-      "description": "<p>Reverse the elements in an array, or the characters in a string.</p>\n"
+      "description": "<p>Reverse the elements in an array, or the characters in a string.</p>\n",
+      "isBlock": false
     },
     "some": {
       "args": [
@@ -300,7 +332,8 @@
       ],
       "numArgs": 3,
       "example": "{{#some [1, \"b\", 3] isString}} string found {{else}} No string found {{/some}} -> ' string found '",
-      "description": "<p>Block helper that returns the block if the callback returns true for some value in the given array.</p>\n"
+      "description": "<p>Block helper that returns the block if the callback returns true for some value in the given array.</p>\n",
+      "isBlock": true
     },
     "sort": {
       "args": [
@@ -309,7 +342,8 @@
       ],
       "numArgs": 2,
       "example": "{{ sort ['b', 'a', 'c'] }} -> ['a', 'b', 'c']",
-      "description": "<p>Sort the given <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
+      "description": "<p>Sort the given <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n",
+      "isBlock": false
     },
     "sortBy": {
       "args": [
@@ -318,7 +352,8 @@
       ],
       "numArgs": 2,
       "example": "{{ sortBy [{'a': 'zzz'}, {'a': 'aaa'}] 'a' }} -> [{'a':'aaa'},{'a':'zzz'}]",
-      "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n"
+      "description": "<p>Sort an <code>array</code>. If an array of objects is passed, you may optionally pass a <code>key</code> to sort on as the second argument. You may alternatively pass a sorting function as the second argument.</p>\n",
+      "isBlock": false
     },
     "withAfter": {
       "args": [
@@ -328,7 +363,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withAfter [1, 2, 3] 1 }} {{this}} {{/withAfter}} -> ' 2  3 '",
-      "description": "<p>Use the items in the array <em>after</em> the specified index as context inside a block. Opposite of <a href=\"#withBefore\">withBefore</a>.</p>\n"
+      "description": "<p>Use the items in the array <em>after</em> the specified index as context inside a block. Opposite of <a href=\"#withBefore\">withBefore</a>.</p>\n",
+      "isBlock": true
     },
     "withBefore": {
       "args": [
@@ -338,7 +374,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withBefore [1, 2, 3] 2 }} {{this}} {{/withBefore}} -> ' 1 '",
-      "description": "<p>Use the items in the array <em>before</em> the specified index as context inside a block. Opposite of <a href=\"#withAfter\">withAfter</a>.</p>\n"
+      "description": "<p>Use the items in the array <em>before</em> the specified index as context inside a block. Opposite of <a href=\"#withAfter\">withAfter</a>.</p>\n",
+      "isBlock": true
     },
     "withFirst": {
       "args": [
@@ -348,7 +385,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withFirst [1, 2, 3] }}{{this}}{{/withFirst}} -> 1",
-      "description": "<p>Use the first item in a collection inside a handlebars block expression. Opposite of <a href=\"#withLast\">withLast</a>.</p>\n"
+      "description": "<p>Use the first item in a collection inside a handlebars block expression. Opposite of <a href=\"#withLast\">withLast</a>.</p>\n",
+      "isBlock": true
     },
     "withGroup": {
       "args": [
@@ -358,7 +396,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withGroup [1, 2, 3, 4] 2}}{{#each this}}{{.}}{{/each}}<br>{{/withGroup}} -> 12<br>34<br>",
-      "description": "<p>Block helper that groups array elements by given group <code>size</code>.</p>\n"
+      "description": "<p>Block helper that groups array elements by given group <code>size</code>.</p>\n",
+      "isBlock": true
     },
     "withLast": {
       "args": [
@@ -368,7 +407,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withLast [1, 2, 3, 4]}}{{this}}{{/withLast}} -> 4",
-      "description": "<p>Use the last item or <code>n</code> items in an array as context inside a block. Opposite of <a href=\"#withFirst\">withFirst</a>.</p>\n"
+      "description": "<p>Use the last item or <code>n</code> items in an array as context inside a block. Opposite of <a href=\"#withFirst\">withFirst</a>.</p>\n",
+      "isBlock": true
     },
     "withSort": {
       "args": [
@@ -378,7 +418,8 @@
       ],
       "numArgs": 3,
       "example": "{{#withSort ['b', 'a', 'c']}}{{this}}{{/withSort}} -> abc",
-      "description": "<p>Block helper that sorts a collection and exposes the sorted collection as context inside the block.</p>\n"
+      "description": "<p>Block helper that sorts a collection and exposes the sorted collection as context inside the block.</p>\n",
+      "isBlock": true
     },
     "unique": {
       "args": [
@@ -387,7 +428,8 @@
       ],
       "numArgs": 2,
       "example": "{{#each (unique ['a', 'a', 'c', 'b', 'e', 'e']) }}{{.}}{{/each}} -> acbe",
-      "description": "<p>Block helper that return an array with all duplicate values removed. Best used along with a <a href=\"#each\">each</a> helper.</p>\n"
+      "description": "<p>Block helper that return an array with all duplicate values removed. Best used along with a <a href=\"#each\">each</a> helper.</p>\n",
+      "isBlock": true
     }
   },
   "number": {
@@ -397,7 +439,8 @@
       ],
       "numArgs": 1,
       "example": "{{ bytes 1386 1 }} -> 1.4 kB",
-      "description": "<p>Format a number to it&#39;s equivalent in bytes. If a string is passed, it&#39;s length will be formatted and returned. <strong>Examples:</strong> - <code>&#39;foo&#39; =&gt; 3 B</code> - <code>13661855 =&gt; 13.66 MB</code> - <code>825399 =&gt; 825.39 kB</code> - <code>1396 =&gt; 1.4 kB</code></p>\n"
+      "description": "<p>Format a number to it&#39;s equivalent in bytes. If a string is passed, it&#39;s length will be formatted and returned. <strong>Examples:</strong> - <code>&#39;foo&#39; =&gt; 3 B</code> - <code>13661855 =&gt; 13.66 MB</code> - <code>825399 =&gt; 825.39 kB</code> - <code>1396 =&gt; 1.4 kB</code></p>\n",
+      "isBlock": false
     },
     "addCommas": {
       "args": [
@@ -405,7 +448,8 @@
       ],
       "numArgs": 1,
       "example": "{{ addCommas 1000000 }} -> 1,000,000",
-      "description": "<p>Add commas to numbers</p>\n"
+      "description": "<p>Add commas to numbers</p>\n",
+      "isBlock": false
     },
     "phoneNumber": {
       "args": [
@@ -413,7 +457,8 @@
       ],
       "numArgs": 1,
       "example": "{{ phoneNumber 8005551212 }} -> (800) 555-1212",
-      "description": "<p>Convert a string or number to a formatted phone number.</p>\n"
+      "description": "<p>Convert a string or number to a formatted phone number.</p>\n",
+      "isBlock": false
     },
     "toAbbr": {
       "args": [
@@ -422,7 +467,8 @@
       ],
       "numArgs": 2,
       "example": "{{ toAbbr 10123 2 }} -> 10.12k",
-      "description": "<p>Abbreviate numbers to the given number of <code>precision</code>. This for general numbers, not size in bytes.</p>\n"
+      "description": "<p>Abbreviate numbers to the given number of <code>precision</code>. This for general numbers, not size in bytes.</p>\n",
+      "isBlock": false
     },
     "toExponential": {
       "args": [
@@ -431,7 +477,8 @@
       ],
       "numArgs": 2,
       "example": "{{ toExponential 10123 2 }} -> 1.01e+4",
-      "description": "<p>Returns a string representing the given number in exponential notation.</p>\n"
+      "description": "<p>Returns a string representing the given number in exponential notation.</p>\n",
+      "isBlock": false
     },
     "toFixed": {
       "args": [
@@ -440,21 +487,24 @@
       ],
       "numArgs": 2,
       "example": "{{ toFixed 1.1234 2 }} -> 1.12",
-      "description": "<p>Formats the given number using fixed-point notation.</p>\n"
+      "description": "<p>Formats the given number using fixed-point notation.</p>\n",
+      "isBlock": false
     },
     "toFloat": {
       "args": [
         "number"
       ],
       "numArgs": 1,
-      "description": "<p>Convert input to a float.</p>\n"
+      "description": "<p>Convert input to a float.</p>\n",
+      "isBlock": false
     },
     "toInt": {
       "args": [
         "number"
       ],
       "numArgs": 1,
-      "description": "<p>Convert input to an integer.</p>\n"
+      "description": "<p>Convert input to an integer.</p>\n",
+      "isBlock": false
     },
     "toPrecision": {
       "args": [
@@ -463,7 +513,8 @@
       ],
       "numArgs": 2,
       "example": "{{toPrecision '1.1234' 2}} -> 1.1",
-      "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n"
+      "description": "<p>Returns a string representing the <code>Number</code> object to the specified precision.</p>\n",
+      "isBlock": false
     }
   },
   "url": {
@@ -473,7 +524,8 @@
       ],
       "numArgs": 1,
       "example": "{{ encodeURI 'https://myurl?Hello There' }} -> https%3A%2F%2Fmyurl%3FHello%20There",
-      "description": "<p>Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.</p>\n"
+      "description": "<p>Encodes a Uniform Resource Identifier (URI) component by replacing each instance of certain characters by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.</p>\n",
+      "isBlock": false
     },
     "escape": {
       "args": [
@@ -481,7 +533,8 @@
       ],
       "numArgs": 1,
       "example": "{{ escape 'https://myurl?Hello+There' }} -> https%3A%2F%2Fmyurl%3FHello%2BThere",
-      "description": "<p>Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc.</p>\n"
+      "description": "<p>Escape the given string by replacing characters with escape sequences. Useful for allowing the string to be used in a URL, etc.</p>\n",
+      "isBlock": false
     },
     "decodeURI": {
       "args": [
@@ -489,7 +542,8 @@
       ],
       "numArgs": 1,
       "example": "{{ decodeURI 'https://myurl?Hello%20There' }} -> https://myurl?Hello There",
-      "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n"
+      "description": "<p>Decode a Uniform Resource Identifier (URI) component.</p>\n",
+      "isBlock": false
     },
     "urlResolve": {
       "args": [
@@ -498,7 +552,8 @@
       ],
       "numArgs": 2,
       "example": "{{ urlResolve 'https://myurl' '/api/test' }} -> https://myurl/api/test",
-      "description": "<p>Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag.</p>\n"
+      "description": "<p>Take a base URL, and a href URL, and resolve them as a browser would for an anchor tag.</p>\n",
+      "isBlock": false
     },
     "urlParse": {
       "args": [
@@ -506,7 +561,8 @@
       ],
       "numArgs": 1,
       "example": "{{ urlParse 'https://myurl/api/test' }}",
-      "description": "<p>Parses a <code>url</code> string into an object.</p>\n"
+      "description": "<p>Parses a <code>url</code> string into an object.</p>\n",
+      "isBlock": false
     },
     "stripQuerystring": {
       "args": [
@@ -514,7 +570,8 @@
       ],
       "numArgs": 1,
       "example": "{{ stripQuerystring 'https://myurl/api/test?foo=bar' }} -> 'https://myurl/api/test'",
-      "description": "<p>Strip the query string from the given <code>url</code>.</p>\n"
+      "description": "<p>Strip the query string from the given <code>url</code>.</p>\n",
+      "isBlock": false
     },
     "stripProtocol": {
       "args": [
@@ -522,7 +579,8 @@
       ],
       "numArgs": 1,
       "example": "{{ stripProtocol 'https://myurl/api/test' }} -> '//myurl/api/test'",
-      "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n"
+      "description": "<p>Strip protocol from a <code>url</code>. Useful for displaying media that may have an &#39;http&#39; protocol on secure connections.</p>\n",
+      "isBlock": false
     }
   },
   "string": {
@@ -533,7 +591,8 @@
       ],
       "numArgs": 2,
       "example": "{{append 'index' '.html'}} -> index.html",
-      "description": "<p>Append the specified <code>suffix</code> to the given string.</p>\n"
+      "description": "<p>Append the specified <code>suffix</code> to the given string.</p>\n",
+      "isBlock": false
     },
     "camelcase": {
       "args": [
@@ -541,7 +600,8 @@
       ],
       "numArgs": 1,
       "example": "{{camelcase 'foo bar baz'}} ->  fooBarBaz",
-      "description": "<p>camelCase the characters in the given <code>string</code>.</p>\n"
+      "description": "<p>camelCase the characters in the given <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "capitalize": {
       "args": [
@@ -549,7 +609,8 @@
       ],
       "numArgs": 1,
       "example": "{{capitalize 'foo bar baz'}} ->  Foo bar baz",
-      "description": "<p>Capitalize the first word in a sentence.</p>\n"
+      "description": "<p>Capitalize the first word in a sentence.</p>\n",
+      "isBlock": false
     },
     "capitalizeAll": {
       "args": [
@@ -557,7 +618,8 @@
       ],
       "numArgs": 1,
       "example": "{{ capitalizeAll 'foo bar baz'}} ->  Foo Bar Baz",
-      "description": "<p>Capitalize all words in a string.</p>\n"
+      "description": "<p>Capitalize all words in a string.</p>\n",
+      "isBlock": false
     },
     "center": {
       "args": [
@@ -566,7 +628,8 @@
       ],
       "numArgs": 2,
       "example": "{{ center 'test' 1}} -> ' test '",
-      "description": "<p>Center a string using non-breaking spaces</p>\n"
+      "description": "<p>Center a string using non-breaking spaces</p>\n",
+      "isBlock": false
     },
     "chop": {
       "args": [
@@ -574,7 +637,8 @@
       ],
       "numArgs": 1,
       "example": "{{ chop ' ABC '}} -> ABC",
-      "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n"
+      "description": "<p>Like trim, but removes both extraneous whitespace <strong>and non-word characters</strong> from the beginning and end of a string.</p>\n",
+      "isBlock": false
     },
     "dashcase": {
       "args": [
@@ -582,7 +646,8 @@
       ],
       "numArgs": 1,
       "example": "{{dashcase 'a-b-c d_e'}} -> a-b-c-d-e",
-      "description": "<p>dash-case the characters in <code>string</code>. Replaces non-word characters and periods with hyphens.</p>\n"
+      "description": "<p>dash-case the characters in <code>string</code>. Replaces non-word characters and periods with hyphens.</p>\n",
+      "isBlock": false
     },
     "dotcase": {
       "args": [
@@ -590,7 +655,8 @@
       ],
       "numArgs": 1,
       "example": "{{dotcase 'a-b-c d_e'}} -> a.b.c.d.e",
-      "description": "<p>dot.case the characters in <code>string</code>.</p>\n"
+      "description": "<p>dot.case the characters in <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "downcase": {
       "args": [
@@ -598,7 +664,8 @@
       ],
       "numArgs": 1,
       "example": "{{downcase 'aBcDeF'}} -> abcdef",
-      "description": "<p>Lowercase all of the characters in the given string. Alias for <a href=\"#lowercase\">lowercase</a>.</p>\n"
+      "description": "<p>Lowercase all of the characters in the given string. Alias for <a href=\"#lowercase\">lowercase</a>.</p>\n",
+      "isBlock": false
     },
     "ellipsis": {
       "args": [
@@ -607,7 +674,8 @@
       ],
       "numArgs": 2,
       "example": "{{ellipsis 'foo bar baz' 7}} -> foo bar…",
-      "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n"
+      "description": "<p>Truncates a string to the specified <code>length</code>, and appends it with an elipsis, <code>…</code>.</p>\n",
+      "isBlock": false
     },
     "hyphenate": {
       "args": [
@@ -615,7 +683,8 @@
       ],
       "numArgs": 1,
       "example": "{{hyphenate 'foo bar baz qux'}} -> foo-bar-baz-qux",
-      "description": "<p>Replace spaces in a string with hyphens.</p>\n"
+      "description": "<p>Replace spaces in a string with hyphens.</p>\n",
+      "isBlock": false
     },
     "isString": {
       "args": [
@@ -623,7 +692,8 @@
       ],
       "numArgs": 1,
       "example": "{{isString 'foo'}} -> true",
-      "description": "<p>Return true if <code>value</code> is a string.</p>\n"
+      "description": "<p>Return true if <code>value</code> is a string.</p>\n",
+      "isBlock": false
     },
     "lowercase": {
       "args": [
@@ -631,7 +701,8 @@
       ],
       "numArgs": 1,
       "example": "{{lowercase 'Foo BAR baZ'}} -> foo bar baz",
-      "description": "<p>Lowercase all characters in the given string.</p>\n"
+      "description": "<p>Lowercase all characters in the given string.</p>\n",
+      "isBlock": false
     },
     "occurrences": {
       "args": [
@@ -640,7 +711,8 @@
       ],
       "numArgs": 2,
       "example": "{{occurrences 'foo bar foo bar baz' 'foo'}} -> 2",
-      "description": "<p>Return the number of occurrences of <code>substring</code> within the given <code>string</code>.</p>\n"
+      "description": "<p>Return the number of occurrences of <code>substring</code> within the given <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "pascalcase": {
       "args": [
@@ -648,7 +720,8 @@
       ],
       "numArgs": 1,
       "example": "{{pascalcase 'foo bar baz'}} -> FooBarBaz",
-      "description": "<p>PascalCase the characters in <code>string</code>.</p>\n"
+      "description": "<p>PascalCase the characters in <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "pathcase": {
       "args": [
@@ -656,7 +729,8 @@
       ],
       "numArgs": 1,
       "example": "{{pathcase 'a-b-c d_e'}} -> a/b/c/d/e",
-      "description": "<p>path/case the characters in <code>string</code>.</p>\n"
+      "description": "<p>path/case the characters in <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "plusify": {
       "args": [
@@ -664,7 +738,8 @@
       ],
       "numArgs": 1,
       "example": "{{plusify 'foo bar baz'}} -> foo+bar+baz",
-      "description": "<p>Replace spaces in the given string with pluses.</p>\n"
+      "description": "<p>Replace spaces in the given string with pluses.</p>\n",
+      "isBlock": false
     },
     "prepend": {
       "args": [
@@ -673,7 +748,8 @@
       ],
       "numArgs": 2,
       "example": "{{prepend 'bar' 'foo-'}} -> foo-bar",
-      "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n"
+      "description": "<p>Prepends the given <code>string</code> with the specified <code>prefix</code>.</p>\n",
+      "isBlock": false
     },
     "remove": {
       "args": [
@@ -682,7 +758,8 @@
       ],
       "numArgs": 2,
       "example": "{{remove 'a b a b a b' 'a '}} -> b b b",
-      "description": "<p>Remove all occurrences of <code>substring</code> from the given <code>str</code>.</p>\n"
+      "description": "<p>Remove all occurrences of <code>substring</code> from the given <code>str</code>.</p>\n",
+      "isBlock": false
     },
     "removeFirst": {
       "args": [
@@ -691,7 +768,8 @@
       ],
       "numArgs": 2,
       "example": "{{removeFirst 'a b a b a b' 'a'}} -> ' b a b a b'",
-      "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n"
+      "description": "<p>Remove the first occurrence of <code>substring</code> from the given <code>str</code>.</p>\n",
+      "isBlock": false
     },
     "replace": {
       "args": [
@@ -701,7 +779,8 @@
       ],
       "numArgs": 3,
       "example": "{{replace 'a b a b a b' 'a' 'z'}} -> z b z b z b",
-      "description": "<p>Replace all occurrences of substring <code>a</code> with substring <code>b</code>.</p>\n"
+      "description": "<p>Replace all occurrences of substring <code>a</code> with substring <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "replaceFirst": {
       "args": [
@@ -711,7 +790,8 @@
       ],
       "numArgs": 3,
       "example": "{{replaceFirst 'a b a b a b' 'a' 'z'}} -> z b a b a b",
-      "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n"
+      "description": "<p>Replace the first occurrence of substring <code>a</code> with substring <code>b</code>.</p>\n",
+      "isBlock": false
     },
     "sentence": {
       "args": [
@@ -719,7 +799,8 @@
       ],
       "numArgs": 1,
       "example": "{{sentence 'hello world. goodbye world.'}} -> Hello world. Goodbye world.",
-      "description": "<p>Sentence case the given string</p>\n"
+      "description": "<p>Sentence case the given string</p>\n",
+      "isBlock": false
     },
     "snakecase": {
       "args": [
@@ -727,7 +808,8 @@
       ],
       "numArgs": 1,
       "example": "{{snakecase 'a-b-c d_e'}} -> a_b_c_d_e",
-      "description": "<p>snake_case the characters in the given <code>string</code>.</p>\n"
+      "description": "<p>snake_case the characters in the given <code>string</code>.</p>\n",
+      "isBlock": false
     },
     "split": {
       "args": [
@@ -735,7 +817,8 @@
       ],
       "numArgs": 1,
       "example": "{{split 'a,b,c'}} -> ['a', 'b', 'c']",
-      "description": "<p>Split <code>string</code> by the given <code>character</code>.</p>\n"
+      "description": "<p>Split <code>string</code> by the given <code>character</code>.</p>\n",
+      "isBlock": false
     },
     "startsWith": {
       "args": [
@@ -745,7 +828,8 @@
       ],
       "numArgs": 3,
       "example": "{{#startsWith 'Goodbye' 'Hello, world!'}}Yep{{else}}Nope{{/startsWith}} -> Nope",
-      "description": "<p>Tests whether a string begins with the given prefix.</p>\n"
+      "description": "<p>Tests whether a string begins with the given prefix.</p>\n",
+      "isBlock": true
     },
     "titleize": {
       "args": [
@@ -753,7 +837,8 @@
       ],
       "numArgs": 1,
       "example": "{{titleize 'this is title case' }} -> This Is Title Case",
-      "description": "<p>Title case the given string.</p>\n"
+      "description": "<p>Title case the given string.</p>\n",
+      "isBlock": false
     },
     "trim": {
       "args": [
@@ -761,7 +846,8 @@
       ],
       "numArgs": 1,
       "example": "{{trim '  ABC  ' }} -> ABC",
-      "description": "<p>Removes extraneous whitespace from the beginning and end of a string.</p>\n"
+      "description": "<p>Removes extraneous whitespace from the beginning and end of a string.</p>\n",
+      "isBlock": false
     },
     "trimLeft": {
       "args": [
@@ -769,7 +855,8 @@
       ],
       "numArgs": 1,
       "example": "{{trimLeft '  ABC ' }} -> 'ABC '",
-      "description": "<p>Removes extraneous whitespace from the beginning of a string.</p>\n"
+      "description": "<p>Removes extraneous whitespace from the beginning of a string.</p>\n",
+      "isBlock": false
     },
     "trimRight": {
       "args": [
@@ -777,7 +864,8 @@
       ],
       "numArgs": 1,
       "example": "{{trimRight '  ABC ' }} ->  '  ABC'",
-      "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n"
+      "description": "<p>Removes extraneous whitespace from the end of a string.</p>\n",
+      "isBlock": false
     },
     "truncate": {
       "args": [
@@ -787,7 +875,8 @@
       ],
       "numArgs": 3,
       "example": "{{truncate 'foo bar baz' 7 }} -> foo bar",
-      "description": "<p>Truncate a string to the specified <code>length</code>. Also see <a href=\"#ellipsis\">ellipsis</a>.</p>\n"
+      "description": "<p>Truncate a string to the specified <code>length</code>. Also see <a href=\"#ellipsis\">ellipsis</a>.</p>\n",
+      "isBlock": false
     },
     "truncateWords": {
       "args": [
@@ -797,7 +886,8 @@
       ],
       "numArgs": 3,
       "example": "{{truncateWords 'foo bar baz' 1 }} -> foo…",
-      "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n"
+      "description": "<p>Truncate a string to have the specified number of words. Also see <a href=\"#truncate\">truncate</a>.</p>\n",
+      "isBlock": false
     },
     "upcase": {
       "args": [
@@ -805,7 +895,8 @@
       ],
       "numArgs": 1,
       "example": "{{upcase 'aBcDef'}} -> ABCDEF",
-      "description": "<p>Uppercase all of the characters in the given string. Alias for <a href=\"#uppercase\">uppercase</a>.</p>\n"
+      "description": "<p>Uppercase all of the characters in the given string. Alias for <a href=\"#uppercase\">uppercase</a>.</p>\n",
+      "isBlock": false
     },
     "uppercase": {
       "args": [
@@ -814,7 +905,8 @@
       ],
       "numArgs": 2,
       "example": "{{uppercase 'aBcDef'}} -> ABCDEF",
-      "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n"
+      "description": "<p>Uppercase all of the characters in the given string. If used as a block helper it will uppercase the entire block. This helper does not support inverse blocks.</p>\n",
+      "isBlock": true
     }
   },
   "comparison": {
@@ -826,7 +918,8 @@
       ],
       "numArgs": 3,
       "example": "{{#and great magnificent}}both{{else}}no{{/and}} -> no",
-      "description": "<p>Helper that renders the block if <strong>both</strong> of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression.</p>\n"
+      "description": "<p>Helper that renders the block if <strong>both</strong> of the given values are truthy. If an inverse block is specified it will be rendered when falsy. Works as a block helper, inline helper or subexpression.</p>\n",
+      "isBlock": true
     },
     "compare": {
       "args": [
@@ -837,7 +930,8 @@
       ],
       "numArgs": 4,
       "example": "{{compare 10 '<' 5 }} -> false",
-      "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n"
+      "description": "<p>Render a block when a comparison of the first and third arguments returns true. The second argument is the [arithemetic operator][operators] to use. You may also optionally specify an inverse block to render when falsy.</p>\n",
+      "isBlock": true
     },
     "contains": {
       "args": [
@@ -848,7 +942,8 @@
       ],
       "numArgs": 4,
       "example": "{{#contains ['a', 'b', 'c'] 'd'}} This will not be rendered. {{else}} This will be rendered. {{/contains}} -> ' This will be rendered. '",
-      "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n"
+      "description": "<p>Block helper that renders the block if <code>collection</code> has the given <code>value</code>, using strict equality (<code>===</code>) for comparison, otherwise the inverse block is rendered (if specified). If a <code>startIndex</code> is specified and is negative, it is used as the offset from the end of the collection.</p>\n",
+      "isBlock": true
     },
     "default": {
       "args": [
@@ -857,7 +952,8 @@
       ],
       "numArgs": 2,
       "example": "{{default null null 'default'}} -> default",
-      "description": "<p>Returns the first value that is not undefined, otherwise the &#39;default&#39; value is returned.</p>\n"
+      "description": "<p>Returns the first value that is not undefined, otherwise the &#39;default&#39; value is returned.</p>\n",
+      "isBlock": false
     },
     "eq": {
       "args": [
@@ -867,7 +963,8 @@
       ],
       "numArgs": 3,
       "example": "{{#eq 3 3}}equal{{else}}not equal{{/eq}} -> equal",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n",
+      "isBlock": true
     },
     "gt": {
       "args": [
@@ -877,7 +974,8 @@
       ],
       "numArgs": 3,
       "example": "{{#gt 4 3}} greater than{{else}} not greater than{{/gt}} -> ' greater than'",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n",
+      "isBlock": true
     },
     "gte": {
       "args": [
@@ -887,7 +985,8 @@
       ],
       "numArgs": 3,
       "example": "{{#gte 4 3}} greater than or equal{{else}} not greater than{{/gte}} -> ' greater than or equal'",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>greater than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n",
+      "isBlock": true
     },
     "has": {
       "args": [
@@ -897,7 +996,8 @@
       ],
       "numArgs": 3,
       "example": "{{#has 'foobar' 'foo'}}has it{{else}}doesn't{{/has}} -> has it",
-      "description": "<p>Block helper that renders a block if <code>value</code> has <code>pattern</code>. If an inverse block is specified it will be rendered when falsy.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>value</code> has <code>pattern</code>. If an inverse block is specified it will be rendered when falsy.</p>\n",
+      "isBlock": true
     },
     "isFalsey": {
       "args": [
@@ -906,7 +1006,8 @@
       ],
       "numArgs": 2,
       "example": "{{isFalsey '' }} -> true",
-      "description": "<p>Returns true if the given <code>value</code> is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
+      "description": "<p>Returns true if the given <code>value</code> is falsey. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n",
+      "isBlock": false
     },
     "isTruthy": {
       "args": [
@@ -915,7 +1016,8 @@
       ],
       "numArgs": 2,
       "example": "{{isTruthy '12' }} -> true",
-      "description": "<p>Returns true if the given <code>value</code> is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n"
+      "description": "<p>Returns true if the given <code>value</code> is truthy. Uses the [falsey][] library for comparisons. Please see that library for more information or to report bugs with this helper.</p>\n",
+      "isBlock": false
     },
     "ifEven": {
       "args": [
@@ -924,7 +1026,8 @@
       ],
       "numArgs": 2,
       "example": "{{#ifEven 2}} even {{else}} odd {{/ifEven}} -> ' even '",
-      "description": "<p>Return true if the given value is an even number.</p>\n"
+      "description": "<p>Return true if the given value is an even number.</p>\n",
+      "isBlock": true
     },
     "ifNth": {
       "args": [
@@ -934,7 +1037,8 @@
       ],
       "numArgs": 3,
       "example": "{{#ifNth 2 10}}remainder{{else}}no remainder{{/ifNth}} -> remainder",
-      "description": "<p>Conditionally renders a block if the remainder is zero when <code>b</code> operand is divided by <code>a</code>. If an inverse block is specified it will be rendered when the remainder is <strong>not zero</strong>.</p>\n"
+      "description": "<p>Conditionally renders a block if the remainder is zero when <code>b</code> operand is divided by <code>a</code>. If an inverse block is specified it will be rendered when the remainder is <strong>not zero</strong>.</p>\n",
+      "isBlock": true
     },
     "ifOdd": {
       "args": [
@@ -943,7 +1047,8 @@
       ],
       "numArgs": 2,
       "example": "{{#ifOdd 3}}odd{{else}}even{{/ifOdd}} -> odd",
-      "description": "<p>Block helper that renders a block if <code>value</code> is <strong>an odd number</strong>. If an inverse block is specified it will be rendered when falsy.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>value</code> is <strong>an odd number</strong>. If an inverse block is specified it will be rendered when falsy.</p>\n",
+      "isBlock": true
     },
     "is": {
       "args": [
@@ -953,7 +1058,8 @@
       ],
       "numArgs": 3,
       "example": "{{#is 3 3}} is {{else}} is not {{/is}} -> ' is '",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#eq\">eq</a> but does not do strict equality.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#eq\">eq</a> but does not do strict equality.</p>\n",
+      "isBlock": true
     },
     "isnt": {
       "args": [
@@ -963,7 +1069,8 @@
       ],
       "numArgs": 3,
       "example": "{{#isnt 3 3}} isnt {{else}} is {{/isnt}} -> ' is '",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>not equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#unlesseq\">unlessEq</a> but does not use strict equality for comparisons.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>not equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. Similar to <a href=\"#unlesseq\">unlessEq</a> but does not use strict equality for comparisons.</p>\n",
+      "isBlock": true
     },
     "lt": {
       "args": [
@@ -972,7 +1079,8 @@
       ],
       "numArgs": 2,
       "example": "{{#lt 2 3}} less than {{else}} more than or equal {{/lt}} -> ' less than '",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n",
+      "isBlock": true
     },
     "lte": {
       "args": [
@@ -982,7 +1090,8 @@
       ],
       "numArgs": 3,
       "example": "{{#lte 2 3}} less than or equal {{else}} more than {{/lte}} -> ' less than or equal '",
-      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n"
+      "description": "<p>Block helper that renders a block if <code>a</code> is <strong>less than or equal to</strong> <code>b</code>. If an inverse block is specified it will be rendered when falsy. You may optionally use the <code>compare=&#39;&#39;</code> hash argument for the second value.</p>\n",
+      "isBlock": true
     },
     "neither": {
       "args": [
@@ -992,7 +1101,8 @@
       ],
       "numArgs": 3,
       "example": "{{#neither null null}}both falsey{{else}}both not falsey{{/neither}} -> both falsey",
-      "description": "<p>Block helper that renders a block if <strong>neither of</strong> the given values are truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
+      "description": "<p>Block helper that renders a block if <strong>neither of</strong> the given values are truthy. If an inverse block is specified it will be rendered when falsy.</p>\n",
+      "isBlock": true
     },
     "not": {
       "args": [
@@ -1001,7 +1111,8 @@
       ],
       "numArgs": 2,
       "example": "{{#not undefined }}falsey{{else}}not falsey{{/not}} -> falsey",
-      "description": "<p>Returns true if <code>val</code> is falsey. Works as a block or inline helper.</p>\n"
+      "description": "<p>Returns true if <code>val</code> is falsey. Works as a block or inline helper.</p>\n",
+      "isBlock": true
     },
     "or": {
       "args": [
@@ -1010,7 +1121,8 @@
       ],
       "numArgs": 2,
       "example": "{{#or 1 2 undefined }} at least one truthy {{else}} all falsey {{/or}} -> ' at least one truthy '",
-      "description": "<p>Block helper that renders a block if <strong>any of</strong> the given values is truthy. If an inverse block is specified it will be rendered when falsy.</p>\n"
+      "description": "<p>Block helper that renders a block if <strong>any of</strong> the given values is truthy. If an inverse block is specified it will be rendered when falsy.</p>\n",
+      "isBlock": true
     },
     "unlessEq": {
       "args": [
@@ -1020,7 +1132,8 @@
       ],
       "numArgs": 3,
       "example": "{{#unlessEq 2 1 }} not equal {{else}} equal {{/unlessEq}} -> ' not equal '",
-      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is equal to <code>b</code></strong>.</p>\n"
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is equal to <code>b</code></strong>.</p>\n",
+      "isBlock": true
     },
     "unlessGt": {
       "args": [
@@ -1030,7 +1143,8 @@
       ],
       "numArgs": 3,
       "example": "{{#unlessGt 20 1 }} not greater than {{else}} greater than {{/unlessGt}} -> ' greater than '",
-      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than <code>b</code></strong>.</p>\n"
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than <code>b</code></strong>.</p>\n",
+      "isBlock": true
     },
     "unlessLt": {
       "args": [
@@ -1040,7 +1154,8 @@
       ],
       "numArgs": 3,
       "example": "{{#unlessLt 20 1 }}greater than or equal{{else}}less than{{/unlessLt}} -> greater than or equal",
-      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than <code>b</code></strong>.</p>\n"
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than <code>b</code></strong>.</p>\n",
+      "isBlock": true
     },
     "unlessGteq": {
       "args": [
@@ -1050,7 +1165,8 @@
       ],
       "numArgs": 3,
       "example": "{{#unlessGteq 20 1 }} less than {{else}}greater than or equal to{{/unlessGteq}} -> greater than or equal to",
-      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than or equal to <code>b</code></strong>.</p>\n"
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is greater than or equal to <code>b</code></strong>.</p>\n",
+      "isBlock": true
     },
     "unlessLteq": {
       "args": [
@@ -1060,7 +1176,8 @@
       ],
       "numArgs": 3,
       "example": "{{#unlessLteq 20 1 }} greater than {{else}} less than or equal to {{/unlessLteq}} -> ' greater than '",
-      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n"
+      "description": "<p>Block helper that always renders the inverse block <strong>unless <code>a</code> is less than or equal to <code>b</code></strong>.</p>\n",
+      "isBlock": true
     }
   },
   "object": {
@@ -1069,7 +1186,8 @@
         "objects"
       ],
       "numArgs": 1,
-      "description": "<p>Extend the context with the properties of other objects. A shallow merge is performed to avoid mutating the context.</p>\n"
+      "description": "<p>Extend the context with the properties of other objects. A shallow merge is performed to avoid mutating the context.</p>\n",
+      "isBlock": false
     },
     "forIn": {
       "args": [
@@ -1077,7 +1195,8 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "<p>Block helper that iterates over the properties of an object, exposing each key and value on the context.</p>\n"
+      "description": "<p>Block helper that iterates over the properties of an object, exposing each key and value on the context.</p>\n",
+      "isBlock": true
     },
     "forOwn": {
       "args": [
@@ -1085,14 +1204,16 @@
         "options"
       ],
       "numArgs": 2,
-      "description": "<p>Block helper that iterates over the <strong>own</strong> properties of an object, exposing each key and value on the context.</p>\n"
+      "description": "<p>Block helper that iterates over the <strong>own</strong> properties of an object, exposing each key and value on the context.</p>\n",
+      "isBlock": true
     },
     "toPath": {
       "args": [
         "prop"
       ],
       "numArgs": 1,
-      "description": "<p>Take arguments and, if they are string or number, convert them to a dot-delineated object property path.</p>\n"
+      "description": "<p>Take arguments and, if they are string or number, convert them to a dot-delineated object property path.</p>\n",
+      "isBlock": false
     },
     "get": {
       "args": [
@@ -1101,7 +1222,8 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "<p>Use property paths (<code>a.b.c</code>) to get a value or nested value from the context. Works as a regular helper or block helper.</p>\n"
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get a value or nested value from the context. Works as a regular helper or block helper.</p>\n",
+      "isBlock": true
     },
     "getObject": {
       "args": [
@@ -1109,7 +1231,8 @@
         "context"
       ],
       "numArgs": 2,
-      "description": "<p>Use property paths (<code>a.b.c</code>) to get an object from the context. Differs from the <code>get</code> helper in that this helper will return the actual object, including the given property key. Also, this helper does not work as a block helper.</p>\n"
+      "description": "<p>Use property paths (<code>a.b.c</code>) to get an object from the context. Differs from the <code>get</code> helper in that this helper will return the actual object, including the given property key. Also, this helper does not work as a block helper.</p>\n",
+      "isBlock": false
     },
     "hasOwn": {
       "args": [
@@ -1117,28 +1240,32 @@
         "context"
       ],
       "numArgs": 2,
-      "description": "<p>Return true if <code>key</code> is an own, enumerable property of the given <code>context</code> object.</p>\n"
+      "description": "<p>Return true if <code>key</code> is an own, enumerable property of the given <code>context</code> object.</p>\n",
+      "isBlock": false
     },
     "isObject": {
       "args": [
         "value"
       ],
       "numArgs": 1,
-      "description": "<p>Return true if <code>value</code> is an object.</p>\n"
+      "description": "<p>Return true if <code>value</code> is an object.</p>\n",
+      "isBlock": false
     },
     "JSONparse": {
       "args": [
         "string"
       ],
       "numArgs": 1,
-      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n",
+      "isBlock": true
     },
     "JSONstringify": {
       "args": [
         "obj"
       ],
       "numArgs": 1,
-      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n",
+      "isBlock": false
     },
     "merge": {
       "args": [
@@ -1146,14 +1273,16 @@
         "objects"
       ],
       "numArgs": 2,
-      "description": "<p>Deeply merge the properties of the given <code>objects</code> with the context object.</p>\n"
+      "description": "<p>Deeply merge the properties of the given <code>objects</code> with the context object.</p>\n",
+      "isBlock": false
     },
     "parseJSON": {
       "args": [
         "string"
       ],
       "numArgs": 1,
-      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n"
+      "description": "<p>Parses the given string using <code>JSON.parse</code>.</p>\n",
+      "isBlock": true
     },
     "pick": {
       "args": [
@@ -1162,14 +1291,16 @@
         "options"
       ],
       "numArgs": 3,
-      "description": "<p>Pick properties from the context object.</p>\n"
+      "description": "<p>Pick properties from the context object.</p>\n",
+      "isBlock": true
     },
     "stringify": {
       "args": [
         "obj"
       ],
       "numArgs": 1,
-      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n"
+      "description": "<p>Stringify an object using <code>JSON.stringify</code>.</p>\n",
+      "isBlock": false
     }
   },
   "uuid": {
@@ -1177,7 +1308,8 @@
       "args": [],
       "numArgs": 0,
       "example": "{{ uuid }} -> f34ebc66-93bd-4f7c-b79b-92b5569138bc",
-      "description": "<p>Generates a UUID, using the V4 method (identical to the browser crypto.randomUUID function).</p>\n"
+      "description": "<p>Generates a UUID, using the V4 method (identical to the browser crypto.randomUUID function).</p>\n",
+      "isBlock": false
     }
   },
   "date": {

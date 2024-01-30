@@ -115,6 +115,7 @@ function getCommentInfo(file, func) {
     docs.example = docs.example.replace("product", "multiply")
   }
   docs.description = blocks[0].trim()
+  docs.isBlock = docs.tags.some(el => el.title === "block")
   return docs
 }
 
@@ -159,6 +160,7 @@ function run() {
         numArgs: args.length,
         example: jsDocInfo.example || undefined,
         description: jsDocInfo.description,
+        isBlock: jsDocInfo.isBlock,
       })
     }
     outputJSON[collection] = collectionInfo
