@@ -27,7 +27,9 @@ export function init() {
 
         const isolateRefs = bbCtx.isolateRefs
         if (!isolateRefs) {
-          const jsIsolate = new ivm.Isolate({ memoryLimit: 64 })
+          const jsIsolate = new ivm.Isolate({
+            memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+          })
           const jsContext = jsIsolate.createContextSync()
 
           const injectedRequire = `const require = function(val){
