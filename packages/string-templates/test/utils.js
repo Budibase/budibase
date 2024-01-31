@@ -1,4 +1,11 @@
 const { getManifest } = require("../src")
+const { getJsHelperList } = require("../src/helpers")
+
+const {
+  convertToJS,
+  processStringSync,
+  encodeJSBinding,
+} = require("../src/index.cjs")
 
 function tryParseJson(str) {
   if (typeof str !== "string") {
@@ -12,7 +19,7 @@ function tryParseJson(str) {
   }
 }
 
-module.exports.getParsedManifest = () => {
+const getParsedManifest = () => {
   const manifest = getManifest()
   const collections = Object.keys(manifest)
   const examples = collections.reduce((acc, collection) => {
@@ -50,4 +57,50 @@ module.exports.getParsedManifest = () => {
   }, {})
 
   return examples
+}
+module.exports.getParsedManifest = getParsedManifest
+
+module.exports.runJsHelpersTests = () => {
+  const manifest = getParsedManifest()
+
+  const processJS = (js, context) => {
+    return processStringSync(encodeJSBinding(js), context)
+  }
+
+  function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
+  }
+
+  describe("can be parsed and run as js", () => {
+    const jsHelpers = getJsHelperList()
+    const jsExamples = Object.keys(manifest).reduce((acc, v) => {
+      acc[v] = manifest[v].filter(([key]) => jsHelpers[key])
+      return acc
+    }, {})
+
+    describe.each(Object.keys(jsExamples))("%s", collection => {
+      it.each(
+        jsExamples[collection].filter(
+          ([_, { requiresHbsBody }]) => !requiresHbsBody
+        )
+      )("%s", async (_, { hbs, js }) => {
+        const context = {
+          double: i => i * 2,
+          isString: x => typeof x === "string",
+        }
+
+        const arrays = hbs.match(/\[[^/\]]+\]/)
+        arrays?.forEach((arrayString, i) => {
+          hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
+          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+        })
+
+        let convertedJs = convertToJS(hbs)
+
+        let result = await processJS(convertedJs, context)
+        result = result.replace(/&nbsp;/g, " ")
+        expect(result).toEqual(js)
+      })
+    })
+  })
 }
