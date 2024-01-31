@@ -23,6 +23,7 @@ import {
   TableSourceType,
   Query,
 } from "@budibase/types"
+import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -204,10 +205,13 @@ export function serverLogAutomation(appId?: string): Automation {
   }
 }
 
-export function loopAutomation(tableId: string, loopOpts?: any): Automation {
+export function loopAutomation(
+  tableId: string,
+  loopOpts?: LoopInput
+): Automation {
   if (!loopOpts) {
     loopOpts = {
-      option: "Array",
+      option: LoopStepType.ARRAY,
       binding: "{{ steps.1.rows }}",
     }
   }

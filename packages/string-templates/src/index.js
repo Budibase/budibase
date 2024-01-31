@@ -10,6 +10,7 @@ const {
 } = require("./utilities")
 const { convertHBSBlock } = require("./conversion")
 const javascript = require("./helpers/javascript")
+const { helpersToRemoveForJs } = require("./helpers/list")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -394,3 +395,4 @@ module.exports.convertToJS = hbs => {
 }
 
 module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
+module.exports.helpersToRemoveForJs = helpersToRemoveForJs
