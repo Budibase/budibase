@@ -1080,11 +1080,11 @@ export class ComponentStore extends BudiStore {
    * @param {object} definition
    * @example
    * '@budibase/standard-components/container'
-   * @returns {boolean}
+   * @returns {array} the settings
    */
   cacheSettings(componentType, definition) {
     let settings = []
-    if (definition && componentType) {
+    if (definition) {
       settings = definition.settings?.filter(setting => !setting.section) ?? []
       definition.settings
         ?.filter(setting => setting.section)
@@ -1096,14 +1096,15 @@ export class ComponentStore extends BudiStore {
             }))
           )
         })
-      this.update(state => ({
-        ...state,
-        settingsCache: {
-          ...state.settingsCache,
-          [componentType]: settings,
-        },
-      }))
     }
+    this.update(state => ({
+      ...state,
+      settingsCache: {
+        ...state.settingsCache,
+        [componentType]: settings,
+      },
+    }))
+    return settings
   }
 
   /**
@@ -1129,13 +1130,15 @@ export class ComponentStore extends BudiStore {
       componentType = `@budibase/standard-components/${componentType}`
     }
 
-    if (this.isCached(componentType)) {
-      return get(this.store).settingsCache[componentType]
-    } else {
-      const def = this.getDefinition(componentType)
-      this.cacheSettings(componentType, def)
-      return get(this.store).settingsCache[componentType]
+    // Use cached value if possible
+    const cachedValue = get(this.store).settingsCache[componentType]
+    if (cachedValue) {
+      return cachedValue
     }
+
+    // Otherwise cache and return new value
+    const def = this.getDefinition(componentType)
+    return this.cacheSettings(componentType, def)
   }
 }
 
