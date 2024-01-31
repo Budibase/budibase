@@ -42,10 +42,10 @@ export const fetch = async (ctx: Ctx) => {
     disableAccountPortal: env.DISABLE_ACCOUNT_PORTAL,
     baseUrl: env.PLATFORM_URL,
     isDev: env.isDev() && !env.isTest(),
+    maintenance: [],
   }
 
   if (env.SELF_HOSTED) {
-    ctx.body.maintenance = []
     if (await isSqsMissing()) {
       ctx.body.maintenance.push({ type: MaintenanceType.SQS_MISSING })
     }
