@@ -66,7 +66,7 @@
     try {
       await store.actions.screens.updateSetting(get(selectedScreen), key, value)
     } catch (error) {
-      console.log(error)
+      console.error(error)
       notifications.error("Error saving screen settings")
     }
   }

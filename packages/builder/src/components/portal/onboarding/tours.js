@@ -45,7 +45,7 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
         onboarding: false,
       }))
     } catch (e) {
-      console.log("Onboarding failed", e)
+      console.error("Onboarding failed", e)
       return false
     }
     return true

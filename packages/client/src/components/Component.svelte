@@ -9,7 +9,7 @@
 </script>
 
 <script>
-  import { getContext, setContext, onMount, onDestroy } from "svelte"
+  import { getContext, setContext, onMount } from "svelte"
   import { writable, get } from "svelte/store"
   import {
     enrichProps,
@@ -30,6 +30,15 @@
   import ScreenPlaceholder from "components/app/ScreenPlaceholder.svelte"
   import ComponentErrorState from "components/error-states/ComponentErrorState.svelte"
   import { BudibasePrefix } from "../stores/components.js"
+  import {
+    decodeJSBinding,
+    findHBSBlocks,
+    isJSBinding,
+  } from "@budibase/string-templates"
+  import {
+    getActionContextKey,
+    getActionDependentContextKeys,
+  } from "../utils/buttonActions.js"
 
   export let instance = {}
   export let isLayout = false
@@ -81,7 +90,6 @@
 
   // Keep track of stringified representations of context and instance
   // to avoid enriching bindings as much as possible
-  let lastContextKey
   let lastInstanceKey
 
   // Visibility flag used by conditional UI
@@ -97,6 +105,13 @@
   // Temporary styles which can be added in the app preview for things like DND.
   // We clear these whenever a new instance is received.
   let ephemeralStyles
+
+  // Single string of all HBS blocks, used to check if we use a certain binding
+  // or not
+  let bindingString = ""
+
+  // List of context keys which we use inside bindings
+  let knownContextKeyMap = {}
 
   // Set up initial state for each new component instance
   $: initialise(instance)
@@ -155,9 +170,6 @@
       hasMissingRequiredSettings)
   $: emptyState = empty && showEmptyState
 
-  // Enrich component settings
-  $: enrichComponentSettings($context, settingsDefinitionMap)
-
   // Evaluate conditional UI settings and store any component setting changes
   // which need to be made
   $: evaluateConditions(conditions)
@@ -206,6 +218,7 @@
     errorState,
     parent: id,
     ancestors: [...($component?.ancestors ?? []), instance._component],
+    path: [...($component?.path ?? []), id],
   })
 
   const initialise = (instance, force = false) => {
@@ -214,7 +227,8 @@
     }
 
     // Ensure we're processing a new instance
-    const instanceKey = Helpers.hashString(JSON.stringify(instance))
+    const stringifiedInstance = JSON.stringify(instance)
+    const instanceKey = Helpers.hashString(stringifiedInstance)
     if (instanceKey === lastInstanceKey && !force) {
       return
     } else {
@@ -274,13 +288,54 @@
       return missing
     })
 
+    // When considering bindings we can ignore children, so we remove that
+    // before storing the reference stringified version
+    const noChildren = JSON.stringify({ ...instance, _children: null })
+    const bindings = findHBSBlocks(noChildren).map(binding => {
+      let sanitizedBinding = binding.replace(/\\"/g, '"')
+      if (isJSBinding(sanitizedBinding)) {
+        return decodeJSBinding(sanitizedBinding)
+      } else {
+        return sanitizedBinding
+      }
+    })
+
+    // The known context key map is built up at runtime, as changes to keys are
+    // encountered. We manually seed this to the required action keys as these
+    // are not encountered at runtime and so need computed in advance.
+    knownContextKeyMap = generateActionKeyMap(instance, settingsDefinition)
+    bindingString = bindings.join(" ")
+
     // Run any migrations
     runMigrations(instance, settingsDefinition)
 
     // Force an initial enrichment of the new settings
-    enrichComponentSettings(get(context), settingsDefinitionMap, {
-      force: true,
+    enrichComponentSettings(get(context), settingsDefinitionMap)
+  }
+
+  // Extracts a map of all context keys which are required by action settings
+  // to provide the functions to evaluate at runtime. This needs done manually
+  // as the action definitions themselves do not specify bindings for action
+  // keys, meaning we cannot do this while doing the other normal bindings.
+  const generateActionKeyMap = (instance, settingsDefinition) => {
+    let map = {}
+    settingsDefinition.forEach(setting => {
+      if (setting.type === "event") {
+        instance[setting.key]?.forEach(action => {
+          // We depend on the actual action key
+          const actionKey = getActionContextKey(action)
+          if (actionKey) {
+            map[actionKey] = true
+          }
+
+          // We also depend on any manually declared context keys
+          getActionDependentContextKeys(action)?.forEach(key => {
+            map[key] = true
+          })
+        })
+      }
     })
+    return map
   }
 
   const runMigrations = (instance, settingsDefinition) => {
@@ -381,17 +436,7 @@
   }
 
   // Enriches any string component props using handlebars
-  const enrichComponentSettings = (
-    context,
-    settingsDefinitionMap,
-    options = { force: false }
-  ) => {
-    const contextChanged = context.key !== lastContextKey
-    if (!contextChanged && !options?.force) {
-      return
-    }
-    lastContextKey = context.key
-
+  const enrichComponentSettings = (context, settingsDefinitionMap) => {
     // Record the timestamp so we can reference it after enrichment
     latestUpdateTime = Date.now()
     const enrichmentTime = latestUpdateTime
@@ -506,31 +551,46 @@
     })
   }
 
+  const handleContextChange = key => {
+    // Check if we already know if this key is used
+    let used = knownContextKeyMap[key]
+
+    // If we don't know, check and cache
+    if (used == null) {
+      used = bindingString.indexOf(`[${key}]`) !== -1
+      knownContextKeyMap[key] = used
+    }
+
+    // Enrich settings if we use this key
+    if (used) {
+      enrichComponentSettings($context, settingsDefinitionMap)
+    }
+  }
+
+  // Register an unregister component instance
   onMount(() => {
-    if (
-      $appStore.isDevApp &&
-      !componentStore.actions.isComponentRegistered(id)
-    ) {
-      componentStore.actions.registerInstance(id, {
-        component: instance._component,
-        getSettings: () => cachedSettings,
-        getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-        getDataContext: () => get(context),
-        reload: () => initialise(instance, true),
-        setEphemeralStyles: styles => (ephemeralStyles = styles),
-        state: store,
-      })
+    if ($appStore.isDevApp) {
+      if (!componentStore.actions.isComponentRegistered(id)) {
+        componentStore.actions.registerInstance(id, {
+          component: instance._component,
+          getSettings: () => cachedSettings,
+          getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
+          getDataContext: () => get(context),
+          reload: () => initialise(instance, true),
+          setEphemeralStyles: styles => (ephemeralStyles = styles),
+          state: store,
+        })
+      }
+      return () => {
+        if (componentStore.actions.isComponentRegistered(id)) {
+          componentStore.actions.unregisterInstance(id)
+        }
+      }
     }
   })
 
-  onDestroy(() => {
-    if (
-      $appStore.isDevApp &&
-      componentStore.actions.isComponentRegistered(id)
-    ) {
-      componentStore.actions.unregisterInstance(id)
-    }
-  })
+  // Observe changes to context
+  onMount(() => context.actions.observeChanges(handleContextChange))
 </script>
 
 {#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}

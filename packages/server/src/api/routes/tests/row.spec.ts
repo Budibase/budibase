@@ -581,7 +581,7 @@ describe.each([
         tableId: InternalTable.USER_METADATA,
       }
 
-      let table = await config.api.table.create({
+      let table = await config.api.table.save({
         name: "TestTable",
         type: "table",
         sourceType: TableSourceType.INTERNAL,
@@ -1690,7 +1690,7 @@ describe.each([
           tableConfig.sourceType = TableSourceType.EXTERNAL
         }
       }
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         ...tableConfig,
         schema: {
           ...tableConfig.schema,

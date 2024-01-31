@@ -8,10 +8,10 @@ import {
   FieldType,
   Table,
   AutoFieldSubType,
+  AutoColumnFieldMetadata,
 } from "@budibase/types"
 
 import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
-import { cache } from "@budibase/backend-core"
 
 tk.freeze(Date.now())
 
@@ -213,8 +213,10 @@ describe("sdk >> rows >> internal", () => {
       )
 
       const persistedTable = await config.getTable(table._id)
-      expect((table as any).schema.id.lastID).toBe(0)
-      expect(persistedTable.schema.id.lastID).toBe(20)
+      expect((table.schema.id as AutoColumnFieldMetadata).lastID).toBe(0)
+      expect((persistedTable.schema.id as AutoColumnFieldMetadata).lastID).toBe(
+        20
+      )
     })
   })
 })
