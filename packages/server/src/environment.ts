@@ -60,6 +60,7 @@ const environment = {
   PLUGINS_DIR: process.env.PLUGINS_DIR || "/plugins",
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
+  SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,

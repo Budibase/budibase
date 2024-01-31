@@ -1,5 +1,6 @@
 import { Knex, knex } from "knex"
 import {
+  RelationshipType,
   FieldSubtype,
   NumberFieldMetadata,
   Operation,
@@ -11,7 +12,6 @@ import {
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { RelationshipType } from "../../constants"
 import { utils } from "@budibase/shared-core"
 
 function isIgnoredType(type: FieldType) {

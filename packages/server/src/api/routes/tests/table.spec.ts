@@ -1,6 +1,6 @@
 import { context, events } from "@budibase/backend-core"
 import {
-  AutoFieldSubTypes,
+  AutoFieldSubType,
   FieldSubtype,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -205,7 +205,7 @@ describe("/tables", () => {
           autoId: {
             name: "id",
             type: FieldType.NUMBER,
-            subtype: AutoFieldSubTypes.AUTO_ID,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
             constraints: {
               type: "number",
@@ -438,7 +438,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a one-to-many user relationship to a user column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -496,7 +496,7 @@ describe("/tables", () => {
       // We found a bug just after releasing this feature where if the row was created from the
       // users table, not the table linking to it, the migration would succeed but lose the data.
       // This happened because the order of the documents in the link was reversed.
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -554,7 +554,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-many user relationship to a users column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -611,7 +611,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-one user relationship to a users column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -670,7 +670,7 @@ describe("/tables", () => {
     describe("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
-        table = await config.api.table.create({
+        table = await config.api.table.save({
           name: "table",
           type: "table",
           sourceId: INTERNAL_TABLE_SOURCE_ID,
