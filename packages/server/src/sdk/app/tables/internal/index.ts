@@ -1,4 +1,5 @@
 import {
+  FieldType,
   RenameColumn,
   Table,
   ViewStatisticsSchema,
@@ -10,7 +11,6 @@ import {
   hasTypeChanged,
   TableSaveFunctions,
 } from "../../../../api/controllers/table/utils"
-import { FieldTypes } from "../../../../constants"
 import { EventType, updateLinks } from "../../../../db/linkedRows"
 import { cloneDeep } from "lodash/fp"
 import isEqual from "lodash/isEqual"
@@ -63,7 +63,7 @@ export async function save(
   }
 
   // rename row fields when table column is renamed
-  if (renaming && table.schema[renaming.updated].type === FieldTypes.LINK) {
+  if (renaming && table.schema[renaming.updated].type === FieldType.LINK) {
     throw new Error("Cannot rename a linked column.")
   }
 

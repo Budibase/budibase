@@ -6,11 +6,11 @@ import * as setup from "./utilities"
 import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
-  AutoFieldSubTypes,
+  AutoFieldSubType,
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
-  FormulaTypes,
+  FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
   MonthlyQuotaName,
   PermissionLevel,
@@ -192,7 +192,7 @@ describe.each([
             "Row ID": {
               name: "Row ID",
               type: FieldType.NUMBER,
-              subtype: AutoFieldSubTypes.AUTO_ID,
+              subtype: AutoFieldSubType.AUTO_ID,
               icon: "ri-magic-line",
               autocolumn: true,
               constraints: {
@@ -581,7 +581,7 @@ describe.each([
         tableId: InternalTable.USER_METADATA,
       }
 
-      let table = await config.api.table.create({
+      let table = await config.api.table.save({
         name: "TestTable",
         type: "table",
         sourceType: TableSourceType.INTERNAL,
@@ -1690,7 +1690,7 @@ describe.each([
           tableConfig.sourceType = TableSourceType.EXTERNAL
         }
       }
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         ...tableConfig,
         schema: {
           ...tableConfig.schema,
@@ -2032,7 +2032,7 @@ describe.each([
               name: "formula",
               type: FieldType.FORMULA,
               formula: "{{ links.0.name }}",
-              formulaType: FormulaTypes.DYNAMIC,
+              formulaType: FormulaType.DYNAMIC,
             },
           },
         }
@@ -2086,7 +2086,7 @@ describe.each([
               name: "formula",
               type: FieldType.FORMULA,
               formula: `{{ js "${js}"}}`,
-              formulaType: FormulaTypes.DYNAMIC,
+              formulaType: FormulaType.DYNAMIC,
             },
           },
         })
@@ -2129,7 +2129,7 @@ describe.each([
                 name: "formula",
                 type: FieldType.FORMULA,
                 formula: `{{ js "${js}"}}`,
-                formulaType: FormulaTypes.DYNAMIC,
+                formulaType: FormulaType.DYNAMIC,
               },
             },
           })
