@@ -2031,10 +2031,10 @@
   resolved "https://registry.yarnpkg.com/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz#75a2e8b51cb758a7553d6804a5932d7aace75c39"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@budibase/handlebars-helpers@^0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.0.tgz#224333d14e3900b7dacf48286af1e624a9fd62ea"
-  integrity sha512-g8+sFrMNxsIDnK+MmdUICTVGr6ReUFtnPp9hJX0VZwz1pN3Ynolpk/Qbu6rEWAvoU1sEqY1mXr9uo/+kEfeGbQ==
+"@budibase/handlebars-helpers@^0.13.1":
+  version "0.13.1"
+  resolved "https://registry.yarnpkg.com/@budibase/handlebars-helpers/-/handlebars-helpers-0.13.1.tgz#d02e73c0df8305cd675e70dc37f8427eb0842080"
+  integrity sha512-v4RbXhr3igvK3i2pj5cNltu/4NMxdPIzcUt/o0RoInhesNH1VSLRdweSFr6/Y34fsCR5jHZ6vltdcz2RgrTKgw==
   dependencies:
     get-object "^0.2.0"
     get-value "^3.0.1"
@@ -2050,10 +2050,10 @@
     to-gfm-code-block "^0.1.1"
     uuid "^9.0.1"
 
-"@budibase/nano@10.1.4":
-  version "10.1.4"
-  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.4.tgz#5c2670d0b4c12d736ddd6581c57d47c0aa45efad"
-  integrity sha512-J+IVaAljGideDvJss/AUxXA1599HEIUJo5c0LLlmc1KMA3GZWZjyX+w2fxAw3qF7hqFvX+qAStQgdcD3+/GPMA==
+"@budibase/nano@10.1.5":
+  version "10.1.5"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.5.tgz#eeaded7bfc707ecabf8fde604425b865a90c06ec"
+  integrity sha512-q1eKIsYKo+iK17zsJYd3VBl+5ufQMPpHYLec0wVsid8wnJVrTQk7RNpBlBUn/EDgXM7t8XNNHlERqHu+CxJu8Q==
   dependencies:
     "@types/tough-cookie" "^4.0.2"
     axios "^1.1.3"
