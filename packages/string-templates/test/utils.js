@@ -60,11 +60,11 @@ const getParsedManifest = () => {
 }
 module.exports.getParsedManifest = getParsedManifest
 
-module.exports.runJsHelpersTests = () => {
+module.exports.runJsHelpersTests = (funcWrap = delegate => delegate()) => {
   const manifest = getParsedManifest()
 
   const processJS = (js, context) => {
-    return processStringSync(encodeJSBinding(js), context)
+    return funcWrap(() => processStringSync(encodeJSBinding(js), context))
   }
 
   function escapeRegExp(string) {

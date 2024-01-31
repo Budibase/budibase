@@ -19,17 +19,28 @@ import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
 
 import tk from "timekeeper"
+import { init } from ".."
+import TestConfiguration from "../../tests/utilities/TestConfiguration"
 tk.freeze("2021-01-21T12:00:00")
 
 describe("jsRunner", () => {
+  const config = new TestConfiguration()
+
+  beforeAll(async () => {
+    init()
+    await config.init()
+  })
+
   const processJS = (js: string, context?: object) => {
-    return processStringSync(encodeJSBinding(js), context || {})
+    return config.doInContext(config.getAppId(), async () =>
+      processStringSync(encodeJSBinding(js), context || {})
+    )
   }
 
-  it("it can run a basic javascript", () => {
-    const output = processJS(`return 1 + 2`)
+  it("it can run a basic javascript", async () => {
+    const output = await processJS(`return 1 + 2`)
     expect(output).toBe(3)
   })
 
-  runJsHelpersTests()
+  runJsHelpersTests((func: any) => config.doInContext(config.getAppId(), func))
 })
