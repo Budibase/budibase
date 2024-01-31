@@ -1,7 +1,6 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import { Row, Table, TableSchema } from "@budibase/types"
-import { FieldTypes } from "../../../constants"
+import { FieldType, Row, Table, TableSchema } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
@@ -22,7 +21,7 @@ export function cleanExportRows(
   let cleanRows = [...rows]
 
   const relationships = Object.entries(schema)
-    .filter((entry: any[]) => entry[1].type === FieldTypes.LINK)
+    .filter((entry: any[]) => entry[1].type === FieldType.LINK)
     .map(entry => entry[0])
 
   relationships.forEach(column => {
@@ -88,17 +87,17 @@ export async function validate({
       continue
     }
     // formulas shouldn't validated, data will be deleted anyway
-    if (type === FieldTypes.FORMULA || column.autocolumn) {
+    if (type === FieldType.FORMULA || column.autocolumn) {
       continue
     }
     // special case for options, need to always allow unselected (empty)
-    if (type === FieldTypes.OPTIONS && constraints?.inclusion) {
+    if (type === FieldType.OPTIONS && constraints?.inclusion) {
       constraints.inclusion.push(null as any, "")
     }
     let res
 
     // Validate.js doesn't seem to handle array
-    if (type === FieldTypes.ARRAY && row[fieldName]) {
+    if (type === FieldType.ARRAY && row[fieldName]) {
       if (row[fieldName].length) {
         if (!Array.isArray(row[fieldName])) {
           row[fieldName] = row[fieldName].split(",")
@@ -116,13 +115,13 @@ export async function validate({
         errors[fieldName] = [`${fieldName} is required`]
       }
     } else if (
-      (type === FieldTypes.ATTACHMENT || type === FieldTypes.JSON) &&
+      (type === FieldType.ATTACHMENT || type === FieldType.JSON) &&
       typeof row[fieldName] === "string"
     ) {
       // this should only happen if there is an error
       try {
         const json = JSON.parse(row[fieldName])
-        if (type === FieldTypes.ATTACHMENT) {
+        if (type === FieldType.ATTACHMENT) {
           if (Array.isArray(json)) {
             row[fieldName] = json
           } else {

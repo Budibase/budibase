@@ -1,6 +1,5 @@
 import { generateLinkID } from "../utils"
-import { FieldTypes } from "../../constants"
-import { LinkDocument } from "@budibase/types"
+import { FieldType, LinkDocument } from "@budibase/types"
 
 /**
  * Creates a new link document structure which can be put to the database. It is important to
@@ -43,7 +42,7 @@ class LinkDocumentImpl implements LinkDocument {
       fieldName1,
       fieldName2
     )
-    this.type = FieldTypes.LINK
+    this.type = FieldType.LINK
     this.doc1 = {
       tableId: tableId1,
       fieldName: fieldName1,
