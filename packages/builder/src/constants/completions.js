@@ -1,4 +1,4 @@
-import { getManifest } from "@budibase/string-templates"
+import { getManifest, helpersToRemoveForJs } from "@budibase/string-templates"
 
 export function handlebarsCompletions() {
   const manifest = getManifest()
@@ -11,7 +11,9 @@ export function handlebarsCompletions() {
       label: helperName,
       displayText: helperName,
       description: helperConfig.description,
-      allowsJs: !helperConfig.requiresBlock,
+      allowsJs:
+        !helperConfig.requiresBlock &&
+        !helpersToRemoveForJs.includes(helperName),
     }))
   )
 }
