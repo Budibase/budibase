@@ -45,6 +45,12 @@
         "no-prototype-builtins": "off",
         "local-rules/no-budibase-imports": "error"
       }
+    },
+    {
+      "files": ["packages/builder/**/*"],
+      "rules": {
+        "no-console": ["error", { "allow": ["warn", "error", "debug"] } ]
+      }
     }
   ],
   "rules": {
