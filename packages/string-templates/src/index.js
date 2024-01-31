@@ -10,6 +10,7 @@ const {
 } = require("./utilities")
 const { convertHBSBlock } = require("./conversion")
 const javascript = require("./helpers/javascript")
+const { helpersToRemoveForJs } = require("./helpers/list")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -398,3 +399,7 @@ module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
 const errors = require("./errors")
 // We cannot use dynamic exports, otherwise the typescript file will not be generating it
 module.exports.JsErrorTimeout = errors.JsErrorTimeout
+
+
+module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+
