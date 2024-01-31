@@ -105,8 +105,10 @@ export function init() {
           }
         }
 
+        // We need to warp up the actual run in a `cb` function to be able to extract its value from isolated-vm
+        js = js.replace(/run\(\);$/, "cb(run());")
         const script = jsIsolate.compileModuleSync(
-          `import helpers from "compiled_module";${js};cb(run());`,
+          `import helpers from "compiled_module";${js}`,
           {}
         )
 
