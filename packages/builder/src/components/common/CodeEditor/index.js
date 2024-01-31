@@ -312,7 +312,7 @@ export const insertBinding = (view, from, to, text, mode) => {
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
   } else {
-    console.log("Unsupported")
+    console.warn("Unsupported")
     return
   }
 
