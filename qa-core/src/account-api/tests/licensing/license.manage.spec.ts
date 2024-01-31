@@ -36,11 +36,11 @@ describe("license management", () => {
     const [plansRes, planBody] = await config.api.licenses.getPlans()
 
     // Select priceId from premium plan
-    let premiumPriceId = null
-    let businessPriceId = ""
+    let premiumPrice = null
+    let businessPriceId: ""
     for (const plan of planBody) {
       if (plan.type === PlanType.PREMIUM_PLUS) {
-        premiumPriceId = plan.prices[0].priceId
+        premiumPrice = plan.prices[0]
       }
       if (plan.type === PlanType.ENTERPRISE_BASIC) {
         businessPriceId = plan.prices[0].priceId
@@ -49,7 +49,7 @@ describe("license management", () => {
 
     // Create checkout session for price
     const checkoutSessionRes = await config.api.stripe.createCheckoutSession(
-      premiumPriceId
+        { id: premiumPrice.priceId, type: premiumPrice.type }
     )
     const checkoutSessionUrl = checkoutSessionRes[1].url
     expect(checkoutSessionUrl).toContain("checkout.stripe.com")
@@ -84,7 +84,7 @@ describe("license management", () => {
       customer: customer.id,
       items: [
         {
-          price: premiumPriceId,
+          price: premiumPrice.priceId,
           quantity: 1,
         },
       ],
@@ -105,6 +105,7 @@ describe("license management", () => {
       expect(portalSessionBody.url).toContain("billing.stripe.com")
 
       // Update subscription from premium to business license
+      //await config.api.licenses.updatePlan(businessPriceId.priceId)
       await config.api.licenses.updatePlan(businessPriceId)
 
       // License updated to Business
