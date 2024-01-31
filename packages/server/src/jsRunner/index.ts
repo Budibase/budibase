@@ -1,5 +1,5 @@
 import ivm from "isolated-vm"
-import env from "./environment"
+import env from "../environment"
 import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
