@@ -47,7 +47,11 @@
       }
     },
     {
-      "files": ["packages/builder/**/*"],
+      "files": [
+        "packages/builder/**/*",
+        "packages/client/**/*",
+        "packages/frontend-core/**/*"
+      ],
       "rules": {
         "no-console": ["error", { "allow": ["warn", "error", "debug"] } ]
       }
