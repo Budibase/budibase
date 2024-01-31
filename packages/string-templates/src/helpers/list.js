@@ -5,7 +5,7 @@ let helpers = undefined
 
 const helpersToRemove = ["sortBy"]
 
-module.exports.getHelperList = () => {
+module.exports.getJsHelperList = () => {
   if (helpers) {
     return helpers
   }
