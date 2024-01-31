@@ -50,7 +50,7 @@
       (!search ||
         helper.label.match(searchRgx) ||
         helper.description.match(searchRgx)) &&
-      (mode.name !== "javascript" || !helper.requiresBlock)
+      (mode.name !== "javascript" || helper.allowsJs)
     )
   })
 
