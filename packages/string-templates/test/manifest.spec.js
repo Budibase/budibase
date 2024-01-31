@@ -24,7 +24,7 @@ const {
 } = require("../src/index.cjs")
 
 const tk = require("timekeeper")
-const { getHelperList } = require("../src/helpers")
+const { getJsHelperList } = require("../src/helpers")
 
 tk.freeze("2021-01-21T12:00:00")
 
@@ -109,7 +109,7 @@ describe("manifest", () => {
   })
 
   describe("can be parsed and run as js", () => {
-    const jsHelpers = getHelperList()
+    const jsHelpers = getJsHelperList()
     const jsExamples = Object.keys(examples).reduce((acc, v) => {
       acc[v] = examples[v].filter(([key]) => jsHelpers[key])
       return acc

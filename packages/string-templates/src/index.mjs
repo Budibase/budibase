@@ -21,6 +21,7 @@ export const findHBSBlocks = templates.findHBSBlocks
 export const convertToJS = templates.convertToJS
 export const setJSRunner = templates.setJSRunner
 export const FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
+export const helpersToRemoveForJs = templates.helpersToRemoveForJs
 
 if (process && !process.env.NO_JS) {
   /**

@@ -20,6 +20,7 @@ module.exports.findHBSBlocks = templates.findHBSBlocks
 module.exports.convertToJS = templates.convertToJS
 module.exports.setJSRunner = templates.setJSRunner
 module.exports.FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
+module.exports.helpersToRemoveForJs = templates.helpersToRemoveForJs
 
 if (!process.env.NO_JS) {
   const { VM } = require("vm2")
