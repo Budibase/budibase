@@ -3,7 +3,10 @@ const helperList = require("@budibase/handlebars-helpers")
 
 let helpers = undefined
 
-module.exports.getHelperList = () => {
+const helpersToRemoveForJs = ["sortBy"]
+module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+
+module.exports.getJsHelperList = () => {
   if (helpers) {
     return helpers
   }
@@ -15,11 +18,16 @@ module.exports.getHelperList = () => {
   }
   for (let collection of constructed) {
     for (let [key, func] of Object.entries(collection)) {
-      helpers[key] = func
+      // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
+      helpers[key] = (...props) => func(...props, {})
     }
   }
   for (let key of Object.keys(externalHandlebars.addedHelpers)) {
     helpers[key] = externalHandlebars.addedHelpers[key]
+  }
+
+  for (const toRemove of helpersToRemoveForJs) {
+    delete helpers[toRemove]
   }
   Object.freeze(helpers)
   return helpers
