@@ -400,6 +400,4 @@ const errors = require("./errors")
 // We cannot use dynamic exports, otherwise the typescript file will not be generating it
 module.exports.JsErrorTimeout = errors.JsErrorTimeout
 
-
 module.exports.helpersToRemoveForJs = helpersToRemoveForJs
-
