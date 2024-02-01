@@ -1,17 +1,17 @@
 import * as linkRows from "../../../db/linkedRows"
-import { generateRowID, InternalTables } from "../../../db/utils"
+import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
-  cleanupAttachments,
+  AttachmentCleanup,
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
 import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
+  FieldType,
   LinkDocumentValue,
   PatchRowRequest,
   PatchRowResponse,
@@ -79,7 +79,7 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     table,
   })) as Row
   // check if any attachments removed
-  await cleanupAttachments(table, { oldRow, row })
+  await AttachmentCleanup.rowUpdate(table, { row, oldRow })
 
   if (isUserTable) {
     // the row has been updated, need to put it into the ctx
@@ -87,45 +87,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     await userController.updateMetadata(ctx as any)
     return { row: ctx.body as Row, table }
   }
-
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
-    updateFormula: true,
-  })
-}
-
-export async function save(ctx: UserCtx) {
-  let inputs = ctx.request.body
-  inputs.tableId = utils.getTableId(ctx)
-
-  if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
-  }
-
-  // this returns the table and row incase they have been updated
-  const dbTable = await sdk.tables.getTable(inputs.tableId)
-
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
-  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
-
-  const validateResult = await sdk.rows.utils.validate({
-    row,
-    table,
-  })
-
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
-  // make sure link rows are up to date
-  row = (await linkRows.updateLinks({
-    eventType: linkRows.EventType.ROW_SAVE,
-    row,
-    tableId: row.tableId,
-    table,
-  })) as Row
 
   return finaliseRow(table, row, {
     oldTable: dbTable,
@@ -165,7 +126,7 @@ export async function destroy(ctx: UserCtx) {
     tableId,
   })
   // remove any attachments that were on the row from object storage
-  await cleanupAttachments(table, { row })
+  await AttachmentCleanup.rowDelete(table, [row])
   // remove any static formula
   await updateRelatedFormula(table, row)
 
@@ -216,7 +177,7 @@ export async function bulkDestroy(ctx: UserCtx) {
     await db.bulkDocs(processedRows.map(row => ({ ...row, _deleted: true })))
   }
   // remove any attachments that were on the rows from object storage
-  await cleanupAttachments(table, { rows: processedRows })
+  await AttachmentCleanup.rowDelete(table, processedRows)
   await updateRelatedFormula(table, processedRows)
   await Promise.all(updates)
   return { response: { ok: true }, rows: processedRows }
@@ -264,7 +225,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
-    if (field.type === FieldTypes.LINK) {
+    if (field.type === FieldType.LINK) {
       // find the links that pertain to this field
       const links = linkVals.filter(link => link.fieldName === fieldName)
       // find the rows that the links state are linked to this field

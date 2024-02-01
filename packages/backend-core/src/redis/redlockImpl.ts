@@ -2,7 +2,6 @@ import Redlock from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
-import { logWarn } from "../logging"
 import { utils } from "@budibase/shared-core"
 import { Duration } from "../utils"
 
@@ -137,7 +136,6 @@ export async function doWithLock<T>(
     const result = await task()
     return { executed: true, result }
   } catch (e: any) {
-    logWarn(`lock type: ${opts.type} error`, e)
     // lock limit exceeded
     if (e.name === "LockError") {
       if (opts.type === LockType.TRY_ONCE) {

@@ -26,7 +26,7 @@ services:
       BB_ADMIN_USER_EMAIL: ${BB_ADMIN_USER_EMAIL}
       BB_ADMIN_USER_PASSWORD: ${BB_ADMIN_USER_PASSWORD}
       PLUGINS_DIR: ${PLUGINS_DIR}
-      OFFLINE_MODE: ${OFFLINE_MODE}
+      OFFLINE_MODE: ${OFFLINE_MODE:-}
     depends_on:
       - worker-service
       - redis-service
@@ -53,11 +53,10 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY}
       REDIS_URL: redis-service:6379
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      OFFLINE_MODE: ${OFFLINE_MODE}
+      OFFLINE_MODE: ${OFFLINE_MODE:-}
     depends_on:
       - redis-service
       - minio-service
-      - couch-init
 
   minio-service:
     restart: unless-stopped
@@ -70,7 +69,7 @@ services:
       MINIO_BROWSER: "off"
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: "timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1"
       interval: 30s
       timeout: 20s
       retries: 3
@@ -98,30 +97,19 @@ services:
 
   couchdb-service:
     restart: unless-stopped
-    image: ibmcom/couchdb3
+    image: budibase/couchdb
+    pull_policy: always
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}
+      - TARGETBUILD=docker-compose
     volumes:
       - couchdb3_data:/opt/couchdb/data
-
-  couch-init:
-    image: curlimages/curl
-    environment:
-      PUT_CALL: "curl -u ${COUCH_DB_USER}:${COUCH_DB_PASSWORD} -X PUT couchdb-service:5984"
-    depends_on:
-      - couchdb-service
-    command:
-      [
-        "sh",
-        "-c",
-        "sleep 10 && $${PUT_CALL}/_users && $${PUT_CALL}/_replicator; fg;",
-      ]
 
   redis-service:
     restart: unless-stopped
     image: redis
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
     volumes:
       - redis_data:/data
 

@@ -1,4 +1,4 @@
-import Nano from "@budibase/nano"
+import type Nano from "@budibase/nano"
 import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
 import { Writable } from "stream"
 
@@ -121,7 +121,6 @@ export interface Database {
   name: string
 
   exists(): Promise<boolean>
-  checkSetup(): Promise<Nano.DocumentScope<any>>
   get<T extends Document>(id?: string): Promise<T>
   getMultiple<T extends Document>(
     ids: string[],

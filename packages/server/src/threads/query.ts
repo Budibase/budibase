@@ -1,7 +1,12 @@
 import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
-import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
+import {
+  WorkerCallback,
+  QueryEvent,
+  QueryVariable,
+  QueryResponse,
+} from "./definitions"
 import ScriptRunner from "../utilities/scriptRunner"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
@@ -9,7 +14,7 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { SourceName, Query } from "@budibase/types"
+import { Query } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -53,7 +58,7 @@ class QueryRunner {
     this.hasDynamicVariables = false
   }
 
-  async execute(): Promise<any> {
+  async execute(): Promise<QueryResponse> {
     let { datasource, fields, queryVerb, transformer, schema } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)

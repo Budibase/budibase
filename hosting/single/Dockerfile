@@ -1,4 +1,4 @@
-FROM node:18-slim as build
+FROM node:20-slim as build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
@@ -42,7 +42,7 @@ COPY packages/string-templates packages/string-templates
 FROM budibase/couchdb as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
-ENV NODE_MAJOR 18
+ENV NODE_MAJOR 20
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single

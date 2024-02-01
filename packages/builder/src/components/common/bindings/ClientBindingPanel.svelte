@@ -7,6 +7,8 @@
   export let allowJS = false
   export let allowHelpers = true
   export let context = null
+  export let autofocusEditor = false
+
   $: enrichedBindings = enrichBindings(bindings)
 
   // Ensure bindings have the correct categories
@@ -28,5 +30,6 @@
   {value}
   {allowJS}
   {allowHelpers}
+  {autofocusEditor}
   on:change
 />

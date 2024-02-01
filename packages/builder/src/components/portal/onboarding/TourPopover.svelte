@@ -67,7 +67,7 @@
         }))
         navigateStep(target)
       } else {
-        console.log("Could not retrieve step")
+        console.warn("Could not retrieve step")
       }
     } else {
       if (typeof tourStep.onComplete === "function") {

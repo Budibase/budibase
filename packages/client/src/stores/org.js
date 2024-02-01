@@ -14,7 +14,7 @@ const createOrgStore = () => {
       const settingsConfigDoc = await API.getTenantConfig(tenantId)
       set({ logoUrl: settingsConfigDoc.config.logoUrl })
     } catch (e) {
-      console.log("Could not init org ", e)
+      console.error("Could not init org ", e)
     }
   }
 

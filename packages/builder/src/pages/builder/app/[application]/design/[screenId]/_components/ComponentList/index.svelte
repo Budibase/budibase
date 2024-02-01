@@ -1,7 +1,12 @@
 <script>
   import { notifications, Icon, Body } from "@budibase/bbui"
   import { isActive, goto } from "@roxi/routify"
-  import { store, selectedScreen, userSelectedResourceMap } from "builderStore"
+  import {
+    store,
+    selectedScreen,
+    userSelectedResourceMap,
+    hoverStore,
+  } from "builderStore"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
@@ -11,6 +16,9 @@
   import ComponentScrollWrapper from "./ComponentScrollWrapper.svelte"
 
   let scrolling = false
+
+  $: screenComponentId = `${$store.selectedScreenId}-screen`
+  $: navComponentId = `${$store.selectedScreenId}-navigation`
 
   const toNewComponentRoute = () => {
     if ($isActive(`./:componentId/new`)) {
@@ -32,6 +40,8 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  const hover = hoverStore.actions.update
 </script>
 
 <div class="components">
@@ -54,34 +64,31 @@
             scrollable
             icon="WebPage"
             on:drop={onDrop}
-            on:click={() => {
-              $store.selectedComponentId = `${$store.selectedScreenId}-screen`
-            }}
-            id={`component-screen`}
-            selectedBy={$userSelectedResourceMap[
-              `${$store.selectedScreenId}-screen`
-            ]}
+            on:click={() => ($store.selectedComponentId = screenComponentId)}
+            hovering={$hoverStore.componentId === screenComponentId}
+            on:mouseenter={() => hover(screenComponentId)}
+            on:mouseleave={() => hover(null)}
+            id="component-screen"
+            selectedBy={$userSelectedResourceMap[screenComponentId]}
           >
             <ScreenslotDropdownMenu component={$selectedScreen?.props} />
           </NavItem>
           <NavItem
             text="Navigation"
             indentLevel={0}
-            selected={$store.selectedComponentId ===
-              `${$store.selectedScreenId}-navigation`}
+            selected={$store.selectedComponentId === navComponentId}
             opened
             scrollable
             icon={$selectedScreen.showNavigation
               ? "Visibility"
               : "VisibilityOff"}
             on:drop={onDrop}
-            on:click={() => {
-              $store.selectedComponentId = `${$store.selectedScreenId}-navigation`
-            }}
-            id={`component-nav`}
-            selectedBy={$userSelectedResourceMap[
-              `${$store.selectedScreenId}-navigation`
-            ]}
+            on:click={() => ($store.selectedComponentId = navComponentId)}
+            hovering={$hoverStore.componentId === navComponentId}
+            on:mouseenter={() => hover(navComponentId)}
+            on:mouseleave={() => hover(null)}
+            id="component-nav"
+            selectedBy={$userSelectedResourceMap[navComponentId]}
           />
           <ComponentTree
             level={0}

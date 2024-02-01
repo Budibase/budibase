@@ -1,4 +1,3 @@
-builder/*
 .data/
 .temp/
 packages/server/runtime_apps/
@@ -41,8 +40,11 @@ bower_components
 build/Release
 
 # Dependency directories
-/node_modules/
 jspm_packages/
+*.min.js
+*.map
+node_modules/
+dist/
 
 # TypeScript v1 declaration files
 typings/

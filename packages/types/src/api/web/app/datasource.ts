@@ -35,3 +35,12 @@ export interface FetchDatasourceInfoResponse {
 export interface UpdateDatasourceRequest extends Datasource {
   datasource: Datasource
 }
+
+export interface BuildSchemaFromSourceRequest {
+  tablesFilter?: string[]
+}
+
+export interface BuildSchemaFromSourceResponse {
+  datasource: Datasource
+  errors: Record<string, string>
+}

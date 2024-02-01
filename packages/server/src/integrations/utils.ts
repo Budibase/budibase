@@ -305,8 +305,8 @@ export function shouldCopySpecialColumn(
 }
 
 /**
- * Looks for columns which need to be copied over into the new table definitions, like relationships
- * and options types.
+ * Looks for columns which need to be copied over into the new table definitions, like relationships,
+ * options types and views.
  * @param tableName The name of the table which is being checked.
  * @param table The specific table which is being checked.
  * @param entities All the tables that existed before - the old table definitions.
@@ -325,6 +325,9 @@ function copyExistingPropsOver(
     if (entities[tableName]?.created) {
       table.created = entities[tableName]?.created
     }
+
+    table.views = entities[tableName].views
+
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
       if (!existingTableSchema.hasOwnProperty(key)) {
@@ -373,8 +376,8 @@ export function checkExternalTables(
       errors[name] = "Table must have a primary key."
     }
 
-    const schemaFields = Object.keys(table.schema)
-    if (schemaFields.find(f => invalidColumns.includes(f))) {
+    const columnNames = Object.keys(table.schema)
+    if (columnNames.find(f => invalidColumns.includes(f))) {
       errors[name] = "Table contains invalid columns."
     }
   }

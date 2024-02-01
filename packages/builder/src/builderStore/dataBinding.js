@@ -456,15 +456,11 @@ const generateComponentContextBindings = (asset, componentContext) => {
         context,
         definition
       )
-
-      // Temporarily append scope for debugging
-      const scope = `[${(context.scope || "global").toUpperCase()}]`
-
       // Create the binding object
       bindings.push({
         type: "context",
         runtimeBinding,
-        readableBinding: `${scope} ${readableBinding}`,
+        readableBinding: `${readableBinding}`,
         // Field schema and provider are required to construct relationship
         // datasource options, based on bindable properties
         fieldSchema,
@@ -475,7 +471,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
         category: bindingCategory.category,
         icon: bindingCategory.icon,
         display: {
-          name: `${scope} ${fieldSchema.name || key}`,
+          name: `${fieldSchema.name || key}`,
           type: fieldSchema.type,
         },
       })
@@ -510,9 +506,7 @@ const isContextCompatibleWithComponent = (context, component) => {
   return true
 }
 
-/**
- * Determines the correct category for a given binding.
- */
+// Enrich binding category information for certain components
 const getComponentBindingCategory = (component, context, def) => {
   // Default category to component name
   let icon = def.icon
@@ -520,14 +514,13 @@ const getComponentBindingCategory = (component, context, def) => {
 
   // Form block edge case
   if (component._component.endsWith("formblock")) {
-    let contextCategorySuffix = {
-      form: "Fields",
-      schema: "Row",
+    if (context.type === "form") {
+      category = `${component._instanceName} - Fields`
+      icon = "Form"
+    } else if (context.type === "schema") {
+      category = `${component._instanceName} - Row`
+      icon = "Data"
     }
-    category = `${component._instanceName} - ${
-      contextCategorySuffix[context.type]
-    }`
-    icon = context.type === "form" ? "Form" : "Data"
   }
 
   return {
@@ -1083,11 +1076,48 @@ export const getAllStateVariables = () => {
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
       const settings = getComponentSettings(component._component)
-      settings
-        .filter(setting => setting.type === "event")
-        .forEach(setting => {
-          eventSettings.push(component[setting.key])
-        })
+
+      const parseEventSettings = (settings, comp) => {
+        settings
+          .filter(setting => setting.type === "event")
+          .forEach(setting => {
+            eventSettings.push(comp[setting.key])
+          })
+      }
+
+      const parseComponentSettings = (settings, component) => {
+        // Parse the nested button configurations
+        settings
+          .filter(setting => setting.type === "buttonConfiguration")
+          .forEach(setting => {
+            const buttonConfig = component[setting.key]
+
+            if (Array.isArray(buttonConfig)) {
+              buttonConfig.forEach(button => {
+                const nestedSettings = getComponentSettings(button._component)
+                parseEventSettings(nestedSettings, button)
+              })
+            }
+          })
+
+        parseEventSettings(settings, component)
+      }
+
+      // Parse the base component settings
+      parseComponentSettings(settings, component)
+
+      // Parse step configuration
+      const stepSetting = settings.find(
+        setting => setting.type === "stepConfiguration"
+      )
+      const steps = stepSetting ? component[stepSetting.key] : []
+      const stepDefinition = getComponentSettings(
+        "@budibase/standard-components/multistepformblockstep"
+      )
+
+      steps.forEach(step => {
+        parseComponentSettings(stepDefinition, step)
+      })
     })
   })
 

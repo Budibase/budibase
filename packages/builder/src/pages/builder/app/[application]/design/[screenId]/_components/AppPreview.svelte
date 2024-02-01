@@ -1,7 +1,7 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedScreen, currentAsset } from "builderStore"
+  import { store, selectedScreen, currentAsset, hoverStore } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ProgressCircle,
@@ -117,6 +117,8 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       $store.selectedComponentId = data.id
+    } else if (type === "hover-component") {
+      hoverStore.actions.update(data.id, false)
     } else if (type === "update-prop") {
       await store.actions.components.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {

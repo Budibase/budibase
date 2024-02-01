@@ -3290,6 +3290,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3497,6 +3498,7 @@
       },
       {
         "type": "options",
+        "label": "Custom options",
         "key": "customOptions",
         "dependsOn": {
           "setting": "optionsSource",
@@ -3960,6 +3962,12 @@
         "type": "boolean",
         "label": "Manual entry",
         "key": "allowManualEntry",
+        "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Auto confirm",
+        "key": "autoConfirm",
         "defaultValue": false
       },
       {
@@ -4868,7 +4876,7 @@
   },
   "chartblock": {
     "block": true,
-    "name": "Chart block",
+    "name": "Chart Block",
     "icon": "GraphPie",
     "hasChildren": false,
     "settings": [
@@ -5358,7 +5366,7 @@
   },
   "tableblock": {
     "block": true,
-    "name": "Table block",
+    "name": "Table Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -5600,11 +5608,42 @@
           }
         ]
       }
-    ]
+    ],
+    "context": {
+      "type": "static",
+      "suffix": "provider",
+      "values": [
+        {
+          "label": "Rows",
+          "key": "rows",
+          "type": "array"
+        },
+        {
+          "label": "Extra Info",
+          "key": "info",
+          "type": "string"
+        },
+        {
+          "label": "Rows Length",
+          "key": "rowsLength",
+          "type": "number"
+        },
+        {
+          "label": "Schema",
+          "key": "schema",
+          "type": "object"
+        },
+        {
+          "label": "Page Number",
+          "key": "pageNumber",
+          "type": "number"
+        }
+      ]
+    }
   },
   "cardsblock": {
     "block": true,
-    "name": "Cards block",
+    "name": "Cards Block",
     "icon": "PersonalizationField",
     "styles": ["size"],
     "size": {
@@ -5779,12 +5818,13 @@
     ],
     "context": {
       "type": "schema",
-      "suffix": "repeater"
+      "suffix": "repeater",
+      "scope": "local"
     }
   },
   "repeaterblock": {
     "block": true,
-    "name": "Repeater block",
+    "name": "Repeater Block",
     "icon": "ViewList",
     "illegalChildren": ["section"],
     "hasChildren": true,
@@ -6025,6 +6065,197 @@
       }
     ]
   },
+  "multistepformblock": {
+    "name": "Multi-step Form Block",
+    "icon": "AssetsAdded",
+    "block": true,
+    "hasChildren": false,
+    "ejectable": false,
+    "size": {
+      "width": 400,
+      "height": 400
+    },
+    "styles": ["size"],
+    "settings": [
+      {
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource"
+      },
+      {
+        "type": "radio",
+        "label": "Type",
+        "key": "actionType",
+        "options": ["Create", "Update", "View"],
+        "defaultValue": "Create"
+      },
+      {
+        "section": true,
+        "dependsOn": {
+          "setting": "actionType",
+          "value": "Create",
+          "invert": true
+        },
+        "name": "Row ID",
+        "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
+        "settings": [
+          {
+            "type": "text",
+            "label": "Row ID",
+            "key": "rowId",
+            "nested": true
+          },
+          {
+            "type": "text",
+            "label": "No rows found",
+            "key": "noRowsMessage",
+            "defaultValue": "We couldn't find a row to display",
+            "nested": true
+          }
+        ]
+      },
+      {
+        "section": true,
+        "name": "Details",
+        "settings": [
+          {
+            "type": "stepConfiguration",
+            "key": "steps",
+            "nested": true,
+            "labelHidden": true,
+            "resetOn": ["dataSource", "actionType"],
+            "defaultValue": [{}]
+          }
+        ]
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Button position",
+        "key": "buttonPosition",
+        "options": [
+          {
+            "label": "Bottom",
+            "value": "bottom"
+          },
+          {
+            "label": "Top",
+            "value": "top"
+          }
+        ],
+        "defaultValue": "bottom"
+      },
+      {
+        "tag": "style",
+        "type": "select",
+        "label": "Size",
+        "key": "size",
+        "options": [
+          {
+            "label": "Medium",
+            "value": "spectrum--medium"
+          },
+          {
+            "label": "Large",
+            "value": "spectrum--large"
+          }
+        ],
+        "defaultValue": "spectrum--medium"
+      }
+    ],
+    "actions": [
+      {
+        "type": "ValidateForm",
+        "suffix": "form"
+      },
+      {
+        "type": "ClearForm",
+        "suffix": "form"
+      },
+      {
+        "type": "UpdateFieldValue",
+        "suffix": "form"
+      },
+      {
+        "type": "ScrollTo",
+        "suffix": "form"
+      },
+      {
+        "type": "ChangeFormStep",
+        "suffix": "form"
+      }
+    ],
+    "context": [
+      {
+        "type": "form",
+        "suffix": "form"
+      },
+      {
+        "type": "schema",
+        "suffix": "repeater"
+      },
+      {
+        "type": "static",
+        "suffix": "form",
+        "values": [
+          {
+            "label": "Value",
+            "key": "__value",
+            "type": "object"
+          },
+          {
+            "label": "Valid",
+            "key": "__valid",
+            "type": "boolean"
+          },
+          {
+            "label": "Current Step",
+            "key": "__currentStep",
+            "type": "number"
+          },
+          {
+            "label": "Current Step Valid",
+            "key": "__currentStepValid",
+            "type": "boolean"
+          }
+        ]
+      }
+    ]
+  },
+  "multistepformblockstep": {
+    "name": "Multi-step Form Block Step",
+    "settings": [
+      {
+        "type": "formStepControls",
+        "label": "Steps",
+        "key": "steps"
+      },
+      {
+        "type": "text",
+        "label": "Title",
+        "key": "title",
+        "nested": true
+      },
+      {
+        "type": "text",
+        "label": "Description",
+        "key": "desc",
+        "nested": true
+      },
+      {
+        "type": "fieldConfiguration",
+        "key": "fields",
+        "nested": true
+      },
+      {
+        "type": "buttonConfiguration",
+        "label": "Buttons",
+        "key": "buttons",
+        "wide": true,
+        "nested": true
+      }
+    ]
+  },
   "formblock": {
     "name": "Form Block",
     "icon": "Form",
@@ -6105,53 +6336,31 @@
         ]
       },
       {
+        "tag": "style",
+        "type": "select",
+        "label": "Button position",
+        "key": "buttonPosition",
+        "options": [
+          {
+            "label": "Bottom",
+            "value": "bottom"
+          },
+          {
+            "label": "Top",
+            "value": "top"
+          }
+        ],
+        "defaultValue": "bottom"
+      },
+      {
         "section": true,
         "name": "Buttons",
-        "dependsOn": {
-          "setting": "actionType",
-          "value": "View",
-          "invert": true
-        },
         "settings": [
           {
-            "type": "text",
-            "key": "saveButtonLabel",
-            "label": "Save button",
+            "type": "buttonConfiguration",
+            "key": "buttons",
             "nested": true,
-            "defaultValue": "Save"
-          },
-          {
-            "type": "text",
-            "key": "deleteButtonLabel",
-            "label": "Delete button",
-            "nested": true,
-            "defaultValue": "Delete",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "Update"
-            }
-          },
-          {
-            "type": "url",
-            "label": "Navigate after button press",
-            "key": "actionUrl",
-            "placeholder": "Choose a screen",
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
-          },
-          {
-            "type": "boolean",
-            "label": "Hide notifications",
-            "key": "notificationOverride",
-            "defaultValue": false,
-            "dependsOn": {
-              "setting": "actionType",
-              "value": "View",
-              "invert": true
-            }
+            "resetOn": ["actionType", "dataSource"]
           }
         ]
       },
@@ -6298,7 +6507,8 @@
     ],
     "context": {
       "type": "schema",
-      "suffix": "repeater"
+      "suffix": "repeater",
+      "scope": "local"
     }
   },
   "grid": {
@@ -6319,7 +6529,7 @@
     ]
   },
   "gridblock": {
-    "name": "Grid block",
+    "name": "Grid Block",
     "icon": "Table",
     "styles": ["size"],
     "size": {
@@ -6461,7 +6671,8 @@
       }
     ],
     "context": {
-      "type": "schema"
+      "type": "schema",
+      "scope": "local"
     },
     "actions": ["RefreshDatasource"]
   },

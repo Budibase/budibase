@@ -1,17 +1,23 @@
 import { Knex, knex } from "knex"
 import {
+  RelationshipType,
   FieldSubtype,
   NumberFieldMetadata,
   Operation,
   QueryJson,
   RenameColumn,
   Table,
+  FieldType,
 } from "@budibase/types"
 import { breakExternalTableId } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
-import { FieldTypes, RelationshipType } from "../../constants"
 import { utils } from "@budibase/shared-core"
+
+function isIgnoredType(type: FieldType) {
+  const ignored = [FieldType.LINK, FieldType.FORMULA]
+  return ignored.indexOf(type) !== -1
+}
 
 function generateSchema(
   schema: CreateTableBuilder,
@@ -47,13 +53,13 @@ function generateSchema(
       continue
     }
     switch (column.type) {
-      case FieldTypes.STRING:
-      case FieldTypes.OPTIONS:
-      case FieldTypes.LONGFORM:
-      case FieldTypes.BARCODEQR:
+      case FieldType.STRING:
+      case FieldType.OPTIONS:
+      case FieldType.LONGFORM:
+      case FieldType.BARCODEQR:
         schema.text(key)
         break
-      case FieldTypes.BB_REFERENCE:
+      case FieldType.BB_REFERENCE:
         const subtype = column.subtype as FieldSubtype
         switch (subtype) {
           case FieldSubtype.USER:
@@ -66,7 +72,7 @@ function generateSchema(
             throw utils.unreachable(subtype)
         }
         break
-      case FieldTypes.NUMBER:
+      case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {
           const { toKey, toTable } = column.meta
@@ -76,21 +82,21 @@ function generateSchema(
           schema.float(key)
         }
         break
-      case FieldTypes.BIGINT:
+      case FieldType.BIGINT:
         schema.bigint(key)
         break
-      case FieldTypes.BOOLEAN:
+      case FieldType.BOOLEAN:
         schema.boolean(key)
         break
-      case FieldTypes.DATETIME:
+      case FieldType.DATETIME:
         schema.datetime(key, {
           useTz: !column.ignoreTimezones,
         })
         break
-      case FieldTypes.ARRAY:
+      case FieldType.ARRAY:
         schema.json(key)
         break
-      case FieldTypes.LINK:
+      case FieldType.LINK:
         // this side of the relationship doesn't need any SQL work
         if (
           column.relationshipType !== RelationshipType.MANY_TO_ONE &&
@@ -121,22 +127,18 @@ function generateSchema(
     }
   }
 
-  if (renamed) {
+  const oldType = renamed ? oldTable?.schema[renamed.old].type : undefined
+  if (renamed && oldType && !isIgnoredType(oldType)) {
     schema.renameColumn(renamed.old, renamed.updated)
   }
 
   // need to check if any columns have been deleted
   if (oldTable) {
-    const deletedColumns = Object.entries(oldTable.schema)
-      .filter(
-        ([key, schema]) =>
-          schema.type !== FieldTypes.LINK &&
-          schema.type !== FieldTypes.FORMULA &&
-          table.schema[key] == null
-      )
-      .map(([key]) => key)
-    deletedColumns.forEach(key => {
-      if (renamed?.old === key) {
+    const deletedColumns = Object.entries(oldTable.schema).filter(
+      ([key, column]) => isIgnoredType(column.type) && table.schema[key] == null
+    )
+    deletedColumns.forEach(([key, column]) => {
+      if (renamed?.old === key || isIgnoredType(column.type)) {
         return
       }
       if (oldTable.constrained && oldTable.constrained.indexOf(key) !== -1) {

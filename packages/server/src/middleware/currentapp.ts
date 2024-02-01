@@ -12,12 +12,18 @@ import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
+import tracer from "dd-trace"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   if (!requestAppId) {
     return next()
+  }
+
+  if (requestAppId) {
+    const span = tracer.scope().active()
+    span?.setTag("appId", requestAppId)
   }
 
   // deny access to application preview
@@ -68,6 +74,14 @@ export default async (ctx: UserCtx, next: any) => {
   // nothing more to do
   if (!appId) {
     return next()
+  }
+
+  if (ctx.user) {
+    const span = tracer.scope().active()
+    if (ctx.user._id) {
+      span?.setTag("userId", ctx.user._id)
+    }
+    span?.setTag("tenantId", ctx.user.tenantId)
   }
 
   const userId = ctx.user ? generateUserMetadataID(ctx.user._id!) : undefined
