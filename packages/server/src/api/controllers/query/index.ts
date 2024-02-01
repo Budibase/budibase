@@ -230,9 +230,14 @@ export async function preview(ctx: UserCtx) {
     )) as QueryResponse
     const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
     const previewSchema: Record<string, string | QuerySchema> = {}
-    const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
+    const makeQuerySchema = (
+      type: FieldType,
+      name: string,
+      subtype?: string
+    ): QuerySchema => ({
       type,
       name,
+      subtype,
     })
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
@@ -248,7 +253,11 @@ export async function preview(ctx: UserCtx) {
               if (field instanceof Date) {
                 fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
               } else if (Array.isArray(field)) {
-                fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
+                fieldMetadata = makeQuerySchema(
+                  FieldType.JSON,
+                  key,
+                  JsonFieldSubType.ARRAY
+                )
               } else {
                 fieldMetadata = makeQuerySchema(FieldType.JSON, key)
               }

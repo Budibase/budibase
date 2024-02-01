@@ -1,9 +1,9 @@
 import { Document } from "../document"
-import { TableSchema } from "./table"
 
 export interface QuerySchema {
   name?: string
   type: string
+  subtype?: string
 }
 
 export interface Query extends Document {
