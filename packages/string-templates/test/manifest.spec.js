@@ -15,51 +15,23 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-const fs = require("fs")
 const { processString } = require("../src/index.cjs")
 
 const tk = require("timekeeper")
+const { getParsedManifest, runJsHelpersTests } = require("./utils")
+
 tk.freeze("2021-01-21T12:00:00")
-
-const manifest = JSON.parse(
-  fs.readFileSync(require.resolve("../manifest.json"), "utf8")
-)
-
-const collections = Object.keys(manifest)
-const examples = collections.reduce((acc, collection) => {
-  const functions = Object.keys(manifest[collection]).filter(
-    fnc => manifest[collection][fnc].example
-  )
-  if (functions.length) {
-    acc[collection] = functions
-  }
-  return acc
-}, {})
 
 function escapeRegExp(string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
 }
 
-function tryParseJson(str) {
-  if (typeof str !== "string") {
-    return
-  }
-
-  try {
-    return JSON.parse(str.replace(/\'/g, '"'))
-  } catch (e) {
-    return
-  }
-}
-
 describe("manifest", () => {
+  const manifest = getParsedManifest()
+
   describe("examples are valid", () => {
-    describe.each(Object.keys(examples))("%s", collection => {
-      it.each(examples[collection])("%s", async func => {
-        const example = manifest[collection][func].example
-
-        let [hbs, js] = example.split("->").map(x => x.trim())
-
+    describe.each(Object.keys(manifest))("%s", collection => {
+      it.each(manifest[collection])("%s", async (_, { hbs, js }) => {
         const context = {
           double: i => i * 2,
           isString: x => typeof x === "string",
@@ -71,26 +43,12 @@ describe("manifest", () => {
           context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
         })
 
-        if (js === undefined) {
-          // The function has no return value
-          return
-        }
-
         let result = await processString(hbs, context)
-        // Trim 's
-        js = js.replace(/^\'|\'$/g, "")
-        if ((parsedExpected = tryParseJson(js))) {
-          if (Array.isArray(parsedExpected)) {
-            if (typeof parsedExpected[0] === "object") {
-              js = JSON.stringify(parsedExpected)
-            } else {
-              js = parsedExpected.join(",")
-            }
-          }
-        }
         result = result.replace(/&nbsp;/g, " ")
         expect(result).toEqual(js)
       })
     })
   })
+
+  runJsHelpersTests()
 })
