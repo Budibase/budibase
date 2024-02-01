@@ -1,5 +1,4 @@
 import { generateQueryID } from "../../../db/utils"
-import { BaseQueryVerbs } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
