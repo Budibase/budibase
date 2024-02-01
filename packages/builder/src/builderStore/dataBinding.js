@@ -407,7 +407,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
       table = info.table
 
       // Determine what to prefix bindings with
-      if (datasource.type === "jsonarray") {
+      if (datasource.type === "jsonarray" || datasource.type === "queryarray") {
         // For JSON arrays, use the array name as the readable prefix
         const split = datasource.label.split(".")
         readablePrefix = split[split.length - 1]

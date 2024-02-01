@@ -132,7 +132,11 @@ const hasSchema = test => {
 
 export const generateQueryArraySchemas = (schema, nestedSchemaFields) => {
   for (let key in schema) {
-    if (schema[key] === "queryarray" && hasSchema(nestedSchemaFields[key])) {
+    if (
+      schema[key]?.type === "json" &&
+      schema[key]?.subtype === "array" &&
+      hasSchema(nestedSchemaFields[key])
+    ) {
       schema[key] = {
         schema: {
           schema: Object.entries(nestedSchemaFields[key] || {}).reduce(
@@ -148,7 +152,8 @@ export const generateQueryArraySchemas = (schema, nestedSchemaFields) => {
           ),
           type: "json",
         },
-        type: "queryarray",
+        type: "json",
+        subtype: "array",
       }
     }
   }
