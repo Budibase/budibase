@@ -16,7 +16,7 @@ import {
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
-import * as uuid from "uuid"
+import uuid from "uuid"
 
 const { basicTable } = setup.structures
 
