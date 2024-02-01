@@ -35,6 +35,7 @@
   export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
+  export let compare = (option, value) => option === value
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -114,7 +115,12 @@
       {#if field.value === "array"}
         <Select readonly={true} value="Array" options={["Array"]} />
       {:else if options}
-        <Select bind:value={field.value} on:change={changed} {options} />
+        <Select
+          bind:value={field.value}
+          {compare}
+          on:change={changed}
+          {options}
+        />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}

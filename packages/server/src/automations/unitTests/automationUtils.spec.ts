@@ -1,10 +1,15 @@
-const automationUtils = require("../automationUtils")
+import { LoopStep, LoopStepType } from "../../definitions/automations"
+import {
+  typecastForLooping,
+  cleanInputValues,
+  substituteLoopStep,
+} from "../automationUtils"
 
 describe("automationUtils", () => {
   describe("substituteLoopStep", () => {
     it("should allow multiple loop binding substitutes", () => {
       expect(
-        automationUtils.substituteLoopStep(
+        substituteLoopStep(
           `{{ loop.currentItem._id }} {{ loop.currentItem._id }} {{ loop.currentItem._id }}`,
           "step.2"
         )
@@ -15,7 +20,7 @@ describe("automationUtils", () => {
 
     it("should handle not subsituting outside of curly braces", () => {
       expect(
-        automationUtils.substituteLoopStep(
+        substituteLoopStep(
           `loop {{ loop.currentItem._id }}loop loop{{ loop.currentItem._id }}loop`,
           "step.2"
         )
@@ -28,37 +33,20 @@ describe("automationUtils", () => {
   describe("typeCastForLooping", () => {
     it("should parse to correct type", () => {
       expect(
-        automationUtils.typecastForLooping(
-          { inputs: { option: "Array" } },
-          { binding: [1, 2, 3] }
-        )
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: [1, 2, 3] })
       ).toEqual([1, 2, 3])
       expect(
-        automationUtils.typecastForLooping(
-          { inputs: { option: "Array" } },
-          { binding: "[1, 2, 3]" }
-        )
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: "[1,2,3]" })
       ).toEqual([1, 2, 3])
       expect(
-        automationUtils.typecastForLooping(
-          { inputs: { option: "String" } },
-          { binding: [1, 2, 3] }
-        )
+        typecastForLooping({ option: LoopStepType.STRING, binding: [1, 2, 3] })
       ).toEqual("1,2,3")
     })
     it("should handle null values", () => {
       // expect it to handle where the binding is null
-      expect(
-        automationUtils.typecastForLooping(
-          { inputs: { option: "Array" } },
-          { binding: null }
-        )
-      ).toEqual(null)
+      expect(typecastForLooping({ option: LoopStepType.ARRAY })).toEqual(null)
       expect(() =>
-        automationUtils.typecastForLooping(
-          { inputs: { option: "Array" } },
-          { binding: "test" }
-        )
+        typecastForLooping({ option: LoopStepType.ARRAY, binding: "test" })
       ).toThrow()
     })
   })
@@ -80,7 +68,7 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        automationUtils.cleanInputValues(
+        cleanInputValues(
           {
             row: {
               relationship: `[{"_id": "ro_ta_users_us_3"}]`,
@@ -113,7 +101,7 @@ describe("automationUtils", () => {
         },
       }
       expect(
-        automationUtils.cleanInputValues(
+        cleanInputValues(
           {
             row: {
               relationship: `ro_ta_users_us_3`,

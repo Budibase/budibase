@@ -1,5 +1,5 @@
 import { generateQueryID } from "../../../db/utils"
-import { FieldTypes } from "../../../constants"
+import { BaseQueryVerbs } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
@@ -7,6 +7,7 @@ import { invalidateDynamicVariables } from "../../../threads/utils"
 import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
+import { QueryEvent } from "../../../threads/definitions"
 import {
   ConfigType,
   Query,
@@ -14,12 +15,13 @@ import {
   SessionCookie,
   FieldSchema,
   JsonFieldMetadata,
-  JsonFieldSubTypes,
+  JsonFieldSubType,
   QueryResponse,
   TableSchema,
   QueryPreview,
+  QuerySchema,
+  FieldType,
 } from "@budibase/types"
-import { QueryEvent } from "../../../threads/definitions"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -160,27 +162,27 @@ export async function preview(ctx: UserCtx) {
         let type = typeof field,
           fieldSchema: FieldSchema = {
             name: key,
-            type: FieldTypes.STRING,
+            type: FieldType.STRING,
           }
         if (field)
           switch (type) {
             case "boolean":
               fieldSchema = {
                 name: key,
-                type: FieldTypes.BOOLEAN,
+                type: FieldType.BOOLEAN,
               }
               break
             case "object":
               if (field instanceof Date) {
                 fieldSchema = {
                   name: key,
-                  type: FieldTypes.DATETIME,
+                  type: FieldType.DATETIME,
                 }
               } else if (Array.isArray(field)) {
                 fieldSchema = {
                   name: key,
-                  type: FieldTypes.JSON,
-                  subtype: JsonFieldSubTypes.ARRAY,
+                  type: FieldType.JSON,
+                  subtype: JsonFieldSubType.ARRAY,
                 } as JsonFieldMetadata
                 nestedSchemaFields[key] = getSchemaFields(
                   field,
@@ -189,14 +191,14 @@ export async function preview(ctx: UserCtx) {
               } else {
                 fieldSchema = {
                   name: key,
-                  type: FieldTypes.JSON,
+                  type: FieldType.JSON,
                 }
               }
               break
             case "number":
               fieldSchema = {
                 name: key,
-                type: FieldTypes.NUMBER,
+                type: FieldType.NUMBER,
               }
               break
           }
@@ -228,12 +230,42 @@ export async function preview(ctx: UserCtx) {
       inputs
     )) as QueryResponse
     const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
-
+    const previewSchema: Record<string, QuerySchema> = {}
+    const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
+      type,
+      name,
+    })
+    if (rows?.length > 0) {
+      for (let key of [...new Set(keys)] as string[]) {
+        const field = rows[0][key]
+        let type = typeof field,
+          fieldMetadata = makeQuerySchema(FieldType.STRING, key)
+        if (field)
+          switch (type) {
+            case "boolean":
+              fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
+              break
+            case "object":
+              if (field instanceof Date) {
+                fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
+              } else if (Array.isArray(field)) {
+                fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
+              } else {
+                fieldMetadata = makeQuerySchema(FieldType.JSON, key)
+              }
+              break
+            case "number":
+              fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
+              break
+          }
+        previewSchema[key] = fieldMetadata
+      }
+    }
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
-      for (let key of Object.keys(schemaFields)) {
-        if (existingSchema[key]?.type) {
-          schemaFields[key] = existingSchema[key]
+      for (let key of Object.keys(previewSchema)) {
+        if (existingSchema[key]) {
+          previewSchema[key] = existingSchema[key]
         }
       }
     }
@@ -242,8 +274,8 @@ export async function preview(ctx: UserCtx) {
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields,
       nestedSchemaFields,
+      schema: previewSchema,
       info,
       extra,
     }
@@ -297,7 +329,9 @@ async function execute(
       schema: query.schema,
     }
 
-    const { rows, pagination, extra, info } = (await Runner.run(inputs)) as any
+    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
+      inputs
+    )
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {
       delete extra.raw

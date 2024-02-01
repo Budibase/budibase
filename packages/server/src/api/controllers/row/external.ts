@@ -1,4 +1,3 @@
-import { FieldTypes } from "../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
@@ -9,6 +8,7 @@ import {
   RunConfig,
 } from "./ExternalRequest"
 import {
+  FieldType,
   Datasource,
   IncludeRelationship,
   Operation,
@@ -154,7 +154,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
     if (
-      field.type !== FieldTypes.LINK ||
+      field.type !== FieldType.LINK ||
       !row[fieldName] ||
       row[fieldName].length === 0
     ) {

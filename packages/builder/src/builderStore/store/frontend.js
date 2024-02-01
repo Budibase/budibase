@@ -92,9 +92,6 @@ const INITIAL_FRONTEND_STATE = {
   // Onboarding
   onboarding: false,
   tourNodes: null,
-
-  // UI state
-  hoveredComponentId: null,
 }
 
 export const getFrontendStore = () => {
@@ -161,6 +158,7 @@ export const getFrontendStore = () => {
           ...INITIAL_FRONTEND_STATE.features,
           ...application.features,
         },
+        automations: application.automations || {},
         icon: application.icon || {},
         initialised: true,
       }))
@@ -709,10 +707,9 @@ export const getFrontendStore = () => {
           else {
             if (setting.type === "dataProvider") {
               // Validate data provider exists, or else clear it
-              const treeId = parent?._id || component._id
-              const path = findComponentPath(screen?.props, treeId)
-              const providers = path.filter(component =>
-                component._component?.endsWith("/dataprovider")
+              const providers = findAllMatchingComponents(
+                screen?.props,
+                component => component._component?.endsWith("/dataprovider")
               )
               // Validate non-empty values
               const valid = providers?.some(dp => value.includes?.(dp._id))
@@ -734,6 +731,16 @@ export const getFrontendStore = () => {
           return null
         }
 
+        // Find all existing components of this type so that we can give this
+        // component a unique name
+        const screen = get(selectedScreen).props
+        const otherComponents = findAllMatchingComponents(
+          screen,
+          x => x._component === definition.component && x._id !== screen._id
+        )
+        let name = definition.friendlyName || definition.name
+        name = `${name} ${otherComponents.length + 1}`
+
         // Generate basic component structure
         let instance = {
           _id: Helpers.uuid(),
@@ -743,7 +750,7 @@ export const getFrontendStore = () => {
             hover: {},
             active: {},
           },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          _instanceName: name,
           ...presetProps,
         }
 
@@ -1414,18 +1421,6 @@ export const getFrontendStore = () => {
           state.selectedComponentId = newParentDefinition._id
           return state
         })
-      },
-      hover: (componentId, notifyClient = true) => {
-        if (componentId === get(store).hoveredComponentId) {
-          return
-        }
-        store.update(state => {
-          state.hoveredComponentId = componentId
-          return state
-        })
-        if (notifyClient) {
-          store.actions.preview.sendEvent("hover-component", componentId)
-        }
       },
     },
     links: {

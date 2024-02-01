@@ -1,16 +1,9 @@
 import { constants, objectStore, roles } from "@budibase/backend-core"
 import {
-  FieldType as FieldTypes,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   Table,
   TableSourceType,
-} from "@budibase/types"
-
-export {
-  FieldType as FieldTypes,
-  RelationshipType,
-  AutoFieldSubTypes,
-  FormulaTypes,
 } from "@budibase/types"
 
 export enum FilterTypes {
@@ -36,14 +29,14 @@ export const NoEmptyFilterStrings = [
 ]
 
 export const CanSwitchTypes = [
-  [FieldTypes.JSON, FieldTypes.ARRAY],
+  [FieldType.JSON, FieldType.ARRAY],
   [
-    FieldTypes.STRING,
-    FieldTypes.OPTIONS,
-    FieldTypes.LONGFORM,
-    FieldTypes.BARCODEQR,
+    FieldType.STRING,
+    FieldType.OPTIONS,
+    FieldType.LONGFORM,
+    FieldType.BARCODEQR,
   ],
-  [FieldTypes.BOOLEAN, FieldTypes.NUMBER],
+  [FieldType.BOOLEAN, FieldType.NUMBER],
 ]
 
 export const SwitchableTypes = CanSwitchTypes.reduce((prev, current) =>
@@ -86,9 +79,9 @@ export const USERS_TABLE_SCHEMA: Table = {
   // TODO: ADMIN PANEL - when implemented this doesn't need to be carried out
   schema: {
     email: {
-      type: FieldTypes.STRING,
+      type: FieldType.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
         email: true,
         length: {
           maximum: "",
@@ -99,34 +92,34 @@ export const USERS_TABLE_SCHEMA: Table = {
     },
     firstName: {
       name: "firstName",
-      type: FieldTypes.STRING,
+      type: FieldType.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
         presence: false,
       },
     },
     lastName: {
       name: "lastName",
-      type: FieldTypes.STRING,
+      type: FieldType.STRING,
       constraints: {
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
         presence: false,
       },
     },
     roleId: {
       name: "roleId",
-      type: FieldTypes.OPTIONS,
+      type: FieldType.OPTIONS,
       constraints: {
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
         presence: false,
         inclusion: Object.values(roles.BUILTIN_ROLE_IDS),
       },
     },
     status: {
       name: "status",
-      type: FieldTypes.OPTIONS,
+      type: FieldType.OPTIONS,
       constraints: {
-        type: FieldTypes.STRING,
+        type: FieldType.STRING,
         presence: false,
         inclusion: Object.values(constants.UserStatus),
       },

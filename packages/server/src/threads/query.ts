@@ -1,7 +1,12 @@
 import { default as threadUtils } from "./utils"
 
 threadUtils.threadSetup()
-import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
+import {
+  WorkerCallback,
+  QueryEvent,
+  QueryVariable,
+  QueryResponse,
+} from "./definitions"
 import ScriptRunner from "../utilities/scriptRunner"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
@@ -53,7 +58,7 @@ class QueryRunner {
     this.hasDynamicVariables = false
   }
 
-  async execute(): Promise<any> {
+  async execute(): Promise<QueryResponse> {
     let { datasource, fields, queryVerb, transformer, schema } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)

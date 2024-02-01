@@ -1,7 +1,7 @@
 const { atob } = require("../utilities")
 const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
-const { getHelperList } = require("./list")
+const { getJsHelperList } = require("./list")
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.cjs or index.mjs).
@@ -42,14 +42,14 @@ module.exports.processJS = (handlebars, context) => {
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.
-    const js = `function run(){${atob(handlebars)}};run();`
+    const js = `(function(){${atob(handlebars)}})();`
 
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
     const sandboxContext = {
       $: path => getContextValue(path, cloneDeep(context)),
-      helpers: getHelperList(),
+      helpers: getJsHelperList(),
     }
 
     // Create a sandbox with our context and run the JS

@@ -157,6 +157,7 @@
     let bindings = []
     let loopBlockCount = 0
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+      if (!name) return
       const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
       const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
 
@@ -184,8 +185,9 @@
       }
 
       if (
-        (idx === 0 && automation.trigger?.event === "row:update") ||
-        automation.trigger?.event === "row:save"
+        idx === 0 &&
+        (automation.trigger?.event === "row:update" ||
+          automation.trigger?.event === "row:save")
       ) {
         if (name !== "id" && name !== "revision") return `trigger.row.${name}`
       }
@@ -290,7 +292,6 @@
         loopBlockCount++
         continue
       }
-
       Object.entries(schema).forEach(([name, value]) =>
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       )
