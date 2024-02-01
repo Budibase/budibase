@@ -157,6 +157,7 @@
     let bindings = []
     let loopBlockCount = 0
     const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+      if (!name) return
       const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
       const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
 
@@ -291,7 +292,6 @@
         loopBlockCount++
         continue
       }
-
       Object.entries(schema).forEach(([name, value]) =>
         addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       )
