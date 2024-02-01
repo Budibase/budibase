@@ -41,6 +41,7 @@ function runBuild(entry, outfile) {
     bundle: true,
     minify: !isDev,
     sourcemap: isDev,
+    format: argv["format"],
     tsconfig,
     plugins: [
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
