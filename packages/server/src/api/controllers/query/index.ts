@@ -12,16 +12,13 @@ import {
   Query,
   UserCtx,
   SessionCookie,
-  FieldSchema,
-  JsonFieldMetadata,
   JsonFieldSubType,
   QueryResponse,
-  TableSchema,
   QueryPreview,
   QuerySchema,
   FieldType,
 } from "@budibase/types"
-import { ValidQueryNameRegex } from "@budibase/shared-core"
+import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
@@ -146,90 +143,15 @@ export async function preview(ctx: UserCtx) {
     rows: any[],
     keys: string[]
   ): {
-    schemaFields: TableSchema
+    previewSchema: Record<string, string | QuerySchema>
     nestedSchemaFields: {
-      [key: string]: TableSchema
+      [key: string]: Record<string, string | QuerySchema>
     }
   } {
-    const schemaFields: TableSchema = {}
-    const nestedSchemaFields: {
-      [key: string]: TableSchema
-    } = {}
-    if (rows?.length > 0) {
-      for (let key of [...new Set(keys)] as string[]) {
-        const field = rows[0][key]
-        let type = typeof field,
-          fieldSchema: FieldSchema = {
-            name: key,
-            type: FieldType.STRING,
-          }
-        if (field)
-          switch (type) {
-            case "boolean":
-              fieldSchema = {
-                name: key,
-                type: FieldType.BOOLEAN,
-              }
-              break
-            case "object":
-              if (field instanceof Date) {
-                fieldSchema = {
-                  name: key,
-                  type: FieldType.DATETIME,
-                }
-              } else if (Array.isArray(field)) {
-                fieldSchema = {
-                  name: key,
-                  type: FieldType.JSON,
-                  subtype: JsonFieldSubType.ARRAY,
-                } as JsonFieldMetadata
-                nestedSchemaFields[key] = getSchemaFields(
-                  field,
-                  Object.keys(field[0])
-                ).schemaFields
-              } else {
-                fieldSchema = {
-                  name: key,
-                  type: FieldType.JSON,
-                }
-              }
-              break
-            case "number":
-              fieldSchema = {
-                name: key,
-                type: FieldType.NUMBER,
-              }
-              break
-          }
-        schemaFields[key] = fieldSchema
-      }
-    }
-    return { schemaFields, nestedSchemaFields }
-  }
-
-  try {
-    const inputs: QueryEvent = {
-      appId: ctx.appId,
-      datasource,
-      queryVerb,
-      fields,
-      parameters,
-      transformer,
-      queryId,
-      schema,
-      // have to pass down to the thread runner - can't put into context now
-      environmentVariables: envVars,
-      ctx: {
-        user: ctx.user,
-        auth: { ...authConfigCtx },
-      },
-    }
-
-    const { rows, keys, info, extra } = (await Runner.run(
-      inputs
-    )) as QueryResponse
-    const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
     const previewSchema: Record<string, string | QuerySchema> = {}
+    const nestedSchemaFields: {
+      [key: string]: Record<string, string | QuerySchema>
+    } = {}
     const makeQuerySchema = (
       type: FieldType,
       name: string,
@@ -253,11 +175,19 @@ export async function preview(ctx: UserCtx) {
               if (field instanceof Date) {
                 fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
               } else if (Array.isArray(field)) {
-                fieldMetadata = makeQuerySchema(
-                  FieldType.JSON,
-                  key,
-                  JsonFieldSubType.ARRAY
-                )
+                if (JsonUtils.hasSchema(field[0])) {
+                  fieldMetadata = makeQuerySchema(
+                    FieldType.JSON,
+                    key,
+                    JsonFieldSubType.ARRAY
+                  )
+                } else {
+                  fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
+                }
+                nestedSchemaFields[key] = getSchemaFields(
+                  field,
+                  Object.keys(field[0])
+                ).previewSchema
               } else {
                 fieldMetadata = makeQuerySchema(FieldType.JSON, key)
               }
@@ -269,6 +199,32 @@ export async function preview(ctx: UserCtx) {
         previewSchema[key] = fieldMetadata
       }
     }
+    return { previewSchema, nestedSchemaFields }
+  }
+
+  try {
+    const inputs: QueryEvent = {
+      appId: ctx.appId,
+      datasource,
+      queryVerb,
+      fields,
+      parameters,
+      transformer,
+      queryId,
+      schema,
+      // have to pass down to the thread runner - can't put into context now
+      environmentVariables: envVars,
+      ctx: {
+        user: ctx.user,
+        auth: { ...authConfigCtx },
+      },
+    }
+
+    const { rows, keys, info, extra } = (await Runner.run(
+      inputs
+    )) as QueryResponse
+    const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
+
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
       for (let key of Object.keys(previewSchema)) {

@@ -1,3 +1,5 @@
+import { utils } from "@budibase/shared-core"
+
 /**
  * Gets the schema for a datasource which is targeting a JSON array, including
  * nested JSON arrays. The returned schema is a squashed, table-like schema
@@ -120,22 +122,12 @@ const extractJSONSchemaKeys = (jsonSchema, squashObjects = false) => {
   return keys
 }
 
-const hasSchema = test => {
-  return (
-    typeof test === "object" &&
-    !Array.isArray(test) &&
-    test !== null &&
-    !(test instanceof Date) &&
-    Object.keys(test).length > 0
-  )
-}
-
 export const generateQueryArraySchemas = (schema, nestedSchemaFields) => {
   for (let key in schema) {
     if (
       schema[key]?.type === "json" &&
       schema[key]?.subtype === "array" &&
-      hasSchema(nestedSchemaFields[key])
+      utils.hasSchema(nestedSchemaFields[key])
     ) {
       schema[key] = {
         schema: {

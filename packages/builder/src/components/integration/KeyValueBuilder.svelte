@@ -87,8 +87,11 @@
   }
 
   function isJsonArray(value) {
-    if (typeof value === "string") {
+    if (!value || typeof value === "string") {
       return false
+    }
+    if (value.type === "array") {
+      return true
     }
     return value.type === "json" && value.subtype === "array"
   }
