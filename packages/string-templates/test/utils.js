@@ -60,9 +60,8 @@ const getParsedManifest = () => {
 }
 module.exports.getParsedManifest = getParsedManifest
 
-module.exports.runJsHelpersTests = (
-  { funcWrap } = { funcWrap: delegate => delegate() }
-) => {
+module.exports.runJsHelpersTests = ({ funcWrap, testsToSkip } = {}) => {
+  funcWrap = funcWrap || (delegate => delegate())
   const manifest = getParsedManifest()
 
   const processJS = (js, context) => {
@@ -81,28 +80,32 @@ module.exports.runJsHelpersTests = (
     }, {})
 
     describe.each(Object.keys(jsExamples))("%s", collection => {
-      it.each(
-        jsExamples[collection].filter(
-          ([_, { requiresHbsBody }]) => !requiresHbsBody
-        )
-      )("%s", async (_, { hbs, js }) => {
-        const context = {
-          double: i => i * 2,
-          isString: x => typeof x === "string",
-        }
+      const examplesToRun = jsExamples[collection]
+        .filter(([_, { requiresHbsBody }]) => !requiresHbsBody)
+        .filter(([key]) => !testsToSkip?.includes(key))
 
-        const arrays = hbs.match(/\[[^/\]]+\]/)
-        arrays?.forEach((arrayString, i) => {
-          hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+      examplesToRun.length &&
+        it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
+          const context = {
+            double: i => i * 2,
+            isString: x => typeof x === "string",
+          }
+
+          const arrays = hbs.match(/\[[^/\]]+\]/)
+          arrays?.forEach((arrayString, i) => {
+            hbs = hbs.replace(
+              new RegExp(escapeRegExp(arrayString)),
+              `array${i}`
+            )
+            context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+          })
+
+          let convertedJs = convertToJS(hbs)
+
+          let result = await processJS(convertedJs, context)
+          result = result.replace(/&nbsp;/g, " ")
+          expect(result).toEqual(js)
         })
-
-        let convertedJs = convertToJS(hbs)
-
-        let result = await processJS(convertedJs, context)
-        result = result.replace(/&nbsp;/g, " ")
-        expect(result).toEqual(js)
-      })
     })
   })
 }
