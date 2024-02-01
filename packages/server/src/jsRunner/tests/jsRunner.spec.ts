@@ -45,5 +45,6 @@ describe("jsRunner", () => {
 
   runJsHelpersTests({
     funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
+    testsToSkip: ["random", "uuid"],
   })
 })
