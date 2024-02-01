@@ -33,7 +33,7 @@
   const provideData = newData => {
     const dataKey = JSON.stringify(newData)
     if (dataKey !== lastDataKey) {
-      context.actions.provideData(providerKey, newData, scope)
+      context.actions.provideData(providerKey, newData)
       lastDataKey = dataKey
     }
   }
@@ -43,7 +43,7 @@
     if (actionsKey !== lastActionsKey) {
       lastActionsKey = actionsKey
       newActions?.forEach(({ type, callback, metadata }) => {
-        context.actions.provideAction(providerKey, type, callback, scope)
+        context.actions.provideAction(providerKey, type, callback)
 
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource
