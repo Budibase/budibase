@@ -58,5 +58,16 @@ describe("jsRunner", () => {
         expect(isValidUUID(result)).toBe(true)
       })
     })
+
+    describe("random", () => {
+      it("random helper returns a valid number", async () => {
+        const min = 1
+        const max = 8
+        const result = await processJS(`return helpers.random(${min}, ${max})`)
+        expect(result).toBeDefined()
+        expect(result).toBeGreaterThanOrEqual(min)
+        expect(result).toBeLessThanOrEqual(max)
+      })
+    })
   })
 })
