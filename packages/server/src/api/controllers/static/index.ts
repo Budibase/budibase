@@ -1,4 +1,5 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
+import { Duration } from "@budibase/backend-core"
 
 require("svelte/register")
 
@@ -322,6 +323,10 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
   } else if (datasource?.source === "GOOGLE_CLOUD") {
     const { bucket, key } = ctx.request.body || {}
 
+    if (!(bucket && key)) {
+      ctx.throw(400, "Request requires a destination bucket and file key")
+    }
+
     const parsedKey = datasource?.config?.privateKey
       .split(String.raw`\n`)
       .join("\n")
@@ -344,7 +349,7 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
         .getSignedUrl({
           version: "v4",
           action: "write",
-          expires: Date.now() + 15 * 60 * 1000,
+          expires: Date.now() + Duration.fromMinutes(15).toMs(),
         })
       signedUrl = url
     } catch (error: any) {
