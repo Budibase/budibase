@@ -1,3 +1,5 @@
+import { validate as isValidUUID } from "uuid"
+
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
 
@@ -43,8 +45,18 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
-  runJsHelpersTests({
-    funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
-    testsToSkip: ["random", "uuid"],
+  describe("helpers", () => {
+    runJsHelpersTests({
+      funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
+      testsToSkip: ["random", "uuid"],
+    })
+
+    describe("uuid", () => {
+      it("uuid helper returns a valid uuid", async () => {
+        const result = await processJS("return helpers.uuid()")
+        expect(result).toBeDefined()
+        expect(isValidUUID(result)).toBe(true)
+      })
+    })
   })
 })
