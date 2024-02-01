@@ -18,11 +18,13 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
 })
 
 import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
+
 const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
 
 import tk from "timekeeper"
 import { init } from ".."
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
+
 tk.freeze("2021-01-21T12:00:00")
 
 describe("jsRunner", () => {
