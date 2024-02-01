@@ -22,8 +22,9 @@
   ],
   "scripts": {
     "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
-    "build": "yarn build:esbuild && tsc && rollup -c",
-    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && rollup -cw\"",
+    "build:es": "yarn node ../../scripts/build.js -e src/index.mjs -o ./dist/bundle.mjs -p tsconfig.json --format=esm",
+    "build": "yarn build:esbuild && tsc && yarn build:es",
+    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && yarn build:es --watch\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },
