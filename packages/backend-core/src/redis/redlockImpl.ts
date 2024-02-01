@@ -2,8 +2,8 @@ import Redlock from "redlock"
 import { getLockClient } from "./init"
 import { LockOptions, LockType } from "@budibase/types"
 import * as context from "../context"
-import env from "../environment"
-import { logWarn } from "../logging"
+import { utils } from "@budibase/shared-core"
+import { Duration } from "../utils"
 
 async function getClient(
   type: LockType,
@@ -12,9 +12,7 @@ async function getClient(
   if (type === LockType.CUSTOM) {
     return newRedlock(opts)
   }
-  if (env.isTest() && type !== LockType.TRY_ONCE) {
-    return newRedlock(OPTIONS.TEST)
-  }
+
   switch (type) {
     case LockType.TRY_ONCE: {
       return newRedlock(OPTIONS.TRY_ONCE)
@@ -28,24 +26,22 @@ async function getClient(
     case LockType.DELAY_500: {
       return newRedlock(OPTIONS.DELAY_500)
     }
+    case LockType.AUTO_EXTEND: {
+      return newRedlock(OPTIONS.AUTO_EXTEND)
+    }
     default: {
-      throw new Error(`Could not get redlock client: ${type}`)
+      throw utils.unreachable(type)
     }
   }
 }
 
-const OPTIONS = {
+const OPTIONS: Record<keyof typeof LockType, Redlock.Options> = {
   TRY_ONCE: {
     // immediately throws an error if the lock is already held
     retryCount: 0,
   },
   TRY_TWICE: {
     retryCount: 1,
-  },
-  TEST: {
-    // higher retry count in unit tests
-    // due to high contention.
-    retryCount: 100,
   },
   DEFAULT: {
     // the expected clock drift; for more details
@@ -67,10 +63,14 @@ const OPTIONS = {
   DELAY_500: {
     retryDelay: 500,
   },
+  CUSTOM: {},
+  AUTO_EXTEND: {
+    retryCount: -1,
+  },
 }
 
 export async function newRedlock(opts: Redlock.Options = {}) {
-  let options = { ...OPTIONS.DEFAULT, ...opts }
+  const options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
   const client = redisWrapper.getClient()
   return new Redlock([client], options)
@@ -100,24 +100,42 @@ function getLockName(opts: LockOptions) {
   return name
 }
 
+export const AUTO_EXTEND_POLLING_MS = Duration.fromSeconds(10).toMs()
+
 export async function doWithLock<T>(
   opts: LockOptions,
   task: () => Promise<T>
 ): Promise<RedlockExecution<T>> {
   const redlock = await getClient(opts.type, opts.customOptions)
-  let lock
+  let lock: Redlock.Lock | undefined
+  let timeout
   try {
     const name = getLockName(opts)
 
+    const ttl =
+      opts.type === LockType.AUTO_EXTEND ? AUTO_EXTEND_POLLING_MS : opts.ttl
+
     // create the lock
-    lock = await redlock.lock(name, opts.ttl)
+    lock = await redlock.lock(name, ttl)
+
+    if (opts.type === LockType.AUTO_EXTEND) {
+      // We keep extending the lock while the task is running
+      const extendInIntervals = (): void => {
+        timeout = setTimeout(async () => {
+          lock = await lock!.extend(ttl, () => opts.onExtend && opts.onExtend())
+
+          extendInIntervals()
+        }, ttl / 2)
+      }
+
+      extendInIntervals()
+    }
 
     // perform locked task
     // need to await to ensure completion before unlocking
     const result = await task()
     return { executed: true, result }
   } catch (e: any) {
-    logWarn(`lock type: ${opts.type} error`, e)
     // lock limit exceeded
     if (e.name === "LockError") {
       if (opts.type === LockType.TRY_ONCE) {
@@ -131,8 +149,7 @@ export async function doWithLock<T>(
       throw e
     }
   } finally {
-    if (lock) {
-      await lock.unlock()
-    }
+    clearTimeout(timeout)
+    await lock?.unlock()
   }
 }

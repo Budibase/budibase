@@ -1,6 +1,5 @@
 import { IncludeDocs, getLinkDocuments } from "./linkUtils"
 import { InternalTables, getUserMetadataParams } from "../utils"
-import { FieldTypes } from "../../constants"
 import { context, logging } from "@budibase/backend-core"
 import LinkDocument from "./LinkDocument"
 import {
@@ -62,7 +61,7 @@ class LinkController {
     }
     for (let fieldName of Object.keys(table.schema)) {
       const { type } = table.schema[fieldName]
-      if (type === FieldTypes.LINK) {
+      if (type === FieldType.LINK) {
         return true
       }
     }
@@ -96,7 +95,7 @@ class LinkController {
   validateTable(table: Table) {
     const usedAlready = []
     for (let schema of Object.values(table.schema)) {
-      if (schema.type !== FieldTypes.LINK) {
+      if (schema.type !== FieldType.LINK) {
         continue
       }
       const unique = schema.tableId! + schema?.fieldName
@@ -172,7 +171,7 @@ class LinkController {
       // get the links this row wants to make
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
-      if (field.type === FieldTypes.LINK && rowField != null) {
+      if (field.type === FieldType.LINK && rowField != null) {
         // check which links actual pertain to the update in this row
         const thisFieldLinkDocs = linkDocs.filter(
           linkDoc =>
@@ -251,9 +250,19 @@ class LinkController {
         // find the docs that need to be deleted
         let toDeleteDocs = thisFieldLinkDocs
           .filter(doc => {
-            let correctDoc =
-              doc.doc1.fieldName === fieldName ? doc.doc2 : doc.doc1
-            return rowField.indexOf(correctDoc.rowId) === -1
+            let correctDoc
+            if (
+              doc.doc1.tableId === table._id! &&
+              doc.doc1.fieldName === fieldName
+            ) {
+              correctDoc = doc.doc2
+            } else if (
+              doc.doc2.tableId === table._id! &&
+              doc.doc2.fieldName === fieldName
+            ) {
+              correctDoc = doc.doc1
+            }
+            return correctDoc && rowField.indexOf(correctDoc.rowId) === -1
           })
           .map(doc => {
             return { ...doc, _deleted: true }
@@ -343,7 +352,7 @@ class LinkController {
     const schema = table.schema
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
-      if (field.type === FieldTypes.LINK && field.fieldName) {
+      if (field.type === FieldType.LINK && field.fieldName) {
         // handle this in a separate try catch, want
         // the put to bubble up as an error, if can't update
         // table for some reason
@@ -356,7 +365,7 @@ class LinkController {
         }
         const fields = this.handleRelationshipType(field, {
           name: field.fieldName,
-          type: FieldTypes.LINK,
+          type: FieldType.LINK,
           // these are the props of the table that initiated the link
           tableId: table._id!,
           fieldName: fieldName,
@@ -403,10 +412,7 @@ class LinkController {
     for (let fieldName of Object.keys(oldTable?.schema || {})) {
       const field = oldTable?.schema[fieldName] as FieldSchema
       // this field has been removed from the table schema
-      if (
-        field.type === FieldTypes.LINK &&
-        newTable.schema[fieldName] == null
-      ) {
+      if (field.type === FieldType.LINK && newTable.schema[fieldName] == null) {
         await this.removeFieldFromTable(fieldName)
       }
     }
@@ -427,10 +433,10 @@ class LinkController {
     for (let fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       try {
-        if (field.type === FieldTypes.LINK && field.fieldName) {
+        if (field.type === FieldType.LINK && field.fieldName) {
           const linkedTable = await this._db.get<Table>(field.tableId)
           delete linkedTable.schema[field.fieldName]
-          await this._db.put(linkedTable)
+          field.tableRev = (await this._db.put(linkedTable)).rev
         }
       } catch (err: any) {
         logging.logWarn(err?.message, err)

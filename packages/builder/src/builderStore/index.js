@@ -4,10 +4,12 @@ import { getTemporalStore } from "./store/temporal"
 import { getThemeStore } from "./store/theme"
 import { getUserStore } from "./store/users"
 import { getDeploymentStore } from "./store/deployments"
-import { derived, writable, get } from "svelte/store"
+import { derived, get } from "svelte/store"
 import { findComponent, findComponentPath } from "./componentUtils"
 import { RoleUtils } from "@budibase/frontend-core"
 import { createHistoryStore } from "builderStore/store/history"
+import { cloneDeep } from "lodash/fp"
+import { getHoverStore } from "./store/hover"
 
 export const store = getFrontendStore()
 export const automationStore = getAutomationStore()
@@ -15,6 +17,7 @@ export const themeStore = getThemeStore()
 export const temporalStore = getTemporalStore()
 export const userStore = getUserStore()
 export const deploymentStore = getDeploymentStore()
+export const hoverStore = getHoverStore()
 
 // Setup history for screens
 export const screenHistoryStore = createHistoryStore({
@@ -69,7 +72,14 @@ export const selectedComponent = derived(
     if (!$selectedScreen || !$store.selectedComponentId) {
       return null
     }
-    return findComponent($selectedScreen?.props, $store.selectedComponentId)
+    const selected = findComponent(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    )
+
+    const clone = selected ? cloneDeep(selected) : selected
+    store.actions.components.migrateSettings(clone)
+    return clone
   }
 )
 
@@ -146,5 +156,3 @@ export const userSelectedResourceMap = derived(userStore, $userStore => {
 export const isOnlyUser = derived(userStore, $userStore => {
   return $userStore.length < 2
 })
-
-export const screensHeight = writable("210px")

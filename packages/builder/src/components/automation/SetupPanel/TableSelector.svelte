@@ -22,7 +22,7 @@
 <Select
   on:change={onChange}
   bind:value
-  options={filteredTables.filter(table => table._id !== TableNames.USERS)}
+  options={filteredTables}
   getOptionLabel={table => table.name}
   getOptionValue={table => table._id}
 />

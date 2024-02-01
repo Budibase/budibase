@@ -97,6 +97,7 @@
   class:typing={typing && !automationNameError}
   class:typing-error={automationNameError}
   class="blockSection"
+  on:click={() => dispatch("toggle")}
 >
   <div class="splitHeader">
     <div class="center-items">
@@ -138,7 +139,20 @@
             on:input={e => {
               automationName = e.target.value.trim()
             }}
-            on:click={startTyping}
+            on:click={e => {
+              e.stopPropagation()
+              startTyping()
+            }}
+            on:keydown={async e => {
+              if (e.key === "Enter") {
+                typing = false
+                if (automationNameError) {
+                  automationName = stepNames[block.id] || block?.name
+                } else {
+                  await saveName()
+                }
+              }
+            }}
             on:blur={async () => {
               typing = false
               if (automationNameError) {
@@ -168,7 +182,11 @@
             </StatusLight>
           </div>
           <Icon
-            on:click={() => dispatch("toggle")}
+            e.stopPropagation()
+            on:click={e => {
+              e.stopPropagation()
+              dispatch("toggle")
+            }}
             hoverable
             name={open ? "ChevronUp" : "ChevronDown"}
           />
@@ -195,7 +213,10 @@
         {/if}
         {#if !showTestStatus}
           <Icon
-            on:click={() => dispatch("toggle")}
+            on:click={e => {
+              e.stopPropagation()
+              dispatch("toggle")
+            }}
             hoverable
             name={open ? "ChevronUp" : "ChevronDown"}
           />

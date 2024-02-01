@@ -1,6 +1,6 @@
 <script>
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
+  import { fetchData, Utils } from "@budibase/frontend-core"
   import { getContext } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
@@ -108,8 +108,16 @@
     }
   }
 
-  $: fetchRows(searchTerm, primaryDisplay, defaultValue)
+  $: forceFetchRows(filter)
+  $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
 
+  const forceFetchRows = async () => {
+    // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
+    optionsObj = {}
+    fieldApi?.setValue([])
+    selectedValue = []
+    debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
+  }
   const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
@@ -124,10 +132,22 @@
         query: { equal: { _id: defaultVal } },
       })
     }
+
+    // Ensure we match all filters, rather than any
+    const baseFilter = (filter || []).filter(x => x.operator !== "allOr")
     await fetch.update({
-      query: { string: { [primaryDisplay]: searchTerm } },
+      filter: [
+        ...baseFilter,
+        {
+          // Use a big numeric prefix to avoid clashing with an existing filter
+          field: `999:${primaryDisplay}`,
+          operator: "string",
+          value: searchTerm,
+        },
+      ],
     })
   }
+  const debouncedFetchRows = Utils.debounce(fetchRows, 250)
 
   const flatten = values => {
     if (!values) {
@@ -216,7 +236,6 @@
       bind:searchTerm
       loading={$fetch.loading}
       bind:open
-      customPopoverMaxHeight={400}
     />
   {/if}
 </Field>

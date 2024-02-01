@@ -13,6 +13,8 @@
   export let draggable = true
   export let focus
 
+  let zoneType = generate()
+
   let store = writable({
     selected: null,
     actions: {
@@ -32,10 +34,13 @@
   }
 
   const dispatch = createEventDispatcher()
-  const flipDurationMs = 150
 
   let anchors = {}
   let draggableItems = []
+
+  // Used for controlling cursor behaviour in order to limit drag behaviour
+  // to the drag handle
+  let inactive = true
 
   const buildDraggable = items => {
     return items
@@ -43,6 +48,7 @@
         return {
           id: listItemKey ? item[listItemKey] : generate(),
           item,
+          type: zoneType,
         }
       })
       .filter(item => item.id)
@@ -64,6 +70,7 @@
   }
 
   const handleFinalize = e => {
+    inactive = true
     updateRowOrder(e)
     dispatch("change", serialiseUpdate())
   }
@@ -77,24 +84,38 @@
   class="list-wrap"
   use:dndzone={{
     items: draggableItems,
-    flipDurationMs,
     dropTargetStyle: { outline: "none" },
-    dragDisabled: !draggable,
+    dragDisabled: !draggable || inactive,
+    type: zoneType,
+    dropFromOthersDisabled: true,
   }}
   on:finalize={handleFinalize}
   on:consider={updateRowOrder}
 >
-  {#each draggableItems as draggable (draggable.id)}
+  {#each draggableItems as draggableItem (draggableItem.id)}
     <li
+      on:click={() => {
+        get(store).actions.select(draggableItem.id)
+      }}
       on:mousedown={() => {
         get(store).actions.select()
       }}
-      bind:this={anchors[draggable.id]}
-      class:highlighted={draggable.id === $store.selected}
+      bind:this={anchors[draggableItem.id]}
+      class:highlighted={draggableItem.id === $store.selected}
     >
       <div class="left-content">
         {#if showHandle}
-          <div class="handle">
+          <div
+            class="handle"
+            aria-label="drag-handle"
+            style={!inactive ? "cursor:grabbing" : "cursor:grab"}
+            on:mousedown={() => {
+              inactive = false
+            }}
+            on:mouseup={() => {
+              inactive = true
+            }}
+          >
             <DragHandle />
           </div>
         {/if}
@@ -102,8 +123,8 @@
       <div class="right-content">
         <svelte:component
           this={listType}
-          anchor={anchors[draggable.item._id]}
-          item={draggable.item}
+          anchor={anchors[draggableItem.item._id]}
+          item={draggableItem.item}
           {...listTypeProps}
           on:change={onItemChanged}
         />
@@ -143,6 +164,7 @@
       --spectrum-table-row-background-color-hover,
       var(--spectrum-alias-highlight-hover)
     );
+    cursor: pointer;
   }
   .list-wrap > li:first-child {
     border-top-left-radius: 4px;
@@ -164,6 +186,9 @@
   .handle {
     display: flex;
     height: var(--spectrum-global-dimension-size-150);
+  }
+  .handle:hover {
+    cursor: grab;
   }
   .handle :global(svg) {
     fill: var(--spectrum-global-color-gray-500);

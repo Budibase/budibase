@@ -1,4 +1,5 @@
 import { store } from "./index"
+import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
   decodeJSBinding,
@@ -91,7 +92,14 @@ export const findAllMatchingComponents = (rootComponent, selector) => {
 }
 
 /**
- * Finds the closes parent component which matches certain criteria
+ * Recurses through the component tree and finds all components.
+ */
+export const findAllComponents = rootComponent => {
+  return findAllMatchingComponents(rootComponent, () => true)
+}
+
+/**
+ * Finds the closest parent component which matches certain criteria
  */
 export const findClosestMatchingComponent = (
   rootComponent,
@@ -238,6 +246,10 @@ export const makeComponentUnique = component => {
 }
 
 export const getComponentText = component => {
+  if (component == null) {
+    return ""
+  }
+
   if (component?._instanceName) {
     return component._instanceName
   }
@@ -245,4 +257,17 @@ export const getComponentText = component => {
     component._component.replace("@budibase/standard-components/", "") ||
     "component"
   return capitalise(type)
+}
+
+export const getComponentName = component => {
+  if (component == null) {
+    return ""
+  }
+
+  const components = get(store)?.components || {}
+  const componentDefinition = components[component._component] || {}
+  const name =
+    componentDefinition.friendlyName || componentDefinition.name || ""
+
+  return name
 }

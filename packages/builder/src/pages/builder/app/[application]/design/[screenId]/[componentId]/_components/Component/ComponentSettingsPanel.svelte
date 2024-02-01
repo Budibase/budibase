@@ -1,7 +1,7 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { store, selectedComponent, selectedScreen } from "builderStore"
-  import { getComponentText } from "builderStore/componentUtils"
+  import { getComponentName } from "builderStore/componentUtils"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
@@ -43,17 +43,25 @@
 
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
+
+  $: componentName = getComponentName(componentInstance)
 </script>
 
 {#if $selectedComponent}
   {#key $selectedComponent._id}
-    <Panel {title} icon={componentDefinition?.icon} borderLeft wide>
+    <Panel
+      {title}
+      icon={componentDefinition?.icon}
+      iconTooltip={componentName}
+      borderLeft
+      wide
+    >
       <span class="panel-title-content" slot="panel-title-content">
         <input
           class="input"
           value={title}
           {title}
-          placeholder={getComponentText(componentInstance)}
+          placeholder={componentName}
           on:keypress={e => {
             if (e.key.toLowerCase() === "enter") {
               e.target.blur()
@@ -100,6 +108,8 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
+          iconTooltip={componentName}
+          componentTitle={title}
         />
       {/if}
       {#if section == "conditions"}

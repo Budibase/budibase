@@ -133,9 +133,14 @@ export async function exportRows(
 
   let result = await search({ tableId, query: requestQuery, sort, sortOrder })
   let rows: Row[] = []
+  let headers
+
+  if (!tableName) {
+    throw new HTTPError("Could not find table name.", 400)
+  }
+  const schema = datasource.entities[tableName].schema
 
   // Filter data to only specified columns if required
-
   if (columns && columns.length) {
     for (let i = 0; i < result.rows.length; i++) {
       rows[i] = {}
@@ -143,22 +148,17 @@ export async function exportRows(
         rows[i][column] = result.rows[i][column]
       }
     }
+    headers = columns
   } else {
     rows = result.rows
   }
 
-  if (!tableName) {
-    throw new HTTPError("Could not find table name.", 400)
-  }
-  const schema = datasource.entities[tableName].schema
   let exportRows = cleanExportRows(rows, schema, format, columns)
-
-  let headers = Object.keys(schema)
 
   let content: string
   switch (format) {
     case exporters.Format.CSV:
-      content = exporters.csv(headers, exportRows)
+      content = exporters.csv(headers ?? Object.keys(schema), exportRows)
       break
     case exporters.Format.JSON:
       content = exporters.json(exportRows)

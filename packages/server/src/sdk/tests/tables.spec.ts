@@ -9,7 +9,7 @@ describe("tables", () => {
 
   beforeAll(async () => {
     await config.init()
-    table = await config.api.table.create(basicTable())
+    table = await config.api.table.save(basicTable())
   })
 
   describe("getTables", () => {

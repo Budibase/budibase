@@ -85,6 +85,7 @@
   let relationshipTableIdSecondary = null
 
   let table = $tables.selected
+
   let confirmDeleteDialog
   let savingColumn
   let deleteColName
@@ -149,7 +150,6 @@
   }
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
-
     if (field && !savingColumn) {
       editableColumn = cloneDeep(field)
       originalName = editableColumn.name ? editableColumn.name + "" : null
@@ -170,21 +170,6 @@
           relationshipPart1 = part1
           relationshipPart2 = part2
         }
-      }
-    } else if (!savingColumn) {
-      let highestNumber = 0
-      Object.keys(table.schema).forEach(columnName => {
-        const columnNumber = extractColumnNumber(columnName)
-        if (columnNumber > highestNumber) {
-          highestNumber = columnNumber
-        }
-        return highestNumber
-      })
-
-      if (highestNumber >= 1) {
-        editableColumn.name = `Column 0${highestNumber + 1}`
-      } else {
-        editableColumn.name = "Column 01"
       }
     }
 
@@ -307,12 +292,6 @@
       dispatch("updatecolumns")
       gridDispatch("close-edit-column")
 
-      if (saveColumn.type === LINK_TYPE) {
-        // Fetching the new tables
-        tables.fetch()
-        // Fetching the new relationships
-        datasources.fetch()
-      }
       if (originalName) {
         notifications.success("Column updated successfully")
       } else {
@@ -339,11 +318,6 @@
         confirmDeleteDialog.hide()
         dispatch("updatecolumns")
         gridDispatch("close-edit-column")
-
-        if (editableColumn.type === LINK_TYPE) {
-          // Updating the relationships
-          datasources.fetch()
-        }
       }
     } catch (error) {
       notifications.error(`Error deleting column: ${error.message}`)
@@ -397,11 +371,6 @@
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-  }
-
-  function extractColumnNumber(columnName) {
-    const match = columnName.match(/Column (\d+)/)
-    return match ? parseInt(match[1]) : 0
   }
 
   function getAllowedTypes() {
@@ -540,8 +509,16 @@
 <Layout noPadding gap="S">
   {#if mounted}
     <Input
+      value={editableColumn.name}
       autofocus
-      bind:value={editableColumn.name}
+      on:input={e => {
+        if (
+          !uneditable &&
+          !(linkEditDisabled && editableColumn.type === LINK_TYPE)
+        ) {
+          editableColumn.name = e.target.value
+        }
+      }}
       disabled={uneditable ||
         (linkEditDisabled && editableColumn.type === LINK_TYPE)}
       error={errors?.name}

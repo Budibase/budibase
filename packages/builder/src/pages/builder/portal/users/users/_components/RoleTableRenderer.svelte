@@ -8,7 +8,7 @@
     x => x.value === users.getUserRole(row)
   )
   $: value = role?.label || "Not available"
-  $: tooltip = role.subtitle || ""
+  $: tooltip = role?.subtitle || ""
 </script>
 
 <div on:click|stopPropagation title={tooltip}>

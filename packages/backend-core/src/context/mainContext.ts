@@ -99,6 +99,8 @@ function updateContext(updates: ContextMap): ContextMap {
 }
 
 async function newContext<T>(updates: ContextMap, task: () => T) {
+  guardMigration()
+
   // see if there already is a context setup
   let context: ContextMap = updateContext(updates)
   return Context.run(context, task)
@@ -132,7 +134,7 @@ export async function doInContext(appId: string, task: any): Promise<any> {
 }
 
 export async function doInTenant<T>(
-  tenantId: string | null,
+  tenantId: string | undefined,
   task: () => T
 ): Promise<T> {
   // make sure default always selected in single tenancy
@@ -145,23 +147,27 @@ export async function doInTenant<T>(
 }
 
 export async function doInAppContext<T>(
-  appId: string | null,
+  appId: string,
   task: () => T
 ): Promise<T> {
-  if (!appId && !env.isTest()) {
+  return _doInAppContext(appId, task)
+}
+
+async function _doInAppContext<T>(
+  appId: string,
+  task: () => T,
+  extraContextSettings?: ContextMap
+): Promise<T> {
+  if (!appId) {
     throw new Error("appId is required")
   }
 
-  let updates: ContextMap
-  if (!appId) {
-    updates = { appId: "" }
-  } else {
-    const tenantId = getTenantIDFromAppID(appId)
-    updates = { appId }
-    if (tenantId) {
-      updates.tenantId = tenantId
-    }
+  const tenantId = getTenantIDFromAppID(appId)
+  const updates: ContextMap = { appId, ...extraContextSettings }
+  if (tenantId) {
+    updates.tenantId = tenantId
   }
+
   return newContext(updates, task)
 }
 
@@ -180,6 +186,24 @@ export async function doInIdentityContext<T>(
     context.tenantId = identity.tenantId
   }
   return newContext(context, task)
+}
+
+function guardMigration() {
+  const context = Context.get()
+  if (context?.isMigrating) {
+    throw new Error(
+      "The context cannot be changed, a migration is currently running"
+    )
+  }
+}
+
+export async function doInAppMigrationContext<T>(
+  appId: string,
+  task: () => T
+): Promise<T> {
+  return _doInAppContext(appId, task, {
+    isMigrating: true,
+  })
 }
 
 export function getIdentity(): IdentityContext | undefined {
@@ -310,4 +334,12 @@ export function isScim(): boolean {
   const context = Context.get()
   const scimCall = context?.isScim
   return !!scimCall
+}
+
+export function getCurrentContext(): ContextMap | undefined {
+  try {
+    return Context.get()
+  } catch (e) {
+    return undefined
+  }
 }

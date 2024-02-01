@@ -41,7 +41,7 @@
       { label: "False", value: "false" },
     ]}
   />
-{:else if schema.type === "array"}
+{:else if schemaHasOptions(schema) && schema.type === "array"}
   <Multiselect
     bind:value={value[field]}
     options={schema.constraints.inclusion}
@@ -64,12 +64,20 @@
   </span>
 {:else if schema.type === "link"}
   <LinkedRowSelector
-    bind:linkedRows={value[field]}
+    linkedRows={value[field]}
     {schema}
     on:change={e => onChange(e, field)}
     useLabel={false}
   />
-{:else if schema.type === "string" || schema.type === "number"}
+{:else if schema.type === "bb_reference"}
+  <LinkedRowSelector
+    linkedRows={value[field]}
+    {schema}
+    linkedTableId={"ta_users"}
+    on:change={e => onChange(e, field)}
+    useLabel={false}
+  />
+{:else if ["string", "number", "bigint", "barcodeqr", "array"].includes(schema.type)}
   <svelte:component
     this={isTestModal ? ModalBindableInput : DrawerBindableInput}
     panel={AutomationBindingPanel}

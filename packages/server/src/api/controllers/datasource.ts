@@ -1,23 +1,20 @@
-import {
-  DocumentType,
-  generateDatasourceID,
-  getQueryParams,
-  getTableParams,
-} from "../../db/utils"
+import { getQueryParams, getTableParams } from "../../db/utils"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
+  BuildSchemaFromSourceRequest,
+  BuildSchemaFromSourceResponse,
   CreateDatasourceRequest,
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  Document,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
-  IntegrationBase,
-  Schema,
+  FieldType,
+  RelationshipFieldMetadata,
   SourceName,
-  Table,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
@@ -25,66 +22,7 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
-
-async function getConnector(
-  datasource: Datasource
-): Promise<IntegrationBase | DatasourcePlus> {
-  const Connector = await getIntegration(datasource.source)
-  // can't enrich if it doesn't have an ID yet
-  if (datasource._id) {
-    datasource = await sdk.datasources.enrich(datasource)
-  }
-  // Connect to the DB and build the schema
-  return new Connector(datasource.config)
-}
-
-async function getAndMergeDatasource(datasource: Datasource) {
-  let existingDatasource: undefined | Datasource
-  if (datasource._id) {
-    existingDatasource = await sdk.datasources.get(datasource._id)
-  }
-  let enrichedDatasource = datasource
-  if (existingDatasource) {
-    enrichedDatasource = sdk.datasources.mergeConfigs(
-      datasource,
-      existingDatasource
-    )
-  }
-  return await sdk.datasources.enrich(enrichedDatasource)
-}
-
-async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
-  const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(
-    datasource._id!,
-    datasource.entities! as Record<string, Table>
-  )
-}
-
-async function buildFilteredSchema(
-  datasource: Datasource,
-  filter?: string[]
-): Promise<Schema> {
-  let schema = await buildSchemaHelper(datasource)
-  if (!filter) {
-    return schema
-  }
-
-  let filteredSchema: Schema = { tables: {}, errors: {} }
-  for (let key in schema.tables) {
-    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-      filteredSchema.tables[key] = schema.tables[key]
-    }
-  }
-
-  for (let key in schema.errors) {
-    if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
-      filteredSchema.errors[key] = schema.errors[key]
-    }
-  }
-  return filteredSchema
-}
+import { isEqual } from "lodash"
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.datasources.fetch()
@@ -94,8 +32,10 @@ export async function verify(
   ctx: UserCtx<VerifyDatasourceRequest, VerifyDatasourceResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = await getConnector(enrichedDatasource)
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
+    datasource
+  )
+  const connector = await sdk.datasources.getConnector(enrichedDatasource)
   if (!connector.testConnection) {
     ctx.throw(400, "Connection information verification not supported")
   }
@@ -111,8 +51,12 @@ export async function information(
   ctx: UserCtx<FetchDatasourceInfoRequest, FetchDatasourceInfoResponse>
 ) {
   const { datasource } = ctx.request.body
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = (await getConnector(enrichedDatasource)) as DatasourcePlus
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
+    datasource
+  )
+  const connector = (await sdk.datasources.getConnector(
+    enrichedDatasource
+  )) as DatasourcePlus
   if (!connector.getTableNames) {
     ctx.throw(400, "Table name fetching not supported by datasource")
   }
@@ -122,41 +66,20 @@ export async function information(
   }
 }
 
-export async function buildSchemaFromDb(ctx: UserCtx) {
-  const db = context.getAppDB()
+export async function buildSchemaFromSource(
+  ctx: UserCtx<BuildSchemaFromSourceRequest, BuildSchemaFromSourceResponse>
+) {
+  const datasourceId = ctx.params.datasourceId
   const tablesFilter = ctx.request.body.tablesFilter
-  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables, errors } = await buildFilteredSchema(datasource, tablesFilter)
-  datasource.entities = tables
-
-  setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
+  const { datasource, errors } = await sdk.datasources.buildSchemaFromSource(
+    datasourceId,
+    tablesFilter
   )
-  datasource._rev = dbResp.rev
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
     errors,
-  }
-}
-
-/**
- * Make sure all datasource entities have a display name selected
- */
-function setDefaultDisplayColumns(datasource: Datasource) {
-  //
-  for (let entity of Object.values(datasource.entities || {})) {
-    if (entity.primaryDisplay) {
-      continue
-    }
-    const notAutoColumn = Object.values(entity.schema).find(
-      schema => !schema.autocolumn
-    )
-    if (notAutoColumn) {
-      entity.primaryDisplay = notAutoColumn.name
-    }
   }
 }
 
@@ -198,19 +121,20 @@ async function invalidateVariables(
 export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
-  let datasource = await sdk.datasources.get(datasourceId)
-  const auth = datasource.config?.auth
-  await invalidateVariables(datasource, ctx.request.body)
+  const baseDatasource = await sdk.datasources.get(datasourceId)
+  const auth = baseDatasource.config?.auth
+  await invalidateVariables(baseDatasource, ctx.request.body)
 
-  const isBudibaseSource = datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
+  const isBudibaseSource =
+    baseDatasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
   const dataSourceBody = isBudibaseSource
     ? { name: ctx.request.body?.name }
     : ctx.request.body
 
-  datasource = {
-    ...datasource,
-    ...sdk.datasources.mergeConfigs(dataSourceBody, datasource),
+  let datasource: Datasource = {
+    ...baseDatasource,
+    ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
@@ -245,53 +169,29 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
   }
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
-}
-
-const preSaveAction: Partial<Record<SourceName, any>> = {
-  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
-    await googleSetupCreationAuth(datasource.config as any)
-  },
+  // send table updates if they have occurred
+  if (datasource.entities) {
+    for (let table of Object.values(datasource.entities)) {
+      const oldTable = baseDatasource.entities?.[table.name]
+      if (!oldTable || !isEqual(oldTable, table)) {
+        builderSocket?.emitTableUpdate(ctx, table, { includeOriginator: true })
+      }
+    }
+  }
 }
 
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const db = context.getAppDB()
-  const plus = ctx.request.body.datasource.plus
-  const fetchSchema = ctx.request.body.fetchSchema
-  const tablesFilter = ctx.request.body.tablesFilter
-
-  const datasource = {
-    _id: generateDatasourceID({ plus }),
-    ...ctx.request.body.datasource,
-    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
-  }
-
-  let errors: Record<string, string> = {}
-  if (fetchSchema) {
-    const schema = await buildFilteredSchema(datasource, tablesFilter)
-    datasource.entities = schema.tables
-    setDefaultDisplayColumns(datasource)
-    errors = schema.errors
-  }
-
-  if (preSaveAction[datasource.source]) {
-    await preSaveAction[datasource.source](datasource)
-  }
-
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.created(datasource)
-  datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
+  const {
+    datasource: datasourceData,
+    fetchSchema,
+    tablesFilter,
+  } = ctx.request.body
+  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+    fetchSchema,
+    tablesFilter,
+  })
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
@@ -321,9 +221,26 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
     []
   )
 
+  function updateRevisions(deletedLinks: RelationshipFieldMetadata[]) {
+    for (const link of deletedLinks) {
+      datasourceTableDocs.forEach((doc: Document) => {
+        if (doc._id === link.tableId) {
+          doc._rev = link.tableRev
+        }
+      })
+    }
+  }
+
   // Destroy the tables.
   for (const table of datasourceTableDocs) {
-    await sdk.tables.internal.destroy(table)
+    const deleted = await sdk.tables.internal.destroy(table)
+    // Update the revisions of any tables that remain to be deleted
+    const deletedLinks: RelationshipFieldMetadata[] = Object.values(
+      deleted.table.schema
+    )
+      .filter(field => field.type === FieldType.LINK)
+      .map(field => field as RelationshipFieldMetadata)
+    updateRevisions(deletedLinks)
   }
 }
 
@@ -373,8 +290,10 @@ export async function query(ctx: UserCtx) {
 
 export async function getExternalSchema(ctx: UserCtx) {
   const datasource = await sdk.datasources.get(ctx.params.datasourceId)
-  const enrichedDatasource = await getAndMergeDatasource(datasource)
-  const connector = await getConnector(enrichedDatasource)
+  const enrichedDatasource = await sdk.datasources.getAndMergeDatasource(
+    datasource
+  )
+  const connector = await sdk.datasources.getConnector(enrichedDatasource)
 
   if (!connector.getExternalSchema) {
     ctx.throw(400, "Datasource does not support exporting external schema")

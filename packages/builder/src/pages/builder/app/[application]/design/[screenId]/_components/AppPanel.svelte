@@ -25,6 +25,7 @@
 
 <style>
   .app-panel {
+    min-width: 410px;
     flex: 1 1 auto;
     overflow-y: auto;
     display: flex;

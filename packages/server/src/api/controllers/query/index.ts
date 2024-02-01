@@ -1,15 +1,21 @@
 import { generateQueryID } from "../../../db/utils"
-import { BaseQueryVerbs, FieldTypes } from "../../../constants"
+import { BaseQueryVerbs } from "../../../constants"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
 import { invalidateDynamicVariables } from "../../../threads/utils"
 import env from "../../../environment"
-import { quotas } from "@budibase/pro"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { QueryEvent } from "../../../threads/definitions"
-import { ConfigType, Query, UserCtx } from "@budibase/types"
+import { QueryEvent, QueryResponse } from "../../../threads/definitions"
+import {
+  ConfigType,
+  Query,
+  UserCtx,
+  SessionCookie,
+  QuerySchema,
+  FieldType,
+} from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
@@ -113,7 +119,7 @@ function getOAuthConfigCookieId(ctx: UserCtx) {
 }
 
 function getAuthConfig(ctx: UserCtx) {
-  const authCookie = utils.getCookie(ctx, constants.Cookie.Auth)
+  const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
   let authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
@@ -161,43 +167,44 @@ export async function preview(ctx: UserCtx) {
         auth: { ...authConfigCtx },
       },
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, keys, info, extra } = await quotas.addQuery<any>(runFn, {
-      datasourceId: datasource._id,
+    const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
+    const previewSchema: Record<string, QuerySchema> = {}
+    const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
+      type,
+      name,
     })
-    const schemaFields: any = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
         const field = rows[0][key]
         let type = typeof field,
-          fieldType = FieldTypes.STRING
+          fieldMetadata = makeQuerySchema(FieldType.STRING, key)
         if (field)
           switch (type) {
             case "boolean":
-              schemaFields[key] = FieldTypes.BOOLEAN
+              fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
               break
             case "object":
               if (field instanceof Date) {
-                fieldType = FieldTypes.DATETIME
+                fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
               } else if (Array.isArray(field)) {
-                fieldType = FieldTypes.ARRAY
+                fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
               } else {
-                fieldType = FieldTypes.JSON
+                fieldMetadata = makeQuerySchema(FieldType.JSON, key)
               }
               break
             case "number":
-              fieldType = FieldTypes.NUMBER
+              fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
               break
           }
-        schemaFields[key] = fieldType
+        previewSchema[key] = fieldMetadata
       }
     }
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
-      for (let key of Object.keys(schemaFields)) {
-        if (existingSchema[key]?.type) {
-          schemaFields[key] = existingSchema[key].type
+      for (let key of Object.keys(previewSchema)) {
+        if (existingSchema[key]) {
+          previewSchema[key] = existingSchema[key]
         }
       }
     }
@@ -206,7 +213,7 @@ export async function preview(ctx: UserCtx) {
     await events.query.previewed(datasource, query)
     ctx.body = {
       rows,
-      schemaFields,
+      schema: previewSchema,
       info,
       extra,
     }
@@ -259,13 +266,9 @@ async function execute(
       },
       schema: query.schema,
     }
-    const runFn = () => Runner.run(inputs)
 
-    const { rows, pagination, extra, info } = await quotas.addQuery<any>(
-      runFn,
-      {
-        datasourceId: datasource._id,
-      }
+    const { rows, pagination, extra, info } = await Runner.run<QueryResponse>(
+      inputs
     )
     // remove the raw from execution incase transformer being used to hide data
     if (extra?.raw) {

@@ -57,16 +57,11 @@
       }}
       class="buttons"
     >
-      <Icon hoverable size="M" name="Play" />
+      <Icon size="M" name="Play" />
       <div>Run test</div>
     </div>
     <div class="buttons">
-      <Icon
-        disabled={!$automationStore.testResults}
-        hoverable
-        size="M"
-        name="Multiple"
-      />
+      <Icon disabled={!$automationStore.testResults} size="M" name="Multiple" />
       <div
         class:disabled={!$automationStore.testResults}
         on:click={() => {

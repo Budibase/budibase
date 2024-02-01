@@ -2,9 +2,7 @@ name: close-featurebranch
 
 on:
   pull_request:
-    types: [closed]
-    branches:
-      - master
+    types: [closed, unlabeled]
   workflow_dispatch:
     inputs:
       BRANCH:
@@ -14,9 +12,12 @@ on:
 
 jobs:
   release:
+    if: |
+      (github.event.action == 'closed' && contains(github.event.pull_request.labels.*.name, 'feature-branch')) ||
+       github.event.label.name == 'feature-branch'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: passeidireto/trigger-external-workflow-action@main
         env:
           PAYLOAD_BRANCH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.BRANCH || github.head_ref }}

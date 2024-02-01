@@ -2,6 +2,7 @@ export * as configs from "./configs"
 export * as events from "./events"
 export * as migrations from "./migrations"
 export * as users from "./users"
+export * as userUtils from "./users/utils"
 export * as roles from "./security/roles"
 export * as permissions from "./security/permissions"
 export * as accounts from "./accounts"
@@ -33,6 +34,7 @@ export * as docUpdates from "./docUpdates"
 export * from "./utils/Duration"
 export { SearchParams } from "./db"
 export * as docIds from "./docIds"
+export * as security from "./security"
 // Add context to tenancy for backwards compatibility
 // only do this for external usages to prevent internal
 // circular dependencies

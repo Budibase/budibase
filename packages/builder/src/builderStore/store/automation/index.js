@@ -4,6 +4,7 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { selectedAutomation } from "builderStore"
 import { notifications } from "@budibase/bbui"
+import { updateReferencesInObject } from "builderStore/dataBinding"
 
 const initialAutomationState = {
   automations: [],
@@ -22,34 +23,14 @@ export const getAutomationStore = () => {
   return store
 }
 
-const updateReferencesInObject = (obj, modifiedIndex, action) => {
-  const regex = /{{\s*steps\.(\d+)\./g
-  for (const key in obj) {
-    if (typeof obj[key] === "string") {
-      let matches
-      while ((matches = regex.exec(obj[key])) !== null) {
-        const referencedStep = parseInt(matches[1])
-        if (action === "add" && referencedStep >= modifiedIndex) {
-          obj[key] = obj[key].replace(
-            `{{ steps.${referencedStep}.`,
-            `{{ steps.${referencedStep + 1}.`
-          )
-        } else if (action === "delete" && referencedStep > modifiedIndex) {
-          obj[key] = obj[key].replace(
-            `{{ steps.${referencedStep}.`,
-            `{{ steps.${referencedStep - 1}.`
-          )
-        }
-      }
-    } else if (typeof obj[key] === "object" && obj[key] !== null) {
-      updateReferencesInObject(obj[key], modifiedIndex, action)
-    }
-  }
-}
-
 const updateStepReferences = (steps, modifiedIndex, action) => {
   steps.forEach(step => {
-    updateReferencesInObject(step.inputs, modifiedIndex, action)
+    updateReferencesInObject({
+      obj: step.inputs,
+      modifiedIndex,
+      action,
+      label: "steps",
+    })
   })
 }
 

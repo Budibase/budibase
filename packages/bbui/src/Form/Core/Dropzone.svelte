@@ -53,7 +53,7 @@
   $: {
     if (selectedImage?.url) {
       selectedUrl = selectedImage?.url
-    } else if (selectedImage) {
+    } else if (selectedImage && isImage) {
       try {
         let reader = new FileReader()
         reader.readAsDataURL(selectedImage)

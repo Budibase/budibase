@@ -1,7 +1,7 @@
 const { atob } = require("../utilities")
-const { cloneDeep } = require("lodash/fp")
+const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
-const { getHelperList } = require("./list")
+const { getJsHelperList } = require("./list")
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.cjs or index.mjs).
@@ -49,13 +49,19 @@ module.exports.processJS = (handlebars, context) => {
     // app context.
     const sandboxContext = {
       $: path => getContextValue(path, cloneDeep(context)),
-      helpers: getHelperList(),
+      helpers: getJsHelperList(),
     }
 
     // Create a sandbox with our context and run the JS
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error) {
+    if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
+      return "Timed out while executing JS"
+    }
+    if (error.name === "ExecutionTimeoutError") {
+      return "Request JS execution limit hit"
+    }
     return "Error while executing JS"
   }
 }
