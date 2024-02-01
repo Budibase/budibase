@@ -2050,10 +2050,10 @@
     to-gfm-code-block "^0.1.1"
     uuid "^9.0.1"
 
-"@budibase/nano@10.1.4":
-  version "10.1.4"
-  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.4.tgz#5c2670d0b4c12d736ddd6581c57d47c0aa45efad"
-  integrity sha512-J+IVaAljGideDvJss/AUxXA1599HEIUJo5c0LLlmc1KMA3GZWZjyX+w2fxAw3qF7hqFvX+qAStQgdcD3+/GPMA==
+"@budibase/nano@10.1.5":
+  version "10.1.5"
+  resolved "https://registry.yarnpkg.com/@budibase/nano/-/nano-10.1.5.tgz#eeaded7bfc707ecabf8fde604425b865a90c06ec"
+  integrity sha512-q1eKIsYKo+iK17zsJYd3VBl+5ufQMPpHYLec0wVsid8wnJVrTQk7RNpBlBUn/EDgXM7t8XNNHlERqHu+CxJu8Q==
   dependencies:
     "@types/tough-cookie" "^4.0.2"
     axios "^1.1.3"
