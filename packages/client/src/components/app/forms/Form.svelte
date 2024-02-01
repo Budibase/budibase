@@ -14,7 +14,7 @@
 
   // Not exposed as a builder setting. Used internally to disable validation
   // for fields rendered in things like search blocks.
-  export let disableValidation = false
+  export let disableSchemaValidation = false
 
   // Not exposed as a builder setting. Used internally to allow searching on
   // auto columns.
@@ -35,7 +35,7 @@
   let loaded = false
   let schema
   let table
-  let currentStep = writable(getInitialFormStep())
+  let currentStep = getContext("current-step") || writable(getInitialFormStep())
 
   $: fetchSchema(dataSource)
   $: schemaKey = generateSchemaKey(schema)
@@ -123,7 +123,7 @@
       {schema}
       {table}
       {initialValues}
-      {disableValidation}
+      {disableSchemaValidation}
       {editAutoColumns}
       {currentStep}
     >

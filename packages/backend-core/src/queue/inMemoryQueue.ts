@@ -15,6 +15,7 @@ function newJob(queue: string, message: any) {
     timestamp: Date.now(),
     queue: queue,
     data: message,
+    opts: {},
   }
 }
 
@@ -66,6 +67,10 @@ class InMemoryQueue {
       }
       this._runCount++
     })
+  }
+
+  async isReady() {
+    return true
   }
 
   // simply puts a message to the queue and emits to the queue for processing

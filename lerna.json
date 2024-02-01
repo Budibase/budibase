@@ -1,10 +1,13 @@
 {
-  "version": "2.13.35",
+  "version": "2.16.2",
   "npmClient": "yarn",
   "packages": [
-    "packages/*"
+    "packages/*",
+    "!packages/account-portal",
+    "packages/account-portal/packages/*"
   ],
   "useNx": true,
+  "concurrency": 20,
   "command": {
     "publish": {
       "ignoreChanges": [

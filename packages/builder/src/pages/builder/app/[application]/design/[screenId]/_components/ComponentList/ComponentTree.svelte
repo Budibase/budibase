@@ -5,6 +5,7 @@
     selectedComponentPath,
     selectedComponent,
     selectedScreen,
+    hoverStore,
   } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
@@ -89,6 +90,8 @@
     }
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
+
+  const hover = hoverStore.actions.update
 </script>
 
 <ul>
@@ -109,6 +112,9 @@
         on:dragover={dragover(component, index)}
         on:iconClick={() => toggleNodeOpen(component._id)}
         on:drop={onDrop}
+        hovering={$hoverStore.componentId === component._id}
+        on:mouseenter={() => hover(component._id)}
+        on:mouseleave={() => hover(null)}
         text={getComponentText(component)}
         icon={getComponentIcon(component)}
         iconTooltip={getComponentName(component)}

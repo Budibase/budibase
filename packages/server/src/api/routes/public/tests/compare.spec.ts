@@ -12,7 +12,7 @@ let apiKey: string, table: Table, app: App, makeRequest: any
 
 beforeAll(async () => {
   app = await config.init()
-  table = await config.updateTable()
+  table = await config.upsertTable()
   apiKey = await config.generateApiKey()
   makeRequest = generateMakeRequest(apiKey)
 })
@@ -69,7 +69,7 @@ describe("check the applications endpoints", () => {
 describe("check the tables endpoints", () => {
   it("should allow retrieving tables through search", async () => {
     await config.createApp("new app 1")
-    table = await config.updateTable()
+    table = await config.upsertTable()
     const res = await makeRequest("post", "/tables/search")
     expect(res).toSatisfyApiSpec()
   })
@@ -108,7 +108,7 @@ describe("check the tables endpoints", () => {
 describe("check the rows endpoints", () => {
   let row: Row
   it("should allow retrieving rows through search", async () => {
-    table = await config.updateTable()
+    table = await config.upsertTable()
     const res = await makeRequest("post", `/tables/${table._id}/rows/search`, {
       query: {},
     })

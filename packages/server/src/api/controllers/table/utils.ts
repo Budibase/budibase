@@ -2,8 +2,6 @@ import { parse, isSchema, isRows } from "../../../utilities/schema"
 import { getRowParams, generateRowID, InternalTables } from "../../../db/utils"
 import isEqual from "lodash/isEqual"
 import {
-  AutoFieldSubTypes,
-  FieldTypes,
   GOOGLE_SHEETS_PRIMARY_KEY,
   USERS_TABLE_SCHEMA,
   SwitchableTypes,
@@ -11,7 +9,7 @@ import {
 } from "../../../constants"
 import {
   inputProcessing,
-  cleanupAttachments,
+  AttachmentCleanup,
 } from "../../../utilities/rowProcessor"
 import { getViews, saveView } from "../view/utils"
 import viewTemplate from "../view/viewBuilder"
@@ -19,6 +17,7 @@ import { cloneDeep } from "lodash/fp"
 import { quotas } from "@budibase/pro"
 import { events, context } from "@budibase/backend-core"
 import {
+  AutoFieldSubType,
   ContextUser,
   Datasource,
   Row,
@@ -82,7 +81,10 @@ export async function checkForColumnUpdates(
     })
 
     // cleanup any attachments from object storage for deleted attachment columns
-    await cleanupAttachments(updatedTable, { oldTable, rows: rawRows })
+    await AttachmentCleanup.tableUpdate(updatedTable, rawRows, {
+      oldTable,
+      rename: columnRename,
+    })
     // Update views
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
@@ -103,7 +105,7 @@ export function makeSureTableUpToDate(table: Table, tableToSave: Table) {
   for ([field, column] of Object.entries(table.schema)) {
     if (
       column.autocolumn &&
-      column.subtype === AutoFieldSubTypes.AUTO_ID &&
+      column.subtype === AutoFieldSubType.AUTO_ID &&
       tableToSave.schema[field]
     ) {
       const tableCol = tableToSave.schema[field] as NumberFieldMetadata
@@ -141,8 +143,8 @@ export async function importToRows(
         ? row[fieldName]
         : [row[fieldName]]
       if (
-        (schema.type === FieldTypes.OPTIONS ||
-          schema.type === FieldTypes.ARRAY) &&
+        (schema.type === FieldType.OPTIONS ||
+          schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
         let merged = [...schema.constraints!.inclusion!, ...rowVal]
@@ -400,7 +402,7 @@ export async function checkForViewUpdates(
       )
       const newViewTemplate = viewTemplate(
         viewMetadata,
-        groupByField?.type === FieldTypes.ARRAY
+        groupByField?.type === FieldType.ARRAY
       )
       const viewName = view.name!
       await saveView(null, viewName, newViewTemplate)
@@ -431,7 +433,7 @@ export function generateJunctionTableName(
 
 export function foreignKeyStructure(keyName: string, meta?: any) {
   const structure: any = {
-    type: FieldTypes.NUMBER,
+    type: FieldType.NUMBER,
     constraints: {},
     name: keyName,
   }

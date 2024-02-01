@@ -107,6 +107,7 @@ const environment = {
   ENCRYPTION_KEY: process.env.ENCRYPTION_KEY,
   API_ENCRYPTION_KEY: getAPIEncryptionKey(),
   COUCH_DB_URL: process.env.COUCH_DB_URL || "http://localhost:4005",
+  COUCH_DB_SQL_URL: process.env.COUCH_DB_SQL_URL || "http://localhost:4984",
   COUCH_DB_USERNAME: process.env.COUCH_DB_USER,
   COUCH_DB_PASSWORD: process.env.COUCH_DB_PASSWORD,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
@@ -165,6 +166,8 @@ const environment = {
   DISABLE_JWT_WARNING: process.env.DISABLE_JWT_WARNING,
   BLACKLIST_IPS: process.env.BLACKLIST_IPS,
   SERVICE_TYPE: "unknown",
+  PASSWORD_MIN_LENGTH: process.env.PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH: process.env.PASSWORD_MAX_LENGTH,
   /**
    * Enable to allow an admin user to login using a password.
    * This can be useful to prevent lockout when configuring SSO.
@@ -176,6 +179,7 @@ const environment = {
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
+  SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

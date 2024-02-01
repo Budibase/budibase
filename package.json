@@ -6,25 +6,26 @@
     "@babel/eslint-parser": "^7.22.5",
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
-    "@typescript-eslint/parser": "6.7.2",
+    "@types/node": "20.10.0",
+    "@typescript-eslint/parser": "6.9.0",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.8.0",
-    "eslint": "^8.44.0",
+    "eslint": "^8.52.0",
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-local-rules": "^2.0.0",
-    "eslint-plugin-svelte": "^2.32.2",
+    "eslint-plugin-svelte": "^2.34.0",
     "husky": "^8.0.3",
     "kill-port": "^1.6.1",
     "lerna": "7.1.1",
     "madge": "^6.0.0",
-    "minimist": "^1.2.8",
     "nx": "16.4.3",
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
     "svelte": "3.49.0",
-    "svelte-eslint-parser": "^0.32.0",
-    "typescript": "5.2.2"
+    "svelte-eslint-parser": "^0.33.1",
+    "typescript": "5.2.2",
+    "yargs": "^17.7.2"
   },
   "scripts": {
     "preinstall": "node scripts/syncProPackage.js",
@@ -39,13 +40,16 @@
     "nuke": "yarn run nuke:packages && yarn run nuke:docker",
     "nuke:packages": "yarn run restore",
     "nuke:docker": "lerna run --stream dev:stack:nuke",
-    "clean": "lerna clean -y",
+    "clean": "lerna clean -y && echo Cleaning top level node modules 🧹 && rm -rf ./node_modules && echo Done! 🚀",
     "kill-builder": "kill-port 3000",
     "kill-server": "kill-port 4001 4002",
-    "kill-all": "yarn run kill-builder && yarn run kill-server",
-    "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev:builder",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev:builder --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker",
-    "dev:server": "yarn run kill-server && lerna run --stream dev:builder --scope @budibase/worker --scope @budibase/server",
+    "kill-accountportal": "kill-port 3001 4003",
+    "kill-all": "yarn run kill-builder && yarn run kill-server && yarn kill-accountportal",
+    "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up --ignore @budibase/account-portal-server && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
+    "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
+    "dev:accountportal": "yarn kill-accountportal && lerna run dev --stream --scope @budibase/account-portal-ui --scope @budibase/account-portal-server",
+    "dev:all": "yarn run kill-all && lerna run --stream dev",
     "dev:built": "yarn run kill-all && cd packages/server && yarn dev:stack:up && cd ../../ && lerna run --stream dev:built",
     "dev:docker": "yarn build --scope @budibase/server --scope @budibase/worker && docker-compose -f hosting/docker-compose.build.yaml -f hosting/docker-compose.dev.yaml --env-file hosting/.env up --build --scale proxy-service=0",
     "test": "lerna run --stream test --stream",
@@ -79,11 +83,14 @@
     "security:audit": "node scripts/audit.js",
     "postinstall": "husky install",
     "submodules:load": "git submodule init && git submodule update && yarn",
-    "submodules:unload": "git submodule deinit --all && yarn"
+    "submodules:unload": "git submodule deinit --all && yarn",
+    "add-app-migration": "node scripts/add-app-migration.js --title"
   },
   "workspaces": {
     "packages": [
-      "packages/*"
+      "packages/*",
+      "!packages/account-portal",
+      "packages/account-portal/packages/*"
     ]
   },
   "resolutions": {
@@ -93,7 +100,7 @@
     "@budibase/types": "0.0.0"
   },
   "engines": {
-    "node": ">=18.0.0 <19.0.0"
+    "node": ">=20.0.0 <21.0.0"
   },
   "dependencies": {}
 }

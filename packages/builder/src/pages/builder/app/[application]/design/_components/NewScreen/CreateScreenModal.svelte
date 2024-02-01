@@ -71,7 +71,7 @@
       $goto(`./${screenId}`)
       store.actions.screens.select(screenId)
     } catch (error) {
-      console.log(error)
+      console.error(error)
       notifications.error("Error creating screens")
     }
   }
@@ -125,7 +125,6 @@
 
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ templates }) => {
-    console.log(templates)
     selectedTemplates = templates
     screenAccessRoleModal.show()
   }
