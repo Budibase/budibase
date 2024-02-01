@@ -70,6 +70,15 @@ export function init() {
             )
           )
 
+          global.setSync(
+            "helpersStripProtocol",
+            new ivm.Callback((str: string) => {
+              var parsed = url.parse(str) as any
+              parsed.protocol = ""
+              return parsed.format()
+            })
+          )
+
           const helpersModule = jsIsolate.compileModuleSync(
             `${injectedRequire};${helpersSource}`
           )
