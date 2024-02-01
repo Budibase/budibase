@@ -27,6 +27,7 @@ describe("jsRunner", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    // Register js runner
     init()
     await config.init()
   })
@@ -42,5 +43,7 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
-  runJsHelpersTests((func: any) => config.doInContext(config.getAppId(), func))
+  runJsHelpersTests({
+    funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
+  })
 })

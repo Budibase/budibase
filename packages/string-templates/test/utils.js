@@ -60,7 +60,9 @@ const getParsedManifest = () => {
 }
 module.exports.getParsedManifest = getParsedManifest
 
-module.exports.runJsHelpersTests = (funcWrap = delegate => delegate()) => {
+module.exports.runJsHelpersTests = (
+  { funcWrap } = { funcWrap: delegate => delegate() }
+) => {
   const manifest = getParsedManifest()
 
   const processJS = (js, context) => {
