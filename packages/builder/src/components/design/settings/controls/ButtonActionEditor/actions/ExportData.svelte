@@ -9,7 +9,7 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builder/dataBinding"
+  } from "../../../../../../dataBinding"
 
   export let parameters
 

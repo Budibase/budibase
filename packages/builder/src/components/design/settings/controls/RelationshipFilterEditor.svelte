@@ -6,7 +6,7 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builder/dataBinding"
+  } from "../../../../dataBinding"
   import { tables, currentAsset, componentStore } from "stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 

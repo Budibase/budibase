@@ -15,7 +15,7 @@ import {
 import { getComponentFieldOptions } from "helpers/formFields"
 import { selectedScreen } from "../screens"
 import { screenStore, appStore, previewStore, tables } from "stores/builder"
-import { buildFormSchema, getSchemaForDatasource } from "builder/dataBinding"
+import { buildFormSchema, getSchemaForDatasource } from "../../../dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
   DEFAULT_BB_DATASOURCE_ID,

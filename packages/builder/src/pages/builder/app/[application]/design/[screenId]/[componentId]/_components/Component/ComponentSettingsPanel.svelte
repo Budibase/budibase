@@ -13,7 +13,7 @@
   import {
     getBindableProperties,
     getComponentBindableProperties,
-  } from "builder/dataBinding"
+  } from "../../../../../../../../../dataBinding"
   import { ActionButton, notifications } from "@budibase/bbui"
   import { capitalise } from "helpers"
 

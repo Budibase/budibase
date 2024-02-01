@@ -3,7 +3,10 @@
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { currentAsset, componentStore } from "stores/builder"
-  import { getActionProviders, buildFormSchema } from "builder/dataBinding"
+  import {
+    getActionProviders,
+    buildFormSchema,
+  } from "../../../../../../dataBinding"
   import { findComponent } from "stores/builder/components/utils"
 
   export let parameters

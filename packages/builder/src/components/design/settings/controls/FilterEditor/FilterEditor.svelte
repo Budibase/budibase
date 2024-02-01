@@ -4,7 +4,7 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builder/dataBinding"
+  } from "../../../../../dataBinding"
   import FilterDrawer from "./FilterDrawer.svelte"
   import { currentAsset } from "stores/builder"
 

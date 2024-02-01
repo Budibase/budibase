@@ -99,8 +99,8 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/components"),
         },
         {
-          find: "builder",
-          replacement: path.resolve("./src/builder"),
+          find: "templates",
+          replacement: path.resolve("./src/templates"),
         },
         {
           find: "stores",

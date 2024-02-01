@@ -42,7 +42,7 @@
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-  } from "builder/dataBinding"
+  } from "../../../dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"

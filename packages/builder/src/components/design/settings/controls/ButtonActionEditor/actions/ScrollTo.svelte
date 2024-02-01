@@ -1,7 +1,10 @@
 <script>
   import { currentAsset, componentStore } from "stores/builder"
   import { Label, Combobox, Select } from "@budibase/bbui"
-  import { getActionProviders, buildFormSchema } from "builder/dataBinding"
+  import {
+    getActionProviders,
+    buildFormSchema,
+  } from "../../../../../../dataBinding"
   import { findComponent } from "stores/builder/components/utils"
 
   export let parameters

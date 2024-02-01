@@ -3,7 +3,7 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builder/dataBinding"
+  } from "../../../../dataBinding"
   import { currentAsset } from "stores/builder"
   import { createEventDispatcher } from "svelte"
 

@@ -2,7 +2,7 @@
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,
-  } from "builder/dataBinding"
+  } from "../../../../../dataBinding"
   import { currentAsset, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"

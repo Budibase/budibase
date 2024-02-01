@@ -1,7 +1,7 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
   import { currentAsset, componentStore, tables, viewsV2 } from "stores/builder"
-  import { getSchemaForDatasourcePlus } from "builder/dataBinding"
+  import { getSchemaForDatasourcePlus } from "../../../../../../dataBinding"
   import SaveFields from "./SaveFields.svelte"
   import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 

@@ -15,7 +15,7 @@
   import {
     getSchemaForDatasource,
     getDatasourceForProvider,
-  } from "builder/dataBinding"
+  } from "../../../../../dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 

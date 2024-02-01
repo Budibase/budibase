@@ -1,11 +1,11 @@
 import { ActionStepID } from "constants/backend/automations"
-import { TableNames } from "../constants"
+import { TableNames } from "constants"
 import {
   AUTO_COLUMN_DISPLAY_NAMES,
   AUTO_COLUMN_SUB_TYPES,
   FIELDS,
   isAutoColumnUserRelationship,
-} from "../constants/backend"
+} from "constants/backend"
 
 export function getAutoColumnInformation(enabled = true) {
   let info = {}
