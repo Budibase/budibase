@@ -42,7 +42,7 @@ module.exports.processJS = (handlebars, context) => {
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.
-    const js = `(function(){${atob(handlebars)}})();`
+    const js = `function run(){${atob(handlebars)}};run();`
 
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
