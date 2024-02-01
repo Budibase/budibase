@@ -229,7 +229,7 @@ export async function preview(ctx: UserCtx) {
       inputs
     )) as QueryResponse
     const { schemaFields, nestedSchemaFields } = getSchemaFields(rows, keys)
-    const previewSchema: Record<string, QuerySchema> = {}
+    const previewSchema: Record<string, string | QuerySchema> = {}
     const makeQuerySchema = (type: FieldType, name: string): QuerySchema => ({
       type,
       name,
