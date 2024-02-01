@@ -36,15 +36,12 @@
   let status = null
   let timeRange = null
   let loaded = false
-
-  $: app = $apps.find(app => app.devId === $store.appId?.includes(app.appId))
+  $: app = $apps.find(app => $store.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
   $: isCloud = $admin.cloud
-
   $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
-
   const timeOptions = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
