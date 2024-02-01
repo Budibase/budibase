@@ -13,7 +13,7 @@ function tryParseJson(str) {
   }
 
   try {
-    return JSON.parse(str.replace(/\'/g, '"'))
+    return JSON.parse(str.replace(/'/g, '"'))
   } catch (e) {
     return
   }
@@ -34,7 +34,7 @@ const getParsedManifest = () => {
         }
 
         // Trim 's
-        js = js.replace(/^\'|\'$/g, "")
+        js = js.replace(/^'|'$/g, "")
         let parsedExpected
         if ((parsedExpected = tryParseJson(js))) {
           if (Array.isArray(parsedExpected)) {
@@ -97,7 +97,7 @@ module.exports.runJsHelpersTests = ({ funcWrap, testsToSkip } = {}) => {
               new RegExp(escapeRegExp(arrayString)),
               `array${i}`
             )
-            context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+            context[`array${i}`] = JSON.parse(arrayString.replace(/'/g, '"'))
           })
 
           let convertedJs = convertToJS(hbs)
