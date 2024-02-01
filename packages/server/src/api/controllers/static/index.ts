@@ -1,5 +1,4 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-import { Duration } from "@budibase/backend-core"
 
 require("svelte/register")
 
@@ -20,6 +19,7 @@ import {
   utils,
   configs,
   BadRequestError,
+  Duration,
 } from "@budibase/backend-core"
 import AWS from "aws-sdk"
 import fs from "fs"
