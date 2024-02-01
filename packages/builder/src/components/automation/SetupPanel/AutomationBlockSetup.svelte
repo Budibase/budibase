@@ -33,6 +33,8 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import BindingPicker from "components/common/bindings/BindingPicker.svelte"
+  import { BindingHelpers } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
@@ -56,7 +58,7 @@
   let drawer
   let fillWidth = true
   let inputData
-  let codeBindingOpen = false
+  let insertAtPos, getCaretPosition
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
@@ -75,6 +77,10 @@
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
   $: codeMode =
     stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+  $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
+    disableWrapping: true,
+  })
+  $: editingJs = codeMode === EditorModes.JS
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
@@ -539,39 +545,51 @@
             />
           {:else if value.customType === "code"}
             <CodeEditorModal>
-              {#if codeMode == EditorModes.JS}
-                <ActionButton
-                  on:click={() => (codeBindingOpen = !codeBindingOpen)}
-                  quiet
-                  icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
-                >
-                  <Detail size="S">Bindings</Detail>
-                </ActionButton>
-                {#if codeBindingOpen}
-                  <pre>{JSON.stringify(bindings, null, 2)}</pre>
-                {/if}
-              {/if}
-              <CodeEditor
-                value={inputData[key]}
-                on:change={e => {
-                  // need to pass without the value inside
-                  onChange({ detail: e.detail }, key)
-                  inputData[key] = e.detail
-                }}
-                completions={stepCompletions}
-                mode={codeMode}
-                autocompleteEnabled={codeMode != EditorModes.JS}
-                height={500}
-              />
-              <div class="messaging">
-                {#if codeMode == EditorModes.Handlebars}
-                  <Icon name="FlashOn" />
-                  <div class="messaging-wrap">
-                    <div>
-                      Add available bindings by typing <strong>
-                        &#125;&#125;
-                      </strong>
-                    </div>
+              <div class:js-editor={editingJs}>
+                <div class:js-code={editingJs} style="width: 100%">
+                  <CodeEditor
+                    value={inputData[key]}
+                    on:change={e => {
+                      // need to pass without the value inside
+                      onChange({ detail: e.detail }, key)
+                      inputData[key] = e.detail
+                    }}
+                    completions={stepCompletions}
+                    mode={codeMode}
+                    autocompleteEnabled={codeMode !== EditorModes.JS}
+                    bind:getCaretPosition
+                    bind:insertAtPos
+                    height={500}
+                  />
+                  <div class="messaging">
+                    {#if codeMode === EditorModes.Handlebars}
+                      <Icon name="FlashOn" />
+                      <div class="messaging-wrap">
+                        <div>
+                          Add available bindings by typing <strong>
+                            &#125;&#125;
+                          </strong>
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+                {#if editingJs}
+                  <div class="js-binding-picker">
+                    <BindingPicker
+                      {bindings}
+                      allowHelpers={false}
+                      addBinding={binding =>
+                        bindingsHelpers.onSelectBinding(
+                          inputData[key],
+                          binding,
+                          {
+                            js: true,
+                            decode: false,
+                          }
+                        )}
+                      mode="javascript"
+                    />
                   </div>
                 {/if}
               </div>
@@ -657,5 +675,20 @@
 
   .test :global(.drawer) {
     width: 10000px !important;
+  }
+
+  .js-editor {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  .js-code {
+    flex: 7;
+  }
+
+  .js-binding-picker {
+    flex: 3;
   }
 </style>
