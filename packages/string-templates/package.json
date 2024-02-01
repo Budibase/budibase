@@ -11,7 +11,9 @@
       "require": "./src/index.cjs",
       "import": "./dist/bundle.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./index-helpers": "./dist/index-helpers.bundled.js",
+    "./test/utils": "./test/utils.js"
   },
   "files": [
     "dist",
@@ -19,8 +21,9 @@
     "manifest.json"
   ],
   "scripts": {
-    "build": "tsc && rollup -c",
-    "dev": "tsc && rollup -cw",
+    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
+    "build": "yarn build:esbuild && tsc && rollup -c",
+    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && rollup -cw\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },
@@ -34,6 +37,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
+    "concurrently": "^8.2.2",
     "doctrine": "^3.0.0",
     "jest": "29.7.0",
     "marked": "^4.0.10",
