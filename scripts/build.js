@@ -6,7 +6,7 @@ const glob = require("glob")
 const fs = require("fs")
 const path = require("path")
 
-const { build } = require("esbuild")
+const { build, context } = require("esbuild")
 
 const {
   default: TsconfigPathsPlugin,
@@ -63,7 +63,10 @@ function runBuild(entry, outfile) {
     ],
   }
 
-  build({
+  const watch = argv["watch"]
+
+  const func = watch ? context : build
+  func({
     ...sharedConfig,
     platform: "node",
     outfile,
@@ -79,16 +82,23 @@ function runBuild(entry, outfile) {
       )
     })
 
-    fs.writeFileSync(
-      `dist/${path.basename(outfile)}.meta.json`,
-      JSON.stringify(result.metafile)
-    )
+    if (watch) {
+      result.watch().then(() => {
+        console.log("Watching...")
+      })
+    } else {
+      fs.writeFileSync(
+        `dist/${path.basename(outfile)}.meta.json`,
+        JSON.stringify(result.metafile)
+      )
+    }
   })
 }
 
 if (require.main === module) {
   const entry = argv["e"] || "./src/index.ts"
-  const outfile = `dist/${entry.split("/").pop().replace(".ts", ".js")}`
+  const outfile =
+    argv["o"] || `dist/${entry.split("/").pop().replace(".ts", ".js")}`
   runBuild(entry, outfile)
 } else {
   module.exports = runBuild
