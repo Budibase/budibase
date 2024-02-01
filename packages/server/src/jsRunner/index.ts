@@ -1,11 +1,12 @@
 import ivm from "isolated-vm"
-import env from "./environment"
+import env from "../environment"
 import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import fs from "fs"
 import url from "url"
 import crypto from "crypto"
+import querystring from "querystring"
 
 const helpersSource = fs.readFileSync(
   `${require.resolve("@budibase/string-templates/index-helpers")}`,
@@ -39,6 +40,10 @@ export function init() {
               resolve: (...params) => urlResolveCb(...params),
               parse: (...params) => urlParseCb(...params),
             }
+          case "querystring":
+            return {
+              escape: (...params) => querystringEscapeCb(...params),
+            }
         }
       };`
 
@@ -55,6 +60,23 @@ export function init() {
             new ivm.Callback((...params: Parameters<typeof url.parse>) =>
               url.parse(...params)
             )
+          )
+
+          global.setSync(
+            "querystringEscapeCb",
+            new ivm.Callback(
+              (...params: Parameters<typeof querystring.escape>) =>
+                querystring.escape(...params)
+            )
+          )
+
+          global.setSync(
+            "helpersStripProtocol",
+            new ivm.Callback((str: string) => {
+              var parsed = url.parse(str) as any
+              parsed.protocol = ""
+              return parsed.format()
+            })
           )
 
           const helpersModule = jsIsolate.compileModuleSync(
