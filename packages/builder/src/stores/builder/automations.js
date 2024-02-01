@@ -4,7 +4,7 @@ import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
 import { createHistoryStore } from "stores/builder/history"
 import { notifications } from "@budibase/bbui"
-import { updateReferencesInObject } from "builder/dataBinding"
+import { updateReferencesInObject } from "../../dataBinding"
 
 const initialAutomationState = {
   automations: [],

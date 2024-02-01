@@ -10,7 +10,7 @@
     notifications,
   } from "@budibase/bbui"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
-  import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import { makeComponentUnique } from "stores/builder/components/utils"
 
   export let screenId

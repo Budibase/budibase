@@ -4,7 +4,7 @@
   import { createEventDispatcher } from "svelte"
   import { Helpers } from "@budibase/bbui"
   import { componentStore } from "stores/builder"
-  import { getEventContextBindings } from "builder/dataBinding"
+  import { getEventContextBindings } from "../../../../../dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
 
   export let componentInstance

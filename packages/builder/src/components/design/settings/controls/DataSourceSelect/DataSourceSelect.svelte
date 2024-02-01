@@ -2,7 +2,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builder/dataBinding"
+  } from "../../../../../dataBinding"
   import {
     Button,
     Popover,

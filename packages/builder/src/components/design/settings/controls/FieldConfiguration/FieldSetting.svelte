@@ -3,7 +3,7 @@
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { runtimeToReadableBinding } from "builder/dataBinding"
+  import { runtimeToReadableBinding } from "../../../../../dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
   import { componentStore } from "stores/builder"
 

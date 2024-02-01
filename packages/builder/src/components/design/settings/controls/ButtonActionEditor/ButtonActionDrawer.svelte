@@ -16,7 +16,7 @@
     getActionBindings,
     makeStateBinding,
     updateReferencesInObject,
-  } from "builder/dataBinding"
+  } from "../../../../../dataBinding"
   import { cloneDeep } from "lodash/fp"
 
   const flipDurationMs = 150

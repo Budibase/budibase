@@ -22,7 +22,7 @@ import {
   decodeJSBinding,
   encodeJSBinding,
 } from "@budibase/string-templates"
-import { TableNames } from "../constants"
+import { TableNames } from "constants"
 import { JSONUtils } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"

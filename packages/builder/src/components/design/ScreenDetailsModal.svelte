@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Input } from "@budibase/bbui"
-  import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import { get } from "svelte/store"
   import { screenStore } from "stores/builder"
 
