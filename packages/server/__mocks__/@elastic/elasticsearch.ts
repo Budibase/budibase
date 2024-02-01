@@ -1,24 +1,27 @@
-const elastic: any = {}
+import { vi } from "vitest"
 
-elastic.Client = function () {
-  this.index = jest.fn().mockResolvedValue({ body: [] })
-  this.search = jest.fn().mockResolvedValue({
-    body: {
-      hits: {
-        hits: [
-          {
-            _source: {
-              name: "test",
+vi.mock("@elastic/elasticsearch", () => {
+  return {
+    Client: vi.fn(() => {
+      return {
+        index: vi.fn(() => ({ body: [] })),
+        search: vi.fn(() => ({
+          body: {
+            hits: {
+              hits: [
+                {
+                  _source: {
+                    name: "test",
+                  },
+                },
+              ],
             },
           },
-        ],
-      },
-    },
-  })
-  this.update = jest.fn().mockResolvedValue({ body: [] })
-  this.delete = jest.fn().mockResolvedValue({ body: [] })
-
-  this.close = jest.fn()
-}
-
-module.exports = elastic
+        })),
+        update: vi.fn(() => ({ body: [] })),
+        delete: vi.fn(() => ({ body: [] })),
+        close: vi.fn(),
+      }
+    }),
+  }
+})

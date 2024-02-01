@@ -1,24 +1,23 @@
-module ArangoMock {
-  const arangodb: any = {}
+import { vi } from "vitest"
 
-  arangodb.Database = function () {
-    this.query = jest.fn(() => ({
-      all: jest.fn(),
-    }))
-    this.collection = jest.fn(() => "collection")
-    this.close = jest.fn()
+vi.mock("arangojs", () => {
+  return {
+    Database: vi.fn(() => ({
+      query: vi.fn(() => ({
+        all: vi.fn(),
+      })),
+      collection: vi.fn(() => "collection"),
+      close: vi.fn(),
+    })),
+    // @ts-ignore
+    aql: (strings, ...args) => {
+      let str = strings.join("{}")
+
+      for (let arg of args) {
+        str = str.replace("{}", arg)
+      }
+
+      return str
+    },
   }
-
-  // @ts-ignore
-  arangodb.aql = (strings, ...args) => {
-    let str = strings.join("{}")
-
-    for (let arg of args) {
-      str = str.replace("{}", arg)
-    }
-
-    return str
-  }
-
-  module.exports = arangodb
-}
+})

@@ -1,8 +1,7 @@
-module AirtableMock {
-  function Airtable() {
-    // @ts-ignore
-    this.base = jest.fn()
-  }
+import { vi } from "vitest"
 
-  module.exports = Airtable
-}
+vi.mock("airtable", () => {
+  return {
+    base: vi.fn(),
+  }
+})

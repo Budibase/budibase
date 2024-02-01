@@ -140,7 +140,7 @@ export function init(endpoint: string) {
   docClient = new AWS.DynamoDB.DocumentClient(docClientParams)
 }
 
-if (!env.isProd() && !env.isJest()) {
+if (!env.isProd() && !env.isTest()) {
   env._set("AWS_ACCESS_KEY_ID", "KEY_ID")
   env._set("AWS_SECRET_ACCESS_KEY", "SECRET_KEY")
   init("http://localhost:8333")

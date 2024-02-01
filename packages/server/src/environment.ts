@@ -84,7 +84,6 @@ const environment = {
     environment[key] = value
   },
   isTest: coreEnv.isTest,
-  isJest: coreEnv.isJest,
   isDev: coreEnv.isDev,
   isProd: () => {
     return !coreEnv.isDev()

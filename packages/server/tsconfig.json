@@ -9,5 +9,6 @@
     "swc": true
   },
   "include": ["src/**/*", "specs", "__mocks__"],
+  "types": ["vitest/globals"],
   "exclude": ["node_modules", "dist"]
 }

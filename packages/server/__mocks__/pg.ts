@@ -1,7 +1,7 @@
-module PgMock {
-  const pg: any = {}
+import { vi } from "vitest"
 
-  const query = jest.fn(() => ({
+vi.mock("pg", () => {
+  const query = vi.fn(() => ({
     rows: [
       {
         a: "string",
@@ -10,21 +10,17 @@ module PgMock {
     ],
   }))
 
-  // constructor
-  function Client() {}
-
-  Client.prototype.query = query
-  Client.prototype.end = jest.fn(cb => {
-    if (cb) cb()
-  })
-  Client.prototype.connect = jest.fn()
-  Client.prototype.release = jest.fn()
-
-  const on = jest.fn()
-
-  pg.Client = Client
-  pg.queryMock = query
-  pg.on = on
-
-  module.exports = pg
-}
+  return {
+    Client: vi.fn(() => ({
+      query,
+      connect: vi.fn(),
+      release: vi.fn(),
+      end: vi.fn(cb => {
+        if (cb) cb()
+      }),
+    })),
+    on: vi.fn(),
+    queryMock: query,
+    types: undefined,
+  }
+})

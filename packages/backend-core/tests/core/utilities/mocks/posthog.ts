@@ -1,7 +1,9 @@
-jest.mock("posthog-node", () => {
-  return jest.fn().mockImplementation(() => {
+import { vi } from "vitest"
+
+vi.mock("posthog-node", () => {
+  return vi.fn().mockImplementation(() => {
     return {
-      capture: jest.fn(),
+      capture: vi.fn(),
     }
   })
 })

@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import tk from "timekeeper"
 import * as internalSdk from "../internal"
 
@@ -70,7 +71,7 @@ describe("sdk >> rows >> internal", () => {
     }
 
     beforeEach(() => {
-      jest.clearAllMocks()
+      vi.clearAllMocks()
     })
 
     it("save will persist the row properly", async () => {

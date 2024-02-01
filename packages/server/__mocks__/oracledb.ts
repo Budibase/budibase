@@ -1,6 +1,7 @@
-module OracleDbMock {
-  // mock execute
-  const execute = jest.fn(() => ({
+import { vi } from "vitest"
+
+vi.mock("oracledb", () => {
+  const executeMock = vi.fn(() => ({
     rows: [
       {
         a: "string",
@@ -8,24 +9,14 @@ module OracleDbMock {
       },
     ],
   }))
+  const closeMock = vi.fn()
 
-  const close = jest.fn()
-
-  // mock connection
-  function Connection() {}
-  Connection.prototype.execute = execute
-  Connection.prototype.close = close
-
-  // mock oracledb
-  const oracleDb: any = {}
-  oracleDb.getConnection = jest.fn(() => {
-    // @ts-ignore
-    return new Connection()
-  })
-
-  // expose mocks
-  oracleDb.executeMock = execute
-  oracleDb.closeMock = close
-
-  module.exports = oracleDb
-}
+  return {
+    getConnection: vi.fn(() => ({
+      execute: executeMock,
+      close: closeMock,
+    })),
+    executeMock,
+    closeMock,
+  }
+})

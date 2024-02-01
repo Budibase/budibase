@@ -1,22 +1,24 @@
-module SendgridMock {
-  class Email {
-    constructor() {
-      // @ts-ignore
-      this.apiKey = null
-    }
+import { vi } from "vitest"
 
-    setApiKey(apiKey: any) {
-      // @ts-ignore
-      this.apiKey = apiKey
-    }
-
-    async send(msg: any) {
-      if (msg.to === "invalid@test.com") {
-        throw "Invalid"
-      }
-      return msg
-    }
+class Email {
+  constructor() {
+    // @ts-ignore
+    this.apiKey = null
   }
 
-  module.exports = new Email()
+  setApiKey(apiKey: any) {
+    // @ts-ignore
+    this.apiKey = apiKey
+  }
+
+  async send(msg: any) {
+    if (msg.to === "invalid@test.com") {
+      throw "Invalid"
+    }
+    return msg
+  }
 }
+
+vi.mock("@sendgrid/mail", () => {
+  return new Email()
+})

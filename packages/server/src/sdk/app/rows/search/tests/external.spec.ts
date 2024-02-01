@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import { GenericContainer } from "testcontainers"
 
 import {
@@ -17,9 +18,8 @@ import {
   generator,
 } from "@budibase/backend-core/tests"
 
-jest.unmock("mysql2/promise")
-
-jest.setTimeout(30000)
+vi.unmock("mysql2/promise")
+vi.setConfig({ testTimeout: 30000 })
 
 describe.skip("external", () => {
   const config = new TestConfiguration()

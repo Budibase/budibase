@@ -1,36 +1,44 @@
-module FirebaseMock {
-  const firebase: any = {}
+import { vi } from "vitest"
 
-  firebase.Firestore = function () {
-    this.get = jest.fn(() => [
-      {
-        data: jest.fn(() => ({ result: "test" })),
-      },
-    ])
-
-    this.update = jest.fn()
-    this.set = jest.fn()
-    this.delete = jest.fn()
-
-    this.doc = jest.fn(() => ({
-      update: this.update,
-      set: this.set,
-      delete: this.delete,
-      get: jest.fn(() => ({
-        data: jest.fn(() => ({ result: "test" })),
+vi.mock("@google-cloud/firestore", () => {
+  return {
+    Firestore: vi.fn(() => ({
+      collection: vi.fn(() => ({
+        doc: vi.fn(() => ({
+          get: vi.fn(() => ({
+            data: vi.fn(() => ({ result: "test" })),
+          })),
+          update: vi.fn(),
+          set: vi.fn(),
+          delete: vi.fn(),
+          id: "test_id",
+        })),
+        where: vi.fn(() => ({
+          get: vi.fn(() => [
+            {
+              data: vi.fn(() => ({ result: "test" })),
+            },
+          ]),
+        })),
+        collection: vi.fn(() => ({
+          doc: vi.fn(() => ({
+            get: vi.fn(() => ({
+              data: vi.fn(() => ({ result: "test" })),
+            })),
+            update: vi.fn(),
+            set: vi.fn(),
+            delete: vi.fn(),
+            id: "test_id",
+          })),
+          where: vi.fn(() => ({
+            get: vi.fn(() => [
+              {
+                data: vi.fn(() => ({ result: "test" })),
+              },
+            ]),
+          })),
+        })),
       })),
-      id: "test_id",
-    }))
-
-    this.where = jest.fn(() => ({
-      get: this.get,
-    }))
-
-    this.collection = jest.fn(() => ({
-      doc: this.doc,
-      where: this.where,
-    }))
+    })),
   }
-
-  module.exports = firebase
-}
+})

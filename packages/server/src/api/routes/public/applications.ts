@@ -1,6 +1,6 @@
 import controller from "../../controllers/public/applications"
 import Endpoint from "./utils/Endpoint"
-const { nameValidator, applicationValidator } = require("../utils/validators")
+import { nameValidator, applicationValidator } from "../utils/validators"
 
 const read = [],
   write = []

@@ -1,24 +1,22 @@
-module MsSqlMock {
-  const mssql: any = {}
+import { vi } from "vitest"
 
-  mssql.query = jest.fn(() => ({
-    recordset: [
-      {
-        a: "string",
-        b: 1,
-      },
-    ],
-  }))
-
-  // mssql.connect = jest.fn(() => ({ recordset: [] }))
-
-  mssql.ConnectionPool = jest.fn(() => ({
-    connect: jest.fn(() => ({
-      request: jest.fn(() => ({
-        query: jest.fn(sql => ({ recordset: [sql] })),
+vi.mock("mssql", () => {
+  return {
+    query: vi.fn(() => ({
+      recordset: [
+        {
+          a: "string",
+          b: 1,
+        },
+      ],
+    })),
+    // connect: vi.fn(() => ({ recordset: [] })),
+    ConnectionPool: vi.fn(() => ({
+      connect: vi.fn(() => ({
+        request: vi.fn(() => ({
+          query: vi.fn(sql => ({ recordset: [sql] })),
+        })),
       })),
     })),
-  }))
-
-  module.exports = mssql
-}
+  }
+})

@@ -1,9 +1,10 @@
+import { vi } from "vitest"
 import { Header } from "@budibase/backend-core"
 import * as setup from "../../api/routes/tests/utilities"
 import * as migrations from "../migrations"
 import { getAppMigrationVersion } from "../appMigrationMetadata"
 
-jest.mock<typeof migrations>("../migrations", () => ({
+vi.mock("../migrations", () => ({
   MIGRATIONS: [
     {
       id: "20231211101320_test",

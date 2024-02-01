@@ -1,17 +1,15 @@
-module MySQLMock {
-  const mysql: any = {}
+import { vi } from "vitest"
 
-  const client = {
-    connect: jest.fn(),
-    end: jest.fn(),
-    query: jest.fn(async () => {
-      return [[]]
+vi.mock("mysql2/promise", () => {
+  return {
+    createConnection: vi.fn(async () => {
+      return {
+        connect: vi.fn(),
+        end: vi.fn(),
+        query: vi.fn(async () => {
+          return [[]]
+        }),
+      }
     }),
   }
-
-  mysql.createConnection = jest.fn(async () => {
-    return client
-  })
-
-  module.exports = mysql
-}
+})

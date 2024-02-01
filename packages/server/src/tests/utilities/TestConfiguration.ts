@@ -65,6 +65,8 @@ import {
   WithRequired,
 } from "@budibase/types"
 
+import { getServer } from "src/app"
+
 import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
@@ -112,7 +114,7 @@ class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app").getServer()
+      this.server = getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true

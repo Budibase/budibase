@@ -15,6 +15,8 @@ import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
+import * as bash from "./steps/bash"
+import * as openai from "./steps/openai"
 import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
@@ -76,9 +78,6 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
 // the fact this isn't included in any definitions means it cannot be
 // ran at all
 if (env.SELF_HOSTED) {
-  const bash = require("./steps/bash")
-  const openai = require("./steps/openai")
-
   // @ts-ignore
   ACTION_IMPLS["EXECUTE_BASH"] = bash.run
   // @ts-ignore

@@ -1,3 +1,4 @@
+import { vi } from "vitest"
 import TestConfig from "../../../../tests/utilities/TestConfiguration"
 import env from "../../../../environment"
 import supertest from "supertest"
@@ -16,30 +17,30 @@ function user() {
   }
 }
 
-jest.mock("../../../../utilities/workerRequests", () => ({
-  getGlobalUsers: jest.fn(() => {
+vi.mock("../../../../utilities/workerRequests", () => ({
+  getGlobalUsers: vi.fn(() => {
     return {
       _id: "us_uuid1",
     }
   }),
-  getGlobalSelf: jest.fn(() => {
+  getGlobalSelf: vi.fn(() => {
     return {
       _id: "us_uuid1",
     }
   }),
-  allGlobalUsers: jest.fn(() => {
+  allGlobalUsers: vi.fn(() => {
     return [user()]
   }),
-  readGlobalUser: jest.fn(() => {
+  readGlobalUser: vi.fn(() => {
     return user()
   }),
-  saveGlobalUser: jest.fn(() => {
+  saveGlobalUser: vi.fn(() => {
     return { _id: "user", _rev: "rev" }
   }),
-  deleteGlobalUser: jest.fn(() => {
+  deleteGlobalUser: vi.fn(() => {
     return { message: "deleted user" }
   }),
-  removeAppFromUserRoles: jest.fn(),
+  removeAppFromUserRoles: vi.fn(),
 }))
 
 export function delay(ms: number) {

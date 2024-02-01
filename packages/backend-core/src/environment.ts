@@ -2,10 +2,6 @@ import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
 
 function isTest() {
-  return isJest()
-}
-
-function isJest() {
   return (
     process.env.NODE_ENV === "jest" ||
     (process.env.JEST_WORKER_ID != null &&
@@ -94,7 +90,6 @@ function isApps() {
 
 const environment = {
   isTest,
-  isJest,
   isDev,
   isWorker,
   isApps,

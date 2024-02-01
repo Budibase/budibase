@@ -167,7 +167,7 @@ export const serveApp = async function (ctx: Ctx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
-    if (!env.isJest()) {
+    if (!env.isTest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
       const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
@@ -205,7 +205,7 @@ export const serveApp = async function (ctx: Ctx) {
       ctx.body = appInfo
     }
   } catch (error) {
-    if (!env.isJest()) {
+    if (!env.isTest()) {
       const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
         title: branding?.metaTitle,
@@ -234,7 +234,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
-  if (!env.isJest()) {
+  if (!env.isTest()) {
     let appId = context.getAppId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
