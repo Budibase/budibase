@@ -184,7 +184,7 @@
       {#if environmentVariablesEnabled}
         <div on:click={() => showModal()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >
@@ -195,7 +195,7 @@
       {:else}
         <div on:click={() => handleUpgradePanel()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >
