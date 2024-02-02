@@ -1,7 +1,6 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import {
-  buildContextTree,
   buildContextTreeLookupMap,
   findAllComponents,
   findAllMatchingComponents,
