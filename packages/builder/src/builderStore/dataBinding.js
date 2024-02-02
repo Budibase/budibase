@@ -364,7 +364,6 @@ const getContextBindings = (asset, componentId) => {
  * Generates a set of bindings for a given component context
  */
 const generateComponentContextBindings = (asset, componentContext) => {
-  console.log("Hello ")
   const { component, definition, contexts } = componentContext
   if (!component || !definition || !contexts?.length) {
     return []
