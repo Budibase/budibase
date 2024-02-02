@@ -585,7 +585,7 @@
                           binding,
                           {
                             js: true,
-                            decode: false,
+                            dontDecode: true,
                           }
                         )}
                       mode="javascript"

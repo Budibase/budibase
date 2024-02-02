@@ -9,11 +9,11 @@ export class BindingHelpers {
   }
 
   // Adds a JS/HBS helper to the expression
-  onSelectHelper(value, helper, { js }) {
+  onSelectHelper(value, helper, { js, dontDecode }) {
     const pos = this.getCaretPosition()
     const { start, end } = pos
     if (js) {
-      const jsVal = decodeJSBinding(value)
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
       const insertVal = jsInsert(jsVal, start, end, helper.text, {
         helper: true,
       })
@@ -25,10 +25,10 @@ export class BindingHelpers {
   }
 
   // Adds a data binding to the expression
-  onSelectBinding(value, binding, { js, decode }) {
+  onSelectBinding(value, binding, { js, dontDecode }) {
     const { start, end } = this.getCaretPosition()
     if (js) {
-      const jsVal = decode ? decodeJSBinding(value) : value
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
       const insertVal = jsInsert(jsVal, start, end, binding.readableBinding, {
         disableWrapping: this.disableWrapping,
       })
