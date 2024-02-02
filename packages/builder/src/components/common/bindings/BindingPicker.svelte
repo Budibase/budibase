@@ -9,6 +9,7 @@
   export let bindings
   export let mode
   export let allowHelpers
+  export let noPaddingTop = false
 
   let search = ""
   let popover
@@ -104,7 +105,7 @@
 
 <Layout noPadding gap="S">
   {#if selectedCategory}
-    <div class="sub-section-back">
+    <div class="sub-section-back" class:no-padding-top={noPaddingTop}>
       <ActionButton
         secondary
         icon={"ArrowLeft"}
@@ -300,6 +301,9 @@
     padding: var(--spacing-l);
     padding-top: var(--spacing-xl);
     padding-bottom: 0px;
+  }
+  .no-padding-top {
+    padding-top: 0 !important;
   }
   .cat-heading {
     margin-bottom: var(--spacing-l);

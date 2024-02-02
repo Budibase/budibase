@@ -577,6 +577,7 @@
                   <div class="js-binding-picker">
                     <BindingPicker
                       {bindings}
+                      noPaddingTop
                       allowHelpers={false}
                       addBinding={binding =>
                         bindingsHelpers.onSelectBinding(
