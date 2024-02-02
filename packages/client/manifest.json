@@ -89,13 +89,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
