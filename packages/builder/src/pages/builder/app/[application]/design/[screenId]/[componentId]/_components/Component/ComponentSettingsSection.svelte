@@ -150,8 +150,6 @@
   onMount(() => {
     store.actions.preview.sendEvent("request-context")
   })
-
-  $: console.log(context)
 </script>
 
 {#each sections as section, idx (section.name)}

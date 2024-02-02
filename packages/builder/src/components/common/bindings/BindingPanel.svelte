@@ -15,6 +15,7 @@
     decodeJSBinding,
     encodeJSBinding,
     convertToJS,
+    processStringSync,
   } from "@budibase/string-templates"
   import {
     readableToRuntimeBinding,
@@ -59,15 +60,21 @@
   let hbsValue = initialValueJS ? null : value
   let sidebar = true
   let targetMode = null
+  let expressionResult
 
   $: usingJS = mode === "JavaScript"
-  $: editorMode = mode == "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
+  $: editorMode =
+    mode === "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
   $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
+  $: runtimeExpression = readableToRuntimeBinding(bindings, value)
+  $: expressionResult = processStringSync(runtimeExpression || "", context)
 
   const updateValue = val => {
-    valid = isValid(readableToRuntimeBinding(bindings, val))
+    const runtimeExpression = readableToRuntimeBinding(bindings, val)
+    valid = isValid(runtimeExpression)
     if (valid) {
       dispatch("change", val)
+      expressionResult = processStringSync(runtimeExpression || "", context)
     }
   }
 
@@ -114,7 +121,7 @@
   }
 
   const switchMode = () => {
-    if (targetMode == "Text") {
+    if (targetMode === "Text") {
       jsValue = null
       updateValue(jsValue)
     } else {
@@ -204,6 +211,11 @@
                   autofocus={autofocusEditor}
                 />
               </div>
+              {#if expressionResult}
+                <div class="result">
+                  {expressionResult}
+                </div>
+              {/if}
               <div class="binding-footer">
                 <div class="messaging">
                   {#if !valid}
@@ -308,6 +320,11 @@
                     autofocus={autofocusEditor}
                   />
                 </div>
+                {#if expressionResult}
+                  <div class="result">
+                    {expressionResult}
+                  </div>
+                {/if}
                 <div class="binding-footer">
                   <div class="messaging">
                     <Icon name="FlashOn" />
@@ -514,5 +531,19 @@
   .binding-drawer :global(.code-editor),
   .binding-drawer :global(.code-editor > div) {
     height: 100%;
+  }
+
+  .result {
+    margin: 0;
+    background: var(--spectrum-global-color-gray-200);
+    font-size: 14px;
+    padding: var(--spacing-l);
+    border-radius: var(--border-radius-s);
+    font-family: monospace;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    max-height: 200px;
+    overflow: auto;
+    white-space: pre;
+    word-wrap: anywhere;
   }
 </style>
