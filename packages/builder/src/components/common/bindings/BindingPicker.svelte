@@ -105,7 +105,7 @@
 
 <Layout noPadding gap="S">
   {#if selectedCategory}
-    <div class="sub-section-back" class:no-padding-top={noPaddingTop}>
+    <div class="sub-section-back">
       <ActionButton
         secondary
         icon={"ArrowLeft"}
@@ -301,9 +301,6 @@
     padding: var(--spacing-l);
     padding-top: var(--spacing-xl);
     padding-bottom: 0px;
-  }
-  .no-padding-top {
-    padding-top: 0 !important;
   }
   .cat-heading {
     margin-bottom: var(--spacing-l);
