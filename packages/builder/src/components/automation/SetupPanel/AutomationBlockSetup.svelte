@@ -577,7 +577,6 @@
                   <div class="js-binding-picker">
                     <BindingPicker
                       {bindings}
-                      noPaddingTop
                       allowHelpers={false}
                       addBinding={binding =>
                         bindingsHelpers.onSelectBinding(
@@ -690,5 +689,6 @@
 
   .js-binding-picker {
     flex: 3;
+    margin-top: calc((var(--spacing-xl) * -1) + 1px);
   }
 </style>
