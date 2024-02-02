@@ -15,4 +15,5 @@ export type ContextMap = {
     jsContext: Context
     helpersModule: Module
   }
+  cleanup?: (() => void | Promise<void>)[]
 }

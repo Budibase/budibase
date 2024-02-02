@@ -115,6 +115,14 @@ export function init() {
           }
 
           bbCtx.isolateRefs = { jsContext, jsIsolate, helpersModule }
+          if (!bbCtx.cleanup) {
+            bbCtx.cleanup = []
+          }
+          bbCtx.cleanup.push(() => {
+            helpersModule.release()
+            jsContext.release()
+            jsIsolate.dispose()
+          })
         }
 
         let { jsIsolate, jsContext, helpersModule } = bbCtx.isolateRefs!
