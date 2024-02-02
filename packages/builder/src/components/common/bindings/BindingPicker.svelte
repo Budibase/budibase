@@ -16,12 +16,8 @@
   let popoverAnchor
   let hoverTarget
   let helpers = handlebarsCompletions()
-
   let selectedCategory
 
-  $: searchRgx = new RegExp(search, "ig")
-
-  // Icons
   $: bindingIcons = bindings?.reduce((acc, ele) => {
     if (ele.icon) {
       acc[ele.category] = acc[ele.category] || ele.icon
@@ -29,10 +25,9 @@
     return acc
   }, {})
   $: categoryIcons = { ...bindingIcons, Helpers: "MagicWand" }
-
   $: categories = Object.entries(groupBy("category", bindings))
   $: categoryNames = getCategoryNames(categories)
-
+  $: searchRgx = new RegExp(search, "ig")
   $: filteredCategories = categories
     .map(([name, categoryBindings]) => ({
       name,
@@ -73,38 +68,35 @@
     }
     return names
   }
+
+  const getBindingValue = binding => {
+    const hbs = `{{ ${binding.runtimeBinding} }}`
+    return processStringSync(hbs, context)
+  }
 </script>
 
-<span class="detailPopover">
-  <Popover
-    align="left-outside"
-    bind:this={popover}
-    anchor={popoverAnchor}
-    maxWidth={300}
-    maxHeight={300}
-    dismissible={false}
-  >
+<Popover
+  align="left-outside"
+  bind:this={popover}
+  anchor={popoverAnchor}
+  maxWidth={400}
+  maxHeight={300}
+  dismissible={false}
+>
+  <div class="helper">
     <Layout gap="S">
-      <div class="helper">
-        {#if hoverTarget.title}
-          <div class="helper__name">{hoverTarget.title}</div>
-        {/if}
-        {#if hoverTarget.description}
-          <div class="helper__description">
-            <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-            {@html hoverTarget.description}
-          </div>
-        {/if}
-        {#if hoverTarget.example}
-          <pre class="helper__example">{hoverTarget.example}</pre>
-        {/if}
-        {#if hoverTarget.val}
-          <pre>{hoverTarget.val}</pre>
-        {/if}
-      </div>
+      {#if hoverTarget.description}
+        <div>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html hoverTarget.description}
+        </div>
+      {/if}
+      {#if hoverTarget.code}
+        <pre>{hoverTarget.code}</pre>
+      {/if}
     </Layout>
-  </Popover>
-</span>
+  </div>
+</Popover>
 
 <Layout noPadding gap="S">
   {#if selectedCategory}
@@ -171,14 +163,13 @@
               <li
                 class="binding"
                 on:mouseenter={e => {
-                  const hbs = `{{ ${binding.runtimeBinding} }}`
-                  const val = processStringSync(hbs, context)
-                  console.log(binding.runtimeBinding, val)
+                  let val = getBindingValue(binding)
+                  if (val === "") {
+                    val = " "
+                  }
                   popoverAnchor = e.target
                   hoverTarget = {
-                    title: binding.display?.name || binding.fieldSchema?.name,
-                    description: binding.description,
-                    val,
+                    code: val,
                   }
                   popover.show()
                   e.stopPropagation()
@@ -224,19 +215,15 @@
             {#each filteredHelpers as helper}
               <li
                 class="binding"
-                on:click={() => addHelper(helper, mode.name == "javascript")}
+                on:click={() => addHelper(helper, mode.name === "javascript")}
                 on:mouseenter={e => {
                   popoverAnchor = e.target
                   if (!helper.displayText && helper.description) {
                     return
                   }
                   hoverTarget = {
-                    title: helper.displayText,
                     description: helper.description,
-                    example: getHelperExample(
-                      helper,
-                      mode.name == "javascript"
-                    ),
+                    code: getHelperExample(helper, mode.name === "javascript"),
                   }
                   popover.show()
                   e.stopPropagation()
@@ -396,5 +383,17 @@
     padding: 2px 4px;
     margin-left: 2px;
     font-weight: 600;
+  }
+
+  .helper pre {
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .helper :global(p) {
+    padding: 0;
+    margin: 0;
   }
 </style>
