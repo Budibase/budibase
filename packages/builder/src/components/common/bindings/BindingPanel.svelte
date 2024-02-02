@@ -72,7 +72,7 @@
   }
 
   const onSelectHelper = (helper, js) => {
-    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, js)
+    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, { js })
   }
 
   const onSelectBinding = (binding, { forceJS } = {}) => {
