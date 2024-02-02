@@ -1,38 +1,41 @@
-export function addHBSBinding(value, caretPos, binding) {
-  binding = typeof binding === "string" ? binding : binding.path
-  value = value == null ? "" : value
+import { decodeJSBinding } from "@budibase/string-templates"
+import { hbInsert, jsInsert } from "components/common/CodeEditor"
 
-  const left = caretPos?.start ? value.substring(0, caretPos.start) : ""
-  const right = caretPos?.end ? value.substring(caretPos.end) : ""
-  if (!left.includes("{{") || !right.includes("}}")) {
-    binding = `{{ ${binding} }}`
+export class BindingHelpers {
+  constructor(getCaretPosition, insertAtPos, { disableWrapping } = {}) {
+    this.getCaretPosition = getCaretPosition
+    this.insertAtPos = insertAtPos
+    this.disableWrapping = disableWrapping
   }
-  if (caretPos.start) {
-    value =
-      value.substring(0, caretPos.start) +
-      binding +
-      value.substring(caretPos.end, value.length)
-  } else {
-    value += binding
-  }
-  return value
-}
 
-export function addJSBinding(value, caretPos, binding, { helper } = {}) {
-  binding = typeof binding === "string" ? binding : binding.path
-  value = value == null ? "" : value
-  if (!helper) {
-    binding = `$("${binding}")`
-  } else {
-    binding = `helpers.${binding}()`
+  // Adds a JS/HBS helper to the expression
+  onSelectHelper(value, helper, { js, dontDecode }) {
+    const pos = this.getCaretPosition()
+    const { start, end } = pos
+    if (js) {
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
+      const insertVal = jsInsert(jsVal, start, end, helper.text, {
+        helper: true,
+      })
+      this.insertAtPos({ start, end, value: insertVal })
+    } else {
+      const insertVal = hbInsert(value, start, end, helper.text)
+      this.insertAtPos({ start, end, value: insertVal })
+    }
   }
-  if (caretPos.start) {
-    value =
-      value.substring(0, caretPos.start) +
-      binding +
-      value.substring(caretPos.end, value.length)
-  } else {
-    value += binding
+
+  // Adds a data binding to the expression
+  onSelectBinding(value, binding, { js, dontDecode }) {
+    const { start, end } = this.getCaretPosition()
+    if (js) {
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
+      const insertVal = jsInsert(jsVal, start, end, binding.readableBinding, {
+        disableWrapping: this.disableWrapping,
+      })
+      this.insertAtPos({ start, end, value: insertVal })
+    } else {
+      const insertVal = hbInsert(value, start, end, binding.readableBinding)
+      this.insertAtPos({ start, end, value: insertVal })
+    }
   }
-  return value
 }
