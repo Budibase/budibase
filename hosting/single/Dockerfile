@@ -124,8 +124,6 @@ HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh
 
 # must set this just before running
 ENV NODE_ENV=production
-# this is required for isolated-vm to work on Node 20+
-ENV NODE_OPTIONS="--no-node-snapshot"
 WORKDIR /
 
 CMD ["./runner.sh"]

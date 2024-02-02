@@ -395,9 +395,4 @@ module.exports.convertToJS = hbs => {
 }
 
 module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
-
-const errors = require("./errors")
-// We cannot use dynamic exports, otherwise the typescript file will not be generating it
-module.exports.JsErrorTimeout = errors.JsErrorTimeout
-
 module.exports.helpersToRemoveForJs = helpersToRemoveForJs
