@@ -15,7 +15,6 @@
     Icon,
     Checkbox,
     DatePicker,
-    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
   import { automationStore, selectedAutomation } from "builderStore"
