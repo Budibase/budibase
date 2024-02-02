@@ -20,21 +20,24 @@ module.exports.findHBSBlocks = templates.findHBSBlocks
 module.exports.convertToJS = templates.convertToJS
 module.exports.setJSRunner = templates.setJSRunner
 module.exports.FIND_ANY_HBS_REGEX = templates.FIND_ANY_HBS_REGEX
+module.exports.helpersToRemoveForJs = templates.helpersToRemoveForJs
 
 if (!process.env.NO_JS) {
-  const vm = require("vm")
-  const {setJSRunner} = require("./helpers/javascript")
+  const { VM } = require("vm2")
+  const { setJSRunner } = require("./helpers/javascript")
   /**
-   * Use vm to run JS scripts in a node Env
+   * Use vm2 to run JS scripts in a node env
    */
   setJSRunner((js, context) => {
-    context = {
-      ...context,
-      alert: undefined,
-      setInterval: undefined,
-      setTimeout: undefined,
-    }
-    vm.createContext(context)
-    return vm.runInNewContext(js, context, {timeout: 1000})
+    const vm = new VM({
+      sandbox: context,
+      timeout: 1000,
+    })
+    return vm.run(js)
   })
+}
+
+const errors = require("./errors")
+for (const error in errors) {
+  module.exports[error] = errors[error]
 }

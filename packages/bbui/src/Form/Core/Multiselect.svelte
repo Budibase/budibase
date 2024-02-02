@@ -15,8 +15,6 @@
   export let autoWidth = false
   export let searchTerm = null
   export let customPopoverHeight
-  export let customPopoverOffsetBelow
-  export let customPopoverMaxHeight
   export let open = false
   export let loading
 
@@ -98,7 +96,5 @@
   {sort}
   {autoWidth}
   {customPopoverHeight}
-  {customPopoverOffsetBelow}
-  {customPopoverMaxHeight}
   {loading}
 />

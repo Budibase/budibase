@@ -46,7 +46,7 @@
     "kill-accountportal": "kill-port 3001 4003",
     "kill-all": "yarn run kill-builder && yarn run kill-server && yarn kill-accountportal",
     "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up --ignore @budibase/account-portal-server && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
     "dev:accountportal": "yarn kill-accountportal && lerna run dev --stream --scope @budibase/account-portal-ui --scope @budibase/account-portal-server",
     "dev:all": "yarn run kill-all && lerna run --stream dev",

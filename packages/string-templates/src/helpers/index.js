@@ -7,7 +7,7 @@ const {
   HelperFunctionBuiltin,
   LITERAL_MARKER,
 } = require("./constants")
-const { getHelperList } = require("./list")
+const { getJsHelperList } = require("./list")
 
 const HTML_SWAPS = {
   "<": "&lt;",
@@ -97,4 +97,4 @@ module.exports.unregisterAll = handlebars => {
   externalHandlebars.unregisterAll(handlebars)
 }
 
-module.exports.getHelperList = getHelperList
+module.exports.getJsHelperList = getJsHelperList

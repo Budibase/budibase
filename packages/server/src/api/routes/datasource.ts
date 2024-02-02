@@ -53,7 +53,7 @@ router
   .post(
     "/api/datasources/:datasourceId/schema",
     authorized(permissions.BUILDER),
-    datasourceController.buildSchemaFromDb
+    datasourceController.buildSchemaFromSource
   )
   .post(
     "/api/datasources",

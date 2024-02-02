@@ -1,4 +1,4 @@
-import ivm, { Context, Script } from "isolated-vm"
+import ivm from "isolated-vm"
 
 const JS_TIMEOUT_MS = 1000
 
@@ -9,8 +9,7 @@ class ScriptRunner {
     const code = `let fn = () => {\n${script}\n}; results.out = fn();`
     this.vm = new IsolatedVM({ memoryLimit: 8 })
     this.vm.context = {
-      data: context.data,
-      params: context.params,
+      ...context,
       results: { out: "" },
     }
     this.vm.code = code

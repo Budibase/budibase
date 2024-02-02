@@ -108,6 +108,8 @@
           {componentInstance}
           {componentDefinition}
           {bindings}
+          iconTooltip={componentName}
+          componentTitle={title}
         />
       {/if}
       {#if section == "conditions"}

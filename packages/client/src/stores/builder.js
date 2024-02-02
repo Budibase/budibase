@@ -8,7 +8,6 @@ const createBuilderStore = () => {
     inBuilder: false,
     screen: null,
     selectedComponentId: null,
-    hoverComponentId: null,
     editMode: false,
     previewId: null,
     theme: null,
@@ -25,16 +24,6 @@ const createBuilderStore = () => {
   }
   const store = writable(initialState)
   const actions = {
-    hoverComponent: id => {
-      if (id === get(store).hoverComponentId) {
-        return
-      }
-      store.update(state => ({
-        ...state,
-        hoverComponentId: id,
-      }))
-      eventStore.actions.dispatchEvent("hover-component", { id })
-    },
     selectComponent: id => {
       if (id === get(store).selectedComponentId) {
         return

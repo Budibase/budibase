@@ -70,7 +70,7 @@ export function hasAppCreatorPermissions(user?: User | ContextUser): boolean {
   return _.flow(
     _.get("roles"),
     _.values,
-    _.find(x => x === "CREATOR"),
+    _.find(x => ["CREATOR", "ADMIN"].includes(x)),
     x => !!x
   )(user)
 }

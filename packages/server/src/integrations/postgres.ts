@@ -149,8 +149,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   private index: number = 1
   private open: boolean
 
-  COLUMNS_SQL!: string
-
   PRIMARY_KEYS_SQL = () => `
   SELECT pg_namespace.nspname table_schema
      , pg_class.relname table_name
@@ -169,6 +167,11 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   FROM pg_type t 
   JOIN pg_enum e on t.oid = e.enumtypid  
   JOIN pg_catalog.pg_namespace n ON n.oid = t.typnamespace;
+  `
+
+  COLUMNS_SQL = () => `
+    select * from information_schema.columns where table_schema = ANY(current_schemas(false)) 
+      AND pg_table_is_visible(to_regclass(format('%I.%I', table_schema, table_name)));
   `
 
   constructor(config: PostgresConfig) {
@@ -224,8 +227,6 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       .split(",")
       .map(item => `"${item.trim()}"`)
     await this.client.query(`SET search_path TO ${search_path.join(",")};`)
-    this.COLUMNS_SQL = `select * from information_schema.columns where table_schema = ANY(current_schemas(false))
-    AND pg_table_is_visible(to_regclass(table_schema || '.' || table_name));`
     this.open = true
   }
 
@@ -312,7 +313,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
     try {
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
 
       const tables: { [key: string]: Table } = {}
 
@@ -382,7 +383,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     try {
       await this.openConnection()
       const columnsResponse: { rows: PostgresColumn[] } =
-        await this.client.query(this.COLUMNS_SQL)
+        await this.client.query(this.COLUMNS_SQL())
       const names = columnsResponse.rows.map(row => row.table_name)
       return [...new Set(names)]
     } finally {

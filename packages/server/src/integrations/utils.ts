@@ -376,8 +376,8 @@ export function checkExternalTables(
       errors[name] = "Table must have a primary key."
     }
 
-    const schemaFields = Object.keys(table.schema)
-    if (schemaFields.find(f => invalidColumns.includes(f))) {
+    const columnNames = Object.keys(table.schema)
+    if (columnNames.find(f => invalidColumns.includes(f))) {
       errors[name] = "Table contains invalid columns."
     }
   }

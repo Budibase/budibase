@@ -2,6 +2,7 @@
   "name": "@budibase/string-templates",
   "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
+  "main": "src/index.cjs",
   "module": "dist/bundle.mjs",
   "license": "MPL-2.0",
   "types": "dist/index.d.ts",
@@ -10,7 +11,9 @@
       "require": "./src/index.cjs",
       "import": "./dist/bundle.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./index-helpers": "./dist/index-helpers.bundled.js",
+    "./test/utils": "./test/utils.js"
   },
   "files": [
     "dist",
@@ -18,21 +21,23 @@
     "manifest.json"
   ],
   "scripts": {
-    "build": "tsc && rollup -c",
-    "dev": "tsc && rollup -cw",
+    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
+    "build": "yarn build:esbuild && tsc && rollup -c",
+    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && rollup -cw\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },
   "dependencies": {
-    "@budibase/handlebars-helpers": "^0.11.11",
+    "@budibase/handlebars-helpers": "^0.13.1",
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.6",
-    "isolated-vm": "^4.6.0",
-    "lodash": "4.17.21"
+    "lodash.clonedeep": "^4.5.0",
+    "vm2": "^3.9.19"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",
     "@rollup/plugin-json": "^4.1.0",
+    "concurrently": "^8.2.2",
     "doctrine": "^3.0.0",
     "jest": "29.7.0",
     "marked": "^4.0.10",
