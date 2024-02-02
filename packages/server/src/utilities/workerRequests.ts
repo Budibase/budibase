@@ -1,4 +1,5 @@
 import fetch from "node-fetch"
+import { Response } from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 import {
