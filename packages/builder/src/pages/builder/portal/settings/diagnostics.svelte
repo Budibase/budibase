@@ -49,7 +49,7 @@
 
 {#if sdk.users.isAdmin($auth.user) && diagnosticInfo}
   <Layout noPadding>
-    <Layout gap="XS">
+    <Layout gap="XS" noPadding>
       <Heading size="M">Diagnostics</Heading>
       <Body>
         Please include this diagnostic information in support requests and
