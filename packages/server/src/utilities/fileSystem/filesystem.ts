@@ -4,7 +4,7 @@ import { resolve, join } from "path"
 import env from "../../environment"
 import tar from "tar"
 
-import { v4 as uuid } from "uuid"
+const uuid = require("uuid/v4")
 
 export const TOP_LEVEL_PATH =
   env.TOP_LEVEL_PATH || resolve(join(__dirname, "..", "..", ".."))
