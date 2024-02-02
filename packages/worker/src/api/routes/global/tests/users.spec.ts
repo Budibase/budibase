@@ -590,6 +590,15 @@ describe("/api/global/users", () => {
       expect(response.body.data[0].email).toBe(user.email)
     })
 
+    it("should be able to search by email with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { string: { ["999:email"]: user.email } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0].email).toBe(user.email)
+    })
+
     it("should be able to search by _id", async () => {
       const user = await config.createUser()
       const response = await config.api.users.searchUsers({
@@ -599,13 +608,52 @@ describe("/api/global/users", () => {
       expect(response.body.data[0]._id).toBe(user._id)
     })
 
+    it("should be able to search by _id with numeric prefixing", async () => {
+      const user = await config.createUser()
+      const response = await config.api.users.searchUsers({
+        query: { equal: { ["1:_id"]: user._id } },
+      })
+      expect(response.body.data.length).toBe(1)
+      expect(response.body.data[0]._id).toBe(user._id)
+    })
+
+    it("should throw an error when using multiple filters on the same field", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["1:email"]: user.email,
+              ["2:email"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
+    it("should throw an error when using multiple filters on the same field without prefixes", async () => {
+      const user = await config.createUser()
+      await config.api.users.searchUsers(
+        {
+          query: {
+            string: {
+              ["_id"]: user.email,
+              ["999:_id"]: "something else",
+            },
+          },
+        },
+        { status: 400 }
+      )
+    })
+
     it("should throw an error when unimplemented options used", async () => {
       const user = await config.createUser()
       await config.api.users.searchUsers(
         {
           query: { equal: { firstName: user.firstName } },
         },
-        { status: 501 }
+        { status: 400 }
       )
     })
 

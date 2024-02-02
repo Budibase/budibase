@@ -29,8 +29,12 @@ import {
   DocumentType,
   ProcessAttachmentResponse,
 } from "@budibase/types"
+import {
+  getAppMigrationVersion,
+  getLatestMigrationId,
+} from "../../../appMigrations"
 
-const send = require("koa-send")
+import send from "koa-send"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -129,7 +133,26 @@ export const deleteObjects = async function (ctx: Ctx) {
   )
 }
 
+const requiresMigration = async (ctx: Ctx) => {
+  const appId = context.getAppId()
+  if (!appId) {
+    ctx.throw("AppId could not be found")
+  }
+
+  const latestMigration = getLatestMigrationId()
+  if (!latestMigration) {
+    return false
+  }
+
+  const latestMigrationApplied = await getAppMigrationVersion(appId)
+
+  const requiresMigrations = latestMigrationApplied !== latestMigration
+  return requiresMigrations
+}
+
 export const serveApp = async function (ctx: Ctx) {
+  const needMigrations = await requiresMigration(ctx)
+
   const bbHeaderEmbed =
     ctx.request.get("x-budibase-embed")?.toLowerCase() === "true"
 
@@ -149,8 +172,8 @@ export const serveApp = async function (ctx: Ctx) {
     let appId = context.getAppId()
 
     if (!env.isJest()) {
-      const App = require("./templates/BudibaseApp.svelte").default
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+      const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css } = App.render({
         metaImage:
           branding?.metaImageUrl ||
@@ -171,6 +194,7 @@ export const serveApp = async function (ctx: Ctx) {
           config?.logoUrl !== ""
             ? objectStore.getGlobalFileUrl("settings", "logoUrl")
             : "",
+        appMigrating: needMigrations,
       })
       const appHbs = loadHandlebarsFile(appHbsPath)
       ctx.body = await processString(appHbs, {
@@ -277,7 +301,6 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
     const { bucket, key } = ctx.request.body || {}
     if (!bucket || !key) {
       ctx.throw(400, "bucket and key values are required")
-      return
     }
     try {
       const s3 = new AWS.S3({

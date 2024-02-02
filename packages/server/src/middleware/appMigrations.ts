@@ -8,7 +8,5 @@ export default async (ctx: UserCtx, next: any) => {
     return next()
   }
 
-  await checkMissingMigrations(appId)
-
-  return next()
+  return checkMissingMigrations(ctx, next, appId)
 }

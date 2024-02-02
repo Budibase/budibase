@@ -151,16 +151,12 @@ export function buildExternalRelationships(
     if (!table.primary || !linkTable.primary) {
       continue
     }
-    const foreignKey = (field as OneToManyRelationshipFieldMetadata).foreignKey
     const definition: RelationshipsJson = {
-      // if no foreign key specified then use the name of the field in other table
-      from: foreignKey || table.primary[0],
-      to: field.fieldName,
       tableName: linkTableName,
       // need to specify where to put this back into
       column: fieldName,
     }
-    if (isManyToMany(field) && field.through) {
+    if (isManyToMany(field)) {
       const { tableName: throughTableName } = breakExternalTableId(
         field.through
       )
@@ -170,6 +166,10 @@ export function buildExternalRelationships(
       definition.to = field.throughFrom || linkTable.primary[0]
       definition.fromPrimary = table.primary[0]
       definition.toPrimary = linkTable.primary[0]
+    } else {
+      // if no foreign key specified then use the name of the field in other table
+      definition.from = field.foreignKey || table.primary[0]
+      definition.to = field.fieldName
     }
     relationships.push(definition)
   }

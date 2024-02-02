@@ -220,6 +220,9 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for apps pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
     # -- Startup probe configuration for apps pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
@@ -272,6 +275,78 @@ services:
       # and resources set for the apps pods.
       targetCPUUtilizationPercentage: 80
 
+  automationWorkers:
+    # -- Whether or not to enable the automation worker service. If you disable this,
+    # automations will be processed by the apps service.
+    enabled: true
+    # @ignore (you shouldn't need to change this)
+    port: 4002
+    # -- The number of automation worker replicas to run.
+    replicaCount: 1
+    # -- The log level for the automation worker service.
+    logLevel: info
+    # -- The resources to use for automation worker pods. See
+    # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
+    # for more information on how to set these.
+    resources: {}
+    # -- Extra environment variables to set for automation worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
+    # -- Startup probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    startupProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      failureThreshold: 30
+      # @ignore
+      periodSeconds: 3
+    # -- Readiness probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    readinessProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      periodSeconds: 3
+      # @ignore
+      failureThreshold: 1
+    # -- Liveness probe configuration for automation worker pods. You shouldn't
+    # need to change this, but if you want to you can find more information
+    # here:
+    # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>
+    # @default -- HTTP health checks.
+    livenessProbe:
+      # @ignore
+      httpGet:
+        path: /health
+        port: 4002
+        scheme: HTTP
+      # @ignore
+      failureThreshold: 3
+      # @ignore
+      periodSeconds: 30
+    autoscaling:
+      # -- Whether to enable horizontal pod autoscaling for the apps service.
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 10
+      # -- Target CPU utilization percentage for the automation worker service.
+      # Note that for autoscaling to work, you will need to have metrics-server
+      # configured, and resources set for the automation worker pods.
+      targetCPUUtilizationPercentage: 80
+
   worker:
     # @ignore (you shouldn't need to change this)
     port: 4003
@@ -285,6 +360,9 @@ services:
     # <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/>
     # for more information on how to set these.
     resources: {}
+    # -- Extra environment variables to set for worker pods. Takes a list of
+    # name=value pairs.
+    extraEnv: []
     # -- Startup probe configuration for worker pods. You shouldn't need to
     # change this, but if you want to you can find more information here:
     # <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/>

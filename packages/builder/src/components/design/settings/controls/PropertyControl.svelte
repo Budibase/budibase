@@ -24,6 +24,7 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
+  export let wide
 
   $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
@@ -78,7 +79,7 @@
 
 <div
   class="property-control"
-  class:wide={!label || labelHidden}
+  class:wide={!label || labelHidden || wide === true}
   class:highlighted={highlighted && nullishValue}
   class:property-focus={propertyFocus}
 >
@@ -104,6 +105,7 @@
       {...props}
       on:drawerHide
       on:drawerShow
+      on:meta
     />
   </div>
   {#if info}
@@ -146,15 +148,28 @@
   .control {
     position: relative;
   }
-  .property-control.wide .control {
-    grid-column: 1 / -1;
-  }
   .text {
     font-size: var(--spectrum-global-dimension-font-size-75);
     color: var(--grey-6);
     grid-column: 2 / 2;
   }
+
+  .property-control.wide .control {
+    flex: 1;
+  }
+  .property-control.wide {
+    grid-template-columns: unset;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+  .property-control.wide > * {
+    width: 100%;
+  }
   .property-control.wide .text {
     grid-column: 1 / -1;
+  }
+  .property-control.wide .label {
+    margin-bottom: -8px;
   }
 </style>

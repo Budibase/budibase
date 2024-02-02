@@ -5,7 +5,7 @@ import {
 } from "@budibase/frontend-core"
 import { store } from "./builderStore"
 import { get } from "svelte/store"
-import { auth } from "./stores/portal"
+import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
@@ -44,5 +44,16 @@ export const API = createAPIClient({
         location.reload()
       }
     }
+  },
+  onMigrationDetected: appId => {
+    const updatingUrl = `/builder/app/updating/${appId}`
+
+    if (window.location.pathname === updatingUrl) {
+      return
+    }
+
+    get(navigation).goto(
+      `${updatingUrl}?returnUrl=${encodeURIComponent(window.location.pathname)}`
+    )
   },
 })

@@ -5,8 +5,8 @@ import { deleteView, getView, getViews, saveView } from "./utils"
 import { fetchView } from "../row"
 import { context, events } from "@budibase/backend-core"
 import sdk from "../../../sdk"
-import { FieldTypes } from "../../../constants"
 import {
+  FieldType,
   Ctx,
   Row,
   Table,
@@ -37,7 +37,7 @@ export async function save(ctx: Ctx) {
     (field: any) => field.name == viewToSave.groupBy
   )
 
-  const view = viewTemplate(viewToSave, groupByField?.type === FieldTypes.ARRAY)
+  const view = viewTemplate(viewToSave, groupByField?.type === FieldType.ARRAY)
   const viewName = viewToSave.name
 
   if (!viewName) {

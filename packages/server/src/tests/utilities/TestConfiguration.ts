@@ -17,7 +17,6 @@ import {
   basicWebhook,
 } from "./structures"
 import {
-  auth,
   cache,
   constants,
   context,
@@ -28,7 +27,18 @@ import {
   sessions,
   tenancy,
 } from "@budibase/backend-core"
-import * as controllers from "./controllers"
+import {
+  app as appController,
+  deploy as deployController,
+  role as roleController,
+  automation as automationController,
+  webhook as webhookController,
+  query as queryController,
+  screen as screenController,
+  layout as layoutController,
+  view as viewController,
+} from "./controllers"
+
 import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
@@ -45,13 +55,14 @@ import {
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
-  SearchFilters,
+  SearchParams,
   SourceName,
   Table,
   TableSourceType,
   User,
   UserRoles,
   View,
+  WithRequired,
 } from "@budibase/types"
 
 import API from "./api"
@@ -218,20 +229,45 @@ class TestConfiguration {
    */
   setEnv(newEnvVars: Partial<typeof env>): () => void {
     const oldEnv = cloneDeep(env)
-    const oldCoreEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
       env._set(key, newEnvVars[key])
-      coreEnv._set(key, newEnvVars[key])
     }
 
     return () => {
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
       }
+    }
+  }
 
-      for (const [key, value] of Object.entries(oldCoreEnv)) {
+  async withCoreEnv(
+    newEnvVars: Partial<typeof coreEnv>,
+    f: () => Promise<void>
+  ) {
+    let cleanup = this.setCoreEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
+    const oldEnv = cloneDeep(env)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      coreEnv._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
         coreEnv._set(key, value)
       }
     }
@@ -253,6 +289,9 @@ class TestConfiguration {
     }
     if (params) {
       request.params = params
+    }
+    request.throw = (status: number, message: string) => {
+      throw new Error(`Error ${status} - ${message}`)
     }
     return this.doInContext(appId, async () => {
       await controlFunc(request)
@@ -516,11 +555,7 @@ class TestConfiguration {
     // clear any old app
     this.appId = null
     this.app = await context.doInTenant(this.tenantId!, async () => {
-      const app = await this._req(
-        { name: appName },
-        null,
-        controllers.app.create
-      )
+      const app = await this._req({ name: appName }, null, appController.create)
       this.appId = app.appId!
       return app
     })
@@ -536,7 +571,7 @@ class TestConfiguration {
   }
 
   async publish() {
-    await this._req(null, null, controllers.deploy.publishApp)
+    await this._req(null, null, deployController.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
@@ -551,7 +586,7 @@ class TestConfiguration {
     const response = await this._req(
       null,
       { appId: this.appId },
-      controllers.app.unpublish
+      appController.unpublish
     )
     this.prodAppId = null
     this.prodApp = null
@@ -560,14 +595,16 @@ class TestConfiguration {
 
   // TABLE
 
-  async updateTable(
+  async upsertTable(
     config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    config.sourceType = config.sourceType || TableSourceType.INTERNAL
-    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
-    const response = await this._req(config, null, controllers.table.save)
+    const response = await this.api.table.save({
+      ...config,
+      sourceType: config.sourceType || TableSourceType.INTERNAL,
+      sourceId: config.sourceId || INTERNAL_TABLE_SOURCE_ID,
+    })
     if (!skipReassigning) {
       this.table = response
     }
@@ -585,7 +622,7 @@ class TestConfiguration {
     if (!config.sourceId) {
       config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async createExternalTable(
@@ -600,12 +637,12 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async getTable(tableId?: string) {
     tableId = tableId || this.table!._id!
-    return this._req(null, { tableId }, controllers.table.find)
+    return this.api.table.get(tableId)
   }
 
   async createLinkedTable(
@@ -653,37 +690,35 @@ class TestConfiguration {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
-    const tableId = (config && config.tableId) || this.table._id
+    const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
-    return this._req(config, { tableId }, controllers.row.save)
+    return this.api.row.save(tableId, config)
   }
 
   async getRow(tableId: string, rowId: string): Promise<Row> {
-    return this._req(null, { tableId, rowId }, controllers.row.find)
+    const res = await this.api.row.get(tableId, rowId)
+    return res.body
   }
 
   async getRows(tableId: string) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    return this._req(null, { tableId }, controllers.row.fetch)
+    return this.api.row.fetch(tableId)
   }
 
-  async searchRows(tableId: string, searchParams: SearchFilters = {}) {
+  async searchRows(tableId: string, searchParams?: SearchParams) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    const body = {
-      query: searchParams,
-    }
-    return this._req(body, { tableId }, controllers.row.search)
+    return this.api.row.search(tableId, searchParams)
   }
 
   // ROLE
 
   async createRole(config?: any) {
     config = config || basicRole()
-    return this._req(config, null, controllers.role.save)
+    return this._req(config, null, roleController.save)
   }
 
   // VIEW
@@ -696,7 +731,7 @@ class TestConfiguration {
       tableId: this.table!._id,
       name: generator.guid(),
     }
-    return this._req(view, null, controllers.view.v1.save)
+    return this._req(view, null, viewController.v1.save)
   }
 
   async createView(
@@ -726,13 +761,13 @@ class TestConfiguration {
       delete config._rev
     }
     this.automation = (
-      await this._req(config, null, controllers.automation.create)
+      await this._req(config, null, automationController.create)
     ).automation
     return this.automation
   }
 
   async getAllAutomations() {
-    return this._req(null, null, controllers.automation.fetch)
+    return this._req(null, null, automationController.fetch)
   }
 
   async deleteAutomation(automation?: any) {
@@ -743,7 +778,7 @@ class TestConfiguration {
     return this._req(
       null,
       { id: automation._id, rev: automation._rev },
-      controllers.automation.destroy
+      automationController.destroy
     )
   }
 
@@ -752,28 +787,27 @@ class TestConfiguration {
       throw "Must create an automation before creating webhook."
     }
     config = config || basicWebhook(this.automation._id)
-    return (await this._req(config, null, controllers.webhook.save)).webhook
+
+    return (await this._req(config, null, webhookController.save)).webhook
   }
 
   // DATASOURCE
 
   async createDatasource(config?: {
     datasource: Datasource
-  }): Promise<Datasource> {
+  }): Promise<WithRequired<Datasource, "_id">> {
     config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
-    this.datasource = response.datasource
-    return this.datasource!
+    const response = await this.api.datasource.create(config.datasource)
+    this.datasource = response
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async updateDatasource(datasource: Datasource): Promise<Datasource> {
-    const response = await this._req(
-      datasource,
-      { datasourceId: datasource._id },
-      controllers.datasource.update
-    )
-    this.datasource = response.datasource
-    return this.datasource!
+  async updateDatasource(
+    datasource: Datasource
+  ): Promise<WithRequired<Datasource, "_id">> {
+    const response = await this.api.datasource.update(datasource)
+    this.datasource = response
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
   async restDatasource(cfg?: any) {
@@ -788,6 +822,7 @@ class TestConfiguration {
 
   async dynamicVariableDatasource() {
     let datasource = await this.restDatasource()
+
     const basedOnQuery = await this.createQuery({
       ...basicQuery(datasource._id!),
       fields: {
@@ -859,21 +894,21 @@ class TestConfiguration {
       throw "No datasource created for query."
     }
     config = config || basicQuery(this.datasource!._id!)
-    return this._req(config, null, controllers.query.save)
+    return this._req(config, null, queryController.save)
   }
 
   // SCREEN
 
   async createScreen(config?: any) {
     config = config || basicScreen()
-    return this._req(config, null, controllers.screen.save)
+    return this._req(config, null, screenController.save)
   }
 
   // LAYOUT
 
   async createLayout(config?: any) {
     config = config || basicLayout()
-    return await this._req(config, null, controllers.layout.save)
+    return await this._req(config, null, layoutController.save)
   }
 }
 

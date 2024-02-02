@@ -38,7 +38,7 @@
       $goto("../portal")
     } catch (error) {
       submitted = false
-      notifications.error("Failed to create admin user")
+      notifications.error(error.message || "Failed to create admin user")
     }
   }
 </script>

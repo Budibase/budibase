@@ -7,7 +7,7 @@ import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs from "fs"
+import fs, { ReadStream } from "fs"
 import env from "../environment"
 import { budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
@@ -184,7 +184,7 @@ export async function upload({
 export async function streamUpload(
   bucketName: string,
   filename: string,
-  stream: any,
+  stream: ReadStream | ReadableStream,
   extra = {}
 ) {
   const objectStore = ObjectStore(bucketName)
@@ -260,12 +260,12 @@ export async function listAllObjects(bucketName: string, path: string) {
 }
 
 /**
- * Generate a presigned url with a default TTL of 36 hours
+ * Generate a presigned url with a default TTL of 1 hour
  */
 export function getPresignedUrl(
   bucketName: string,
   key: string,
-  durationSeconds: number = 129600
+  durationSeconds: number = 3600
 ) {
   const objectStore = ObjectStore(bucketName, { presigning: true })
   const params = {

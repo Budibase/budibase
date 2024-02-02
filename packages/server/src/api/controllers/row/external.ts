@@ -1,4 +1,3 @@
-import { FieldTypes } from "../../../constants"
 import {
   breakExternalTableId,
   breakRowIdField,
@@ -9,6 +8,7 @@ import {
   RunConfig,
 } from "./ExternalRequest"
 import {
+  FieldType,
   Datasource,
   IncludeRelationship,
   Operation,
@@ -26,7 +26,7 @@ import {
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { cloneDeep, isEqual } from "lodash"
+import { cloneDeep } from "lodash"
 
 export async function handleRequest<T extends Operation>(
   operation: T,
@@ -83,50 +83,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     ...response,
     row: enrichedRow,
     table,
-  }
-}
-
-export async function save(ctx: UserCtx) {
-  const inputs = ctx.request.body
-  const tableId = utils.getTableId(ctx)
-
-  const table = await sdk.tables.getTable(tableId)
-  const { table: updatedTable, row } = await inputProcessing(
-    ctx.user?._id,
-    cloneDeep(table),
-    inputs
-  )
-
-  const validateResult = await sdk.rows.utils.validate({
-    row,
-    tableId,
-  })
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
-  const response = await handleRequest(Operation.CREATE, tableId, {
-    row,
-  })
-
-  if (!isEqual(table, updatedTable)) {
-    await sdk.tables.saveTable(updatedTable)
-  }
-
-  const rowId = response.row._id
-  if (rowId) {
-    const row = await sdk.rows.external.getRow(tableId, rowId, {
-      relationships: true,
-    })
-    return {
-      ...response,
-      row: await outputProcessing(table, row, {
-        preserveLinks: true,
-        squash: true,
-      }),
-    }
-  } else {
-    return response
   }
 }
 
@@ -198,7 +154,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
   for (let [fieldName, field] of Object.entries(table.schema)) {
     if (
-      field.type !== FieldTypes.LINK ||
+      field.type !== FieldType.LINK ||
       !row[fieldName] ||
       row[fieldName].length === 0
     ) {

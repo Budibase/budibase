@@ -1,8 +1,7 @@
 // need to handle table name + field or just field, depending on if relationships used
-import { Row, Table } from "@budibase/types"
+import { FieldType, Row, Table } from "@budibase/types"
 import { generateRowIdField } from "../../../../integrations/utils"
 import { processFormulas } from "../../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../../constants"
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function extractFieldValue({
@@ -91,10 +90,7 @@ export function basicProcessing({
 
 export function fixArrayTypes(row: Row, table: Table) {
   for (let [fieldName, schema] of Object.entries(table.schema)) {
-    if (
-      schema.type === FieldTypes.ARRAY &&
-      typeof row[fieldName] === "string"
-    ) {
+    if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
       } catch (err) {

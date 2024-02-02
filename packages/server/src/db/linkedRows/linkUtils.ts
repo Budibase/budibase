@@ -1,8 +1,8 @@
 import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
-import { FieldTypes } from "../../constants"
 import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
 import {
+  FieldType,
   DatabaseQueryOpts,
   LinkDocument,
   LinkDocumentValue,
@@ -56,7 +56,7 @@ export async function getLinkDocuments(args: {
   try {
     let linkRows = (await db.query(getQueryIndex(ViewName.LINK), params)).rows
     // filter to get unique entries
-    const foundIds: string[] = []
+    const foundIds = new Set()
     linkRows = linkRows.filter(link => {
       // make sure anything unique is the correct key
       if (
@@ -65,9 +65,9 @@ export async function getLinkDocuments(args: {
       ) {
         return false
       }
-      const unique = foundIds.indexOf(link.id) === -1
+      const unique = !foundIds.has(link.id)
       if (unique) {
-        foundIds.push(link.id)
+        foundIds.add(link.id)
       }
       return unique
     })
@@ -99,9 +99,15 @@ export async function getLinkDocuments(args: {
 }
 
 export function getUniqueByProp(array: any[], prop: string) {
-  return array.filter((obj, pos, arr) => {
-    return arr.map(mapObj => mapObj[prop]).indexOf(obj[prop]) === pos
-  })
+  const seen = new Set()
+  const filteredArray = []
+  for (const item of array) {
+    if (!seen.has(item[prop])) {
+      seen.add(item[prop])
+      filteredArray.push(item)
+    }
+  }
+  return filteredArray
 }
 
 export function getLinkedTableIDs(table: Table): string[] {
@@ -125,11 +131,11 @@ export async function getLinkedTable(id: string, tables: Table[]) {
 export function getRelatedTableForField(table: Table, fieldName: string) {
   // look to see if its on the table, straight in the schema
   const field = table.schema[fieldName]
-  if (field?.type === FieldTypes.LINK) {
+  if (field?.type === FieldType.LINK) {
     return field.tableId
   }
   for (let column of Object.values(table.schema)) {
-    if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
+    if (column.type === FieldType.LINK && column.fieldName === fieldName) {
       return column.tableId
     }
   }

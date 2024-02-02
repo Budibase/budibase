@@ -1,4 +1,5 @@
 import {
+  AutoFieldSubType,
   AutoReason,
   Datasource,
   FieldSchema,
@@ -34,7 +35,6 @@ import {
   isManyToMany,
 } from "./utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
-import { AutoFieldSubTypes, FieldTypes } from "../../../constants"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
@@ -118,10 +118,10 @@ function buildFilters(
  */
 function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   const primaryOptions = [
-    FieldTypes.STRING,
-    FieldTypes.LONGFORM,
-    FieldTypes.OPTIONS,
-    FieldTypes.NUMBER,
+    FieldType.STRING,
+    FieldType.LONGFORM,
+    FieldType.OPTIONS,
+    FieldType.NUMBER,
   ]
   // filter out fields which cannot be keys
   const fieldNames = Object.entries(table.schema)
@@ -231,8 +231,8 @@ function isEditableColumn(column: FieldSchema) {
   const isExternalAutoColumn =
     column.autocolumn &&
     column.autoReason !== AutoReason.FOREIGN_KEY &&
-    column.subtype !== AutoFieldSubTypes.AUTO_ID
-  const isFormula = column.type === FieldTypes.FORMULA
+    column.subtype !== AutoFieldSubType.AUTO_ID
+  const isFormula = column.type === FieldType.FORMULA
   return !(isExternalAutoColumn || isFormula)
 }
 
@@ -279,11 +279,11 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
       // parse floats/numbers
-      if (field.type === FieldTypes.NUMBER && !isNaN(parseFloat(row[key]))) {
+      if (field.type === FieldType.NUMBER && !isNaN(parseFloat(row[key]))) {
         newRow[key] = parseFloat(row[key])
       }
       // if its not a link then just copy it over
-      if (field.type !== FieldTypes.LINK) {
+      if (field.type !== FieldType.LINK) {
         newRow[key] = row[key]
         continue
       }
@@ -444,7 +444,7 @@ export class ExternalRequest<T extends Operation> {
     // we need this to work out if any relationships need removed
     for (const field of Object.values(table.schema)) {
       if (
-        field.type !== FieldTypes.LINK ||
+        field.type !== FieldType.LINK ||
         !field.fieldName ||
         isOneSide(field)
       ) {

@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -51,8 +51,12 @@ ENV TENANT_FEATURE_FLAGS=*:LICENSING,*:USER_GROUPS,*:ONBOARDING_TOUR
 ENV ACCOUNT_PORTAL_URL=https://account.budibase.app
 
 ARG BUDIBASE_VERSION
+ARG GIT_COMMIT_SHA
 # Ensuring the version argument is sent
 RUN test -n "$BUDIBASE_VERSION"
 ENV BUDIBASE_VERSION=$BUDIBASE_VERSION
+ENV DD_GIT_REPOSITORY_URL=https://github.com/budibase/budibase
+ENV DD_GIT_COMMIT_SHA=$GIT_COMMIT_SHA
+ENV DD_VERSION=$BUDIBASE_VERSION
 
 CMD ["./docker_run.sh"]
