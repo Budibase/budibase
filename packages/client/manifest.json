@@ -4720,7 +4720,8 @@
       }
     ],
     "context": {
-      "type": "schema"
+      "type": "schema",
+      "scope": "local"
     }
   },
   "daterangepicker": {
