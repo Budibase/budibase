@@ -1,19 +1,19 @@
-import {
-  DocumentType,
-  generateDatasourceID,
-  getQueryParams,
-  getTableParams,
-} from "../../db/utils"
+import { getQueryParams, getTableParams } from "../../db/utils"
 import { getIntegration } from "../../integrations"
 import { invalidateDynamicVariables } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
+  BuildSchemaFromSourceRequest,
+  BuildSchemaFromSourceResponse,
   CreateDatasourceRequest,
   CreateDatasourceResponse,
   Datasource,
   DatasourcePlus,
+  Document,
   FetchDatasourceInfoRequest,
   FetchDatasourceInfoResponse,
+  FieldType,
+  RelationshipFieldMetadata,
   SourceName,
   UpdateDatasourceResponse,
   UserCtx,
@@ -22,7 +22,6 @@ import {
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
-import { setupCreationAuth as googleSetupCreationAuth } from "../../integrations/googlesheets"
 import { isEqual } from "lodash"
 
 export async function fetch(ctx: UserCtx) {
@@ -67,44 +66,20 @@ export async function information(
   }
 }
 
-export async function buildSchemaFromDb(ctx: UserCtx) {
-  const db = context.getAppDB()
+export async function buildSchemaFromSource(
+  ctx: UserCtx<BuildSchemaFromSourceRequest, BuildSchemaFromSourceResponse>
+) {
+  const datasourceId = ctx.params.datasourceId
   const tablesFilter = ctx.request.body.tablesFilter
-  const datasource = await sdk.datasources.get(ctx.params.datasourceId)
 
-  const { tables, errors } = await sdk.datasources.buildFilteredSchema(
-    datasource,
+  const { datasource, errors } = await sdk.datasources.buildSchemaFromSource(
+    datasourceId,
     tablesFilter
   )
-  datasource.entities = tables
-
-  setDefaultDisplayColumns(datasource)
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  datasource._rev = dbResp.rev
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
     errors,
-  }
-}
-
-/**
- * Make sure all datasource entities have a display name selected
- */
-function setDefaultDisplayColumns(datasource: Datasource) {
-  //
-  for (let entity of Object.values(datasource.entities || {})) {
-    if (entity.primaryDisplay) {
-      continue
-    }
-    const notAutoColumn = Object.values(entity.schema).find(
-      schema => !schema.autocolumn
-    )
-    if (notAutoColumn) {
-      entity.primaryDisplay = notAutoColumn.name
-    }
   }
 }
 
@@ -205,54 +180,18 @@ export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
   }
 }
 
-const preSaveAction: Partial<Record<SourceName, any>> = {
-  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
-    await googleSetupCreationAuth(datasource.config as any)
-  },
-}
-
 export async function save(
   ctx: UserCtx<CreateDatasourceRequest, CreateDatasourceResponse>
 ) {
-  const db = context.getAppDB()
-  const plus = ctx.request.body.datasource.plus
-  const fetchSchema = ctx.request.body.fetchSchema
-  const tablesFilter = ctx.request.body.tablesFilter
-
-  const datasource = {
-    _id: generateDatasourceID({ plus }),
-    ...ctx.request.body.datasource,
-    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
-  }
-
-  let errors: Record<string, string> = {}
-  if (fetchSchema) {
-    const schema = await sdk.datasources.buildFilteredSchema(
-      datasource,
-      tablesFilter
-    )
-    datasource.entities = schema.tables
-    setDefaultDisplayColumns(datasource)
-    errors = schema.errors
-  }
-
-  if (preSaveAction[datasource.source]) {
-    await preSaveAction[datasource.source](datasource)
-  }
-
-  const dbResp = await db.put(
-    sdk.tables.populateExternalTableSchemas(datasource)
-  )
-  await events.datasource.created(datasource)
-  datasource._rev = dbResp.rev
-
-  // Drain connection pools when configuration is changed
-  if (datasource.source) {
-    const source = await getIntegration(datasource.source)
-    if (source && source.pool) {
-      await source.pool.end()
-    }
-  }
+  const {
+    datasource: datasourceData,
+    fetchSchema,
+    tablesFilter,
+  } = ctx.request.body
+  const { datasource, errors } = await sdk.datasources.save(datasourceData, {
+    fetchSchema,
+    tablesFilter,
+  })
 
   ctx.body = {
     datasource: await sdk.datasources.removeSecretSingle(datasource),
@@ -282,9 +221,26 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
     []
   )
 
+  function updateRevisions(deletedLinks: RelationshipFieldMetadata[]) {
+    for (const link of deletedLinks) {
+      datasourceTableDocs.forEach((doc: Document) => {
+        if (doc._id === link.tableId) {
+          doc._rev = link.tableRev
+        }
+      })
+    }
+  }
+
   // Destroy the tables.
   for (const table of datasourceTableDocs) {
-    await sdk.tables.internal.destroy(table)
+    const deleted = await sdk.tables.internal.destroy(table)
+    // Update the revisions of any tables that remain to be deleted
+    const deletedLinks: RelationshipFieldMetadata[] = Object.values(
+      deleted.table.schema
+    )
+      .filter(field => field.type === FieldType.LINK)
+      .map(field => field as RelationshipFieldMetadata)
+    updateRevisions(deletedLinks)
   }
 }
 

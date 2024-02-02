@@ -31,7 +31,7 @@
   async function login() {
     form.validate()
     if (Object.keys(errors).length > 0) {
-      console.log("errors", errors)
+      console.error("errors", errors)
       return
     }
     try {

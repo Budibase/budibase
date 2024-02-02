@@ -12,6 +12,8 @@ import {
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
+  LockName,
+  LockType,
   MigrationType,
   SaveUserResponse,
   SearchUsersRequest,
@@ -27,6 +29,7 @@ import {
   platform,
   tenancy,
   db,
+  locks,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -380,51 +383,60 @@ export const inviteAccept = async (
 ) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
-    // info is an extension of the user object that was stored by global
-    const { email, info }: any = await cache.invite.getCode(inviteCode)
-    await cache.invite.deleteCode(inviteCode)
-    const user = await tenancy.doInTenant(info.tenantId, async () => {
-      let request: any = {
-        firstName,
-        lastName,
-        password,
-        email,
-        admin: { global: info?.admin?.global || false },
-        roles: info.apps,
-        tenantId: info.tenantId,
-      }
-      let builder: { global: boolean; apps?: string[] } = {
-        global: info?.builder?.global || false,
-      }
+    await locks.doWithLock(
+      {
+        type: LockType.AUTO_EXTEND,
+        name: LockName.PROCESS_USER_INVITE,
+        resource: inviteCode,
+        systemLock: true,
+      },
+      async () => {
+        // info is an extension of the user object that was stored by global
+        const { email, info } = await cache.invite.getCode(inviteCode)
+        const user = await tenancy.doInTenant(info.tenantId, async () => {
+          let request: any = {
+            firstName,
+            lastName,
+            password,
+            email,
+            admin: { global: info?.admin?.global || false },
+            roles: info.apps,
+            tenantId: info.tenantId,
+          }
+          const builder: { global: boolean; apps?: string[] } = {
+            global: info?.builder?.global || false,
+          }
 
-      if (info?.builder?.apps) {
-        builder.apps = info.builder.apps
-        request.builder = builder
-      }
-      delete info.apps
-      request = {
-        ...request,
-        ...info,
-      }
+          if (info?.builder?.apps) {
+            builder.apps = info.builder.apps
+            request.builder = builder
+          }
+          delete info.apps
+          request = {
+            ...request,
+            ...info,
+          }
 
-      const saved = await userSdk.db.save(request)
-      const db = tenancy.getGlobalDB()
-      const user = await db.get<User>(saved._id)
-      await events.user.inviteAccepted(user)
-      return saved
-    })
+          const saved = await userSdk.db.save(request)
+          await events.user.inviteAccepted(saved)
+          return saved
+        })
 
-    ctx.body = {
-      _id: user._id!,
-      _rev: user._rev!,
-      email: user.email,
-    }
+        await cache.invite.deleteCode(inviteCode)
+
+        ctx.body = {
+          _id: user._id!,
+          _rev: user._rev!,
+          email: user.email,
+        }
+      }
+    )
   } catch (err: any) {
     if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, "Unable to create new user, invitation invalid.")
+    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
   }
 }

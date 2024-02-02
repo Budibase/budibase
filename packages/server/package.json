@@ -15,6 +15,7 @@
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
+    "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
     "test": "bash scripts/test.sh",
     "test:memory": "jest --maxWorkers=2 --logHeapUsage --forceExit",
     "test:watch": "jest --watch",
@@ -65,14 +66,14 @@
     "cookies": "0.8.0",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
-    "dd-trace": "3.13.2",
+    "dd-trace": "5.0.0",
     "dotenv": "8.2.0",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
     "google-auth-library": "7.12.0",
     "google-spreadsheet": "3.2.0",
     "ioredis": "5.3.2",
-    "isolated-vm": "^4.6.0",
+    "isolated-vm": "^4.7.2",
     "jimp": "0.22.10",
     "joi": "17.6.0",
     "js-yaml": "4.1.0",
@@ -81,7 +82,7 @@
     "koa": "2.13.4",
     "koa-body": "4.2.0",
     "koa-compress": "4.0.1",
-    "koa-send": "5.0.0",
+    "koa-send": "5.0.1",
     "koa-useragent": "^4.1.0",
     "koa2-ratelimit": "1.1.1",
     "lodash": "4.17.21",
@@ -107,7 +108,7 @@
     "to-json-schema": "0.2.5",
     "undici": "^6.0.1",
     "undici-types": "^6.0.1",
-    "uuid": "3.3.2",
+    "uuid": "^8.3.2",
     "validate.js": "0.13.1",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0"
@@ -121,6 +122,7 @@
     "@types/google-spreadsheet": "3.1.5",
     "@types/jest": "29.5.5",
     "@types/koa": "2.13.4",
+    "@types/koa-send": "^4.1.6",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "4.14.200",
     "@types/mssql": "9.1.4",
@@ -130,6 +132,7 @@
     "@types/server-destroy": "1.0.1",
     "@types/supertest": "2.0.14",
     "@types/tar": "6.1.5",
+    "@types/uuid": "8.3.4",
     "apidoc": "0.50.4",
     "copyfiles": "2.4.1",
     "docker-compose": "0.23.17",
@@ -143,6 +146,7 @@
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",
+    "testcontainers": "10.6.0",
     "timekeeper": "2.2.0",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
@@ -163,6 +167,12 @@
               "@budibase/backend-core"
             ],
             "target": "build"
+          },
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build:esbuild"
           }
         ]
       },
@@ -179,6 +189,16 @@
               "@budibase/builder"
             ],
             "target": "build"
+          }
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build:esbuild"
           }
         ]
       }

@@ -10,6 +10,7 @@
   export let noRowsMessage
 
   const component = getContext("component")
+  const { ContextScopes } = getContext("sdk")
 
   $: providerId = `${$component.id}-provider`
   $: dataProvider = `{{ literal ${safe(providerId)} }}`
@@ -55,6 +56,7 @@
           noRowsMessage: noRowsMessage || "We couldn't find a row to display",
           direction: "column",
           hAlign: "center",
+          scope: ContextScopes.Global,
         }}
       >
         <slot />

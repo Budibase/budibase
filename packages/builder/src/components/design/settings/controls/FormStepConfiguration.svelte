@@ -6,7 +6,7 @@
   import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"
   import { Utils } from "@budibase/frontend-core"
-  import { cloneDeep } from "lodash"
+  import { cloneDeep, isEqual } from "lodash"
 
   export let componentInstance
   export let componentBindings
@@ -21,21 +21,32 @@
   const currentStep = derived(multiStepStore, state => state.currentStep)
   const componentType = "@budibase/standard-components/multistepformblockstep"
 
+  let cachedValue
+  let cachedInstance = {}
+
+  $: if (!isEqual(cachedValue, value)) {
+    cachedValue = value
+  }
+
+  $: if (!isEqual(componentInstance, cachedInstance)) {
+    cachedInstance = componentInstance
+  }
+
   setContext("multi-step-form-block", multiStepStore)
 
-  $: stepCount = value?.length || 0
+  $: stepCount = cachedValue?.length || 0
   $: updateStore(stepCount)
-  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: dataSource = getDatasourceForProvider($currentAsset, cachedInstance)
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
-  $: stepSettings = value?.[$currentStep] || {}
+  $: stepSettings = cachedValue?.[$currentStep] || {}
   $: defaults = Utils.buildMultiStepFormBlockDefaultProps({
-    _id: componentInstance._id,
+    _id: cachedInstance._id,
     stepCount: $multiStepStore.stepCount,
     currentStep: $multiStepStore.currentStep,
-    actionType: componentInstance.actionType,
-    dataSource: componentInstance.dataSource,
+    actionType: cachedInstance.actionType,
+    dataSource: cachedInstance.dataSource,
   })
   $: stepInstance = {
     _id: Helpers.uuid(),

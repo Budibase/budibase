@@ -48,6 +48,9 @@ async function checkResponse(
     let error
     try {
       error = await response.json()
+      if (!error.message) {
+        error = JSON.stringify(error)
+      }
     } catch (err) {
       error = await response.text()
     }
