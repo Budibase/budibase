@@ -2,7 +2,7 @@ import { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
 export default async (ctx: Ctx, next: any) => {
-  const resp = next()
+  const resp = await next()
 
   const current = context.getCurrentContext()
   if (current?.cleanup) {
