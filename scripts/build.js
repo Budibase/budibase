@@ -23,7 +23,7 @@ function runBuild(entry, outfile) {
   )
 
   if (
-    !fs.existsSync("../pro/src") &&
+    !fs.existsSync(path.join(__dirname, "../packages/pro/src")) &&
     tsconfigPathPluginContent.compilerOptions?.paths
   ) {
     // If we don't have pro, we cannot bundle backend-core.
@@ -51,7 +51,16 @@ function runBuild(entry, outfile) {
       ".svelte": "copy",
     },
     metafile: true,
-    external: ["deasync", "mock-aws-s3", "nock", "bull"],
+    external: [
+      "deasync",
+      "mock-aws-s3",
+      "nock",
+      "bull",
+      "pouchdb",
+      "bcrypt",
+      "bcryptjs",
+      "graphql/*",
+    ],
   }
 
   build({

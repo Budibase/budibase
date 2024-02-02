@@ -1,12 +1,11 @@
 import * as linkRows from "../../../db/linkedRows"
-import { generateRowID, InternalTables } from "../../../db/utils"
+import { InternalTables } from "../../../db/utils"
 import * as userController from "../user"
 import {
   AttachmentCleanup,
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
 // import { fullSearch, paginatedSearch } from "./internalSearch"
 // import { getGlobalUsersFromMetadata } from "../../../utilities/global"
@@ -17,6 +16,7 @@ import { csv, json, jsonWithSchema, Format } from "../view/exporters"
 import { apiFileReturn } from "../../../utilities/fileSystem"
 import { sqlSearch } from "./internalSql"
 import {
+  FieldType,
   LinkDocumentValue,
   PatchRowRequest,
   PatchRowResponse,
@@ -98,45 +98,6 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
     await userController.updateMetadata(ctx as any)
     return { row: ctx.body as Row, table }
   }
-
-  return finaliseRow(table, row, {
-    oldTable: dbTable,
-    updateFormula: true,
-  })
-}
-
-export async function save(ctx: UserCtx) {
-  let inputs = ctx.request.body
-  inputs.tableId = utils.getTableId(ctx)
-
-  if (!inputs._rev && !inputs._id) {
-    inputs._id = generateRowID(inputs.tableId)
-  }
-
-  // this returns the table and row incase they have been updated
-  const dbTable = await sdk.tables.getTable(inputs.tableId)
-
-  // need to copy the table so it can be differenced on way out
-  const tableClone = cloneDeep(dbTable)
-
-  let { table, row } = await inputProcessing(ctx.user?._id, tableClone, inputs)
-
-  const validateResult = await sdk.rows.utils.validate({
-    row,
-    table,
-  })
-
-  if (!validateResult.valid) {
-    throw { validation: validateResult.errors }
-  }
-
-  // make sure link rows are up-to-date
-  row = (await linkRows.updateLinks({
-    eventType: linkRows.EventType.ROW_SAVE,
-    row,
-    tableId: row.tableId,
-    table,
-  })) as Row
 
   return finaliseRow(table, row, {
     oldTable: dbTable,
@@ -371,7 +332,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
-    if (field.type === FieldTypes.LINK) {
+    if (field.type === FieldType.LINK) {
       // find the links that pertain to this field
       const links = linkVals.filter(link => link.fieldName === fieldName)
       // find the rows that the links state are linked to this field

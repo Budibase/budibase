@@ -12,6 +12,8 @@ import {
   InviteUserRequest,
   InviteUsersRequest,
   InviteUsersResponse,
+  LockName,
+  LockType,
   MigrationType,
   SaveUserResponse,
   SearchUsersRequest,
@@ -26,6 +28,8 @@ import {
   migrations,
   platform,
   tenancy,
+  db,
+  locks,
 } from "@budibase/backend-core"
 import { checkAnyUserExists } from "../../../utilities/users"
 import { isEmailConfigured } from "../../../utilities/email"
@@ -185,9 +189,27 @@ export const getAppUsers = async (ctx: Ctx<SearchUsersRequest>) => {
 export const search = async (ctx: Ctx<SearchUsersRequest>) => {
   const body = ctx.request.body
 
-  // TODO: for now only one supported search key, string.email
-  if (body?.query && !userSdk.core.isSupportedUserSearch(body.query)) {
-    ctx.throw(501, "Can only search by string.email or equal._id")
+  // TODO: for now only two supported search keys; string.email and equal._id
+  if (body?.query) {
+    // Clean numeric prefixing. This will overwrite duplicate search fields,
+    // but this is fine because we only support a single custom search on
+    // email and id
+    for (let filters of Object.values(body.query)) {
+      if (filters && typeof filters === "object") {
+        for (let [field, value] of Object.entries(filters)) {
+          delete filters[field]
+          const cleanedField = db.removeKeyNumbering(field)
+          if (filters[cleanedField] !== undefined) {
+            ctx.throw(400, "Only 1 filter per field is supported")
+          }
+          filters[cleanedField] = value
+        }
+      }
+    }
+    // Validate we aren't trying to search on any illegal fields
+    if (!userSdk.core.isSupportedUserSearch(body.query)) {
+      ctx.throw(400, "Can only search by string.email or equal._id")
+    }
   }
 
   if (body.paginate === false) {
@@ -361,51 +383,60 @@ export const inviteAccept = async (
 ) => {
   const { inviteCode, password, firstName, lastName } = ctx.request.body
   try {
-    // info is an extension of the user object that was stored by global
-    const { email, info }: any = await cache.invite.getCode(inviteCode)
-    await cache.invite.deleteCode(inviteCode)
-    const user = await tenancy.doInTenant(info.tenantId, async () => {
-      let request: any = {
-        firstName,
-        lastName,
-        password,
-        email,
-        admin: { global: info?.admin?.global || false },
-        roles: info.apps,
-        tenantId: info.tenantId,
-      }
-      let builder: { global: boolean; apps?: string[] } = {
-        global: info?.builder?.global || false,
-      }
+    await locks.doWithLock(
+      {
+        type: LockType.AUTO_EXTEND,
+        name: LockName.PROCESS_USER_INVITE,
+        resource: inviteCode,
+        systemLock: true,
+      },
+      async () => {
+        // info is an extension of the user object that was stored by global
+        const { email, info } = await cache.invite.getCode(inviteCode)
+        const user = await tenancy.doInTenant(info.tenantId, async () => {
+          let request: any = {
+            firstName,
+            lastName,
+            password,
+            email,
+            admin: { global: info?.admin?.global || false },
+            roles: info.apps,
+            tenantId: info.tenantId,
+          }
+          const builder: { global: boolean; apps?: string[] } = {
+            global: info?.builder?.global || false,
+          }
 
-      if (info?.builder?.apps) {
-        builder.apps = info.builder.apps
-        request.builder = builder
-      }
-      delete info.apps
-      request = {
-        ...request,
-        ...info,
-      }
+          if (info?.builder?.apps) {
+            builder.apps = info.builder.apps
+            request.builder = builder
+          }
+          delete info.apps
+          request = {
+            ...request,
+            ...info,
+          }
 
-      const saved = await userSdk.db.save(request)
-      const db = tenancy.getGlobalDB()
-      const user = await db.get<User>(saved._id)
-      await events.user.inviteAccepted(user)
-      return saved
-    })
+          const saved = await userSdk.db.save(request)
+          await events.user.inviteAccepted(saved)
+          return saved
+        })
 
-    ctx.body = {
-      _id: user._id!,
-      _rev: user._rev!,
-      email: user.email,
-    }
+        await cache.invite.deleteCode(inviteCode)
+
+        ctx.body = {
+          _id: user._id!,
+          _rev: user._rev!,
+          email: user.email,
+        }
+      }
+    )
   } catch (err: any) {
     if (err.code === ErrorCode.USAGE_LIMIT_EXCEEDED) {
       // explicitly re-throw limit exceeded errors
       ctx.throw(400, err)
     }
     console.warn("Error inviting user", err)
-    ctx.throw(400, "Unable to create new user, invitation invalid.")
+    ctx.throw(400, err || "Unable to create new user, invitation invalid.")
   }
 }

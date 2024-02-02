@@ -147,7 +147,7 @@
       bind:id={formId}
       props={{
         dataSource,
-        disableValidation: true,
+        disableSchemaValidation: true,
         editAutoColumns: true,
         size,
       }}
@@ -231,6 +231,7 @@
           paginate,
           limit: rowCount,
         }}
+        context="provider"
         order={1}
       >
         <BlockComponent
@@ -265,7 +266,7 @@
             props={{
               dataSource,
               buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
+              buttons: Utils.buildFormBlockButtonConfig({
                 _id: $component.id + "-form-edit",
                 showDeleteButton: deleteLabel !== "",
                 showSaveButton: true,
@@ -299,7 +300,7 @@
             props={{
               dataSource,
               buttonPosition: "top",
-              buttons: Utils.buildDynamicButtonConfig({
+              buttons: Utils.buildFormBlockButtonConfig({
                 _id: $component.id + "-form-new",
                 showDeleteButton: false,
                 showSaveButton: true,

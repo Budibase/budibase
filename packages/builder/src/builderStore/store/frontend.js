@@ -85,7 +85,6 @@ const INITIAL_FRONTEND_STATE = {
   selectedScreenId: null,
   selectedComponentId: null,
   selectedLayoutId: null,
-  hoverComponentId: null,
 
   // Client state
   selectedComponentInstance: null,
@@ -159,6 +158,7 @@ export const getFrontendStore = () => {
           ...INITIAL_FRONTEND_STATE.features,
           ...application.features,
         },
+        automations: application.automations || {},
         icon: application.icon || {},
         initialised: true,
       }))
@@ -610,12 +610,12 @@ export const getFrontendStore = () => {
           // Use default config if the 'buttons' prop has never been initialised
           if (!("buttons" in enrichedComponent)) {
             enrichedComponent["buttons"] =
-              Utils.buildDynamicButtonConfig(enrichedComponent)
+              Utils.buildFormBlockButtonConfig(enrichedComponent)
             migrated = true
           } else if (enrichedComponent["buttons"] == null) {
             // Ignore legacy config if 'buttons' has been reset by 'resetOn'
             const { _id, actionType, dataSource } = enrichedComponent
-            enrichedComponent["buttons"] = Utils.buildDynamicButtonConfig({
+            enrichedComponent["buttons"] = Utils.buildFormBlockButtonConfig({
               _id,
               actionType,
               dataSource,
@@ -707,10 +707,9 @@ export const getFrontendStore = () => {
           else {
             if (setting.type === "dataProvider") {
               // Validate data provider exists, or else clear it
-              const treeId = parent?._id || component._id
-              const path = findComponentPath(screen?.props, treeId)
-              const providers = path.filter(component =>
-                component._component?.endsWith("/dataprovider")
+              const providers = findAllMatchingComponents(
+                screen?.props,
+                component => component._component?.endsWith("/dataprovider")
               )
               // Validate non-empty values
               const valid = providers?.some(dp => value.includes?.(dp._id))
@@ -732,6 +731,16 @@ export const getFrontendStore = () => {
           return null
         }
 
+        // Find all existing components of this type so that we can give this
+        // component a unique name
+        const screen = get(selectedScreen).props
+        const otherComponents = findAllMatchingComponents(
+          screen,
+          x => x._component === definition.component && x._id !== screen._id
+        )
+        let name = definition.friendlyName || definition.name
+        name = `${name} ${otherComponents.length + 1}`
+
         // Generate basic component structure
         let instance = {
           _id: Helpers.uuid(),
@@ -741,7 +750,7 @@ export const getFrontendStore = () => {
             hover: {},
             active: {},
           },
-          _instanceName: `New ${definition.friendlyName || definition.name}`,
+          _instanceName: name,
           ...presetProps,
         }
 
@@ -1289,15 +1298,14 @@ export const getFrontendStore = () => {
           const settings = getComponentSettings(component._component)
           const updatedSetting = settings.find(setting => setting.key === name)
 
-          // Can be a single string or array of strings
-          const resetFields = settings.filter(setting => {
-            return (
+          // Reset dependent fields
+          settings.forEach(setting => {
+            const needsReset =
               name === setting.resetOn ||
               (Array.isArray(setting.resetOn) && setting.resetOn.includes(name))
-            )
-          })
-          resetFields?.forEach(setting => {
-            component[setting.key] = null
+            if (needsReset) {
+              component[setting.key] = setting.defaultValue || null
+            }
           })
 
           if (

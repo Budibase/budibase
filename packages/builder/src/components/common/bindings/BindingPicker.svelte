@@ -47,9 +47,10 @@
     })
   $: filteredHelpers = helpers?.filter(helper => {
     return (
-      !search ||
-      helper.label.match(searchRgx) ||
-      helper.description.match(searchRgx)
+      (!search ||
+        helper.label.match(searchRgx) ||
+        helper.description.match(searchRgx)) &&
+      (mode.name !== "javascript" || helper.allowsJs)
     )
   })
 
@@ -79,6 +80,7 @@
     bind:this={popover}
     anchor={popoverAnchor}
     maxWidth={300}
+    maxHeight={300}
     dismissible={false}
   >
     <Layout gap="S">

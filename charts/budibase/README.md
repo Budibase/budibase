@@ -157,6 +157,17 @@ $ helm install --create-namespace --namespace budibase budibase . -f values.yaml
 | services.apps.replicaCount | int | `1` | The number of apps replicas to run. |
 | services.apps.resources | object | `{}` | The resources to use for apps pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
 | services.apps.startupProbe | object | HTTP health checks. | Startup probe configuration for apps pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.automationWorkers.autoscaling.enabled | bool | `false` | Whether to enable horizontal pod autoscaling for the apps service. |
+| services.automationWorkers.autoscaling.maxReplicas | int | `10` |  |
+| services.automationWorkers.autoscaling.minReplicas | int | `1` |  |
+| services.automationWorkers.autoscaling.targetCPUUtilizationPercentage | int | `80` | Target CPU utilization percentage for the automation worker service. Note that for autoscaling to work, you will need to have metrics-server configured, and resources set for the automation worker pods. |
+| services.automationWorkers.enabled | bool | `true` | Whether or not to enable the automation worker service. If you disable this, automations will be processed by the apps service. |
+| services.automationWorkers.livenessProbe | object | HTTP health checks. | Liveness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.automationWorkers.logLevel | string | `"info"` | The log level for the automation worker service. |
+| services.automationWorkers.readinessProbe | object | HTTP health checks. | Readiness probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
+| services.automationWorkers.replicaCount | int | `1` | The number of automation worker replicas to run. |
+| services.automationWorkers.resources | object | `{}` | The resources to use for automation worker pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |
+| services.automationWorkers.startupProbe | object | HTTP health checks. | Startup probe configuration for automation worker pods. You shouldn't need to change this, but if you want to you can find more information here: <https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/> |
 | services.couchdb.backup.enabled | bool | `false` | Whether or not to enable periodic CouchDB backups. This works by replicating to another CouchDB instance. |
 | services.couchdb.backup.interval | string | `""` | Backup interval in seconds |
 | services.couchdb.backup.resources | object | `{}` | The resources to use for CouchDB backup pods. See <https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/> for more information on how to set these. |

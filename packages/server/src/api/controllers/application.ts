@@ -340,7 +340,7 @@ async function performAppCreate(ctx: UserCtx) {
     // Initialise the app migration version as the latest one
     await appMigrations.updateAppMigrationMetadata({
       appId,
-      version: appMigrations.latestMigration,
+      version: appMigrations.getLatestMigrationId(),
     })
 
     await cache.app.invalidateAppMetadata(appId, newApplication)
@@ -445,6 +445,9 @@ export async function update(ctx: UserCtx) {
     name: app.name,
     url: app.url,
     icon: app.icon,
+    automations: {
+      chainAutomations: app.automations?.chainAutomations,
+    },
   })
 }
 
