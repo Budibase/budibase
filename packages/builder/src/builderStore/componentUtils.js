@@ -309,7 +309,7 @@ export const buildContextTree = (
 }
 
 /**
- * Generates a lookup map of which content branch all components in a component
+ * Generates a lookup map of which context branch all components in a component
  * tree are inside.
  */
 export const buildContextTreeLookupMap = rootComponent => {
