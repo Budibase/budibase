@@ -4,25 +4,22 @@ import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 let container: StartedTestContainer | undefined
 
 export async function start(): Promise<StartedTestContainer> {
-  if (!container) {
-    container = await new GenericContainer("mongo:7.0-jammy")
-      .withExposedPorts(27017)
-      .withEnvironment({
-        MONGO_INITDB_ROOT_USERNAME: "mongo",
-        MONGO_INITDB_ROOT_PASSWORD: "password",
-      })
-      .withWaitStrategy(
-        Wait.forSuccessfulCommand(
-          `mongosh --eval "db.version()"`
-        ).withStartupTimeout(10000)
-      )
-      .start()
-  }
-  return container
+  return await new GenericContainer("mongo:7.0-jammy")
+    .withExposedPorts(27017)
+    .withEnvironment({
+      MONGO_INITDB_ROOT_USERNAME: "mongo",
+      MONGO_INITDB_ROOT_PASSWORD: "password",
+    })
+    .withWaitStrategy(
+      Wait.forSuccessfulCommand(`mongosh --eval "db.version()"`)
+    )
+    .start()
 }
 
 export async function datasource(): Promise<Datasource> {
-  const container = await start()
+  if (!container) {
+    container = await start()
+  }
   const host = container.getHost()
   const port = container.getMappedPort(27017)
   return {
