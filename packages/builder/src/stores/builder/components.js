@@ -72,39 +72,6 @@ export class ComponentStore extends BudiStore {
     this.isCached = this.isCached.bind(this)
     this.cacheSettings = this.cacheSettings.bind(this)
     this.getComponentSettings = this.getComponentSettings.bind(this)
-
-    this.selected = derived(
-      [this.store, selectedScreen],
-      ([$store, $selectedScreen]) => {
-        if (
-          $selectedScreen &&
-          $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
-        ) {
-          return $selectedScreen?.props
-        }
-        if (!$selectedScreen || !$store.selectedComponentId) {
-          return null
-        }
-        const selected = findComponent(
-          $selectedScreen?.props,
-          $store.selectedComponentId
-        )
-
-        const clone = selected ? cloneDeep(selected) : selected
-        this.migrateSettings(clone)
-        return clone
-      }
-    )
-
-    this.selectedComponentPath = derived(
-      [this.store, selectedScreen],
-      ([$store, $selectedScreen]) => {
-        return findComponentPath(
-          $selectedScreen?.props,
-          $store.selectedComponentId
-        ).map(component => component._id)
-      }
-    )
   }
 
   /**
@@ -202,7 +169,7 @@ export class ComponentStore extends BudiStore {
     const componentPrefix = "@budibase/standard-components"
     let migrated = false
 
-    if (enrichedComponent?._component == `${componentPrefix}/formblock`) {
+    if (enrichedComponent?._component === `${componentPrefix}/formblock`) {
       // Use default config if the 'buttons' prop has never been initialised
       if (!("buttons" in enrichedComponent)) {
         enrichedComponent["buttons"] =
@@ -1149,6 +1116,35 @@ export class ComponentStore extends BudiStore {
 
 export const componentStore = new ComponentStore()
 
-export const selectedComponent = componentStore.selected
+export const selectedComponent = derived(
+  [componentStore, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    if (
+      $selectedScreen &&
+      $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
+    ) {
+      return $selectedScreen?.props
+    }
+    if (!$selectedScreen || !$store.selectedComponentId) {
+      return null
+    }
+    const selected = findComponent(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    )
 
-export const selectedComponentPath = componentStore.selectedComponentPath
+    const clone = selected ? cloneDeep(selected) : selected
+    componentStore.migrateSettings(clone)
+    return clone
+  }
+)
+
+export const selectedComponentPath = derived(
+  [componentStore, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    return findComponentPath(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    ).map(component => component._id)
+  }
+)
