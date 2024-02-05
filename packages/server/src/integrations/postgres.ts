@@ -202,8 +202,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       response.connected = true
     } catch (e: any) {
-      console.log(e)
-      response.error = e.message as string
+      if (typeof e.message === "string" && e.message !== "") {
+        response.error = e.message as string
+      } else if (typeof e.code === "string" && e.code !== "") {
+        response.error = e.code
+      } else {
+        response.error = "Unknown error"
+      }
     } finally {
       await this.closeConnection()
     }
