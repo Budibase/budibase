@@ -33,19 +33,20 @@ export function init() {
           })
           const jsContext = jsIsolate.createContextSync()
 
-          const injectedRequire = `const require = function(val){
-        switch (val) {
-          case "url": 
-            return {
-              resolve: (...params) => urlResolveCb(...params),
-              parse: (...params) => urlParseCb(...params),
-            }
-          case "querystring":
-            return {
-              escape: (...params) => querystringEscapeCb(...params),
-            }
-        }
-      };`
+          const injectedRequire = `
+            const require = function(val){
+              switch (val) {
+                case "url": 
+                  return {
+                    resolve: (...params) => urlResolveCb(...params),
+                    parse: (...params) => urlParseCb(...params),
+                  }
+                case "querystring":
+                  return {
+                    escape: (...params) => querystringEscapeCb(...params),
+                  }
+              }
+            };`
 
           const global = jsContext.global
           global.setSync(
@@ -83,9 +84,9 @@ export function init() {
             `${injectedRequire};${helpersSource}`
           )
 
-          const cryptoModule = jsIsolate.compileModuleSync(`export default {
-        randomUUID: cryptoRandomUUIDCb,
-      }`)
+          const cryptoModule = jsIsolate.compileModuleSync(
+            `export default { randomUUID: cryptoRandomUUIDCb }`
+          )
           cryptoModule.instantiateSync(jsContext, specifier => {
             throw new Error(`No imports allowed. Required: ${specifier}`)
           })
