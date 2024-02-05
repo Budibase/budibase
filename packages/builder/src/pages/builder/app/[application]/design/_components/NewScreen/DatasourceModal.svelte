@@ -4,7 +4,7 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
   import { onMount } from "svelte"
-  import rowListScreen from "../../../../../../../templates/rowListScreen"
+  import rowListScreen from "templates/rowListScreen"
   import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
   export let mode

@@ -15,7 +15,7 @@
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "../../../../../../../../../dataBinding"
+  } from "dataBinding"
 
   export let componentInstance
   export let componentDefinition

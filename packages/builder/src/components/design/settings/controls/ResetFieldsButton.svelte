@@ -2,7 +2,7 @@
   import { ActionButton, notifications } from "@budibase/bbui"
   import { selectedScreen, componentStore } from "stores/builder"
   import { findClosestMatchingComponent } from "helpers/components"
-  import { makeDatasourceFormComponents } from "../../../../templates/commonComponents"
+  import { makeDatasourceFormComponents } from "templates/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let componentInstance

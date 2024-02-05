@@ -48,7 +48,7 @@
     runtimeToReadableBinding,
     runtimeToReadableMap,
     toBindingsArray,
-  } from "../../dataBinding"
+  } from "dataBinding"
 
   export let queryId
 

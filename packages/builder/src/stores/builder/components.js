@@ -20,7 +20,7 @@ import {
   previewStore,
   tables,
 } from "stores/builder/index"
-import { buildFormSchema, getSchemaForDatasource } from "../../dataBinding"
+import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
   DEFAULT_BB_DATASOURCE_ID,

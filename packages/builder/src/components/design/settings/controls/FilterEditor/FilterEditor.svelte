@@ -1,10 +1,7 @@
 <script>
   import { notifications, ActionButton, Button, Drawer } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import FilterDrawer from "./FilterDrawer.svelte"
   import { selectedScreen } from "stores/builder"
 

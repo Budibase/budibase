@@ -1,9 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { canBeSortColumn } from "@budibase/shared-core"

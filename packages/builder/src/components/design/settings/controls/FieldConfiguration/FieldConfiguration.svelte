@@ -6,7 +6,7 @@
     getSchemaForDatasource,
     getBindableProperties,
     getComponentBindableProperties,
-  } from "../../../../../dataBinding"
+  } from "dataBinding"
   import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"

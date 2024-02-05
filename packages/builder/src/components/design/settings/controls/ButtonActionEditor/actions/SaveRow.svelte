@@ -6,7 +6,7 @@
     tables,
     viewsV2,
   } from "stores/builder"
-  import { getSchemaForDatasourcePlus } from "../../../../../../dataBinding"
+  import { getSchemaForDatasourcePlus } from "dataBinding"
   import SaveFields from "./SaveFields.svelte"
   import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 

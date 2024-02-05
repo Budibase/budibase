@@ -13,7 +13,7 @@
   import { selectedScreen, screenStore } from "stores/builder"
   import sanitizeUrl from "helpers/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
-  import { getBindableProperties } from "../../../../../../../../../dataBinding"
+  import { getBindableProperties } from "dataBinding"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 

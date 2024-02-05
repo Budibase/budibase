@@ -12,10 +12,7 @@
   } from "@budibase/bbui"
   import { selectedScreen, selectedComponent } from "stores/builder"
   import { findClosestMatchingComponent } from "helpers/components"
-  import {
-    getSchemaForDatasource,
-    getDatasourceForProvider,
-  } from "../../../../../dataBinding"
+  import { getSchemaForDatasource, getDatasourceForProvider } from "dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 

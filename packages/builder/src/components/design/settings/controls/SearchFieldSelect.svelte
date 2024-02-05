@@ -1,9 +1,6 @@
 <script>
   import { Multiselect } from "@budibase/bbui"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen, tables } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { getFields } from "helpers/searchFields"
