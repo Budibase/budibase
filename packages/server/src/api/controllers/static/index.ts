@@ -222,16 +222,11 @@ export const serveApp = async function (ctx: Ctx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
-    const foo = await db.allDocs(
-      getScreenParams(null, {
-        include_docs: true,
-      })
-    );
-
-    //console.log('before');
-    //console.log(JSON.stringify(foo, null, 2));
-    //console.log('after');
-
+    if (env.isDev()) {
+      console.log("dev");
+    } else {
+      console.log("no dev");
+    }
 
     const themeVariables = getThemeVariables(appInfo?.theme);
 

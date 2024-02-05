@@ -11,6 +11,7 @@
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
   const getIframeURL = app => {
+    console.log(app);
     if (app.status === "published") {
       return `/app${app.url}`
     }
