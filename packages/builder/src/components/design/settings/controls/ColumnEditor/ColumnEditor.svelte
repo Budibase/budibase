@@ -7,7 +7,7 @@
     getDatasourceForProvider,
     getSchemaForDatasource,
   } from "../../../../../dataBinding"
-  import { currentAsset } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { getFields } from "helpers/searchFields"
 
   export let componentInstance
@@ -21,8 +21,8 @@
   let boundValue
 
   $: text = getText(value)
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchema($currentAsset, datasource)
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: schema = getSchema($selectedScreen, datasource)
   $: options = allowCellEditing
     ? Object.keys(schema || {})
     : enrichedSchemaFields?.map(field => field.name)

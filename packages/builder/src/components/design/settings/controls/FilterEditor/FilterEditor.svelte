@@ -6,7 +6,7 @@
     getSchemaForDatasource,
   } from "../../../../../dataBinding"
   import FilterDrawer from "./FilterDrawer.svelte"
-  import { currentAsset } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
 
   const dispatch = createEventDispatcher()
 
@@ -18,8 +18,8 @@
   let drawer
 
   $: tempValue = value
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: dsSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: dsSchema = getSchemaForDatasource($selectedScreen, datasource)?.schema
   $: schemaFields = Object.values(schema || dsSchema || {})
   $: text = getText(value?.filter(filter => filter.field))
 

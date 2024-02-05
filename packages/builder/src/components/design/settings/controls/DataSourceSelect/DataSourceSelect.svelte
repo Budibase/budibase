@@ -22,7 +22,7 @@
     queries as queriesStore,
     viewsV2 as viewsV2Store,
     views as viewsStore,
-    currentAsset,
+    selectedScreen,
     componentStore,
     datasources,
     integrations,
@@ -76,7 +76,7 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = findAllComponents($currentAsset.props)
+  $: dataProviders = findAllComponents($selectedScreen.props)
     .filter(component => {
       return (
         component._component?.endsWith("/dataprovider") &&

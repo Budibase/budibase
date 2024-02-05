@@ -1,6 +1,6 @@
 <script>
   import { ActionButton, notifications } from "@budibase/bbui"
-  import { currentAsset, componentStore } from "stores/builder"
+  import { selectedScreen, componentStore } from "stores/builder"
   import { findClosestMatchingComponent } from "helpers/components"
   import { makeDatasourceFormComponents } from "../../../../templates/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -11,7 +11,7 @@
 
   const resetFormFields = async () => {
     const form = findClosestMatchingComponent(
-      $currentAsset?.props,
+      $selectedScreen?.props,
       componentInstance._id,
       component => component._component.endsWith("/form")
     )

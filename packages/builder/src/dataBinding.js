@@ -7,7 +7,6 @@ import {
   findComponentPath,
 } from "helpers/components"
 import {
-  currentAsset,
   componentStore,
   screenStore,
   appStore,
@@ -15,6 +14,7 @@ import {
   queries as queriesStores,
   tables as tablesStore,
   roles as rolesStore,
+  selectedScreen,
 } from "stores/builder"
 import {
   makePropSafe,
@@ -731,13 +731,11 @@ export const getEventContextBindings = ({
   asset,
 }) => {
   let bindings = []
-
-  const selectedAsset = asset ?? get(currentAsset)
+  asset = asset ?? get(selectedScreen)
 
   // Check if any context bindings are provided by the component for this
   // setting
-  const component =
-    componentInstance ?? findComponent(selectedAsset.props, componentId)
+  const component = componentInstance ?? findComponent(asset.props, componentId)
 
   if (!component) {
     return bindings
