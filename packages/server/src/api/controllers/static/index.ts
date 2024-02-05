@@ -12,7 +12,7 @@ import {
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
-import { DocumentType } from "../../../db/utils"
+import { DocumentType, getScreenParams } from "../../../db/utils"
 import {
   context,
   objectStore,
@@ -31,6 +31,61 @@ import {
 } from "../../../appMigrations"
 
 import send from "koa-send"
+
+const getThemeVariables = (theme) => {
+  if (theme === "spectrum--lightest") {
+    return `
+      --spectrum-global-color-gray-50: rgb(255, 255, 255);
+      --spectrum-global-color-gray-200: rgb(244, 244, 244);
+      --spectrum-global-color-gray-300: rgb(234, 234, 234);
+      --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
+    `
+  }
+  if (theme === "spectrum--light") {
+    return `
+    --spectrum-global-color-gray-50: rgb(255, 255, 255);
+    --spectrum-global-color-gray-200: rgb(234, 234, 234);
+    --spectrum-global-color-gray-300: rgb(225, 225, 225);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
+
+    `
+  }
+  if (theme === "spectrum--dark") {
+    return `
+    --spectrum-global-color-gray-100: rgb(50, 50, 50);
+    --spectrum-global-color-gray-200: rgb(62, 62, 62);
+    --spectrum-global-color-gray-300: rgb(74, 74, 74);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--darkest") {
+    return `
+  --spectrum-global-color-gray-100: rgb(30, 30, 30);
+  --spectrum-global-color-gray-200: rgb(44, 44, 44);
+  --spectrum-global-color-gray-300: rgb(57, 57, 57);
+  --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--nord") {
+    return `
+    --spectrum-global-color-gray-100: #3b4252;
+
+  --spectrum-global-color-gray-200: #424a5c;
+  --spectrum-global-color-gray-300: #4c566a;
+  --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--midnight") {
+    return `
+    --hue: 220;
+    --sat: 10%;
+    --spectrum-global-color-gray-100: hsl(var(--hue), var(--sat), 17%);
+    --spectrum-global-color-gray-200: hsl(var(--hue), var(--sat), 20%);
+    --spectrum-global-color-gray-300: hsl(var(--hue), var(--sat), 24%);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+}
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -167,10 +222,23 @@ export const serveApp = async function (ctx: Ctx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
+    const foo = await db.allDocs(
+      getScreenParams(null, {
+        include_docs: true,
+      })
+    );
+
+    //console.log('before');
+    //console.log(JSON.stringify(foo, null, 2));
+    //console.log('after');
+
+
+    const themeVariables = getThemeVariables(appInfo?.theme);
+
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
       const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css } = App.render({
+      const { head, html, css, ...rest } = App.render({
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -196,7 +264,7 @@ export const serveApp = async function (ctx: Ctx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        style: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
       })

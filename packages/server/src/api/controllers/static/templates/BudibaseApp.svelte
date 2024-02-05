@@ -1,4 +1,6 @@
 <script>
+  import ClientAppSkeleton from "./ClientAppSkeleton.svelte" // copied in budibase/scripts/build.js to here
+
   export let title = ""
   export let favicon = ""
 
@@ -96,6 +98,7 @@
 </svelte:head>
 
 <body id="app">
+  <ClientAppSkeleton />
   <div id="error">
     {#if clientLibPath}
       <h1>There was an error loading your app</h1>

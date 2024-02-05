@@ -3,7 +3,7 @@
   import { setContext, onMount } from "svelte"
   import { Layout, Heading, Body } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg"
-  import { Constants, CookieUtils } from "@budibase/frontend-core"
+  import { ClientAppSkeleton, Constants, CookieUtils } from "@budibase/frontend-core"
   import Component from "./Component.svelte"
   import SDK from "sdk"
   import {
@@ -80,11 +80,19 @@
     }
   }
 
+  let fontsLoaded = false;
+
   // Load app config
   onMount(async () => {
+    document.fonts.ready.then(() => {
+      fontsLoaded = true
+    })
+
     await initialise()
     await authStore.actions.fetchUser()
     dataLoaded = true
+    document.getElementById('clientAppSkeletonLoader')?.remove();
+
     if (get(builderStore).inBuilder) {
       builderStore.actions.notifyLoaded()
     } else {

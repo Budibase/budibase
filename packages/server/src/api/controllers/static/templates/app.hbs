@@ -1,13 +1,17 @@
 <html>
-
   <head>
     {{{head}}}
+
+    <style>
+      {{style}}
+    </style>
+
+    <script>
+      window["##BUDIBASE_APP_ID##"] = "{{appId}}"
+      window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
+    </script>
   </head>
 
-  <script>
-    window["##BUDIBASE_APP_ID##"] = "{{appId}}"
-    window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
-  </script>
 
-  {{{body}}}
+  {{body}}
 </html>

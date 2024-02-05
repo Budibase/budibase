@@ -1,5 +1,6 @@
 import { DEFAULT_BB_DATASOURCE_ID } from "constants/backend"
 import { DatasourceFeature } from "@budibase/types"
+import { API } from "api"
 
 export const integrationForDatasource = (integrations, datasource) => ({
   name: datasource.source,
@@ -32,4 +33,27 @@ export const configFromIntegration = integration => {
 
 export const shouldIntegrationFetchTableNames = integration => {
   return integration.features?.[DatasourceFeature.FETCH_TABLE_NAMES]
+}
+
+/*
+export const setDefaultScreenHideNavigation = (apps, selectedAppId) => {
+  console.log(apps);
+  console.log(selectedAppId);
+
+  const selectedApp = apps.find(app => app.instance._id === selectedAppId);
+  console.log(selectedApp);
+}*/
+
+export const setDefaultScreenShowNavigation = (screens, selectedAppId) => {
+  console.log(screens);
+  let defaultScreenShowNavigation = screens?.[0]?.showNavigation;
+
+  for (const screen of screens) {
+    if (screen.routing.homeScreen) {
+      defaultScreenShowNavigation = screen.showNavigation;
+      break;
+    }
+  }
+
+  API.setDefaultScreenShowNavigation(selectedAppId, defaultScreenShowNavigation);
 }

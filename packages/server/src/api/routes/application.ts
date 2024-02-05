@@ -35,6 +35,11 @@ router
     controller.updateClient
   )
   .post(
+    "/api/applications/:appId/setDefaultScreenShowNavigation",
+    authorized(permissions.BUILDER),
+    controller.setDefaultScreenShowNavigation
+  )
+  .post(
     "/api/applications/:appId/client/revert",
     authorized(permissions.BUILDER),
     controller.revertClient

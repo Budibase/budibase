@@ -185,4 +185,11 @@ export const buildAppEndpoints = API => ({
       url: `/api/applications/${appId}/sample`,
     })
   },
+
+  setDefaultScreenShowNavigation: async (appId, visible) => {
+    return await API.post({
+      url: `/api/applications/${appId}/setDefaultScreenShowNavigation`,
+      body: { visible },
+    })
+  },
 })

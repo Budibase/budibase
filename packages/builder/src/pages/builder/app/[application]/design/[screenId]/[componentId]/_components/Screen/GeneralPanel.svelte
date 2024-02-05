@@ -14,6 +14,9 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
+  import { API } from "api"
+  import { setDefaultScreenShowNavigation } from "stores/selectors"
+  import { apps } from "stores/portal"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 
@@ -64,11 +67,19 @@
 
     // Update screen setting
     try {
+      console.log($store.appId);
       await store.actions.screens.updateSetting(get(selectedScreen), key, value)
+      await setDefaultScreenShowNavigation($store.screens, $store.appId);
     } catch (error) {
       console.log(error)
       notifications.error("Error saving screen settings")
     }
+  }
+
+  $: {
+    console.log("scr");
+    console.log($selectedScreen);
+    console.log("scr");
   }
 
   $: screenSettings = [

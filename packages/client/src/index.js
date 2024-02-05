@@ -108,8 +108,11 @@ const loadBudibase = async () => {
 
   // Create app if one hasn't been created yet
   if (!app) {
+    // Remove the SSR rendered skeleton
+    //document.getElementById('clientAppSkeletonLoader')?.remove();
+
     app = new ClientApp({
-      target: window.document.body,
+      target: window.document.body
     })
   }
 }

@@ -68,6 +68,8 @@ function runBuild(entry, outfile) {
     platform: "node",
     outfile,
   }).then(result => {
+    fs.copyFileSync(`${process.cwd()}/../frontend-core/src/components/ClientAppSkeleton.svelte`, `${process.cwd()}/dist/ClientAppSkeleton.svelte`)
+
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
       for (const file of files) {
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
