@@ -1,7 +1,7 @@
 <script>
   import { Label, Select, Body, Multiselect } from "@budibase/bbui"
   import { findAllMatchingComponents, findComponent } from "helpers/components"
-  import { currentAsset } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { onMount } from "svelte"
   import {
     getDatasourceForProvider,
@@ -21,14 +21,15 @@
     },
   ]
 
-  $: tables = findAllMatchingComponents($currentAsset?.props, component =>
+  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
     component._component.endsWith("table")
   ).map(table => ({
     label: table._instanceName,
     value: table._id,
   }))
-  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("tableblock")
+  $: tableBlocks = findAllMatchingComponents(
+    $selectedScreen?.props,
+    component => component._component.endsWith("tableblock")
   ).map(block => ({
     label: block._instanceName,
     value: `${block._id}-table`,
@@ -41,9 +42,9 @@
     if (tableId?.includes("-")) {
       tableId = tableId.split("-")[0]
     }
-    const selectedTable = findComponent($currentAsset?.props, tableId)
-    const datasource = getDatasourceForProvider($currentAsset, selectedTable)
-    const { schema } = getSchemaForDatasource($currentAsset, datasource)
+    const selectedTable = findComponent($selectedScreen?.props, tableId)
+    const datasource = getDatasourceForProvider($selectedScreen, selectedTable)
+    const { schema } = getSchemaForDatasource($selectedScreen, datasource)
     return Object.keys(schema || {})
   }
 

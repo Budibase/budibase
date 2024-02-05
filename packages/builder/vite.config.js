@@ -107,6 +107,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/stores"),
         },
         {
+          find: "dataBinding",
+          replacement: path.resolve("./src/dataBinding.js"),
+        },
+        {
           find: "api",
           replacement: path.resolve("./src/api.js"),
         },

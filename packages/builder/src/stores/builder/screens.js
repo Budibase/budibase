@@ -483,8 +483,6 @@ export const selectedScreen = derived(screenStore, $store => {
   return $store.screens.find(screen => screen._id === $store.selectedScreenId)
 })
 
-export const currentAsset = selectedScreen
-
 export const sortedScreens = derived(screenStore, $screenStore => {
   return $screenStore.screens.slice().sort((a, b) => {
     // Sort by role first

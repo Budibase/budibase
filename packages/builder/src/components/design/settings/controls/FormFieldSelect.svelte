@@ -1,6 +1,6 @@
 <script>
   import { Combobox } from "@budibase/bbui"
-  import { currentAsset } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { getComponentFieldOptions } from "helpers/formFields"
 
   export let componentInstance
@@ -8,7 +8,7 @@
   export let type
 
   $: options = getComponentFieldOptions(
-    $currentAsset?.props,
+    $selectedScreen?.props,
     componentInstance?._id,
     type
   )

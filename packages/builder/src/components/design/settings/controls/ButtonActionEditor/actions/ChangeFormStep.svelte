@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset, componentStore } from "stores/builder"
-  import { getActionProviders } from "../../../../../../dataBinding"
+  import { selectedScreen, componentStore } from "stores/builder"
+  import { getActionProviders } from "dataBinding"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
@@ -10,7 +10,7 @@
   export let nested
 
   $: actionProviders = getActionProviders(
-    $currentAsset,
+    $selectedScreen,
     $componentStore.selectedComponentId,
     "ChangeFormStep",
     { includeSelf: nested }

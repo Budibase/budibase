@@ -1,11 +1,11 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
-  import { currentAsset } from "stores/builder"
+  import { selectedScreen } from "stores/builder"
   import { findAllMatchingComponents } from "helpers/components"
 
   export let parameters
 
-  $: components = findAllMatchingComponents($currentAsset?.props, component =>
+  $: components = findAllMatchingComponents($selectedScreen?.props, component =>
     component._component.endsWith("s3upload")
   )
 </script>

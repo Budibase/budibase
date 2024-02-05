@@ -7,12 +7,7 @@ import {
 } from "./components"
 import { navigationStore } from "./navigation.js"
 import { themeStore } from "./theme.js"
-import {
-  screenStore,
-  selectedScreen,
-  currentAsset,
-  sortedScreens,
-} from "./screens.js"
+import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
 import { builderStore } from "./builder.js"
 import { hoverStore } from "./hover.js"
 import { previewStore } from "./preview.js"
@@ -52,7 +47,6 @@ export {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
-  currentAsset,
   sortedScreens,
   userStore,
   isOnlyUser,
