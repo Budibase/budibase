@@ -5,6 +5,8 @@ import { MongoClient, type Collection } from "mongodb"
 
 jest.unmock("mongodb")
 
+const collection = "test_collection"
+
 describe("/queries", () => {
   let config = setup.getConfig()
   let datasource: Datasource
@@ -20,7 +22,15 @@ describe("/queries", () => {
       transformer: "return data",
       readable: true,
     }
-    return await config.api.query.create({ ...defaultQuery, ...query })
+    const combinedQuery = { ...defaultQuery, ...query }
+    if (
+      combinedQuery.fields &&
+      combinedQuery.fields.extra &&
+      !combinedQuery.fields.extra.collection
+    ) {
+      combinedQuery.fields.extra.collection = collection
+    }
+    return await config.api.query.create(combinedQuery)
   }
 
   async function withClient(
@@ -37,7 +47,6 @@ describe("/queries", () => {
   }
 
   async function withCollection(
-    collection: string,
     callback: (collection: Collection) => Promise<void>
   ): Promise<void> {
     await withClient(async client => {
@@ -61,7 +70,7 @@ describe("/queries", () => {
   })
 
   beforeEach(async () => {
-    await withCollection("test_table", async collection => {
+    await withCollection(async collection => {
       await collection.insertMany([
         { name: "one" },
         { name: "two" },
@@ -73,18 +82,17 @@ describe("/queries", () => {
   })
 
   afterEach(async () => {
-    await withCollection("test_table", async collection => {
+    await withCollection(async collection => {
       await collection.drop()
     })
   })
 
-  it("should execute a query", async () => {
+  it("should execute a count query", async () => {
     const query = await createQuery({
       fields: {
-        json: "{}",
+        json: {},
         extra: {
           actionType: "count",
-          collection: "test_table",
         },
       },
     })
@@ -94,13 +102,12 @@ describe("/queries", () => {
     expect(result.data).toEqual([{ value: 5 }])
   })
 
-  it("should execute a query with a transformer", async () => {
+  it("should execute a count query with a transformer", async () => {
     const query = await createQuery({
       fields: {
-        json: "{}",
+        json: {},
         extra: {
           actionType: "count",
-          collection: "test_table",
         },
       },
       transformer: "return data + 1",
@@ -111,13 +118,48 @@ describe("/queries", () => {
     expect(result.data).toEqual([{ value: 6 }])
   })
 
+  it("should execute a find query", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {},
+        extra: {
+          actionType: "find",
+        },
+      },
+    })
+
+    const result = await config.api.query.execute(query._id!)
+
+    expect(result.data).toEqual([
+      { _id: expect.anything(), name: "one" },
+      { _id: expect.anything(), name: "two" },
+      { _id: expect.anything(), name: "three" },
+      { _id: expect.anything(), name: "four" },
+      { _id: expect.anything(), name: "five" },
+    ])
+  })
+
+  it("should execute a findOne query", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {},
+        extra: {
+          actionType: "findOne",
+        },
+      },
+    })
+
+    const result = await config.api.query.execute(query._id!)
+
+    expect(result.data).toEqual([{ _id: expect.anything(), name: "one" }])
+  })
+
   it("should execute a create query with parameters", async () => {
     const query = await createQuery({
       fields: {
-        json: '{"foo": "{{ foo }}"}',
+        json: { foo: "{{ foo }}" },
         extra: {
           actionType: "insertOne",
-          collection: "test_table",
         },
       },
       queryVerb: "create",
@@ -140,12 +182,160 @@ describe("/queries", () => {
       },
     ])
 
-    await withCollection("test_table", async collection => {
+    await withCollection(async collection => {
       const doc = await collection.findOne({ foo: { $eq: "bar" } })
       expect(doc).toEqual({
         _id: expect.anything(),
         foo: "bar",
       })
+    })
+  })
+
+  it("should execute a delete query with parameters", async () => {
+    const query = await createQuery({
+      fields: {
+        json: { name: { $eq: "{{ name }}" } },
+        extra: {
+          actionType: "deleteOne",
+        },
+      },
+      queryVerb: "delete",
+      parameters: [
+        {
+          name: "name",
+          default: "",
+        },
+      ],
+    })
+
+    const result = await config.api.query.execute(query._id!, {
+      parameters: { name: "one" },
+    })
+
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        deletedCount: 1,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const doc = await collection.findOne({ name: { $eq: "one" } })
+      expect(doc).toBeNull()
+    })
+  })
+
+  it("should execute an update query with parameters", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {
+          filter: { name: { $eq: "{{ name }}" } },
+          update: { $set: { name: "{{ newName }}" } },
+        },
+        extra: {
+          actionType: "updateOne",
+        },
+      },
+      queryVerb: "update",
+      parameters: [
+        {
+          name: "name",
+          default: "",
+        },
+        {
+          name: "newName",
+          default: "",
+        },
+      ],
+    })
+
+    const result = await config.api.query.execute(query._id!, {
+      parameters: { name: "one", newName: "newOne" },
+    })
+
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        matchedCount: 1,
+        modifiedCount: 1,
+        upsertedCount: 0,
+        upsertedId: null,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const doc = await collection.findOne({ name: { $eq: "newOne" } })
+      expect(doc).toEqual({
+        _id: expect.anything(),
+        name: "newOne",
+      })
+
+      const oldDoc = await collection.findOne({ name: { $eq: "one" } })
+      expect(oldDoc).toBeNull()
+    })
+  })
+
+  it("should be able to delete all records", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {},
+        extra: {
+          actionType: "deleteMany",
+        },
+      },
+      queryVerb: "delete",
+    })
+
+    const result = await config.api.query.execute(query._id!)
+
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        deletedCount: 5,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const docs = await collection.find().toArray()
+      expect(docs).toHaveLength(0)
+    })
+  })
+
+  it("should be able to update all documents", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {
+          filter: {},
+          update: { $set: { name: "newName" } },
+        },
+        extra: {
+          actionType: "updateMany",
+        },
+      },
+      queryVerb: "update",
+    })
+
+    const result = await config.api.query.execute(query._id!)
+
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        matchedCount: 5,
+        modifiedCount: 5,
+        upsertedCount: 0,
+        upsertedId: null,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const docs = await collection.find().toArray()
+      expect(docs).toHaveLength(5)
+      for (const doc of docs) {
+        expect(doc).toEqual({
+          _id: expect.anything(),
+          name: "newName",
+        })
+      }
     })
   })
 })
