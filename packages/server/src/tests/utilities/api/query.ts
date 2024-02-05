@@ -1,5 +1,9 @@
 import TestConfiguration from "../TestConfiguration"
-import { Query } from "@budibase/types"
+import {
+  Query,
+  type ExecuteQueryRequest,
+  type ExecuteQueryResponse,
+} from "@budibase/types"
 import { TestAPI } from "./base"
 
 export class QueryAPI extends TestAPI {
@@ -21,10 +25,14 @@ export class QueryAPI extends TestAPI {
     return res.body as Query
   }
 
-  execute = async (queryId: string): Promise<{ data: any }> => {
+  execute = async (
+    queryId: string,
+    body?: ExecuteQueryRequest
+  ): Promise<ExecuteQueryResponse> => {
     const res = await this.request
       .post(`/api/v2/queries/${queryId}`)
       .set(this.config.defaultHeaders())
+      .send(body)
       .expect("Content-Type", /json/)
 
     if (res.status !== 200) {
