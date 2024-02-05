@@ -1,8 +1,5 @@
 import { writable, get } from "svelte/store"
-import {
-  findComponentParent,
-  findComponentPath,
-} from "stores/builder/components/utils"
+import { findComponentParent, findComponentPath } from "helpers/components"
 import { selectedScreen, componentStore } from "stores/builder"
 
 export const DropPosition = {

@@ -11,7 +11,7 @@
   } from "@budibase/bbui"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import sanitizeUrl from "helpers/sanitizeUrl"
-  import { makeComponentUnique } from "stores/builder/components/utils"
+  import { makeComponentUnique } from "helpers/components"
 
   export let screenId
 

@@ -7,7 +7,7 @@
     getActionProviders,
     buildFormSchema,
   } from "../../../../../../dataBinding"
-  import { findComponent } from "stores/builder/components/utils"
+  import { findComponent } from "helpers/components"
 
   export let parameters
   export let bindings = []

@@ -2,7 +2,7 @@
   import {
     findClosestMatchingComponent,
     findComponent,
-  } from "stores/builder/components/utils"
+  } from "helpers/components"
   import {
     getDatasourceForProvider,
     getSchemaForDatasource,

@@ -1,4 +1,4 @@
-import { findClosestMatchingComponent } from "stores/builder/components/utils"
+import { findClosestMatchingComponent } from "helpers/components"
 import {
   getDatasourceForProvider,
   getSchemaForDatasource,

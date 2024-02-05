@@ -2,7 +2,7 @@ import { derived, get } from "svelte/store"
 import { cloneDeep } from "lodash/fp"
 import { Helpers } from "@budibase/bbui"
 import { RoleUtils, Utils } from "@budibase/frontend-core"
-import { findAllMatchingComponents } from "stores/builder/components/utils"
+import { findAllMatchingComponents } from "helpers/components"
 import {
   layoutStore,
   appStore,

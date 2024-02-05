@@ -5,7 +5,7 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
-} from "stores/builder/components/utils"
+} from "helpers/components"
 import {
   currentAsset,
   componentStore,

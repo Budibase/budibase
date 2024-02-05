@@ -30,7 +30,7 @@
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "stores/builder/components/utils"
+  import { findAllComponents } from "helpers/components"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"

@@ -2,7 +2,7 @@
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
   import { currentAsset } from "stores/builder"
-  import { findAllMatchingComponents } from "stores/builder/components/utils"
+  import { findAllMatchingComponents } from "helpers/components"
 
   export let value
 

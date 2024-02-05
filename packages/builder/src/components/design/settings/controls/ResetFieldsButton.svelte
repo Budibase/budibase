@@ -1,7 +1,7 @@
 <script>
   import { ActionButton, notifications } from "@budibase/bbui"
   import { currentAsset, componentStore } from "stores/builder"
-  import { findClosestMatchingComponent } from "stores/builder/components/utils"
+  import { findClosestMatchingComponent } from "helpers/components"
   import { makeDatasourceFormComponents } from "../../../../templates/commonComponents"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 

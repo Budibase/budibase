@@ -11,18 +11,23 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
-} from "stores/builder/components/utils"
+} from "helpers/components"
 import { getComponentFieldOptions } from "helpers/formFields"
-import { selectedScreen } from "../screens"
-import { screenStore, appStore, previewStore, tables } from "stores/builder"
-import { buildFormSchema, getSchemaForDatasource } from "../../../dataBinding"
+import { selectedScreen } from "./screens"
+import {
+  screenStore,
+  appStore,
+  previewStore,
+  tables,
+} from "stores/builder/index"
+import { buildFormSchema, getSchemaForDatasource } from "../../dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
   DEFAULT_BB_DATASOURCE_ID,
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import BudiStore from "../BudiStore"
+import BudiStore from "./BudiStore"
 import { Utils } from "@budibase/frontend-core"
 
 export const INITIAL_COMPONENTS_STATE = {
