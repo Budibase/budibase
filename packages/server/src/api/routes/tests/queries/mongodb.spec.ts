@@ -4,7 +4,6 @@ import { databaseTestProviders } from "../../../../integrations/tests/utils"
 import { MongoClient } from "mongodb"
 
 jest.unmock("mongodb")
-jest.setTimeout(3000)
 
 describe("/queries", () => {
   let request = setup.getRequest()
