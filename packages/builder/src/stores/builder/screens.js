@@ -39,12 +39,6 @@ export class ScreenStore extends BudiStore {
     this.sequentialScreenPatch = this.sequentialScreenPatch.bind(this)
     this.removeCustomLayout = this.removeCustomLayout.bind(this)
 
-    this.selected = derived(this.store, $store => {
-      return get(this.store).screens.find(
-        screen => screen._id === $store.selectedScreenId
-      )
-    })
-
     this.history = createHistoryStore({
       getDoc: id => get(this.store).screens?.find(screen => screen._id === id),
       selectDoc: this.select,
@@ -485,7 +479,9 @@ export class ScreenStore extends BudiStore {
 
 export const screenStore = new ScreenStore()
 
-export const selectedScreen = screenStore.selected
+export const selectedScreen = derived(screenStore, $store => {
+  return $store.screens.find(screen => screen._id === $store.selectedScreenId)
+})
 
 export const currentAsset = selectedScreen
 
