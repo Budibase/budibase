@@ -11,7 +11,7 @@
     DatePicker,
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "stores/builder"
-  import { findClosestMatchingComponent } from "stores/builder/components/utils"
+  import { findClosestMatchingComponent } from "helpers/components"
   import {
     getSchemaForDatasource,
     getDatasourceForProvider,

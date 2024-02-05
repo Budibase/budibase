@@ -9,7 +9,7 @@
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { getComponentName } from "stores/builder/components/utils"
+  import { getComponentName } from "helpers/components"
   import {
     getBindableProperties,
     getComponentBindableProperties,

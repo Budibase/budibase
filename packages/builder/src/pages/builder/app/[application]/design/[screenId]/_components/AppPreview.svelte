@@ -22,10 +22,7 @@
     notifications,
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import {
-    findComponent,
-    findComponentPath,
-  } from "stores/builder/components/utils"
+  import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
 
   let iframe

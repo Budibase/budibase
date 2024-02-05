@@ -11,7 +11,7 @@
   } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
-  import { findComponentPath } from "stores/builder/components/utils"
+  import { findComponentPath } from "helpers/components"
 
   let searchString
   let searchRef

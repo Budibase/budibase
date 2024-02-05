@@ -1,9 +1,6 @@
 <script>
   import { Label, Select, Body, Multiselect } from "@budibase/bbui"
-  import {
-    findAllMatchingComponents,
-    findComponent,
-  } from "stores/builder/components/utils"
+  import { findAllMatchingComponents, findComponent } from "helpers/components"
   import { currentAsset } from "stores/builder"
   import { onMount } from "svelte"
   import {
