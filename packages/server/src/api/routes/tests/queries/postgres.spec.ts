@@ -42,6 +42,19 @@ describe("/queries", () => {
     return await config.api.query.create({ ...defaultQuery, ...query })
   }
 
+  async function withClient(
+    callback: (client: Client) => Promise<void>
+  ): Promise<void> {
+    const ds = await databaseTestProviders.postgres.datasource()
+    const client = new Client(ds.config!)
+    await client.connect()
+    try {
+      await callback(client)
+    } finally {
+      await client.end()
+    }
+  }
+
   afterAll(async () => {
     await databaseTestProviders.postgres.stop()
     setup.afterAll()
@@ -55,20 +68,16 @@ describe("/queries", () => {
   })
 
   beforeEach(async () => {
-    const ds = await databaseTestProviders.postgres.datasource()
-    const client = new Client(ds.config!)
-    await client.connect()
-    await client.query(createTableSQL)
-    await client.query(insertSQL)
-    await client.end()
+    await withClient(async client => {
+      await client.query(createTableSQL)
+      await client.query(insertSQL)
+    })
   })
 
   afterEach(async () => {
-    const ds = await databaseTestProviders.postgres.datasource()
-    const client = new Client(ds.config!)
-    await client.connect()
-    await client.query(dropTableSQL)
-    await client.end()
+    await withClient(async client => {
+      await client.query(dropTableSQL)
+    })
   })
 
   it("should execute a query", async () => {
@@ -123,5 +132,39 @@ describe("/queries", () => {
         name: "one",
       },
     ])
+  })
+
+  it("should be able to insert with bindings", async () => {
+    const query = await createQuery({
+      fields: {
+        sql: "INSERT INTO test_table (name) VALUES ({{ foo }})",
+      },
+      parameters: [
+        {
+          name: "foo",
+          default: "bar",
+        },
+      ],
+      queryVerb: "create",
+    })
+
+    const result = await config.api.query.execute(query._id!, {
+      parameters: {
+        foo: "baz",
+      },
+    })
+
+    expect(result.data).toEqual([
+      {
+        created: true,
+      },
+    ])
+
+    await withClient(async client => {
+      const { rows } = await client.query(
+        "SELECT * FROM test_table WHERE name = 'baz'"
+      )
+      expect(rows).toHaveLength(1)
+    })
   })
 })
