@@ -100,11 +100,13 @@ const resetBuilderHistory = () => {
 
 export const initialise = async pkg => {
   const { application } = pkg
-  appStore.syncAppPackage(pkg)
-  appStore.syncAppRoutes()
+  await Promise.all([
+    appStore.syncAppRoutes(),
+    componentStore.refreshDefinitions(application?.appId),
+  ])
   builderStore.init(application)
+  appStore.syncAppPackage(pkg)
   navigationStore.syncAppNavigation(application?.navigation)
-  await componentStore.refreshDefinitions(application?.appId)
   themeStore.syncAppTheme(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
