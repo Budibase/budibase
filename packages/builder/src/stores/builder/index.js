@@ -82,13 +82,15 @@ export const reset = () => {
 }
 
 const refreshBuilderData = async () => {
-  await automationStore.actions.fetch()
-  await datasources.init()
-  await integrations.init()
-  await queries.init()
-  await tables.init()
-  await roles.fetch()
-  await flags.fetch()
+  await Promise.all([
+    automationStore.actions.fetch(),
+    datasources.init(),
+    integrations.init(),
+    queries.init(),
+    tables.init(),
+    roles.fetch(),
+    flags.fetch(),
+  ])
 }
 
 const resetBuilderHistory = () => {
@@ -98,27 +100,16 @@ const resetBuilderHistory = () => {
 
 export const initialise = async pkg => {
   const { application } = pkg
-
   appStore.syncAppPackage(pkg)
-
   appStore.syncAppRoutes()
-
   builderStore.init(application)
-
   navigationStore.syncAppNavigation(application?.navigation)
-
   await componentStore.refreshDefinitions(application?.appId)
-
   themeStore.syncAppTheme(application)
-
   screenStore.syncAppScreens(pkg)
-
   layoutStore.syncAppLayouts(pkg)
-
   // required for api comms
   database.syncAppDatabase(application)
-
   resetBuilderHistory()
-
   await refreshBuilderData()
 }
