@@ -499,7 +499,6 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // start building the query
-
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     query = query.limit(foundLimit)
     if (foundOffset) {
