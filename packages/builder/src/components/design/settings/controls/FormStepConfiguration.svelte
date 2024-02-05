@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher, setContext } from "svelte"
-  import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  import { getDatasourceForProvider } from "../../../../dataBinding"
+  import ComponentSettingsSection from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { getDatasourceForProvider } from "dataBinding"
   import { selectedScreen, componentStore, previewStore } from "stores/builder"
   import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"

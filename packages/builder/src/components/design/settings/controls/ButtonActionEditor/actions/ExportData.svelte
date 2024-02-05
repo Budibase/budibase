@@ -3,10 +3,7 @@
   import { findAllMatchingComponents, findComponent } from "helpers/components"
   import { selectedScreen } from "stores/builder"
   import { onMount } from "svelte"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
 
   export let parameters
 

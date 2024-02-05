@@ -1,8 +1,5 @@
 <script>
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"

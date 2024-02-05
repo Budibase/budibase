@@ -2,7 +2,7 @@
   import { tables } from "stores/builder"
   import { API } from "api"
   import { Select, Label, Multiselect } from "@budibase/bbui"
-  import { capitalise } from "../../helpers"
+  import { capitalise } from "helpers"
   import { createEventDispatcher } from "svelte"
 
   export let schema

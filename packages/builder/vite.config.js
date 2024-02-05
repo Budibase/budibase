@@ -99,6 +99,10 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/components"),
         },
         {
+          find: "pages",
+          replacement: path.resolve("./src/pages"),
+        },
+        {
           find: "templates",
           replacement: path.resolve("./src/templates"),
         },

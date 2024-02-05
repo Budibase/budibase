@@ -3,10 +3,7 @@
   import { createEventDispatcher } from "svelte"
   import ColumnDrawer from "./ColumnDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "../../../../../dataBinding"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
   import { selectedScreen } from "stores/builder"
   import { getFields } from "helpers/searchFields"
 
