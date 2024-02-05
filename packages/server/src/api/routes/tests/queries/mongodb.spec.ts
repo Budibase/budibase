@@ -6,7 +6,6 @@ import { MongoClient } from "mongodb"
 jest.unmock("mongodb")
 
 describe("/queries", () => {
-  let request = setup.getRequest()
   let config = setup.getConfig()
   let datasource: Datasource
 
@@ -21,18 +20,7 @@ describe("/queries", () => {
       transformer: "return data",
       readable: true,
     }
-
-    const res = await request
-      .post(`/api/queries`)
-      .set(config.defaultHeaders())
-      .send({ ...defaultQuery, ...query })
-      .expect("Content-Type", /json/)
-
-    if (res.status !== 200) {
-      throw new Error(JSON.stringify(res.body))
-    }
-
-    return res.body as Query
+    return await config.api.query.create({ ...defaultQuery, ...query })
   }
 
   afterAll(async () => {

@@ -4,22 +4,21 @@ import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 let container: StartedTestContainer | undefined
 
 export async function start(): Promise<StartedTestContainer> {
-  if (!container) {
-    container = await new GenericContainer("postgres:16.1-bullseye")
-      .withExposedPorts(5432)
-      .withEnvironment({ POSTGRES_PASSWORD: "password" })
-      .withWaitStrategy(
-        Wait.forSuccessfulCommand(
-          "pg_isready -h localhost -p 5432"
-        ).withStartupTimeout(10000)
-      )
-      .start()
-  }
-  return container
+  return await new GenericContainer("postgres:16.1-bullseye")
+    .withExposedPorts(5432)
+    .withEnvironment({ POSTGRES_PASSWORD: "password" })
+    .withWaitStrategy(
+      Wait.forSuccessfulCommand(
+        "pg_isready -h localhost -p 5432"
+      ).withStartupTimeout(10000)
+    )
+    .start()
 }
 
 export async function datasource(): Promise<Datasource> {
-  const container = await start()
+  if (!container) {
+    container = await start()
+  }
   const host = container.getHost()
   const port = container.getMappedPort(5432)
 
