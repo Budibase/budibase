@@ -113,7 +113,12 @@ export default class AliasTables {
       }
       json.meta.tables = aliasedTables
     }
-    json.tableAliases = this.tableAliases
+    // invert and return
+    const invertedTableAliases: Record<string, string> = {}
+    for (let [key, value] of Object.entries(this.tableAliases)) {
+      invertedTableAliases[value] = key
+    }
+    json.tableAliases = invertedTableAliases
     const response = await getDatasourceAndQuery(json)
     return this.reverse(response)
   }
