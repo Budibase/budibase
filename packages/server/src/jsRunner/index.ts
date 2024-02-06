@@ -3,15 +3,11 @@ import env from "../environment"
 import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
-import fs from "fs"
 import url from "url"
 import crypto from "crypto"
 import querystring from "querystring"
 
-const helpersSource = fs.readFileSync(
-  `${require.resolve("@budibase/string-templates/index-helpers")}`,
-  "utf8"
-)
+const helpersSource = require("./bundles/index-helpers.ivm.bundle.js.txt")
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
