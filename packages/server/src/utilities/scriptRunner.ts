@@ -1,6 +1,7 @@
 import ivm from "isolated-vm"
 
 import bson from "bson"
+import { BundleType, loadBundle } from "../jsRunner/bundles"
 
 const JS_TIMEOUT_MS = 1000
 
@@ -53,7 +54,7 @@ class IsolatedVM {
   }
 
   set code(code: string) {
-    const bsonSource = require("../jsRunner/bundles/bson.ivm.bundle.js")
+    const bsonSource = loadBundle(BundleType.BSON)
 
     this.#bsonModule = this.isolate.compileModuleSync(bsonSource)
     this.#bsonModule.instantiateSync(this.vm, specifier => {
