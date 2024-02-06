@@ -1,4 +1,4 @@
-import { getComponentContexts } from "builder/dataBinding"
+import { getComponentContexts } from "dataBinding"
 import { capitalise } from "helpers"
 
 // Generates bindings for all components that provider "datasource like"

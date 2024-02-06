@@ -14,7 +14,7 @@
     findComponentPath,
     getComponentText,
     getComponentName,
-  } from "stores/builder/components/utils"
+  } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
 

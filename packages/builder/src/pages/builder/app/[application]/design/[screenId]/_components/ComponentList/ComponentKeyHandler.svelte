@@ -5,7 +5,7 @@
     componentStore,
     selectedComponent,
   } from "stores/builder"
-  import { findComponent } from "stores/builder/components/utils"
+  import { findComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"

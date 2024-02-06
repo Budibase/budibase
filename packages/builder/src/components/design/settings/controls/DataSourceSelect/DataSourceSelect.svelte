@@ -2,7 +2,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builder/dataBinding"
+  } from "dataBinding"
   import {
     Button,
     Popover,
@@ -22,7 +22,7 @@
     queries as queriesStore,
     viewsV2 as viewsV2Store,
     views as viewsStore,
-    currentAsset,
+    selectedScreen,
     componentStore,
     datasources,
     integrations,
@@ -30,7 +30,7 @@
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "stores/builder/components/utils"
+  import { findAllComponents } from "helpers/components"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
@@ -76,7 +76,7 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = findAllComponents($currentAsset.props)
+  $: dataProviders = findAllComponents($selectedScreen.props)
     .filter(component => {
       return (
         component._component?.endsWith("/dataprovider") &&

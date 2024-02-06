@@ -5,7 +5,6 @@
   import { notifications } from "@budibase/bbui"
   import { SplitPage } from "@budibase/frontend-core"
   import { API } from "api"
-  import { database } from "stores/builder"
   import { auth, admin } from "stores/portal"
 
   let name = "My first app"
@@ -25,9 +24,6 @@
     data.append("useTemplate", false)
 
     const createdApp = await API.createApp(data)
-
-    // Select Correct Application/DB in prep for creating user
-    database.syncAppDatabase(createdApp)
 
     // Update checklist - in case first app
     await admin.init()

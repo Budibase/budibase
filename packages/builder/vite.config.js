@@ -99,12 +99,20 @@ export default defineConfig(({ mode }) => {
           replacement: path.resolve("./src/components"),
         },
         {
-          find: "builder",
-          replacement: path.resolve("./src/builder"),
+          find: "pages",
+          replacement: path.resolve("./src/pages"),
+        },
+        {
+          find: "templates",
+          replacement: path.resolve("./src/templates"),
         },
         {
           find: "stores",
           replacement: path.resolve("./src/stores"),
+        },
+        {
+          find: "dataBinding",
+          replacement: path.resolve("./src/dataBinding.js"),
         },
         {
           find: "api",

@@ -1,7 +1,12 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import { currentAsset, componentStore, tables, viewsV2 } from "stores/builder"
-  import { getSchemaForDatasourcePlus } from "builder/dataBinding"
+  import {
+    selectedScreen,
+    componentStore,
+    tables,
+    viewsV2,
+  } from "stores/builder"
+  import { getSchemaForDatasourcePlus } from "dataBinding"
   import SaveFields from "./SaveFields.svelte"
   import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 
@@ -10,7 +15,7 @@
   export let nested
 
   $: providerOptions = getDatasourceLikeProviders({
-    asset: $currentAsset,
+    asset: $selectedScreen,
     componentId: $componentStore.selectedComponentId,
     nested,
   })

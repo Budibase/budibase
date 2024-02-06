@@ -1,10 +1,7 @@
 <script>
   import { Multiselect } from "@budibase/bbui"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builder/dataBinding"
-  import { currentAsset, tables } from "stores/builder"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { selectedScreen, tables } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { getFields } from "helpers/searchFields"
 
@@ -13,8 +10,8 @@
   export let placeholder
 
   const dispatch = createEventDispatcher()
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = getOptions(datasource, schema || {})
   $: boundValue = getSelectedOption(value, options)
 

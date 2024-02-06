@@ -16,12 +16,6 @@ export class LayoutStore extends BudiStore {
     this.syncAppLayouts = this.syncAppLayouts.bind(this)
     this.select = this.select.bind(this)
     this.deleteLayout = this.deleteLayout.bind(this)
-
-    this.selectedLayout = derived(this.store, $store => {
-      return $store.layouts?.find(
-        layout => layout._id === $store.selectedLayoutId
-      )
-    })
   }
 
   reset() {
@@ -78,4 +72,6 @@ export class LayoutStore extends BudiStore {
 
 export const layoutStore = new LayoutStore()
 
-export const selectedLayout = layoutStore.selectedLayout
+export const selectedLayout = derived(layoutStore, $store => {
+  return $store.layouts?.find(layout => layout._id === $store.selectedLayoutId)
+})

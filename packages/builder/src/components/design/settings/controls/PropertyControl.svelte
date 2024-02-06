@@ -3,7 +3,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builder/dataBinding"
+  } from "dataBinding"
   import { builderStore } from "stores/builder"
   import { onDestroy } from "svelte"
 

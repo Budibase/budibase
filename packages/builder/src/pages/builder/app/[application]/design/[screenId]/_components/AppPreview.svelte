@@ -9,7 +9,6 @@
     appStore,
     navigationStore,
     selectedScreen,
-    currentAsset,
     hoverStore,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -22,10 +21,7 @@
     notifications,
   } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import {
-    findComponent,
-    findComponentPath,
-  } from "stores/builder/components/utils"
+  import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
 
   let iframe
@@ -147,7 +143,7 @@
       const { key, ctrlKey } = data
       document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
     } else if (type === "duplicate-component" && data.id) {
-      const rootComponent = get(currentAsset).props
+      const rootComponent = get(selectedScreen).props
       const component = findComponent(rootComponent, data.id)
       componentStore.copy(component)
       await componentStore.paste(component)
@@ -157,7 +153,7 @@
       loading = false
     } else if (type === "move-component") {
       const { componentId, destinationComponentId } = data
-      const rootComponent = get(currentAsset).props
+      const rootComponent = get(selectedScreen).props
 
       // Get source and destination components
       const source = findComponent(rootComponent, componentId)

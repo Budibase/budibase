@@ -28,7 +28,7 @@
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "builder/utils"
+  import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"

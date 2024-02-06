@@ -2,9 +2,9 @@
   import { Select, Label, Combobox } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
-  import { currentAsset, componentStore } from "stores/builder"
-  import { getActionProviders, buildFormSchema } from "builder/dataBinding"
-  import { findComponent } from "stores/builder/components/utils"
+  import { selectedScreen, componentStore } from "stores/builder"
+  import { getActionProviders, buildFormSchema } from "dataBinding"
+  import { findComponent } from "helpers/components"
 
   export let parameters
   export let bindings = []
@@ -22,13 +22,13 @@
   ]
 
   $: formComponent = getFormComponent(
-    $currentAsset.props,
+    $selectedScreen.props,
     parameters.componentId
   )
   $: formSchema = buildFormSchema(formComponent)
   $: fieldOptions = Object.keys(formSchema || {})
   $: actionProviders = getActionProviders(
-    $currentAsset,
+    $selectedScreen,
     $componentStore.selectedComponentId,
     "ValidateForm",
     { includeSelf: nested }
