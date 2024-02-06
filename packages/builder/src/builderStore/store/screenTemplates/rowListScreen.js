@@ -83,7 +83,7 @@ const createCustomColumns = schema => {
       pascalCasePresent = true
     }
     customTableColumns.push({
-      displayName: insertSpaceBetweenWords(key),
+      displayName: createDisplayName(key),
       name: key,
       id: generate(),
     })
@@ -94,19 +94,21 @@ const createCustomColumns = schema => {
 /**
  * Replaces underscores with spaces
  * Inserts a space between capitalised words
+ * Capitalises the first character
  */
-const insertSpaceBetweenWords = str => {
-  return str
+const createDisplayName = str => {
+  let spacedWords = str
     .replaceAll("_", " ")
     .replace(/([A-Z]+)/g, " $1")
     .trim()
+  return spacedWords.charAt(0).toUpperCase() + spacedWords.substr(1)
 }
 
 /**
  * Converts snake case, pascal case, etc to title case
  */
 const toTitleCase = str => {
-  return insertSpaceBetweenWords(str).replace(/\w\S*/g, function (txt) {
+  return createDisplayName(str).replace(/\w\S*/g, function (txt) {
     return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   })
 }

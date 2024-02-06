@@ -127,7 +127,14 @@
       .filter(entry => {
         return !entry[1].autocolumn
       })
-      .map(entry => entry[0])
+      .map(entry => ({
+        name: entry[0],
+        active: entry[1].active,
+        label: tableColumns?.find(column => column.name === entry[0])
+          ?.displayName,
+        placeholder: tableColumns?.find(column => column.name === entry[0])
+          ?.displayName,
+      }))
   }
 
   const getEditTitle = (detailsFormBlockId, primaryDisplay) => {

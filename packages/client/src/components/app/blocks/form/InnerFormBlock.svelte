@@ -51,8 +51,8 @@
         }
       : {
           field: field.name,
-          label: field.name,
-          placeholder: field.name,
+          label: field.label || field.name,
+          placeholder: field.placeholder || field.name,
           _instanceName: field.name,
         }
     return fieldProps

@@ -47,6 +47,7 @@
     getDatasourceForProvider($currentAsset, componentInstance)
 
   $: resourceId = datasource?.resourceId || datasource?.tableId
+  $: tableColumns = componentInstance.tableColumns
 
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
@@ -74,14 +75,15 @@
     selected.forEach(val => {
       delete schemaClone[val.field]
     })
-
     return Object.keys(schemaClone)
       .filter(key => !schemaClone[key].autocolumn)
       .map(key => {
         const col = schemaClone[key]
         let toggleOn = !value
         return {
-          field: key,
+          field: {
+            name: key,
+          },
           active: typeof col.active != "boolean" ? toggleOn : col.active,
         }
       })
@@ -117,19 +119,27 @@
     if (instance._component) {
       return instance
     }
-    const type = getComponentForField(instance.field, schema)
+    const type = getComponentForField(instance.field.name, schema)
     if (!type) {
       return null
     }
     instance._component = `@budibase/standard-components/${type}`
 
+    let field = instance.field
+    let customColumn = tableColumns?.find(column => column.name === field.name)
+
+    if (customColumn) {
+      field.label = customColumn.displayName
+      field.placeholder = customColumn.displayName
+    }
+
     const pseudoComponentInstance = store.actions.components.createInstance(
       instance._component,
       {
-        _instanceName: instance.field,
-        field: instance.field,
-        label: instance.field,
-        placeholder: instance.field,
+        _instanceName: field.name,
+        field: field.name,
+        label: field.label || field.name,
+        placeholder: field.placeholder || field.name,
       },
       {}
     )
