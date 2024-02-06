@@ -48,9 +48,10 @@ describe("license management", () => {
     }
 
     // Create checkout session for price
-    const checkoutSessionRes = await config.api.stripe.createCheckoutSession(
-        { id: premiumPrice.priceId, type: premiumPrice.type }
-    )
+    const checkoutSessionRes = await config.api.stripe.createCheckoutSession({
+      id: premiumPrice.priceId,
+      type: premiumPrice.type,
+    })
     const checkoutSessionUrl = checkoutSessionRes[1].url
     expect(checkoutSessionUrl).toContain("checkout.stripe.com")
 
