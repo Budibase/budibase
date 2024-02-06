@@ -11,4 +11,4 @@ packages/sdk/sdk
 packages/account-portal/packages/server/build
 packages/account-portal/packages/ui/.routify
 packages/account-portal/packages/ui/build
-.ivm.bundle.js
+**/*.ivm.bundle.js
