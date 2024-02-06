@@ -12,7 +12,6 @@
       "import": "./dist/bundle.mjs"
     },
     "./package.json": "./package.json",
-    "./index-helpers": "./dist/index-helpers.bundled.js",
     "./test/utils": "./test/utils.js"
   },
   "files": [
@@ -21,9 +20,8 @@
     "manifest.json"
   ],
   "scripts": {
-    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
-    "build": "yarn build:esbuild && tsc && rollup -c",
-    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && rollup -cw\"",
+    "build": "tsc && rollup -c",
+    "dev": "concurrently \"tsc --watch\" \"rollup -cw\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },

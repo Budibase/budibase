@@ -25,14 +25,14 @@ class ScriptRunner {
 class IsolatedVM {
   isolate: ivm.Isolate
   vm: ivm.Context
-  jail: ivm.Reference
+  #jail: ivm.Reference
   script: any
 
   constructor({ memoryLimit }: { memoryLimit: number }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
-    this.jail = this.vm.global
-    this.jail.setSync("global", this.jail.derefInto())
+    this.#jail = this.vm.global
+    this.#jail.setSync("global", this.#jail.derefInto())
   }
 
   getValue(key: string) {
@@ -44,7 +44,7 @@ class IsolatedVM {
 
   set context(context: Record<string, any>) {
     for (let key in context) {
-      this.jail.setSync(key, this.copyRefToVm(context[key]))
+      this.#jail.setSync(key, this.copyRefToVm(context[key]))
     }
   }
 
