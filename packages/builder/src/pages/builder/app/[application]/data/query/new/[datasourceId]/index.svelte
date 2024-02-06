@@ -3,7 +3,7 @@
   import QueryViewer from "components/integration/QueryViewer.svelte"
   import RestQueryViewer from "components/integration/RestQueryViewer.svelte"
   import { IntegrationTypes } from "constants/backend"
-  import { database, datasources } from "stores/builder"
+  import { datasources } from "stores/builder"
 
   $: datasource = $datasources.list.find(ds => ds._id === $params.datasourceId)
   $: {
@@ -32,7 +32,7 @@
   }
 </script>
 
-{#if $database._id && datasource && query}
+{#if datasource && query}
   {#if isRestQuery}
     <RestQueryViewer />
   {:else}
