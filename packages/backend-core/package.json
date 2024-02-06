@@ -21,7 +21,7 @@
     "test:watch": "jest --watchAll"
   },
   "dependencies": {
-    "@budibase/nano": "10.1.4",
+    "@budibase/nano": "10.1.5",
     "@budibase/pouchdb-replication-stream": "1.2.10",
     "@budibase/shared-core": "0.0.0",
     "@budibase/types": "0.0.0",

@@ -165,8 +165,9 @@ export async function importApp(
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
     template.file && fs.lstatSync(template.file.path).isDirectory()
+  let tmpPath: string | undefined = undefined
   if (template.file && (isTar || isDirectory)) {
-    const tmpPath = isTar ? await untarFile(template.file) : template.file.path
+    tmpPath = isTar ? await untarFile(template.file) : template.file.path
     if (isTar && template.file.password) {
       await decryptFiles(tmpPath, template.file.password)
     }
@@ -208,5 +209,9 @@ export async function importApp(
   }
   await updateAttachmentColumns(prodAppId, db)
   await updateAutomations(prodAppId, db)
+  // clear up afterward
+  if (tmpPath) {
+    fs.rmSync(tmpPath, { recursive: true, force: true })
+  }
   return ok
 }
