@@ -1,6 +1,9 @@
 import sanitizeUrl from "./utils/sanitizeUrl"
 import { Screen } from "./utils/Screen"
 import { Component } from "./utils/Component"
+import { tables } from "../../../stores/backend"
+import { get } from "svelte/store"
+import { generate } from "shortid"
 
 export default function (datasources, mode = "table") {
   if (!Array.isArray(datasources)) {
@@ -20,6 +23,7 @@ export const ROW_LIST_TEMPLATE = "ROW_LIST_TEMPLATE"
 export const rowListUrl = datasource => sanitizeUrl(`/${datasource.label}`)
 
 const generateTableBlock = datasource => {
+  const table = get(tables).list.find(table => table._id === datasource.tableId)
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
@@ -29,6 +33,7 @@ const generateTableBlock = datasource => {
       size: "spectrum--medium",
       paginate: true,
       rowCount: 8,
+      tableColumns: createCustomColumns(table),
       clickBehaviour: "details",
       showTitleButton: true,
       titleButtonText: "Create row",
@@ -60,4 +65,20 @@ const createScreen = (datasource, mode) => {
         : generateGridBlock(datasource)
     )
     .json()
+}
+
+const createCustomColumns = table => {
+  let snakeCasePresent = false
+  let customTableColumns = []
+  for (const key in table.schema) {
+    if (key.includes("_")) {
+      snakeCasePresent = true
+    }
+    customTableColumns.push({
+      displayName: key.replaceAll("_", " "),
+      name: key,
+      id: generate(),
+    })
+  }
+  return snakeCasePresent ? customTableColumns : undefined
 }
