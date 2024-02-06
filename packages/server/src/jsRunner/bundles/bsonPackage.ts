@@ -1,0 +1,1 @@
+export { deserialize } from "bson"

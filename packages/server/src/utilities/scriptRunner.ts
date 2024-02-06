@@ -1,24 +1,27 @@
 import ivm from "isolated-vm"
 
+import bson from "bson"
+
 const JS_TIMEOUT_MS = 1000
 
 class ScriptRunner {
   vm: IsolatedVM
 
   constructor(script: string, context: any) {
-    const code = `let fn = () => {\n${script}\n}; results.out = fn();`
-    this.vm = new IsolatedVM({ memoryLimit: 8 })
+    this.vm = new IsolatedVM({ memoryLimit: 64 })
     this.vm.context = {
       ...context,
+      data: bson.BSON.serialize({ data: context.data }),
       results: { out: "" },
     }
+
+    const code = `let fn = () => {data=deserialize(data).data;\n${script}\n}; cb(JSON.parse(JSON.stringify(fn())));`
     this.vm.code = code
   }
 
   execute() {
-    this.vm.runScript()
-    const results = this.vm.getValue("results")
-    return results.out
+    const result = this.vm.runScript()
+    return result
   }
 }
 
@@ -26,7 +29,8 @@ class IsolatedVM {
   isolate: ivm.Isolate
   vm: ivm.Context
   #jail: ivm.Reference
-  script: any
+  script: ivm.Module = undefined!
+  #bsonModule: ivm.Module = undefined!
 
   constructor({ memoryLimit }: { memoryLimit: number }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
@@ -49,11 +53,38 @@ class IsolatedVM {
   }
 
   set code(code: string) {
-    this.script = this.isolate.compileScriptSync(code)
+    const bsonSource = require("../jsRunner/bundles/bson.ivm.bundle.js")
+
+    this.#bsonModule = this.isolate.compileModuleSync(bsonSource)
+    this.#bsonModule.instantiateSync(this.vm, specifier => {
+      throw new Error(`No imports allowed. Required: ${specifier}`)
+    })
+
+    this.script = this.isolate.compileModuleSync(
+      `import {deserialize} from "compiled_module";${code}`
+    )
   }
 
   runScript() {
-    this.script.runSync(this.vm, { timeout: JS_TIMEOUT_MS })
+    this.script.instantiateSync(this.vm, specifier => {
+      if (specifier === "compiled_module") {
+        return this.#bsonModule
+      }
+
+      throw new Error(`"${specifier}" import not allowed`)
+    })
+
+    let result
+    this.vm.global.setSync(
+      "cb",
+      new ivm.Callback((value: any) => {
+        result = value
+      })
+    )
+
+    this.script.evaluateSync({ timeout: JS_TIMEOUT_MS })
+
+    return result
   }
 
   copyRefToVm(value: Object): ivm.Copy<Object> {
