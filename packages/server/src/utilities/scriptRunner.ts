@@ -2,6 +2,7 @@ import ivm from "isolated-vm"
 
 import bson from "bson"
 import { BundleType, loadBundle } from "../jsRunner/bundles"
+import env from "../environment"
 
 const JS_TIMEOUT_MS = 1000
 
@@ -9,7 +10,7 @@ class ScriptRunner {
   vm: IsolatedVM
 
   constructor(script: string, context: any) {
-    this.vm = new IsolatedVM({ memoryLimit: 64 })
+    this.vm = new IsolatedVM({ memoryLimit: env.JS_RUNNER_MEMORY_LIMIT })
     this.vm.context = {
       ...context,
       data: bson.BSON.serialize({ data: context.data }),
