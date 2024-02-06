@@ -37,10 +37,10 @@ class ScriptRunner {
 }
 
 class IsolatedVM {
-  isolate: ivm.Isolate
-  vm: ivm.Context
+  #isolate: ivm.Isolate
+  #vm: ivm.Context
   #jail: ivm.Reference
-  script: ivm.Module = undefined!
+  #script: ivm.Module = undefined!
   #bsonModule?: ivm.Module
 
   constructor({
@@ -50,23 +50,22 @@ class IsolatedVM {
     memoryLimit: number
     parseBson: boolean
   }) {
-    this.isolate = new ivm.Isolate({ memoryLimit })
-    this.vm = this.isolate.createContextSync()
-    this.#jail = this.vm.global
+    this.#isolate = new ivm.Isolate({ memoryLimit })
+    this.#vm = this.#isolate.createContextSync()
+    this.#jail = this.#vm.global
     this.#jail.setSync("global", this.#jail.derefInto())
-    // this.#parseBson = parseBson
 
     if (parseBson) {
       const bsonSource = loadBundle(BundleType.BSON)
-      this.#bsonModule = this.isolate.compileModuleSync(bsonSource)
-      this.#bsonModule.instantiateSync(this.vm, specifier => {
+      this.#bsonModule = this.#isolate.compileModuleSync(bsonSource)
+      this.#bsonModule.instantiateSync(this.#vm, specifier => {
         throw new Error(`No imports allowed. Required: ${specifier}`)
       })
     }
   }
 
   getValue(key: string) {
-    const ref = this.vm.global.getSync(key, { reference: true })
+    const ref = this.#vm.global.getSync(key, { reference: true })
     const result = ref.copySync()
     ref.release()
     return result
@@ -82,12 +81,12 @@ class IsolatedVM {
     if (this.#bsonModule) {
       code = `import {deserialize} from "compiled_module";${code}`
     }
-    this.script = this.isolate.compileModuleSync(code)
+    this.#script = this.#isolate.compileModuleSync(code)
   }
 
   runScript() {
     if (this.#bsonModule) {
-      this.script.instantiateSync(this.vm, specifier => {
+      this.#script.instantiateSync(this.#vm, specifier => {
         if (specifier === "compiled_module") {
           return this.#bsonModule!
         }
@@ -97,14 +96,14 @@ class IsolatedVM {
     }
 
     let result
-    this.vm.global.setSync(
+    this.#vm.global.setSync(
       "cb",
       new ivm.Callback((value: any) => {
         result = value
       })
     )
 
-    this.script.evaluateSync({ timeout: JS_TIMEOUT_MS })
+    this.#script.evaluateSync({ timeout: JS_TIMEOUT_MS })
 
     return result
   }
