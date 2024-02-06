@@ -3,15 +3,10 @@ import env from "../environment"
 import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
-import fs from "fs"
 import url from "url"
 import crypto from "crypto"
 import querystring from "querystring"
-
-const helpersSource = fs.readFileSync(
-  `${require.resolve("@budibase/string-templates/index-helpers")}`,
-  "utf8"
-)
+import { BundleType, loadBundle } from "./bundles"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
@@ -21,6 +16,7 @@ class ExecutionTimeoutError extends Error {
 }
 
 export function init() {
+  const helpersSource = loadBundle(BundleType.HELPERS)
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
       try {
@@ -33,19 +29,20 @@ export function init() {
           })
           const jsContext = jsIsolate.createContextSync()
 
-          const injectedRequire = `const require = function(val){
-        switch (val) {
-          case "url": 
-            return {
-              resolve: (...params) => urlResolveCb(...params),
-              parse: (...params) => urlParseCb(...params),
-            }
-          case "querystring":
-            return {
-              escape: (...params) => querystringEscapeCb(...params),
-            }
-        }
-      };`
+          const injectedRequire = `
+            const require = function(val){
+              switch (val) {
+                case "url": 
+                  return {
+                    resolve: (...params) => urlResolveCb(...params),
+                    parse: (...params) => urlParseCb(...params),
+                  }
+                case "querystring":
+                  return {
+                    escape: (...params) => querystringEscapeCb(...params),
+                  }
+              }
+            };`
 
           const global = jsContext.global
           global.setSync(
@@ -83,9 +80,9 @@ export function init() {
             `${injectedRequire};${helpersSource}`
           )
 
-          const cryptoModule = jsIsolate.compileModuleSync(`export default {
-        randomUUID: cryptoRandomUUIDCb,
-      }`)
+          const cryptoModule = jsIsolate.compileModuleSync(
+            `export default { randomUUID: cryptoRandomUUIDCb }`
+          )
           cryptoModule.instantiateSync(jsContext, specifier => {
             throw new Error(`No imports allowed. Required: ${specifier}`)
           })

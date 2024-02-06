@@ -13,6 +13,8 @@
     "build": "node ./scripts/build.js",
     "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
+    "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=esm --external:handlebars",
+    "build:isolated-vm-libs": "yarn build:isolated-vm-lib:string-templates",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
     "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
@@ -165,12 +167,6 @@
               "@budibase/backend-core"
             ],
             "target": "build"
-          },
-          {
-            "projects": [
-              "@budibase/string-templates"
-            ],
-            "target": "build:esbuild"
           }
         ]
       },
@@ -187,16 +183,6 @@
               "@budibase/builder"
             ],
             "target": "build"
-          }
-        ]
-      },
-      "test": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/string-templates"
-            ],
-            "target": "build:esbuild"
           }
         ]
       }
