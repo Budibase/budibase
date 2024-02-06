@@ -2,7 +2,9 @@
   import { getContext } from "svelte"
   import Placeholder from "./Placeholder.svelte"
   import Container from "./Container.svelte"
-  import { ContextScopes } from "constants"
+
+  const { Provider, ContextScopes } = getContext("sdk")
+  const component = getContext("component")
 
   export let dataProvider
   export let noRowsMessage
@@ -11,9 +13,6 @@
   export let vAlign
   export let gap
   export let scope = ContextScopes.Local
-
-  const { Provider } = getContext("sdk")
-  const component = getContext("component")
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? true
