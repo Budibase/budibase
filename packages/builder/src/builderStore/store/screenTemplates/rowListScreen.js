@@ -27,13 +27,13 @@ const generateTableBlock = datasource => {
   const tableBlock = new Component("@budibase/standard-components/tableblock")
   tableBlock
     .customProps({
-      title: datasource.label,
+      title: toTitleCase(datasource.label),
       dataSource: datasource,
       sortOrder: "Ascending",
       size: "spectrum--medium",
       paginate: true,
       rowCount: 8,
-      tableColumns: createCustomColumns(table),
+      tableColumns: createCustomColumns(table.schema),
       clickBehaviour: "details",
       showTitleButton: true,
       titleButtonText: "Create row",
@@ -67,18 +67,46 @@ const createScreen = (datasource, mode) => {
     .json()
 }
 
-const createCustomColumns = table => {
-  let snakeCasePresent = false
+/**
+ * If the table schema has fields with snake case or pascal case,
+ * then return custom columns with pretty labels
+ */
+const createCustomColumns = schema => {
+  let snakeCasePresent = false,
+    pascalCasePresent = false
   let customTableColumns = []
-  for (const key in table.schema) {
+  for (const key in schema) {
     if (key.includes("_")) {
       snakeCasePresent = true
     }
+    if (key.match(/([a-z][A-Z])/g)) {
+      pascalCasePresent = true
+    }
     customTableColumns.push({
-      displayName: key.replaceAll("_", " "),
+      displayName: insertSpaceBetweenWords(key),
       name: key,
       id: generate(),
     })
   }
-  return snakeCasePresent ? customTableColumns : undefined
+  return snakeCasePresent || pascalCasePresent ? customTableColumns : undefined
+}
+
+/**
+ * Replaces underscores with spaces
+ * Inserts a space between capitalised words
+ */
+const insertSpaceBetweenWords = str => {
+  return str
+    .replaceAll("_", " ")
+    .replace(/([A-Z]+)/g, " $1")
+    .trim()
+}
+
+/**
+ * Converts snake case, pascal case, etc to title case
+ */
+const toTitleCase = str => {
+  return insertSpaceBetweenWords(str).replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
+  })
 }
