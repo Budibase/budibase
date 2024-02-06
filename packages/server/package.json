@@ -167,12 +167,6 @@
               "@budibase/backend-core"
             ],
             "target": "build"
-          },
-          {
-            "projects": [
-              "@budibase/string-templates"
-            ],
-            "target": "build:esbuild"
           }
         ]
       },
@@ -189,16 +183,6 @@
               "@budibase/builder"
             ],
             "target": "build"
-          }
-        ]
-      },
-      "test": {
-        "dependsOn": [
-          {
-            "projects": [
-              "@budibase/string-templates"
-            ],
-            "target": "build:esbuild"
           }
         ]
       }
