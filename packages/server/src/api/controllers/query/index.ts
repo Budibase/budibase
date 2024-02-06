@@ -15,6 +15,9 @@ import {
   SessionCookie,
   QuerySchema,
   FieldType,
+  type ExecuteQueryRequest,
+  type ExecuteQueryResponse,
+  type Row,
 } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
@@ -223,7 +226,7 @@ export async function preview(ctx: UserCtx) {
 }
 
 async function execute(
-  ctx: UserCtx,
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | Row[]>,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
