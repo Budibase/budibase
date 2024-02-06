@@ -12,7 +12,6 @@ import {
   FieldTypeSubtypes,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
-  MonthlyQuotaName,
   PermissionLevel,
   QuotaUsageType,
   RelationshipType,
@@ -53,7 +52,7 @@ describe.each([
 
   afterAll(async () => {
     if (dsProvider) {
-      await dsProvider.stopContainer()
+      await dsProvider.stop()
     }
     setup.afterAll()
   })
@@ -63,7 +62,7 @@ describe.each([
 
     if (dsProvider) {
       await config.createDatasource({
-        datasource: await dsProvider.getDsConfig(),
+        datasource: await dsProvider.datasource(),
       })
     }
   })
@@ -117,16 +116,6 @@ describe.each([
     return total
   }
 
-  const getQueryUsage = async () => {
-    const { total } = await config.doInContext(null, () =>
-      quotas.getCurrentUsageValues(
-        QuotaUsageType.MONTHLY,
-        MonthlyQuotaName.QUERIES
-      )
-    )
-    return total
-  }
-
   const assertRowUsage = async (expected: number) => {
     const usage = await getRowUsage()
     expect(usage).toBe(expected)
@@ -162,7 +151,6 @@ describe.each([
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await request
         .post(`/api/${tableId}/rows`)
@@ -180,7 +168,6 @@ describe.each([
 
     it("Increment row autoId per create row request", async () => {
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const tableConfig = generateTableConfig()
       const newTable = await createTable(
@@ -231,7 +218,6 @@ describe.each([
     it("updates a row successfully", async () => {
       const existing = await config.createRow()
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.save(tableId, {
         _id: existing._id,
@@ -246,7 +232,6 @@ describe.each([
 
     it("should load a row", async () => {
       const existing = await config.createRow()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.get(tableId, existing._id!)
 
@@ -268,7 +253,6 @@ describe.each([
       }
       const firstRow = await config.createRow({ tableId })
       await config.createRow(newRow)
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.fetch(tableId)
 
@@ -279,7 +263,6 @@ describe.each([
 
     it("load should return 404 when row does not exist", async () => {
       await config.createRow()
-      const queryUsage = await getQueryUsage()
 
       await config.api.row.get(tableId, "1234567", {
         expectStatus: 404,
@@ -530,7 +513,6 @@ describe.each([
       const existing = await config.createRow()
 
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const row = await config.api.row.patch(table._id!, {
         _id: existing._id!,
@@ -552,7 +534,6 @@ describe.each([
     it("should throw an error when given improper types", async () => {
       const existing = await config.createRow()
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       await config.api.row.patch(
         table._id!,
@@ -650,7 +631,6 @@ describe.each([
     it("should be able to delete a row", async () => {
       const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.delete(table._id!, [createdRow])
       expect(res.body[0]._id).toEqual(createdRow._id)
@@ -666,7 +646,6 @@ describe.each([
 
     it("should return no errors on valid row", async () => {
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.validate(table._id!, { name: "ivan" })
 
@@ -677,7 +656,6 @@ describe.each([
 
     it("should errors on invalid row", async () => {
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.validate(table._id!, { name: 1 })
 
@@ -703,7 +681,6 @@ describe.each([
       const row1 = await config.createRow()
       const row2 = await config.createRow()
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.delete(table._id!, [row1, row2])
 
@@ -719,7 +696,6 @@ describe.each([
         config.createRow(),
       ])
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.delete(table._id!, [
         row1,
@@ -735,7 +711,6 @@ describe.each([
     it("should accept a valid row object and delete the row", async () => {
       const row1 = await config.createRow()
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.delete(table._id!, row1)
 
@@ -746,7 +721,6 @@ describe.each([
 
     it("Should ignore malformed/invalid delete requests", async () => {
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       const res = await config.api.row.delete(
         table._id!,
@@ -782,7 +756,6 @@ describe.each([
       it("should be able to fetch tables contents via 'view'", async () => {
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
-        const queryUsage = await getQueryUsage()
 
         const res = await config.api.legacyView.get(table._id!)
         expect(res.body.length).toEqual(1)
@@ -792,7 +765,6 @@ describe.each([
 
       it("should throw an error if view doesn't exist", async () => {
         const rowUsage = await getRowUsage()
-        const queryUsage = await getQueryUsage()
 
         await config.api.legacyView.get("derp", { expectStatus: 404 })
 
@@ -808,7 +780,6 @@ describe.each([
         })
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
-        const queryUsage = await getQueryUsage()
 
         const res = await config.api.legacyView.get(view.name)
         expect(res.body.length).toEqual(1)
@@ -864,7 +835,6 @@ describe.each([
         }
       )
       const rowUsage = await getRowUsage()
-      const queryUsage = await getQueryUsage()
 
       // test basic enrichment
       const resBasic = await config.api.row.get(
@@ -1100,7 +1070,6 @@ describe.each([
 
         const createdRow = await config.createRow()
         const rowUsage = await getRowUsage()
-        const queryUsage = await getQueryUsage()
 
         await config.api.row.delete(view.id, [createdRow])
 
@@ -1127,7 +1096,6 @@ describe.each([
           config.createRow(),
         ])
         const rowUsage = await getRowUsage()
-        const queryUsage = await getQueryUsage()
 
         await config.api.row.delete(view.id, [rows[0], rows[2]])
 
