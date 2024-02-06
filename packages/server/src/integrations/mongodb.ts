@@ -356,8 +356,8 @@ class MongoIntegration implements IntegrationBase {
   constructor(config: MongoDBConfig) {
     this.config = config
     const options: MongoClientOptions = {
-      tlsCertificateFile: config.tlsCertificateFile || undefined,
-      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
+      tlsCertificateKeyFile:
+        config.tlsCertificateKeyFile || config.tlsCertificateFile || undefined,
       tlsCAFile: config.tlsCAFile || undefined,
     }
     this.client = new MongoClient(config.connectionString, options)
