@@ -1,5 +1,4 @@
-import {getJsHelperList} from '@budibase/string-templates/js-helpers'
-
+import { getJsHelperList } from "@budibase/string-templates/js-helpers"
 
 const helpers = getJsHelperList()
 export default {
