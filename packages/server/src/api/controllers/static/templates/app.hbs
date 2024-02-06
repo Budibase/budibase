@@ -10,8 +10,14 @@
       window["##BUDIBASE_APP_ID##"] = "{{appId}}"
       window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
     </script>
+    <style>
+      {{skeletonCss}}
+    </style>
   </head>
 
 
-  {{body}}
+  <body id="app">
+    {{skeletonHtml}}
+    {{body}}
+  </body>
 </html>

@@ -224,16 +224,20 @@ export const serveApp = async function (ctx: UserCtx) {
 
     const hideDevTools = !!ctx.params.appUrl;
     const sideNav = appInfo.navigation.navigation === "Left"
-    const showFooter = !ctx.user?.license?.features?.includes("branding");
-
+    const hideFooter = ctx.user?.license?.features?.includes("branding");
     const themeVariables = getThemeVariables(appInfo?.theme);
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-      const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css, ...rest } = App.render({
+      const Skeleton = require("@budibase/frontend-core/src/components/ClientAppSkeleton.svelte").default
+      const skeleton = Skeleton.render({
         hideDevTools,
         sideNav,
+        hideFooter
+      });
+      const App = require("./templates/BudibaseApp.svelte").default
+
+      const { head, html, css, ...rest } = App.render({
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -259,9 +263,11 @@ export const serveApp = async function (ctx: UserCtx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: `:root{${themeVariables}} ${css.code}`,
+        style: css.code,
         appId,
         embedded: bbHeaderEmbed,
+        skeletonHtml: skeleton.html,
+        skeletonCss: `:root{${themeVariables}} ${skeleton.css.code}` 
       })
     } else {
       // just return the app info for jest to assert on
@@ -293,9 +299,14 @@ export const serveApp = async function (ctx: UserCtx) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: Ctx) {
+export const serveBuilderPreview = async function (ctx: UserCtx) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
+
+  const hideDevTools = !!ctx.params.appUrl;
+  const sideNav = appInfo.navigation.navigation === "Left"
+  const showFooter = !ctx.user?.license?.features?.includes("branding");
+  const themeVariables = getThemeVariables(appInfo?.theme);
 
   if (!env.isJest()) {
     let appId = context.getAppId()
