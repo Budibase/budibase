@@ -7,7 +7,7 @@ import url from "url"
 import crypto from "crypto"
 import querystring from "querystring"
 
-const helpersSource = require("./bundles/index-helpers.ivm.bundle.js.txt")
+const helpersSource = require("./bundles/index-helpers.ivm.bundle.js")
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
