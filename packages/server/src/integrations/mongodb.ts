@@ -638,7 +638,7 @@ class MongoIntegration implements IntegrationBase {
       let response = []
       if (query.extra?.actionType === "pipeline") {
         for await (const doc of collection.aggregate(
-          query.steps.map(({key, value}) => {
+          query.steps.map(({ key, value }) => {
             let temp: any = {}
             temp[key] = JSON.parse(value.value)
             return this.createObjectIds(temp)
