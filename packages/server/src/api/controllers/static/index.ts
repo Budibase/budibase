@@ -222,11 +222,8 @@ export const serveApp = async function (ctx: Ctx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
-    if (env.isDev()) {
-      console.log("dev");
-    } else {
-      console.log("no dev");
-    }
+    const isPublished = !!ctx.params.appUrl;
+    console.log(JSON.stringify(appInfo.navigation.navigation === "Top", null, 2));
 
     const themeVariables = getThemeVariables(appInfo?.theme);
 
