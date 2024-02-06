@@ -105,7 +105,6 @@ describe("license management", () => {
       expect(portalSessionBody.url).toContain("billing.stripe.com")
 
       // Update subscription from premium to business license
-      //await config.api.licenses.updatePlan(businessPriceId.priceId)
       await config.api.licenses.updatePlan(businessPriceId)
 
       // License updated to Business
