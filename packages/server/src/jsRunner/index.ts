@@ -6,6 +6,7 @@ import tracer from "dd-trace"
 import url from "url"
 import crypto from "crypto"
 import querystring from "querystring"
+import { BundleType, loadBundle } from "./bundles"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
@@ -15,6 +16,7 @@ class ExecutionTimeoutError extends Error {
 }
 
 export function init() {
+  const helpersSource = loadBundle(BundleType.HELPERS)
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
       try {
@@ -74,7 +76,6 @@ export function init() {
             })
           )
 
-          const helpersSource = require("./bundles/index-helpers.ivm.bundle.js")
           const helpersModule = jsIsolate.compileModuleSync(
             `${injectedRequire};${helpersSource}`
           )
