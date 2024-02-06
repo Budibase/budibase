@@ -24,7 +24,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
+import { UserCtx, App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestMigrationId,
@@ -201,7 +201,7 @@ const requiresMigration = async (ctx: Ctx) => {
   return requiresMigrations
 }
 
-export const serveApp = async function (ctx: Ctx) {
+export const serveApp = async function (ctx: UserCtx) {
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
@@ -222,8 +222,14 @@ export const serveApp = async function (ctx: Ctx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
-    const isPublished = !!ctx.params.appUrl;
-    console.log(JSON.stringify(appInfo.navigation.navigation === "Top", null, 2));
+    const hideDevTools = !!ctx.params.appUrl;
+    const sideNav = appInfo.navigation.navigation === "Left"
+    const showFooter = !ctx.user?.license?.features?.includes("branding");
+
+    console.log("---");
+    console.log(showFooter ? "yes" : "no");
+    console.log(JSON.stringify(ctx.user, null, 2));
+    console.log("---");
 
     const themeVariables = getThemeVariables(appInfo?.theme);
 
@@ -231,6 +237,8 @@ export const serveApp = async function (ctx: Ctx) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
       const App = require("./templates/BudibaseApp.svelte").default
       const { head, html, css, ...rest } = App.render({
+        hideDevTools,
+        sideNav,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
