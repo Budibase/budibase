@@ -154,6 +154,55 @@ describe("/queries", () => {
     expect(result.data).toEqual([{ _id: expect.anything(), name: "one" }])
   })
 
+  it("should execute a findOneAndUpdate query", async () => {
+    const query = await createQuery({
+      fields: {
+        json: {
+          filter: { name: { $eq: "one" } },
+          update: { $set: { name: "newName" } },
+        },
+        extra: {
+          actionType: "findOneAndUpdate",
+        },
+      },
+    })
+
+    const result = await config.api.query.execute(query._id!)
+
+    expect(result.data).toEqual([
+      {
+        lastErrorObject: { n: 1, updatedExisting: true },
+        ok: 1,
+        value: { _id: expect.anything(), name: "one" },
+      },
+    ])
+
+    await withCollection(async collection => {
+      expect(await collection.countDocuments()).toBe(5)
+
+      const doc = await collection.findOne({ name: { $eq: "newName" } })
+      expect(doc).toEqual({
+        _id: expect.anything(),
+        name: "newName",
+      })
+    })
+  })
+
+  it("should execute a distinct query", async () => {
+    const query = await createQuery({
+      fields: {
+        json: "name",
+        extra: {
+          actionType: "distinct",
+        },
+      },
+    })
+
+    const result = await config.api.query.execute(query._id!)
+    const values = result.data.map(o => o.value).sort()
+    expect(values).toEqual(["five", "four", "one", "three", "two"])
+  })
+
   it("should execute a create query with parameters", async () => {
     const query = await createQuery({
       fields: {
