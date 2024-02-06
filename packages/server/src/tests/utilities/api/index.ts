@@ -10,6 +10,7 @@ import { ApplicationAPI } from "./application"
 import { BackupAPI } from "./backup"
 import { AttachmentAPI } from "./attachment"
 import { UserAPI } from "./user"
+import { QueryAPI } from "./query"
 
 export default class API {
   table: TableAPI
@@ -23,6 +24,7 @@ export default class API {
   backup: BackupAPI
   attachment: AttachmentAPI
   user: UserAPI
+  query: QueryAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -36,5 +38,6 @@ export default class API {
     this.backup = new BackupAPI(config)
     this.attachment = new AttachmentAPI(config)
     this.user = new UserAPI(config)
+    this.query = new QueryAPI(config)
   }
 }
