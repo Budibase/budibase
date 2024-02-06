@@ -9,6 +9,7 @@
   export let bindings
   export let mode
   export let allowHelpers
+  export let noPaddingTop = false
 
   let search = ""
   let popover
@@ -47,9 +48,10 @@
     })
   $: filteredHelpers = helpers?.filter(helper => {
     return (
-      !search ||
-      helper.label.match(searchRgx) ||
-      helper.description.match(searchRgx)
+      (!search ||
+        helper.label.match(searchRgx) ||
+        helper.description.match(searchRgx)) &&
+      (mode.name !== "javascript" || helper.allowsJs)
     )
   })
 

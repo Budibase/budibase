@@ -7,6 +7,9 @@ import {
   findHBSBlocks,
 } from "@budibase/string-templates"
 import { capitalise } from "helpers"
+import { Constants } from "@budibase/frontend-core"
+
+const { ContextScopes } = Constants
 
 /**
  * Recursively searches for a specific component ID
@@ -263,11 +266,59 @@ export const getComponentName = component => {
   if (component == null) {
     return ""
   }
-
   const components = get(store)?.components || {}
   const componentDefinition = components[component._component] || {}
-  const name =
-    componentDefinition.friendlyName || componentDefinition.name || ""
+  return componentDefinition.friendlyName || componentDefinition.name || ""
+}
 
-  return name
+/**
+ * Recurses through the component tree and builds a tree of contexts provided
+ * by components.
+ */
+export const buildContextTree = (
+  rootComponent,
+  tree = { root: [] },
+  currentBranch = "root"
+) => {
+  // Sanity check
+  if (!rootComponent) {
+    return tree
+  }
+
+  // Process this component's contexts
+  const def = store.actions.components.getDefinition(rootComponent._component)
+  if (def?.context) {
+    tree[currentBranch].push(rootComponent._id)
+    const contexts = Array.isArray(def.context) ? def.context : [def.context]
+
+    // If we provide local context, start a new branch for our children
+    if (contexts.some(context => context.scope === ContextScopes.Local)) {
+      currentBranch = rootComponent._id
+      tree[rootComponent._id] = []
+    }
+  }
+
+  // Process children
+  if (rootComponent._children) {
+    rootComponent._children.forEach(child => {
+      buildContextTree(child, tree, currentBranch)
+    })
+  }
+
+  return tree
+}
+
+/**
+ * Generates a lookup map of which context branch all components in a component
+ * tree are inside.
+ */
+export const buildContextTreeLookupMap = rootComponent => {
+  const tree = buildContextTree(rootComponent)
+  let map = {}
+  Object.entries(tree).forEach(([branch, ids]) => {
+    ids.forEach(id => {
+      map[id] = branch
+    })
+  })
+  return map
 }

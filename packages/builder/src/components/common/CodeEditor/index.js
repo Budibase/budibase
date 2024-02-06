@@ -286,13 +286,14 @@ export const hbInsert = (value, from, to, text) => {
   return parsedInsert
 }
 
-export function jsInsert(value, from, to, text, { helper } = {}) {
+export function jsInsert(value, from, to, text, { helper, disableWrapping }) {
   let parsedInsert = ""
 
   const left = from ? value.substring(0, from) : ""
   const right = to ? value.substring(to) : ""
-
-  if (helper) {
+  if (disableWrapping) {
+    parsedInsert = text
+  } else if (helper) {
     parsedInsert = `helpers.${text}()`
   } else if (!left.includes('$("') || !right.includes('")')) {
     parsedInsert = `$("${text}")`
@@ -312,7 +313,7 @@ export const insertBinding = (view, from, to, text, mode) => {
   } else if (mode.name == "handlebars") {
     parsedInsert = hbInsert(view.state.doc?.toString(), from, to, text)
   } else {
-    console.log("Unsupported")
+    console.warn("Unsupported")
     return
   }
 
