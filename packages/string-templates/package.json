@@ -12,8 +12,7 @@
       "import": "./dist/bundle.mjs"
     },
     "./package.json": "./package.json",
-    "./js-helpers": "./src/index-helpers.js",
-    "./index-helpers": "./dist/index-helpers.bundled.js",
+    "./js-helpers": "./src/helpers/list.js",
     "./test/utils": "./test/utils.js"
   },
   "files": [
