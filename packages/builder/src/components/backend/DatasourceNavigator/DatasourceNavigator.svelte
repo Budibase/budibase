@@ -9,7 +9,6 @@
     views,
     viewsV2,
     userSelectedResourceMap,
-    database,
   } from "stores/builder"
   import EditDatasourcePopover from "./popovers/EditDatasourcePopover.svelte"
   import EditQueryPopover from "./popovers/EditQueryPopover.svelte"
@@ -75,69 +74,67 @@
     searchTerm && !showAppUsersTable && !enrichedDataSources.find(ds => ds.show)
 </script>
 
-{#if $database?._id}
-  <div class="hierarchy-items-container">
-    {#if showAppUsersTable}
-      <NavItem
-        icon="UserGroup"
-        text={appUsersTableName}
-        selected={$isActive("./table/:tableId") &&
-          $tables.selected?._id === TableNames.USERS}
-        on:click={() => selectTable(TableNames.USERS)}
-        selectedBy={$userSelectedResourceMap[TableNames.USERS]}
-      />
-    {/if}
-    {#each enrichedDataSources.filter(ds => ds.show) as datasource}
-      <NavItem
-        border
-        text={datasource.name}
-        opened={datasource.open}
-        selected={$isActive("./datasource") && datasource.selected}
-        withArrow={true}
-        on:click={() => selectDatasource(datasource)}
-        on:iconClick={() => toggleNode(datasource)}
-        selectedBy={$userSelectedResourceMap[datasource._id]}
-      >
-        <div class="datasource-icon" slot="icon">
-          <IntegrationIcon
-            integrationType={datasource.source}
-            schema={datasource.schema}
-            size="18"
-          />
-        </div>
-        {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
-          <EditDatasourcePopover {datasource} />
-        {/if}
-      </NavItem>
-
-      {#if datasource.open}
-        <TableNavigator tables={datasource.tables} {selectTable} />
-        {#each datasource.queries as query}
-          <NavItem
-            indentLevel={1}
-            icon="SQLQuery"
-            iconText={customQueryIconText(datasource, query)}
-            iconColor={customQueryIconColor(datasource, query)}
-            text={customQueryText(datasource, query)}
-            selected={$isActive("./query/:queryId") &&
-              $queries.selectedQueryId === query._id}
-            on:click={() => $goto(`./query/${query._id}`)}
-            selectedBy={$userSelectedResourceMap[query._id]}
-          >
-            <EditQueryPopover {query} />
-          </NavItem>
-        {/each}
+<div class="hierarchy-items-container">
+  {#if showAppUsersTable}
+    <NavItem
+      icon="UserGroup"
+      text={appUsersTableName}
+      selected={$isActive("./table/:tableId") &&
+        $tables.selected?._id === TableNames.USERS}
+      on:click={() => selectTable(TableNames.USERS)}
+      selectedBy={$userSelectedResourceMap[TableNames.USERS]}
+    />
+  {/if}
+  {#each enrichedDataSources.filter(ds => ds.show) as datasource}
+    <NavItem
+      border
+      text={datasource.name}
+      opened={datasource.open}
+      selected={$isActive("./datasource") && datasource.selected}
+      withArrow={true}
+      on:click={() => selectDatasource(datasource)}
+      on:iconClick={() => toggleNode(datasource)}
+      selectedBy={$userSelectedResourceMap[datasource._id]}
+    >
+      <div class="datasource-icon" slot="icon">
+        <IntegrationIcon
+          integrationType={datasource.source}
+          schema={datasource.schema}
+          size="18"
+        />
+      </div>
+      {#if datasource._id !== BUDIBASE_INTERNAL_DB_ID}
+        <EditDatasourcePopover {datasource} />
       {/if}
-    {/each}
-    {#if showNoResults}
-      <Layout paddingY="none" paddingX="L">
-        <div class="no-results">
-          There aren't any datasources matching that name
-        </div>
-      </Layout>
+    </NavItem>
+
+    {#if datasource.open}
+      <TableNavigator tables={datasource.tables} {selectTable} />
+      {#each datasource.queries as query}
+        <NavItem
+          indentLevel={1}
+          icon="SQLQuery"
+          iconText={customQueryIconText(datasource, query)}
+          iconColor={customQueryIconColor(datasource, query)}
+          text={customQueryText(datasource, query)}
+          selected={$isActive("./query/:queryId") &&
+            $queries.selectedQueryId === query._id}
+          on:click={() => $goto(`./query/${query._id}`)}
+          selectedBy={$userSelectedResourceMap[query._id]}
+        >
+          <EditQueryPopover {query} />
+        </NavItem>
+      {/each}
     {/if}
-  </div>
-{/if}
+  {/each}
+  {#if showNoResults}
+    <Layout paddingY="none" paddingX="L">
+      <div class="no-results">
+        There aren't any datasources matching that name
+      </div>
+    </Layout>
+  {/if}
+</div>
 
 <style>
   .hierarchy-items-container {

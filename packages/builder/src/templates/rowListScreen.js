@@ -1,6 +1,6 @@
-import sanitizeUrl from "./utils/sanitizeUrl"
-import { Screen } from "./utils/Screen"
-import { Component } from "./utils/Component"
+import sanitizeUrl from "helpers/sanitizeUrl"
+import { Screen } from "./Screen"
+import { Component } from "./Component"
 
 export default function (datasources, mode = "table") {
   if (!Array.isArray(datasources)) {

@@ -1,10 +1,7 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builder/dataBinding"
-  import { currentAsset } from "stores/builder"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { selectedScreen } from "stores/builder"
   import { createEventDispatcher } from "svelte"
   import { canBeSortColumn } from "@budibase/shared-core"
 
@@ -13,8 +10,8 @@
   export let placeholder
 
   const dispatch = createEventDispatcher()
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchemaForDatasource($currentAsset, datasource).schema
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: schema = getSchemaForDatasource($selectedScreen, datasource).schema
   $: options = getSortableFields(schema)
   $: boundValue = getValidValue(value, options)
 

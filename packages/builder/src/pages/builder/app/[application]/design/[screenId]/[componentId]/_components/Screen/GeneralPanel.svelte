@@ -11,9 +11,9 @@
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { selectedScreen, screenStore } from "stores/builder"
-  import sanitizeUrl from "builder/store/screenTemplates/utils/sanitizeUrl"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
-  import { getBindableProperties } from "builder/dataBinding"
+  import { getBindableProperties } from "dataBinding"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 

@@ -6,7 +6,7 @@ import {
   encodeJSBinding,
   findHBSBlocks,
 } from "@budibase/string-templates"
-import { capitalise } from "helpers"
+import { capitalise } from "./index"
 
 /**
  * Recursively searches for a specific component ID

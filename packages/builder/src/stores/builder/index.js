@@ -7,12 +7,7 @@ import {
 } from "./components"
 import { navigationStore } from "./navigation.js"
 import { themeStore } from "./theme.js"
-import {
-  screenStore,
-  selectedScreen,
-  currentAsset,
-  sortedScreens,
-} from "./screens.js"
+import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
 import { builderStore } from "./builder.js"
 import { hoverStore } from "./hover.js"
 import { previewStore } from "./preview.js"
@@ -23,7 +18,6 @@ import {
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
-import { database } from "./database.js"
 
 // Backend
 import { tables } from "./tables"
@@ -39,7 +33,6 @@ import { flags } from "./flags"
 
 export {
   layoutStore,
-  database,
   appStore,
   componentStore,
   navigationStore,
@@ -52,7 +45,6 @@ export {
   automationStore,
   selectedAutomation,
   automationHistoryStore,
-  currentAsset,
   sortedScreens,
   userStore,
   isOnlyUser,
@@ -82,13 +74,15 @@ export const reset = () => {
 }
 
 const refreshBuilderData = async () => {
-  await automationStore.actions.fetch()
-  await datasources.init()
-  await integrations.init()
-  await queries.init()
-  await tables.init()
-  await roles.fetch()
-  await flags.fetch()
+  await Promise.all([
+    automationStore.actions.fetch(),
+    datasources.init(),
+    integrations.init(),
+    queries.init(),
+    tables.init(),
+    roles.fetch(),
+    flags.fetch(),
+  ])
 }
 
 const resetBuilderHistory = () => {
@@ -98,27 +92,16 @@ const resetBuilderHistory = () => {
 
 export const initialise = async pkg => {
   const { application } = pkg
-
-  appStore.syncAppPackage(pkg)
-
-  appStore.syncAppRoutes()
-
+  await Promise.all([
+    appStore.syncAppRoutes(),
+    componentStore.refreshDefinitions(application?.appId),
+  ])
   builderStore.init(application)
-
+  appStore.syncAppPackage(pkg)
   navigationStore.syncAppNavigation(application?.navigation)
-
-  await componentStore.refreshDefinitions(application?.appId)
-
   themeStore.syncAppTheme(application)
-
   screenStore.syncAppScreens(pkg)
-
   layoutStore.syncAppLayouts(pkg)
-
-  // required for api comms
-  database.syncAppDatabase(application)
-
   resetBuilderHistory()
-
   await refreshBuilderData()
 }

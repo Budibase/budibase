@@ -1,6 +1,6 @@
 <script>
   import TableDataTable from "components/backend/DataTable/TableDataTable.svelte"
-  import { tables, database } from "stores/builder"
+  import { tables } from "stores/builder"
   import { Banner } from "@budibase/bbui"
 
   const verifyAutocolumns = table => {
@@ -30,7 +30,7 @@
   })
 </script>
 
-{#if $database?._id && $tables?.selected?.name}
+{#if $tables?.selected?.name}
   {#if duplicates?.length}
     <div class="alert-wrap">
       <Banner type="warning" showCloseButton={false}>

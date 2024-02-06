@@ -13,7 +13,7 @@
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { checkForCollectStep } from "builder/utils"
+  import { checkForCollectStep } from "helpers/utils"
 
   export let blockIdx
   export let lastStep

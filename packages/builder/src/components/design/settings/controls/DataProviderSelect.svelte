@@ -1,14 +1,14 @@
 <script>
   import { Select } from "@budibase/bbui"
   import { makePropSafe } from "@budibase/string-templates"
-  import { currentAsset } from "stores/builder"
-  import { findAllMatchingComponents } from "stores/builder/components/utils"
+  import { selectedScreen } from "stores/builder"
+  import { findAllMatchingComponents } from "helpers/components"
 
   export let value
 
   const getValue = component => `{{ literal ${makePropSafe(component._id)} }}`
 
-  $: providers = findAllMatchingComponents($currentAsset?.props, c =>
+  $: providers = findAllMatchingComponents($selectedScreen?.props, c =>
     c._component?.endsWith("/dataprovider")
   )
 </script>

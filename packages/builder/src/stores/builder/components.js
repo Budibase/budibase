@@ -11,18 +11,23 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
-} from "stores/builder/components/utils"
+} from "helpers/components"
 import { getComponentFieldOptions } from "helpers/formFields"
-import { selectedScreen } from "../screens"
-import { screenStore, appStore, previewStore, tables } from "stores/builder"
-import { buildFormSchema, getSchemaForDatasource } from "builder/dataBinding"
+import { selectedScreen } from "./screens"
+import {
+  screenStore,
+  appStore,
+  previewStore,
+  tables,
+} from "stores/builder/index"
+import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
   BUDIBASE_INTERNAL_DB_ID,
   DEFAULT_BB_DATASOURCE_ID,
   DB_TYPE_INTERNAL,
   DB_TYPE_EXTERNAL,
 } from "constants/backend"
-import BudiStore from "../BudiStore"
+import BudiStore from "./BudiStore"
 import { Utils } from "@budibase/frontend-core"
 
 export const INITIAL_COMPONENTS_STATE = {
@@ -67,39 +72,6 @@ export class ComponentStore extends BudiStore {
     this.isCached = this.isCached.bind(this)
     this.cacheSettings = this.cacheSettings.bind(this)
     this.getComponentSettings = this.getComponentSettings.bind(this)
-
-    this.selected = derived(
-      [this.store, selectedScreen],
-      ([$store, $selectedScreen]) => {
-        if (
-          $selectedScreen &&
-          $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
-        ) {
-          return $selectedScreen?.props
-        }
-        if (!$selectedScreen || !$store.selectedComponentId) {
-          return null
-        }
-        const selected = findComponent(
-          $selectedScreen?.props,
-          $store.selectedComponentId
-        )
-
-        const clone = selected ? cloneDeep(selected) : selected
-        this.migrateSettings(clone)
-        return clone
-      }
-    )
-
-    this.selectedComponentPath = derived(
-      [this.store, selectedScreen],
-      ([$store, $selectedScreen]) => {
-        return findComponentPath(
-          $selectedScreen?.props,
-          $store.selectedComponentId
-        ).map(component => component._id)
-      }
-    )
   }
 
   /**
@@ -197,7 +169,7 @@ export class ComponentStore extends BudiStore {
     const componentPrefix = "@budibase/standard-components"
     let migrated = false
 
-    if (enrichedComponent?._component == `${componentPrefix}/formblock`) {
+    if (enrichedComponent?._component === `${componentPrefix}/formblock`) {
       // Use default config if the 'buttons' prop has never been initialised
       if (!("buttons" in enrichedComponent)) {
         enrichedComponent["buttons"] =
@@ -1080,11 +1052,11 @@ export class ComponentStore extends BudiStore {
    * @param {object} definition
    * @example
    * '@budibase/standard-components/container'
-   * @returns {boolean}
+   * @returns {array} the settings
    */
   cacheSettings(componentType, definition) {
     let settings = []
-    if (definition && componentType) {
+    if (definition) {
       settings = definition.settings?.filter(setting => !setting.section) ?? []
       definition.settings
         ?.filter(setting => setting.section)
@@ -1096,14 +1068,15 @@ export class ComponentStore extends BudiStore {
             }))
           )
         })
-      this.update(state => ({
-        ...state,
-        settingsCache: {
-          ...state.settingsCache,
-          [componentType]: settings,
-        },
-      }))
     }
+    this.update(state => ({
+      ...state,
+      settingsCache: {
+        ...state.settingsCache,
+        [componentType]: settings,
+      },
+    }))
+    return settings
   }
 
   /**
@@ -1129,18 +1102,49 @@ export class ComponentStore extends BudiStore {
       componentType = `@budibase/standard-components/${componentType}`
     }
 
-    if (this.isCached(componentType)) {
-      return get(this.store).settingsCache[componentType]
-    } else {
-      const def = this.getDefinition(componentType)
-      this.cacheSettings(componentType, def)
-      return get(this.store).settingsCache[componentType]
+    // Use cached value if possible
+    const cachedValue = get(this.store).settingsCache[componentType]
+    if (cachedValue) {
+      return cachedValue
     }
+
+    // Otherwise cache and return new value
+    const def = this.getDefinition(componentType)
+    return this.cacheSettings(componentType, def)
   }
 }
 
 export const componentStore = new ComponentStore()
 
-export const selectedComponent = componentStore.selected
+export const selectedComponent = derived(
+  [componentStore, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    if (
+      $selectedScreen &&
+      $store.selectedComponentId?.startsWith(`${$selectedScreen._id}-`)
+    ) {
+      return $selectedScreen?.props
+    }
+    if (!$selectedScreen || !$store.selectedComponentId) {
+      return null
+    }
+    const selected = findComponent(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    )
 
-export const selectedComponentPath = componentStore.selectedComponentPath
+    const clone = selected ? cloneDeep(selected) : selected
+    componentStore.migrateSettings(clone)
+    return clone
+  }
+)
+
+export const selectedComponentPath = derived(
+  [componentStore, selectedScreen],
+  ([$store, $selectedScreen]) => {
+    return findComponentPath(
+      $selectedScreen?.props,
+      $store.selectedComponentId
+    ).map(component => component._id)
+  }
+)

@@ -1,20 +1,20 @@
 <script>
-  import { currentAsset, componentStore } from "stores/builder"
+  import { selectedScreen, componentStore } from "stores/builder"
   import { Label, Combobox, Select } from "@budibase/bbui"
-  import { getActionProviders, buildFormSchema } from "builder/dataBinding"
-  import { findComponent } from "stores/builder/components/utils"
+  import { getActionProviders, buildFormSchema } from "dataBinding"
+  import { findComponent } from "helpers/components"
 
   export let parameters
   export let nested
 
   $: formComponent = getFormComponent(
-    $currentAsset.props,
+    $selectedScreen.props,
     parameters.componentId
   )
   $: formSchema = buildFormSchema(formComponent)
   $: fieldOptions = Object.keys(formSchema || {})
   $: actionProviders = getActionProviders(
-    $currentAsset,
+    $selectedScreen,
     $componentStore.selectedComponentId,
     "ScrollTo",
     { includeSelf: nested }
