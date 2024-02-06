@@ -1,4 +1,6 @@
-import { getJsHelperList } from "@budibase/string-templates/js-helpers"
+const {
+  getJsHelperList,
+} = require("../../../../string-templates/src/helpers/list.js")
 
 const helpers = getJsHelperList()
 export default {
