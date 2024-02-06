@@ -1,4 +1,5 @@
 import { Document } from "../document"
+import type { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
@@ -53,4 +54,13 @@ export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
   flags?: {
     urlName?: boolean
   }
+}
+
+export interface ExecuteQueryRequest {
+  parameters?: { [key: string]: string }
+  pagination?: any
+}
+
+export interface ExecuteQueryResponse {
+  data: Row[]
 }

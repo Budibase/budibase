@@ -63,7 +63,7 @@
     "koa-useragent": "^4.1.0",
     "lodash": "4.17.21",
     "node-fetch": "2.6.7",
-    "nodemailer": "6.7.2",
+    "nodemailer": "6.9.9",
     "passport-google-oauth": "2.0.0",
     "passport-local": "1.0.0",
     "pouchdb": "7.3.0",
