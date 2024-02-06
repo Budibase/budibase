@@ -9,15 +9,24 @@ const JS_TIMEOUT_MS = 1000
 class ScriptRunner {
   vm: IsolatedVM
 
-  constructor(script: string, context: any) {
-    this.vm = new IsolatedVM({ memoryLimit: env.JS_RUNNER_MEMORY_LIMIT })
+  constructor(script: string, context: any, { parseBson = false } = {}) {
+    this.vm = new IsolatedVM({
+      memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+      parseBson,
+    })
     this.vm.context = {
       ...context,
-      data: bson.BSON.serialize({ data: context.data }),
+      data: parseBson
+        ? bson.BSON.serialize({ data: context.data })
+        : context.data,
       results: { out: "" },
     }
 
-    const code = `let fn = () => {data=deserialize(data).data;\n${script}\n}; cb(JSON.parse(JSON.stringify(fn())));`
+    if (parseBson) {
+      script = `return JSON.parse(JSON.stringify((function(){data=deserialize(data).data;${script}})()));`
+    }
+
+    const code = `const fn=function(){${script}};cb(fn());`
     this.vm.code = code
   }
 
@@ -32,13 +41,28 @@ class IsolatedVM {
   vm: ivm.Context
   #jail: ivm.Reference
   script: ivm.Module = undefined!
-  #bsonModule: ivm.Module = undefined!
+  #bsonModule?: ivm.Module
 
-  constructor({ memoryLimit }: { memoryLimit: number }) {
+  constructor({
+    memoryLimit,
+    parseBson,
+  }: {
+    memoryLimit: number
+    parseBson: boolean
+  }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
     this.#jail = this.vm.global
     this.#jail.setSync("global", this.#jail.derefInto())
+    // this.#parseBson = parseBson
+
+    if (parseBson) {
+      const bsonSource = loadBundle(BundleType.BSON)
+      this.#bsonModule = this.isolate.compileModuleSync(bsonSource)
+      this.#bsonModule.instantiateSync(this.vm, specifier => {
+        throw new Error(`No imports allowed. Required: ${specifier}`)
+      })
+    }
   }
 
   getValue(key: string) {
@@ -55,26 +79,22 @@ class IsolatedVM {
   }
 
   set code(code: string) {
-    const bsonSource = loadBundle(BundleType.BSON)
-
-    this.#bsonModule = this.isolate.compileModuleSync(bsonSource)
-    this.#bsonModule.instantiateSync(this.vm, specifier => {
-      throw new Error(`No imports allowed. Required: ${specifier}`)
-    })
-
-    this.script = this.isolate.compileModuleSync(
-      `import {deserialize} from "compiled_module";${code}`
-    )
+    if (this.#bsonModule) {
+      code = `import {deserialize} from "compiled_module";${code}`
+    }
+    this.script = this.isolate.compileModuleSync(code)
   }
 
   runScript() {
-    this.script.instantiateSync(this.vm, specifier => {
-      if (specifier === "compiled_module") {
-        return this.#bsonModule
-      }
+    if (this.#bsonModule) {
+      this.script.instantiateSync(this.vm, specifier => {
+        if (specifier === "compiled_module") {
+          return this.#bsonModule!
+        }
 
-      throw new Error(`"${specifier}" import not allowed`)
-    })
+        throw new Error(`"${specifier}" import not allowed`)
+      })
+    }
 
     let result
     this.vm.global.setSync(

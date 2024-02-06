@@ -14,7 +14,7 @@ import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query } from "@budibase/types"
+import { Datasource, Query, SourceName } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -127,10 +127,16 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
-        data: rows,
-        params: enrichedParameters,
-      })
+      const runner = new ScriptRunner(
+        transformer,
+        {
+          data: rows,
+          params: enrichedParameters,
+        },
+        {
+          parseBson: datasource.source === SourceName.MONGODB,
+        }
+      )
       rows = runner.execute()
     }
 
