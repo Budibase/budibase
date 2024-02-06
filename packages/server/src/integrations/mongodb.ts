@@ -21,7 +21,6 @@ import environment from "../environment"
 interface MongoDBConfig {
   connectionString: string
   db: string
-  tlsCertificateFile: string
   tlsCertificateKeyFile: string
   tlsCAFile: string
 }
@@ -320,16 +319,11 @@ const getSchema = () => {
   if (environment.SELF_HOSTED) {
     schema.datasource = {
       ...schema.datasource,
-      //@ts-ignore
+      // @ts-ignore
       tls: {
         type: DatasourceFieldType.FIELD_GROUP,
         display: "Configure SSL",
         fields: {
-          tlsCertificateFile: {
-            type: DatasourceFieldType.STRING,
-            required: false,
-            display: "Certificate file path",
-          },
           tlsCertificateKeyFile: {
             type: DatasourceFieldType.STRING,
             required: false,
@@ -356,7 +350,6 @@ class MongoIntegration implements IntegrationBase {
   constructor(config: MongoDBConfig) {
     this.config = config
     const options: MongoClientOptions = {
-      tlsCertificateFile: config.tlsCertificateFile || undefined,
       tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
       tlsCAFile: config.tlsCAFile || undefined,
     }
@@ -645,7 +638,7 @@ class MongoIntegration implements IntegrationBase {
       let response = []
       if (query.extra?.actionType === "pipeline") {
         for await (const doc of collection.aggregate(
-          query.steps.map(({ key, value }) => {
+          query.steps.map(({key, value}) => {
             let temp: any = {}
             temp[key] = JSON.parse(value.value)
             return this.createObjectIds(temp)
