@@ -18,7 +18,6 @@ import {
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
-import { database } from "./database.js"
 
 // Backend
 import { tables } from "./tables"
@@ -34,7 +33,6 @@ import { flags } from "./flags"
 
 export {
   layoutStore,
-  database,
   appStore,
   componentStore,
   navigationStore,
@@ -104,8 +102,6 @@ export const initialise = async pkg => {
   themeStore.syncAppTheme(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
-  // required for api comms
-  database.syncAppDatabase(application)
   resetBuilderHistory()
   await refreshBuilderData()
 }
