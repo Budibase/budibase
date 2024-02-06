@@ -15,9 +15,14 @@
     Checkbox,
     notifications,
     Select,
+    Combobox,
   } from "@budibase/bbui"
   import { selectedScreen, store } from "builderStore"
   import { DefaultAppTheme } from "constants"
+
+  $: screenRouteOptions = $store.screens
+    .map(screen => screen.routing?.route)
+    .filter(x => x != null)
 
   const updateShowNavigation = async e => {
     await store.actions.screens.updateSetting(
@@ -108,23 +113,6 @@
           />
         {/if}
         <div class="label">
-          <Label size="M">Show logo</Label>
-        </div>
-        <Checkbox
-          value={!$store.navigation.hideLogo}
-          on:change={e => update("hideLogo", !e.detail)}
-        />
-        {#if !$store.navigation.hideLogo}
-          <div class="label">
-            <Label size="M">Logo URL</Label>
-          </div>
-          <Input
-            value={$store.navigation.logoUrl}
-            on:change={e => update("logoUrl", e.detail)}
-            updateOnChange={false}
-          />
-        {/if}
-        <div class="label">
           <Label size="M">Show title</Label>
         </div>
         <Checkbox
@@ -158,6 +146,47 @@
           value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}
           on:change={e => update("navTextColor", e.detail)}
         />
+      </div>
+    </div>
+
+    <div class="divider" />
+    <div class="customizeSection">
+      <div class="subheading">
+        <Detail>Logo</Detail>
+      </div>
+      <div class="controls">
+        <div class="label">
+          <Label size="M">Show logo</Label>
+        </div>
+        <Checkbox
+          value={!$store.navigation.hideLogo}
+          on:change={e => update("hideLogo", !e.detail)}
+        />
+        {#if !$store.navigation.hideLogo}
+          <div class="label">
+            <Label size="M">Logo image URL</Label>
+          </div>
+          <Input
+            value={$store.navigation.logoUrl}
+            on:change={e => update("logoUrl", e.detail)}
+            updateOnChange={false}
+          />
+          <div class="label">
+            <Label size="M">Logo link URL</Label>
+          </div>
+          <Combobox
+            value={$store.navigation.logoLinkUrl}
+            on:change={e => update("logoLinkUrl", e.detail)}
+            options={screenRouteOptions}
+          />
+          <div class="label">
+            <Label size="M">New tab</Label>
+          </div>
+          <Checkbox
+            value={!!$store.navigation.openLogoLinkInNewTab}
+            on:change={e => update("openLogoLinkInNewTab", !!e.detail)}
+          />
+        {/if}
       </div>
     </div>
   {/if}

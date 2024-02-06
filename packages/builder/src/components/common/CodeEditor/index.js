@@ -286,13 +286,14 @@ export const hbInsert = (value, from, to, text) => {
   return parsedInsert
 }
 
-export function jsInsert(value, from, to, text, { helper } = {}) {
+export function jsInsert(value, from, to, text, { helper, disableWrapping }) {
   let parsedInsert = ""
 
   const left = from ? value.substring(0, from) : ""
   const right = to ? value.substring(to) : ""
-
-  if (helper) {
+  if (disableWrapping) {
+    parsedInsert = text
+  } else if (helper) {
     parsedInsert = `helpers.${text}()`
   } else if (!left.includes('$("') || !right.includes('")')) {
     parsedInsert = `$("${text}")`
