@@ -226,11 +226,6 @@ export const serveApp = async function (ctx: UserCtx) {
     const sideNav = appInfo.navigation.navigation === "Left"
     const showFooter = !ctx.user?.license?.features?.includes("branding");
 
-    console.log("---");
-    console.log(showFooter ? "yes" : "no");
-    console.log(JSON.stringify(ctx.user, null, 2));
-    console.log("---");
-
     const themeVariables = getThemeVariables(appInfo?.theme);
 
     if (!env.isJest()) {
