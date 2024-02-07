@@ -94,15 +94,13 @@ class IsolatedVM {
   }
 
   runScript(): void {
-    if (this.#bsonModule) {
-      this.#script.instantiateSync(this.#vm, specifier => {
-        if (specifier === "compiled_module") {
-          return this.#bsonModule!
-        }
+    this.#script.instantiateSync(this.#vm, specifier => {
+      if (specifier === "compiled_module" && this.#bsonModule) {
+        return this.#bsonModule!
+      }
 
-        throw new Error(`"${specifier}" import not allowed`)
-      })
-    }
+      throw new Error(`"${specifier}" import not allowed`)
+    })
 
     this.#script.evaluateSync({ timeout: JS_TIMEOUT_MS })
   }
