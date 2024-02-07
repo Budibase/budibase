@@ -4,13 +4,14 @@ import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 let container: StartedTestContainer | undefined
 
 export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer("postgres:16.1-bullseye")
-    .withExposedPorts(5432)
-    .withEnvironment({ POSTGRES_PASSWORD: "password" })
+  return await new GenericContainer("mongo:7.0-jammy")
+    .withExposedPorts(27017)
+    .withEnvironment({
+      MONGO_INITDB_ROOT_USERNAME: "mongo",
+      MONGO_INITDB_ROOT_PASSWORD: "password",
+    })
     .withWaitStrategy(
-      Wait.forSuccessfulCommand(
-        "pg_isready -h localhost -p 5432"
-      ).withStartupTimeout(10000)
+      Wait.forSuccessfulCommand(`mongosh --eval "db.version()"`)
     )
     .start()
 }
@@ -20,22 +21,14 @@ export async function datasource(): Promise<Datasource> {
     container = await start()
   }
   const host = container.getHost()
-  const port = container.getMappedPort(5432)
-
+  const port = container.getMappedPort(27017)
   return {
-    type: "datasource_plus",
-    source: SourceName.POSTGRES,
-    plus: true,
+    type: "datasource",
+    source: SourceName.MONGODB,
+    plus: false,
     config: {
-      host,
-      port,
-      database: "postgres",
-      user: "postgres",
-      password: "password",
-      schema: "public",
-      ssl: false,
-      rejectUnauthorized: false,
-      ca: false,
+      connectionString: `mongodb://mongo:password@${host}:${port}`,
+      db: "mongo",
     },
   }
 }

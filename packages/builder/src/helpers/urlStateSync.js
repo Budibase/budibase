@@ -52,7 +52,7 @@ export const syncURLToState = options => {
   let cachedPage = get(routify.page)
   let previousParamsHash = null
   let debug = false
-  const log = (...params) => debug && console.log(`[${urlParam}]`, ...params)
+  const log = (...params) => debug && console.debug(`[${urlParam}]`, ...params)
 
   // Navigate to a certain URL
   const gotoUrl = (url, params) => {

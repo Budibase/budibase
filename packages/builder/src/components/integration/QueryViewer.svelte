@@ -93,7 +93,13 @@
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      if (typeof error.message === "string") {
+        notifications.error(`Query Error: ${error.message}`)
+      } else if (typeof error.message?.code === "string") {
+        notifications.error(`Query Error: ${error.message.code}`)
+      } else {
+        notifications.error(`Query Error: ${JSON.stringify(error.message)}`)
+      }
 
       if (!suppressErrors) {
         throw error

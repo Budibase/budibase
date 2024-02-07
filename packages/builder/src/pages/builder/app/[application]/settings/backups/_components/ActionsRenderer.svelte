@@ -12,7 +12,8 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import CreateRestoreModal from "./CreateRestoreModal.svelte"
   import { createEventDispatcher } from "svelte"
-  import { isOnlyUser } from "stores/builder"
+  import { isOnlyUser } from "builderStore"
+  import { BackupType } from "constants/backend/backups"
 
   export let row
 
@@ -42,12 +43,11 @@
 </script>
 
 <div class="cell">
-  <ActionMenu align="right">
-    <div slot="control">
-      <Icon size="M" hoverable name="MoreSmallList" />
-    </div>
-
-    {#if row.type !== "restore"}
+  {#if row.type !== BackupType.RESTORE}
+    <ActionMenu align="right">
+      <div slot="control">
+        <Icon size="M" hoverable name="MoreSmallList" />
+      </div>
       <AbsTooltip
         position={TooltipPosition.Left}
         text="Unavailable - another user is editing this app"
@@ -62,8 +62,8 @@
       </AbsTooltip>
       <MenuItem on:click={deleteDialog.show} icon="Delete">Delete</MenuItem>
       <MenuItem on:click={downloadExport} icon="Download">Download</MenuItem>
-    {/if}
-  </ActionMenu>
+    </ActionMenu>
+  {/if}
 </div>
 
 <Modal bind:this={restoreBackupModal}>
