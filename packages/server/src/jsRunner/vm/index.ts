@@ -54,37 +54,23 @@ export class IsolatedVM implements VM {
   }
 
   withHelpers() {
-    const injectedRequire = `
-    const require = function(val){
-      switch (val) {
-        case "url": 
-          return {
-            resolve: (...params) => urlResolveCb(...params),
-            parse: (...params) => urlParseCb(...params),
-          }
-        case "querystring":
-          return {
-            escape: (...params) => querystringEscapeCb(...params),
-          }
-      }
-    };`
+    const urlModule = this.#registerCallbacks({
+      resolve: url.resolve,
+      parse: url.parse,
+    })
 
-    const helpersSource = loadBundle(BundleType.HELPERS)
-    const helpersModule = this.#isolate.compileModuleSync(
-      `${injectedRequire};${helpersSource}`
-    )
+    const querystringModule = this.#registerCallbacks({
+      escape: querystring.escape,
+    })
+
+    const injectedRequire = `const require=function req(val) {
+        switch (val) {
+            case "url": return ${urlModule};
+            case "querystring": return ${querystringModule};
+        }
+      }`
 
     this.#addToContext({
-      urlResolveCb: new ivm.Callback(
-        (...params: Parameters<typeof url.resolve>) => url.resolve(...params)
-      ),
-      urlParseCb: new ivm.Callback((...params: Parameters<typeof url.parse>) =>
-        url.parse(...params)
-      ),
-      querystringEscapeCb: new ivm.Callback(
-        (...params: Parameters<typeof querystring.escape>) =>
-          querystring.escape(...params)
-      ),
       helpersStripProtocol: new ivm.Callback((str: string) => {
         var parsed = url.parse(str) as any
         parsed.protocol = ""
@@ -92,24 +78,24 @@ export class IsolatedVM implements VM {
       }),
     })
 
-    const cryptoModule = this.#isolate.compileModuleSync(
-      `export default { randomUUID: cryptoRandomUUIDCb }`
+    const helpersSource = loadBundle(BundleType.HELPERS)
+    const helpersModule = this.#isolate.compileModuleSync(
+      `${injectedRequire};${helpersSource}`
     )
-    cryptoModule.instantiateSync(this.#vm, specifier => {
-      throw new Error(`No imports allowed. Required: ${specifier}`)
-    })
 
-    this.#addToContext({
-      cryptoRandomUUIDCb: new ivm.Callback(
-        (...params: Parameters<typeof crypto.randomUUID>) => {
-          return crypto.randomUUID(...params)
-        }
-      ),
+    const cryptoModule = this.#registerCallbacks({
+      randomUUID: crypto.randomUUID,
     })
 
     helpersModule.instantiateSync(this.#vm, specifier => {
       if (specifier === "crypto") {
-        return cryptoModule
+        const module = this.#isolate.compileModuleSync(
+          `export default ${cryptoModule}`
+        )
+        module.instantiateSync(this.#vm, specifier => {
+          throw new Error(`No imports allowed. Required: ${specifier}`)
+        })
+        return module
       }
       throw new Error(`No imports allowed. Required: ${specifier}`)
     })
@@ -152,6 +138,28 @@ export class IsolatedVM implements VM {
 
     const result = this.#getResult()
     return result
+  }
+
+  #registerCallbacks(functions: Record<string, any>) {
+    const libId = crypto.randomUUID().replace(/-/g, "")
+
+    const x: Record<string, string> = {}
+    for (const [funcName, func] of Object.entries(functions)) {
+      const key = `f${libId}${funcName}cb`
+      x[funcName] = key
+
+      this.#addToContext({
+        [key]: new ivm.Callback((...params: any[]) => (func as any)(...params)),
+      })
+    }
+
+    const mod =
+      `{` +
+      Object.entries(x)
+        .map(([key, func]) => `${key}: ${func}`)
+        .join() +
+      "}"
+    return mod
   }
 
   #addToContext(context: Record<string, any>) {
