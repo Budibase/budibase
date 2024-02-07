@@ -12,7 +12,6 @@ const getUserLicense = () => {
 
 const getAppLicenseType = () => {
   const appDef = get(appStore)
-  console.log(appDef);
   if (appDef?.licenseType) {
     return appDef.licenseType
   }
