@@ -1,4 +1,4 @@
-import { IdentityContext } from "@budibase/types"
+import { IdentityContext, VM } from "@budibase/types"
 import { Isolate, Context, Module } from "isolated-vm"
 
 // keep this out of Budibase types, don't want to expose context info
@@ -15,4 +15,5 @@ export type ContextMap = {
     jsContext: Context
     helpersModule: Module
   }
+  vm?: VM
 }
