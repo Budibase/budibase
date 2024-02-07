@@ -171,6 +171,7 @@
 
   .noAnimation {
     animation-name: none;
+    background: transparent;
   }
 
   .devTools {
@@ -301,11 +302,11 @@
 
   @keyframes shimmer {
     0% {
-      left: -100%;
+      left: -170%;
     }
 
     100% {
-      left: 100%;
+      left: 170%;
     }
   }
 </style>
