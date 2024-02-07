@@ -1,7 +1,17 @@
 <script>
   export let data
+  export let maxRowsToDisplay = 5
 
-  $: string = JSON.stringify(data || {}, null, 2)
+  let string
+  $: {
+    string = JSON.stringify(data || {}, null, 2)
+    if (Array.isArray(data) && data.length > maxRowsToDisplay) {
+      string = JSON.stringify(data.slice(0, maxRowsToDisplay) || {}, null, 2)
+
+      // Display '...' at the end of the array
+      string = string.replace(/(}\n])/, "},\n  ...\n]")
+    }
+  }
 </script>
 
 <textarea class="json" disabled value={string} />
