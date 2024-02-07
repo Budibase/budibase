@@ -21,13 +21,11 @@ export class IsolatedVM implements VM {
   #timeout: number
   #perRequestLimit?: number
 
-  #modules: Record<
-    string,
-    {
-      headCode: string
-      module: ivm.Module
-    }
-  > = {}
+  #modules: {
+    import: string
+    moduleKey: string
+    module: ivm.Module
+  }[] = []
 
   readonly #resultKey = "results"
 
@@ -63,13 +61,6 @@ export class IsolatedVM implements VM {
       escape: querystring.escape,
     })
 
-    const injectedRequire = `const require=function req(val) {
-        switch (val) {
-            case "url": return ${urlModule};
-            case "querystring": return ${querystringModule};
-        }
-      }`
-
     this.#addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
         var parsed = url.parse(str) as any
@@ -78,17 +69,22 @@ export class IsolatedVM implements VM {
       }),
     })
 
+    const injectedRequire = `const require=function req(val) {
+        switch (val) {
+            case "url": return ${urlModule};
+            case "querystring": return ${querystringModule};
+        }
+      }`
     const helpersSource = loadBundle(BundleType.HELPERS)
     const helpersModule = this.#isolate.compileModuleSync(
       `${injectedRequire};${helpersSource}`
     )
 
-    const cryptoModule = this.#registerCallbacks({
-      randomUUID: crypto.randomUUID,
-    })
-
     helpersModule.instantiateSync(this.#vm, specifier => {
       if (specifier === "crypto") {
+        const cryptoModule = this.#registerCallbacks({
+          randomUUID: crypto.randomUUID,
+        })
         const module = this.#isolate.compileModuleSync(
           `export default ${cryptoModule}`
         )
@@ -100,10 +96,11 @@ export class IsolatedVM implements VM {
       throw new Error(`No imports allowed. Required: ${specifier}`)
     })
 
-    this.#modules["compiled_module"] = {
-      headCode: 'import helpers from "compiled_module"',
+    this.#modules.push({
+      import: "helpers",
+      moduleKey: `i${crypto.randomUUID().replace(/-/g, "")}`,
       module: helpersModule,
-    }
+    })
     return this
   }
 
@@ -120,15 +117,16 @@ export class IsolatedVM implements VM {
     }
 
     code = [
-      ...Object.values(this.#modules).map(m => m.headCode),
+      ...this.#modules.map(m => `import ${m.import} from "${m.moduleKey}"`),
       `results.out=${code};`,
     ].join(";")
 
     const script = this.#isolate.compileModuleSync(code)
 
     script.instantiateSync(this.#vm, specifier => {
-      if (specifier === "compiled_module") {
-        return this.#modules[specifier].module
+      const module = this.#modules.find(m => m.moduleKey === specifier)
+      if (module) {
+        return module.module
       }
 
       throw new Error(`"${specifier}" import not allowed`)
