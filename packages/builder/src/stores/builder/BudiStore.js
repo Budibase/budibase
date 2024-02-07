@@ -29,7 +29,7 @@ export default class BudiStore {
      */
     if (opts?.debug) {
       this.subscribe(state => {
-        console.log(`${this.constructor.name}`, state)
+        console.warn(`${this.constructor.name}`, state)
       })
     }
   }
