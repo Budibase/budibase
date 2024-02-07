@@ -1,16 +1,21 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import { apps, auth, sideBarCollapsed } from "stores/portal"
+  import { licensing, apps, auth, sideBarCollapsed } from "stores/portal"
   import { Link, Body, ActionButton } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
+  import { ClientAppSkeleton } from "@budibase/frontend-core";
 
   $: app = $apps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
+  let loading = true;
+
   const getIframeURL = app => {
+    loading = true;
+
     if (app.status === "published") {
       return `/app${app.url}`
     }
@@ -28,6 +33,14 @@
   }
 
   $: fetchScreens(app?.devId)
+
+  const handleLoad = (e) => {
+    loading = false;
+  }
+
+  $: {
+    console.log();
+  }
 </script>
 
 <div class="container">
@@ -78,7 +91,20 @@
       </Body>
     </div>
   {:else}
-    <iframe src={iframeUrl} title={app.name} />
+    
+    {#if loading}
+      <div class="loading">
+        <div class={`loadingThemeWrapper ${app.theme}`}>
+          <ClientAppSkeleton
+            noAnimation
+            hideDevTools={app?.status === "published"}
+            sideNav={app?.navigation.navigation === "Left"}
+            hideFooter={$licensing.brandingEnabled}
+          />
+        </div>
+      </div>
+    {/if}
+    <iframe class:hide={loading} on:load={handleLoad} src={iframeUrl} title={app.name} />
   {/if}
 </div>
 
@@ -98,6 +124,23 @@
     align-items: center;
     gap: var(--spacing-xs);
     flex: 0 0 50px;
+  }
+
+  .loadingThemeWrapper {
+    height: 100%;
+    container-type: inline-size;
+  }
+
+  .loading {
+    height: 100%;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--spacing-s);
+    overflow: hidden;
+  }
+
+  .hide {
+    visibility: hidden;
+    height: 0;
   }
 
   iframe {

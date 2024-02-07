@@ -2,6 +2,7 @@
   export let sideNav = false;
   export let hideDevTools = false;
   export let hideFooter = false;
+  export let noAnimation = false;
 </script>
 
 <svelte:head>
@@ -59,7 +60,7 @@
 </svelte:head>
 
 <div class:sideNav id="clientAppSkeletonLoader" class="skeleton">
-  <div class="animation" />
+  <div class="animation" class:noAnimation />
 
   {#if !hideDevTools}
     <div class="devTools" >
@@ -166,6 +167,10 @@
     animation-iteration-count: infinite;
     animation-name: shimmer;
     animation-timing-function: linear;
+  }
+
+  .noAnimation {
+    animation-name: none;
   }
 
   .devTools {

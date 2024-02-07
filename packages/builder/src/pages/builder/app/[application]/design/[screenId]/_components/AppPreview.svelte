@@ -37,10 +37,6 @@
   // Determine selected component ID
   $: selectedComponentId = $store.selectedComponentId
 
-  $: {
-    console.log($store.navigation?.navigation);
-  }
-
   $: previewData = {
     appId: $store.appId,
     layout,
@@ -235,10 +231,10 @@
       class:mobile={$store.previewDevice === "mobile"}
     >
       <ClientAppSkeleton
-          sideNav={$store.navigation?.navigation === "Left"}
-          hideFooter
-          hideDevTools
-        />
+        sideNav={$store.navigation?.navigation === "Left"}
+        hideFooter
+        hideDevTools
+      />
     </div>
   {:else if error}
     <div class="center error">
