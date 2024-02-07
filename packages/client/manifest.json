@@ -6262,7 +6262,6 @@
     "icon": "Form",
     "styles": ["size"],
     "block": true,
-    "info": "Form blocks are only compatible with internal or SQL tables",
     "size": {
       "width": 400,
       "height": 400
@@ -6271,14 +6270,22 @@
       {
         "type": "schema",
         "label": "Schema",
-        "key": "dataSource"
+        "key": "dataSource",
+        "defaultValue": {
+          "name": "Custom",
+          "label": "Custom"
+        }
       },
       {
         "type": "radio",
         "label": "Type",
         "key": "actionType",
         "options": ["Create", "Update", "View"],
-        "defaultValue": "Create"
+        "defaultValue": "Create",
+        "dependsOn": {
+          "setting": "dataSource.type",
+          "value": ["table", "viewV2"]
+        }
       },
       {
         "section": true,
