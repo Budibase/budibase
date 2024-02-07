@@ -92,9 +92,14 @@
     }))
   $: links = bindings
     // Get only link bindings
-    .filter(x => x.fieldSchema?.type === "link")
-    // Filter out bindings provided by forms
-    .filter(x => !x.component?.endsWith("/form"))
+    .filter(binding => binding.fieldSchema?.type === "link")
+    // Filter out bindings provided by forms and form blocks
+    .filter(binding => {
+      return (
+        !binding.component?.endsWith("/form") &&
+        !binding.component?.endsWith("/formblock")
+      )
+    })
     .map(binding => {
       const { providerId, readableBinding, fieldSchema } = binding || {}
       const { name, tableId } = fieldSchema || {}
@@ -111,6 +116,8 @@
         rowTableId: `{{ ${safeProviderId}.${safe("tableId")} }}`,
       }
     })
+    // Ensure we extracted a valid table ID, otherwise we can't use this
+    .filter(linkSource => linkSource.tableId != null)
   $: fields = bindings
     .filter(x => arrayTypes.includes(x.fieldSchema?.type))
     .map(binding => {
