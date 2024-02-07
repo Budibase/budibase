@@ -4,7 +4,6 @@
   import { store, selectedScreen, currentAsset, hoverStore } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
-    ProgressCircle,
     Layout,
     Heading,
     Body,
@@ -14,6 +13,7 @@
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { isActive, goto } from "@roxi/routify"
+  import { ClientAppSkeleton } from "@budibase/frontend-core";
 
   let iframe
   let layout
@@ -36,6 +36,10 @@
 
   // Determine selected component ID
   $: selectedComponentId = $store.selectedComponentId
+
+  $: {
+    console.log($store.navigation?.navigation);
+  }
 
   $: previewData = {
     appId: $store.appId,
@@ -225,8 +229,16 @@
 
 <div class="component-container">
   {#if loading}
-    <div class="center">
-      <ProgressCircle />
+    <div
+      class={`loading ${$store.theme}`}
+      class:tablet={$store.previewDevice === "tablet"}
+      class:mobile={$store.previewDevice === "mobile"}
+    >
+      <ClientAppSkeleton
+          sideNav={$store.navigation?.navigation === "Left"}
+          hideFooter
+          hideDevTools
+        />
     </div>
   {:else if error}
     <div class="center error">
@@ -243,8 +255,6 @@
     bind:this={iframe}
     src="/app/preview"
     class:hidden={loading || error}
-    class:tablet={$store.previewDevice === "tablet"}
-    class:mobile={$store.previewDevice === "mobile"}
   />
   <div
     class="add-component"
@@ -264,6 +274,25 @@
 />
 
 <style>
+  .loading {
+    position: absolute;
+    container-type: inline-size;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+  }
+
+  .loading.tablet {
+    width: calc(1024px + 6px);
+    max-height: calc(768px + 6px);
+  }
+
+  .loading.mobile {
+    width: calc(390px + 6px);
+    max-height: calc(844px + 6px);
+  }
+
   .component-container {
     grid-row-start: middle;
     grid-column-start: middle;

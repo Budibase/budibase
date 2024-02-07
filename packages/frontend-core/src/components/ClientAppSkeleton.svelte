@@ -4,7 +4,61 @@
   export let hideFooter = false;
 </script>
 
-<div class:sideNav id="clientAppSkeletonLoader" class="skeleton mobile">
+<svelte:head>
+<style>
+  @media (max-width: 720px) {
+    #clientAppSkeletonLoader .devToolsButton {
+      display: none;
+    }
+
+    #clientAppSkeletonLoader .main {
+      flex-direction: column;
+      width: initial;
+    }
+
+    #clientAppSkeletonLoader .nav {
+      height: 61px;
+      width: initial;
+    }
+
+    #clientAppSkeletonLoader .body {
+      width: initial;
+      height: 100%;
+    }
+
+    #clientAppSkeletonLoader .footer {
+      border-top: none;
+    }
+  }
+
+  @container (max-width: 720px) {
+    #clientAppSkeletonLoader .devToolsButton {
+      display: none;
+    }
+
+    #clientAppSkeletonLoader .main {
+      flex-direction: column;
+      width: initial;
+    }
+
+    #clientAppSkeletonLoader .nav {
+      height: 61px;
+      width: initial;
+    }
+
+    #clientAppSkeletonLoader .body {
+      width: initial;
+      height: 100%;
+    }
+
+    #clientAppSkeletonLoader .footer {
+      border-top: none;
+    }
+  }
+</style>
+</svelte:head>
+
+<div class:sideNav id="clientAppSkeletonLoader" class="skeleton">
   <div class="animation" />
 
   {#if !hideDevTools}
@@ -91,7 +145,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    border-radius: 0.5rem;
+    border-radius: 4px;
     overflow: hidden;
     background-color: var(--spectrum-global-color-gray-200);
   }
@@ -167,12 +221,6 @@
     width: 16px;
   }
 
-  @media (max-width: 720px) {
-    .mobile .devToolsButton {
-      display: none;
-    }
-  }
-
   .main {
     height: 100%;
     display: flex;
@@ -182,13 +230,6 @@
   .sideNav .main {
     flex-direction: row;
     width: 100%;
-  }
-
-  @media (max-width: 720px) {
-    .mobile .main {
-      flex-direction: column;
-      width: initial;
-    }
   }
 
   .nav {
@@ -203,13 +244,6 @@
     width: 251px;
   }
 
-  @media (max-width: 720px) {
-    .mobile .nav {
-      height: 61px;
-      width: initial;
-    }
-  }
-
   .body {
     z-index: 2;
     display: flex;
@@ -221,13 +255,6 @@
   .sideNav .body {
     width: 100%;
     height: initial;
-  }
-
-  @media (max-width: 720px) {
-    .mobile .body {
-      width: initial;
-      height: 100%;
-    }
   }
 
   .body :global(svg > rect) {
@@ -265,12 +292,6 @@
 
   .sideNav .footer {
     border-top:3px solid var(--spectrum-alias-background-color-primary);
-  }
-
-  @media (max-width: 720px) {
-    .mobile .footer {
-      border-top: none;
-    }
   }
 
   @keyframes shimmer {

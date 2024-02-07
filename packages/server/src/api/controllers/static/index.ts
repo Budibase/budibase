@@ -267,7 +267,8 @@ export const serveApp = async function (ctx: UserCtx) {
         appId,
         embedded: bbHeaderEmbed,
         skeletonHtml: skeleton.html,
-        skeletonCss: `:root{${themeVariables}} ${skeleton.css.code}` 
+        skeletonCss: `:root{${themeVariables}} ${skeleton.css.code}`,
+        skeletonHead: skeleton.head,
       })
     } else {
       // just return the app info for jest to assert on
@@ -302,11 +303,6 @@ export const serveApp = async function (ctx: UserCtx) {
 export const serveBuilderPreview = async function (ctx: UserCtx) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
-
-  const hideDevTools = !!ctx.params.appUrl;
-  const sideNav = appInfo.navigation.navigation === "Left"
-  const showFooter = !ctx.user?.license?.features?.includes("branding");
-  const themeVariables = getThemeVariables(appInfo?.theme);
 
   if (!env.isJest()) {
     let appId = context.getAppId()
