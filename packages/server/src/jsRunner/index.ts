@@ -16,6 +16,7 @@ export function init() {
           vm = new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
             timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
+            perRequestLimit: env.JS_PER_REQUEST_TIME_LIMIT_MS,
           }).withHelpers()
 
           bbCtx.vm = vm
