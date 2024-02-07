@@ -38,6 +38,10 @@
   import FreeFooter from "components/FreeFooter.svelte"
   import licensing from "../licensing"
 
+  $: {
+    console.log(licensing.logoEnabled());
+  }
+
   // Provide contexts
   setContext("sdk", SDK)
   setContext("component", writable({ id: null, ancestors: [] }))
