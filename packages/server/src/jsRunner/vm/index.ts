@@ -7,11 +7,19 @@ import querystring from "querystring"
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
 
+class ExecutionTimeoutError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ExecutionTimeoutError"
+  }
+}
+
 export class IsolatedVM implements VM {
   #isolate: ivm.Isolate
   #vm: ivm.Context
   #jail: ivm.Reference
   #timeout: number
+  #perRequestLimit?: number
 
   #modules: Record<
     string,
@@ -26,9 +34,11 @@ export class IsolatedVM implements VM {
   constructor({
     memoryLimit,
     timeout,
+    perRequestLimit,
   }: {
     memoryLimit: number
     timeout: number
+    perRequestLimit?: number
   }) {
     this.#isolate = new ivm.Isolate({ memoryLimit })
     this.#vm = this.#isolate.createContextSync()
@@ -40,10 +50,7 @@ export class IsolatedVM implements VM {
     })
 
     this.#timeout = timeout
-  }
-
-  get cpuTime() {
-    return this.#isolate.cpuTime
+    this.#perRequestLimit = perRequestLimit
   }
 
   withHelpers() {
@@ -115,6 +122,17 @@ export class IsolatedVM implements VM {
   }
 
   execute(code: string): string {
+    const perRequestLimit = this.#perRequestLimit
+
+    if (perRequestLimit) {
+      const cpuMs = Number(this.#isolate.cpuTime) / 1e6
+      if (cpuMs > perRequestLimit) {
+        throw new ExecutionTimeoutError(
+          `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+        )
+      }
+    }
+
     code = [
       ...Object.values(this.#modules).map(m => m.headCode),
       `results.out=${code};`,
