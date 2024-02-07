@@ -16,9 +16,9 @@ jest.mock("@budibase/backend-core", () => {
     },
   }
 })
-import * as setup from "./utilities"
-import { checkBuilderEndpoint } from "./utilities/TestFunctions"
-import { checkCacheForDynamicVariable } from "../../../threads/utils"
+import * as setup from "../utilities"
+import { checkBuilderEndpoint } from "../utilities/TestFunctions"
+import { checkCacheForDynamicVariable } from "../../../../threads/utils"
 
 const { basicQuery, basicDatasource } = setup.structures
 import { events, db as dbCore } from "@budibase/backend-core"
