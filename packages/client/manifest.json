@@ -6269,8 +6269,8 @@
     },
     "settings": [
       {
-        "type": "table",
-        "label": "Data",
+        "type": "schema",
+        "label": "Schema",
         "key": "dataSource"
       },
       {
