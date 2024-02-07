@@ -224,7 +224,7 @@ export const serveApp = async function (ctx: UserCtx) {
 
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = appInfo.navigation.navigation === "Left"
-    const hideFooter = ctx.user.license.features.includes(Feature.BRANDING)
+    const hideFooter = ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
     const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
