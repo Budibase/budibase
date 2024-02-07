@@ -164,7 +164,7 @@ describe("Builder store", () => {
 
   it("Overrite an existing route/path mapping with a new URL", ctx => {
     expect(ctx.test.store.previousTopNavPath).toStrictEqual({})
-    console.log(INITIAL_BUILDER_STATE)
+
     const dataRoute = "/builder/app/:application/data"
     const dataURL = "/builder/app/app_dev_123/data/table/ta_users"
     const updatedURL = "/builder/app/app_dev_123/data/table/ta_employees"

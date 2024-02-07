@@ -243,7 +243,7 @@ export const buildContextTree = (
   }
 
   // Process this component's contexts
-  const def = store.actions.components.getDefinition(rootComponent._component)
+  const def = componentStore.getDefinition(rootComponent._component)
   if (def?.context) {
     tree[currentBranch].push(rootComponent._id)
     const contexts = Array.isArray(def.context) ? def.context : [def.context]

@@ -7,7 +7,7 @@ const registerNode = async (node, tourStepKey) => {
   }
 
   if (!get(builderStore).tourKey) {
-    console.log("Tour Handler - No active tour ", tourStepKey, node)
+    console.warn("Tour Handler - No active tour ", tourStepKey, node)
     return
   }
 
