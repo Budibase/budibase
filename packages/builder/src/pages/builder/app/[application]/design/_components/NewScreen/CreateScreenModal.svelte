@@ -70,7 +70,7 @@
       $goto(`./${screenId}`)
       screenStore.select(screenId)
     } catch (error) {
-      console.log(error)
+      console.error(error)
       notifications.error("Error creating screens")
     }
   }

@@ -373,6 +373,7 @@
   confirmText="Save"
   onConfirm={saveRelationship}
   disabled={!valid}
+  size="L"
 >
   <div class="headings">
     <Detail>Tables</Detail>

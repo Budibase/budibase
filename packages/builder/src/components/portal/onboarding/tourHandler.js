@@ -3,7 +3,7 @@ import { get } from "svelte/store"
 
 const registerNode = async (node, tourStepKey) => {
   if (!node) {
-    console.log("Tour Handler - an anchor node is required")
+    console.warn("Tour Handler - an anchor node is required")
   }
 
   if (!get(builderStore).tourKey) {

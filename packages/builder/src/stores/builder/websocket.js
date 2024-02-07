@@ -25,7 +25,7 @@ export const createBuilderWebsocket = appId => {
     })
   })
   socket.on("connect_error", err => {
-    console.log("Failed to connect to builder websocket:", err.message)
+    console.error("Failed to connect to builder websocket:", err.message)
   })
   socket.on("disconnect", () => {
     userStore.actions.reset()
