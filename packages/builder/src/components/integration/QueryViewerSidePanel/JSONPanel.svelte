@@ -9,7 +9,10 @@
       string = JSON.stringify(data.slice(0, maxRowsToDisplay) || {}, null, 2)
 
       // Display '...' at the end of the array
-      string = string.replace(/(}\n])/, "},\n  ...\n]")
+      string = string.replace(
+        /(}\n])/,
+        `},\n  ...${data.length - maxRowsToDisplay} further items\n]`
+      )
     }
   }
 </script>
