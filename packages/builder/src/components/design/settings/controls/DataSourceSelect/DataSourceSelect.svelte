@@ -39,6 +39,7 @@
   export let showAllQueries
   export let bindings = []
   export let showDataProviders = true
+  export let showCustom = false
 
   const dispatch = createEventDispatcher()
   const arrayTypes = ["attachment", "array"]
@@ -340,16 +341,19 @@
         onSelect={handleSelected}
       />
     {/if}
-    <DataSourceCategory
-      dividerState={true}
-      heading="Other"
-      dataSet={[custom]}
-      {value}
-      onSelect={handleSelected}
-    />
+    {#if showCustom}
+      <DataSourceCategory
+        dividerState={true}
+        heading="Other"
+        dataSet={[custom]}
+        {value}
+        onSelect={handleSelected}
+      />
+    {/if}
     {#if otherSources?.length}
       <DataSourceCategory
-        dividerState={false}
+        heading={showCustom ? null : "Other"}
+        dividerState={!showCustom}
         dataSet={otherSources}
         {value}
         onSelect={handleSelected}

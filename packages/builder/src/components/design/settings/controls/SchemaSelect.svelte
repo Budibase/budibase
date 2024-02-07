@@ -9,5 +9,6 @@
   {...$$props}
   showAllQueries={true}
   showDataProviders={false}
+  showCustom={false}
   {otherSources}
 />
