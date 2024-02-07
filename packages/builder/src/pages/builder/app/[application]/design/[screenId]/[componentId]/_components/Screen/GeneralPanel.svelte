@@ -14,8 +14,6 @@
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
   import { getBindableProperties } from "builderStore/dataBinding"
-  import { API } from "api"
-  import { apps } from "stores/portal"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 
@@ -66,7 +64,6 @@
 
     // Update screen setting
     try {
-      console.log($store.appId);
       await store.actions.screens.updateSetting(get(selectedScreen), key, value)
     } catch (error) {
       console.log(error)

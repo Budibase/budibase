@@ -6,17 +6,16 @@
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import { ClientAppSkeleton } from "@budibase/frontend-core";
+  import { ClientAppSkeleton } from "@budibase/frontend-core"
 
   $: app = $apps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
-  let loading = true;
+  let loading = true
 
   const getIframeURL = app => {
-    loading = true;
-    console.log("loading");
+    loading = true
 
     if (app.status === "published") {
       return `/app${app.url}`
@@ -38,7 +37,7 @@
 
   const receiveMessage = async message => {
     if (message.data.type === "docLoaded") {
-      loading = false;
+      loading = false
     }
   }
 
@@ -99,7 +98,6 @@
       </Body>
     </div>
   {:else}
-    
     <div class:hide={!loading} class="loading">
       <div class={`loadingThemeWrapper ${app.theme}`}>
         <ClientAppSkeleton
@@ -112,7 +110,6 @@
     </div>
     <iframe class:hide={loading} src={iframeUrl} title={app.name} />
   {/if}
-
 </div>
 
 <style>

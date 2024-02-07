@@ -1,74 +1,79 @@
 <script>
-  export let sideNav = false;
-  export let hideDevTools = false;
-  export let hideFooter = false;
-  export let noAnimation = false;
+  export let sideNav = false
+  export let hideDevTools = false
+  export let hideFooter = false
+  export let noAnimation = false
 </script>
 
 <svelte:head>
-<style>
-  @media (max-width: 720px) {
-    #clientAppSkeletonLoader .devToolsButton {
-      display: none;
+  <style>
+    @media (max-width: 720px) {
+      #clientAppSkeletonLoader .devToolsButton {
+        display: none;
+      }
+
+      #clientAppSkeletonLoader .main {
+        flex-direction: column;
+        width: initial;
+      }
+
+      #clientAppSkeletonLoader .nav {
+        height: 61px;
+        width: initial;
+      }
+
+      #clientAppSkeletonLoader .body {
+        width: initial;
+        height: 100%;
+      }
+
+      #clientAppSkeletonLoader .footer {
+        border-top: none;
+      }
     }
 
-    #clientAppSkeletonLoader .main {
-      flex-direction: column;
-      width: initial;
-    }
+    @container (max-width: 720px) {
+      #clientAppSkeletonLoader .devToolsButton {
+        display: none;
+      }
 
-    #clientAppSkeletonLoader .nav {
-      height: 61px;
-      width: initial;
-    }
+      #clientAppSkeletonLoader .main {
+        flex-direction: column;
+        width: initial;
+      }
 
-    #clientAppSkeletonLoader .body {
-      width: initial;
-      height: 100%;
-    }
+      #clientAppSkeletonLoader .nav {
+        height: 61px;
+        width: initial;
+      }
 
-    #clientAppSkeletonLoader .footer {
-      border-top: none;
-    }
-  }
+      #clientAppSkeletonLoader .body {
+        width: initial;
+        height: 100%;
+      }
 
-  @container (max-width: 720px) {
-    #clientAppSkeletonLoader .devToolsButton {
-      display: none;
+      #clientAppSkeletonLoader .footer {
+        border-top: none;
+      }
     }
-
-    #clientAppSkeletonLoader .main {
-      flex-direction: column;
-      width: initial;
-    }
-
-    #clientAppSkeletonLoader .nav {
-      height: 61px;
-      width: initial;
-    }
-
-    #clientAppSkeletonLoader .body {
-      width: initial;
-      height: 100%;
-    }
-
-    #clientAppSkeletonLoader .footer {
-      border-top: none;
-    }
-  }
-</style>
+  </style>
 </svelte:head>
 
 <div class:sideNav id="clientAppSkeletonLoader" class="skeleton">
   <div class="animation" class:noAnimation />
 
   {#if !hideDevTools}
-    <div class="devTools" >
+    <div class="devTools">
       <p class="title">Preview</p>
 
       <div class="button viewButton">
         <p>View as yourself</p>
-        <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="18"
+          viewBox="0 0 18 18"
+          width="18"
+        >
           <defs>
             <style>
               .fill {
@@ -77,12 +82,26 @@
             </style>
           </defs>
           <title>S ChevronDown 18 N</title>
-          <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" /><path class="fill" d="M4,7.01a1,1,0,0,1,1.7055-.7055l3.289,3.286,3.289-3.286a1,1,0,0,1,1.437,1.3865l-.0245.0245L9.7,11.7075a1,1,0,0,1-1.4125,0L4.293,7.716A.9945.9945,0,0,1,4,7.01Z" />
+          <rect
+            id="Canvas"
+            fill="#ff13dc"
+            opacity="0"
+            width="18"
+            height="18"
+          /><path
+            class="fill"
+            d="M4,7.01a1,1,0,0,1,1.7055-.7055l3.289,3.286,3.289-3.286a1,1,0,0,1,1.437,1.3865l-.0245.0245L9.7,11.7075a1,1,0,0,1-1.4125,0L4.293,7.716A.9945.9945,0,0,1,4,7.01Z"
+          />
         </svg>
       </div>
 
       <div class="button devToolsButton">
-        <svg xmlns="http://www.w3.org/2000/svg" height="18" viewBox="0 0 18 18" width="18">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          height="18"
+          viewBox="0 0 18 18"
+          width="18"
+        >
           <defs>
             <style>
               .fill {
@@ -91,16 +110,31 @@
             </style>
           </defs>
           <title>S Code 18 N</title>
-          <rect id="Canvas" fill="#ff13dc" opacity="0" width="18" height="18" /><path class="fill" d="M17.7465,9.5305l-4.0965,4.16a.5.5,0,0,1-.70709.00541l-.00541-.00541-.4465-.4535a.503.503,0,0,1,0-.7L15.9715,9,12.492,5.4645a.503.503,0,0,1,0-.7l.4465-.4535a.5.5,0,0,1,.70709-.00541L13.651,4.311l4.0955,4.16A.76151.76151,0,0,1,17.7465,9.5305Z" />
-          <path class="fill" d="M.2535,8.4695,4.35,4.3095a.5.5,0,0,1,.70709-.00541l.00541.00541.4465.4535a.503.503,0,0,1,0,.7L2.0285,9,5.508,12.5355a.503.503,0,0,1,0,.7l-.4465.4535a.5.5,0,0,1-.70709.00541L4.349,13.689.2535,9.5305A.76151.76151,0,0,1,.2535,8.4695Z" />
-          <path class="fill" d="M7.7445,14.8435h-.572a.5.5,0,0,1-.483-.6295L9.7855,2.6935a.5.5,0,0,1,.483-.3705h.5525a.5.5,0,0,1,.483.627L8.2275,14.473A.5.5,0,0,1,7.7445,14.8435Z" />
+          <rect
+            id="Canvas"
+            fill="#ff13dc"
+            opacity="0"
+            width="18"
+            height="18"
+          /><path
+            class="fill"
+            d="M17.7465,9.5305l-4.0965,4.16a.5.5,0,0,1-.70709.00541l-.00541-.00541-.4465-.4535a.503.503,0,0,1,0-.7L15.9715,9,12.492,5.4645a.503.503,0,0,1,0-.7l.4465-.4535a.5.5,0,0,1,.70709-.00541L13.651,4.311l4.0955,4.16A.76151.76151,0,0,1,17.7465,9.5305Z"
+          />
+          <path
+            class="fill"
+            d="M.2535,8.4695,4.35,4.3095a.5.5,0,0,1,.70709-.00541l.00541.00541.4465.4535a.503.503,0,0,1,0,.7L2.0285,9,5.508,12.5355a.503.503,0,0,1,0,.7l-.4465.4535a.5.5,0,0,1-.70709.00541L4.349,13.689.2535,9.5305A.76151.76151,0,0,1,.2535,8.4695Z"
+          />
+          <path
+            class="fill"
+            d="M7.7445,14.8435h-.572a.5.5,0,0,1-.483-.6295L9.7855,2.6935a.5.5,0,0,1,.483-.3705h.5525a.5.5,0,0,1,.483.627L8.2275,14.473A.5.5,0,0,1,7.7445,14.8435Z"
+          />
         </svg>
         <p>DevTools</p>
       </div>
     </div>
   {/if}
   <div class="main">
-  <div class="nav" />
+    <div class="nav" />
     <div class="body">
       <div class="bodyVerticalPadding" />
       <div class="bodyHorizontal">
@@ -297,7 +331,7 @@
   }
 
   .sideNav .footer {
-    border-top:3px solid var(--spectrum-alias-background-color-primary);
+    border-top: 3px solid var(--spectrum-alias-background-color-primary);
   }
 
   @keyframes shimmer {

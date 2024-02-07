@@ -12,7 +12,7 @@ import {
   TOP_LEVEL_PATH,
 } from "../../../utilities/fileSystem"
 import env from "../../../environment"
-import { DocumentType, getScreenParams } from "../../../db/utils"
+import { DocumentType } from "../../../db/utils"
 import {
   context,
   objectStore,
@@ -32,7 +32,7 @@ import {
 
 import send from "koa-send"
 
-const getThemeVariables = (theme) => {
+const getThemeVariables = theme => {
   if (theme === "spectrum--lightest") {
     return `
       --spectrum-global-color-gray-50: rgb(255, 255, 255);
@@ -222,19 +222,20 @@ export const serveApp = async function (ctx: UserCtx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
     let appId = context.getAppId()
 
-    const hideDevTools = !!ctx.params.appUrl;
+    const hideDevTools = !!ctx.params.appUrl
     const sideNav = appInfo.navigation.navigation === "Left"
-    const hideFooter = ctx.user?.license?.features?.includes("branding");
-    const themeVariables = getThemeVariables(appInfo?.theme);
+    const hideFooter = ctx.user?.license?.features?.includes("branding")
+    const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-      const Skeleton = require("@budibase/frontend-core/src/components/ClientAppSkeleton.svelte").default
+      const Skeleton =
+        require("@budibase/frontend-core/src/components/ClientAppSkeleton.svelte").default
       const skeleton = Skeleton.render({
         hideDevTools,
         sideNav,
-        hideFooter
-      });
+        hideFooter,
+      })
       const App = require("./templates/BudibaseApp.svelte").default
 
       const { head, html, css, ...rest } = App.render({
@@ -300,7 +301,7 @@ export const serveApp = async function (ctx: UserCtx) {
   }
 }
 
-export const serveBuilderPreview = async function (ctx: UserCtx) {
+export const serveBuilderPreview = async function (ctx: Ctx) {
   const db = context.getAppDB({ skip_setup: true })
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 

@@ -448,22 +448,6 @@ export async function update(ctx: UserCtx) {
   })
 }
 
-// memoizes whether navigation is visible on the default screen of the app, so that
-// the loading placeholder can display content accordingly. If this wasn't memoized then all screens 
-// for the app would need to be checked to see if they were the home page.
-export async function setDefaultScreenShowNavigation(ctx: BBContext) {
-  const db = context.getAppDB()
-  const application = await db.get<App>(DocumentType.APP_METADATA)
-  const visible = !!ctx.request.body.visible;
-  console.log("before")
-  console.log(visible ? "trueeee": "false");
-  console.log(application);
-  console.log("after");
-
-  ctx.status = 200
-}
-
-
 export async function updateClient(ctx: UserCtx) {
   // Get current app version
   const db = context.getAppDB()

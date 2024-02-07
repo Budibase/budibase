@@ -3,17 +3,11 @@
   import { onMount, onDestroy } from "svelte"
   import { store, selectedScreen, currentAsset, hoverStore } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import {
-    Layout,
-    Heading,
-    Body,
-    Icon,
-    notifications,
-  } from "@budibase/bbui"
+  import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "builderStore/componentUtils"
   import { isActive, goto } from "@roxi/routify"
-  import { ClientAppSkeleton } from "@budibase/frontend-core";
+  import { ClientAppSkeleton } from "@budibase/frontend-core"
 
   let iframe
   let layout
