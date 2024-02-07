@@ -132,6 +132,19 @@ export const buildFormBlockButtonConfig = props => {
   if (!_id) {
     return
   }
+
+  // Handle custom schema types
+  if (!dataSource?.type) {
+    return [
+      {
+        text: "Submit",
+        _id: Helpers.uuid(),
+        _component: "@budibase/standard-components/button",
+        type: "cta",
+      },
+    ]
+  }
+
   const formId = `${_id}-form`
   const repeaterId = `${_id}-repeater`
   const resourceId = dataSource?.resourceId
