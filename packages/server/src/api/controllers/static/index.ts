@@ -24,7 +24,7 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { UserCtx, App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
+import { UserCtx, App, Ctx, ProcessAttachmentResponse, Feature } from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestMigrationId,
@@ -32,7 +32,7 @@ import {
 
 import send from "koa-send"
 
-const getThemeVariables = theme => {
+const getThemeVariables = (theme: string) => {
   if (theme === "spectrum--lightest") {
     return `
       --spectrum-global-color-gray-50: rgb(255, 255, 255);
@@ -224,7 +224,7 @@ export const serveApp = async function (ctx: UserCtx) {
 
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = appInfo.navigation.navigation === "Left"
-    const hideFooter = ctx.user?.license?.features?.includes("branding")
+    const hideFooter = ctx.user.license.features.includes(Feature.BRANDING)
     const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
