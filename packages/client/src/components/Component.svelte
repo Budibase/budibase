@@ -384,7 +384,7 @@
 
     // Derive static, dynamic and nested settings if the instance changed
     settingsDefinition?.forEach(setting => {
-      if (setting.nested) {
+      if (setting.nested && setting.key !== "steps") {
         delete newDynamicSettings[setting.key]
       } else {
         const value = settings[setting.key]

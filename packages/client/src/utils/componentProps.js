@@ -1,6 +1,8 @@
 import { enrichDataBindings } from "./enrichDataBinding"
 import { enrichButtonActions } from "./buttonActions"
 import { decodeJSBinding } from "@budibase/string-templates"
+import { helpers } from "@budibase/shared-core"
+import { componentStore } from "stores"
 
 /**
  * Deeply compares 2 props using JSON.stringify.
@@ -27,10 +29,43 @@ export const enrichProps = (props, context, settingsDefinitionMap) => {
   // Extract top level button action settings.
   let normalProps = { ...props }
   let actionProps = {}
+
   Object.keys(normalProps).forEach(prop => {
     if (settingsDefinitionMap?.[prop]?.type === "event") {
+      console.log("event Prop value ", normalProps[prop])
       actionProps[prop] = normalProps[prop]
       delete normalProps[prop]
+    } else if (settingsDefinitionMap?.[prop]?.type === "buttonConfiguration") {
+      console.log("Testing buttonConfiguration")
+      normalProps[prop].forEach((button, idx) => {
+        actionProps[`${prop}.${idx}.onClick`] = button.onClick //better way to get this?
+        delete button.onClick
+      })
+    } else if (settingsDefinitionMap?.[prop]?.type === "stepConfiguration") {
+      console.log("Testing stepConfiguration")
+
+      const stepDef = componentStore.actions.getComponentDefinition(
+        "@budibase/standard-components/multistepformblockstep"
+      )
+      const settingsDef = getSettingsDefinition(stepDef)
+      let settingsDefMap = {}
+      settingsDef?.forEach(setting => {
+        settingsDefMap[setting.key] = setting
+      })
+
+      normalProps[prop].forEach((step, stepIdx) => {
+        Object.keys(step).forEach(stepProp => {
+          if (settingsDefMap?.[stepProp]?.type === "buttonConfiguration") {
+            console.log("NESTED BUTTONS")
+            step[stepProp].forEach((button, buttonIdx) => {
+              actionProps[
+                `${prop}.${stepIdx}.${stepProp}.${buttonIdx}.onClick`
+              ] = button.onClick
+              delete button.onClick
+            })
+          }
+        })
+      })
     }
   })
 
@@ -45,7 +80,22 @@ export const enrichProps = (props, context, settingsDefinitionMap) => {
   // Actions are enriched into a function at this stage, but actual data
   // binding enrichment is done dynamically at runtime.
   Object.keys(actionProps).forEach(prop => {
-    enrichedProps[prop] = enrichButtonActions(actionProps[prop], context)
+    let track = {}
+    let parts = prop.split(".")
+    parts.forEach((part, idx) => {
+      if (idx !== parts.length - 1) {
+        track = track[part] || enrichedProps[part]
+      } else {
+        track[part] = enrichButtonActions(actionProps[prop], context)
+      }
+    })
+    // Debug
+    if (parts.length == 1) {
+      const test = enrichButtonActions(actionProps[prop], context)
+      console.log("Original values", test)
+      enrichedProps[prop] = test
+    }
+    //enrichedProps[prop] = enrichButtonActions(actionProps[prop], context)
   })
 
   // Conditions

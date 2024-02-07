@@ -66,6 +66,7 @@ export const getActionDependentContextKeys = action => {
 }
 
 const saveRowHandler = async (action, context) => {
+  console.log("saveRowHandler ", action, context)
   const { fields, providerId, tableId, notificationOverride } =
     action.parameters
   let payload
@@ -371,6 +372,7 @@ const continueIfHandler = action => {
 }
 
 const showNotificationHandler = action => {
+  console.log("showNotificationHandler ", action)
   const { message, type, autoDismiss } = action.parameters
   if (!message || !type) {
     return
@@ -425,6 +427,7 @@ const confirmTextMap = {
  * A handler returning `false` is a flag to stop execution of handlers
  */
 export const enrichButtonActions = (actions, context) => {
+  console.log("ENRICH ", actions, context)
   // Prevent button actions in the builder preview
   if (!actions?.length || get(builderStore).inBuilder) {
     return null
@@ -442,6 +445,7 @@ export const enrichButtonActions = (actions, context) => {
   })
 
   return async eventContext => {
+    console.log("enrichButtonActions ", actions, context)
     // Button context is built up as actions are executed.
     // Inherit any previous button context which may have come from actions
     // before a confirmable action since this breaks the chain.
