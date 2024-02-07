@@ -25,7 +25,7 @@
   } from "stores/builder"
   import { DefaultAppTheme } from "constants"
 
-  $: screenRouteOptions = $store.screens
+  $: screenRouteOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
 
@@ -164,15 +164,15 @@
           <Label size="M">Show logo</Label>
         </div>
         <Checkbox
-          value={!$store.navigation.hideLogo}
+          value={!$navigationStore.hideLogo}
           on:change={e => update("hideLogo", !e.detail)}
         />
-        {#if !$store.navigation.hideLogo}
+        {#if !$navigationStore.hideLogo}
           <div class="label">
             <Label size="M">Logo image URL</Label>
           </div>
           <Input
-            value={$store.navigation.logoUrl}
+            value={$navigationStore.logoUrl}
             on:change={e => update("logoUrl", e.detail)}
             updateOnChange={false}
           />
@@ -180,7 +180,7 @@
             <Label size="M">Logo link URL</Label>
           </div>
           <Combobox
-            value={$store.navigation.logoLinkUrl}
+            value={$navigationStore.logoLinkUrl}
             on:change={e => update("logoLinkUrl", e.detail)}
             options={screenRouteOptions}
           />
@@ -188,7 +188,7 @@
             <Label size="M">New tab</Label>
           </div>
           <Checkbox
-            value={!!$store.navigation.openLogoLinkInNewTab}
+            value={!!$navigationStore.openLogoLinkInNewTab}
             on:change={e => update("openLogoLinkInNewTab", !!e.detail)}
           />
         {/if}
