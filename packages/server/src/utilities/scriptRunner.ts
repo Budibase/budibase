@@ -22,6 +22,11 @@ class ScriptRunner {
     })
 
     if (parseBson) {
+      // If we need to parse bson, we follow the next steps:
+      // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
+      // 2. Deserialise the data within the isolate, to get the original data
+      // 3. Process script
+      // 4. Stringify and parse result in order to convert the result from BSON to json
       script = `return JSON.parse(JSON.stringify((function(){data=deserialize(data).data;${script}})()));`
     }
 
