@@ -255,7 +255,8 @@ export async function listAllObjects(bucketName: string, path: string) {
       objects = objects.concat(response.Contents)
     }
     isTruncated = !!response.IsTruncated
-  } while (isTruncated)
+    token = response.NextContinuationToken
+  } while (isTruncated && token)
   return objects
 }
 
