@@ -104,6 +104,11 @@ export class IsolatedVM implements VM {
     return this
   }
 
+  withContext(context: Record<string, any>) {
+    this.#addToContext(context)
+    return this
+  }
+
   execute(code: string): string {
     const perRequestLimit = this.#perRequestLimit
 
