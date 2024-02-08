@@ -368,6 +368,8 @@ const getContextBindings = (asset, componentId) => {
   // Get all available contexts for this component
   const componentContexts = getComponentContexts(asset, componentId)
 
+  console.log(componentContexts)
+
   // Generate bindings for each context
   return componentContexts
     .map(componentContext => {
@@ -510,10 +512,10 @@ const isContextCompatibleWithComponent = (context, component) => {
 
   // Certain types of form blocks only allow certain contexts
   if (_component.endsWith("formblock")) {
-    if (
-      (actionType === "Create" && type === "schema") ||
-      (actionType === "View" && type === "form")
-    ) {
+    if (["Create", "Custom"].includes(actionType) && type === "schema") {
+      return false
+    }
+    if (actionType === "View" && type === "form") {
       return false
     }
   }
@@ -1032,21 +1034,27 @@ export const buildFormSchema = (component, asset) => {
     return schema
   }
 
+  // Handle form blocks
   if (component._component.endsWith("formblock")) {
-    let schema = {}
-    const datasource = getDatasourceForProvider(asset, component)
-    const info = getSchemaForDatasource(component, datasource)
-
-    if (!info?.schema) {
+    // Handle custom form blocks by inspecting the fields setting
+    if (component.actionType === "Custom") {
+      component.fields?.forEach(field => {
+        schema[field.field] = { type: field.type }
+      })
       return schema
     }
 
+    // Handle all other form blocks by using the shema
+    const datasource = getDatasourceForProvider(asset, component)
+    const info = getSchemaForDatasource(component, datasource)
+    if (!info?.schema) {
+      return schema
+    }
     if (!component.fields) {
       Object.values(info.schema)
-        .filter(
-          ({ autocolumn, name }) =>
-            !autocolumn && !["_rev", "_id"].includes(name)
-        )
+        .filter(({ autocolumn, name }) => {
+          return !autocolumn && !["_rev", "_id"].includes(name)
+        })
         .forEach(({ name }) => {
           schema[name] = { type: info?.schema[name].type }
         })
@@ -1060,11 +1068,10 @@ export const buildFormSchema = (component, asset) => {
         }
       })
     }
-
     return schema
   }
 
-  // Otherwise find all field component children
+  // Handle normal forms by finding all field component children
   const settings = getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
