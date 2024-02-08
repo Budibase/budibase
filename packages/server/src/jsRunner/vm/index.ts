@@ -205,8 +205,8 @@ export class IsolatedVM implements VM {
 
     script.evaluateSync({ timeout: this.#timeout })
 
-    const result = this.#getResult()
-    return result
+    const result = this.#getFromContext(this.#resultKey)
+    return result.out
   }
 
   #registerCallbacks(functions: Record<string, any>) {
@@ -241,13 +241,9 @@ export class IsolatedVM implements VM {
   }
 
   #getFromContext(key: string) {
-    return this.#jail.getSync(key)
-  }
-
-  #getResult() {
-    const ref = this.#vm.global.getSync(this.#resultKey, { reference: true })
+    const ref = this.#vm.global.getSync(key, { reference: true })
     const result = ref.copySync()
     ref.release()
-    return result.out
+    return result
   }
 }
