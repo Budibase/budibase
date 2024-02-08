@@ -1,5 +1,3 @@
-import bson from "bson"
-
 import env from "../environment"
 import { IsolatedVM } from "../jsRunner/vm"
 
