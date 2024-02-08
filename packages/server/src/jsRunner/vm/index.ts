@@ -14,6 +14,35 @@ class ExecutionTimeoutError extends Error {
   }
 }
 
+class ModuleHandler {
+  #modules: {
+    import: string
+    moduleKey: string
+    module: ivm.Module
+  }[] = []
+
+  #generateRandomKey = () => `i${crypto.randomUUID().replace(/-/g, "")}`
+
+  registerModule(module: ivm.Module, imports: string) {
+    this.#modules.push({
+      moduleKey: this.#generateRandomKey(),
+      import: imports,
+      module: module,
+    })
+  }
+
+  generateImports() {
+    return this.#modules
+      .map(m => `import ${m.import} from "${m.moduleKey}"`)
+      .join(";")
+  }
+
+  getModule(key: string) {
+    const module = this.#modules.find(m => m.moduleKey === key)
+    return module?.module
+  }
+}
+
 export class IsolatedVM implements VM {
   #isolate: ivm.Isolate
   #vm: ivm.Context
@@ -21,11 +50,7 @@ export class IsolatedVM implements VM {
   #timeout: number
   #perRequestLimit?: number
 
-  #modules: {
-    import: string
-    moduleKey: string
-    module: ivm.Module
-  }[] = []
+  #moduleHandler = new ModuleHandler()
 
   readonly #resultKey = "results"
 
@@ -96,11 +121,7 @@ export class IsolatedVM implements VM {
       throw new Error(`No imports allowed. Required: ${specifier}`)
     })
 
-    this.#modules.push({
-      import: "helpers",
-      moduleKey: `i${crypto.randomUUID().replace(/-/g, "")}`,
-      module: helpersModule,
-    })
+    this.#moduleHandler.registerModule(helpersModule, "helpers")
     return this
   }
 
@@ -121,17 +142,14 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = [
-      ...this.#modules.map(m => `import ${m.import} from "${m.moduleKey}"`),
-      `results.out=${code};`,
-    ].join(";")
+    code = `${this.#moduleHandler.generateImports()};results.out=${code};`
 
     const script = this.#isolate.compileModuleSync(code)
 
     script.instantiateSync(this.#vm, specifier => {
-      const module = this.#modules.find(m => m.moduleKey === specifier)
+      const module = this.#moduleHandler.getModule(specifier)
       if (module) {
-        return module.module
+        return module
       }
 
       throw new Error(`"${specifier}" import not allowed`)
