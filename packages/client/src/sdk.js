@@ -23,12 +23,12 @@ import { getAction } from "utils/getAction"
 import Provider from "components/context/Provider.svelte"
 import Block from "components/Block.svelte"
 import BlockComponent from "components/BlockComponent.svelte"
-import { ActionTypes, ContextScopes } from "./constants"
+import { ActionTypes } from "./constants"
 import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
-import { fetchData, LuceneUtils } from "@budibase/frontend-core"
+import { fetchData, LuceneUtils, Constants } from "@budibase/frontend-core"
 
 export default {
   API,
@@ -57,7 +57,7 @@ export default {
   fetchDatasourceSchema,
   fetchData,
   LuceneUtils,
-  ContextScopes,
+  ContextScopes: Constants.ContextScopes,
   getAPIKey,
   enrichButtonActions,
   processStringSync,

@@ -1,8 +1,10 @@
 <script>
   import { getContext, setContext, onDestroy } from "svelte"
   import { dataSourceStore, createContextStore } from "stores"
-  import { ActionTypes, ContextScopes } from "constants"
+  import { ActionTypes } from "constants"
   import { generate } from "shortid"
+
+  const { ContextScopes } = getContext("sdk")
 
   export let data
   export let actions
@@ -33,7 +35,7 @@
   const provideData = newData => {
     const dataKey = JSON.stringify(newData)
     if (dataKey !== lastDataKey) {
-      context.actions.provideData(providerKey, newData, scope)
+      context.actions.provideData(providerKey, newData)
       lastDataKey = dataKey
     }
   }
@@ -43,7 +45,7 @@
     if (actionsKey !== lastActionsKey) {
       lastActionsKey = actionsKey
       newActions?.forEach(({ type, callback, metadata }) => {
-        context.actions.provideAction(providerKey, type, callback, scope)
+        context.actions.provideAction(providerKey, type, callback)
 
         // Register any "refresh datasource" actions with a singleton store
         // so we can easily refresh data at all levels for any datasource

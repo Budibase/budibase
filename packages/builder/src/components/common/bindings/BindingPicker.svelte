@@ -9,6 +9,7 @@
   export let bindings
   export let mode
   export let allowHelpers
+  export let noPaddingTop = false
 
   let search = ""
   let popover
