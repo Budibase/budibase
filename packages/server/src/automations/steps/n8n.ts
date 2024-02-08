@@ -7,25 +7,8 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  HttpMethod,
 } from "@budibase/types"
-
-enum Method {
-  GET = "get",
-  POST = "post",
-  PATCH = "patch",
-  PUT = "put",
-  HEAD = "head",
-  DELETE = "delete",
-}
-
-const MethodPretty = {
-  [Method.GET]: "GET",
-  [Method.POST]: "POST",
-  [Method.PATCH]: "PATCH",
-  [Method.PUT]: "PUT",
-  [Method.HEAD]: "HEAD",
-  [Method.DELETE]: "DELETE",
-}
 
 export const definition: AutomationStepSchema = {
   name: "n8n Integration",
@@ -51,8 +34,7 @@ export const definition: AutomationStepSchema = {
         method: {
           type: AutomationIOType.STRING,
           title: "Method",
-          enum: Object.values(Method),
-          pretty: Object.values(MethodPretty),
+          enum: Object.values(HttpMethod),
         },
         authorization: {
           type: AutomationIOType.STRING,
@@ -112,13 +94,13 @@ export async function run({ inputs }: AutomationStepInput) {
     headers: HeadersInit
     body?: string
   } = {
-    method: method || "get",
+    method: method || HttpMethod.GET,
     headers: {
       "Content-Type": "application/json",
       Authorization: authorization,
     },
   }
-  if (!["get", "head"].includes(request.method)) {
+  if (!["GET", "HEAD"].includes(request.method)) {
     request.body = JSON.stringify({
       ...payload,
     })
