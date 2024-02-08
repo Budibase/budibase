@@ -13,11 +13,16 @@ export function init() {
 
         let { vm } = bbCtx
         if (!vm) {
+          // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
+          const { helpers, ...ctxToPass } = ctx
+
           vm = new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
             timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
             perRequestLimit: env.JS_PER_REQUEST_TIME_LIMIT_MS,
-          }).withHelpers()
+          })
+            .withContext(ctxToPass)
+            .withHelpers()
 
           bbCtx.vm = vm
         }
