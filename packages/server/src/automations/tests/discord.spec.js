@@ -11,7 +11,7 @@ describe("test the outgoing webhook action", () => {
     await config.init()
     inputs = {
       username: "joe_bloggs",
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     }
   })
 
@@ -19,7 +19,7 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action", async () => {
     const res = await setup.runStep(setup.actions.discord.stepId, inputs)
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("post")
     expect(res.success).toEqual(true)
   })

@@ -448,7 +448,7 @@ describe("Cover a few complex use cases", () => {
   it("getting a nice date from the user", async () => {
     const input = { text: `{{ date user.subscriptionDue "DD-MM" }}` }
     const context = JSON.parse(
-      `{"user":{"email":"test@test.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@test.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`
+      `{"user":{"email":"test@example.com","roleId":"ADMIN","type":"user","tableId":"ta_users","subscriptionDue":"2021-01-12T12:00:00.000Z","_id":"ro_ta_users_us_test@example.com","_rev":"2-24cc794985eb54183ecb93e148563f3d"}}`
     )
     const output = await processObject(input, context)
     expect(output.text).toBe("12-01")
