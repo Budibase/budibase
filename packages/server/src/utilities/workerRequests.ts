@@ -1,4 +1,4 @@
-import fetch from "node-fetch"
+import { Response, default as fetch } from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 import {
@@ -40,25 +40,21 @@ export function request(ctx?: Ctx, request?: any) {
 }
 
 async function checkResponse(
-  response: any,
+  response: Response,
   errorMsg: string,
   { ctx }: { ctx?: Ctx } = {}
 ) {
-  if (response.status !== 200) {
-    let error
-    try {
-      error = await response.json()
-      if (!error.message) {
-        error = JSON.stringify(error)
-      }
-    } catch (err) {
-      error = await response.text()
+  if (response.status >= 300) {
+    let responseErrorMessage
+    if (response.headers.get("content-type")?.includes("json")) {
+      const error = await response.json()
+      responseErrorMessage = error.message ?? JSON.stringify(error)
+    } else {
+      responseErrorMessage = await response.text()
     }
-    const msg = `Unable to ${errorMsg} - ${
-      error.message ? error.message : error
-    }`
+    const msg = `Unable to ${errorMsg} - ${responseErrorMessage}`
     if (ctx) {
-      ctx.throw(400, msg)
+      ctx.throw(msg, response.status)
     } else {
       throw msg
     }

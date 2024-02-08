@@ -1,63 +1,28 @@
-import ivm from "isolated-vm"
+import env from "../environment"
+import { IsolatedVM } from "../jsRunner/vm"
 
 const JS_TIMEOUT_MS = 1000
 
 class ScriptRunner {
-  vm: IsolatedVM
+  private code: string
+  private vm: IsolatedVM
 
-  constructor(script: string, context: any) {
-    const code = `let fn = () => {\n${script}\n}; results.out = fn();`
-    this.vm = new IsolatedVM({ memoryLimit: 64 })
-    this.vm.context = {
-      ...context,
-      results: { out: "" },
+  constructor(script: string, context: any, { parseBson = false } = {}) {
+    this.code = `(() => {${script}})();`
+    this.vm = new IsolatedVM({
+      memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+      timeout: JS_TIMEOUT_MS,
+    }).withContext(context)
+
+    if (parseBson && context.data) {
+      this.vm = this.vm.withParsingBson(context.data)
     }
-    this.vm.code = code
   }
 
   execute() {
-    this.vm.runScript()
-    const results = this.vm.getValue("results")
-    return results.out
-  }
-}
-
-class IsolatedVM {
-  isolate: ivm.Isolate
-  vm: ivm.Context
-  #jail: ivm.Reference
-  script: any
-
-  constructor({ memoryLimit }: { memoryLimit: number }) {
-    this.isolate = new ivm.Isolate({ memoryLimit })
-    this.vm = this.isolate.createContextSync()
-    this.#jail = this.vm.global
-    this.#jail.setSync("global", this.#jail.derefInto())
-  }
-
-  getValue(key: string) {
-    const ref = this.vm.global.getSync(key, { reference: true })
-    const result = ref.copySync()
-    ref.release()
+    const result = this.vm.execute(this.code)
     return result
   }
-
-  set context(context: Record<string, any>) {
-    for (let key in context) {
-      this.#jail.setSync(key, this.copyRefToVm(context[key]))
-    }
-  }
-
-  set code(code: string) {
-    this.script = this.isolate.compileScriptSync(code)
-  }
-
-  runScript() {
-    this.script.runSync(this.vm, { timeout: JS_TIMEOUT_MS })
-  }
-
-  copyRefToVm(value: Object): ivm.Copy<Object> {
-    return new ivm.ExternalCopy(value).copyInto({ release: true })
-  }
 }
+
 export default ScriptRunner

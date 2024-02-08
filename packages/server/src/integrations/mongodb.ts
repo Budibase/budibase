@@ -21,7 +21,6 @@ import environment from "../environment"
 interface MongoDBConfig {
   connectionString: string
   db: string
-  tlsCertificateFile: string
   tlsCertificateKeyFile: string
   tlsCAFile: string
 }
@@ -320,16 +319,11 @@ const getSchema = () => {
   if (environment.SELF_HOSTED) {
     schema.datasource = {
       ...schema.datasource,
-      //@ts-ignore
+      // @ts-ignore
       tls: {
         type: DatasourceFieldType.FIELD_GROUP,
         display: "Configure SSL",
         fields: {
-          tlsCertificateFile: {
-            type: DatasourceFieldType.STRING,
-            required: false,
-            display: "Certificate file path",
-          },
           tlsCertificateKeyFile: {
             type: DatasourceFieldType.STRING,
             required: false,
@@ -356,8 +350,7 @@ class MongoIntegration implements IntegrationBase {
   constructor(config: MongoDBConfig) {
     this.config = config
     const options: MongoClientOptions = {
-      tlsCertificateKeyFile:
-        config.tlsCertificateKeyFile || config.tlsCertificateFile || undefined,
+      tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
       tlsCAFile: config.tlsCAFile || undefined,
     }
     this.client = new MongoClient(config.connectionString, options)
@@ -525,7 +518,10 @@ class MongoIntegration implements IntegrationBase {
           return await collection.findOneAndUpdate(
             findAndUpdateJson.filter,
             findAndUpdateJson.update,
-            findAndUpdateJson.options
+            {
+              ...findAndUpdateJson.options,
+              includeResultMetadata: true,
+            }
           )
         }
         case "count": {

@@ -63,12 +63,14 @@
     "koa-useragent": "^4.1.0",
     "lodash": "4.17.21",
     "node-fetch": "2.6.7",
-    "nodemailer": "6.7.2",
+    "nodemailer": "6.9.9",
     "passport-google-oauth": "2.0.0",
     "passport-local": "1.0.0",
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
-    "server-destroy": "1.0.1"
+    "server-destroy": "1.0.1",
+    "undici": "^6.0.1",
+    "undici-types": "^6.0.1"
   },
   "devDependencies": {
     "@swc/core": "1.3.71",
