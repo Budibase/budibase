@@ -518,7 +518,10 @@ class MongoIntegration implements IntegrationBase {
           return await collection.findOneAndUpdate(
             findAndUpdateJson.filter,
             findAndUpdateJson.update,
-            findAndUpdateJson.options
+            {
+              ...findAndUpdateJson.options,
+              includeResultMetadata: true,
+            }
           )
         }
         case "count": {
