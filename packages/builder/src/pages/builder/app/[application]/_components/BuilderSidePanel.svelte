@@ -107,7 +107,7 @@
       return
     }
     if (!prodAppId) {
-      console.log("Application id required")
+      console.error("Application id required")
       return
     }
     await usersFetch.update({
