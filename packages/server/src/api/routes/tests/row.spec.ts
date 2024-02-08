@@ -2031,7 +2031,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_EXECUTION_TIME_LIMIT_MS: 20 }, async () => {
+      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 20 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -2071,7 +2071,7 @@ describe.each([
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_EXECUTION_TIME_LIMIT_MS: 20,
+          JS_PER_INVOCATION_TIMEOUT_MS: 20,
           JS_PER_REQUEST_TIME_LIMIT_MS: 40,
         },
         async () => {

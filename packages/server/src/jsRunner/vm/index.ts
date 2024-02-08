@@ -47,7 +47,7 @@ export class IsolatedVM implements VM {
   private isolate: ivm.Isolate
   private vm: ivm.Context
   private jail: ivm.Reference
-  private timeout: number
+  private invocationTimeout: number
   private perRequestLimit?: number
 
   private moduleHandler = new ModuleHandler()
@@ -56,11 +56,11 @@ export class IsolatedVM implements VM {
 
   constructor({
     memoryLimit,
-    timeout,
+    invocationTimeout,
     perRequestLimit,
   }: {
     memoryLimit: number
-    timeout: number
+    invocationTimeout: number
     perRequestLimit?: number
   }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
@@ -72,7 +72,7 @@ export class IsolatedVM implements VM {
       [this.resultKey]: { out: "" },
     })
 
-    this.timeout = timeout
+    this.invocationTimeout = invocationTimeout
     this.perRequestLimit = perRequestLimit
   }
 
@@ -155,7 +155,7 @@ export class IsolatedVM implements VM {
       throw new Error(`"${specifier}" import not allowed`)
     })
 
-    script.evaluateSync({ timeout: this.timeout })
+    script.evaluateSync({ timeout: this.invocationTimeout })
 
     const result = this.getResult()
     return result
