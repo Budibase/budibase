@@ -12,6 +12,7 @@
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
   import { convertOldFieldFormat, getComponentForField } from "./utils"
+  import { generateIncrementedName } from "helpers/helpers"
 
   export let componentInstance
   export let bindings
@@ -168,13 +169,21 @@
   }
 
   const addField = () => {
+    // Generate the next available field name
+    const newName = generateIncrementedName({
+      items: fieldList,
+      extractName: field => field.field,
+      prefix: "Field",
+    })
+
+    // Create instance
     let newField = store.actions.components.createInstance(
       "@budibase/standard-components/stringfield",
       {
-        _instanceName: "Field 1",
-        field: "Field 1",
-        label: "Field 1",
-        placeholder: "Field 1",
+        _instanceName: newName,
+        field: newName,
+        label: newName,
+        placeholder: newName,
       },
       {}
     )

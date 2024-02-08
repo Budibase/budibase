@@ -44,3 +44,27 @@ export const isBuilderInputFocused = e => {
   }
   return false
 }
+
+// Generates the next sequential name for a named series, such as "Container 1",
+// "Container 2" etc. Existing names do not need to be in order. The new name
+// will be 1 higher than the largest existing name.
+export const generateIncrementedName = ({ items, extractName, prefix }) => {
+  if (!prefix) {
+    return null
+  }
+  if (!extractName || !items?.length) {
+    return `${prefix} 1`
+  }
+  const regex = new RegExp(`^${prefix}\\s+([0-9]+)\\s*$`)
+  let maxIdx = 0
+  for (let i = 0; i < items.length; i++) {
+    const matches = regex.exec(extractName(items[i]))
+    if (matches?.[1]) {
+      const idx = parseInt(matches[1].trim())
+      if (idx > maxIdx) {
+        maxIdx = idx
+      }
+    }
+  }
+  return `${prefix} ${maxIdx + 1}`
+}
