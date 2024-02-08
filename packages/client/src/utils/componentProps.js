@@ -1,8 +1,8 @@
 import { enrichDataBindings } from "./enrichDataBinding"
 import { enrichButtonActions } from "./buttonActions"
 import { decodeJSBinding } from "@budibase/string-templates"
-import { helpers } from "@budibase/shared-core"
 import { componentStore } from "stores"
+import { Helpers } from "@budibase/bbui"
 
 /**
  * Deeply compares 2 props using JSON.stringify.
@@ -27,47 +27,63 @@ export const propsAreSame = (a, b) => {
 export const enrichProps = (props, context, settingsDefinitionMap) => {
   // We want to exclude any button actions from enrichment at this stage.
   // Extract top level button action settings.
-  let normalProps = { ...props }
+  let normalProps = Helpers.cloneDeep(props)
   let actionProps = {}
 
-  Object.keys(normalProps).forEach(prop => {
-    if (settingsDefinitionMap?.[prop]?.type === "event") {
-      console.log("event Prop value ", normalProps[prop])
-      actionProps[prop] = normalProps[prop]
-      delete normalProps[prop]
-    } else if (settingsDefinitionMap?.[prop]?.type === "buttonConfiguration") {
-      console.log("Testing buttonConfiguration")
-      normalProps[prop].forEach((button, idx) => {
-        actionProps[`${prop}.${idx}.onClick`] = button.onClick //better way to get this?
-        delete button.onClick
-      })
-    } else if (settingsDefinitionMap?.[prop]?.type === "stepConfiguration") {
-      console.log("Testing stepConfiguration")
+  const componentToSettingsMap = component => {
+    const stepDef = componentStore.actions.getComponentDefinition(component)
+    const settingsDef = getSettingsDefinition(stepDef)
+    let settingsDefMap = {}
+    settingsDef?.forEach(setting => {
+      settingsDefMap[setting.key] = setting
+    })
+    return settingsDefMap
+  }
 
-      const stepDef = componentStore.actions.getComponentDefinition(
-        "@budibase/standard-components/multistepformblockstep"
-      )
-      const settingsDef = getSettingsDefinition(stepDef)
-      let settingsDefMap = {}
-      settingsDef?.forEach(setting => {
-        settingsDefMap[setting.key] = setting
-      })
-
-      normalProps[prop].forEach((step, stepIdx) => {
-        Object.keys(step).forEach(stepProp => {
-          if (settingsDefMap?.[stepProp]?.type === "buttonConfiguration") {
-            console.log("NESTED BUTTONS")
-            step[stepProp].forEach((button, buttonIdx) => {
-              actionProps[
-                `${prop}.${stepIdx}.${stepProp}.${buttonIdx}.onClick`
-              ] = button.onClick
-              delete button.onClick
-            })
-          }
+  const processEventActions = (props, settingsDefinitionMap, propPath) => {
+    Object.keys(props).forEach(prop => {
+      if (settingsDefinitionMap?.[prop]?.type === "event") {
+        const settingPath = propPath ? `${propPath}.${prop}` : prop
+        actionProps[settingPath] = props[prop]
+        delete props[prop]
+      } else if (
+        settingsDefinitionMap?.[prop]?.type === "buttonConfiguration"
+      ) {
+        // Remove nested button actions so that they may be stored and processed later
+        // at the button component level. If they are processed now, the bindings will be lost.
+        const buttonSettingDefMap = componentToSettingsMap(
+          "@budibase/standard-components/button"
+        )
+        props[prop].forEach((button, idx) => {
+          processEventActions(button, buttonSettingDefMap, `${prop}.${idx}`)
         })
-      })
-    }
-  })
+      } else if (settingsDefinitionMap?.[prop]?.type === "stepConfiguration") {
+        // Parse each step and ensure the nested button actions are extracted and preserved.
+        // The config will be returned after the stepConfiguration core props are processed
+        const stepSettingDefMap = componentToSettingsMap(
+          "@budibase/standard-components/multistepformblockstep"
+        )
+        const buttonSettingDefMap = componentToSettingsMap(
+          "@budibase/standard-components/button"
+        )
+        props[prop].forEach((step, stepIdx) => {
+          Object.keys(step).forEach(stepProp => {
+            if (stepSettingDefMap?.[stepProp]?.type === "buttonConfiguration") {
+              step[stepProp].forEach((button, buttonIdx) => {
+                processEventActions(
+                  button,
+                  buttonSettingDefMap,
+                  `${prop}.${stepIdx}.${stepProp}.${buttonIdx}`
+                )
+              })
+            }
+          })
+        })
+      }
+    })
+  }
+
+  processEventActions(normalProps, settingsDefinitionMap)
 
   // Store the original conditions so that we can restore parts of them after
   // enrichment
@@ -80,22 +96,22 @@ export const enrichProps = (props, context, settingsDefinitionMap) => {
   // Actions are enriched into a function at this stage, but actual data
   // binding enrichment is done dynamically at runtime.
   Object.keys(actionProps).forEach(prop => {
-    let track = {}
+    let track = enrichedProps
     let parts = prop.split(".")
-    parts.forEach((part, idx) => {
-      if (idx !== parts.length - 1) {
-        track = track[part] || enrichedProps[part]
-      } else {
-        track[part] = enrichButtonActions(actionProps[prop], context)
-      }
-    })
-    // Debug
-    if (parts.length == 1) {
-      const test = enrichButtonActions(actionProps[prop], context)
-      console.log("Original values", test)
-      enrichedProps[prop] = test
+    // IF nested actions were removed earlier, they will be restored
+    // e.g. steps.0.buttons.0.onClick
+    if (parts.length > 1) {
+      parts.forEach((part, idx) => {
+        if (idx !== parts.length - 1) {
+          track = track[part]
+        } else {
+          track[part] = actionProps[prop]
+        }
+      })
+    } else {
+      // Only enriched at the root component prop level
+      enrichedProps[prop] = enrichButtonActions(actionProps[prop], context)
     }
-    //enrichedProps[prop] = enrichButtonActions(actionProps[prop], context)
   })
 
   // Conditions
