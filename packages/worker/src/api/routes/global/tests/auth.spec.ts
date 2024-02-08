@@ -80,7 +80,7 @@ describe("/api/global/auth", () => {
 
       it("should return 403 when user doesn't exist", async () => {
         const tenantId = config.tenantId!
-        const email = "invaliduser@test.com"
+        const email = "invaliduser@example.com"
         const password = "password"
 
         const response = await config.api.auth.login(
