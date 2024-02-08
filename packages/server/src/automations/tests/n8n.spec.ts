@@ -11,12 +11,12 @@ describe("test the outgoing webhook action", () => {
 
   it("should be able to run the action and default to 'get'", async () => {
     const res = await runStep(actions.n8n.stepId, {
-      url: "http://www.test.com",
+      url: "http://www.example.com",
       body: {
         test: "IGNORE_ME",
       },
     })
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("get")
     expect(res.response.body).toBeUndefined()
     expect(res.success).toEqual(true)
@@ -29,9 +29,9 @@ describe("test the outgoing webhook action", () => {
         value: payload,
       },
       method: "post",
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     })
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("post")
     expect(res.response.body).toEqual(`{"name":"Adam","age":9}`)
     expect(res.success).toEqual(true)
@@ -45,7 +45,7 @@ describe("test the outgoing webhook action", () => {
         value: payload,
       },
       method: "post",
-      url: "http://www.test.com",
+      url: "http://www.example.com",
     })
     expect(res.httpStatus).toEqual(400)
     expect(res.response).toEqual("Invalid payload JSON")
@@ -54,13 +54,13 @@ describe("test the outgoing webhook action", () => {
 
   it("should not append the body if the method is HEAD", async () => {
     const res = await runStep(actions.n8n.stepId, {
-      url: "http://www.test.com",
+      url: "http://www.example.com",
       method: "head",
       body: {
         test: "IGNORE_ME",
       },
     })
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("head")
     expect(res.response.body).toBeUndefined()
     expect(res.success).toEqual(true)
