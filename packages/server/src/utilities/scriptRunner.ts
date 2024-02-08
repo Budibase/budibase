@@ -14,9 +14,9 @@ class ScriptRunner {
       timeout: JS_TIMEOUT_MS,
     }).withContext(context)
 
-    if (parseBson && context.data) {
-      this.vm = this.vm.withParsingBson(context.data)
-    }
+    // if (parseBson && context.data) {
+    //   this.vm = this.vm.withParsingBson(context.data)
+    // }
   }
 
   execute() {
