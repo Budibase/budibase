@@ -131,13 +131,16 @@ export class IsolatedVM implements VM {
 
   withContext(context: Record<string, any>) {
     this.#addToContext(context)
-    this.#handleBsonData()
+
     return this
   }
 
-  withParsingBson() {
+  withParsingBson(data: any) {
     this.#parseBson = true
-    this.#handleBsonData()
+
+    this.#addToContext({
+      bsonData: bson.BSON.serialize(data),
+    })
 
     const bsonSource = loadBundle(BundleType.BSON)
     const bsonModule = this.#isolate.compileModuleSync(bsonSource)
@@ -147,21 +150,6 @@ export class IsolatedVM implements VM {
 
     this.#moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
     return this
-  }
-
-  #handleBsonData() {
-    if (!this.#parseBson) {
-      return
-    }
-
-    const data = this.#getFromContext("data")
-    if (!data) {
-      return
-    }
-
-    this.#addToContext({
-      data: bson.BSON.serialize({ data }),
-    })
   }
 
   execute(code: string): string {
@@ -182,12 +170,11 @@ export class IsolatedVM implements VM {
       // 2. Deserialise the data within the isolate, to get the original data
       // 3. Process script
       // 4. Stringify the result in order to convert the result from BSON to json
-      code = `toJson(
-                (function(){
-                    data= deserialize(data).data;
-                    return ${code};
-                })()
-            );`
+      code = `(function(){
+                    const data= deserialize(bsonData);
+                    const result = ${code}
+                    return toJson(result);
+                })();`
     }
 
     code = `${this.#moduleHandler.generateImports()};results.out=${code};`
