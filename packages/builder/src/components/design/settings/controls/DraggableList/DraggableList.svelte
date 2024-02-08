@@ -12,6 +12,9 @@
   export let listItemKey
   export let draggable = true
   export let focus
+  export let addButtonVisible = false
+  export let addButtonText = null
+  export let addButtonDisabled = false
 
   let zoneType = generate()
 
@@ -131,6 +134,13 @@
       </div>
     </li>
   {/each}
+  {#if addButtonVisible}
+    <li class:disabled={addButtonDisabled} on:click={() => dispatch("add")}>
+      <div class="add-button">
+        {addButtonText || "Add"}
+      </div>
+    </li>
+  {/if}
 </ul>
 
 <style>
@@ -196,5 +206,17 @@
     margin-left: 2px;
     width: var(--spectrum-global-dimension-size-65);
     height: 100%;
+  }
+
+  .add-button {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
+    margin: var(--spacing-s);
+  }
+  li.disabled {
+    color: var(--spectrum-global-color-gray-500);
+    pointer-events: none;
   }
 </style>

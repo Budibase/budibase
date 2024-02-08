@@ -49,9 +49,9 @@
     })
   }
 
-  const getDefaultFields = (fields, schema) => {
-    if (!schema) {
-      return []
+  const getDefaultFields = (fields, schema, actionType) => {
+    if (!schema || actionType === "Custom") {
+      return fields || []
     }
     let defaultFields = []
 
@@ -71,7 +71,8 @@
   let schema
 
   $: formattedFields = convertOldFieldFormat(fields)
-  $: fieldsOrDefault = getDefaultFields(formattedFields, schema)
+  $: fieldsOrDefault = getDefaultFields(formattedFields, schema, actionType)
+  $: console.log(fieldsOrDefault)
   $: fetchSchema(dataSource)
   // We could simply spread $$props into the inner form and append our
   // additions, but that would create svelte warnings about unused props and

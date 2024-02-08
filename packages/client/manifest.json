@@ -6268,31 +6268,27 @@
     },
     "settings": [
       {
-        "type": "schema",
-        "label": "Schema",
-        "key": "dataSource",
-        "defaultValue": {
-          "name": "Custom",
-          "label": "Custom"
-        }
-      },
-      {
         "type": "radio",
         "label": "Type",
         "key": "actionType",
-        "options": ["Create", "Update", "View"],
-        "defaultValue": "Create",
+        "options": ["Create", "Update", "View", "Custom"],
+        "defaultValue": "Create"
+      },
+      {
+        "type": "table",
+        "label": "Data",
+        "key": "dataSource",
         "dependsOn": {
-          "setting": "dataSource.type",
-          "value": ["table", "viewV2"]
+          "setting": "actionType",
+          "value": "Custom",
+          "invert": true
         }
       },
       {
         "section": true,
         "dependsOn": {
           "setting": "actionType",
-          "value": "Create",
-          "invert": true
+          "value": ["Update", "View"]
         },
         "name": "Row ID",
         "info": "<a href='https://docs.budibase.com/docs/form-block' target='_blank'>How to pass a row ID using bindings</a>",
@@ -6329,11 +6325,25 @@
             "nested": true
           },
           {
-            "type": "fieldConfiguration",
             "key": "fields",
+            "type": "fieldConfiguration",
             "nested": true,
             "resetOn": "dataSource",
-            "selectAllFields": true
+            "selectAllFields": true,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Custom",
+              "invert": true
+            }
+          },
+          {
+            "key": "fields",
+            "type": "customFieldConfiguration",
+            "nested": true,
+            "dependsOn": {
+              "setting": "actionType",
+              "value": "Custom"
+            }
           },
           {
             "type": "boolean",

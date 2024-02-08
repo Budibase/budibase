@@ -11,6 +11,8 @@
   export let componentBindings
   export let bindings
   export let anchor
+  export let customSchema = false
+  export let removeField
 
   const dispatch = createEventDispatcher()
   const onToggle = item => {
@@ -58,15 +60,27 @@
     <div class="field-label">{readableText}</div>
   </div>
   <div class="list-item-right">
-    <Toggle
-      on:change={onToggle(item)}
-      on:click={e => {
-        e.stopPropagation()
-      }}
-      text=""
-      value={item.active}
-      thin
-    />
+    {#if customSchema}
+      <Icon
+        size="S"
+        name="Close"
+        hoverable
+        on:click={e => {
+          e.stopPropagation()
+          removeField(item._id)
+        }}
+      />
+    {:else}
+      <Toggle
+        on:change={onToggle(item)}
+        on:click={e => {
+          e.stopPropagation()
+        }}
+        text=""
+        value={item.active}
+        thin
+      />
+    {/if}
   </div>
 </div>
 
@@ -104,5 +118,24 @@
         var(--spectrum-alias-border-color)
       );
     align-items: center;
+  }
+  .list-item-body :global(.spectrum-Switch-switch) {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  .list-item-body :global(.spectrum-Switch-input) {
+    height: auto;
+  }
+  .list-item-body :global(.spectrum-Switch) {
+    min-height: 0;
+  }
+  .list-item-body :global(.spectrum-Form-itemField) {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .list-item-body {
+    padding: 8px 0;
   }
 </style>

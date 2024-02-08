@@ -36,6 +36,15 @@
   $: renderHeader = buttons || title
 
   const getComponentForField = field => {
+    // Use the actual component type, if the field is a full component
+    // definition (like when nested inside form blocks)
+    const prefix = "@budibase/standard-components/"
+    const componentType = field._component?.split(prefix)?.[1]
+    if (componentType?.length) {
+      return componentType
+    }
+
+    // Otherwise look up the real type of the field from the schema
     const fieldSchemaName = field.field || field.name
     if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
       return null
@@ -162,9 +171,7 @@
     {/if}
   </BlockComponent>
 {:else}
-  <Placeholder
-    text="Choose your table and add some fields to your form to get started"
-  />
+  <Placeholder text="Add some fields to your form to get started" />
 {/if}
 
 <style>

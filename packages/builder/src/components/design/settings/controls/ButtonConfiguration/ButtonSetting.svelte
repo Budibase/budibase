@@ -80,9 +80,6 @@
     margin-top: 8px;
     margin-bottom: 8px;
   }
-  .list-item-right :global(div.spectrum-Switch) {
-    margin: 0px;
-  }
   .list-item-body {
     justify-content: space-between;
   }

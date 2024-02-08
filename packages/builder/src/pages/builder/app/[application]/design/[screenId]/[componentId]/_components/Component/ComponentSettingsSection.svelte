@@ -46,6 +46,9 @@
       sections = sections.concat(customSections)
     }
 
+    // Shallow clone sections to avoid mutation when updating visibility below
+    sections = sections.map(section => ({ ...section }))
+
     // Filter out settings which shouldn't be rendered
     sections.forEach(section => {
       section.visible = shouldDisplay(instance, section)
@@ -63,6 +66,11 @@
       section.visible =
         section.name === "General" ||
         section.settings.some(setting => setting.visible)
+
+      // Now filter out hidden settings entirely.
+      // Ensure we shallow clone here to avoid updating the settings list on
+      // the actual definition reference object.
+      section.settings = section.settings.filter(x => x.visible)
     })
 
     return sections
@@ -165,41 +173,39 @@
       {/if}
       <div class="settings">
         {#each section.settings as setting (setting.key)}
-          {#if setting.visible}
-            <PropertyControl
-              type={setting.type}
-              control={getComponentForSetting(setting)}
-              label={setting.label}
-              labelHidden={setting.labelHidden}
-              wide={setting.wide}
-              key={setting.key}
-              value={componentInstance[setting.key]}
-              defaultValue={setting.defaultValue}
-              nested={setting.nested}
-              onChange={val => updateSetting(setting, val)}
-              highlighted={$store.highlightedSettingKey === setting.key}
-              propertyFocus={$store.propertyFocus === setting.key}
-              info={setting.info}
-              disableBindings={setting.disableBindings}
-              props={{
-                // Generic settings
-                placeholder: setting.placeholder || null,
+          <PropertyControl
+            type={setting.type}
+            control={getComponentForSetting(setting)}
+            label={setting.label}
+            labelHidden={setting.labelHidden}
+            wide={setting.wide}
+            key={setting.key}
+            value={componentInstance[setting.key]}
+            defaultValue={setting.defaultValue}
+            nested={setting.nested}
+            onChange={val => updateSetting(setting, val)}
+            highlighted={$store.highlightedSettingKey === setting.key}
+            propertyFocus={$store.propertyFocus === setting.key}
+            info={setting.info}
+            disableBindings={setting.disableBindings}
+            props={{
+              // Generic settings
+              placeholder: setting.placeholder || null,
 
-                // Select settings
-                options: setting.options || [],
+              // Select settings
+              options: setting.options || [],
 
-                // Number fields
-                min: setting.min ?? null,
-                max: setting.max ?? null,
-              }}
-              {bindings}
-              {componentBindings}
-              {componentInstance}
-              {componentDefinition}
-              on:drawerShow
-              on:drawerHide
-            />
-          {/if}
+              // Number fields
+              min: setting.min ?? null,
+              max: setting.max ?? null,
+            }}
+            {bindings}
+            {componentBindings}
+            {componentInstance}
+            {componentDefinition}
+            on:drawerShow
+            on:drawerHide
+          />
         {/each}
         {#if idx === 0 && componentDefinition?.component?.endsWith("/fieldgroup")}
           <ResetFieldsButton {componentInstance} />

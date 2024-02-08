@@ -16,6 +16,7 @@
   export let componentInstance
   export let bindings
   export let value
+  export let customSchema = false
 
   const dispatch = createEventDispatcher()
 
@@ -26,33 +27,34 @@
   let options
   let sanitisedValue
   let unconfigured
-
+  let componentBindings = []
   let selectAll = true
 
   $: resolvedBindings =
     bindings || getBindableProperties($selectedScreen, componentInstance._id)
-
   $: actionType = componentInstance.actionType
-  let componentBindings = []
-
   $: if (actionType) {
     componentBindings = getComponentBindableProperties(
       $selectedScreen,
       componentInstance._id
     )
   }
-
   $: datasource =
     componentInstance.dataSource ||
     getDatasourceForProvider($currentAsset, componentInstance)
-
   $: resourceId = datasource?.resourceId || datasource?.tableId
-
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
   }
+  $: updateState(cachedValue, resourceId)
 
   const updateState = value => {
+    // Handle custom types
+    if (customSchema) {
+      fieldList = value || []
+      return
+    }
+
     schema = getSchema($currentAsset, datasource)
     options = Object.keys(schema || {})
     sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
@@ -62,8 +64,6 @@
       .map(buildPseudoInstance)
       .filter(x => x != null)
   }
-
-  $: updateState(cachedValue, resourceId)
 
   // Builds unused ones only
   const buildUnconfiguredOptions = (schema, selected) => {
@@ -103,9 +103,14 @@
     sanitisedFields = cloneDeep(value)
   }
 
-  const getValidColumns = (columns, options) => {
+  const getValidColumns = (columns, options, customSchema) => {
     if (!Array.isArray(columns) || !columns.length) {
       return []
+    }
+
+    // Allow any columns for custom schema
+    if (customSchema) {
+      return columns
     }
 
     return columns.filter(column => {
@@ -145,50 +150,82 @@
       return pSetting.field === updatedField?.field
     })
 
-    if (parentFieldIdx == -1) {
+    if (parentFieldIdx === -1) {
       parentFieldsUpdated.push(updatedField)
     } else {
       parentFieldsUpdated[parentFieldIdx] = updatedField
     }
 
-    dispatch("change", getValidColumns(parentFieldsUpdated, options))
+    dispatch(
+      "change",
+      getValidColumns(parentFieldsUpdated, options, customSchema)
+    )
   }
 
   const listUpdated = columns => {
-    const parsedColumns = getValidColumns(columns, options)
+    const parsedColumns = getValidColumns(columns, options, customSchema)
     dispatch("change", parsedColumns)
+  }
+
+  const addField = () => {
+    let newField = store.actions.components.createInstance(
+      "@budibase/standard-components/stringfield",
+      {
+        _instanceName: "Field 1",
+        field: "Field 1",
+        label: "Field 1",
+        placeholder: "Field 1",
+      },
+      {}
+    )
+    newField.active = true
+    dispatch("change", [...fieldList, newField])
+  }
+
+  const removeField = id => {
+    dispatch(
+      "change",
+      fieldList.filter(field => field._id !== id)
+    )
   }
 </script>
 
 <div class="field-configuration">
   <div class="toggle-all">
     <span>Fields</span>
-    <Toggle
-      on:change={() => {
-        let update = fieldList.map(field => ({
-          ...field,
-          active: selectAll,
-        }))
-        listUpdated(update)
-      }}
-      text=""
-      bind:value={selectAll}
-      thin
-    />
+    {#if !customSchema}
+      <Toggle
+        on:change={() => {
+          let update = fieldList.map(field => ({
+            ...field,
+            active: selectAll,
+          }))
+          listUpdated(update)
+        }}
+        text=""
+        bind:value={selectAll}
+        thin
+        disabled={!fieldList?.length}
+      />
+    {/if}
   </div>
-  {#if fieldList?.length}
-    <DraggableList
-      on:change={e => listUpdated(e.detail)}
-      on:itemChange={processItemUpdate}
-      items={fieldList}
-      listItemKey={"_id"}
-      listType={FieldSetting}
-      listTypeProps={{
-        componentBindings,
-        bindings: resolvedBindings,
-      }}
-    />
-  {/if}
+  <DraggableList
+    on:change={e => listUpdated(e.detail)}
+    on:itemChange={processItemUpdate}
+    items={fieldList}
+    listItemKey={"_id"}
+    listType={FieldSetting}
+    listTypeProps={{
+      componentBindings,
+      bindings: resolvedBindings,
+      customSchema,
+      removeField,
+    }}
+    addButtonVisible={customSchema}
+    addButtonText="Add field"
+    addButtonDisabled={false}
+    on:add={addField}
+  />
 </div>
 
 <style>
@@ -201,14 +238,15 @@
   .toggle-all {
     display: flex;
     justify-content: space-between;
+    margin-bottom: var(--spacing-s);
   }
   .toggle-all :global(.spectrum-Switch) {
-    margin-right: 0px;
+    margin-right: 0;
     padding-right: calc(var(--spacing-s) - 1px);
     min-height: unset;
   }
   .toggle-all :global(.spectrum-Switch .spectrum-Switch-switch) {
-    margin-top: 0px;
+    margin: 0;
   }
   .toggle-all span {
     color: var(--spectrum-global-color-gray-700);
