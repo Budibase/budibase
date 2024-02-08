@@ -1,117 +1,139 @@
-import ivm from "isolated-vm"
-
 import bson from "bson"
-import { BundleType, loadBundle } from "../jsRunner/bundles"
+
 import env from "../environment"
+import { IsolatedVM } from "../jsRunner/vm"
 
 const JS_TIMEOUT_MS = 1000
-
 class ScriptRunner {
-  vm: IsolatedVM
+  #code: string
+  #vm: IsolatedVM
 
   constructor(script: string, context: any, { parseBson = false } = {}) {
-    this.vm = new IsolatedVM({
+    this.#code = `(() => {${script}})();`
+    this.#vm = new IsolatedVM({
       memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-      parseBson,
-      context: {
-        ...context,
-        data: parseBson
-          ? bson.BSON.serialize({ data: context.data })
-          : context.data,
-      },
-    })
+      timeout: JS_TIMEOUT_MS,
+    }).withContext(context)
 
     if (parseBson) {
-      // If we need to parse bson, we follow the next steps:
-      // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
-      // 2. Deserialise the data within the isolate, to get the original data
-      // 3. Process script
-      // 4. Stringify the result in order to convert the result from BSON to json
-      script = `return toJson((function(){data=deserialize(data, { validation: { utf8: true } }).data;${script}})());`
+      this.#vm = this.#vm.withParsingBson()
     }
-
-    this.vm.code = script
   }
 
   execute() {
-    this.vm.runScript()
-    const result = this.vm.getResult()
+    const result = this.#vm.execute(this.#code)
     return result
   }
 }
 
-class IsolatedVM {
-  #isolate: ivm.Isolate
-  #vm: ivm.Context
-  #jail: ivm.Reference
-  #script: ivm.Module = undefined!
-  #bsonModule?: ivm.Module
+// <<<<<<< HEAD
+//   constructor(script: string, context: any, { parseBson = false } = {}) {
+//     this.vm = new IsolatedVM({
+//       memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+//       parseBson,
+//       context: {
+//         ...context,
+//         data: parseBson
+//           ? bson.BSON.serialize({ data: context.data })
+//           : context.data,
+//       },
+//     })
 
-  readonly #resultKey = "results"
+//     if (parseBson) {
+//       // If we need to parse bson, we follow the next steps:
+//       // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
+//       // 2. Deserialise the data within the isolate, to get the original data
+//       // 3. Process script
+//       // 4. Stringify the result in order to convert the result from BSON to json
+//       script = `return toJson((function(){data=deserialize(data, { validation: { utf8: true } }).data;${script}})());`
+//     }
 
-  constructor({
-    memoryLimit,
-    parseBson,
-    context,
-  }: {
-    memoryLimit: number
-    parseBson: boolean
-    context: Record<string, any>
-  }) {
-    this.#isolate = new ivm.Isolate({ memoryLimit })
-    this.#vm = this.#isolate.createContextSync()
-    this.#jail = this.#vm.global
-    this.#jail.setSync("global", this.#jail.derefInto())
+//     this.vm.code = script
+//   }
 
-    this.#addToContext(context)
-    this.#addToContext({
-      [this.#resultKey]: { out: "" },
-    })
+//   execute() {
+//     this.vm.runScript()
+//     const result = this.vm.getResult()
+//     return result
+//   }
+// }
 
-    if (parseBson) {
-      const bsonSource = loadBundle(BundleType.BSON)
-      this.#bsonModule = this.#isolate.compileModuleSync(bsonSource)
-      this.#bsonModule.instantiateSync(this.#vm, specifier => {
-        throw new Error(`No imports allowed. Required: ${specifier}`)
-      })
-    }
-  }
+// class IsolatedVM {
+//   #isolate: ivm.Isolate
+//   #vm: ivm.Context
+//   #jail: ivm.Reference
+//   #script: ivm.Module = undefined!
+//   #bsonModule?: ivm.Module
 
-  getResult() {
-    const ref = this.#vm.global.getSync(this.#resultKey, { reference: true })
-    const result = ref.copySync()
-    ref.release()
-    return result.out
-  }
+//   readonly #resultKey = "results"
 
-  #addToContext(context: Record<string, any>) {
-    for (let key in context) {
-      this.#jail.setSync(key, this.#copyRefToVm(context[key]))
-    }
-  }
+//   constructor({
+//     memoryLimit,
+//     parseBson,
+//     context,
+//   }: {
+//     memoryLimit: number
+//     parseBson: boolean
+//     context: Record<string, any>
+//   }) {
+//     this.#isolate = new ivm.Isolate({ memoryLimit })
+//     this.#vm = this.#isolate.createContextSync()
+//     this.#jail = this.#vm.global
+//     this.#jail.setSync("global", this.#jail.derefInto())
 
-  set code(code: string) {
-    code = `const fn=function(){${code}};results.out=fn();`
-    if (this.#bsonModule) {
-      code = `import {deserialize, toJson} from "compiled_module";${code}`
-    }
-    this.#script = this.#isolate.compileModuleSync(code)
-  }
+//     this.#addToContext(context)
+//     this.#addToContext({
+//       [this.#resultKey]: { out: "" },
+//     })
 
-  runScript(): void {
-    this.#script.instantiateSync(this.#vm, specifier => {
-      if (specifier === "compiled_module" && this.#bsonModule) {
-        return this.#bsonModule!
-      }
+//     if (parseBson) {
+//       const bsonSource = loadBundle(BundleType.BSON)
+//       this.#bsonModule = this.#isolate.compileModuleSync(bsonSource)
+//       this.#bsonModule.instantiateSync(this.#vm, specifier => {
+//         throw new Error(`No imports allowed. Required: ${specifier}`)
+//       })
+//     }
+//   }
 
-      throw new Error(`"${specifier}" import not allowed`)
-    })
+//   getResult() {
+//     const ref = this.#vm.global.getSync(this.#resultKey, { reference: true })
+//     const result = ref.copySync()
+//     ref.release()
+//     return result.out
+//   }
 
-    this.#script.evaluateSync({ timeout: JS_TIMEOUT_MS })
-  }
+//   #addToContext(context: Record<string, any>) {
+//     for (let key in context) {
+//       this.#jail.setSync(key, this.#copyRefToVm(context[key]))
+//     }
+//   }
 
-  #copyRefToVm(value: Object): ivm.Copy<Object> {
-    return new ivm.ExternalCopy(value).copyInto({ release: true })
-  }
-}
+//   set code(code: string) {
+//     code = `const fn=function(){${code}};results.out=fn();`
+//     if (this.#bsonModule) {
+//       code = `import {deserialize, toJson} from "compiled_module";${code}`
+//     }
+//     this.#script = this.#isolate.compileModuleSync(code)
+//   }
+
+//   runScript(): void {
+//     this.#script.instantiateSync(this.#vm, specifier => {
+//       if (specifier === "compiled_module" && this.#bsonModule) {
+//         return this.#bsonModule!
+//       }
+
+//       throw new Error(`"${specifier}" import not allowed`)
+//     })
+
+//     this.#script.evaluateSync({ timeout: JS_TIMEOUT_MS })
+//   }
+
+//   #copyRefToVm(value: Object): ivm.Copy<Object> {
+//     return new ivm.ExternalCopy(value).copyInto({ release: true })
+//   }
+// =======
+
+// >>>>>>> isolated-vm-wrapper
+// }
+
 export default ScriptRunner
