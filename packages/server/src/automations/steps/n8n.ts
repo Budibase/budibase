@@ -54,6 +54,10 @@ export const definition: AutomationStepSchema = {
           enum: Object.values(Method),
           pretty: Object.values(MethodPretty),
         },
+        authorization: {
+          type: AutomationIOType.STRING,
+          title: "Authorization",
+        },
         body: {
           type: AutomationIOType.JSON,
           title: "Payload",
@@ -82,7 +86,7 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, body, method } = inputs
+  const { url, body, method, authorization } = inputs
 
   let payload = {}
   try {
@@ -111,6 +115,7 @@ export async function run({ inputs }: AutomationStepInput) {
     method: method || "get",
     headers: {
       "Content-Type": "application/json",
+      authorization,
     },
   }
   if (!["get", "head"].includes(request.method)) {
