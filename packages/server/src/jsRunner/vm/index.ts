@@ -52,7 +52,8 @@ export class IsolatedVM implements VM {
   #timeout: number
   #perRequestLimit?: number
 
-  #parseBson?: boolean
+  // By default the wrapper returns itself
+  #codeWrapper: (code: string) => string = code => code
 
   #moduleHandler = new ModuleHandler()
 
@@ -136,10 +137,8 @@ export class IsolatedVM implements VM {
   }
 
   withParsingBson(data: any) {
-    this.#parseBson = true
-
     this.#addToContext({
-      bsonData: bson.BSON.serialize(data),
+      bsonData: bson.BSON.serialize({ data }),
     })
 
     const bsonSource = loadBundle(BundleType.BSON)
@@ -149,6 +148,19 @@ export class IsolatedVM implements VM {
     })
 
     this.#moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
+
+    // If we need to parse bson, we follow the next steps:
+    // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
+    // 2. Deserialise the data within the isolate, to get the original data
+    // 3. Process script
+    // 4. Stringify the result in order to convert the result from BSON to json
+    this.#codeWrapper = code =>
+      `(function(){
+            const data = deserialize(bsonData, { validation: { utf8: false } }).data;
+            const result = ${code}
+            return toJson(result);
+        })();`
+
     return this
   }
 
@@ -164,20 +176,9 @@ export class IsolatedVM implements VM {
       }
     }
 
-    if (this.#parseBson) {
-      // If we need to parse bson, we follow the next steps:
-      // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
-      // 2. Deserialise the data within the isolate, to get the original data
-      // 3. Process script
-      // 4. Stringify the result in order to convert the result from BSON to json
-      code = `(function(){
-                    const data= deserialize(bsonData);
-                    const result = ${code}
-                    return toJson(result);
-                })();`
-    }
-
-    code = `${this.#moduleHandler.generateImports()};results.out=${code};`
+    code = `${this.#moduleHandler.generateImports()};results.out=${this.#codeWrapper(
+      code
+    )};`
 
     const script = this.#isolate.compileModuleSync(code)
 
