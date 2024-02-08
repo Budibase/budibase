@@ -2072,7 +2072,7 @@ describe.each([
       await config.withEnv(
         {
           JS_PER_INVOCATION_TIMEOUT_MS: 20,
-          JS_PER_REQUEST_TIME_LIMIT_MS: 40,
+          JS_PER_REQUEST_TIMEOUT_MS: 40,
         },
         async () => {
           const js = Buffer.from(

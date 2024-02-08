@@ -48,7 +48,7 @@ export class IsolatedVM implements VM {
   private vm: ivm.Context
   private jail: ivm.Reference
   private invocationTimeout: number
-  private perRequestLimit?: number
+  private isolateAccumulatedTimeout?: number
 
   private moduleHandler = new ModuleHandler()
 
@@ -57,11 +57,11 @@ export class IsolatedVM implements VM {
   constructor({
     memoryLimit,
     invocationTimeout,
-    perRequestLimit,
+    isolateAccumulatedTimeout,
   }: {
     memoryLimit: number
     invocationTimeout: number
-    perRequestLimit?: number
+    isolateAccumulatedTimeout?: number
   }) {
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
@@ -73,7 +73,7 @@ export class IsolatedVM implements VM {
     })
 
     this.invocationTimeout = invocationTimeout
-    this.perRequestLimit = perRequestLimit
+    this.isolateAccumulatedTimeout = isolateAccumulatedTimeout
   }
 
   withHelpers() {
@@ -131,13 +131,11 @@ export class IsolatedVM implements VM {
   }
 
   execute(code: string): string {
-    const perRequestLimit = this.perRequestLimit
-
-    if (perRequestLimit) {
+    if (this.isolateAccumulatedTimeout) {
       const cpuMs = Number(this.isolate.cpuTime) / 1e6
-      if (cpuMs > perRequestLimit) {
+      if (cpuMs > this.isolateAccumulatedTimeout) {
         throw new ExecutionTimeoutError(
-          `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+          `CPU time limit exceeded (${cpuMs}ms > ${this.isolateAccumulatedTimeout}ms)`
         )
       }
     }
