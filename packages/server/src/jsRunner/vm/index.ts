@@ -126,7 +126,6 @@ export class IsolatedVM implements VM {
   }
 
   withContext(context: Record<string, any>) {
-    debugger
     this.addToContext(context)
     return this
   }
