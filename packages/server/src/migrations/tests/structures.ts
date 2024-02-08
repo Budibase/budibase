@@ -46,7 +46,7 @@ export const smtp = (conf?: SMTPConfig): SMTPConfig => {
     config: {
       port: 12345,
       host: "smtptesthost.com",
-      from: "testfrom@test.com",
+      from: "testfrom@example.com",
       subject: "Hello!",
       secure: false,
       ...conf,

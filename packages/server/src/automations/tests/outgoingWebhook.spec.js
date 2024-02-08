@@ -11,7 +11,7 @@ describe("test the outgoing webhook action", () => {
     await config.init()
     inputs = {
       requestMethod: "POST",
-      url: "www.test.com",
+      url: "www.example.com",
       requestBody: JSON.stringify({
         a: 1,
       }),
@@ -26,7 +26,7 @@ describe("test the outgoing webhook action", () => {
       inputs
     )
     expect(res.success).toEqual(true)
-    expect(res.response.url).toEqual("http://www.test.com")
+    expect(res.response.url).toEqual("http://www.example.com")
     expect(res.response.method).toEqual("POST")
     expect(JSON.parse(res.response.body).a).toEqual(1)
   })
