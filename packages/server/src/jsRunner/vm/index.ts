@@ -185,10 +185,12 @@ export class IsolatedVM implements VM {
 
   private addToContext(context: Record<string, any>) {
     for (let key in context) {
+      const value = context[key]
       this.jail.setSync(
         key,
-        context[key]
-        //new ivm.ExternalCopy(context[key]).copyInto({ release: true })
+        typeof value === "function"
+          ? value
+          : new ivm.ExternalCopy(value).copyInto({ release: true })
       )
     }
   }
