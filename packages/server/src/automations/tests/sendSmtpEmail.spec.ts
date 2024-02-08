@@ -33,7 +33,7 @@ describe("test the outgoing webhook action", () => {
     jest
       .spyOn(workerRequests, "sendSmtpEmail")
       .mockImplementationOnce(async () =>
-        generateResponse("user1@test.com", "admin@test.com")
+        generateResponse("user1@example.com", "admin@example.com")
       )
     const invite = {
       startTime: new Date(),
@@ -43,8 +43,8 @@ describe("test the outgoing webhook action", () => {
       url: "url",
     }
     inputs = {
-      to: "user1@test.com",
-      from: "admin@test.com",
+      to: "user1@example.com",
+      from: "admin@example.com",
       subject: "hello",
       contents: "testing",
       cc: "cc",
@@ -61,8 +61,8 @@ describe("test the outgoing webhook action", () => {
     expect(res.success).toEqual(true)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledTimes(1)
     expect(workerRequests.sendSmtpEmail).toHaveBeenCalledWith({
-      to: "user1@test.com",
-      from: "admin@test.com",
+      to: "user1@example.com",
+      from: "admin@example.com",
       subject: "hello",
       contents: "testing",
       cc: "cc",
