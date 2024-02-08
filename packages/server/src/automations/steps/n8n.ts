@@ -1,4 +1,4 @@
-import fetch from "node-fetch"
+import fetch, { HeadersInit } from "node-fetch"
 import { getFetchResponse } from "./utils"
 import {
   AutomationActionStepId,
@@ -9,14 +9,32 @@ import {
   AutomationFeature,
 } from "@budibase/types"
 
+enum Method {
+  GET = "get",
+  POST = "post",
+  PATCH = "patch",
+  PUT = "put",
+  HEAD = "head",
+  DELETE = "delete",
+}
+
+const MethodPretty = {
+  [Method.GET]: "GET",
+  [Method.POST]: "POST",
+  [Method.PATCH]: "PATCH",
+  [Method.PUT]: "PUT",
+  [Method.HEAD]: "HEAD",
+  [Method.DELETE]: "DELETE",
+}
+
 export const definition: AutomationStepSchema = {
-  name: "Make Integration",
-  stepTitle: "Make",
-  tagline: "Trigger a Make scenario",
+  name: "n8n Integration",
+  stepTitle: "n8n",
+  tagline: "Trigger an n8n workflow",
   description:
-    "Performs a webhook call to Make and gets the response (if configured)",
+    "Performs a webhook call to n8n and gets the response (if configured)",
   icon: "ri-shut-down-line",
-  stepId: AutomationActionStepId.integromat,
+  stepId: AutomationActionStepId.n8n,
   type: AutomationStepType.ACTION,
   internal: false,
   features: {
@@ -30,12 +48,18 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "Webhook URL",
         },
+        method: {
+          type: AutomationIOType.STRING,
+          title: "Method",
+          enum: Object.values(Method),
+          pretty: Object.values(MethodPretty),
+        },
         body: {
           type: AutomationIOType.JSON,
           title: "Payload",
         },
       },
-      required: ["url", "body"],
+      required: ["url", "method"],
     },
     outputs: {
       properties: {
@@ -58,7 +82,7 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  const { url, body } = inputs
+  const { url, body, method } = inputs
 
   let payload = {}
   try {
@@ -79,16 +103,24 @@ export async function run({ inputs }: AutomationStepInput) {
     }
   }
   let response
-  try {
-    response = await fetch(url, {
-      method: "post",
-      body: JSON.stringify({
-        ...payload,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
+  let request: {
+    method: string
+    headers: HeadersInit
+    body?: string
+  } = {
+    method: method || "get",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }
+  if (!["get", "head"].includes(request.method)) {
+    request.body = JSON.stringify({
+      ...payload,
     })
+  }
+
+  try {
+    response = await fetch(url, request)
   } catch (err: any) {
     return {
       httpStatus: 400,

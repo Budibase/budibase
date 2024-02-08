@@ -128,10 +128,10 @@
         >
           <div class="item-body">
             <img
-              width="20"
-              height="20"
+              width={20}
+              height={20}
               src={externalActions[action.stepId].icon}
-              alt="zapier"
+              alt={externalActions[action.stepId].name}
             />
             <span class="icon-spacing">
               <Body size="XS">
