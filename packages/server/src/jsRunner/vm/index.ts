@@ -141,14 +141,6 @@ export class IsolatedVM implements VM {
       bsonData: bson.BSON.serialize({ data }),
     })
 
-    const bsonSource = loadBundle(BundleType.BSON)
-    const bsonModule = this.#isolate.compileModuleSync(bsonSource)
-    bsonModule.instantiateSync(this.#vm, specifier => {
-      throw new Error(`No imports allowed. Required: ${specifier}`)
-    })
-
-    this.#moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
-
     // If we need to parse bson, we follow the next steps:
     // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
     // 2. Deserialise the data within the isolate, to get the original data
@@ -160,6 +152,47 @@ export class IsolatedVM implements VM {
             const result = ${code}
             return toJson(result);
         })();`
+
+    const bsonSource = loadBundle(BundleType.BSON)
+
+    this.#addToContext({
+      textDecoderCb: new ivm.Callback(
+        (args: {
+          constructorArgs: any
+          functionArgs: Parameters<InstanceType<typeof TextDecoder>["decode"]>
+        }) => {
+          const result = new TextDecoder(...args.constructorArgs).decode(
+            ...args.functionArgs
+          )
+          return result
+        }
+      ),
+    })
+
+    // "Polyfilling" text decoder. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
+    const textDecoderPolyfill = class TextDecoder {
+      constructorArgs
+
+      constructor(...constructorArgs: any) {
+        this.constructorArgs = constructorArgs
+      }
+
+      decode(...input: any) {
+        // @ts-ignore
+        return textDecoderCb({
+          constructorArgs: this.constructorArgs,
+          functionArgs: input,
+        })
+      }
+    }.toString()
+    const bsonModule = this.#isolate.compileModuleSync(
+      `${textDecoderPolyfill};${bsonSource}`
+    )
+    bsonModule.instantiateSync(this.#vm, specifier => {
+      throw new Error(`No imports allowed. Required: ${specifier}`)
+    })
+
+    this.#moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
 
     return this
   }
