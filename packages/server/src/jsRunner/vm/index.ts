@@ -7,7 +7,6 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
-import { context } from "@budibase/backend-core"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
