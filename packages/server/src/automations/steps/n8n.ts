@@ -115,7 +115,7 @@ export async function run({ inputs }: AutomationStepInput) {
     method: method || "get",
     headers: {
       "Content-Type": "application/json",
-      authorization,
+      Authorization: authorization,
     },
   }
   if (!["get", "head"].includes(request.method)) {
