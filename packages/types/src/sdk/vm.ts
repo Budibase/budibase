@@ -1,3 +1,3 @@
 export interface VM {
-  execute(code: string): string
+  execute(code: string): any
 }

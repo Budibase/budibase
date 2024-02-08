@@ -130,7 +130,7 @@ export class IsolatedVM implements VM {
     return this
   }
 
-  execute(code: string): string {
+  execute(code: string): any {
     if (this.isolateAccumulatedTimeout) {
       const cpuMs = Number(this.isolate.cpuTime) / 1e6
       if (cpuMs > this.isolateAccumulatedTimeout) {
