@@ -2,6 +2,7 @@
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
+  import FormTypeModal from "./FormTypeModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
   import { Modal, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
@@ -19,12 +20,17 @@
   let screenDetailsModal
   let datasourceModal
   let screenAccessRoleModal
+  let formTypeModal
 
   // Cache variables for workflow
   let screenAccessRole = Roles.BASIC
+
   let selectedTemplates = null
+
+  let selectedDatasources = null
   let blankScreenUrl = null
   let screenMode = null
+  let formType = null
 
   // Creates an array of screens, checking and sanitising their URLs
   const createScreens = async ({ screens, screenAccessRole }) => {
@@ -56,20 +62,21 @@
         screen.routing.roleId = screenAccessRole
 
         // Create the screen
-        const response = await store.actions.screens.save(screen)
-        screenId = response._id
+        // const response = await store.actions.screens.save(screen)
+        // screenId = response._id
 
         // Add link in layout. We only ever actually create 1 screen now, even
         // for autoscreens, so it's always safe to do this.
-        await store.actions.links.save(
-          screen.routing.route,
-          capitalise(screen.routing.route.split("/")[1])
-        )
+        // await store.actions.links.save(
+        //   screen.routing.route,
+        //   capitalise(screen.routing.route.split("/")[1])
+        // )
+        console.log(screen)
       }
 
       // Go to new screen
-      $goto(`./${screenId}`)
-      store.actions.screens.select(screenId)
+      //$goto(`./${screenId}`)
+      //store.actions.screens.select(screenId)
     } catch (error) {
       console.log(error)
       notifications.error("Error creating screens")
@@ -103,13 +110,15 @@
   // Handler for NewScreenModal
   export const show = newMode => {
     mode = newMode
-    selectedTemplates = null
+    // selectedTemplates = null
+    selectedDatasources = null
     blankScreenUrl = null
     screenMode = mode
     pendingScreen = null
     screenAccessRole = Roles.BASIC
+    formType = null
 
-    if (mode === "table" || mode === "grid") {
+    if (mode === "table" || mode === "grid" || mode === "form") {
       datasourceModal.show()
     } else if (mode === "blank") {
       let templates = getTemplates($tables.list)
@@ -124,8 +133,9 @@
   }
 
   // Handler for DatasourceModal confirmation, move to screen access select
-  const confirmScreenDatasources = async ({ templates }) => {
-    selectedTemplates = templates
+  const confirmScreenDatasources = async ({ datasources }) => {
+    selectedDatasources = datasources
+    console.log("confirmScreenDatasources ", datasources)
     screenAccessRoleModal.show()
   }
 
@@ -136,6 +146,14 @@
       screenTemplate.autoTableId = template.resourceId
       return screenTemplate
     })
+    console.log("selectedTemplates ", selectedTemplates)
+    /*
+
+      id : "ROW_LIST_TEMPLATE" 
+      name : "Employees - List"
+      resourceId : "ta_bb_employee"
+
+    */
     await createScreens({ screens, screenAccessRole })
   }
 
@@ -175,8 +193,14 @@
       datasourceModal.show()
     }
   }
+  window.test = () => {
+    formTypeModal.show()
+  }
 </script>
 
+<!--
+  returns templates, should return selected resources for use elsewhere
+-->
 <Modal bind:this={datasourceModal} autoFocus={false}>
   <DatasourceModal
     {mode}
@@ -187,10 +211,17 @@
 
 <Modal bind:this={screenAccessRoleModal}>
   <ScreenRoleModal
-    onConfirm={confirmScreenCreation}
-    onCancel={roleSelectBack}
+    onConfirm={() => {
+      if (screenMode === "form") {
+        formTypeModal.show()
+      } else {
+        confirmScreenCreation()
+      }
+    }}
     bind:screenAccessRole
+    onCancel={roleSelectBack}
     screenUrl={blankScreenUrl}
+    confirmText={screenMode === "form" ? "Confirm" : "Done"}
   />
 </Modal>
 
@@ -198,5 +229,29 @@
   <ScreenDetailsModal
     onConfirm={confirmScreenBlank}
     initialUrl={blankScreenUrl}
+  />
+</Modal>
+
+<Modal
+  bind:this={formTypeModal}
+  on:hide={() => {
+    console.log("hide")
+    //formType = null
+  }}
+>
+  <FormTypeModal
+    onConfirm={() => {
+      console.log("test confirm")
+    }}
+    onCancel={() => {
+      console.log("cancel")
+      formTypeModal.hide()
+      screenAccessRoleModal.show()
+    }}
+    on:select={e => {
+      console.log("form type selection ", e.detail)
+      formType = e.detail
+    }}
+    type={formType}
   />
 </Modal>
