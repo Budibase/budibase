@@ -61,7 +61,7 @@
           resolve({ initialised: true })
         })
         .catch(err => {
-          console.log("There was a problem scanning the image", err)
+          console.error("There was a problem scanning the image", err)
           resolve({ initialised: false })
         })
     })

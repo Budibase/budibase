@@ -445,6 +445,9 @@ export async function update(ctx: UserCtx) {
     name: app.name,
     url: app.url,
     icon: app.icon,
+    automations: {
+      chainAutomations: app.automations?.chainAutomations,
+    },
   })
 }
 
