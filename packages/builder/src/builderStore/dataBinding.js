@@ -1,6 +1,7 @@
 import { cloneDeep } from "lodash/fp"
 import { get } from "svelte/store"
 import {
+  buildContextTreeLookupMap,
   findAllComponents,
   findAllMatchingComponents,
   findComponent,
@@ -20,10 +21,12 @@ import {
   encodeJSBinding,
 } from "@budibase/string-templates"
 import { TableNames } from "../constants"
-import { JSONUtils } from "@budibase/frontend-core"
+import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
 import { convertOldFieldFormat } from "components/design/settings/controls/FieldConfiguration/utils"
+
+const { ContextScopes } = Constants
 
 // Regex to match all instances of template strings
 const CAPTURE_VAR_INSIDE_TEMPLATE = /{{([^}]+)}}/g
@@ -214,20 +217,27 @@ export const getComponentContexts = (
     return []
   }
   let map = {}
+  const componentPath = findComponentPath(asset.props, componentId)
+  const componentPathIds = componentPath.map(component => component._id)
+  const contextTreeLookupMap = buildContextTreeLookupMap(asset.props)
 
   // Processes all contexts exposed by a component
   const processContexts = scope => component => {
-    const def = store.actions.components.getDefinition(component._component)
+    // Sanity check
+    const def = store.actions.components.getDefinition(component?._component)
     if (!def?.context) {
       return
     }
-    if (!map[component._id]) {
-      map[component._id] = {
-        component,
-        definition: def,
-        contexts: [],
-      }
+
+    // Filter out global contexts not in the same branch.
+    // Global contexts are only valid if their branch root is an ancestor of
+    // this component.
+    const branch = contextTreeLookupMap[component._id]
+    if (branch !== "root" && !componentPathIds.includes(branch)) {
+      return
     }
+
+    // Process all contexts provided by this component
     const contexts = Array.isArray(def.context) ? def.context : [def.context]
     contexts.forEach(context => {
       // Ensure type matches
@@ -235,7 +245,7 @@ export const getComponentContexts = (
         return
       }
       // Ensure scope matches
-      let contextScope = context.scope || "global"
+      let contextScope = context.scope || ContextScopes.Global
       if (contextScope !== scope) {
         return
       }
@@ -243,17 +253,23 @@ export const getComponentContexts = (
       if (!isContextCompatibleWithComponent(context, component)) {
         return
       }
+      if (!map[component._id]) {
+        map[component._id] = {
+          component,
+          definition: def,
+          contexts: [],
+        }
+      }
       map[component._id].contexts.push(context)
     })
   }
 
   // Process all global contexts
   const allComponents = findAllComponents(asset.props)
-  allComponents.forEach(processContexts("global"))
+  allComponents.forEach(processContexts(ContextScopes.Global))
 
-  // Process all local contexts
-  const localComponents = findComponentPath(asset.props, componentId)
-  localComponents.forEach(processContexts("local"))
+  // Process all local contexts in the immediate tree
+  componentPath.forEach(processContexts(ContextScopes.Local))
 
   // Exclude self if required
   if (!options?.includeSelf) {
