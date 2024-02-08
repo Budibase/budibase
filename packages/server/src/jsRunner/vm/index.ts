@@ -1,4 +1,5 @@
 import ivm from "isolated-vm"
+import bson from "bson"
 
 import url from "url"
 import crypto from "crypto"
@@ -49,6 +50,9 @@ export class IsolatedVM implements VM {
   private jail: ivm.Reference
   private invocationTimeout: number
   private isolateAccumulatedTimeout?: number
+
+  // By default the wrapper returns itself
+  private codeWrapper: (code: string) => string = code => code
 
   private moduleHandler = new ModuleHandler()
 
@@ -127,6 +131,68 @@ export class IsolatedVM implements VM {
 
   withContext(context: Record<string, any>) {
     this.addToContext(context)
+
+    return this
+  }
+
+  withParsingBson(data: any) {
+    this.addToContext({
+      bsonData: bson.BSON.serialize({ data }),
+    })
+
+    // If we need to parse bson, we follow the next steps:
+    // 1. Serialise the data from potential BSON to buffer before passing it to the isolate
+    // 2. Deserialise the data within the isolate, to get the original data
+    // 3. Process script
+    // 4. Stringify the result in order to convert the result from BSON to json
+    this.codeWrapper = code =>
+      `(function(){
+            const data = deserialize(bsonData, { validation: { utf8: false } }).data;
+            const result = ${code}
+            return toJson(result);
+        })();`
+
+    const bsonSource = loadBundle(BundleType.BSON)
+
+    this.addToContext({
+      textDecoderCb: new ivm.Callback(
+        (args: {
+          constructorArgs: any
+          functionArgs: Parameters<InstanceType<typeof TextDecoder>["decode"]>
+        }) => {
+          const result = new TextDecoder(...args.constructorArgs).decode(
+            ...args.functionArgs
+          )
+          return result
+        }
+      ),
+    })
+
+    // "Polyfilling" text decoder. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
+    const textDecoderPolyfill = class TextDecoder {
+      constructorArgs
+
+      constructor(...constructorArgs: any) {
+        this.constructorArgs = constructorArgs
+      }
+
+      decode(...input: any) {
+        // @ts-ignore
+        return textDecoderCb({
+          constructorArgs: this.constructorArgs,
+          functionArgs: input,
+        })
+      }
+    }.toString()
+    const bsonModule = this.isolate.compileModuleSync(
+      `${textDecoderPolyfill};${bsonSource}`
+    )
+    bsonModule.instantiateSync(this.vm, specifier => {
+      throw new Error(`No imports allowed. Required: ${specifier}`)
+    })
+
+    this.moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
+
     return this
   }
 
@@ -140,7 +206,9 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};results.out=${code};`
+    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
+      code
+    )};`
 
     const script = this.isolate.compileModuleSync(code)
 
@@ -155,8 +223,8 @@ export class IsolatedVM implements VM {
 
     script.evaluateSync({ timeout: this.invocationTimeout })
 
-    const result = this.getResult()
-    return result
+    const result = this.getFromContext(this.resultKey)
+    return result.out
   }
 
   private registerCallbacks(functions: Record<string, any>) {
@@ -193,10 +261,10 @@ export class IsolatedVM implements VM {
     }
   }
 
-  private getResult() {
-    const ref = this.vm.global.getSync(this.resultKey, { reference: true })
+  private getFromContext(key: string) {
+    const ref = this.vm.global.getSync(key, { reference: true })
     const result = ref.copySync()
     ref.release()
-    return result.out
+    return result
   }
 }
