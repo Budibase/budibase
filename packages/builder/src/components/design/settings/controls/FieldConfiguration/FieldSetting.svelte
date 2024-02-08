@@ -32,7 +32,7 @@
 
   const parseSettings = settings => {
     return settings
-      .filter(setting => setting.key !== "field")
+      .filter(setting => customSchema || setting.key !== "field")
       .map(setting => {
         return { ...setting, nested: true }
       })

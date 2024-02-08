@@ -145,11 +145,11 @@
   const processItemUpdate = e => {
     const updatedField = e.detail
     const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
-
-    let parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
-      return pSetting.field === updatedField?.field
+    const parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
+      return pSetting._id === updatedField?._id
     })
 
+    // Add this field if not encountered before. Otherwise, update it.
     if (parentFieldIdx === -1) {
       parentFieldsUpdated.push(updatedField)
     } else {

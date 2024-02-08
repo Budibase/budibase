@@ -368,8 +368,6 @@ const getContextBindings = (asset, componentId) => {
   // Get all available contexts for this component
   const componentContexts = getComponentContexts(asset, componentId)
 
-  console.log(componentContexts)
-
   // Generate bindings for each context
   return componentContexts
     .map(componentContext => {
