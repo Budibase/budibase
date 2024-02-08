@@ -18,7 +18,7 @@ export function init() {
 
           vm = new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-            timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
+            invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
             perRequestLimit: env.JS_PER_REQUEST_TIME_LIMIT_MS,
           })
             .withContext(ctxToPass)

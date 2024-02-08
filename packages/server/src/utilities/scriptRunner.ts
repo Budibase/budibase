@@ -10,7 +10,7 @@ class ScriptRunner {
     this.code = `(() => {${script}})();`
     this.vm = new IsolatedVM({
       memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-      timeout: JS_TIMEOUT_MS,
+      invocationTimeout: JS_TIMEOUT_MS,
     }).withContext(context)
   }
 
