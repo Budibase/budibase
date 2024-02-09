@@ -1,3 +1,5 @@
+const vm = require("vm")
+
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
 
@@ -15,7 +17,7 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-const { processString } = require("../src/index.cjs")
+const { processString, setJSRunner } = require("../src/index.js")
 
 const tk = require("timekeeper")
 const { getParsedManifest, runJsHelpersTests } = require("./utils")
@@ -28,6 +30,12 @@ function escapeRegExp(string) {
 
 describe("manifest", () => {
   const manifest = getParsedManifest()
+
+  beforeAll(() => {
+    setJSRunner((js, context) => {
+      return vm.runInNewContext(js, context, { timeout: 1000 })
+    })
+  })
 
   describe("examples are valid", () => {
     describe.each(Object.keys(manifest))("%s", collection => {

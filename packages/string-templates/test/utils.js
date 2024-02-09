@@ -5,7 +5,7 @@ const {
   convertToJS,
   processStringSync,
   encodeJSBinding,
-} = require("../src/index.cjs")
+} = require("../src/index.js")
 
 function tryParseJson(str) {
   if (typeof str !== "string") {
