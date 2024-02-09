@@ -2220,6 +2220,13 @@
     enabled "2.0.x"
     kuler "^2.0.0"
 
+"@datadog/native-appsec@6.0.0":
+  version "6.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-6.0.0.tgz#da753f8566ec5180ad9e83014cb44984b4bc878e"
+  integrity sha512-e7vH5usFoqov7FraPcA99fe80t2/qm4Cmno1T3iBhYlhyO6HD01ArDsCZ/sUvNIUR1ujxtbr8Z9WRGJ0qQ/FDA==
+  dependencies:
+    node-gyp-build "^3.9.0"
+
 "@datadog/native-appsec@7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-7.0.0.tgz#a380174dd49aef2d9bb613a0ec8ead6dc7822095"
@@ -6403,7 +6410,7 @@ acorn@^7.1.1:
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-7.4.1.tgz#feaed255973d2e77555b83dbc08851a6c63520fa"
   integrity sha512-nQyp0o1/mNdbTO1PO6kHkwSrmgZ0MT/jCCpNiwbUjGoRN4dlBhqJtoQuCnEOKzgTVwg0ZWiCoQy6SxMebQVh8A==
 
-acorn@^8.1.0, acorn@^8.10.0, acorn@^8.2.4, acorn@^8.4.1, acorn@^8.5.0, acorn@^8.7.1, acorn@^8.8.1, acorn@^8.8.2, acorn@^8.9.0:
+acorn@^8.1.0, acorn@^8.10.0, acorn@^8.2.4, acorn@^8.4.1, acorn@^8.5.0, acorn@^8.7.0, acorn@^8.7.1, acorn@^8.8.1, acorn@^8.8.2, acorn@^8.9.0:
   version "8.11.3"
   resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.3.tgz#71e0b14e13a4ec160724b38fb7b0f233b1b81d7a"
   integrity sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==
@@ -8791,6 +8798,46 @@ dc-polyfill@^0.1.2:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/dc-polyfill/-/dc-polyfill-0.1.3.tgz#fe9eefc86813439dd46d6f9ad9582ec079c39720"
   integrity sha512-Wyk5n/5KUj3GfVKV2jtDbtChC/Ff9fjKsBcg4ZtYW1yQe3DXNHcGURvmoxhqQdfOQ9TwyMjnfyv1lyYcOkFkFA==
+
+dd-trace@5.0.0:
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-5.0.0.tgz#1e9848d6b6212ca67f8a3d62ce1f9ecd93fb5ebb"
+  integrity sha512-MmbM05l0qFeM73kDyyQAHWvyeZl2m6FYlv3hgtBU8GSpFmNu/33llyYp4TDpoEJ7hqd5LWT7mKKQFq8lRbTH3w==
+  dependencies:
+    "@datadog/native-appsec" "6.0.0"
+    "@datadog/native-iast-rewriter" "2.2.2"
+    "@datadog/native-iast-taint-tracking" "1.6.4"
+    "@datadog/native-metrics" "^2.0.0"
+    "@datadog/pprof" "5.0.0"
+    "@datadog/sketches-js" "^2.1.0"
+    "@opentelemetry/api" "^1.0.0"
+    "@opentelemetry/core" "^1.14.0"
+    crypto-randomuuid "^1.0.0"
+    dc-polyfill "^0.1.2"
+    ignore "^5.2.4"
+    import-in-the-middle "^1.7.1"
+    int64-buffer "^0.1.9"
+    ipaddr.js "^2.1.0"
+    istanbul-lib-coverage "3.2.0"
+    jest-docblock "^29.7.0"
+    koalas "^1.0.2"
+    limiter "1.1.5"
+    lodash.kebabcase "^4.1.1"
+    lodash.pick "^4.4.0"
+    lodash.sortby "^4.7.0"
+    lodash.uniq "^4.5.0"
+    lru-cache "^7.14.0"
+    methods "^1.1.2"
+    module-details-from-path "^1.0.3"
+    msgpack-lite "^0.1.26"
+    node-abort-controller "^3.1.1"
+    opentracing ">=0.12.1"
+    path-to-regexp "^0.1.2"
+    pprof-format "^2.0.7"
+    protobufjs "^7.2.5"
+    retry "^0.13.1"
+    semver "^7.5.4"
+    tlhunter-sorted-set "^0.1.0"
 
 dd-trace@5.2.0:
   version "5.2.0"
@@ -12079,7 +12126,7 @@ import-from@^3.0.0:
   dependencies:
     resolve-from "^5.0.0"
 
-import-in-the-middle@^1.7.3:
+import-in-the-middle@^1.7.1, import-in-the-middle@^1.7.3:
   version "1.7.3"
   resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.3.tgz#ffa784cdd57a47d2b68d2e7dd33070ff06baee43"
   integrity sha512-R2I11NRi0lI3jD2+qjqyVlVEahsejw7LDnYEbGb47QEFjczE3bZYsmWheCTQA+LFs2DzOQxR7Pms7naHW1V4bQ==
@@ -14478,6 +14525,11 @@ lodash.isstring@^4.0.1:
   resolved "https://registry.yarnpkg.com/lodash.isstring/-/lodash.isstring-4.0.1.tgz#d527dfb5456eca7cc9bb95d5daeaf88ba54a5451"
   integrity sha512-0wJxfxH1wgO3GrbuP+dTTk7op+6L41QCXbGINEmD+ny/G/eCqGzxyCsh7159S+mgDDcoarnBw6PC1PS5+wUGgw==
 
+lodash.kebabcase@^4.1.1:
+  version "4.1.1"
+  resolved "https://registry.yarnpkg.com/lodash.kebabcase/-/lodash.kebabcase-4.1.1.tgz#8489b1cb0d29ff88195cceca448ff6d6cc295c36"
+  integrity sha512-N8XRTIMMqqDgSy4VLKPnJ/+hpGZN+PHQiJnSenYqPaVV/NCqEogTnAdZLQiGKhxX+JCs8waWq2t1XHWKOmlY8g==
+
 lodash.keys@^4.2.0:
   version "4.2.0"
   resolved "https://registry.yarnpkg.com/lodash.keys/-/lodash.keys-4.2.0.tgz#a08602ac12e4fb83f91fc1fb7a360a4d9ba35205"
@@ -14508,7 +14560,7 @@ lodash.once@^4.0.0:
   resolved "https://registry.yarnpkg.com/lodash.once/-/lodash.once-4.1.1.tgz#0dd3971213c7c56df880977d504c88fb471a97ac"
   integrity sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==
 
-lodash.pick@^4.0.0:
+lodash.pick@^4.0.0, lodash.pick@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/lodash.pick/-/lodash.pick-4.4.0.tgz#52f05610fff9ded422611441ed1fc123a03001b3"
   integrity sha512-hXt6Ul/5yWjfklSGvLQl8vM//l3FtyHZeuelpzK6mm99pNvN9yTDruNZPEJZD1oWrqo+izBmB7oUfWgcCX7s4Q==
@@ -21269,6 +21321,14 @@ vlq@^0.2.2:
   version "0.2.3"
   resolved "https://registry.yarnpkg.com/vlq/-/vlq-0.2.3.tgz#8f3e4328cf63b1540c0d67e1b2778386f8975b26"
   integrity sha512-DRibZL6DsNhIgYQ+wNdWDL2SL3bKPlVrRiBqV5yuMm++op8W4kGFtaQfCs4KEJn0wBZcHVHJ3eoywX8983k1ow==
+
+vm2@^3.9.19:
+  version "3.9.19"
+  resolved "https://registry.yarnpkg.com/vm2/-/vm2-3.9.19.tgz#be1e1d7a106122c6c492b4d51c2e8b93d3ed6a4a"
+  integrity sha512-J637XF0DHDMV57R6JyVsTak7nIL8gy5KH4r1HiwWLf/4GBbb5MKL5y7LpmF4A8E2nR6XmzpmMFQ7V7ppPTmUQg==
+  dependencies:
+    acorn "^8.7.0"
+    acorn-walk "^8.2.0"
 
 vuvuzela@1.0.3:
   version "1.0.3"

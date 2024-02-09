@@ -1,42 +1,61 @@
+import vm from "vm"
 import env from "../environment"
-import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
+import { setJSRunner } from "@budibase/string-templates"
+import { context, timers } from "@budibase/backend-core"
 import tracer from "dd-trace"
 
-import { IsolatedVM } from "./vm"
-import { context } from "@budibase/backend-core"
+type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
-  setJSRunner((js: string, ctx: Record<string, any>) => {
+  setJSRunner((js: string, ctx: vm.Context) => {
     return tracer.trace("runJS", {}, span => {
-      try {
-        const bbCtx = context.getCurrentContext()!
-
-        let { vm } = bbCtx
-        if (!vm) {
-          // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
-          const { helpers, ...ctxToPass } = ctx
-
-          vm = new IsolatedVM({
-            memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-            invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
-            isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
+      const perRequestLimit = env.JS_PER_REQUEST_TIMEOUT_MS
+      let track: TrackerFn = f => f()
+      if (perRequestLimit) {
+        const bbCtx = tracer.trace("runJS.getCurrentContext", {}, span =>
+          context.getCurrentContext()
+        )
+        if (bbCtx) {
+          if (!bbCtx.jsExecutionTracker) {
+            span?.addTags({
+              createdExecutionTracker: true,
+            })
+            bbCtx.jsExecutionTracker = tracer.trace(
+              "runJS.createExecutionTimeTracker",
+              {},
+              span => timers.ExecutionTimeTracker.withLimit(perRequestLimit)
+            )
+          }
+          span?.addTags({
+            js: {
+              limitMS: bbCtx.jsExecutionTracker.limitMs,
+              elapsedMS: bbCtx.jsExecutionTracker.elapsedMS,
+            },
           })
-            .withContext(ctxToPass)
-            .withHelpers()
-
-          bbCtx.vm = vm
+          // We call checkLimit() here to prevent paying the cost of creating
+          // a new VM context below when we don't need to.
+          tracer.trace("runJS.checkLimitAndBind", {}, span => {
+            bbCtx.jsExecutionTracker!.checkLimit()
+            track = bbCtx.jsExecutionTracker!.track.bind(
+              bbCtx.jsExecutionTracker
+            )
+          })
         }
-
-        const result = vm.execute(js)
-
-        return result
-      } catch (error: any) {
-        if (error.message === "Script execution timed out.") {
-          throw new JsErrorTimeout()
-        }
-
-        throw error
       }
+
+      ctx = {
+        ...ctx,
+        alert: undefined,
+        setInterval: undefined,
+        setTimeout: undefined,
+      }
+
+      vm.createContext(ctx)
+      return track(() =>
+        vm.runInNewContext(js, ctx, {
+          timeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
+        })
+      )
     })
   })
 }
