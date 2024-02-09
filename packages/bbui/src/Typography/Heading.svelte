@@ -22,12 +22,7 @@
     font-family: var(--font-accent);
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
+  h1 {
     text-wrap: balance;
   }
 </style>
