@@ -21,8 +21,6 @@ export function cleanup() {
   intervals = []
 }
 
-
-
 export class ExecutionTimeoutError extends Error {
   public readonly name = "ExecutionTimeoutError"
 }
