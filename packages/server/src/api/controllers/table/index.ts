@@ -14,7 +14,6 @@ import { events } from "@budibase/backend-core"
 import {
   BulkImportRequest,
   BulkImportResponse,
-  DocumentType,
   FetchTablesResponse,
   MigrateRequest,
   MigrateResponse,
@@ -25,7 +24,6 @@ import {
   TableResponse,
   TableSourceType,
   UserCtx,
-  SEPARATOR,
 } from "@budibase/types"
 import sdk from "../../../sdk"
 import { jsonFromCsvString } from "../../../utilities/csv"
