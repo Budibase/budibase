@@ -11,7 +11,7 @@ class ScriptRunner {
   private tracerSpan: Span
 
   constructor(script: string, context: any, { parseBson = false } = {}) {
-    this.tracerSpan = tracer.startSpan("scriptRunner")
+    this.tracerSpan = tracer.startSpan("scriptRunner", { tags: { parseBson } })
 
     this.code = `(() => {${script}})();`
     this.vm = new IsolatedVM({
@@ -25,10 +25,14 @@ class ScriptRunner {
   }
 
   execute() {
-    const result = tracer.trace("scriptRunner.execute", () => {
-      const result = this.vm.execute(this.code)
-      return result
-    })
+    const result = tracer.trace(
+      "scriptRunner.execute",
+      { childOf: this.tracerSpan },
+      () => {
+        const result = this.vm.execute(this.code)
+        return result
+      }
+    )
     this.tracerSpan.finish()
     return result
   }
