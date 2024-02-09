@@ -47,6 +47,13 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
+  it("should prevent sandbox escape", async () => {
+    const output = await processJS(
+      `return this.constructor.constructor("return process")()`
+    )
+    expect(output).toBe("Error while executing JS")
+  })
+
   describe("helpers", () => {
     runJsHelpersTests({
       funcWrap: (func: any) => config.doInContext(config.getAppId(), func),

@@ -142,13 +142,6 @@ describe("Javascript", () => {
       const output = processJS(`return process`)
       expect(output).toBe("Error while executing JS")
     })
-
-    it("should prevent sandbox escape", () => {
-      const output = processJS(
-        `return this.constructor.constructor("return process")()`
-      )
-      expect(output).toBe("Error while executing JS")
-    })
   })
 
   describe("check JS helpers", () => {
