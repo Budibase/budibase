@@ -14,7 +14,8 @@
     $admin.cloud &&
     !$admin.disableAccountPortal &&
     $admin.accountPortalUrl &&
-    !$admin?.checklist?.sso?.checked
+    !$admin?.checklist?.sso?.checked &&
+    !$admin.checklist.branding
   ) {
     window.location.href = $admin.accountPortalUrl
   }
