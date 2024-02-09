@@ -58,7 +58,7 @@
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
     "lint:fix:eslint": "eslint --fix --max-warnings=0 packages qa-core",
     "lint:fix:prettier": "prettier --write \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --write \"qa-core/**/*.{js,ts,svelte}\"",
-    "lint:fix": "yarn run lint:fix:prettier && yarn run lint:fix:eslint",
+    "lint:fix": "yarn run lint:fix:eslint && yarn run lint:fix:prettier",
     "build:specs": "lerna run --stream specs",
     "build:docker:airgap": "node hosting/scripts/airgapped/airgappedDockerBuild",
     "build:docker:airgap:single": "SINGLE_IMAGE=1 node hosting/scripts/airgapped/airgappedDockerBuild",
