@@ -84,7 +84,7 @@ type DefaultUserValues = {
   csrfToken: string
 }
 
-interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
 }
