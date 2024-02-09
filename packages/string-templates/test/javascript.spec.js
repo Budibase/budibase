@@ -14,13 +14,6 @@ const processJS = (js, context) => {
 describe("Javascript", () => {
   beforeAll(() => {
     setJSRunner((js, context) => {
-      context = {
-        ...context,
-        alert: undefined,
-        setInterval: undefined,
-        setTimeout: undefined,
-      }
-      vm.createContext(context)
       return vm.runInNewContext(js, context, { timeout: 1000 })
     })
   })
