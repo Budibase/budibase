@@ -15,7 +15,7 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-const { processString } = require("../src/index.cjs")
+const { processString } = require("../src/index.js")
 
 const tk = require("timekeeper")
 const { getParsedManifest, runJsHelpersTests } = require("./utils")
