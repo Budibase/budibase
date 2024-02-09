@@ -20,11 +20,8 @@ class ScriptRunner {
     }).withContext(context)
 
     if (parseBson && context.data) {
-      this.tracerSpan.log({ event: "isolated-vm.registering-bson" })
       this.vm = this.vm.withParsingBson(context.data)
     }
-
-    this.tracerSpan.log({ event: "isolated-vm.initialised" })
   }
 
   execute() {
