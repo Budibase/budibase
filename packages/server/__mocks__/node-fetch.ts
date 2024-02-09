@@ -36,8 +36,8 @@ module FetchMock {
 
     if (url.includes("/api/global")) {
       const user = {
-        email: "test@test.com",
-        _id: "us_test@test.com",
+        email: "test@example.com",
+        _id: "us_test@example.com",
         status: "active",
         roles: {},
         builder: {
@@ -58,7 +58,7 @@ module FetchMock {
           url: "/app1",
         },
       })
-    } else if (url.includes("test.com")) {
+    } else if (url.includes("example.com")) {
       return json({
         body: opts.body,
         url,

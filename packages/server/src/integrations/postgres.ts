@@ -29,6 +29,7 @@ import { Client, ClientConfig, types } from "pg"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import { exec } from "child_process"
 import { storeTempFile } from "../utilities/fileSystem"
+import { env } from "@budibase/backend-core"
 
 // Return "date" and "timestamp" types as plain strings.
 // This lets us reference the original stored timezone.
@@ -202,8 +203,13 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       await this.openConnection()
       response.connected = true
     } catch (e: any) {
-      console.log(e)
-      response.error = e.message as string
+      if (typeof e.message === "string" && e.message !== "") {
+        response.error = e.message as string
+      } else if (typeof e.code === "string" && e.code !== "") {
+        response.error = e.code
+      } else {
+        response.error = "Unknown error"
+      }
     } finally {
       await this.closeConnection()
     }
@@ -428,6 +434,14 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
   }
 
   async getExternalSchema() {
+    if (!env.SELF_HOSTED) {
+      // This is because it relies on shelling out to pg_dump and we don't want
+      // to enable shell injection attacks.
+      throw new Error(
+        "schema export for Postgres is not supported in Budibase Cloud"
+      )
+    }
+
     const dumpCommandParts = [
       `user=${this.config.user}`,
       `host=${this.config.host}`,
