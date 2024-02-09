@@ -199,6 +199,56 @@ describe("/tables", () => {
       expect(res.body.name).toBeUndefined()
     })
 
+    it("updates only the passed fields", async () => {
+      const testTable = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+        views: {
+          view1: {
+            id: "viewId",
+            version: 2,
+            name: "table view",
+            tableId: "tableId",
+          },
+        },
+      })
+
+      const response = await request
+        .post(`/api/tables`)
+        .send({
+          ...testTable,
+          name: "UpdatedName",
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body).toEqual({
+        ...testTable,
+        name: "UpdatedName",
+        _rev: expect.stringMatching(/^2-.+/),
+      })
+
+      const persistedTable = await config.api.table.get(testTable._id!)
+      expect(persistedTable).toEqual({
+        ...testTable,
+        name: "UpdatedName",
+        _rev: expect.stringMatching(/^2-.+/),
+      })
+    })
+
     describe("user table", () => {
       it("should add roleId and email field when adjusting user table schema", async () => {
         const res = await request
