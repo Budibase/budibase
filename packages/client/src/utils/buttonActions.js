@@ -350,6 +350,12 @@ const exportDataHandler = async action => {
   }
 }
 
+const clearRowSelection = async action => {
+  rowSelectionStore.actions.clearRowSelection(
+    action.parameters.tableComponentId
+  )
+}
+
 const continueIfHandler = action => {
   const { type, value, operator, referenceValue } = action.parameters
   if (!type || !operator) {
@@ -380,14 +386,14 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const OpenSidePanelHandler = action => {
+const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
     sidePanelStore.actions.open(id)
   }
 }
 
-const CloseSidePanelHandler = () => {
+const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
@@ -407,8 +413,9 @@ const handlerMap = {
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
-  ["Open Side Panel"]: OpenSidePanelHandler,
-  ["Close Side Panel"]: CloseSidePanelHandler,
+  ["Open Side Panel"]: openSidePanelHandler,
+  ["Close Side Panel"]: closeSidePanelHandler,
+  ["Clear Row Selection"]: clearRowSelection,
 }
 
 const confirmTextMap = {
