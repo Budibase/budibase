@@ -14,7 +14,8 @@
     "check:types": "tsc -p tsconfig.json --noEmit --paths null"
   },
   "dependencies": {
-    "@budibase/types": "0.0.0"
+    "@budibase/types": "0.0.0",
+    "cron-validate": "^1.4.5"
   },
   "devDependencies": {
     "rimraf": "3.0.2",
