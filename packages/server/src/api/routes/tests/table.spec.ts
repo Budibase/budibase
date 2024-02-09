@@ -18,6 +18,12 @@ import * as setup from "./utilities"
 import sdk from "../../../sdk"
 import * as uuid from "uuid"
 
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+import { TableToBuild } from "src/tests/utilities/TestConfiguration"
+
+tk.freeze(mocks.date.MOCK_DATE)
+
 const { basicTable } = setup.structures
 
 describe("/tables", () => {
@@ -58,6 +64,47 @@ describe("/tables", () => {
       expect(res.body.name).toEqual("TestTable")
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
+    })
+
+    it("creates all the passed fields", async () => {
+      const tableData: TableToBuild = {
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+        views: {
+          view1: {
+            id: "viewId",
+            version: 2,
+            name: "table view",
+            tableId: "tableId",
+          },
+        },
+      }
+      const testTable = await config.createTable(tableData)
+
+      const expected: Table = {
+        ...tableData,
+        type: "table",
+        sourceType: TableSourceType.INTERNAL,
+        sourceId: expect.any(String),
+        _rev: expect.stringMatching(/^1-.+/),
+        updatedAt: mocks.date.MOCK_DATE.toISOString(),
+      }
+      expect(testTable).toEqual(expected)
+
+      const persistedTable = await config.api.table.get(testTable._id!)
+      expect(persistedTable).toEqual(expected)
     })
 
     it("creates a table via data import", async () => {
