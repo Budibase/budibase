@@ -1,3 +1,4 @@
+import tracer from "dd-trace"
 import env from "../environment"
 import { IsolatedVM } from "../jsRunner/vm"
 
@@ -20,8 +21,10 @@ class ScriptRunner {
   }
 
   execute() {
-    const result = this.vm.execute(this.code)
-    return result
+    return tracer.trace("scriptRunner.execute", () => {
+      const result = this.vm.execute(this.code)
+      return result
+    })
   }
 }
 
