@@ -17,7 +17,7 @@ describe("test the outgoing webhook action", () => {
       },
     })
     expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("get")
+    expect(res.response.method).toEqual("GET")
     expect(res.response.body).toBeUndefined()
     expect(res.success).toEqual(true)
   })
@@ -28,11 +28,11 @@ describe("test the outgoing webhook action", () => {
       body: {
         value: payload,
       },
-      method: "post",
+      method: "POST",
       url: "http://www.example.com",
     })
     expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("post")
+    expect(res.response.method).toEqual("POST")
     expect(res.response.body).toEqual(`{"name":"Adam","age":9}`)
     expect(res.success).toEqual(true)
   })
@@ -44,7 +44,7 @@ describe("test the outgoing webhook action", () => {
       body: {
         value: payload,
       },
-      method: "post",
+      method: "POST",
       url: "http://www.example.com",
     })
     expect(res.httpStatus).toEqual(400)
@@ -55,13 +55,13 @@ describe("test the outgoing webhook action", () => {
   it("should not append the body if the method is HEAD", async () => {
     const res = await runStep(actions.n8n.stepId, {
       url: "http://www.example.com",
-      method: "head",
+      method: "HEAD",
       body: {
         test: "IGNORE_ME",
       },
     })
     expect(res.response.url).toEqual("http://www.example.com")
-    expect(res.response.method).toEqual("head")
+    expect(res.response.method).toEqual("HEAD")
     expect(res.response.body).toBeUndefined()
     expect(res.success).toEqual(true)
   })
