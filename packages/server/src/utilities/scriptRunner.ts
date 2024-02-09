@@ -1,4 +1,4 @@
-import tracer from "dd-trace"
+import tracer, { Span } from "dd-trace"
 import env from "../environment"
 import { IsolatedVM } from "../jsRunner/vm"
 
@@ -8,7 +8,11 @@ class ScriptRunner {
   private code: string
   private vm: IsolatedVM
 
+  private tracerSpan: Span
+
   constructor(script: string, context: any, { parseBson = false } = {}) {
+    this.tracerSpan = tracer.startSpan("scriptRunner")
+
     this.code = `(() => {${script}})();`
     this.vm = new IsolatedVM({
       memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
@@ -16,15 +20,20 @@ class ScriptRunner {
     }).withContext(context)
 
     if (parseBson && context.data) {
+      this.tracerSpan.log({ event: "isolated-vm.registering-bson" })
       this.vm = this.vm.withParsingBson(context.data)
     }
+
+    this.tracerSpan.log({ event: "isolated-vm.initialised" })
   }
 
   execute() {
-    return tracer.trace("scriptRunner.execute", () => {
+    const result = tracer.trace("scriptRunner.execute", () => {
       const result = this.vm.execute(this.code)
       return result
     })
+    this.tracerSpan.finish()
+    return result
   }
 }
 
