@@ -4719,10 +4719,22 @@
         ]
       }
     ],
-    "context": {
-      "type": "schema",
-      "scope": "local"
-    }
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Selected Rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ]
   },
   "daterangepicker": {
     "name": "Date Range",
