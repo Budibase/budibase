@@ -4,7 +4,7 @@ const { LITERAL_MARKER } = require("../helpers/constants")
 const { getJsHelperList } = require("./list")
 
 // The method of executing JS scripts depends on the bundle being built.
-// This setter is used in the entrypoint (either index.cjs or index.mjs).
+// This setter is used in the entrypoint (either index.js or index.mjs).
 let runJS
 module.exports.setJSRunner = runner => (runJS = runner)
 
