@@ -1,6 +1,7 @@
 const { FIND_HBS_REGEX } = require("../utilities")
 const preprocessor = require("./preprocessor")
 const postprocessor = require("./postprocessor")
+const { tracer } = require("dd-trace")
 
 function process(output, processors, opts) {
   for (let processor of processors) {
@@ -22,15 +23,19 @@ function process(output, processors, opts) {
 }
 
 module.exports.preprocess = (string, opts) => {
-  let processors = preprocessor.processors
-  if (opts.noFinalise) {
-    processors = processors.filter(
-      processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
-    )
-  }
-  return process(string, processors, opts)
+  return tracer.trace("preprocess", {}, () => {
+    let processors = preprocessor.processors
+    if (opts.noFinalise) {
+      processors = processors.filter(
+        processor => processor.name !== preprocessor.PreprocessorNames.FINALISE
+      )
+    }
+    return process(string, processors, opts)
+  })
 }
 module.exports.postprocess = string => {
-  let processors = postprocessor.processors
-  return process(string, processors)
+  return tracer.trace("postprocess", {}, () => {
+    let processors = postprocessor.processors
+    return process(string, processors)
+  })
 }

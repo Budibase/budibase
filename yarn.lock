@@ -2220,12 +2220,27 @@
     enabled "2.0.x"
     kuler "^2.0.0"
 
+"@datadog/native-appsec@4.0.0":
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-4.0.0.tgz#ee08138b987dec557eac3650a43a972dac85b6a6"
+  integrity sha512-myTguXJ3VQHS2E1ylNsSF1avNpDmq5t+K4Q47wdzeakGc3sDIDDyEbvuFTujl9c9wBIkup94O1mZj5DR37ajzA==
+  dependencies:
+    node-gyp-build "^3.9.0"
+
 "@datadog/native-appsec@6.0.0":
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-6.0.0.tgz#da753f8566ec5180ad9e83014cb44984b4bc878e"
   integrity sha512-e7vH5usFoqov7FraPcA99fe80t2/qm4Cmno1T3iBhYlhyO6HD01ArDsCZ/sUvNIUR1ujxtbr8Z9WRGJ0qQ/FDA==
   dependencies:
     node-gyp-build "^3.9.0"
+
+"@datadog/native-iast-rewriter@2.2.1":
+  version "2.2.1"
+  resolved "https://registry.yarnpkg.com/@datadog/native-iast-rewriter/-/native-iast-rewriter-2.2.1.tgz#3c74c5a8caa0b876e091e9c5a95256add0d73e1c"
+  integrity sha512-DyZlE8gNa5AoOFNKGRJU4RYF/Y/tJzv4bIAMuVBbEnMA0xhiIYqpYQG8T3OKkALl3VSEeBMjYwuOR2fCrJ6gzA==
+  dependencies:
+    lru-cache "^7.14.0"
+    node-gyp-build "^4.5.0"
 
 "@datadog/native-iast-rewriter@2.2.2":
   version "2.2.2"
@@ -2249,6 +2264,17 @@
   dependencies:
     node-addon-api "^6.1.0"
     node-gyp-build "^3.9.0"
+
+"@datadog/pprof@4.0.1":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@datadog/pprof/-/pprof-4.0.1.tgz#f8629ecb62646d90ed49b6252dd0583d8d5001d3"
+  integrity sha512-TavqyiyQZOaUM9eQB07r8+K/T1CqKyOdsUGxpN79+BF+eOQBpTj/Cte6KdlhcUSKL3h5hSjC+vlgA7uW2qtVhA==
+  dependencies:
+    delay "^5.0.0"
+    node-gyp-build "<4.0"
+    p-limit "^3.1.0"
+    pprof-format "^2.0.7"
+    source-map "^0.7.4"
 
 "@datadog/pprof@5.0.0":
   version "5.0.0"
@@ -8792,6 +8818,45 @@ dc-polyfill@^0.1.2:
   resolved "https://registry.yarnpkg.com/dc-polyfill/-/dc-polyfill-0.1.3.tgz#fe9eefc86813439dd46d6f9ad9582ec079c39720"
   integrity sha512-Wyk5n/5KUj3GfVKV2jtDbtChC/Ff9fjKsBcg4ZtYW1yQe3DXNHcGURvmoxhqQdfOQ9TwyMjnfyv1lyYcOkFkFA==
 
+dd-trace@4.20.0:
+  version "4.20.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-4.20.0.tgz#9a2cc3f28ff558c5605927b1362eb64605df76c1"
+  integrity sha512-y7IDLSSt6nww6zMdw/I8oLdfgOQADIOkERCNdfSzlBrXHz5CHimEOFfsHN87ag0mn6vusr06aoi+CQRZSNJz2g==
+  dependencies:
+    "@datadog/native-appsec" "4.0.0"
+    "@datadog/native-iast-rewriter" "2.2.1"
+    "@datadog/native-iast-taint-tracking" "1.6.4"
+    "@datadog/native-metrics" "^2.0.0"
+    "@datadog/pprof" "4.0.1"
+    "@datadog/sketches-js" "^2.1.0"
+    "@opentelemetry/api" "^1.0.0"
+    "@opentelemetry/core" "^1.14.0"
+    crypto-randomuuid "^1.0.0"
+    dc-polyfill "^0.1.2"
+    ignore "^5.2.4"
+    import-in-the-middle "^1.4.2"
+    int64-buffer "^0.1.9"
+    ipaddr.js "^2.1.0"
+    istanbul-lib-coverage "3.2.0"
+    jest-docblock "^29.7.0"
+    koalas "^1.0.2"
+    limiter "^1.1.4"
+    lodash.kebabcase "^4.1.1"
+    lodash.pick "^4.4.0"
+    lodash.sortby "^4.7.0"
+    lodash.uniq "^4.5.0"
+    lru-cache "^7.14.0"
+    methods "^1.1.2"
+    module-details-from-path "^1.0.3"
+    msgpack-lite "^0.1.26"
+    node-abort-controller "^3.1.1"
+    opentracing ">=0.12.1"
+    path-to-regexp "^0.1.2"
+    pprof-format "^2.0.7"
+    protobufjs "^7.2.4"
+    retry "^0.13.1"
+    semver "^7.5.4"
+
 dd-trace@5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-5.0.0.tgz#1e9848d6b6212ca67f8a3d62ce1f9ecd93fb5ebb"
@@ -12082,6 +12147,16 @@ import-from@^3.0.0:
   dependencies:
     resolve-from "^5.0.0"
 
+import-in-the-middle@^1.4.2:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.3.tgz#ffa784cdd57a47d2b68d2e7dd33070ff06baee43"
+  integrity sha512-R2I11NRi0lI3jD2+qjqyVlVEahsejw7LDnYEbGb47QEFjczE3bZYsmWheCTQA+LFs2DzOQxR7Pms7naHW1V4bQ==
+  dependencies:
+    acorn "^8.8.2"
+    acorn-import-assertions "^1.9.0"
+    cjs-module-lexer "^1.2.2"
+    module-details-from-path "^1.0.3"
+
 import-in-the-middle@^1.7.1:
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.2.tgz#31c44088271b50ecb9cacbdfb1e5732c802e0658"
@@ -14281,7 +14356,7 @@ lilconfig@^2.0.3, lilconfig@^2.0.5:
   resolved "https://registry.yarnpkg.com/lilconfig/-/lilconfig-2.1.0.tgz#78e23ac89ebb7e1bfbf25b18043de756548e7f52"
   integrity sha512-utWOt/GHzuUxnLKxB6dk81RoOeoNeHgbrXiuGk4yyF5qlRz+iIVWu56E2fqGHFrXz0QNUhLB/8nKqvRH66JKGQ==
 
-limiter@1.1.5:
+limiter@1.1.5, limiter@^1.1.4:
   version "1.1.5"
   resolved "https://registry.yarnpkg.com/limiter/-/limiter-1.1.5.tgz#8f92a25b3b16c6131293a0cc834b4a838a2aa7c2"
   integrity sha512-FWWMIEOxz3GwUI4Ts/IvgVy6LPvoMPgjMdQ185nN6psJyBJ4yOpzqm695/h5umdLJg2vW3GR5iG11MAkR2AzJA==

@@ -11,6 +11,7 @@ const {
 const { convertHBSBlock } = require("./conversion")
 const javascript = require("./helpers/javascript")
 const { helpersToRemoveForJs } = require("./helpers/list")
+const { tracer } = require("dd-trace")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -41,31 +42,48 @@ function testObject(object) {
  */
 let templateCache = {}
 function createTemplate(string, opts) {
-  opts = { ...defaultOpts, ...opts }
+  return tracer.trace("createTemplate", {}, span => {
+    opts = { ...defaultOpts, ...opts }
 
-  // Finalising adds a helper, can't do this with no helpers
-  const key = `${string}-${JSON.stringify(opts)}`
+    span.addTags({
+      template: {
+        opts: {
+          cacheTemplates: opts.cacheTemplates,
+          noHelpers: opts.noHelpers,
+          noEscaping: opts.noEscaping,
+        },
+      },
+    })
 
-  // Reuse the cached template is possible
-  if (opts.cacheTemplates && templateCache[key]) {
-    return templateCache[key]
-  }
+    // Finalising adds a helper, can't do this with no helpers
+    const key = `${string}-${JSON.stringify(opts)}`
 
-  string = processors.preprocess(string, opts)
+    // Reuse the cached template is possible
+    if (opts.cacheTemplates && templateCache[key]) {
+      span.addTags({ template: { cacheHit: true } })
+      return templateCache[key]
+    }
 
-  // Optionally disable built in HBS escaping
-  if (opts.noEscaping) {
-    string = exports.disableEscaping(string)
-  }
+    string = tracer.trace("processors.preprocess", {}, () =>
+      processors.preprocess(string, opts)
+    )
 
-  // This does not throw an error when template can't be fulfilled,
-  // have to try correct beforehand
-  const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
-  const template = instance.compile(string, {
-    strict: false,
+    // Optionally disable built in HBS escaping
+    if (opts.noEscaping) {
+      string = exports.disableEscaping(string)
+    }
+
+    // This does not throw an error when template can't be fulfilled,
+    // have to try correct beforehand
+    const instance = opts.noHelpers ? hbsInstanceNoHelpers : hbsInstance
+    const template = tracer.trace("instance.compile", {}, () =>
+      instance.compile(string, {
+        strict: false,
+      })
+    )
+    templateCache[key] = template
+    return template
   })
-  templateCache[key] = template
-  return template
 }
 
 /**
@@ -149,18 +167,20 @@ module.exports.processStringSync = (string, context, opts) => {
     throw "Cannot process non-string types."
   }
   function process(stringPart) {
-    const template = createTemplate(stringPart, opts)
-    const now = Math.floor(Date.now() / 1000) * 1000
-    return processors.postprocess(
-      template({
-        now: new Date(now).toISOString(),
-        __opts: {
-          ...opts,
-          input: stringPart,
-        },
-        ...context,
-      })
-    )
+    return tracer.trace("process", {}, () => {
+      const template = createTemplate(stringPart, opts)
+      const now = Math.floor(Date.now() / 1000) * 1000
+      return processors.postprocess(
+        template({
+          now: new Date(now).toISOString(),
+          __opts: {
+            ...opts,
+            input: stringPart,
+          },
+          ...context,
+        })
+      )
+    })
   }
   try {
     if (opts && opts.onlyFound) {
@@ -340,15 +360,17 @@ module.exports.doesContainStrings = (template, strings) => {
  * @return {string[]} The found HBS blocks.
  */
 module.exports.findHBSBlocks = string => {
-  if (!string || typeof string !== "string") {
-    return []
-  }
-  let regexp = new RegExp(FIND_ANY_HBS_REGEX)
-  let matches = string.match(regexp)
-  if (matches == null) {
-    return []
-  }
-  return matches
+  return tracer.trace("findHBSBlocks", {}, () => {
+    if (!string || typeof string !== "string") {
+      return []
+    }
+    let regexp = new RegExp(FIND_ANY_HBS_REGEX)
+    let matches = string.match(regexp)
+    if (matches == null) {
+      return []
+    }
+    return matches
+  })
 }
 
 /**
