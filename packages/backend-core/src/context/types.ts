@@ -1,4 +1,4 @@
-import { IdentityContext } from "@budibase/types"
+import { IdentityContext, VM } from "@budibase/types"
 import { ExecutionTimeTracker } from "../timers"
 
 // keep this out of Budibase types, don't want to expose context info
@@ -11,4 +11,5 @@ export type ContextMap = {
   automationId?: string
   isMigrating?: boolean
   jsExecutionTracker?: ExecutionTimeTracker
+  vm?: VM
 }
