@@ -8,6 +8,8 @@
   export let value
   let error
 
+  const reboot = "@reboot"
+
   $: {
     const exists = CRON_EXPRESSIONS.some(cron => cron.value === value)
     const customIndex = CRON_EXPRESSIONS.findIndex(
@@ -22,7 +24,9 @@
   }
 
   const onChange = e => {
-    error = helpers.cron.validate(e.detail).err
+    if (value !== reboot) {
+      error = helpers.cron.validate(e.detail).err
+    }
     if (e.detail === value || error) {
       return
     }
@@ -57,7 +61,7 @@
     if (!$flags.cloud) {
       CRON_EXPRESSIONS.push({
         label: "Every Budibase Reboot",
-        value: "@reboot",
+        value: reboot,
       })
     }
   })
