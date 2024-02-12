@@ -127,10 +127,16 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
-        data: rows,
-        params: enrichedParameters,
-      })
+      const runner = new ScriptRunner(
+        transformer,
+        {
+          data: rows,
+          params: enrichedParameters,
+        },
+        {
+          parseBson: datasource.source === SourceName.MONGODB,
+        }
+      )
       rows = runner.execute()
     }
 
