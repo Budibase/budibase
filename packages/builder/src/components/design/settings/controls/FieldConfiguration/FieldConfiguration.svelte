@@ -168,27 +168,39 @@
     dispatch("change", parsedColumns)
   }
 
-  const addField = () => {
-    // Generate the next available field name
-    const newName = generateIncrementedName({
-      items: fieldList,
-      extractName: field => field.field,
-      prefix: "Field",
-    })
+  const createInstance = (name, type) => {
+    // Generate the next available field name if required
+    if (!name) {
+      name = generateIncrementedName({
+        items: fieldList,
+        extractName: field => field.field,
+        prefix: "Field",
+      })
+    }
 
-    // Create instance
-    let newField = store.actions.components.createInstance(
-      "@budibase/standard-components/stringfield",
-      {
-        _instanceName: newName,
-        field: newName,
-        label: newName,
-        placeholder: newName,
-      },
-      {}
-    )
-    newField.active = true
-    dispatch("change", [...fieldList, newField])
+    // Default to text field
+    if (!type) {
+      type = "@budibase/standard-components/stringfield"
+    }
+
+    // Make new instance
+    return {
+      ...store.actions.components.createInstance(
+        type,
+        {
+          _instanceName: name,
+          field: name,
+          label: name,
+          placeholder: name,
+        },
+        {}
+      ),
+      active: true,
+    }
+  }
+
+  const addField = () => {
+    dispatch("change", [...fieldList, createInstance()])
   }
 
   const removeField = id => {
@@ -196,6 +208,20 @@
       "change",
       fieldList.filter(field => field._id !== id)
     )
+  }
+
+  const changeFieldType = (id, newType) => {
+    const idx = fieldList.findIndex(field => field._id === id)
+    if (idx === -1) {
+      return
+    }
+    const existingField = fieldList[idx]
+    let newField = createInstance(existingField.field, newType)
+
+    // Reuse existing ID to prevent closing the component popover
+    newField._id = id
+
+    dispatch("change", fieldList.toSpliced(idx, 1, newField))
   }
 </script>
 
@@ -221,6 +247,7 @@
   <DraggableList
     on:change={e => listUpdated(e.detail)}
     on:itemChange={processItemUpdate}
+    on:add={addField}
     items={fieldList}
     listItemKey={"_id"}
     listType={FieldSetting}
@@ -229,11 +256,11 @@
       bindings: resolvedBindings,
       customSchema,
       removeField,
+      changeFieldType,
     }}
     addButtonVisible={customSchema}
     addButtonText="Add field"
     addButtonDisabled={false}
-    on:add={addField}
   />
 </div>
 
