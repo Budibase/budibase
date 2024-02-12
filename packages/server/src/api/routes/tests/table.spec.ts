@@ -348,6 +348,7 @@ describe("/tables", () => {
 
   describe("fetch", () => {
     let testTable: Table
+    const enrichViewSchemasMock = jest.spyOn(sdk.tables, "enrichViewSchemas")
 
     beforeEach(async () => {
       testTable = await config.createTable(testTable)
@@ -355,6 +356,10 @@ describe("/tables", () => {
 
     afterEach(() => {
       delete testTable._rev
+    })
+
+    afterAll(() => {
+      enrichViewSchemasMock.mockRestore()
     })
 
     it("returns all the tables for that instance in the response body", async () => {
@@ -405,7 +410,7 @@ describe("/tables", () => {
 
     it("should enrich the view schemas for viewsV2", async () => {
       const tableId = config.table!._id!
-      jest.spyOn(sdk.tables, "enrichViewSchemas").mockImplementation(t => ({
+      enrichViewSchemasMock.mockImplementation(t => ({
         ...t,
         views: {
           view1: {
@@ -413,7 +418,7 @@ describe("/tables", () => {
             name: "view1",
             schema: {},
             id: "new_view_id",
-            tableId,
+            tableId: t._id!,
           },
         },
       }))
@@ -480,11 +485,7 @@ describe("/tables", () => {
     let testTable: Table
 
     beforeEach(async () => {
-      testTable = await config.createTable(testTable)
-    })
-
-    afterEach(() => {
-      delete testTable._rev
+      testTable = await config.createTable()
     })
 
     it("returns a success response when a table is deleted.", async () => {
