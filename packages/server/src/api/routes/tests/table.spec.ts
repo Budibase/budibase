@@ -21,7 +21,7 @@ import * as uuid from "uuid"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
-import { TableToBuild } from "src/tests/utilities/TestConfiguration"
+import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
