@@ -107,7 +107,7 @@
       return
     }
     if (!prodAppId) {
-      console.log("Application id required")
+      console.error("Application id required")
       return
     }
     await usersFetch.update({
@@ -392,6 +392,10 @@
   }
 
   const openInviteFlow = () => {
+    // prevent email from getting overwritten if changes are made
+    if (!email) {
+      email = query
+    }
     $licensing.userLimitReached
       ? userLimitReachedModal.show()
       : (invitingFlow = true)

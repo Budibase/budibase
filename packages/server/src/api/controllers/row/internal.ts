@@ -6,12 +6,12 @@ import {
   inputProcessing,
   outputProcessing,
 } from "../../../utilities/rowProcessor"
-import { FieldTypes } from "../../../constants"
 import * as utils from "./utils"
 import { cloneDeep } from "lodash/fp"
 import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
 import {
+  FieldType,
   LinkDocumentValue,
   PatchRowRequest,
   PatchRowResponse,
@@ -225,7 +225,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   // insert the link rows in the correct place throughout the main row
   for (let fieldName of Object.keys(table.schema)) {
     let field = table.schema[fieldName]
-    if (field.type === FieldTypes.LINK) {
+    if (field.type === FieldType.LINK) {
       // find the links that pertain to this field
       const links = linkVals.filter(link => link.fieldName === fieldName)
       // find the rows that the links state are linked to this field

@@ -44,6 +44,12 @@ type GroupFns = {
   getBulk: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
 }
+type CreateAdminUserOpts = {
+  ssoId?: string
+  hashPassword?: boolean
+  requirePassword?: boolean
+  skipPasswordValidation?: boolean
+}
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
 const bulkDeleteProcessing = async (dbUser: User) => {
@@ -112,9 +118,11 @@ export class UserDB {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
 
-      const passwordValidation = validatePassword(password)
-      if (!passwordValidation.valid) {
-        throw new HTTPError(passwordValidation.error, 400)
+      if (!opts.skipPasswordValidation) {
+        const passwordValidation = validatePassword(password)
+        if (!passwordValidation.valid) {
+          throw new HTTPError(passwordValidation.error, 400)
+        }
       }
 
       hashedPassword = opts.hashPassword ? await hash(password) : password
@@ -243,7 +251,8 @@ export class UserDB {
     }
 
     const change = dbUser ? 0 : 1 // no change if there is existing user
-    const creatorsChange = isCreator(dbUser) !== isCreator(user) ? 1 : 0
+    const creatorsChange =
+      (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
       await validateUniqueUser(email, tenantId)
 
@@ -327,7 +336,7 @@ export class UserDB {
       }
       newUser.userGroups = groups || []
       newUsers.push(newUser)
-      if (isCreator(newUser)) {
+      if (await isCreator(newUser)) {
         newCreators.push(newUser)
       }
     }
@@ -424,12 +433,16 @@ export class UserDB {
       _deleted: true,
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
-    const creatorsToDelete = usersToDelete.filter(isCreator)
+
+    const creatorsEval = await Promise.all(usersToDelete.map(isCreator))
+    const creatorsToDeleteCount = creatorsEval.filter(
+      creator => !!creator
+    ).length
 
     for (let user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
-    await UserDB.quotas.removeUsers(toDelete.length, creatorsToDelete.length)
+    await UserDB.quotas.removeUsers(toDelete.length, creatorsToDeleteCount)
 
     // Build Response
     // index users by id
@@ -478,7 +491,7 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev)
 
-    const creatorsToDelete = isCreator(dbUser) ? 1 : 0
+    const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
@@ -489,7 +502,7 @@ export class UserDB {
     email: string,
     password: string,
     tenantId: string,
-    opts?: { ssoId?: string; hashPassword?: boolean; requirePassword?: boolean }
+    opts?: CreateAdminUserOpts
   ) {
     const user: User = {
       email: email,
@@ -513,6 +526,7 @@ export class UserDB {
     return await UserDB.save(user, {
       hashPassword: opts?.hashPassword,
       requirePassword: opts?.requirePassword,
+      skipPasswordValidation: opts?.skipPasswordValidation,
     })
   }
 

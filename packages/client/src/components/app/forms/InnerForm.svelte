@@ -11,7 +11,7 @@
   export let size
   export let schema
   export let table
-  export let disableValidation = false
+  export let disableSchemaValidation = false
   export let editAutoColumns = false
 
   // We export this store so that when we remount the inner form we can still
@@ -156,17 +156,16 @@
       if (!field) {
         return
       }
-
       // Create validation function based on field schema
-      const schemaConstraints = schema?.[field]?.constraints
-      const validator = disableValidation
+      const schemaConstraints = disableSchemaValidation
         ? null
-        : createValidatorFromConstraints(
-            schemaConstraints,
-            validationRules,
-            field,
-            table
-          )
+        : schema?.[field]?.constraints
+      const validator = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
 
       // Sanitise the default value to ensure it doesn't contain invalid data
       defaultValue = sanitiseValue(defaultValue, schema?.[field], type)
@@ -332,15 +331,15 @@
       const { value, error } = fieldState
 
       // Create new validator
-      const schemaConstraints = schema?.[field]?.constraints
-      const validator = disableValidation
+      const schemaConstraints = disableSchemaValidation
         ? null
-        : createValidatorFromConstraints(
-            schemaConstraints,
-            validationRules,
-            field,
-            table
-          )
+        : schema?.[field]?.constraints
+      const validator = createValidatorFromConstraints(
+        schemaConstraints,
+        validationRules,
+        field,
+        table
+      )
 
       // Update validator
       fieldInfo.update(state => {
@@ -423,10 +422,14 @@
     }
     const fieldId = field.fieldState.fieldId
     const fieldElement = document.getElementById(fieldId)
-    fieldElement.focus({ preventScroll: true })
+    if (fieldElement) {
+      fieldElement.focus({ preventScroll: true })
+    }
     const label = document.querySelector(`label[for="${fieldId}"]`)
-    label.style.scrollMargin = "100px"
-    label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    if (label) {
+      label.style.scrollMargin = "100px"
+      label.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    }
   }
 
   // Action context to pass to children

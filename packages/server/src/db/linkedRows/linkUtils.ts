@@ -1,8 +1,8 @@
 import { ViewName, getQueryIndex, isRelationshipColumn } from "../utils"
-import { FieldTypes } from "../../constants"
 import { createLinkView } from "../views/staticViews"
 import { context, logging } from "@budibase/backend-core"
 import {
+  FieldType,
   DatabaseQueryOpts,
   LinkDocument,
   LinkDocumentValue,
@@ -131,11 +131,11 @@ export async function getLinkedTable(id: string, tables: Table[]) {
 export function getRelatedTableForField(table: Table, fieldName: string) {
   // look to see if its on the table, straight in the schema
   const field = table.schema[fieldName]
-  if (field?.type === FieldTypes.LINK) {
+  if (field?.type === FieldType.LINK) {
     return field.tableId
   }
   for (let column of Object.values(table.schema)) {
-    if (column.type === FieldTypes.LINK && column.fieldName === fieldName) {
+    if (column.type === FieldType.LINK && column.fieldName === fieldName) {
       return column.tableId
     }
   }

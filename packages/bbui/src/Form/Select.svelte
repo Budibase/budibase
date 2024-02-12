@@ -28,6 +28,7 @@
   export let footer = null
   export let tag = null
   export let helpText = null
+  export let compare
   const dispatch = createEventDispatcher()
   const onChange = e => {
     value = e.detail
@@ -65,6 +66,7 @@
     {autocomplete}
     {customPopoverHeight}
     {tag}
+    {compare}
     on:change={onChange}
     on:click
   />

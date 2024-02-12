@@ -1,5 +1,4 @@
-const tk = require("timekeeper")
-tk.freeze(Date.now())
+import tk from "timekeeper"
 
 // Mock out postgres for this
 jest.mock("pg")
@@ -17,16 +16,24 @@ jest.mock("@budibase/backend-core", () => {
     },
   }
 })
-const setup = require("./utilities")
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const { checkCacheForDynamicVariable } = require("../../../threads/utils")
+import * as setup from "../utilities"
+import { checkBuilderEndpoint } from "../utilities/TestFunctions"
+import { checkCacheForDynamicVariable } from "../../../../threads/utils"
+
 const { basicQuery, basicDatasource } = setup.structures
-const { events, db: dbCore } = require("@budibase/backend-core")
+import { events, db as dbCore } from "@budibase/backend-core"
+import { Datasource, Query, SourceName } from "@budibase/types"
+
+tk.freeze(Date.now())
+
+const mockIsProdAppID = dbCore.isProdAppID as jest.MockedFunction<
+  typeof dbCore.isProdAppID
+>
 
 describe("/queries", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
-  let datasource, query
+  let datasource: Datasource & Required<Pick<Datasource, "_id">>, query: Query
 
   afterAll(setup.afterAll)
 
@@ -40,18 +47,7 @@ describe("/queries", () => {
     await setupTest()
   })
 
-  async function createInvalidIntegration() {
-    const datasource = await config.createDatasource({
-      datasource: {
-        ...basicDatasource().datasource,
-        source: "INVALID_INTEGRATION",
-      },
-    })
-    const query = await config.createQuery()
-    return { datasource, query }
-  }
-
-  const createQuery = async query => {
+  const createQuery = async (query: Query) => {
     return request
       .post(`/api/queries`)
       .send(query)
@@ -67,7 +63,7 @@ describe("/queries", () => {
       jest.clearAllMocks()
       const res = await createQuery(query)
 
-      expect(res.res.statusMessage).toEqual(
+      expect((res as any).res.statusMessage).toEqual(
         `Query ${query.name} saved successfully.`
       )
       expect(res.body).toEqual({
@@ -92,7 +88,7 @@ describe("/queries", () => {
       query._rev = res.body._rev
       await createQuery(query)
 
-      expect(res.res.statusMessage).toEqual(
+      expect((res as any).res.statusMessage).toEqual(
         `Query ${query.name} saved successfully.`
       )
       expect(res.body).toEqual({
@@ -168,8 +164,8 @@ describe("/queries", () => {
 
     it("should remove sensitive info for prod apps", async () => {
       // Mock isProdAppID to pretend we are using a prod app
-      dbCore.isProdAppID.mockClear()
-      dbCore.isProdAppID.mockImplementation(() => true)
+      mockIsProdAppID.mockClear()
+      mockIsProdAppID.mockImplementation(() => true)
 
       const query = await config.createQuery()
       const res = await request
@@ -184,7 +180,7 @@ describe("/queries", () => {
 
       // Reset isProdAppID mock
       expect(dbCore.isProdAppID).toHaveBeenCalledTimes(1)
-      dbCore.isProdAppID.mockImplementation(() => false)
+      mockIsProdAppID.mockImplementation(() => false)
     })
   })
 
@@ -211,10 +207,11 @@ describe("/queries", () => {
     })
 
     it("should apply authorization to endpoint", async () => {
+      const query = await config.createQuery()
       await checkBuilderEndpoint({
         config,
         method: "DELETE",
-        url: `/api/queries/${config._id}/${config._rev}`,
+        url: `/api/queries/${query._id}/${query._rev}`,
       })
     })
   })
@@ -235,9 +232,9 @@ describe("/queries", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual({
-        a: "string",
-        b: "number",
+      expect(res.body.schema).toEqual({
+        a: { type: "string", name: "a" },
+        b: { type: "number", name: "b" },
       })
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
@@ -272,20 +269,21 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      let error
-      try {
-        await createInvalidIntegration()
-      } catch (err) {
-        error = err
-      }
-      expect(error).toBeDefined()
-      expect(error.message).toBe("No datasource implementation found.")
+      const response = await config.api.datasource.create(
+        {
+          ...basicDatasource().datasource,
+          source: "INVALID_INTEGRATION" as SourceName,
+        },
+        { expectStatus: 500, rawResponse: true }
+      )
+
+      expect(response.body.message).toBe("No datasource implementation found.")
     })
   })
 
   describe("variables", () => {
-    async function preview(datasource, fields) {
-      return config.previewQuery(request, config, datasource, fields)
+    async function preview(datasource: Datasource, fields: any) {
+      return config.previewQuery(request, config, datasource, fields, undefined)
     }
 
     it("should work with static variables", async () => {
@@ -300,10 +298,10 @@ describe("/queries", () => {
         queryString: "test={{ variable2 }}",
       })
       // these responses come from the mock
-      expect(res.body.schemaFields).toEqual({
-        opts: "json",
-        url: "string",
-        value: "string",
+      expect(res.body.schema).toEqual({
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
+        value: { type: "string", name: "value" },
       })
       expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
     })
@@ -314,10 +312,10 @@ describe("/queries", () => {
         path: "www.google.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual({
-        opts: "json",
-        url: "string",
-        value: "string",
+      expect(res.body.schema).toEqual({
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
+        value: { type: "string", name: "value" },
       })
       expect(res.body.rows[0].url).toContain("doctype%20html")
     })
@@ -337,10 +335,10 @@ describe("/queries", () => {
         path: "www.failonce.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schemaFields).toEqual({
-        fails: "number",
-        opts: "json",
-        url: "string",
+      expect(res.body.schema).toEqual({
+        fails: { type: "number", name: "fails" },
+        opts: { type: "json", name: "opts" },
+        url: { type: "string", name: "url" },
       })
       expect(res.body.rows[0].fails).toEqual(1)
     })
@@ -370,11 +368,19 @@ describe("/queries", () => {
   })
 
   describe("Current User Request Mapping", () => {
-    async function previewGet(datasource, fields, params) {
+    async function previewGet(
+      datasource: Datasource,
+      fields: any,
+      params: any
+    ) {
       return config.previewQuery(request, config, datasource, fields, params)
     }
 
-    async function previewPost(datasource, fields, params) {
+    async function previewPost(
+      datasource: Datasource,
+      fields: any,
+      params: any
+    ) {
       return config.previewQuery(
         request,
         config,
@@ -394,14 +400,18 @@ describe("/queries", () => {
           emailHdr: "{{[user].[email]}}",
         },
       })
-      const res = await previewGet(datasource, {
-        path: "www.google.com",
-        queryString: "email={{[user].[email]}}",
-        headers: {
-          queryHdr: "{{[user].[firstName]}}",
-          secondHdr: "1234",
+      const res = await previewGet(
+        datasource,
+        {
+          path: "www.google.com",
+          queryString: "email={{[user].[email]}}",
+          headers: {
+            queryHdr: "{{[user].[firstName]}}",
+            secondHdr: "1234",
+          },
         },
-      })
+        undefined
+      )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
       expect(parsedRequest.opts.headers).toEqual({

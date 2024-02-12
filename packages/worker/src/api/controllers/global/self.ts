@@ -91,6 +91,9 @@ export async function getSelf(ctx: any) {
     id: userId,
   }
 
+  // Adjust creators quotas (prevents wrong creators count if user has changed the plan)
+  await groups.adjustGroupCreatorsQuotas()
+
   // get the main body of the user
   const user = await userSdk.db.getUser(userId)
   ctx.body = await groups.enrichUserRolesFromGroups(user)
