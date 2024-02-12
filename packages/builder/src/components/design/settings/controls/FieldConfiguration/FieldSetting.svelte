@@ -151,7 +151,7 @@
     height: var(--spectrum-alias-item-height-m);
     padding: 0 var(--spectrum-alias-item-padding-m);
     border-radius: var(--spectrum-alias-border-radius-regular);
-    border: var(--spectrum-actionbutton-border-size) solid
+    border: 1px solid
       var(
         --spectrum-actionbutton-m-border-color,
         var(--spectrum-alias-border-color)
