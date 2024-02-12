@@ -89,7 +89,7 @@ export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceType?: TableSourceType
 }
 
-class TestConfiguration {
+export default class TestConfiguration {
   server: any
   request: supertest.SuperTest<supertest.Test> | undefined
   started: boolean
@@ -911,5 +911,3 @@ class TestConfiguration {
     return await this._req(config, null, layoutController.save)
   }
 }
-
-export = TestConfiguration
