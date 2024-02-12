@@ -911,3 +911,5 @@ export default class TestConfiguration {
     return await this._req(config, null, layoutController.save)
   }
 }
+
+module.exports = TestConfiguration
