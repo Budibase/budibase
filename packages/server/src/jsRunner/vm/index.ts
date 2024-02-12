@@ -206,9 +206,9 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
+    code = `(1,eval)(\`${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
       code
-    )};`
+    )}\`)`
 
     const script = this.isolate.compileModuleSync(code)
 
