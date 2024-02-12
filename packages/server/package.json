@@ -69,7 +69,7 @@
     "cookies": "0.8.0",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",
-    "dd-trace": "5.0.0",
+    "dd-trace": "5.2.0",
     "dotenv": "8.2.0",
     "form-data": "4.0.0",
     "global-agent": "3.0.0",
@@ -113,6 +113,7 @@
     "undici-types": "^6.0.1",
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
+    "vm2": "^3.9.19",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0"
   },

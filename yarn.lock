@@ -2227,6 +2227,13 @@
   dependencies:
     node-gyp-build "^3.9.0"
 
+"@datadog/native-appsec@7.0.0":
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/@datadog/native-appsec/-/native-appsec-7.0.0.tgz#a380174dd49aef2d9bb613a0ec8ead6dc7822095"
+  integrity sha512-bywstWFW2hWxzPuS0+mFMVHHL0geulx5yQFtsjfszaH2LTAgk2D+Rt40MKbAoZ8q3tRw2dy6aYQ7svO3ca8jpA==
+  dependencies:
+    node-gyp-build "^3.9.0"
+
 "@datadog/native-iast-rewriter@2.2.2":
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/@datadog/native-iast-rewriter/-/native-iast-rewriter-2.2.2.tgz#3f7feaf6be1af4c83ad063065b8ed509bbaf11cb"
@@ -8832,6 +8839,43 @@ dd-trace@5.0.0:
     semver "^7.5.4"
     tlhunter-sorted-set "^0.1.0"
 
+dd-trace@5.2.0:
+  version "5.2.0"
+  resolved "https://registry.yarnpkg.com/dd-trace/-/dd-trace-5.2.0.tgz#6ca2d76ece95f08d98468d7782c22f24192afa53"
+  integrity sha512-Z5ql3ZKzVW3DPstHPkTPcIPvKljHNtzTYY/WuZRlgT4XK7rMaN0j5nA8LlUh7m+tOPWs05IiKngbYVZjsqhRgA==
+  dependencies:
+    "@datadog/native-appsec" "7.0.0"
+    "@datadog/native-iast-rewriter" "2.2.2"
+    "@datadog/native-iast-taint-tracking" "1.6.4"
+    "@datadog/native-metrics" "^2.0.0"
+    "@datadog/pprof" "5.0.0"
+    "@datadog/sketches-js" "^2.1.0"
+    "@opentelemetry/api" "^1.0.0"
+    "@opentelemetry/core" "^1.14.0"
+    crypto-randomuuid "^1.0.0"
+    dc-polyfill "^0.1.2"
+    ignore "^5.2.4"
+    import-in-the-middle "^1.7.3"
+    int64-buffer "^0.1.9"
+    ipaddr.js "^2.1.0"
+    istanbul-lib-coverage "3.2.0"
+    jest-docblock "^29.7.0"
+    koalas "^1.0.2"
+    limiter "1.1.5"
+    lodash.sortby "^4.7.0"
+    lru-cache "^7.14.0"
+    methods "^1.1.2"
+    module-details-from-path "^1.0.3"
+    msgpack-lite "^0.1.26"
+    node-abort-controller "^3.1.1"
+    opentracing ">=0.12.1"
+    path-to-regexp "^0.1.2"
+    pprof-format "^2.0.7"
+    protobufjs "^7.2.5"
+    retry "^0.13.1"
+    semver "^7.5.4"
+    tlhunter-sorted-set "^0.1.0"
+
 debug@4, debug@4.3.4, debug@^4.0.0, debug@^4.0.1, debug@^4.1.0, debug@^4.1.1, debug@^4.2.0, debug@^4.3.1, debug@^4.3.2, debug@^4.3.3, debug@^4.3.4, debug@~4.3.1, debug@~4.3.2:
   version "4.3.4"
   resolved "https://registry.yarnpkg.com/debug/-/debug-4.3.4.tgz#1319f6579357f2338d3337d2cdd4914bb5dcc865"
@@ -12082,10 +12126,10 @@ import-from@^3.0.0:
   dependencies:
     resolve-from "^5.0.0"
 
-import-in-the-middle@^1.7.1:
-  version "1.7.2"
-  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.2.tgz#31c44088271b50ecb9cacbdfb1e5732c802e0658"
-  integrity sha512-coz7AjRnPyKW36J6JX5Bjz1mcX7MX1H2XsEGseVcnXMdzsAbbAu0HBZhiAem+3SAmuZdi+p8OwoB2qUpTRgjOQ==
+import-in-the-middle@^1.7.1, import-in-the-middle@^1.7.3:
+  version "1.7.3"
+  resolved "https://registry.yarnpkg.com/import-in-the-middle/-/import-in-the-middle-1.7.3.tgz#ffa784cdd57a47d2b68d2e7dd33070ff06baee43"
+  integrity sha512-R2I11NRi0lI3jD2+qjqyVlVEahsejw7LDnYEbGb47QEFjczE3bZYsmWheCTQA+LFs2DzOQxR7Pms7naHW1V4bQ==
   dependencies:
     acorn "^8.8.2"
     acorn-import-assertions "^1.9.0"
