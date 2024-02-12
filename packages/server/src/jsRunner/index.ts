@@ -1,7 +1,7 @@
 import vm from "vm"
 import env from "../environment"
-import { setJSRunner } from "@budibase/string-templates"
-import { context, timers } from "@budibase/backend-core"
+import { setJSRunner, setOnErrorLog } from "@budibase/string-templates"
+import { context, logging, timers } from "@budibase/backend-core"
 import tracer from "dd-trace"
 
 type TrackerFn = <T>(f: () => T) => T
@@ -58,4 +58,10 @@ export function init() {
       )
     })
   })
+
+  if (env.LOG_JS_ERRORS) {
+    setOnErrorLog((error: Error) => {
+      logging.logWarn(JSON.stringify(error))
+    })
+  }
 }
