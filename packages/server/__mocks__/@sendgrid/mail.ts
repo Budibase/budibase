@@ -11,7 +11,7 @@ module SendgridMock {
     }
 
     async send(msg: any) {
-      if (msg.to === "invalid@test.com") {
+      if (msg.to === "invalid@example.com") {
         throw "Invalid"
       }
       return msg
