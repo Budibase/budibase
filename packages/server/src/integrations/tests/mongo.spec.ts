@@ -221,6 +221,7 @@ describe("MongoDB Integration", () => {
     })
     expect(args[2]).toEqual({
       upsert: false,
+      includeResultMetadata: true,
     })
   })
 
