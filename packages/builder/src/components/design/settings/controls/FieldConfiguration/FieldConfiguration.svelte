@@ -185,16 +185,12 @@
 
     // Make new instance
     return {
-      ...store.actions.components.createInstance(
-        type,
-        {
-          _instanceName: name,
-          field: name,
-          label: name,
-          placeholder: name,
-        },
-        {}
-      ),
+      ...store.actions.components.createInstance(type, {
+        _instanceName: name,
+        field: name,
+        label: name,
+        placeholder: name,
+      }),
       active: true,
     }
   }

@@ -6,6 +6,7 @@
   import { Helpers } from "@budibase/bbui"
   import { getEventContextBindings } from "builderStore/dataBinding"
   import { cloneDeep, isEqual } from "lodash/fp"
+  import { generateIncrementedName } from "helpers/helpers"
 
   export let componentInstance
   export let componentBindings
@@ -23,7 +24,6 @@
   $: if (!isEqual(value, cachedValue)) {
     cachedValue = cloneDeep(value)
   }
-
   $: buttonList = sanitizeValue(cachedValue) || []
   $: buttonCount = buttonList.length
   $: eventContextBindings = getEventContextBindings({
@@ -73,14 +73,18 @@
         _instanceName: Helpers.uuid(),
         text: cfg.text,
         type: cfg.type || "primary",
-      },
-      {}
+      }
     )
   }
 
   const addButton = () => {
+    const name = generateIncrementedName({
+      items: buttonList,
+      extractName: button => button.text,
+      prefix: "Button",
+    })
     const newButton = buildPseudoInstance({
-      text: `Button ${buttonCount + 1}`,
+      text: name,
     })
     dispatch("change", [...buttonList, newButton])
     focusItem = newButton._id
