@@ -365,6 +365,7 @@ module.exports.doesContainString = (template, string) => {
 }
 
 module.exports.setJSRunner = javascript.setJSRunner
+module.exports.setOnErrorLog = javascript.setOnErrorLog
 
 module.exports.convertToJS = hbs => {
   const blocks = exports.findHBSBlocks(hbs)
