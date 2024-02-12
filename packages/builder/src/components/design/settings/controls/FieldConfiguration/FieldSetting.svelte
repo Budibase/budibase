@@ -85,7 +85,7 @@
               key="type"
               value={item._component}
               control={Select}
-              props={{ options: FieldTypes }}
+              props={{ options: FieldTypes, placeholder: null }}
               onChange={handleFieldTypeChange}
             />
           </div>
