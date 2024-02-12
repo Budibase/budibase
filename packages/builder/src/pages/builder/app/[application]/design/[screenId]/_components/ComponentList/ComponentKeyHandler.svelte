@@ -70,7 +70,9 @@
       componentTreeNodesStore.expandNode(component._id)
 
       const expandChildren = component => {
-        (component._children ?? []).forEach(child => {
+        const children = component._children ?? []
+
+        children.forEach(child => {
           componentTreeNodesStore.expandNode(child._id)
           expandChildren(child)
         })
@@ -82,7 +84,9 @@
       componentTreeNodesStore.collapseNode(component._id)
 
       const collapseChildren = component => {
-        (component._children ?? []).forEach(child => {
+        const children = component._children ?? []
+
+        children.forEach(child => {
           componentTreeNodesStore.collapseNode(child._id)
           collapseChildren(child)
         })
