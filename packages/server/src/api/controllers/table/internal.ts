@@ -18,10 +18,11 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     _rename?: RenameColumn
   } = {
     _id: generateTableID(),
-    ...rest,
-    type: "table",
-    sourceType: TableSourceType.INTERNAL,
     views: {},
+    ...rest,
+    // Ensure these fields are populated, even if not sent in the request
+    type: rest.type || "table",
+    sourceType: rest.sourceType || TableSourceType.INTERNAL,
   }
   const renaming = tableToSave._rename
   delete tableToSave._rename

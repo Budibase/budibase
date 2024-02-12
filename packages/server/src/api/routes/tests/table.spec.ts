@@ -5,6 +5,7 @@ import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
+  NumberFieldMetadata,
   RelationshipType,
   Row,
   SaveTableRequest,
@@ -83,7 +84,7 @@ describe("/tables", () => {
           },
         },
         views: {
-          view1: {
+          "table view": {
             id: "viewId",
             version: 2,
             name: "table view",
@@ -96,9 +97,29 @@ describe("/tables", () => {
       const expected: Table = {
         ...tableData,
         type: "table",
+        views: {
+          "table view": {
+            ...tableData.views!["table view"],
+            schema: {
+              autoId: {
+                autocolumn: true,
+                constraints: {
+                  presence: false,
+                  type: "number",
+                },
+                name: "id",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                visible: false,
+              } as NumberFieldMetadata,
+            },
+          },
+        },
         sourceType: TableSourceType.INTERNAL,
         sourceId: expect.any(String),
         _rev: expect.stringMatching(/^1-.+/),
+        _id: expect.any(String),
+        createdAt: mocks.date.MOCK_DATE.toISOString(),
         updatedAt: mocks.date.MOCK_DATE.toISOString(),
       }
       expect(testTable).toEqual(expected)
