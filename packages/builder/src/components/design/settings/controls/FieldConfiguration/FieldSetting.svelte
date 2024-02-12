@@ -21,6 +21,7 @@
 
   $: readableText = getReadableText(item)
   $: componentDef = store.actions.components.getDefinition(item._component)
+  $: fieldTypes = getFieldTypes()
 
   const onToggle = item => {
     return e => {
@@ -60,8 +61,6 @@
       })
   }
 
-  const FieldTypes = getFieldTypes()
-
   const handleFieldTypeChange = newType => {
     changeFieldType(item._id, newType)
   }
@@ -85,7 +84,10 @@
               key="type"
               value={item._component}
               control={Select}
-              props={{ options: FieldTypes, placeholder: null }}
+              props={{
+                options: fieldTypes,
+                placeholder: null,
+              }}
               onChange={handleFieldTypeChange}
             />
           </div>
