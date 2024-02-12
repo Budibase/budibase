@@ -80,7 +80,7 @@ describe("/static", () => {
           .set(config.defaultHeaders())
           .expect("Content-Type", /json/)
           .expect(200)
-        expect(res.body.signedUrl).toEqual("http://test.com/foo/bar")
+        expect(res.body.signedUrl).toEqual("http://example.com/foo/bar")
         expect(res.body.publicUrl).toEqual(
           `https://${bucket}.s3.eu-west-1.amazonaws.com/${key}`
         )

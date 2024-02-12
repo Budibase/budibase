@@ -3,7 +3,7 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 require("svelte/register")
 
 import { join } from "../../../utilities/centralPath"
-import uuid from "uuid"
+import * as uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {

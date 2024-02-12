@@ -41,6 +41,7 @@
 
   let autoSchema = {}
   let rows = []
+  let keys = {}
 
   const parseQuery = query => {
     modified = false
@@ -93,7 +94,13 @@
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      if (typeof error.message === "string") {
+        notifications.error(`Query Error: ${error.message}`)
+      } else if (typeof error.message?.code === "string") {
+        notifications.error(`Query Error: ${error.message.code}`)
+      } else {
+        notifications.error(`Query Error: ${JSON.stringify(error.message)}`)
+      }
 
       if (!suppressErrors) {
         throw error
@@ -137,8 +144,20 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  async function handleKeyDown(evt) {
+    keys[evt.key] = true
+    if ((keys["Meta"] || keys["Control"]) && keys["Enter"]) {
+      await runQuery({ suppressErrors: false })
+    }
+  }
+
+  function handleKeyUp(evt) {
+    delete keys[evt.key]
+  }
 </script>
 
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <QueryViewerSavePromptModal
   checkIsModified={() => checkIsModified(newQuery)}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}

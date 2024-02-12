@@ -1,4 +1,4 @@
-const { processString } = require("../src/index.cjs")
+const { processString } = require("../src/index.js")
 
 describe("Handling context properties with spaces in their name", () => {
   it("should allow through literal specifiers", async () => {

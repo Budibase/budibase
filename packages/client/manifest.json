@@ -4780,7 +4780,8 @@
       }
     ],
     "context": {
-      "type": "schema"
+      "type": "schema",
+      "scope": "local"
     }
   },
   "daterangepicker": {
@@ -6801,6 +6802,17 @@
         "label": "Disabled",
         "key": "disabled",
         "defaultValue": false
+      },
+      {
+        "type": "boolean",
+        "label": "Read only",
+        "key": "readonly",
+        "defaultValue": false,
+        "dependsOn": {
+          "setting": "disabled",
+          "value": true,
+          "invert": true
+        }
       },
       {
         "type": "select",

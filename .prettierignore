@@ -12,3 +12,4 @@ packages/pro/coverage
 packages/account-portal/packages/ui/build
 packages/account-portal/packages/ui/.routify
 packages/account-portal/packages/server/build
+**/*.ivm.bundle.js
