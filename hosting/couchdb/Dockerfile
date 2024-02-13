@@ -1,5 +1,10 @@
 # Modified from https://github.com/apache/couchdb-docker/blob/main/3.2.1/Dockerfile
-FROM node:20-slim
+#
+# Everything in this `base` image is adapted from the official `couchdb` image's
+# Dockerfile. Only modifications related to upgrading from Debian bullseye to
+# bookworm have been included. The `runner` image contains Budibase's
+# customisations to the image, e.g. adding Clouseau.
+FROM node:20-slim AS base
 
 # Add CouchDB user account to make sure the IDs are assigned consistently
 RUN groupadd -g 5984 -r couchdb && useradd -u 5984 -d /opt/couchdb -g couchdb couchdb
@@ -15,13 +20,12 @@ RUN set -ex; \
      ; \
     rm -rf /var/lib/apt/lists/*
 
-# grab gosu for easy step-down from root and tini for signal handling and zombie reaping
+# grab tini for signal handling and zombie reaping
 # see https://github.com/apache/couchdb-docker/pull/28#discussion_r141112407
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends gosu tini; \
+    apt-get install -y --no-install-recommends tini; \
     rm -rf /var/lib/apt/lists/*; \
-    gosu nobody true; \
     tini --version
 
 # http://docs.couchdb.org/en/latest/install/unix.html#installing-the-apache-couchdb-packages
@@ -89,7 +93,9 @@ VOLUME /opt/couchdb/data
 # 4369: Erlang portmap daemon (epmd)
 # 9100: CouchDB cluster communication port
 EXPOSE 5984 4369 9100
-# CMD ["/opt/couchdb/bin/couchdb"]
+CMD ["/opt/couchdb/bin/couchdb"]
+
+FROM base as runner
 
 ENV COUCHDB_USER admin
 ENV COUCHDB_PASSWORD admin
