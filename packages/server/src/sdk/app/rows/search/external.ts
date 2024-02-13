@@ -101,7 +101,16 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, columns, rowIds, query, sort, sortOrder } = options
+  const {
+    tableId,
+    format,
+    columns,
+    rowIds,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+  } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
   let requestQuery: SearchFilters = {}
@@ -158,7 +167,11 @@ export async function exportRows(
   let content: string
   switch (format) {
     case exporters.Format.CSV:
-      content = exporters.csv(headers ?? Object.keys(schema), exportRows)
+      content = exporters.csv(
+        headers ?? Object.keys(schema),
+        exportRows,
+        delimiter
+      )
       break
     case exporters.Format.JSON:
       content = exporters.json(exportRows)
