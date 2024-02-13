@@ -16,9 +16,9 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { automationsEnabled } from "../features"
+import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 
-const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 let Runner: Thread
@@ -198,6 +198,13 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
     !isRebootTrigger(automation) &&
     trigger?.inputs.cron
   ) {
+    const cronExp = trigger.inputs.cron
+    const validation = helpers.cron.validate(cronExp)
+    if (!validation.valid) {
+      throw new Error(
+        `Invalid automation CRON "${cronExp}" - ${validation.err.join(", ")}`
+      )
+    }
     // make a job id rather than letting Bull decide, makes it easier to handle on way out
     const jobId = `${appId}_cron_${newid()}`
     const job: any = await automationQueue.add(
@@ -205,7 +212,7 @@ export async function enableCronTrigger(appId: any, automation: Automation) {
         automation,
         event: { appId, timestamp: Date.now() },
       },
-      { repeat: { cron: trigger.inputs.cron }, jobId }
+      { repeat: { cron: cronExp }, jobId }
     )
     // Assign cron job ID from bull so we can remove it later if the cron trigger is removed
     trigger.cronJobId = job.id
