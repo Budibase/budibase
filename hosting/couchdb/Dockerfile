@@ -1,4 +1,4 @@
-# Modified from https://github.com/apache/couchdb-docker/blob/main/3.2.1/Dockerfile
+# Modified from https://github.com/apache/couchdb-docker/blob/main/3.3.3/Dockerfile
 #
 # Everything in this `base` image is adapted from the official `couchdb` image's
 # Dockerfile. Only modifications related to upgrading from Debian bullseye to
