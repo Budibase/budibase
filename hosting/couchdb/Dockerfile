@@ -1,5 +1,5 @@
 # Modified from https://github.com/apache/couchdb-docker/blob/main/3.2.1/Dockerfile
-FROM debian:bookworm-slim
+FROM node:20-slim
 
 # Add CouchDB user account to make sure the IDs are assigned consistently
 RUN groupadd -g 5984 -r couchdb && useradd -u 5984 -d /opt/couchdb -g couchdb couchdb
