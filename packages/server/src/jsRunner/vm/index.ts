@@ -115,9 +115,9 @@ export class IsolatedVM implements VM {
     // 4. Stringify the result in order to convert the result from BSON to json
     this.codeWrapper = code =>
       `(function(){
-            const data = deserialize(bsonData, { validation: { utf8: false } }).data;
+            const data = bson.deserialize(bsonData, { validation: { utf8: false } }).data;
             const result = ${code}
-            return toJson(result);
+            return bson.toJson(result);
         })();`
 
     const bsonSource = loadBundle(BundleType.BSON)
@@ -137,7 +137,7 @@ export class IsolatedVM implements VM {
     })
 
     // "Polyfilling" text decoder. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
-    const textDecoderPolyfill = class TextDecoder {
+    const textDecoderPolyfill = class TextDecoderMock {
       constructorArgs
 
       constructor(...constructorArgs: any) {
@@ -151,19 +151,11 @@ export class IsolatedVM implements VM {
           functionArgs: input,
         })
       }
-    }.toString()
-    const bsonModule = this.isolate.compileModuleSync(
-      `${textDecoderPolyfill};${bsonSource}`
-    )
-    bsonModule.instantiateSync(this.vm, specifier => {
-      throw new Error(`No imports allowed. Required: ${specifier}`)
-    })
+    }
+      .toString()
+      .replace(/TextDecoderMock/, "TextDecoder")
 
-    this.moduleHandler.registerModule(
-      bsonModule,
-      "{deserialize, toJson}",
-      "bson"
-    )
+    this.moduleHandler.registerModule(`${textDecoderPolyfill};${bsonSource}`)
 
     return this
   }
@@ -178,13 +170,17 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};${this.codeWrapper(code)};`
+    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
+      code
+    )}`
 
     const script = this.isolate.compileScriptSync(code)
 
-    const result = script.runSync(this.vm, { timeout: this.invocationTimeout })
+    script.runSync(this.vm, { timeout: this.invocationTimeout })
 
-    return result
+    // We can't rely on the script run result as it will not work for non-transferable values
+    const result = this.getFromContext(this.resultKey)
+    return result.out
   }
 
   private registerCallbacks(functions: Record<string, any>) {
@@ -219,5 +215,12 @@ export class IsolatedVM implements VM {
           : new ivm.ExternalCopy(value).copyInto({ release: true })
       )
     }
+  }
+
+  private getFromContext(key: string) {
+    const ref = this.vm.global.getSync(key, { reference: true })
+    const result = ref.copySync()
+    ref.release()
+    return result
   }
 }
