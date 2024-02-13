@@ -110,6 +110,7 @@ export async function exportRows(
     sort,
     sortOrder,
     delimiter,
+    customHeaders,
   } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
@@ -170,7 +171,8 @@ export async function exportRows(
       content = exporters.csv(
         headers ?? Object.keys(schema),
         exportRows,
-        delimiter
+        delimiter,
+        customHeaders
       )
       break
     case exporters.Format.JSON:
