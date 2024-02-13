@@ -1,7 +1,19 @@
 import { Row, TableSchema } from "@budibase/types"
 
-export function csv(headers: string[], rows: Row[], delimiter: string = ",") {
-  let csv = headers.map(key => `"${key}"`).join(delimiter)
+function getHeaders(
+  headers: string[],
+  customHeaders: { [key: string]: string }
+) {
+  return headers.map(header => `"${customHeaders[header] || header}"`)
+}
+
+export function csv(
+  headers: string[],
+  rows: Row[],
+  delimiter: string = ",",
+  customHeaders: { [key: string]: string } = {}
+) {
+  let csv = getHeaders(headers, customHeaders).join(delimiter)
 
   for (let row of rows) {
     csv = `${csv}\n${headers

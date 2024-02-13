@@ -1,15 +1,9 @@
 <script>
-  import { Label, Select, Body, Multiselect } from "@budibase/bbui"
-  import {
-    findAllMatchingComponents,
-    findComponent,
-  } from "builderStore/componentUtils"
+  import { Label, Select, Body } from "@budibase/bbui"
+  import { findAllMatchingComponents } from "builderStore/componentUtils"
   import { currentAsset } from "builderStore"
   import { onMount } from "svelte"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
+  import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
 
   export let parameters
 
@@ -53,29 +47,23 @@
 
   $: tables = findAllMatchingComponents($currentAsset?.props, component =>
     component._component.endsWith("table")
-  ).map(table => ({
-    label: table._instanceName,
-    value: table._id,
-  }))
+  )
   $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
     component._component.endsWith("tableblock")
-  ).map(block => ({
-    label: block._instanceName,
-    value: `${block._id}-table`,
+  )
+  $: components = tables.concat(tableBlocks)
+  $: componentOptions = components.map(table => ({
+    label: table._instanceName,
+    value: table._component.includes("tableblock")
+      ? `${table._id}-table`
+      : table._id,
   }))
-  $: componentOptions = tables.concat(tableBlocks)
-  $: columnOptions = getColumnOptions(parameters.tableComponentId)
-
-  const getColumnOptions = tableId => {
-    // Strip block suffix if block component
-    if (tableId?.includes("-")) {
-      tableId = tableId.split("-")[0]
-    }
-    const selectedTable = findComponent($currentAsset?.props, tableId)
-    const datasource = getDatasourceForProvider($currentAsset, selectedTable)
-    const { schema } = getSchemaForDatasource($currentAsset, datasource)
-    return Object.keys(schema || {})
-  }
+  $: selectedTableId = parameters.tableComponentId?.includes("-")
+    ? parameters.tableComponentId.split("-")[0]
+    : parameters.tableComponentId
+  $: selectedTable = components.find(
+    component => component._id === selectedTableId
+  )
 
   onMount(() => {
     if (!parameters.type) {
@@ -112,10 +100,20 @@
       disabled={parameters.type !== "csv"}
     />
     <Label small>Export columns</Label>
-    <Multiselect
-      placeholder="All columns"
-      bind:value={parameters.columns}
-      options={columnOptions}
+    <ColumnEditor
+      value={parameters.columns}
+      allowCellEditing={false}
+      componentInstance={selectedTable}
+      on:change={e => {
+        const columns = e.detail
+        parameters.customHeaders = columns.reduce((headerMap, column) => {
+          return {
+            [column.name]: column.displayName,
+            ...headerMap,
+          }
+        }, {})
+        parameters.columns = columns.map(column => column.name)
+      }}
     />
   </div>
 </div>
@@ -139,7 +137,7 @@
   .params {
     display: grid;
     column-gap: var(--spacing-xs);
-    row-gap: var(--spacing-s);
+    row-gap: var(--spacing-m);
     grid-template-columns: 90px 1fr 75px;
     align-items: center;
   }

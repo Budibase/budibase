@@ -341,6 +341,7 @@ const exportDataHandler = async action => {
         format: action.parameters.type,
         columns: action.parameters.columns,
         delimiter: action.parameters.delimiter,
+        customHeaders: action.parameters.customHeaders,
       })
       download(data, `${selection.tableId}.${action.parameters.type}`)
     } catch (error) {

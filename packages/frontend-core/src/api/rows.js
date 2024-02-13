@@ -91,13 +91,22 @@ export const buildRowEndpoints = API => ({
    * @param columns which columns to export (all if undefined)
    * @param delimiter how values should be separated in a CSV (default is comma)
    */
-  exportRows: async ({ tableId, rows, format, columns, search, delimiter }) => {
+  exportRows: async ({
+    tableId,
+    rows,
+    format,
+    columns,
+    search,
+    delimiter,
+    customHeaders,
+  }) => {
     return await API.post({
       url: `/api/${tableId}/rows/exportRows?format=${format}`,
       body: {
         rows,
         columns,
         delimiter,
+        customHeaders,
         ...search,
       },
       parseResponse: async response => {

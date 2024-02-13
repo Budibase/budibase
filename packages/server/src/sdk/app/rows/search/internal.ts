@@ -93,6 +93,7 @@ export async function exportRows(
     sort,
     sortOrder,
     delimiter,
+    customHeaders,
   } = options
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
@@ -137,7 +138,12 @@ export async function exportRows(
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
-      content: csv(headers ?? Object.keys(rows[0]), exportRows, delimiter),
+      content: csv(
+        headers ?? Object.keys(rows[0]),
+        exportRows,
+        delimiter,
+        customHeaders
+      ),
     }
   } else if (format === Format.JSON) {
     return {

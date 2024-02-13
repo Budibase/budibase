@@ -38,6 +38,7 @@ export interface ExportRowsRequest {
   sort?: string
   sortOrder?: SortOrder
   delimiter?: string
+  customHeaders?: { [key: string]: string }
 }
 
 export type ExportRowsResponse = ReadStream

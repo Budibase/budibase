@@ -42,6 +42,7 @@ export interface ExportRowsParams {
   query?: SearchFilters
   sort?: string
   sortOrder?: SortOrder
+  customHeaders?: { [key: string]: string }
 }
 
 export interface ExportRowsResult {
