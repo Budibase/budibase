@@ -10,6 +10,8 @@ import {
   AutomationStepSchema,
   AutomationStepType,
 } from "@budibase/types"
+import { utils } from "@budibase/backend-core"
+import env from "../../environment"
 
 export const definition: AutomationStepSchema = {
   name: "External Data Connector",
@@ -84,7 +86,10 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   })
 
   try {
-    await queryController.executeV2(ctx, { isAutomation: true })
+    await Promise.race([
+      queryController.executeV2(ctx, { isAutomation: true }),
+      utils.timeout(env.QUERY_THREAD_TIMEOUT, { reject: true }),
+    ])
     const { data, ...rest } = ctx.body
 
     return {
