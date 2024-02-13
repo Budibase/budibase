@@ -114,7 +114,8 @@ EOWARN
 	fi
 
 	if [ "$(id -u)" = '0' ]; then
-		exec gosu couchdb "$@"
+		export HOME=$(echo ~couchdb)
+		exec setpriv --reuid=couchdb --regid=couchdb --clear-groups "$@"
 	fi
 fi
 
