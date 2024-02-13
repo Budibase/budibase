@@ -134,7 +134,7 @@ export async function exportRows(
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",

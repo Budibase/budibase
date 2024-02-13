@@ -112,7 +112,7 @@
             ...headerMap,
           }
         }, {})
-        parameters.columns = columns.map(column => column.name)
+        parameters.columns = columns
       }}
     />
   </div>
