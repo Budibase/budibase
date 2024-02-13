@@ -10,7 +10,7 @@
     $redirect("../")
   }
 
-  if ($admin.checklist?.branding) {
+  if ($admin?.checklist?.branding) {
     let url = new URL("http://hello.petertest.com:10001/auth/login")
     let hostname = url.hostname
     let parts = hostname.split(".")
