@@ -340,6 +340,7 @@ const exportDataHandler = async action => {
         rows: selection.selectedRows,
         format: action.parameters.type,
         columns: action.parameters.columns,
+        delimiter: action.parameters.delimiter,
       })
       download(data, `${selection.tableId}.${action.parameters.type}`)
     } catch (error) {

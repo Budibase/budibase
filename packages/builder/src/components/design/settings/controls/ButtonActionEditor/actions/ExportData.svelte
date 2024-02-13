@@ -34,8 +34,20 @@
       value: ";",
     },
     {
+      label: ":",
+      value: ":",
+    },
+    {
       label: "|",
       value: "|",
+    },
+    {
+      label: "~",
+      value: "~",
+    },
+    {
+      label: "[tab]",
+      value: "  ",
     },
   ]
 
@@ -90,14 +102,15 @@
       options={componentOptions}
       on:change={() => (parameters.columns = [])}
     />
-    <Select label="Export as" bind:value={parameters.type} options={FORMATS} />
-    {#if parameters.type === "csv"}
-      <Select
-        label="Delimiter"
-        bind:value={parameters.delimiter}
-        options={DELIMITERS}
-      />
-    {/if}
+    <span />
+    <Label small>Export as</Label>
+    <Select bind:value={parameters.type} options={FORMATS} />
+    <Select
+      bind:value={parameters.delimiter}
+      placeholder={null}
+      options={DELIMITERS}
+      disabled={parameters.type !== "csv"}
+    />
     <Label small>Export columns</Label>
     <Multiselect
       placeholder="All columns"
@@ -127,7 +140,7 @@
     display: grid;
     column-gap: var(--spacing-xs);
     row-gap: var(--spacing-s);
-    grid-template-columns: 90px 1fr;
+    grid-template-columns: 90px 1fr 75px;
     align-items: center;
   }
 </style>

@@ -37,6 +37,7 @@ export interface ExportRowsRequest {
   query?: SearchFilters
   sort?: string
   sortOrder?: SortOrder
+  delimiter?: string
 }
 
 export type ExportRowsResponse = ReadStream

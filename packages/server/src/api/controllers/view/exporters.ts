@@ -1,7 +1,7 @@
 import { Row, TableSchema } from "@budibase/types"
 
-export function csv(headers: string[], rows: Row[]) {
-  let csv = headers.map(key => `"${key}"`).join(",")
+export function csv(headers: string[], rows: Row[], delimiter: string = ",") {
+  let csv = headers.map(key => `"${key}"`).join(delimiter)
 
   for (let row of rows) {
     csv = `${csv}\n${headers
@@ -15,7 +15,7 @@ export function csv(headers: string[], rows: Row[]) {
             : ""
         return val.trim()
       })
-      .join(",")}`
+      .join(delimiter)}`
   }
   return csv
 }
