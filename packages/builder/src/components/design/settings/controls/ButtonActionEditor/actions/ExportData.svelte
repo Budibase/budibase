@@ -24,6 +24,21 @@
     },
   ]
 
+  const DELIMITERS = [
+    {
+      label: ",",
+      value: ",",
+    },
+    {
+      label: ";",
+      value: ";",
+    },
+    {
+      label: "|",
+      value: "|",
+    },
+  ]
+
   $: tables = findAllMatchingComponents($currentAsset?.props, component =>
     component._component.endsWith("table")
   ).map(table => ({
@@ -54,6 +69,9 @@
     if (!parameters.type) {
       parameters.type = "csv"
     }
+    if (!parameters.delimiter) {
+      parameters.delimiter = ","
+    }
   })
 </script>
 
@@ -72,8 +90,14 @@
       options={componentOptions}
       on:change={() => (parameters.columns = [])}
     />
-    <Label small>Export as</Label>
-    <Select bind:value={parameters.type} options={FORMATS} />
+    <Select label="Export as" bind:value={parameters.type} options={FORMATS} />
+    {#if parameters.type === "csv"}
+      <Select
+        label="Delimiter"
+        bind:value={parameters.delimiter}
+        options={DELIMITERS}
+      />
+    {/if}
     <Label small>Export columns</Label>
     <Multiselect
       placeholder="All columns"
