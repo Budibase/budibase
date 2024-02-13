@@ -30,6 +30,11 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
+  it("it can execute sloppy javascript", async () => {
+    const output = await processJS(`a=2;b=3;return a + b`)
+    expect(output).toBe(5)
+  })
+
   it("should prevent sandbox escape", async () => {
     const output = await processJS(
       `return this.constructor.constructor("return process")()`
