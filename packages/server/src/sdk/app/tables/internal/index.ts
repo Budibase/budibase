@@ -75,11 +75,13 @@ export async function save(
     if (!tableView) continue
 
     if (viewsSdk.isV2(tableView)) {
-      table.views[view] = viewsSdk.syncSchema(
-        oldTable!.views![view] as ViewV2,
-        table.schema,
-        renaming
-      )
+      if (oldTable?.views && oldTable.views[view]) {
+        table.views[view] = viewsSdk.syncSchema(
+          oldTable.views[view] as ViewV2,
+          table.schema,
+          renaming
+        )
+      }
       continue
     }
 
