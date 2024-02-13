@@ -80,7 +80,7 @@ describe("/api/global/auth", () => {
 
       it("should return 403 when user doesn't exist", async () => {
         const tenantId = config.tenantId!
-        const email = "invaliduser@test.com"
+        const email = "invaliduser@example.com"
         const password = "password"
 
         const response = await config.api.auth.login(
@@ -229,7 +229,7 @@ describe("/api/global/auth", () => {
           )
 
           expect(res.body).toEqual({
-            message: "Cannot reset password.",
+            message: "Password change is disabled for this user",
             status: 400,
           })
         }
@@ -261,8 +261,12 @@ describe("/api/global/auth", () => {
             )
 
             // convert to account owner now that password has been requested
-            const account = structures.accounts.ssoAccount() as CloudAccount
-            mocks.accounts.getAccount.mockReturnValueOnce(
+            const account: CloudAccount = {
+              ...structures.accounts.ssoAccount(),
+              budibaseUserId: "budibaseUserId",
+              email: user.email,
+            }
+            mocks.accounts.getAccountByTenantId.mockReturnValueOnce(
               Promise.resolve(account)
             )
 

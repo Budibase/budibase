@@ -101,7 +101,7 @@ export class UserAPI extends TestAPI {
     if (!request) {
       request = {
         email: structures.email(),
-        password: generator.string(),
+        password: generator.string({ length: 8 }),
         tenantId: structures.tenant.id(),
       }
     }

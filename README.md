@@ -11,7 +11,7 @@
   The low code platform you'll enjoy using
 </h3>
 <p align="center">
-  Budibase is an open source low-code platform, and the easiest way to build internal apps that improve productivity.
+  Budibase is an open-source low-code platform that saves engineers 100s of hours building forms, portals, and approval apps, securely.
 </p>
 
 <h3 align="center">
@@ -20,7 +20,7 @@
 <br>
 
 <p align="center">
-  <img alt="Budibase design ui" src="https://res.cloudinary.com/daog6scxm/image/upload/v1633524049/ui/design-ui-wide-mobile_gdaveq.jpg">
+  <img alt="Budibase design ui" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680181644/ui/homepage-design-ui_sizp7b.png">
 </p>
 
 <p align="center">
@@ -57,7 +57,7 @@
 ## ✨ Features
 
 ### Build and ship real software 
-Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing your users with a great experience.
+Unlike other platforms, with Budibase you build and ship single page applications. Budibase applications have performance baked in and can be designed responsively, providing users with a great experience.
 <br /><br />
 
 ### Open source and extensible
@@ -65,40 +65,36 @@ Budibase is open-source - licensed as GPL v3. This should fill you with confiden
 <br /><br />
 
 ### Load data or start from scratch
-Budibase pulls in data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no datasources. [Request new datasources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+Budibase pulls data from multiple sources, including MongoDB, CouchDB, PostgreSQL, MySQL, Airtable, S3, DynamoDB, or a REST API. And unlike other platforms, with Budibase you can start from scratch and create business apps with no data sources. [Request new datasources](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
-  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/data_n1tlhf.png">
+  <img alt="Budibase data" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680281798/ui/data_klbuna.png">
 </p>
 <br /><br />
 
 ### Design and build apps with powerful pre-made components
 
-Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose a lot of your favourite CSS styling options so you can go that extra creative mile. [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
+Budibase comes out of the box with beautifully designed, powerful components which you can use like building blocks to build your UI. We also expose many of your favourite CSS styling options so you can go that extra creative mile. [Request new component](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 
 <p align="center">
-  <img alt="Budibase design" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970243/Out%20of%20beta%20launch/design-like-a-pro_qhlfeu.gif">
+  <img alt="Budibase design" src="https://res.cloudinary.com/daog6scxm/image/upload/v1675437167/ui/form_2x_mbli8y.png">
 </p>
 <br /><br />
 
-### Automate processes, integrate with other tools, and connect to webhooks
-Save time by automating manual processes and workflows. From connecting to webhooks, to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
-
-<p align="center">
-  <img alt="Budibase automations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970486/Out%20of%20beta%20launch/automation_riro7u.png">
-</p>
+### Automate processes, integrate with other tools and connect to webhooks
+Save time by automating manual processes and workflows. From connecting to webhooks to automating emails, simply tell Budibase what to do and let it work for you. You can easily [create new automations for Budibase here](https://github.com/Budibase/automations) or [Request new automation](https://github.com/Budibase/budibase/discussions?discussions_q=category%3AIdeas).
 <br /><br />
 
 ### Integrate with your favorite tools
 Budibase integrates with a number of popular tools allowing you to build apps that perfectly fit your stack.
 
 <p align="center">
-  <img alt="Budibase integrations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1636970242/Out%20of%20beta%20launch/integrations_kc7dqt.png">
+  <img alt="Budibase integrations" src="https://res.cloudinary.com/daog6scxm/image/upload/v1680195228/ui/automate_fg9z07.png">
 </p>
 <br /><br />
 
-### Admin paradise
-Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user-management to the group manager.
+### Deploy with confidence and security
+Budibase is made to scale. With Budibase, you can self-host on your own infrastructure and globally manage users, onboarding, SMTP, apps, groups, theming and more. You can also provide users/groups with an app portal and disseminate user management to the group manager.
 
 - Checkout the promo video: https://youtu.be/xoljVpty_Kw
 
@@ -119,17 +115,14 @@ As with anything that we build in Budibase, our new public API is simple to use,
 #### Docs
 You can learn more about the Budibase API at the following places:
 
-- [General documentation](https://docs.budibase.com/docs/public-api) : Learn how to get your API key, how to use spec, and how to use with Postman
+- [General documentation](https://docs.budibase.com/docs/public-api): Learn how to get your API key, how to use spec, and how to use Postman
 - [Interactive API documentation](https://docs.budibase.com/reference/post_applications) : Learn how to interact with the API
 
-#### Guides
-
-- [Build an app with Budibase and Next.js](https://budibase.com/blog/building-a-crud-app-with-budibase-and-next.js/)
+<br /><br />
 
 ## 🏁 Get started
 
-Deploy Budibase self-hosted in your existing infrastructure, using Docker, Kubernetes, and Digital Ocean.
-Or use Budibase Cloud if you don't need to self-host, and would like to get started quickly.
+Deploy Budibase using Docker, Kubernetes, and Digital Ocean on your existing infrastructure. Or use Budibase Cloud if you don't need to self-host and would like to get started quickly.
 
 ### [Get started with self-hosting Budibase](https://docs.budibase.com/docs/hosting-methods)
 
@@ -162,7 +155,7 @@ If you have a question or would like to talk with other Budibase users and join 
 
 ## ❗ Code of conduct
 
-Budibase is dedicated to providing a welcoming, diverse, and harrassment-free experience for everyone. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/docs/CODE_OF_CONDUCT.md). Please read it.
+Budibase is dedicated to providing everyone a welcoming, diverse, and harassment-free experience. We expect everyone in the Budibase community to abide by our [**Code of Conduct**](https://github.com/Budibase/budibase/blob/HEAD/docs/CODE_OF_CONDUCT.md). Please read it.
 <br />
 
 
@@ -171,16 +164,16 @@ Budibase is dedicated to providing a welcoming, diverse, and harrassment-free ex
 
 ## 🙌 Contributing to Budibase
 
-From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API please create an issue first. This way we can ensure your work is not in vain.
-Environment setup instructions are available for [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) and [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
+From opening a bug report to creating a pull request: every contribution is appreciated and welcomed. If you're planning to implement a new feature or change the API, please create an issue first. This way, we can ensure your work is not in vain.
+Environment setup instructions are available [here](https://github.com/Budibase/budibase/tree/HEAD/docs/CONTRIBUTING.md).
 
 ### Not Sure Where to Start?
-A good place to start contributing, is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
+A good place to start contributing is the [First time issues project](https://github.com/Budibase/budibase/projects/22).
 
 ### How the repository is organized
 Budibase is a monorepo managed by lerna. Lerna manages the building and publishing of the budibase packages. At a high level, here are the packages that make up Budibase.
 
-- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client side svelte application.
+- [packages/builder](https://github.com/Budibase/budibase/tree/HEAD/packages/builder) - contains code for the budibase builder client-side svelte application.
 
 - [packages/client](https://github.com/Budibase/budibase/tree/HEAD/packages/client) - A module that runs in the browser responsible for reading JSON definition and creating living, breathing web apps from it.
 
@@ -193,7 +186,7 @@ For more information, see [CONTRIBUTING.md](https://github.com/Budibase/budibase
 
 ## 📝 License
 
-Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps that you build can be licensed however you like.
+Budibase is open-source, licensed as [GPL v3](https://www.gnu.org/licenses/gpl-3.0.en.html). The client and component libraries are licensed as [MPL](https://directory.fsf.org/wiki/License:MPL-2.0) - so the apps you build can be licensed however you like.
 
 <br /><br />
 

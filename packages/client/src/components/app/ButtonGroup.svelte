@@ -29,8 +29,8 @@
           type,
           quiet,
           disabled,
-          size,
           icon,
+          size: size || "M",
         }}
       />
     {/each}

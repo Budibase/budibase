@@ -1,4 +1,4 @@
-FROM node:18-slim as build
+FROM node:20-slim as build
 
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
@@ -42,7 +42,7 @@ COPY packages/string-templates packages/string-templates
 FROM budibase/couchdb as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
-ENV NODE_MAJOR 18
+ENV NODE_MAJOR 20
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
@@ -124,6 +124,8 @@ HEALTHCHECK --interval=15s --timeout=15s --start-period=45s CMD "/healthcheck.sh
 
 # must set this just before running
 ENV NODE_ENV=production
+# this is required for isolated-vm to work on Node 20+
+ENV NODE_OPTIONS="--no-node-snapshot"
 WORKDIR /
 
 CMD ["./runner.sh"]

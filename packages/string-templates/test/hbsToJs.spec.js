@@ -1,4 +1,4 @@
-const { convertToJS } = require("../src/index.cjs")
+const { convertToJS } = require("../src/index.js")
 
 function checkLines(response, lines) {
   const toCheck = response.split("\n")
@@ -125,6 +125,14 @@ describe("Test that the string processing works correctly", () => {
       'const var1 = helpers.avg(helpers.abs($("val1")), $("val2"));',
       "const var2 = helpers.add(1, 2);",
       "return `average: ${var1} add: ${var2}`;",
+    ])
+  })
+
+  it("should handle uuids", () => {
+    const response = convertToJS("This is: {{ uuid }}")
+    checkLines(response, [
+      "const var1 = helpers.uuid();",
+      "return `This is: ${var1}`;",
     ])
   })
 })

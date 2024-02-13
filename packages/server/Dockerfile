@@ -1,4 +1,4 @@
-FROM node:18-slim
+FROM node:20-slim
 
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-check="scripts/watchtower-hooks/pre-check.sh"
 LABEL com.centurylinklabs.watchtower.lifecycle.pre-update="scripts/watchtower-hooks/pre-update.sh"
@@ -82,6 +82,8 @@ EXPOSE 4001
 # due to this causing yarn to stop installing dev dependencies
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
+# this is required for isolated-vm to work on Node 20+
+ENV NODE_OPTIONS="--no-node-snapshot"
 ENV CLUSTER_MODE=${CLUSTER_MODE}
 ENV TOP_LEVEL_PATH=/app
 

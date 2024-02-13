@@ -53,6 +53,8 @@
   export let value = ""
   export let placeholder = null
   export let autocompleteEnabled = true
+  export let autofocus = false
+  export let jsBindingWrapping = true
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -186,7 +188,7 @@
       )
       complete.push(
         EditorView.inputHandler.of((view, from, to, insert) => {
-          if (insert === "$") {
+          if (jsBindingWrapping && insert === "$") {
             let { text } = view.state.doc.lineAt(from)
 
             const left = from ? text.substring(0, from) : ""
@@ -239,6 +241,12 @@
       extensions: buildExtensions(baseExtensions),
       parent: textarea,
     })
+  }
+
+  $: {
+    if (autofocus && isEditorInitialised) {
+      editor.focus()
+    }
   }
 
   $: editorHeight = typeof height === "number" ? `${height}px` : height

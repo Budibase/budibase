@@ -23,6 +23,7 @@ import { automationsEnabled, printFeatures } from "./features"
 import Koa from "koa"
 import { Server } from "http"
 import { AddressInfo } from "net"
+import * as jsRunner from "./jsRunner"
 
 let STARTUP_RAN = false
 
@@ -137,7 +138,11 @@ export async function startup(app?: Koa, server?: Server) {
             bbAdminEmail,
             bbAdminPassword,
             tenantId,
-            { hashPassword: true, requirePassword: true }
+            {
+              hashPassword: true,
+              requirePassword: true,
+              skipPasswordValidation: true,
+            }
           )
           // Need to set up an API key for automated integration tests
           if (env.isTest()) {
@@ -152,4 +157,6 @@ export async function startup(app?: Koa, server?: Server) {
       }
     })
   }
+
+  jsRunner.init()
 }

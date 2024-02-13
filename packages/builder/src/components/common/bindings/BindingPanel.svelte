@@ -29,10 +29,9 @@
     hbAutocomplete,
     EditorModes,
     bindingsToCompletions,
-    hbInsert,
-    jsInsert,
   } from "../CodeEditor"
   import BindingPicker from "./BindingPicker.svelte"
+  import { BindingHelpers } from "./utils"
 
   const dispatch = createEventDispatcher()
 
@@ -45,6 +44,7 @@
   export let valid
   export let allowJS = false
   export let allowHelpers = true
+  export let autofocusEditor = false
 
   const drawerActions = getContext("drawer-actions")
   const bindingDrawerActions = getContext("binding-drawer-actions")
@@ -59,8 +59,10 @@
   let targetMode = null
 
   $: usingJS = mode === "JavaScript"
-  $: editorMode = mode == "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
+  $: editorMode =
+    mode === "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
   $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
+  $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
   const updateValue = val => {
     valid = isValid(readableToRuntimeBinding(bindings, val))
@@ -69,31 +71,13 @@
     }
   }
 
-  // Adds a JS/HBS helper to the expression
   const onSelectHelper = (helper, js) => {
-    const pos = getCaretPosition()
-    const { start, end } = pos
-    if (js) {
-      let js = decodeJSBinding(jsValue)
-      const insertVal = jsInsert(js, start, end, helper.text, { helper: true })
-      insertAtPos({ start, end, value: insertVal })
-    } else {
-      const insertVal = hbInsert(hbsValue, start, end, helper.text)
-      insertAtPos({ start, end, value: insertVal })
-    }
+    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, { js })
   }
 
-  // Adds a data binding to the expression
   const onSelectBinding = (binding, { forceJS } = {}) => {
-    const { start, end } = getCaretPosition()
-    if (usingJS || forceJS) {
-      let js = decodeJSBinding(jsValue)
-      const insertVal = jsInsert(js, start, end, binding.readableBinding)
-      insertAtPos({ start, end, value: insertVal })
-    } else {
-      const insertVal = hbInsert(hbsValue, start, end, binding.readableBinding)
-      insertAtPos({ start, end, value: insertVal })
-    }
+    const js = usingJS || forceJS
+    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
   }
 
   const onChangeMode = e => {
@@ -199,6 +183,7 @@
                   ]}
                   placeholder=""
                   height="100%"
+                  autofocus={autofocusEditor}
                 />
               </div>
               <div class="binding-footer">
@@ -301,6 +286,7 @@
                     bind:getCaretPosition
                     bind:insertAtPos
                     height="100%"
+                    autofocus={autofocusEditor}
                   />
                 </div>
                 <div class="binding-footer">

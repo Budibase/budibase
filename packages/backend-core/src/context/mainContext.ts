@@ -134,7 +134,7 @@ export async function doInContext(appId: string, task: any): Promise<any> {
 }
 
 export async function doInTenant<T>(
-  tenantId: string | null,
+  tenantId: string | undefined,
   task: () => T
 ): Promise<T> {
   // make sure default always selected in single tenancy
@@ -334,4 +334,12 @@ export function isScim(): boolean {
   const context = Context.get()
   const scimCall = context?.isScim
   return !!scimCall
+}
+
+export function getCurrentContext(): ContextMap | undefined {
+  try {
+    return Context.get()
+  } catch (e) {
+    return undefined
+  }
 }

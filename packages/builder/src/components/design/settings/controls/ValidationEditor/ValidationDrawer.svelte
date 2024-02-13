@@ -12,7 +12,10 @@
   } from "@budibase/bbui"
   import { currentAsset, selectedComponent } from "builderStore"
   import { findClosestMatchingComponent } from "builderStore/componentUtils"
-  import { getSchemaForDatasource } from "builderStore/dataBinding"
+  import {
+    getSchemaForDatasource,
+    getDatasourceForProvider,
+  } from "builderStore/dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
@@ -124,6 +127,12 @@
     ],
   }
 
+  const resolveDatasource = (currentAsset, componentInstance, parent) => {
+    return (
+      getDatasourceForProvider(currentAsset, parent || componentInstance) || {}
+    )
+  }
+
   $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
@@ -146,8 +155,8 @@
         component._component.endsWith("/formblock") ||
         component._component.endsWith("/tableblock")
     )
-
-    return getSchemaForDatasource(asset, formParent?.dataSource)
+    const dataSource = resolveDatasource(asset, component, formParent)
+    return getSchemaForDatasource(asset, dataSource)
   }
 
   const parseRulesFromSchema = (field, dataSourceSchema) => {
