@@ -7,6 +7,10 @@ export const enum BundleType {
   BSON = "bson",
 }
 
+const bundleSourceFile: Record<BundleType, string> = {
+  [BundleType.HELPERS]: "./index-helpers.ivm.bundle.js",
+  [BundleType.BSON]: "./bson.ivm.bundle.js",
+}
 const bundleSourceCode: Partial<Record<BundleType, string>> = {}
 
 export function loadBundle(type: BundleType) {
@@ -15,34 +19,7 @@ export function loadBundle(type: BundleType) {
     return sourceCode
   }
 
-  if (!environment.isBundled) {
-    let filePath
-    switch (type) {
-      case BundleType.HELPERS:
-        filePath = "./index-helpers.ivm.bundle.js"
-        break
-      case BundleType.BSON:
-        filePath = "./bson.ivm.bundle.js"
-        break
-      default:
-        throw utils.unreachable(type)
-    }
-
-    sourceCode = fs.readFileSync(require.resolve(filePath), "utf-8")
-  } else {
-    // If we are running from a built version, esbuild is configured to inject .ivm.bundle.js files as text
-    switch (type) {
-      case BundleType.HELPERS:
-        sourceCode = require("./index-helpers.ivm.bundle.js")
-        break
-      case BundleType.BSON:
-        sourceCode = require("./bson.ivm.bundle.js")
-        break
-      default:
-        throw utils.unreachable(type)
-    }
-  }
+  sourceCode = fs.readFileSync(require.resolve(bundleSourceFile[type]), "utf-8")
   bundleSourceCode[type] = sourceCode
-
   return sourceCode
 }
