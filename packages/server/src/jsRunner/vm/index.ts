@@ -178,7 +178,7 @@ export class IsolatedVM implements VM {
 
     const script = this.isolate.compileScriptSync(code)
 
-    script.runSync(this.vm, { timeout: this.invocationTimeout })
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
 
     // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
