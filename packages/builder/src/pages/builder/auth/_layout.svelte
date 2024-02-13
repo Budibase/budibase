@@ -11,11 +11,11 @@
   }
 
   if ($admin?.checklist?.branding) {
-    let url = new URL("http://hello.petertest.com:10001/auth/login")
+    let url = new URL(window.location.href)
     let hostname = url.hostname
     let parts = hostname.split(".")
     let tenantId = parts[0]
-    CookieUtils.setCookie("tenantId", tenantId, "petertest.com")
+    CookieUtils.setCookie("tenantId", tenantId, domain)
   }
 
   if (
