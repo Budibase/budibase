@@ -1,4 +1,2 @@
-export const bson = {
-  deserialize: require("bson").deserialize,
-  toJson: require("bson").EJSON.deserialize,
-}
+export const deserialize = require("bson").deserialize
+export const toJson = require("bson").EJSON.deserialize

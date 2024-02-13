@@ -1,4 +1,5 @@
-const helpers= (() => {
+"use strict";
+var helpers = (() => {
   var __create = Object.create;
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
@@ -3538,6 +3539,10 @@ const helpers= (() => {
   });
 
   // src/jsRunner/bundles/index-helpers.ts
+  var index_helpers_exports = {};
+  __export(index_helpers_exports, {
+    helpers: () => helpers
+  });
   var {
     getJsHelperList
   } = require_list();
@@ -3548,8 +3553,7 @@ const helpers= (() => {
     // eslint-disable-next-line no-undef
     stripProtocol: helpersStripProtocol
   };
-
-  return helpers
+  return __toCommonJS(index_helpers_exports);
 })();
 /*! Bundled license information:
 

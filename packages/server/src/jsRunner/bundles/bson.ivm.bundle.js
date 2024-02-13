@@ -1,5 +1,9 @@
-const bson=(() => {
+"use strict";
+var bson = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
   var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
     get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
   }) : x)(function(x) {
@@ -10,6 +14,19 @@ const bson=(() => {
   var __commonJS = (cb, mod) => function __require2() {
     return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
   };
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
   // ../../node_modules/bson/lib/bson.cjs
   var require_bson = __commonJS({
@@ -3705,7 +3722,7 @@ const bson=(() => {
         finalBuffer.set(buffer.subarray(0, serializationIndex), startIndex);
         return startIndex + serializationIndex - 1;
       }
-      function deserialize(buffer2, options = {}) {
+      function deserialize2(buffer2, options = {}) {
         return internalDeserialize(ByteUtils.toLocalBufferType(buffer2), options);
       }
       function calculateObjectSize(object, options = {}) {
@@ -3726,7 +3743,7 @@ const bson=(() => {
         }
         return index;
       }
-      var bson2 = /* @__PURE__ */ Object.freeze({
+      var bson = /* @__PURE__ */ Object.freeze({
         __proto__: null,
         BSONError,
         BSONRegExp,
@@ -3749,13 +3766,13 @@ const bson=(() => {
         Timestamp,
         UUID,
         calculateObjectSize,
-        deserialize,
+        deserialize: deserialize2,
         deserializeStream,
         serialize,
         serializeWithBufferAndIndex,
         setInternalBufferSize
       });
-      exports.BSON = bson2;
+      exports.BSON = bson;
       exports.BSONError = BSONError;
       exports.BSONRegExp = BSONRegExp;
       exports.BSONRuntimeError = BSONRuntimeError;
@@ -3777,7 +3794,7 @@ const bson=(() => {
       exports.Timestamp = Timestamp;
       exports.UUID = UUID;
       exports.calculateObjectSize = calculateObjectSize;
-      exports.deserialize = deserialize;
+      exports.deserialize = deserialize2;
       exports.deserializeStream = deserializeStream;
       exports.serialize = serialize;
       exports.serializeWithBufferAndIndex = serializeWithBufferAndIndex;
@@ -3786,9 +3803,12 @@ const bson=(() => {
   });
 
   // src/jsRunner/bundles/bsonPackage.ts
-  var bson = {
-    deserialize: require_bson().deserialize,
-    toJson: require_bson().EJSON.deserialize
-  };
-  return bson
+  var bsonPackage_exports = {};
+  __export(bsonPackage_exports, {
+    deserialize: () => deserialize,
+    toJson: () => toJson
+  });
+  var deserialize = require_bson().deserialize;
+  var toJson = require_bson().EJSON.deserialize;
+  return __toCommonJS(bsonPackage_exports);
 })();
