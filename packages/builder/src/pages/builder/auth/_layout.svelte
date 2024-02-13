@@ -16,7 +16,6 @@
     let parts = hostname.split(".")
     let tenantId = parts[0]
     let domain = parts.slice(-2).join(".")
-    console.log(domain)
     CookieUtils.setCookie("tenantId", tenantId, domain)
   }
 
