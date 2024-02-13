@@ -4,11 +4,15 @@ import { setJSRunner, setOnErrorLog } from "@budibase/string-templates"
 import { context, logging, timers } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { serializeError } from "serialize-error"
+import { IsolatedVM } from "./vm"
 
 type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
   setJSRunner((js: string, ctx: vm.Context) => {
+    const ivm = new IsolatedVM({ memoryLimit: 10, invocationTimeout: 1000 })
+    ivm.withContext(ctx)
+
     return tracer.trace("runJS", {}, span => {
       const perRequestLimit = env.JS_PER_REQUEST_TIMEOUT_MS
       let track: TrackerFn = f => f()
