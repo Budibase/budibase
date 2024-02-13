@@ -85,7 +85,7 @@ export class IsolatedVM implements VM {
       }),
     })
 
-    const injectedRequire = `const require=function req(val) {
+    const injectedRequire = `require=function req(val) {
         switch (val) {
             case "url": return ${urlModule};
             case "querystring": return ${querystringModule};
