@@ -163,7 +163,7 @@ export async function exportRows(
     rows = result.rows
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
 
   let content: string
   switch (format) {

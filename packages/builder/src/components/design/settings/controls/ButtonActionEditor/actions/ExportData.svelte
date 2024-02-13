@@ -101,7 +101,7 @@
     />
     <Label small>Export columns</Label>
     <ColumnEditor
-      value={parameters.columns}
+      bind:value={parameters.columns}
       allowCellEditing={false}
       componentInstance={selectedTable}
       on:change={e => {
@@ -112,7 +112,6 @@
             ...headerMap,
           }
         }, {})
-        parameters.columns = columns
       }}
     />
   </div>

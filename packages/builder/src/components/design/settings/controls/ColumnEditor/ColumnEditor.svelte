@@ -32,6 +32,12 @@
     allowLinks: true,
   })
 
+  $: {
+    value = (value || []).filter(column =>
+      Object.keys(schema || {}).includes(column.name || column)
+    )
+  }
+
   const getText = value => {
     if (!value?.length) {
       return "All columns"
