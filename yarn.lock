@@ -8553,7 +8553,7 @@ cron-parser@^4.2.1:
   dependencies:
     luxon "^3.2.1"
 
-cron-validate@^1.4.5:
+cron-validate@1.4.5:
   version "1.4.5"
   resolved "https://registry.yarnpkg.com/cron-validate/-/cron-validate-1.4.5.tgz#eceb221f7558e6302e5f84c7b3a454fdf4d064c3"
   integrity sha512-nKlOJEnYKudMn/aNyNH8xxWczlfpaazfWV32Pcx/2St51r2bxWbGhZD7uwzMcRhunA/ZNL+Htm/i0792Z59UMQ==
