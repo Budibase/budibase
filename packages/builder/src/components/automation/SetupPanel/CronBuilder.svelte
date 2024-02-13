@@ -2,14 +2,12 @@
   import { Button, Select, Input, Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "stores/backend"
-  import { helpers } from "@budibase/shared-core"
+  import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
   export let value
   let error
-
-  const reboot = "@reboot"
 
   $: {
     const exists = CRON_EXPRESSIONS.some(cron => cron.value === value)
@@ -25,7 +23,7 @@
   }
 
   const onChange = e => {
-    if (value !== reboot) {
+    if (value !== REBOOT_CRON) {
       error = helpers.cron.validate(e.detail).err
     }
     if (e.detail === value || error) {
@@ -62,7 +60,7 @@
     if (!$flags.cloud) {
       CRON_EXPRESSIONS.push({
         label: "Every Budibase Reboot",
-        value: reboot,
+        value: REBOOT_CRON,
       })
     }
   })

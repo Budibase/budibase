@@ -16,10 +16,9 @@ import {
 } from "@budibase/types"
 import sdk from "../sdk"
 import { automationsEnabled } from "../features"
-import { helpers } from "@budibase/shared-core"
+import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 import tracer from "dd-trace"
 
-const REBOOT_CRON = "@reboot"
 const WH_STEP_ID = definitions.WEBHOOK.stepId
 const CRON_STEP_ID = definitions.CRON.stepId
 let Runner: Thread
