@@ -1,9 +1,8 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
-  import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
   import { builderStore } from "stores"
-  import { Utils } from "@budibase/frontend-core"
+  import { ComponentUtils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
   import { writable } from "svelte/store"
 
@@ -22,22 +21,6 @@
   // Set current step context to force child form to use it
   const currentStep = writable(1)
   setContext("current-step", currentStep)
-
-  const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
-  }
 
   let schema
 
@@ -68,59 +51,28 @@
     currentStep.set(newStep + 1)
   }
 
-  const getPropsForField = field => {
-    if (field._component) {
-      return field
-    }
-    return {
-      field: field.name,
-      label: field.name,
-      placeholder: field.name,
-      _instanceName: field.name,
-    }
-  }
-
-  const getComponentForField = field => {
-    const fieldSchemaName = field.field || field.name
-    if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
-      return null
-    }
-    const type = schema[fieldSchemaName].type
-    return FieldTypeToComponentMap[type]
-  }
-
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
-  }
-
-  const getDefaultFields = (fields, schema) => {
-    if (fields?.length) {
-      return fields.filter(field => field.active)
-    }
-    return Object.values(schema || {})
-      .filter(field => !field.autocolumn)
-      .map(field => ({
-        name: field.name,
-      }))
   }
 
   const enrichSteps = (steps, schema, id) => {
     const safeSteps = steps?.length ? steps : [{}]
     return safeSteps.map((step, idx) => {
-      const { title, desc, fields, buttons } = step
-      const defaultProps = Utils.buildMultiStepFormBlockDefaultProps({
-        _id: id,
-        stepCount: safeSteps.length,
-        currentStep: idx,
-        actionType,
-        dataSource,
-      })
+      const { title, fields, buttons } = step
+      const defaultProps =
+        ComponentUtils.generateDefaultMultiStepFormBlockProps({
+          _id: id,
+          actionType,
+          schema,
+          stepCount: safeSteps.length,
+          currentStep: idx,
+          dataSource,
+        })
       return {
-        _stepId: Helpers.uuid(),
-        fields: getDefaultFields(fields || [], schema),
+        ...step,
         title: title ?? defaultProps.title,
-        desc,
-        buttons: buttons || defaultProps.buttons,
+        buttons: buttons || defaultProps.buttons || [],
+        fields: fields || defaultProps.fields || [],
       }
     })
   }
@@ -144,7 +96,7 @@
       },
     }}
   >
-    {#each enrichedSteps as step, stepIdx (step._stepId)}
+    {#each enrichedSteps as step, stepIdx (step._id)}
       <BlockComponent
         type="formstep"
         props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
@@ -188,17 +140,16 @@
             </BlockComponent>
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
-
           <BlockComponent type="container" order={2}>
             <div
               class="form-block fields"
               class:mobile={$context.device.mobile}
             >
-              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${fieldIdx}`)}
-                {#if getComponentForField(field)}
+              {#each step.fields as field, fieldIdx (`${field.field}_${fieldIdx}`)}
+                {#if field.active}
                   <BlockComponent
-                    type={getComponentForField(field)}
-                    props={getPropsForField(field)}
+                    type={field._component}
+                    props={field}
                     order={fieldIdx}
                     interactive
                     name={field.field}

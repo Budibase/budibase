@@ -24,6 +24,7 @@
   export let text = ""
   export let fixed = false
   export let color = null
+  export let noWrap = false
 
   let wrapper
   let hovered = false
@@ -107,7 +108,7 @@
       style={`left:${left}px;top:${top}px;${tooltipStyle}`}
       transition:fade|local={{ duration: 130 }}
     >
-      <span class="spectrum-Tooltip-label">{text}</span>
+      <span class="spectrum-Tooltip-label" class:no-wrap={noWrap}>{text}</span>
       <span class="spectrum-Tooltip-tip" style={tipStyle} />
     </span>
   </Portal>
@@ -132,6 +133,9 @@
     overflow: hidden;
     font-size: 12px;
     font-weight: 600;
+  }
+  .spectrum-Tooltip-label.no-wrap {
+    white-space: nowrap;
   }
 
   /* Colour overrides for default type */

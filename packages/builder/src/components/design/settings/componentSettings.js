@@ -23,7 +23,7 @@ import BasicColumnEditor from "./controls/ColumnEditor/BasicColumnEditor.svelte"
 import GridColumnEditor from "./controls/GridColumnConfiguration/GridColumnConfiguration.svelte"
 import BarButtonList from "./controls/BarButtonList.svelte"
 import FieldConfiguration from "./controls/FieldConfiguration/FieldConfiguration.svelte"
-import CustomFieldConfiguration from "./controls/FieldConfiguration/CustomFieldConfiguration.svelte"
+import LegacyFieldConfiguration from "./controls/FieldConfiguration/LegacyFieldConfiguration.svelte"
 import ButtonConfiguration from "./controls/ButtonConfiguration/ButtonConfiguration.svelte"
 import RelationshipFilterEditor from "./controls/RelationshipFilterEditor.svelte"
 import FormStepConfiguration from "./controls/FormStepConfiguration.svelte"
@@ -53,7 +53,7 @@ const componentMap = {
   "filter/relationship": RelationshipFilterEditor,
   url: URLSelect,
   fieldConfiguration: FieldConfiguration,
-  customFieldConfiguration: CustomFieldConfiguration,
+  legacyFieldConfiguration: LegacyFieldConfiguration,
   buttonConfiguration: ButtonConfiguration,
   stepConfiguration: FormStepConfiguration,
   formStepControls: FormStepControls,

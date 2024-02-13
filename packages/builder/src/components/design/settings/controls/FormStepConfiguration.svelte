@@ -1,12 +1,15 @@
 <script>
   import { createEventDispatcher, setContext } from "svelte"
   import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  import { getDatasourceForProvider } from "builderStore/dataBinding"
+  import {
+    getDatasourceForProvider,
+    getSchemaForDatasource,
+  } from "builderStore/dataBinding"
   import { currentAsset, store } from "builderStore"
-  import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"
-  import { Utils } from "@budibase/frontend-core"
-  import { cloneDeep, isEqual } from "lodash"
+  import { ComponentUtils } from "@budibase/frontend-core"
+  import { cloneDeep } from "lodash"
+  import { Helpers } from "@budibase/bbui"
 
   export let componentInstance
   export let componentBindings
@@ -21,44 +24,39 @@
   const currentStep = derived(multiStepStore, state => state.currentStep)
   const componentType = "@budibase/standard-components/multistepformblockstep"
 
-  let cachedValue
-  let cachedInstance = {}
-
-  $: if (!isEqual(cachedValue, value)) {
-    cachedValue = value
-  }
-
-  $: if (!isEqual(componentInstance, cachedInstance)) {
-    cachedInstance = componentInstance
-  }
-
   setContext("multi-step-form-block", multiStepStore)
 
-  $: stepCount = cachedValue?.length || 0
+  $: stepCount = value?.length || 0
   $: updateStore(stepCount)
-  $: dataSource = getDatasourceForProvider($currentAsset, cachedInstance)
+  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: schema = getSchemaForDatasource($currentAsset, dataSource)?.schema
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
-  $: stepSettings = cachedValue?.[$currentStep] || {}
-  $: defaults = Utils.buildMultiStepFormBlockDefaultProps({
-    _id: cachedInstance._id,
+  $: stepSettings = value?.[$currentStep] || {}
+  $: defaults = ComponentUtils.generateDefaultMultiStepFormBlockProps({
+    _id: componentInstance._id,
     stepCount: $multiStepStore.stepCount,
     currentStep: $multiStepStore.currentStep,
-    actionType: cachedInstance.actionType,
-    dataSource: cachedInstance.dataSource,
+    actionType: componentInstance.actionType,
+    dataSource: componentInstance.dataSource,
+    schema,
   })
   $: stepInstance = {
-    _id: Helpers.uuid(),
+    ...componentInstance,
+    _stepId: Helpers.uuid(),
     _component: componentType,
     _instanceName: `Step ${currentStep + 1}`,
     title: stepSettings.title ?? defaults.title,
     buttons: stepSettings.buttons || defaults.buttons,
-    fields: stepSettings.fields,
+    fields: stepSettings.fields || defaults.fields,
     desc: stepSettings.desc,
 
     // Needed for field configuration
     dataSource,
+
+    // Needed to determine whether we are using custom a schema or not
+    actionType: componentInstance.actionType,
   }
 
   const getDefinition = stepLabel => {
@@ -155,20 +153,24 @@
       updateStep(field, val)
     }
   }
+
+  $: $multiStepStore, console.log("new key")
 </script>
 
 <div class="nested-section">
-  <ComponentSettingsSection
-    includeHidden
-    componentInstance={stepInstance}
-    componentDefinition={stepDef}
-    onUpdateSetting={processUpdate}
-    showSectionTitle={false}
-    isScreen={false}
-    nested={true}
-    {bindings}
-    {componentBindings}
-  />
+  {#key $multiStepStore}
+    <ComponentSettingsSection
+      includeHidden
+      componentInstance={stepInstance}
+      componentDefinition={stepDef}
+      onUpdateSetting={processUpdate}
+      showSectionTitle={false}
+      isScreen={false}
+      nested={true}
+      {bindings}
+      {componentBindings}
+    />
+  {/key}
 </div>
 
 <style>

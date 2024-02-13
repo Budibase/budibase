@@ -111,3 +111,19 @@ export const ContextScopes = {
   Local: "local",
   Global: "global",
 }
+
+export const FieldTypeToComponentMap = {
+  string: "stringfield",
+  number: "numberfield",
+  bigint: "bigintfield",
+  options: "optionsfield",
+  array: "multifieldselect",
+  boolean: "booleanfield",
+  longform: "longformfield",
+  datetime: "datetimefield",
+  attachment: "attachmentfield",
+  link: "relationshipfield",
+  json: "jsonfield",
+  barcodeqr: "codescanner",
+  bb_reference: "bbreferencefield",
+}

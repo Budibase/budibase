@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher, getContext } from "svelte"
-  import { ActionButton } from "@budibase/bbui"
+  import { ActionButton, AbsTooltip } from "@budibase/bbui"
 
   const multiStepStore = getContext("multi-step-form-block")
   const dispatch = createEventDispatcher()
@@ -28,45 +28,49 @@
   </div>
 {:else}
   <div class="step-actions">
-    <ActionButton
-      size="S"
-      secondary
-      icon="ChevronLeft"
-      disabled={currentStep === 0}
-      on:click={() => {
-        stepAction("previousStep")
-      }}
-      tooltip={"Previous step"}
-    />
-    <ActionButton
-      size="S"
-      secondary
-      disabled={currentStep === stepCount - 1}
-      icon="ChevronRight"
-      on:click={() => {
-        stepAction("nextStep")
-      }}
-      tooltip={"Next step"}
-    />
-    <ActionButton
-      size="S"
-      secondary
-      icon="Close"
-      disabled={stepCount === 1}
-      on:click={() => {
-        stepAction("removeStep")
-      }}
-      tooltip={"Remove step"}
-    />
-    <ActionButton
-      size="S"
-      secondary
-      icon="MultipleAdd"
-      on:click={() => {
-        stepAction("addStep")
-      }}
-      tooltip={"Add step"}
-    />
+    <AbsTooltip text="Previous step">
+      <ActionButton
+        size="S"
+        secondary
+        icon="ChevronLeft"
+        disabled={currentStep === 0}
+        on:click={() => {
+          stepAction("previousStep")
+        }}
+      />
+    </AbsTooltip>
+    <AbsTooltip text="Next step">
+      <ActionButton
+        size="S"
+        secondary
+        disabled={currentStep === stepCount - 1}
+        icon="ChevronRight"
+        on:click={() => {
+          stepAction("nextStep")
+        }}
+      />
+    </AbsTooltip>
+    <AbsTooltip text="Remove step">
+      <ActionButton
+        size="S"
+        secondary
+        icon="Close"
+        disabled={stepCount === 1}
+        on:click={() => {
+          stepAction("removeStep")
+        }}
+      />
+    </AbsTooltip>
+    <AbsTooltip text="Add step" noWrap>
+      <ActionButton
+        size="S"
+        secondary
+        icon="MultipleAdd"
+        on:click={() => {
+          stepAction("addStep")
+        }}
+      />
+    </AbsTooltip>
   </div>
 {/if}
 

@@ -606,7 +606,7 @@ export const getFrontendStore = () => {
         const componentPrefix = "@budibase/standard-components"
         let migrated = false
 
-        if (enrichedComponent?._component == `${componentPrefix}/formblock`) {
+        if (enrichedComponent?._component === `${componentPrefix}/formblock`) {
           // Use default config if the 'buttons' prop has never been initialised
           if (!("buttons" in enrichedComponent)) {
             enrichedComponent["buttons"] =

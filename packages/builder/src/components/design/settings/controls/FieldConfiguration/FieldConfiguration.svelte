@@ -1,178 +1,50 @@
 <script>
   import { Toggle } from "@budibase/bbui"
-  import { cloneDeep, isEqual } from "lodash/fp"
   import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
-  import { currentAsset, store, selectedScreen } from "builderStore"
+  import { store, selectedScreen } from "builderStore"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
-  import { convertOldFieldFormat, getComponentForField } from "./utils"
   import { generateIncrementedName } from "helpers/helpers"
 
   export let componentInstance
   export let bindings
   export let value
-  export let customSchema = false
 
   const dispatch = createEventDispatcher()
 
-  let sanitisedFields
-  let fieldList
-  let schema
-  let cachedValue
-  let options
-  let sanitisedValue
-  let unconfigured
-  let componentBindings = []
-  let selectAll = true
-
+  $: allActive = value.every(x => x.active)
+  $: customSchema = componentInstance.actionType === "Custom"
   $: resolvedBindings =
     bindings || getBindableProperties($selectedScreen, componentInstance._id)
-  $: actionType = componentInstance.actionType
-  $: if (actionType) {
-    componentBindings = getComponentBindableProperties(
-      $selectedScreen,
-      componentInstance._id
-    )
-  }
-  $: datasource =
-    componentInstance.dataSource ||
-    getDatasourceForProvider($currentAsset, componentInstance)
-  $: resourceId = datasource?.resourceId || datasource?.tableId
-  $: if (!isEqual(value, cachedValue)) {
-    cachedValue = cloneDeep(value)
-  }
-  $: updateState(cachedValue, resourceId)
-
-  const updateState = value => {
-    // Handle custom types
-    if (customSchema) {
-      fieldList = value || []
-      return
-    }
-
-    schema = getSchema($currentAsset, datasource)
-    options = Object.keys(schema || {})
-    sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
-    updateSanitsedFields(sanitisedValue)
-    unconfigured = buildUnconfiguredOptions(schema, sanitisedFields)
-    fieldList = [...sanitisedFields, ...unconfigured]
-      .map(buildPseudoInstance)
-      .filter(x => x != null)
-  }
-
-  // Builds unused ones only
-  const buildUnconfiguredOptions = (schema, selected) => {
-    if (!schema) {
-      return []
-    }
-    let schemaClone = cloneDeep(schema)
-    selected.forEach(val => {
-      delete schemaClone[val.field]
-    })
-
-    return Object.keys(schemaClone)
-      .filter(key => !schemaClone[key].autocolumn)
-      .map(key => {
-        const col = schemaClone[key]
-        let toggleOn = !value
-        return {
-          field: key,
-          active: typeof col.active != "boolean" ? toggleOn : col.active,
-        }
-      })
-  }
-
-  const getSchema = (asset, datasource) => {
-    const schema = getSchemaForDatasource(asset, datasource).schema
-
-    // Don't show ID and rev in tables
-    if (schema) {
-      delete schema._id
-      delete schema._rev
-    }
-
-    return schema
-  }
-
-  const updateSanitsedFields = value => {
-    sanitisedFields = cloneDeep(value)
-  }
-
-  const getValidColumns = (columns, options, customSchema) => {
-    if (!Array.isArray(columns) || !columns.length) {
-      return []
-    }
-
-    // Allow any columns for custom schema
-    if (customSchema) {
-      return columns
-    }
-
-    return columns.filter(column => {
-      return options.includes(column.field)
-    })
-  }
-
-  const buildPseudoInstance = instance => {
-    if (instance._component) {
-      return instance
-    }
-    const type = getComponentForField(instance.field, schema)
-    if (!type) {
-      return null
-    }
-    instance._component = `@budibase/standard-components/${type}`
-
-    const pseudoComponentInstance = store.actions.components.createInstance(
-      instance._component,
-      {
-        _instanceName: instance.field,
-        field: instance.field,
-        label: instance.field,
-        placeholder: instance.field,
-      },
-      {}
-    )
-
-    return { ...instance, ...pseudoComponentInstance }
-  }
+  $: componentBindings = getComponentBindableProperties(
+    $selectedScreen,
+    componentInstance._id
+  )
 
   const processItemUpdate = e => {
     const updatedField = e.detail
-    const parentFieldsUpdated = fieldList ? cloneDeep(fieldList) : []
-    const parentFieldIdx = parentFieldsUpdated.findIndex(pSetting => {
-      return pSetting._id === updatedField?._id
+    const newValue = value.slice()
+    const idx = newValue.findIndex(field => {
+      return field._id === updatedField?._id
     })
-
     // Add this field if not encountered before. Otherwise, update it.
-    if (parentFieldIdx === -1) {
-      parentFieldsUpdated.push(updatedField)
+    if (idx === -1) {
+      newValue.push(updatedField)
     } else {
-      parentFieldsUpdated[parentFieldIdx] = updatedField
+      newValue[idx] = updatedField
     }
-
-    dispatch(
-      "change",
-      getValidColumns(parentFieldsUpdated, options, customSchema)
-    )
-  }
-
-  const listUpdated = columns => {
-    const parsedColumns = getValidColumns(columns, options, customSchema)
-    dispatch("change", parsedColumns)
+    dispatch("change", newValue)
   }
 
   const createInstance = (name, type) => {
     // Generate the next available field name if required
     if (!name) {
       name = generateIncrementedName({
-        items: fieldList,
+        items: value,
         extractName: field => field.field,
         prefix: "Field",
       })
@@ -196,28 +68,27 @@
   }
 
   const addField = () => {
-    dispatch("change", [...fieldList, createInstance()])
+    dispatch("change", [...value, createInstance()])
   }
 
   const removeField = id => {
     dispatch(
       "change",
-      fieldList.filter(field => field._id !== id)
+      value.filter(field => field._id !== id)
     )
   }
 
   const changeFieldType = (id, newType) => {
-    const idx = fieldList.findIndex(field => field._id === id)
+    const idx = value.findIndex(field => field._id === id)
     if (idx === -1) {
       return
     }
-    const existingField = fieldList[idx]
-    let newField = createInstance(existingField.field, newType)
-
     // Reuse existing ID to prevent closing the component popover
-    newField._id = id
-
-    dispatch("change", fieldList.toSpliced(idx, 1, newField))
+    const newField = {
+      ...createInstance(value[idx].field, newType),
+      _id: id,
+    }
+    dispatch("change", value.toSpliced(idx, 1, newField))
   }
 </script>
 
@@ -226,25 +97,26 @@
     <span>Fields</span>
     {#if !customSchema}
       <Toggle
-        on:change={() => {
-          let update = fieldList.map(field => ({
-            ...field,
-            active: selectAll,
-          }))
-          listUpdated(update)
-        }}
-        text=""
-        bind:value={selectAll}
         thin
-        disabled={!fieldList?.length}
+        value={allActive}
+        disabled={!value.length}
+        on:change={e => {
+          dispatch(
+            "change",
+            value.map(field => ({
+              ...field,
+              active: e.detail,
+            }))
+          )
+        }}
       />
     {/if}
   </div>
   <DraggableList
-    on:change={e => listUpdated(e.detail)}
+    on:change
     on:itemChange={processItemUpdate}
     on:add={addField}
-    items={fieldList}
+    items={value}
     listItemKey={"_id"}
     listType={FieldSetting}
     listTypeProps={{
@@ -263,9 +135,6 @@
 <style>
   .field-configuration {
     padding-top: 8px;
-  }
-  .field-configuration :global(.spectrum-ActionButton) {
-    width: 100%;
   }
   .toggle-all {
     display: flex;

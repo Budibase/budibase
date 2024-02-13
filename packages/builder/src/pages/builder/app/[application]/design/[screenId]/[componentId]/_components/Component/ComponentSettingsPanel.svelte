@@ -88,7 +88,7 @@
           {/each}
         </div>
       </span>
-      {#if section == "settings"}
+      {#if section === "settings"}
         <ComponentSettingsSection
           {componentInstance}
           {componentDefinition}
@@ -97,7 +97,7 @@
           {isScreen}
         />
       {/if}
-      {#if section == "styles"}
+      {#if section === "styles"}
         <DesignSection
           {componentInstance}
           {componentBindings}
@@ -112,7 +112,7 @@
           componentTitle={title}
         />
       {/if}
-      {#if section == "conditions"}
+      {#if section === "conditions"}
         <ConditionalUISection
           {componentInstance}
           {componentDefinition}

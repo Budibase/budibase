@@ -43,7 +43,9 @@ const UpdateReferenceAction = {
  * Gets all bindable data context fields and instance fields.
  */
 export const getBindableProperties = (asset, componentId) => {
+  console.log("get", componentId)
   const contextBindings = getContextBindings(asset, componentId)
+  console.log(contextBindings)
   const userBindings = getUserBindings()
   const urlBindings = getUrlBindings(asset)
   const deviceBindings = getDeviceBindings()
@@ -1036,9 +1038,11 @@ export const buildFormSchema = (component, asset) => {
   if (component._component.endsWith("formblock")) {
     // Handle custom form blocks by inspecting the fields setting
     if (component.actionType === "Custom") {
-      component.fields?.forEach(field => {
-        schema[field.field] = { type: field.type }
-      })
+      const fields =
+        component.fields ||
+        component.fields?.forEach(field => {
+          schema[field.field] = { type: field.type }
+        })
       return schema
     }
 

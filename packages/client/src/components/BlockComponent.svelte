@@ -19,6 +19,8 @@
   const component = getContext("component")
   const block = getContext("block")
   const rand = generate()
+  const BuiltinPrefix = "@budibase/standard-components/"
+  const PluginPrefix = "plugin/"
 
   // Create a fake component instance so that we can use the core Component
   // to render this part of the block, taking advantage of binding enrichment
@@ -49,10 +51,12 @@
     if (!type) {
       return null
     }
-    if (type.startsWith("plugin/")) {
+    if (type.startsWith(PluginPrefix)) {
       return type
+    } else if (!type.startsWith(BuiltinPrefix)) {
+      return `${BuiltinPrefix}${type}`
     } else {
-      return `@budibase/standard-components/${type}`
+      return type
     }
   }
 
@@ -63,8 +67,10 @@
     if (!type) {
       return "New component"
     }
-    if (type.startsWith("plugin/")) {
-      type = type.split("plugin/")[1]
+    if (type.startsWith(PluginPrefix)) {
+      type = type.split(PluginPrefix)[1]
+    } else if (type.startsWith(BuiltinPrefix)) {
+      type = type.split(BuiltinPrefix)[1]
     }
     return type[0].toUpperCase() + type.slice(1)
   }
