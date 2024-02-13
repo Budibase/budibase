@@ -93,26 +93,6 @@ export class IsolatedVM implements VM {
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
-    // const helpersModule = this.isolate.compileModuleSync(
-    //   `${injectedRequire};${helpersSource}`
-    // )
-
-    // helpersModule.instantiateSync(this.vm, specifier => {
-    //   if (specifier === "crypto") {
-    //     const cryptoModule = this.registerCallbacks({
-    //       randomUUID: crypto.randomUUID,
-    //     })
-    //     const module = this.isolate.compileModuleSync(
-    //       `export default ${cryptoModule}`
-    //     )
-    //     module.instantiateSync(this.vm, specifier => {
-    //       throw new Error(`No imports allowed. Required: ${specifier}`)
-    //     })
-    //     return module
-    //   }
-    //   throw new Error(`No imports allowed. Required: ${specifier}`)
-    // })
-
     this.moduleHandler.registerModule(`${injectedRequire};${helpersSource}`)
     return this
   }
