@@ -20,3 +20,41 @@ export function cleanup() {
   }
   intervals = []
 }
+
+export class ExecutionTimeoutError extends Error {
+  public readonly name = "ExecutionTimeoutError"
+}
+
+export class ExecutionTimeTracker {
+  static withLimit(limitMs: number) {
+    return new ExecutionTimeTracker(limitMs)
+  }
+
+  constructor(readonly limitMs: number) {}
+
+  private totalTimeMs = 0
+
+  track<T>(f: () => T): T {
+    this.checkLimit()
+    const start = process.hrtime.bigint()
+    try {
+      return f()
+    } finally {
+      const end = process.hrtime.bigint()
+      this.totalTimeMs += Number(end - start) / 1e6
+      this.checkLimit()
+    }
+  }
+
+  get elapsedMS() {
+    return this.totalTimeMs
+  }
+
+  checkLimit() {
+    if (this.totalTimeMs > this.limitMs) {
+      throw new ExecutionTimeoutError(
+        `Execution time limit of ${this.limitMs}ms exceeded: ${this.totalTimeMs}ms`
+      )
+    }
+  }
+}
