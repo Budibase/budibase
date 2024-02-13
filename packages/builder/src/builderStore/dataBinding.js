@@ -1038,11 +1038,9 @@ export const buildFormSchema = (component, asset) => {
   if (component._component.endsWith("formblock")) {
     // Handle custom form blocks by inspecting the fields setting
     if (component.actionType === "Custom") {
-      const fields =
-        component.fields ||
-        component.fields?.forEach(field => {
-          schema[field.field] = { type: field.type }
-        })
+      component.fields?.forEach(field => {
+        schema[field.field] = { type: field.type }
+      })
       return schema
     }
 
