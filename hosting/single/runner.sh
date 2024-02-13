@@ -97,10 +97,12 @@ fi
 sleep 10
 
 pushd app
-pm2 start -l /dev/stdout --name app "yarn run:docker"
+pm2 start --name app "yarn run:docker"
 popd
 pushd worker
-pm2 start -l /dev/stdout --name worker "yarn run:docker"
+pm2 start --name worker "yarn run:docker"
 popd
 echo "end of runner.sh, sleeping ..."
+
+tail -f $HOME/.pm2/logs/*.log
 sleep infinity
