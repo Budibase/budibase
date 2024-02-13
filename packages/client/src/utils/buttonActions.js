@@ -352,7 +352,10 @@ const exportDataHandler = async action => {
         format: action.parameters.type,
         columns: action.parameters.columns,
       })
-      download(data, `${selection.tableId}.${action.parameters.type}`)
+      download(
+        new Blob([data], { type: "text/plain" }),
+        `${selection.tableId}.${action.parameters.type}`
+      )
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
