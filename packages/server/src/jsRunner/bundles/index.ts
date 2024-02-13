@@ -8,20 +8,21 @@ export const enum BundleType {
 }
 
 const bundleSourceCode = {
-  [BundleType.HELPERS]: "../bundles/index-helpers.ivm.bundle.js",
-  [BundleType.BSON]: "../bundles/bson.ivm.bundle.js",
+  [BundleType.HELPERS]: "./index-helpers.ivm.bundle.js",
+  [BundleType.BSON]: "./bson.ivm.bundle.js",
 }
 
 export function loadBundle(type: BundleType) {
-  if (environment.isJest()) {
+  if (!environment.isBundled) {
     return fs.readFileSync(require.resolve(bundleSourceCode[type]), "utf-8")
   }
 
+  // If we are running from a built version, esbuild is configured to inject .ivm.bundle.js files as text
   switch (type) {
     case BundleType.HELPERS:
-      return require("../bundles/index-helpers.ivm.bundle.js")
+      return require("./index-helpers.ivm.bundle.js")
     case BundleType.BSON:
-      return require("../bundles/bson.ivm.bundle.js")
+      return require("./bson.ivm.bundle.js")
     default:
       utils.unreachable(type)
   }

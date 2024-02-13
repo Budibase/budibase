@@ -98,6 +98,7 @@ const environment = {
   JS_RUNNER_MEMORY_LIMIT:
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) || 64,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
+  isBundled: process.env.BUNDLED,
 }
 
 // clean up any environment variable edge cases
