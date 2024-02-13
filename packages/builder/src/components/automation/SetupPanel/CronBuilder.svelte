@@ -2,15 +2,36 @@
   import { Button, Select, Input, Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { flags } from "stores/backend"
+  import { helpers } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
 
   export let value
+  let error
+
+  const reboot = "@reboot"
+
+  $: {
+    const exists = CRON_EXPRESSIONS.some(cron => cron.value === value)
+    const customIndex = CRON_EXPRESSIONS.findIndex(
+      cron => cron.label === "Custom"
+    )
+
+    if (!exists && customIndex === -1) {
+      CRON_EXPRESSIONS[0] = { label: "Custom", value: value }
+    } else if (exists && customIndex !== -1) {
+      CRON_EXPRESSIONS.splice(customIndex, 1)
+    }
+  }
 
   const onChange = e => {
-    if (e.detail === value) {
+    if (value !== reboot) {
+      error = helpers.cron.validate(e.detail).err
+    }
+    if (e.detail === value || error) {
       return
     }
+
     value = e.detail
     dispatch("change", e.detail)
   }
@@ -41,7 +62,7 @@
     if (!$flags.cloud) {
       CRON_EXPRESSIONS.push({
         label: "Every Budibase Reboot",
-        value: "@reboot",
+        value: reboot,
       })
     }
   })
@@ -49,6 +70,7 @@
 
 <div class="block-field">
   <Input
+    {error}
     on:change={onChange}
     {value}
     on:blur={() => (touched = true)}
@@ -64,7 +86,7 @@
     {#if presets}
       <Select
         on:change={onChange}
-        {value}
+        value={value || "Custom"}
         secondary
         extraThin
         label="Presets"
