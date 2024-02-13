@@ -16,31 +16,14 @@ class ExecutionTimeoutError extends Error {
 }
 
 class ModuleHandler {
-  private modules: {
-    import: string
-    moduleKey: string
-    module: ivm.Module
-  }[] = []
+  private modules: string[] = []
 
-  private generateRandomKey = () => `i${crypto.randomUUID().replace(/-/g, "")}`
-
-  registerModule(module: ivm.Module, imports: string) {
-    this.modules.push({
-      moduleKey: this.generateRandomKey(),
-      import: imports,
-      module: module,
-    })
+  registerModule(code: string) {
+    this.modules.push(code)
   }
 
   generateImports() {
-    return this.modules
-      .map(m => `import ${m.import} from "${m.moduleKey}"`)
-      .join(";")
-  }
-
-  getModule(key: string) {
-    const module = this.modules.find(m => m.moduleKey === key)
-    return module?.module
+    return this.modules.join(";")
   }
 }
 
@@ -98,34 +81,39 @@ export class IsolatedVM implements VM {
       }),
     })
 
+    const cryptoModule = this.registerCallbacks({
+      randomUUID: crypto.randomUUID,
+    })
+
     const injectedRequire = `const require=function req(val) {
         switch (val) {
             case "url": return ${urlModule};
             case "querystring": return ${querystringModule};
+            case "crypto": return ${cryptoModule};
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
-    const helpersModule = this.isolate.compileModuleSync(
-      `${injectedRequire};${helpersSource}`
-    )
+    // const helpersModule = this.isolate.compileModuleSync(
+    //   `${injectedRequire};${helpersSource}`
+    // )
 
-    helpersModule.instantiateSync(this.vm, specifier => {
-      if (specifier === "crypto") {
-        const cryptoModule = this.registerCallbacks({
-          randomUUID: crypto.randomUUID,
-        })
-        const module = this.isolate.compileModuleSync(
-          `export default ${cryptoModule}`
-        )
-        module.instantiateSync(this.vm, specifier => {
-          throw new Error(`No imports allowed. Required: ${specifier}`)
-        })
-        return module
-      }
-      throw new Error(`No imports allowed. Required: ${specifier}`)
-    })
+    // helpersModule.instantiateSync(this.vm, specifier => {
+    //   if (specifier === "crypto") {
+    //     const cryptoModule = this.registerCallbacks({
+    //       randomUUID: crypto.randomUUID,
+    //     })
+    //     const module = this.isolate.compileModuleSync(
+    //       `export default ${cryptoModule}`
+    //     )
+    //     module.instantiateSync(this.vm, specifier => {
+    //       throw new Error(`No imports allowed. Required: ${specifier}`)
+    //     })
+    //     return module
+    //   }
+    //   throw new Error(`No imports allowed. Required: ${specifier}`)
+    // })
 
-    this.moduleHandler.registerModule(helpersModule, "helpers")
+    this.moduleHandler.registerModule(`${injectedRequire};${helpersSource}`)
     return this
   }
 
@@ -191,7 +179,11 @@ export class IsolatedVM implements VM {
       throw new Error(`No imports allowed. Required: ${specifier}`)
     })
 
-    this.moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
+    this.moduleHandler.registerModule(
+      bsonModule,
+      "{deserialize, toJson}",
+      "bson"
+    )
 
     return this
   }
@@ -206,25 +198,13 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
-      code
-    )};`
+    code = `${this.moduleHandler.generateImports()};${this.codeWrapper(code)};`
 
-    const script = this.isolate.compileModuleSync(code)
+    const script = this.isolate.compileScriptSync(code)
 
-    script.instantiateSync(this.vm, specifier => {
-      const module = this.moduleHandler.getModule(specifier)
-      if (module) {
-        return module
-      }
+    const result = script.runSync(this.vm, { timeout: this.invocationTimeout })
 
-      throw new Error(`"${specifier}" import not allowed`)
-    })
-
-    script.evaluateSync({ timeout: this.invocationTimeout })
-
-    const result = this.getFromContext(this.resultKey)
-    return result.out
+    return result
   }
 
   private registerCallbacks(functions: Record<string, any>) {
@@ -259,12 +239,5 @@ export class IsolatedVM implements VM {
           : new ivm.ExternalCopy(value).copyInto({ release: true })
       )
     }
-  }
-
-  private getFromContext(key: string) {
-    const ref = this.vm.global.getSync(key, { reference: true })
-    const result = ref.copySync()
-    ref.release()
-    return result
   }
 }
