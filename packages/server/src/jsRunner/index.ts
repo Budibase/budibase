@@ -1,15 +1,16 @@
 import vm from "vm"
-import env from "./environment"
-import { setJSRunner } from "@budibase/string-templates"
-import { context, timers } from "@budibase/backend-core"
+import env from "../environment"
+import { setJSRunner, setOnErrorLog } from "@budibase/string-templates"
+import { context, logging, timers } from "@budibase/backend-core"
 import tracer from "dd-trace"
+import { serializeError } from "serialize-error"
 
 type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
   setJSRunner((js: string, ctx: vm.Context) => {
     return tracer.trace("runJS", {}, span => {
-      const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
+      const perRequestLimit = env.JS_PER_REQUEST_TIMEOUT_MS
       let track: TrackerFn = f => f()
       if (perRequestLimit) {
         const bbCtx = tracer.trace("runJS.getCurrentContext", {}, span =>
@@ -53,9 +54,15 @@ export function init() {
       vm.createContext(ctx)
       return track(() =>
         vm.runInNewContext(js, ctx, {
-          timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
+          timeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
         })
       )
     })
   })
+
+  if (env.LOG_JS_ERRORS) {
+    setOnErrorLog((error: Error) => {
+      logging.logWarn(JSON.stringify(serializeError(error)))
+    })
+  }
 }
