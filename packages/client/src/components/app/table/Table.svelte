@@ -3,6 +3,7 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { canBeSortColumn } from "@budibase/shared-core"
+  import Provider from "../../context/Provider.svelte"
 
   export let dataProvider
   export let columns
@@ -53,6 +54,11 @@
     if (rowIds.length) {
       selectedRows = selectedRows.filter(row => rowIds.includes(row._id))
     }
+  }
+
+  // Build our data context
+  $: dataContext = {
+    selectedRows,
   }
 
   const getFields = (
@@ -156,27 +162,29 @@
 </script>
 
 <div use:styleable={$component.styles} class={size}>
-  <Table
-    {data}
-    {schema}
-    {loading}
-    {rowCount}
-    {quiet}
-    {compact}
-    {customRenderers}
-    allowSelectRows={allowSelectRows && table}
-    bind:selectedRows
-    allowEditRows={false}
-    allowEditColumns={false}
-    showAutoColumns={true}
-    disableSorting
-    autoSortColumns={!columns?.length}
-    on:sort={onSort}
-    on:click={handleClick}
-    placeholderText={noRowsMessage || "No rows found"}
-  >
-    <slot />
-  </Table>
+  <Provider data={dataContext}>
+    <Table
+      {data}
+      {schema}
+      {loading}
+      {rowCount}
+      {quiet}
+      {compact}
+      {customRenderers}
+      allowSelectRows={allowSelectRows && table}
+      bind:selectedRows
+      allowEditRows={false}
+      allowEditColumns={false}
+      showAutoColumns={true}
+      disableSorting
+      autoSortColumns={!columns?.length}
+      on:sort={onSort}
+      on:click={handleClick}
+      placeholderText={noRowsMessage || "No rows found"}
+    >
+      <slot />
+    </Table>
+  </Provider>
   {#if allowSelectRows && selectedRows.length}
     <div class="row-count">
       {selectedRows.length} row{selectedRows.length === 1 ? "" : "s"} selected
