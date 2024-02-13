@@ -12,7 +12,7 @@ describe("/api/applications/:appId/sync", () => {
     app = await config.init()
     // create some users which we will use throughout the tests
     await config.createUser({
-      email: "sync1@test.com",
+      email: "sync1@example.com",
       roles: {
         [app._id!]: roles.BUILTIN_ROLE_IDS.BASIC,
       },

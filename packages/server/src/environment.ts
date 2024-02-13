@@ -71,9 +71,9 @@ const environment = {
   SELF_HOSTED: process.env.SELF_HOSTED,
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
-  JS_PER_EXECUTION_TIME_LIMIT_MS:
+  JS_PER_INVOCATION_TIMEOUT_MS:
     parseIntSafe(process.env.JS_PER_EXECUTION_TIME_LIMIT_MS) || 1000,
-  JS_PER_REQUEST_TIME_LIMIT_MS: parseIntSafe(
+  JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
     process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),
   // old
@@ -95,6 +95,9 @@ const environment = {
   TOP_LEVEL_PATH:
     process.env.TOP_LEVEL_PATH || process.env.SERVER_TOP_LEVEL_PATH,
   APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
+  JS_RUNNER_MEMORY_LIMIT:
+    parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) || 64,
+  LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
 }
 
 // threading can cause memory issues with node-ts in development
