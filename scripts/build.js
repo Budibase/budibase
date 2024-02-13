@@ -63,6 +63,9 @@ function runBuild(entry, outfile) {
       "graphql/*",
       "bson",
     ],
+    define: {
+      "process.env.BUNDLED": '"true"',
+    },
   }
 
   build({
