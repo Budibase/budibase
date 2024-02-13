@@ -2,7 +2,7 @@ const {
   getJsHelperList,
 } = require("../../../../string-templates/src/helpers/list.js")
 
-export const helpers = {
+export default {
   ...getJsHelperList(),
   // pointing stripProtocol to a unexisting function to be able to declare it on isolated-vm
   // @ts-ignore

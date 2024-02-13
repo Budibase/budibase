@@ -73,16 +73,16 @@ export class IsolatedVM implements VM {
       escape: querystring.escape,
     })
 
+    const cryptoModule = this.registerCallbacks({
+      randomUUID: crypto.randomUUID,
+    })
+
     this.addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
         var parsed = url.parse(str) as any
         parsed.protocol = ""
         return parsed.format()
       }),
-    })
-
-    const cryptoModule = this.registerCallbacks({
-      randomUUID: crypto.randomUUID,
     })
 
     const injectedRequire = `const require=function req(val) {
@@ -93,7 +93,9 @@ export class IsolatedVM implements VM {
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
-    this.moduleHandler.registerModule(`${injectedRequire};${helpersSource}`)
+    this.moduleHandler.registerModule(
+      `${injectedRequire};${helpersSource};helpers=helpers.default`
+    )
     return this
   }
 
