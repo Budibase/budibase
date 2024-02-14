@@ -3,8 +3,8 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
-  import { store } from "builderStore"
+  } from "dataBinding"
+  import { builderStore } from "stores/builder"
   import { onDestroy } from "svelte"
 
   export let label = ""
@@ -72,7 +72,7 @@
 
   onDestroy(() => {
     if (highlighted) {
-      store.actions.settings.highlight(null)
+      builderStore.highlightSetting(null)
     }
   })
   let highlight

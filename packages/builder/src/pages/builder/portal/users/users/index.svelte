@@ -36,7 +36,7 @@
   import { get } from "svelte/store"
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
-  import { OnboardingType } from "../../../../../constants"
+  import { OnboardingType } from "constants"
   import ScimBanner from "../_components/SCIMBanner.svelte"
   import { sdk } from "@budibase/shared-core"
 

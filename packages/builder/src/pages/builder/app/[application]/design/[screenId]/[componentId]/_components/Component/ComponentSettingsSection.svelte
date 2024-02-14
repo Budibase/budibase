@@ -1,7 +1,7 @@
 <script>
   import { helpers } from "@budibase/shared-core"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { componentStore, builderStore } from "stores/builder"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
@@ -73,7 +73,7 @@
       if (typeof onUpdateSetting === "function") {
         await onUpdateSetting(setting, value)
       } else {
-        await store.actions.components.updateSetting(setting.key, value)
+        await componentStore.updateSetting(setting.key, value)
       }
       // Send event if required
       if (setting.sendEvents) {
@@ -177,10 +177,10 @@
               defaultValue={setting.defaultValue}
               nested={setting.nested}
               onChange={val => updateSetting(setting, val)}
-              highlighted={$store.highlightedSetting?.key === setting.key
-                ? $store.highlightedSetting
+              highlighted={$builderStore.highlightedSetting?.key === setting.key
+                ? $builderStore.highlightedSetting
                 : null}
-              propertyFocus={$store.propertyFocus === setting.key}
+              propertyFocus={$builderStore.propertyFocus === setting.key}
               info={setting.info}
               disableBindings={setting.disableBindings}
               props={{

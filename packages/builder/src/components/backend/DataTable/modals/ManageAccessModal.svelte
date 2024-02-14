@@ -1,6 +1,6 @@
 <script>
   import { PermissionSource } from "@budibase/types"
-  import { roles, permissions as permissionsStore } from "stores/backend"
+  import { roles, permissions as permissionsStore } from "stores/builder"
   import {
     Label,
     Input,

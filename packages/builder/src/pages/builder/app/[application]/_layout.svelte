@@ -1,11 +1,13 @@
 <script>
   import {
-    store,
-    automationStore,
+    initialise,
+    reset,
+    appStore,
+    builderStore,
+    previewStore,
     userStore,
     deploymentStore,
-  } from "builderStore"
-  import { roles, flags } from "stores/backend"
+  } from "stores/builder"
   import { auth, apps } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
@@ -45,14 +47,14 @@
 
   async function getPackage() {
     try {
-      store.actions.reset()
+      reset()
+
       const pkg = await API.fetchAppPackage(application)
-      await store.actions.initialise(pkg)
-      await automationStore.actions.fetch()
-      await roles.fetch()
-      await flags.fetch()
+      await initialise(pkg)
+
       await apps.load()
-      await deploymentStore.actions.load()
+      await deploymentStore.load()
+
       loaded = true
       return pkg
     } catch (error) {
@@ -68,12 +70,11 @@
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
     if (!activeTopNav) return
-    store.update(state => {
-      if (!state.previousTopNavPath) state.previousTopNavPath = {}
-      state.previousTopNavPath[activeTopNav.path] = window.location.pathname
-      $goto(state.previousTopNavPath[path] || path)
-      return state
-    })
+    builderStore.setPreviousTopNavPath(
+      activeTopNav.path,
+      window.location.pathname
+    )
+    $goto($builderStore.previousTopNavPath[path] || path)
   }
 
   // Event handler for the command palette
@@ -88,20 +89,13 @@
     // Check if onboarding is enabled.
     if (isEnabled(TENANT_FEATURE_FLAGS.ONBOARDING_TOUR)) {
       if (!$auth.user?.onboardedAt) {
-        await store.update(state => ({
-          ...state,
-          onboarding: true,
-          tourKey: TOUR_KEYS.TOUR_BUILDER_ONBOARDING,
-        }))
+        builderStore.startBuilderOnboarding()
       } else {
         // Feature tour date
         const release_date = new Date("2023-03-01T00:00:00.000Z")
         const onboarded = new Date($auth.user?.onboardedAt)
         if (onboarded < release_date) {
-          await store.update(state => ({
-            ...state,
-            tourKey: TOUR_KEYS.FEATURE_ONBOARDING,
-          }))
+          builderStore.startTour(TOUR_KEYS.FEATURE_ONBOARDING)
         }
       }
     }
@@ -124,22 +118,20 @@
   onDestroy(() => {
     // Run async on a slight delay to let other cleanup logic run without
     // being confused by the store wiping
-    setTimeout(() => {
-      store.actions.reset()
-    }, 10)
+    setTimeout(reset, 10)
   })
 </script>
 
 <TourPopover />
 
-{#if $store.builderSidePanel}
+{#if $builderStore.builderSidePanel}
   <BuilderSidePanel />
 {/if}
 
-<div class="root" class:blur={$store.showPreview}>
+<div class="root" class:blur={$previewStore.showPreview}>
   <VerificationPromptBanner />
   <div class="top-nav">
-    {#if $store.initialised}
+    {#if $appStore.initialised}
       <div class="topleftnav">
         <span class="back-to-apps">
           <Icon
@@ -164,7 +156,7 @@
         </Tabs>
       </div>
       <div class="topcenternav">
-        <Heading size="XS">{$store.name}</Heading>
+        <Heading size="XS">{$appStore.name}</Heading>
       </div>
       <div class="toprightnav">
         <span>
@@ -190,7 +182,7 @@
   {/await}
 </div>
 
-{#if $store.showPreview}
+{#if $previewStore.showPreview}
   <PreviewOverlay />
 {/if}
 

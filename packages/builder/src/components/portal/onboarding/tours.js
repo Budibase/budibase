@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { store } from "builderStore"
+import { builderStore } from "stores/builder"
 import { auth } from "stores/portal"
 import analytics from "analytics"
 import {
@@ -33,7 +33,7 @@ export const TOUR_KEYS = {
 }
 
 const resetTourState = () => {
-  store.update(state => ({
+  builderStore.update(state => ({
     ...state,
     tourNodes: undefined,
     tourKey: undefined,
@@ -179,12 +179,12 @@ const getTours = () => {
             can significantly improve usability by making the process more digestible for your users.`,
           query: "#steps-prop-control-wrap",
           onComplete: () => {
-            store.actions.settings.highlight()
+            builderStore.highlightSetting()
             endTour({ key: TOUR_KEYS.BUILDER_FORM_CREATE })
           },
           onLoad: () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS)
-            store.actions.settings.highlight("steps", "info")
+            builderStore.highlightSetting("steps", "info")
           },
           positionHandler: customPositionHandler,
           align: "left-outside",
@@ -200,7 +200,7 @@ const getTours = () => {
           query: "#rowId-prop-control-wrap",
           onLoad: () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_ROW_ID)
-            store.actions.settings.highlight("rowId", "info")
+            builderStore.highlightSetting("rowId", "info")
           },
           positionHandler: customPositionHandler,
           align: "left-outside",
@@ -213,19 +213,19 @@ const getTours = () => {
             can significantly improve usability by making the process more digestible for your users.`,
           query: "#steps-prop-control-wrap",
           onComplete: () => {
-            store.actions.settings.highlight()
+            builderStore.highlightSetting()
             endTour({ key: TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE })
           },
           onLoad: () => {
             tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS)
-            store.actions.settings.highlight("steps", "info")
+            builderStore.highlightSetting("steps", "info")
           },
           positionHandler: customPositionHandler,
           align: "left-outside",
         },
       ],
       onSkip: async () => {
-        store.actions.settings.highlight()
+        builderStore.highlightSetting()
         endTour({ key: TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE, skipped: true })
       },
     },

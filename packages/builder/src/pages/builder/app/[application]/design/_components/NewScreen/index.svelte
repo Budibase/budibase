@@ -6,13 +6,13 @@
   import gridImage from "./images/grid.png"
   import formImage from "./images/form.png" //optimized example
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
 
   export let onClose = null
 
   let createScreenModal
 
-  $: hasScreens = $store.screens?.length
+  $: hasScreens = $screenStore.screens?.length
 </script>
 
 <div class="page">

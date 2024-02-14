@@ -84,12 +84,12 @@ type DefaultUserValues = {
   csrfToken: string
 }
 
-interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
 }
 
-class TestConfiguration {
+export default class TestConfiguration {
   server: any
   request: supertest.SuperTest<supertest.Test> | undefined
   started: boolean
@@ -912,4 +912,4 @@ class TestConfiguration {
   }
 }
 
-export = TestConfiguration
+module.exports = TestConfiguration
