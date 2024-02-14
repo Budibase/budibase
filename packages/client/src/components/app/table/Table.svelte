@@ -47,13 +47,6 @@
       selectedRows.map(row => row._id)
     )
   }
-  // Clear row selection if action was trigger
-  $: {
-    if ($rowSelectionStore?.[$component.id]?.clearSelectedRows) {
-      selectedRows = []
-      rowSelectionStore.actions.updateSelection($component.id, [])
-    }
-  }
 
   // If the data changes, double check that the selected elements are still present.
   $: if (data) {
