@@ -4719,10 +4719,22 @@
         ]
       }
     ],
-    "context": {
-      "type": "schema",
-      "scope": "local"
-    }
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Selected Rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ]
   },
   "daterangepicker": {
     "name": "Date Range",
@@ -5610,37 +5622,50 @@
         ]
       }
     ],
-    "context": {
-      "type": "static",
-      "suffix": "provider",
-      "values": [
-        {
-          "label": "Rows",
-          "key": "rows",
-          "type": "array"
-        },
-        {
-          "label": "Extra Info",
-          "key": "info",
-          "type": "string"
-        },
-        {
-          "label": "Rows Length",
-          "key": "rowsLength",
-          "type": "number"
-        },
-        {
-          "label": "Schema",
-          "key": "schema",
-          "type": "object"
-        },
-        {
-          "label": "Page Number",
-          "key": "pageNumber",
-          "type": "number"
-        }
-      ]
-    }
+    "context": [
+      {
+        "type": "static",
+        "suffix": "provider",
+        "values": [
+          {
+            "label": "Rows",
+            "key": "rows",
+            "type": "array"
+          },
+          {
+            "label": "Extra Info",
+            "key": "info",
+            "type": "string"
+          },
+          {
+            "label": "Rows Length",
+            "key": "rowsLength",
+            "type": "number"
+          },
+          {
+            "label": "Schema",
+            "key": "schema",
+            "type": "object"
+          },
+          {
+            "label": "Page Number",
+            "key": "pageNumber",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "suffix": "table",
+        "values": [
+          {
+            "label": "Selected Rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ]
   },
   "cardsblock": {
     "block": true,

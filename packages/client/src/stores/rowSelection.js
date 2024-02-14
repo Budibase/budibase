@@ -5,7 +5,7 @@ const createRowSelectionStore = () => {
 
   function updateSelection(componentId, tableId, selectedRows) {
     store.update(state => {
-      state[componentId] = { tableId: tableId, selectedRows: selectedRows }
+      state[componentId] = { tableId, selectedRows }
       return state
     })
   }
