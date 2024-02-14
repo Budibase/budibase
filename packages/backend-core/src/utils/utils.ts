@@ -226,19 +226,8 @@ export function isClient(ctx: Ctx) {
   return ctx.headers[Header.TYPE] === "client"
 }
 
-export function timeout(
-  timeMs: number,
-  opts?: { reject?: boolean }
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (opts?.reject) {
-        reject(new Error(`timed out - ${timeMs}ms`))
-      } else {
-        resolve()
-      }
-    }, timeMs)
-  })
+export function timeout(timeMs: number) {
+  return new Promise(resolve => setTimeout(resolve, timeMs))
 }
 
 export function isAudited(event: Event) {
