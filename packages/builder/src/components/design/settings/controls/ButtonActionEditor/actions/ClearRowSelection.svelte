@@ -1,18 +1,19 @@
 <script>
   import { Label, Select, Body } from "@budibase/bbui"
   import { findAllMatchingComponents } from "helpers/components"
-  import { currentAsset } from "builderStore"
+  import { selectedScreen } from "stores/builder"
 
   export let parameters
 
-  $: tables = findAllMatchingComponents($currentAsset?.props, component =>
+  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
     component._component.endsWith("table")
   ).map(table => ({
     label: table._instanceName,
     value: table._id,
   }))
-  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("tableblock")
+  $: tableBlocks = findAllMatchingComponents(
+    $selectedScreen?.props,
+    component => component._component.endsWith("tableblock")
   ).map(block => ({
     label: block._instanceName,
     value: `${block._id}-table`,
