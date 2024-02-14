@@ -270,6 +270,7 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
+            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
