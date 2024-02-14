@@ -162,13 +162,21 @@
       onClick({ row: e.detail })
     }
   }
+
+  const actions = [
+    {
+      type: ActionTypes.ClearRowSelection,
+      callback: () => (selectedRows = []),
+    },
+  ]
+
   onDestroy(() => {
     rowSelectionStore.actions.updateSelection($component.id, [])
   })
 </script>
 
 <div use:styleable={$component.styles} class={size}>
-  <Provider data={dataContext}>
+  <Provider {actions} data={dataContext}>
     <Table
       {data}
       {schema}

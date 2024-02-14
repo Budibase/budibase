@@ -47,6 +47,8 @@ export const getActionContextKey = action => {
       return key(action.parameters.componentId, ActionTypes.ClearForm)
     case "Change Form Step":
       return key(action.parameters.componentId, ActionTypes.ChangeFormStep)
+    case "Clear Row Selection":
+      return key(action.parameters.componentId, ActionTypes.ClearRowSelection)
     default:
       return null
   }
@@ -353,12 +355,6 @@ const exportDataHandler = async action => {
   }
 }
 
-const clearRowSelection = async action => {
-  rowSelectionStore.actions.clearRowSelection(
-    action.parameters.tableComponentId
-  )
-}
-
 const continueIfHandler = action => {
   const { type, value, operator, referenceValue } = action.parameters
   if (!type || !operator) {
@@ -418,7 +414,6 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
-  ["Clear Row Selection"]: clearRowSelection,
 }
 
 const confirmTextMap = {

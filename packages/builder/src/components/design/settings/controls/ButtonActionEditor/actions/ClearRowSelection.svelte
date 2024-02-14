@@ -24,10 +24,7 @@
   <Body size="S">Clear the row selection from the selected table.</Body>
   <div class="params">
     <Label small>Table</Label>
-    <Select
-      bind:value={parameters.tableComponentId}
-      options={componentOptions}
-    />
+    <Select bind:value={parameters.componentId} options={componentOptions} />
   </div>
 </div>
 

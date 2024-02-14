@@ -18,28 +18,12 @@ const createRowSelectionStore = () => {
     return selection[componentId] || {}
   }
 
-  function clearRowSelection(tableComponentId) {
-    const selection = get(store)
-    const componentId = Object.keys(selection).find(
-      componentId => componentId === tableComponentId
-    )
-    store.update(state => {
-      state[componentId] = {
-        tableId: tableComponentId,
-        selectedRows: [],
-        clearSelectedRows: true,
-      }
-      return state
-    })
-  }
-
   return {
     subscribe: store.subscribe,
     set: store.set,
     actions: {
       updateSelection,
       getSelection,
-      clearRowSelection,
     },
   }
 }
