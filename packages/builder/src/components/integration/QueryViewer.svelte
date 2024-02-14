@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries } from "stores/builder"
   import {
     Icon,
     Select,
@@ -42,6 +42,7 @@
   let autoSchema = {}
   let nestedSchemaFields = {}
   let rows = []
+  let keys = {}
 
   const parseQuery = query => {
     modified = false
@@ -146,8 +147,20 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  async function handleKeyDown(evt) {
+    keys[evt.key] = true
+    if ((keys["Meta"] || keys["Control"]) && keys["Enter"]) {
+      await runQuery({ suppressErrors: false })
+    }
+  }
+
+  function handleKeyUp(evt) {
+    delete keys[evt.key]
+  }
 </script>
 
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <QueryViewerSavePromptModal
   checkIsModified={() => checkIsModified(newQuery)}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}

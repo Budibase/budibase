@@ -23,27 +23,27 @@ const USERS = [
     password: "test",
   },
   {
-    email: "loadtest2@test.com",
+    email: "loadtest2@example.com",
     password: "test",
   },
   {
-    email: "loadtest3@test.com",
+    email: "loadtest3@example.com",
     password: "test",
   },
   {
-    email: "loadtest4@test.com",
+    email: "loadtest4@example.com",
     password: "test",
   },
   {
-    email: "loadtest5@test.com",
+    email: "loadtest5@example.com",
     password: "test",
   },
   {
-    email: "loadtest6@test.com",
+    email: "loadtest6@example.com",
     password: "test",
   },
   {
-    email: "loadtest7@test.com",
+    email: "loadtest7@example.com",
     password: "test",
   },
 ]
