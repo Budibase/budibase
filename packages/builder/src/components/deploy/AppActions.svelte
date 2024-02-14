@@ -101,7 +101,13 @@
     } catch (error) {
       console.error(error)
       analytics.captureException(error)
-      notifications.error("Error publishing app")
+      const baseMsg = "Error publishing app"
+      const message = error.message
+      if (message) {
+        notifications.error(`${baseMsg} - ${message}`)
+      } else {
+        notifications.error(baseMsg)
+      }
     }
     publishing = false
   }
