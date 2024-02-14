@@ -1,9 +1,9 @@
 <script>
   import { Label, Select, Body } from "@budibase/bbui"
-  import { findAllMatchingComponents } from "builderStore/componentUtils"
-  import { currentAsset } from "builderStore"
   import { onMount } from "svelte"
   import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
+  import { findAllMatchingComponents } from "helpers/components"
+  import { selectedScreen } from "stores/builder"
 
   export let parameters
 
@@ -49,11 +49,12 @@
     },
   ]
 
-  $: tables = findAllMatchingComponents($currentAsset?.props, component =>
+  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
     component._component.endsWith("table")
   )
-  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("tableblock")
+  $: tableBlocks = findAllMatchingComponents(
+    $selectedScreen?.props,
+    component => component._component.endsWith("tableblock")
   )
   $: components = tables.concat(tableBlocks)
   $: componentOptions = components.map(table => ({

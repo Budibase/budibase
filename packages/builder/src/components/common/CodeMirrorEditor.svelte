@@ -27,7 +27,7 @@
 <script>
   import { Label } from "@budibase/bbui"
   import CodeMirror from "components/integration/codemirror"
-  import { themeStore } from "builderStore"
+  import { themeStore } from "stores/portal"
   import { createEventDispatcher, onMount } from "svelte"
 
   export let mode = EditorModes.JS
