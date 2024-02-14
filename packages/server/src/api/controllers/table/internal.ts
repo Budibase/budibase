@@ -19,10 +19,15 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
   } = {
     _id: generateTableID(),
     ...rest,
-    type: "table",
-    sourceType: TableSourceType.INTERNAL,
-    views: {},
+    // Ensure these fields are populated, even if not sent in the request
+    type: rest.type || "table",
+    sourceType: rest.sourceType || TableSourceType.INTERNAL,
   }
+
+  if (!tableToSave.views) {
+    tableToSave.views = {}
+  }
+
   const renaming = tableToSave._rename
   delete tableToSave._rename
 
