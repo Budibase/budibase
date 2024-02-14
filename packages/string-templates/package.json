@@ -21,7 +21,7 @@
   ],
   "scripts": {
     "build:es": "yarn node ../../scripts/build.js -e src/index.mjs -o ./dist/bundle.mjs -p tsconfig.json --format=esm",
-    "build": "yarn build:es && tsc && rollup -c",
+    "build": "yarn build:es && tsc",
     "dev": "concurrently \"tsc --watch\" \"yarn build:es --watch\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
