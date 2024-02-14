@@ -2,20 +2,24 @@
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import FormTypeModal from "./FormTypeModal.svelte"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import rowListScreen from "builderStore/store/screenTemplates/rowListScreen"
-  import formScreen from "builderStore/store/screenTemplates/formScreen"
   import { Modal, notifications } from "@budibase/bbui"
-  import { store } from "builderStore"
-  import { get } from "svelte/store"
-  import getTemplates from "builderStore/store/screenTemplates"
-  import { tables } from "stores/backend"
+  import {
+    screenStore,
+    navigationStore,
+    tables,
+    builderStore,
+  } from "stores/builder"
   import { auth } from "stores/portal"
+  import { get } from "svelte/store"
+  import getTemplates from "templates"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
+  import formScreen from "templates/formScreen"
+  import rowListScreen from "templates/rowListScreen"
 
   let mode
   let pendingScreen
@@ -68,13 +72,13 @@
         screen.routing.roleId = screenAccessRole
 
         // Create the screen
-        const response = await store.actions.screens.save(screen)
+        const response = await screenStore.save(screen)
         screenId = response._id
         createdScreens.push(response)
 
         // Add link in layout. We only ever actually create 1 screen now, even
         // for autoscreens, so it's always safe to do this.
-        await store.actions.links.save(
+        await navigationStore.saveLink(
           screen.routing.route,
           capitalise(screen.routing.route.split("/")[1])
         )
@@ -91,7 +95,9 @@
   // currently selected role
   const hasExistingUrl = url => {
     const roleId = screenAccessRole
-    const screens = get(store).screens.filter(s => s.routing.roleId === roleId)
+    const screens = get(screenStore).screens.filter(
+      s => s.routing.roleId === roleId
+    )
     return !!screens.find(s => s.routing?.route === url)
   }
 
@@ -190,7 +196,7 @@
 
     // Go to new screen
     $goto(`./${lastScreen._id}`)
-    store.actions.screens.select(lastScreen._id)
+    screenStore.select(lastScreen._id)
   }
 
   const confirmFormScreenCreation = async () => {
@@ -211,7 +217,7 @@
 
       const tourRequired = !$auth?.user?.tours?.[associatedTour]
       if (tourRequired) {
-        store.update(state => ({
+        builderStore.update(state => ({
           ...state,
           tourStepKey: null,
           tourNodes: null,
@@ -222,7 +228,7 @@
 
     // Go to new screen
     $goto(`./${lastScreen._id}/${mainComponent}`)
-    store.actions.screens.select(lastScreen._id)
+    screenStore.select(lastScreen._id)
   }
 
   // Submit screen config for creation.

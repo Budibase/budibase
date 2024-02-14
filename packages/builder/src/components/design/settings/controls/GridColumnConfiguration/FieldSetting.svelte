@@ -4,7 +4,7 @@
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
 
   export let item
   export let anchor
@@ -29,7 +29,7 @@
     const component = `@budibase/standard-components/${
       FieldTypeToComponentMap[item.columnType]
     }`
-    return store.actions.components.getDefinition(component).icon
+    return componentStore.getDefinition(component).icon
   }
 </script>
 

@@ -2,7 +2,7 @@
   import { tourHandler } from "./tourHandler"
   import { TOURSBYSTEP } from "./tours"
   import { onMount, onDestroy } from "svelte"
-  import { store } from "builderStore"
+  import { builderStore } from "stores/builder"
 
   export let stepKeys = []
 
@@ -24,7 +24,7 @@
     }
   }
 
-  $: tourKeyWatch = $store.tourKey
+  $: tourKeyWatch = $builderStore.tourKey
   $: if (tourKeyWatch || stepKeys || ready) {
     stepKeys.forEach(tourStepKey => {
       registerTourNode(tourKeyWatch, tourStepKey)

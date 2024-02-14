@@ -8,6 +8,9 @@ const { getJsHelperList } = require("./list")
 let runJS
 module.exports.setJSRunner = runner => (runJS = runner)
 
+let onErrorLog
+module.exports.setOnErrorLog = delegate => (onErrorLog = delegate)
+
 // Helper utility to strip square brackets from a value
 const removeSquareBrackets = value => {
   if (!value || typeof value !== "string") {
@@ -56,6 +59,8 @@ module.exports.processJS = (handlebars, context) => {
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error) {
+    onErrorLog && onErrorLog(error)
+
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
       return "Timed out while executing JS"
     }

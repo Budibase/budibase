@@ -21,11 +21,14 @@
   import { API } from "api"
   import { apps } from "stores/portal"
   import {
-    deploymentStore,
-    store,
+    previewStore,
+    builderStore,
     isOnlyUser,
+    appStore,
+    deploymentStore,
+    initialise,
     sortedScreens,
-  } from "builderStore"
+  } from "stores/builder"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import { TOUR_STEP_KEYS } from "components/portal/onboarding/tours.js"
   import { goto } from "@roxi/routify"
@@ -50,15 +53,15 @@
   $: isPublished =
     selectedApp?.status === "published" && latestDeployments?.length > 0
   $: updateAvailable =
-    $store.upgradableVersion &&
-    $store.version &&
-    $store.upgradableVersion !== $store.version
+    $appStore.upgradableVersion &&
+    $appStore.version &&
+    $appStore.upgradableVersion !== $appStore.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
   $: lastDeployed = getLastDeployedString($deploymentStore)
 
   const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage($store.devId)
-    await store.actions.initialise(applicationPkg)
+    const applicationPkg = await API.fetchAppPackage($appStore.devId)
+    await initialise(applicationPkg)
   }
 
   const getLastDeployedString = deployments => {
@@ -71,10 +74,7 @@
   }
 
   const previewApp = () => {
-    store.update(state => ({
-      ...state,
-      showPreview: true,
-    }))
+    previewStore.showPreview(true)
   }
 
   const viewApp = () => {
@@ -92,7 +92,7 @@
   async function publishApp() {
     try {
       publishing = true
-      await API.publishAppChanges($store.appId)
+      await API.publishAppChanges($appStore.appId)
       notifications.send("App published successfully", {
         type: "success",
         icon: "GlobeCheck",
@@ -101,7 +101,13 @@
     } catch (error) {
       console.error(error)
       analytics.captureException(error)
-      notifications.error("Error publishing app")
+      const baseMsg = "Error publishing app"
+      const message = error.message
+      if (message) {
+        notifications.error(`${baseMsg} - ${message}`)
+      } else {
+        notifications.error(baseMsg)
+      }
     }
     publishing = false
   }
@@ -136,7 +142,7 @@
   const completePublish = async () => {
     try {
       await apps.load()
-      await deploymentStore.actions.load()
+      await deploymentStore.load()
     } catch (err) {
       notifications.error("Error refreshing app")
     }
@@ -167,10 +173,7 @@
             quiet
             icon="UserGroup"
             on:click={() => {
-              store.update(state => {
-                state.builderSidePanel = true
-                return state
-              })
+              builderStore.showBuilderSidePanel()
             }}
           >
             Users
@@ -243,7 +246,7 @@
                   }
                 }}
               >
-                {$store.url}
+                {$appStore.url}
                 {#if isPublished}
                   <Icon size="S" name="LinkOut" />
                 {:else}
@@ -324,10 +327,10 @@
 <Modal bind:this={updateAppModal} padding={false} width="600px">
   <UpdateAppModal
     app={{
-      name: $store.name,
-      url: $store.url,
-      icon: $store.icon,
-      appId: $store.appId,
+      name: $appStore.name,
+      url: $appStore.url,
+      icon: $appStore.icon,
+      appId: $appStore.appId,
     }}
     onUpdateComplete={async () => {
       await initialiseApp()

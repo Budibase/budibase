@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Layout, notifications, Body } from "@budibase/bbui"
-  import { datasources } from "stores/backend"
+  import { datasources } from "stores/builder"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
   import { onMount } from "svelte"
