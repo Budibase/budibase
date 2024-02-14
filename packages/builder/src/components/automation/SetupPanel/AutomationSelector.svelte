@@ -1,7 +1,7 @@
 <script>
   import { Select, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import { TriggerStepID } from "constants/backend/automations"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"

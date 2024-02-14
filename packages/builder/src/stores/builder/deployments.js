@@ -2,7 +2,7 @@ import { writable } from "svelte/store"
 import { API } from "api"
 import { notifications } from "@budibase/bbui"
 
-export const getDeploymentStore = () => {
+export const createDeploymentStore = () => {
   let store = writable([])
 
   const load = async () => {
@@ -15,8 +15,8 @@ export const getDeploymentStore = () => {
 
   return {
     subscribe: store.subscribe,
-    actions: {
-      load,
-    },
+    load,
   }
 }
+
+export const deploymentStore = createDeploymentStore()

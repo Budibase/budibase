@@ -1,5 +1,5 @@
 import { Component } from "./Component"
-import { getSchemaForDatasource } from "../../../dataBinding"
+import { getSchemaForDatasource } from "dataBinding"
 
 const fieldTypeToComponentMap = {
   string: "stringfield",

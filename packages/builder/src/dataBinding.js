@@ -6,21 +6,24 @@ import {
   findAllMatchingComponents,
   findComponent,
   findComponentPath,
-  getComponentSettings,
-} from "./componentUtils"
-import { store, currentAsset } from "builderStore"
+} from "helpers/components"
 import {
+  componentStore,
+  screenStore,
+  appStore,
+  layoutStore,
   queries as queriesStores,
   tables as tablesStore,
   roles as rolesStore,
-} from "stores/backend"
+  selectedScreen,
+} from "stores/builder"
 import {
   makePropSafe,
   isJSBinding,
   decodeJSBinding,
   encodeJSBinding,
 } from "@budibase/string-templates"
-import { TableNames } from "../constants"
+import { TableNames } from "./constants"
 import { JSONUtils, Constants } from "@budibase/frontend-core"
 import ActionDefinitions from "components/design/settings/controls/ButtonActionEditor/manifest.json"
 import { environment, licensing } from "stores/portal"
@@ -187,7 +190,7 @@ export const getComponentBindableProperties = (asset, componentId) => {
 
   // Ensure that the component exists and exposes context
   const component = findComponent(asset.props, componentId)
-  const def = store.actions.components.getDefinition(component?._component)
+  const def = componentStore.getDefinition(component?._component)
   if (!def?.context) {
     return []
   }
@@ -223,8 +226,7 @@ export const getComponentContexts = (
 
   // Processes all contexts exposed by a component
   const processContexts = scope => component => {
-    // Sanity check
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component._component)
     if (!def?.context) {
       return
     }
@@ -302,7 +304,7 @@ export const getActionProviders = (
     if (!options?.includeSelf && component._id === componentId) {
       return
     }
-    const def = store.actions.components.getDefinition(component._component)
+    const def = componentStore.getDefinition(component._component)
     const actions = (def?.actions || []).map(action => {
       return typeof action === "string" ? { type: action } : action
     })
@@ -325,7 +327,7 @@ export const getActionProviders = (
  * Gets a datasource object for a certain data provider component
  */
 export const getDatasourceForProvider = (asset, component) => {
-  const settings = getComponentSettings(component?._component)
+  const settings = componentStore.getComponentSettings(component?._component)
 
   // If this component has a dataProvider setting, go up the stack and use it
   const dataProviderSetting = settings.find(setting => {
@@ -581,7 +583,7 @@ export const getUserBindings = () => {
  */
 const getDeviceBindings = () => {
   let bindings = []
-  if (get(store).clientFeatures?.deviceAwareness) {
+  if (get(appStore).clientFeatures?.deviceAwareness) {
     const safeDevice = makePropSafe("device")
 
     bindings = [
@@ -621,7 +623,7 @@ const getDeviceBindings = () => {
  */
 const getSelectedRowsBindings = asset => {
   let bindings = []
-  if (get(store).clientFeatures?.rowSelection) {
+  if (get(appStore).clientFeatures?.rowSelection) {
     // Add bindings for table components
     let tables = findAllMatchingComponents(asset?.props, component =>
       component._component.endsWith("table")
@@ -679,7 +681,7 @@ export const makeStateBinding = key => {
  */
 const getStateBindings = () => {
   let bindings = []
-  if (get(store).clientFeatures?.state) {
+  if (get(appStore).clientFeatures?.state) {
     bindings = getAllStateVariables().map(makeStateBinding)
   }
   return bindings
@@ -745,23 +747,20 @@ export const getEventContextBindings = ({
   asset,
 }) => {
   let bindings = []
-
-  const selectedAsset = asset ?? get(currentAsset)
+  asset = asset ?? get(selectedScreen)
 
   // Check if any context bindings are provided by the component for this
   // setting
-  const component =
-    componentInstance ?? findComponent(selectedAsset.props, componentId)
+  const component = componentInstance ?? findComponent(asset.props, componentId)
 
   if (!component) {
     return bindings
   }
 
   const definition =
-    componentDefinition ??
-    store.actions.components.getDefinition(component?._component)
+    componentDefinition ?? componentStore.getDefinition(component?._component)
 
-  const settings = getComponentSettings(component?._component)
+  const settings = componentStore.getComponentSettings(component?._component)
   const eventSetting = settings.find(setting => setting.key === settingKey)
 
   if (eventSetting?.context?.length) {
@@ -1066,7 +1065,7 @@ export const buildFormSchema = (component, asset) => {
   }
 
   // Otherwise find all field component children
-  const settings = getComponentSettings(component._component)
+  const settings = componentStore.getComponentSettings(component._component)
   const fieldSetting = settings.find(
     setting => setting.key === "field" && setting.type.startsWith("field/")
   )
@@ -1092,7 +1091,7 @@ export const getAllStateVariables = () => {
   let eventSettings = []
   getAllAssets().forEach(asset => {
     findAllMatchingComponents(asset.props, component => {
-      const settings = getComponentSettings(component._component)
+      const settings = componentStore.getComponentSettings(component._component)
 
       const parseEventSettings = (settings, comp) => {
         settings
@@ -1111,7 +1110,9 @@ export const getAllStateVariables = () => {
 
             if (Array.isArray(buttonConfig)) {
               buttonConfig.forEach(button => {
-                const nestedSettings = getComponentSettings(button._component)
+                const nestedSettings = componentStore.getComponentSettings(
+                  button._component
+                )
                 parseEventSettings(nestedSettings, button)
               })
             }
@@ -1128,7 +1129,7 @@ export const getAllStateVariables = () => {
         setting => setting.type === "stepConfiguration"
       )
       const steps = stepSetting ? component[stepSetting.key] : []
-      const stepDefinition = getComponentSettings(
+      const stepDefinition = componentStore.getComponentSettings(
         "@budibase/standard-components/multistepformblockstep"
       )
 
@@ -1139,7 +1140,7 @@ export const getAllStateVariables = () => {
   })
 
   // Add on load settings from screens
-  get(store).screens.forEach(screen => {
+  get(screenStore).screens.forEach(screen => {
     if (screen.onLoad) {
       eventSettings.push(screen.onLoad)
     }
@@ -1168,8 +1169,8 @@ export const getAllStateVariables = () => {
 export const getAllAssets = () => {
   // Get all component containing assets
   let allAssets = []
-  allAssets = allAssets.concat(get(store).layouts || [])
-  allAssets = allAssets.concat(get(store).screens || [])
+  allAssets = allAssets.concat(get(layoutStore).layouts || [])
+  allAssets = allAssets.concat(get(screenStore).screens || [])
 
   return allAssets
 }

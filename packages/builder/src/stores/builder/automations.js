@@ -1,10 +1,10 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 import { API } from "api"
 import { cloneDeep } from "lodash/fp"
 import { generate } from "shortid"
-import { selectedAutomation } from "builderStore"
+import { createHistoryStore } from "stores/builder/history"
 import { notifications } from "@budibase/bbui"
-import { updateReferencesInObject } from "builderStore/dataBinding"
+import { updateReferencesInObject } from "dataBinding"
 
 const initialAutomationState = {
   automations: [],
@@ -17,10 +17,21 @@ const initialAutomationState = {
   selectedAutomationId: null,
 }
 
-export const getAutomationStore = () => {
+// If this functions, remove the actions elements
+export const createAutomationStore = () => {
   const store = writable(initialAutomationState)
+
   store.actions = automationActions(store)
-  return store
+
+  // Setup history for automations
+  const history = createHistoryStore({
+    getDoc: store.actions.getDefinition,
+    selectDoc: store.actions.select,
+  })
+
+  store.actions.save = history.wrapSaveDoc(store.actions.save)
+  store.actions.delete = history.wrapDeleteDoc(store.actions.delete)
+  return { store, history }
 }
 
 const updateStepReferences = (steps, modifiedIndex, action) => {
@@ -318,4 +329,20 @@ const automationActions = store => ({
       }
     }
   },
+})
+
+const automations = createAutomationStore()
+
+export const automationStore = automations.store
+
+export const automationHistoryStore = automations.history
+
+// Derived automation state
+export const selectedAutomation = derived(automationStore, $automationStore => {
+  if (!$automationStore.selectedAutomationId) {
+    return null
+  }
+  return $automationStore.automations?.find(
+    x => x._id === $automationStore.selectedAutomationId
+  )
 })

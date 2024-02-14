@@ -1,6 +1,5 @@
 <script>
-  import { licensing, auth } from "stores/portal"
-  import { temporalStore } from "builderStore"
+  import { licensing, auth, temporalStore } from "stores/portal"
   import { onMount } from "svelte"
   import DayPassWarningModal from "./DayPassWarningModal.svelte"
   import PaymentFailedModal from "./PaymentFailedModal.svelte"

@@ -3,7 +3,7 @@
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources } from "stores/builder"
   import NavHeader from "components/common/NavHeader.svelte"
 
   let searchValue

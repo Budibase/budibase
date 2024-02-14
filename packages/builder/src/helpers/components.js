@@ -1,4 +1,4 @@
-import { store } from "./index"
+import { componentStore } from "stores/builder"
 import { get } from "svelte/store"
 import { Helpers } from "@budibase/bbui"
 import {
@@ -145,50 +145,6 @@ const searchComponentTree = (rootComponent, matchComponent) => {
 }
 
 /**
- * Searches a component's definition for a setting matching a certain predicate.
- * These settings are cached because they cannot change at run time.
- */
-let componentSettingCache = {}
-export const getComponentSettings = componentType => {
-  if (!componentType) {
-    return []
-  }
-
-  // Ensure whole component name is used
-  if (
-    !componentType.startsWith("plugin/") &&
-    !componentType.startsWith("@budibase")
-  ) {
-    componentType = `@budibase/standard-components/${componentType}`
-  }
-
-  // Check if we have cached this type already
-  if (componentSettingCache[componentType]) {
-    return componentSettingCache[componentType]
-  }
-
-  // Otherwise get the settings and cache them
-  const def = store.actions.components.getDefinition(componentType)
-  let settings = []
-  if (def) {
-    settings = def.settings?.filter(setting => !setting.section) ?? []
-    def.settings
-      ?.filter(setting => setting.section)
-      .forEach(section => {
-        settings = settings.concat(
-          (section.settings || []).map(setting => ({
-            ...setting,
-            section: section.name,
-          }))
-        )
-      })
-  }
-  componentSettingCache[componentType] = settings
-
-  return settings
-}
-
-/**
  * Randomises a components ID's, including all child component IDs, and also
  * updates all data bindings to still be valid.
  * This mutates the object in place.
@@ -266,7 +222,8 @@ export const getComponentName = component => {
   if (component == null) {
     return ""
   }
-  const components = get(store)?.components || {}
+
+  const components = get(componentStore)?.components || {}
   const componentDefinition = components[component._component] || {}
   return componentDefinition.friendlyName || componentDefinition.name || ""
 }
@@ -286,7 +243,7 @@ export const buildContextTree = (
   }
 
   // Process this component's contexts
-  const def = store.actions.components.getDefinition(rootComponent._component)
+  const def = componentStore.getDefinition(rootComponent._component)
   if (def?.context) {
     tree[currentBranch].push(rootComponent._id)
     const contexts = Array.isArray(def.context) ? def.context : [def.context]

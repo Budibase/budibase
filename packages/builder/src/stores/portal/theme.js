@@ -33,3 +33,6 @@ export const getThemeStore = () => {
 
   return store
 }
+
+// ?? confusion
+export const themeStore = getThemeStore()
