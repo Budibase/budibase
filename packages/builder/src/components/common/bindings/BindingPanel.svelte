@@ -20,7 +20,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
@@ -30,10 +30,9 @@
     hbAutocomplete,
     EditorModes,
     bindingsToCompletions,
-    hbInsert,
-    jsInsert,
   } from "../CodeEditor"
   import BindingPicker from "./BindingPicker.svelte"
+  import { BindingHelpers } from "./utils"
 
   const dispatch = createEventDispatcher()
 
@@ -68,6 +67,7 @@
   $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(bindings, value)
   $: expressionResult = processStringSync(runtimeExpression || "", context)
+  $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
   const updateValue = val => {
     const runtimeExpression = readableToRuntimeBinding(bindings, val)
@@ -78,31 +78,13 @@
     }
   }
 
-  // Adds a JS/HBS helper to the expression
   const onSelectHelper = (helper, js) => {
-    const pos = getCaretPosition()
-    const { start, end } = pos
-    if (js) {
-      let js = decodeJSBinding(jsValue)
-      const insertVal = jsInsert(js, start, end, helper.text, { helper: true })
-      insertAtPos({ start, end, value: insertVal })
-    } else {
-      const insertVal = hbInsert(hbsValue, start, end, helper.text)
-      insertAtPos({ start, end, value: insertVal })
-    }
+    bindingHelpers.onSelectHelper(js ? jsValue : hbsValue, helper, { js })
   }
 
-  // Adds a data binding to the expression
   const onSelectBinding = (binding, { forceJS } = {}) => {
-    const { start, end } = getCaretPosition()
-    if (usingJS || forceJS) {
-      let js = decodeJSBinding(jsValue)
-      const insertVal = jsInsert(js, start, end, binding.readableBinding)
-      insertAtPos({ start, end, value: insertVal })
-    } else {
-      const insertVal = hbInsert(hbsValue, start, end, binding.readableBinding)
-      insertAtPos({ start, end, value: insertVal })
-    }
+    const js = usingJS || forceJS
+    bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
   }
 
   const onChangeMode = e => {

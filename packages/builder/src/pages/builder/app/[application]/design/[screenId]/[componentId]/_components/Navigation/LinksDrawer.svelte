@@ -10,7 +10,7 @@
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
 
   export let links = []
@@ -23,7 +23,7 @@
       link.id = generate()
     }
   })
-  $: urlOptions = $store.screens
+  $: urlOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
 

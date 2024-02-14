@@ -1,9 +1,6 @@
 <script>
   import { Layout, Input } from "@budibase/bbui"
-  import {
-    createValidationStore,
-    requiredValidator,
-  } from "../../../helpers/validation"
+  import { createValidationStore, requiredValidator } from "helpers/validation"
 
   export let password
   export let error

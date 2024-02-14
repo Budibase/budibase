@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore"
+  import { layoutStore } from "stores/builder"
   import { Select } from "@budibase/bbui"
 
   export let value
@@ -8,7 +8,7 @@
 <Select
   bind:value
   on:change
-  options={$store.layouts}
+  options={$layoutStore.layouts}
   getOptionLabel={layout => layout.name}
   getOptionValue={layout => layout._id}
 />

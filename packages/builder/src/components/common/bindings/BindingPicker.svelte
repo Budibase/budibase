@@ -10,6 +10,7 @@
   export let mode
   export let allowHelpers
   export let context = null
+  export let noPaddingTop = false
 
   let search = ""
   let popover
