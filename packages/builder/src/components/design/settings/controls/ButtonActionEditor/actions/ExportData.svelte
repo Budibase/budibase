@@ -43,6 +43,10 @@
       label: "[tab]",
       value: "  ",
     },
+    {
+      label: "[space]",
+      value: " ",
+    },
   ]
 
   $: tables = findAllMatchingComponents($currentAsset?.props, component =>
@@ -137,7 +141,7 @@
     display: grid;
     column-gap: var(--spacing-xs);
     row-gap: var(--spacing-m);
-    grid-template-columns: 90px 1fr 75px;
+    grid-template-columns: 90px 1fr 90px;
     align-items: center;
   }
 </style>
