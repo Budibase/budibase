@@ -198,7 +198,6 @@ export const serveApp = async function (ctx: Ctx) {
         appId,
         embedded: bbHeaderEmbed,
       })
-
     } else {
       // just return the app info for jest to assert on
       ctx.body = appInfo

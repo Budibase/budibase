@@ -237,6 +237,8 @@
 </script>
 
 <svelte:window on:keydown={onKeyDown} />
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <ModalContent
   size="L"
   showCancelButton={false}
