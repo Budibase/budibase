@@ -4639,6 +4639,7 @@
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
+    "actions": ["ClearRowSelection"],
     "size": {
       "width": 600,
       "height": 400
