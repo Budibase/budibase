@@ -1,9 +1,6 @@
 <script>
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { currentAsset, store } from "builderStore"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
@@ -32,18 +29,18 @@
     return schema
   }
 
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
   $: primaryDisplayColumnName = getSchemaForDatasource(
-    $currentAsset,
+    $selectedScreen,
     datasource
   )?.table?.primaryDisplay
-  $: schema = getSchema(currentAsset, datasource)
+  $: schema = getSchema(selectedScreen, datasource)
   $: columns = getColumns({
     columns: value,
     schema,
     primaryDisplayColumnName,
     onChange: handleChange,
-    createComponent: store.actions.components.createInstance,
+    createComponent: componentStore.createInstance,
   })
 </script>
 
