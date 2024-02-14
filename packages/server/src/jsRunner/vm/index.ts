@@ -15,18 +15,6 @@ class ExecutionTimeoutError extends Error {
   }
 }
 
-class ModuleHandler {
-  private modules: string[] = []
-
-  registerModule(code: string) {
-    this.modules.push(code)
-  }
-
-  generateImports() {
-    return this.modules.join(";")
-  }
-}
-
 export class IsolatedVM implements VM {
   private isolate: ivm.Isolate
   private vm: ivm.Context
@@ -36,8 +24,6 @@ export class IsolatedVM implements VM {
 
   // By default the wrapper returns itself
   private codeWrapper: (code: string) => string = code => code
-
-  private moduleHandler = new ModuleHandler()
 
   private readonly resultKey = "results"
 
@@ -93,9 +79,11 @@ export class IsolatedVM implements VM {
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
-    this.moduleHandler.registerModule(
+    const script = this.isolate.compileScriptSync(
       `${injectedRequire};${helpersSource};helpers=helpers.default`
     )
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
+
     return this
   }
 
@@ -157,7 +145,10 @@ export class IsolatedVM implements VM {
       .toString()
       .replace(/TextDecoderMock/, "TextDecoder")
 
-    this.moduleHandler.registerModule(`${textDecoderPolyfill};${bsonSource}`)
+    const script = this.isolate.compileScriptSync(
+      `${textDecoderPolyfill};${bsonSource}`
+    )
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
 
     return this
   }
@@ -172,9 +163,7 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
-      code
-    )}`
+    code = `results.out=${this.codeWrapper(code)}`
 
     const script = this.isolate.compileScriptSync(code)
 
