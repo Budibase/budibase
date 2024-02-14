@@ -10,7 +10,7 @@ import {
   removeDeprecated,
 } from "../../automations/utils"
 import { deleteEntityMetadata } from "../../utilities"
-import { MetadataTypes, AUTOMATION_SYNC_TIMEOUT } from "../../constants"
+import { MetadataTypes } from "../../constants"
 import { setTestFlag, clearTestFlag } from "../../utilities/redis"
 import { context, cache, events, db as dbCore } from "@budibase/backend-core"
 import { automations, features } from "@budibase/pro"
@@ -24,6 +24,7 @@ import {
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import env from "../../environment"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -274,7 +275,9 @@ export async function trigger(ctx: UserCtx) {
       automation,
       {
         fields: ctx.request.body.fields,
-        timeout: ctx.request.body.timeout * 1000 || AUTOMATION_SYNC_TIMEOUT,
+        timeout:
+          ctx.request.body.timeout * 1000 ||
+          env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
       },
       { getResponses: true }
     )

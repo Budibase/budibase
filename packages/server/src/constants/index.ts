@@ -6,8 +6,6 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
-export * from "./automations"
-
 export enum FilterTypes {
   STRING = "string",
   FUZZY = "fuzzy",

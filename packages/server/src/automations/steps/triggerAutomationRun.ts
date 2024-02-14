@@ -11,7 +11,7 @@ import {
 import * as triggers from "../triggers"
 import { context } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
-import { AUTOMATION_SYNC_TIMEOUT } from "../../constants"
+import env from "../../environment"
 
 export const definition: AutomationStepSchema = {
   name: "Trigger an automation",
@@ -77,7 +77,8 @@ export async function run({ inputs }: AutomationStepInput) {
         automation,
         {
           fields: { ...fieldParams },
-          timeout: inputs.timeout * 1000 || AUTOMATION_SYNC_TIMEOUT,
+          timeout:
+            inputs.timeout * 1000 || env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
         },
         { getResponses: true }
       )
