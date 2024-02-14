@@ -45,7 +45,7 @@ export function smtp(conf?: any): SMTPConfig {
     config: {
       port: 12345,
       host: "smtptesthost.com",
-      from: "testfrom@test.com",
+      from: "testfrom@example.com",
       subject: "Hello!",
       secure: false,
       ...conf,
@@ -59,7 +59,7 @@ export function smtpEthereal(): SMTPConfig {
     config: {
       port: 587,
       host: "smtp.ethereal.email",
-      from: "testfrom@test.com",
+      from: "testfrom@example.com",
       secure: false,
       auth: {
         user: "wyatt.zulauf29@ethereal.email",

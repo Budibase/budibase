@@ -6,8 +6,8 @@
     getSchemaForDatasource,
     getBindableProperties,
     getComponentBindableProperties,
-  } from "builderStore/dataBinding"
-  import { currentAsset, store, selectedScreen } from "builderStore"
+  } from "dataBinding"
+  import { selectedScreen, componentStore } from "stores/builder"
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import { createEventDispatcher } from "svelte"
   import FieldSetting from "./FieldSetting.svelte"
@@ -44,7 +44,7 @@
 
   $: datasource =
     componentInstance.dataSource ||
-    getDatasourceForProvider($currentAsset, componentInstance)
+    getDatasourceForProvider($selectedScreen, componentInstance)
 
   $: resourceId = datasource?.resourceId || datasource?.tableId
   $: tableColumns = componentInstance.tableColumns
@@ -54,7 +54,7 @@
   }
 
   const updateState = value => {
-    schema = getSchema($currentAsset, datasource)
+    schema = getSchema($selectedScreen, datasource)
     options = Object.keys(schema || {})
     sanitisedValue = getValidColumns(convertOldFieldFormat(value), options)
     updateSanitsedFields(sanitisedValue)
@@ -133,7 +133,7 @@
       field.placeholder = customColumn.displayName
     }
 
-    const pseudoComponentInstance = store.actions.components.createInstance(
+    const pseudoComponentInstance = componentStore.createInstance(
       instance._component,
       {
         _instanceName: field.name,

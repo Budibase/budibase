@@ -25,7 +25,7 @@ export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
     roles: { app_test: "admin" },
     firstName: generator.first(),
     lastName: generator.last(),
-    pictureUrl: "http://test.com",
+    pictureUrl: "http://example.com",
     tenantId: tenant.id(),
     ...userProps,
   }

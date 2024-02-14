@@ -1,11 +1,14 @@
 import { Datasource, Query } from "@budibase/types"
 import * as setup from "../utilities"
 import { databaseTestProviders } from "../../../../integrations/tests/utils"
-import { MongoClient, type Collection } from "mongodb"
+import { MongoClient, type Collection, BSON } from "mongodb"
 
 jest.unmock("mongodb")
 
 const collection = "test_collection"
+
+const expectValidId = expect.stringMatching(/^\w{24}$/)
+const expectValidBsonObjectId = expect.any(BSON.ObjectId)
 
 describe("/queries", () => {
   let config = setup.getConfig()
@@ -131,11 +134,11 @@ describe("/queries", () => {
     const result = await config.api.query.execute(query._id!)
 
     expect(result.data).toEqual([
-      { _id: expect.anything(), name: "one" },
-      { _id: expect.anything(), name: "two" },
-      { _id: expect.anything(), name: "three" },
-      { _id: expect.anything(), name: "four" },
-      { _id: expect.anything(), name: "five" },
+      { _id: expectValidId, name: "one" },
+      { _id: expectValidId, name: "two" },
+      { _id: expectValidId, name: "three" },
+      { _id: expectValidId, name: "four" },
+      { _id: expectValidId, name: "five" },
     ])
   })
 
@@ -151,7 +154,7 @@ describe("/queries", () => {
 
     const result = await config.api.query.execute(query._id!)
 
-    expect(result.data).toEqual([{ _id: expect.anything(), name: "one" }])
+    expect(result.data).toEqual([{ _id: expectValidId, name: "one" }])
   })
 
   it("should execute a findOneAndUpdate query", async () => {
@@ -173,7 +176,7 @@ describe("/queries", () => {
       {
         lastErrorObject: { n: 1, updatedExisting: true },
         ok: 1,
-        value: { _id: expect.anything(), name: "one" },
+        value: { _id: expectValidId, name: "one" },
       },
     ])
 
@@ -182,7 +185,7 @@ describe("/queries", () => {
 
       const doc = await collection.findOne({ name: { $eq: "newName" } })
       expect(doc).toEqual({
-        _id: expect.anything(),
+        _id: expectValidBsonObjectId,
         name: "newName",
       })
     })
@@ -227,14 +230,14 @@ describe("/queries", () => {
     expect(result.data).toEqual([
       {
         acknowledged: true,
-        insertedId: expect.anything(),
+        insertedId: expectValidId,
       },
     ])
 
     await withCollection(async collection => {
       const doc = await collection.findOne({ foo: { $eq: "bar" } })
       expect(doc).toEqual({
-        _id: expect.anything(),
+        _id: expectValidBsonObjectId,
         foo: "bar",
       })
     })
@@ -315,7 +318,7 @@ describe("/queries", () => {
     await withCollection(async collection => {
       const doc = await collection.findOne({ name: { $eq: "newOne" } })
       expect(doc).toEqual({
-        _id: expect.anything(),
+        _id: expectValidBsonObjectId,
         name: "newOne",
       })
 
@@ -381,7 +384,7 @@ describe("/queries", () => {
       expect(docs).toHaveLength(5)
       for (const doc of docs) {
         expect(doc).toEqual({
-          _id: expect.anything(),
+          _id: expectValidBsonObjectId,
           name: "newName",
         })
       }
