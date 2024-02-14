@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore"
+  import { screenStore, componentStore } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
     ActionMenu,
@@ -10,20 +10,20 @@
     notifications,
   } from "@budibase/bbui"
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
-  import { makeComponentUnique } from "builderStore/componentUtils"
+  import sanitizeUrl from "helpers/sanitizeUrl"
+  import { makeComponentUnique } from "helpers/components"
 
   export let screenId
 
   let confirmDeleteDialog
   let screenDetailsModal
 
-  $: screen = $store.screens.find(screen => screen._id === screenId)
-  $: noPaste = !$store.componentToPaste
+  $: screen = $screenStore.screens.find(screen => screen._id === screenId)
+  $: noPaste = !$componentStore.componentToPaste
 
   const pasteComponent = mode => {
     try {
-      store.actions.components.paste(screen.props, mode, screen)
+      componentStore.paste(screen.props, mode, screen)
     } catch (error) {
       notifications.error("Error saving component")
     }
@@ -47,7 +47,7 @@
 
     try {
       // Create the screen
-      await store.actions.screens.save(duplicateScreen)
+      await screenStore.save(duplicateScreen)
     } catch (error) {
       notifications.error("Error duplicating screen")
     }
@@ -55,7 +55,7 @@
 
   const deleteScreen = async () => {
     try {
-      await store.actions.screens.delete(screen)
+      await screenStore.delete(screen)
       notifications.success("Deleted screen successfully")
     } catch (err) {
       notifications.error("Error deleting screen")

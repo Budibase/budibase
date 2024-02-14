@@ -1,4 +1,4 @@
-import { Screen } from "./utils/Screen"
+import { Screen } from "./Screen"
 
 export default {
   name: `Create from scratch`,

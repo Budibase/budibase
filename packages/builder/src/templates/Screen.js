@@ -33,6 +33,11 @@ export class Screen extends BaseStructure {
     }
   }
 
+  role(role) {
+    this._json.routing.roleId = role
+    return this
+  }
+
   normalStyle(styling) {
     this._json.props._styles.normal = styling
     return this
