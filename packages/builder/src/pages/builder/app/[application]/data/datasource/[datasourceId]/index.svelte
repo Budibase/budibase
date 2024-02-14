@@ -1,6 +1,6 @@
 <script>
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
-  import { datasources, integrations } from "stores/backend"
+  import { datasources, integrations } from "stores/builder"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"

@@ -3,7 +3,7 @@
     automationStore,
     selectedAutomation,
     automationHistoryStore,
-  } from "builderStore"
+  } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"

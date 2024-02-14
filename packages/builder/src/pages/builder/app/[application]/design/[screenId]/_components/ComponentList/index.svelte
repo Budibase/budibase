@@ -2,11 +2,12 @@
   import { notifications, Icon, Body } from "@budibase/bbui"
   import { isActive, goto } from "@roxi/routify"
   import {
-    store,
     selectedScreen,
+    screenStore,
+    componentStore,
     userSelectedResourceMap,
     hoverStore,
-  } from "builderStore"
+  } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import ComponentTree from "./ComponentTree.svelte"
   import { dndStore, DropPosition } from "./dndStore.js"
@@ -17,8 +18,8 @@
 
   let scrolling = false
 
-  $: screenComponentId = `${$store.selectedScreenId}-screen`
-  $: navComponentId = `${$store.selectedScreenId}-navigation`
+  $: screenComponentId = `${$screenStore.selectedScreenId}-screen`
+  $: navComponentId = `${$screenStore.selectedScreenId}-navigation`
 
   const toNewComponentRoute = () => {
     if ($isActive(`./:componentId/new`)) {
@@ -41,7 +42,7 @@
     scrolling = e.target.scrollTop !== 0
   }
 
-  const hover = hoverStore.actions.update
+  const hover = hoverStore.hover
 </script>
 
 <div class="components">
@@ -58,13 +59,15 @@
           <NavItem
             text="Screen"
             indentLevel={0}
-            selected={$store.selectedComponentId ===
-              `${$store.selectedScreenId}-screen`}
+            selected={$componentStore.selectedComponentId ===
+              `${$screenStore.selectedScreenId}-screen`}
             opened
             scrollable
             icon="WebPage"
             on:drop={onDrop}
-            on:click={() => ($store.selectedComponentId = screenComponentId)}
+            on:click={() => {
+              componentStore.select(`${$screenStore.selectedScreenId}-screen`)
+            }}
             hovering={$hoverStore.componentId === screenComponentId}
             on:mouseenter={() => hover(screenComponentId)}
             on:mouseleave={() => hover(null)}
@@ -76,14 +79,18 @@
           <NavItem
             text="Navigation"
             indentLevel={0}
-            selected={$store.selectedComponentId === navComponentId}
+            selected={$componentStore.selectedComponentId === navComponentId}
             opened
             scrollable
-            icon={$selectedScreen.showNavigation
+            icon={$selectedScreen?.showNavigation
               ? "Visibility"
               : "VisibilityOff"}
             on:drop={onDrop}
-            on:click={() => ($store.selectedComponentId = navComponentId)}
+            on:click={() => {
+              componentStore.select(
+                `${$screenStore.selectedScreenId}-navigation`
+              )
+            }}
             hovering={$hoverStore.componentId === navComponentId}
             on:mouseenter={() => hover(navComponentId)}
             on:mouseleave={() => hover(null)}
