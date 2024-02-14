@@ -2,20 +2,20 @@
   import { Button, Drawer } from "@budibase/bbui"
   import NavigationLinksDrawer from "./LinksDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
-  import { store } from "builderStore"
+  import { navigationStore } from "stores/builder"
 
   let drawer
   let links
 
   const openDrawer = () => {
-    links = cloneDeep($store.navigation.links || [])
+    links = cloneDeep($navigationStore.links || [])
     drawer.show()
   }
 
   const save = async () => {
-    let navigation = $store.navigation
+    let navigation = $navigationStore
     navigation.links = links
-    await store.actions.navigation.save(navigation)
+    await navigationStore.save(navigation)
     drawer.hide()
   }
 </script>

@@ -1,8 +1,8 @@
 <script>
   import { createEventDispatcher, setContext } from "svelte"
-  import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  import { getDatasourceForProvider } from "builderStore/dataBinding"
-  import { currentAsset, store } from "builderStore"
+  import ComponentSettingsSection from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { getDatasourceForProvider } from "dataBinding"
+  import { selectedScreen, componentStore, previewStore } from "stores/builder"
   import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"
   import { Utils } from "@budibase/frontend-core"
@@ -36,7 +36,7 @@
 
   $: stepCount = cachedValue?.length || 0
   $: updateStore(stepCount)
-  $: dataSource = getDatasourceForProvider($currentAsset, cachedInstance)
+  $: dataSource = getDatasourceForProvider($selectedScreen, cachedInstance)
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
@@ -62,7 +62,7 @@
   }
 
   const getDefinition = stepLabel => {
-    let def = cloneDeep(store.actions.components.getDefinition(componentType))
+    let def = cloneDeep(componentStore.getDefinition(componentType))
     def.settings.find(x => x.key === "steps").label = stepLabel
     return def
   }
@@ -85,7 +85,7 @@
   }
 
   const emitCurrentStep = step => {
-    store.actions.preview.sendEvent("builder-meta", {
+    previewStore.sendEvent("builder-meta", {
       componentId: componentInstance._id,
       step: step,
     })
