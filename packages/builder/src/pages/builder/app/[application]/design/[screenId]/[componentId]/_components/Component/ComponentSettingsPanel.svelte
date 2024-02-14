@@ -1,18 +1,30 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { store, selectedComponent, selectedScreen } from "builderStore"
+  import { auth } from "stores/portal"
   import { getComponentName } from "builderStore/componentUtils"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
   import { notifications, ActionButton } from "@budibase/bbui"
+  import TourWrap from "components/portal/onboarding/TourWrap.svelte"
+  import {
+    TOUR_STEP_KEYS,
+    TOUR_KEYS,
+  } from "components/portal/onboarding/tours.js"
 
   import {
     getBindableProperties,
     getComponentBindableProperties,
   } from "builderStore/dataBinding"
   import { capitalise } from "helpers"
+
+  const {
+    BUILDER_FORM_CREATE_STEPS,
+    BUILDER_FORM_VIEW_UPDATE_STEPS,
+    BUILDER_FORM_ROW_ID,
+  } = TOUR_STEP_KEYS
 
   const onUpdateName = async value => {
     try {
@@ -43,7 +55,6 @@
 
   $: id = $selectedComponent?._id
   $: id, (section = tabs[0])
-
   $: componentName = getComponentName(componentInstance)
 </script>
 
@@ -89,13 +100,21 @@
         </div>
       </span>
       {#if section == "settings"}
-        <ComponentSettingsSection
-          {componentInstance}
-          {componentDefinition}
-          {bindings}
-          {componentBindings}
-          {isScreen}
-        />
+        <TourWrap
+          stepKeys={[
+            BUILDER_FORM_CREATE_STEPS,
+            BUILDER_FORM_VIEW_UPDATE_STEPS,
+            BUILDER_FORM_ROW_ID,
+          ]}
+        >
+          <ComponentSettingsSection
+            {componentInstance}
+            {componentDefinition}
+            {bindings}
+            {componentBindings}
+            {isScreen}
+          />
+        </TourWrap>
       {/if}
       {#if section == "styles"}
         <DesignSection

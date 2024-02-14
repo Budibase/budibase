@@ -4,14 +4,18 @@
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
   import FormTypeModal from "./FormTypeModal.svelte"
   import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import rowListScreen from "builderStore/store/screenTemplates/rowListScreen"
+  import formScreen from "builderStore/store/screenTemplates/formScreen"
   import { Modal, notifications } from "@budibase/bbui"
   import { store } from "builderStore"
   import { get } from "svelte/store"
   import getTemplates from "builderStore/store/screenTemplates"
   import { tables } from "stores/backend"
+  import { auth } from "stores/portal"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
+  import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 
   let mode
   let pendingScreen
@@ -25,7 +29,8 @@
   // Cache variables for workflow
   let screenAccessRole = Roles.BASIC
 
-  let selectedTemplates = null
+  let templates = null
+  let screens = null
 
   let selectedDatasources = null
   let blankScreenUrl = null
@@ -40,6 +45,7 @@
 
     try {
       let screenId
+      let createdScreens = []
 
       for (let screen of screens) {
         // Check we aren't clashing with an existing URL
@@ -62,21 +68,19 @@
         screen.routing.roleId = screenAccessRole
 
         // Create the screen
-        // const response = await store.actions.screens.save(screen)
-        // screenId = response._id
+        const response = await store.actions.screens.save(screen)
+        screenId = response._id
+        createdScreens.push(response)
 
         // Add link in layout. We only ever actually create 1 screen now, even
         // for autoscreens, so it's always safe to do this.
-        // await store.actions.links.save(
-        //   screen.routing.route,
-        //   capitalise(screen.routing.route.split("/")[1])
-        // )
-        console.log(screen)
+        await store.actions.links.save(
+          screen.routing.route,
+          capitalise(screen.routing.route.split("/")[1])
+        )
       }
 
-      // Go to new screen
-      //$goto(`./${screenId}`)
-      //store.actions.screens.select(screenId)
+      return createdScreens
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
@@ -110,7 +114,8 @@
   // Handler for NewScreenModal
   export const show = newMode => {
     mode = newMode
-    // selectedTemplates = null
+    templates = null
+    screens = null
     selectedDatasources = null
     blankScreenUrl = null
     screenMode = mode
@@ -135,26 +140,24 @@
   // Handler for DatasourceModal confirmation, move to screen access select
   const confirmScreenDatasources = async ({ datasources }) => {
     selectedDatasources = datasources
-    console.log("confirmScreenDatasources ", datasources)
-    screenAccessRoleModal.show()
+    if (screenMode === "form") {
+      formTypeModal.show()
+    } else {
+      screenAccessRoleModal.show()
+    }
   }
 
   // Handler for Datasource Screen Creation
   const completeDatasourceScreenCreation = async () => {
-    const screens = selectedTemplates.map(template => {
+    templates = rowListScreen(selectedDatasources)
+
+    const screens = templates.map(template => {
       let screenTemplate = template.create()
       screenTemplate.autoTableId = template.resourceId
       return screenTemplate
     })
-    console.log("selectedTemplates ", selectedTemplates)
-    /*
-
-      id : "ROW_LIST_TEMPLATE" 
-      name : "Employees - List"
-      resourceId : "ta_bb_employee"
-
-    */
-    await createScreens({ screens, screenAccessRole })
+    const createdScreens = await createScreens({ screens, screenAccessRole })
+    loadNewScreen(createdScreens)
   }
 
   const confirmScreenBlank = async ({ screenUrl }) => {
@@ -171,7 +174,55 @@
       return
     }
     pendingScreen.routing.route = screenUrl
-    await createScreens({ screens: [pendingScreen], screenAccessRole })
+    const createdScreens = await createScreens({
+      screens: [pendingScreen],
+      screenAccessRole,
+    })
+    loadNewScreen(createdScreens)
+  }
+
+  const onConfirmFormType = () => {
+    screenAccessRoleModal.show()
+  }
+
+  const loadNewScreen = createdScreens => {
+    const lastScreen = createdScreens.slice(-1)
+
+    // Go to new screen
+    $goto(`./${lastScreen._id}`)
+    store.actions.screens.select(lastScreen._id)
+  }
+
+  const confirmFormScreenCreation = async () => {
+    templates = formScreen(selectedDatasources, { actionType: formType })
+    screens = templates.map(template => {
+      let screenTemplate = template.create()
+      return screenTemplate
+    })
+    const createdScreens = await createScreens({ screens, screenAccessRole })
+    const lastScreen = createdScreens?.slice(-1)?.pop()
+    const mainComponent = lastScreen?.props?._children?.[0]._id
+
+    if (formType === "Update" || formType === "Create") {
+      const associatedTour =
+        formType === "Update"
+          ? TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE
+          : TOUR_KEYS.BUILDER_FORM_CREATE
+
+      const tourRequired = !$auth?.user?.tours?.[associatedTour]
+      if (tourRequired) {
+        store.update(state => ({
+          ...state,
+          tourStepKey: null,
+          tourNodes: null,
+          tourKey: associatedTour,
+        }))
+      }
+    }
+
+    // Go to new screen
+    $goto(`./${lastScreen._id}/${mainComponent}`)
+    store.actions.screens.select(lastScreen._id)
   }
 
   // Submit screen config for creation.
@@ -181,6 +232,8 @@
         screenUrl: blankScreenUrl,
         screenAccessRole,
       })
+    } else if (screenMode === "form") {
+      confirmFormScreenCreation()
     } else {
       completeDatasourceScreenCreation()
     }
@@ -193,30 +246,16 @@
       datasourceModal.show()
     }
   }
-  window.test = () => {
-    formTypeModal.show()
-  }
 </script>
 
-<!--
-  returns templates, should return selected resources for use elsewhere
--->
 <Modal bind:this={datasourceModal} autoFocus={false}>
-  <DatasourceModal
-    {mode}
-    onConfirm={confirmScreenDatasources}
-    initialScreens={!selectedTemplates ? [] : [...selectedTemplates]}
-  />
+  <DatasourceModal {mode} onConfirm={confirmScreenDatasources} />
 </Modal>
 
 <Modal bind:this={screenAccessRoleModal}>
   <ScreenRoleModal
     onConfirm={() => {
-      if (screenMode === "form") {
-        formTypeModal.show()
-      } else {
-        confirmScreenCreation()
-      }
+      confirmScreenCreation()
     }}
     bind:screenAccessRole
     onCancel={roleSelectBack}
@@ -232,24 +271,14 @@
   />
 </Modal>
 
-<Modal
-  bind:this={formTypeModal}
-  on:hide={() => {
-    console.log("hide")
-    //formType = null
-  }}
->
+<Modal bind:this={formTypeModal}>
   <FormTypeModal
-    onConfirm={() => {
-      console.log("test confirm")
-    }}
+    onConfirm={onConfirmFormType}
     onCancel={() => {
-      console.log("cancel")
       formTypeModal.hide()
-      screenAccessRoleModal.show()
+      datasourceModal.show()
     }}
     on:select={e => {
-      console.log("form type selection ", e.detail)
       formType = e.detail
     }}
     type={formType}

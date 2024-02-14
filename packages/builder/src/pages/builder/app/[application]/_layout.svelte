@@ -151,7 +151,7 @@
         </span>
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <TourWrap tourStepKey={`builder-${title}-section`}>
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
               <Tab
                 quiet
                 selected={$isActive(path)}

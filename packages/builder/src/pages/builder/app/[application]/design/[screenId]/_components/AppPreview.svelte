@@ -161,7 +161,7 @@
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {
-      store.actions.settings.highlight(data.setting)
+      store.actions.settings.highlight(data.setting, "error")
 
       // Also scroll setting into view
       const selector = `#${data.setting}-prop-control`

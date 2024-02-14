@@ -10,6 +10,7 @@
   export let onCancel
   export let screenUrl
   export let screenAccessRole
+  export let confirmText = "Done"
 
   let error
 
@@ -41,7 +42,7 @@
 
 <ModalContent
   title="Access"
-  confirmText="Done"
+  {confirmText}
   cancelText="Back"
   {onConfirm}
   {onCancel}

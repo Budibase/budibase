@@ -1,5 +1,5 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
   import { runtimeToReadableBinding } from "builderStore/dataBinding"
   import { isJSBinding } from "@budibase/string-templates"

@@ -75,7 +75,7 @@ const INITIAL_FRONTEND_STATE = {
   theme: "",
   customTheme: {},
   previewDevice: "desktop",
-  highlightedSettingKey: null,
+  highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
   hasLock: true,
@@ -1460,10 +1460,10 @@ export const getFrontendStore = () => {
       },
     },
     settings: {
-      highlight: key => {
+      highlight: (key, type) => {
         store.update(state => ({
           ...state,
-          highlightedSettingKey: key,
+          highlightedSetting: { key, type: type || "info" },
         }))
       },
       propertyFocus: key => {

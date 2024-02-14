@@ -2,8 +2,14 @@ import { get } from "svelte/store"
 import { store } from "builderStore"
 import { auth } from "stores/portal"
 import analytics from "analytics"
-import { OnboardingData, OnboardingDesign, OnboardingPublish } from "./steps"
+import {
+  OnboardingData,
+  OnboardingDesign,
+  OnboardingPublish,
+  NewViewUpdateFormRowId,
+} from "./steps"
 import { API } from "api"
+import { customPositionHandler } from "components/design/settings/controls/EditComponentPopover"
 
 const ONBOARDING_EVENT_PREFIX = "onboarding"
 
@@ -14,11 +20,26 @@ export const TOUR_STEP_KEYS = {
   BUILDER_USER_MANAGEMENT: "builder-user-management",
   BUILDER_AUTOMATION_SECTION: "builder-automation-section",
   FEATURE_USER_MANAGEMENT: "feature-user-management",
+  BUILDER_FORM_CREATE_STEPS: "builder-form-create-steps",
+  BUILDER_FORM_VIEW_UPDATE_STEPS: "builder-form-view-update-steps",
+  BUILDER_FORM_ROW_ID: "builder-form-row-id",
 }
 
 export const TOUR_KEYS = {
   TOUR_BUILDER_ONBOARDING: "builder-onboarding",
   FEATURE_ONBOARDING: "feature-onboarding",
+  BUILDER_FORM_CREATE: "builder-form-create",
+  BUILDER_FORM_VIEW_UPDATE: "builder-form-view-update",
+}
+
+const resetTourState = () => {
+  store.update(state => ({
+    ...state,
+    tourNodes: undefined,
+    tourKey: undefined,
+    tourKeyStep: undefined,
+    onboarding: false,
+  }))
 }
 
 const endUserOnboarding = async ({ skipped = false } = {}) => {
@@ -37,13 +58,7 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
       // Update the cached user
       await auth.getSelf()
 
-      store.update(state => ({
-        ...state,
-        tourNodes: undefined,
-        tourKey: undefined,
-        tourKeyStep: undefined,
-        onboarding: false,
-      }))
+      resetTourState()
     } catch (e) {
       console.error("Onboarding failed", e)
       return false
@@ -52,9 +67,28 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
   }
 }
 
-const tourEvent = eventKey => {
+const endTour = async ({ key, skipped = false } = {}) => {
+  const { tours = {} } = get(auth).user
+  tours[key] = new Date().toISOString()
+
+  await API.updateSelf({
+    tours,
+  })
+
+  if (skipped) {
+    tourEvent(key, skipped)
+  }
+
+  // Update the cached user
+  await auth.getSelf()
+
+  resetTourState()
+}
+
+const tourEvent = (eventKey, skipped) => {
   analytics.captureEvent(`${ONBOARDING_EVENT_PREFIX}:${eventKey}`, {
     eventSource: EventSource.PORTAL,
+    skipped,
   })
 }
 
@@ -135,7 +169,74 @@ const getTours = () => {
         },
       ],
     },
+    [TOUR_KEYS.BUILDER_FORM_CREATE]: {
+      steps: [
+        {
+          id: TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS,
+          title: "Add multiple steps",
+          body: `When faced with a sizable form, consider implementing a multi-step 
+            approach to enhance user experience. Breaking the form into multiple steps 
+            can significantly improve usability by making the process more digestible for your users.`,
+          query: "#steps-prop-control-wrap",
+          onComplete: () => {
+            store.actions.settings.highlight()
+            endTour({ key: TOUR_KEYS.BUILDER_FORM_CREATE })
+          },
+          onLoad: () => {
+            tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS)
+            store.actions.settings.highlight("steps", "info")
+          },
+          positionHandler: customPositionHandler,
+          align: "left-outside",
+        },
+      ],
+    },
+    [TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE]: {
+      steps: [
+        {
+          id: TOUR_STEP_KEYS.BUILDER_FORM_ROW_ID,
+          title: "Add row ID to update a row",
+          layout: NewViewUpdateFormRowId,
+          query: "#rowId-prop-control-wrap",
+          onLoad: () => {
+            tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_ROW_ID)
+            store.actions.settings.highlight("rowId", "info")
+          },
+          positionHandler: customPositionHandler,
+          align: "left-outside",
+        },
+        {
+          id: TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS,
+          title: "Add multiple steps",
+          body: `When faced with a sizable form, consider implementing a multi-step 
+            approach to enhance user experience. Breaking the form into multiple steps 
+            can significantly improve usability by making the process more digestible for your users.`,
+          query: "#steps-prop-control-wrap",
+          onComplete: () => {
+            store.actions.settings.highlight()
+            endTour({ key: TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE })
+          },
+          onLoad: () => {
+            tourEvent(TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS)
+            store.actions.settings.highlight("steps", "info")
+          },
+          positionHandler: customPositionHandler,
+          align: "left-outside",
+        },
+      ],
+      onSkip: async () => {
+        store.actions.settings.highlight()
+        endTour({ key: TOUR_KEYS.BUILDER_FORM_VIEW_UPDATE, skipped: true })
+      },
+    },
   }
 }
 
 export const TOURS = getTours()
+export const TOURSBYSTEP = Object.keys(TOURS).reduce((acc, tour) => {
+  TOURS[tour].steps.forEach(element => {
+    acc[element.id] = element
+    acc[element.id]["tour"] = tour
+  })
+  return acc
+}, {})

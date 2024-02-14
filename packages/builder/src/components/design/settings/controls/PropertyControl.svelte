@@ -20,7 +20,7 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let highlighted = false
+  export let highlighted
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
@@ -75,12 +75,17 @@
       store.actions.settings.highlight(null)
     }
   })
+  let highlight
+  $: if (!Array.isArray(value)) {
+    highlight = highlighted?.type ? `highlighted-${highlighted?.type}` : ""
+  }
 </script>
 
 <div
-  class="property-control"
+  id={`${key}-prop-control-wrap`}
+  class={`property-control ${highlight}`}
   class:wide={!label || labelHidden || wide === true}
-  class:highlighted={highlighted && nullishValue}
+  class:highlighted={highlighted && !Array.isArray(value)}
   class:property-focus={propertyFocus}
 >
   {#if label && !labelHidden}
@@ -115,6 +120,16 @@
 </div>
 
 <style>
+  .property-control.highlighted.highlighted-info {
+    border-color: var(--spectrum-semantic-informative-color-background);
+  }
+  .property-control.highlighted.highlighted-error {
+    border-color: var(--spectrum-global-color-static-red-600);
+  }
+  .property-control.highlighted.highlighted-warning {
+    border-color: var(--spectrum-global-color-static-orange-700);
+  }
+
   .property-control {
     position: relative;
     display: grid;
@@ -132,6 +147,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
+    margin-top: -3.5px;
+    margin-bottom: -3.5px;
+    padding-bottom: 3.5px;
+    padding-top: 3.5px;
   }
 
   .property-control.property-focus :global(input) {
