@@ -1,6 +1,6 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { datasources, flags, integrations, queries } from "stores/backend"
+  import { datasources, flags, integrations, queries } from "stores/builder"
   import { environment } from "stores/portal"
   import {
     Banner,
@@ -48,7 +48,7 @@
     runtimeToReadableBinding,
     runtimeToReadableMap,
     toBindingsArray,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   export let queryId
 

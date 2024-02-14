@@ -2,12 +2,11 @@
   import ScreenDetailsModal from "components/design/ScreenDetailsModal.svelte"
   import DatasourceModal from "./DatasourceModal.svelte"
   import ScreenRoleModal from "./ScreenRoleModal.svelte"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import { Modal, notifications } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { screenStore, navigationStore, tables } from "stores/builder"
   import { get } from "svelte/store"
-  import getTemplates from "builderStore/store/screenTemplates"
-  import { tables } from "stores/backend"
+  import getTemplates from "templates"
   import { Roles } from "constants/backend"
   import { capitalise } from "helpers"
   import { goto } from "@roxi/routify"
@@ -56,12 +55,12 @@
         screen.routing.roleId = screenAccessRole
 
         // Create the screen
-        const response = await store.actions.screens.save(screen)
+        const response = await screenStore.save(screen)
         screenId = response._id
 
         // Add link in layout. We only ever actually create 1 screen now, even
         // for autoscreens, so it's always safe to do this.
-        await store.actions.links.save(
+        await navigationStore.saveLink(
           screen.routing.route,
           capitalise(screen.routing.route.split("/")[1])
         )
@@ -69,7 +68,7 @@
 
       // Go to new screen
       $goto(`./${screenId}`)
-      store.actions.screens.select(screenId)
+      screenStore.select(screenId)
     } catch (error) {
       console.error(error)
       notifications.error("Error creating screens")
@@ -80,7 +79,9 @@
   // currently selected role
   const hasExistingUrl = url => {
     const roleId = screenAccessRole
-    const screens = get(store).screens.filter(s => s.routing.roleId === roleId)
+    const screens = get(screenStore).screens.filter(
+      s => s.routing.roleId === roleId
+    )
     return !!screens.find(s => s.routing?.route === url)
   }
 

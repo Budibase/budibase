@@ -4,7 +4,7 @@
     automationStore,
     selectedAutomation,
     userSelectedResourceMap,
-  } from "builderStore"
+  } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import EditAutomationPopover from "./EditAutomationPopover.svelte"
   import { notifications } from "@budibase/bbui"
