@@ -2,20 +2,55 @@
 
 const start = Date.now()
 
-const glob = require("glob")
 const fs = require("fs")
+const { readdir, copyFile, mkdir } = require('node:fs/promises');
 const path = require("path")
 
 const { build } = require("esbuild")
+const { compile } = require('svelte/compiler')
 
 const {
   default: TsconfigPathsPlugin,
 } = require("@esbuild-plugins/tsconfig-paths")
 const { nodeExternalsPlugin } = require("esbuild-node-externals")
 
+const svelteCompilePlugin = {
+  name: 'svelteCompile',
+  setup(build) {
+    // This resolve handler is necessary to bundle the Svelte runtime into the the final output,
+    // otherwise the bundled script will attempt to resolve it at runtime
+    build.onResolve({ filter: /svelte\/internal/ }, async () => {
+      return { path: `${process.cwd()}/../../node_modules/svelte/src/runtime/internal/ssr.js` }
+    })
+
+    // Compiles `.svelte` files into JS classes so that they can be directly imported into our
+    // Typescript packages
+    build.onLoad({ filter: /\.svelte$/ }, async (args) => {
+      const source = await fs.promises.readFile(args.path, 'utf8')
+      const dir = path.dirname(args.path);
+
+      try {
+        const { js } = compile(source, { css: "injected", generate: "ssr" })
+
+        return {
+          // The code placed in the generated file
+          contents: js.code,
+          // The loader this is passed to, basically how the above provided content is "treated",
+          // the contents provided above will be transpiled and bundled like any other JS file.
+          loader: 'js', 
+          // Where to resolve any imports present in the loaded file
+          resolveDir: dir
+        }
+      } catch (e) {
+        return { errors: [JSON.stringify(e)] }
+      }
+    })
+  }
+}
+
 var { argv } = require("yargs")
 
-function runBuild(entry, outfile) {
+async function runBuild(entry, outfile) {
   const isDev = process.env.NODE_ENV !== "production"
   const tsconfig = argv["p"] || `tsconfig.build.json`
   const tsconfigPathPluginContent = JSON.parse(
@@ -43,12 +78,12 @@ function runBuild(entry, outfile) {
     sourcemap: isDev,
     tsconfig,
     plugins: [
+      svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin(),
     ],
     preserveSymlinks: true,
     loader: {
-      ".svelte": "copy",
       ".ivm.bundle.js": "text",
     },
     metafile: true,
@@ -65,27 +100,33 @@ function runBuild(entry, outfile) {
     ],
   }
 
-  build({
+  await mkdir('dist', { recursive: true });
+
+  const hbsFiles = (async () => {
+    const dir = await readdir('./', { recursive: true });
+    const files = dir.filter(entry => entry.endsWith('.hbs'));
+    const fileCopyPromises = files.map(file => copyFile(file, `dist/${path.basename(file)}`))
+
+    await Promise.all(fileCopyPromises)
+  })()
+
+  const mainBuild = build({
     ...sharedConfig,
     platform: "node",
     outfile,
-  }).then(result => {
-    glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
-      for (const file of files) {
-        fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
-      }
-
-      console.log(
-        "\x1b[32m%s\x1b[0m",
-        `Build successfully in ${(Date.now() - start) / 1000} seconds`
-      )
-    })
-
-    fs.writeFileSync(
-      `dist/${path.basename(outfile)}.meta.json`,
-      JSON.stringify(result.metafile)
-    )
   })
+
+  await Promise.all([hbsFiles, mainBuild])
+
+  fs.writeFileSync(
+    `dist/${path.basename(outfile)}.meta.json`,
+    JSON.stringify((await mainBuild).metafile)
+  )
+
+  console.log(
+    "\x1b[32m%s\x1b[0m",
+    `Build successfully in ${(Date.now() - start) / 1000} seconds`
+  )
 }
 
 if (require.main === module) {
