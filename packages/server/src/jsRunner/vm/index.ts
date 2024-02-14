@@ -26,6 +26,7 @@ export class IsolatedVM implements VM {
   private codeWrapper: (code: string) => string = code => code
 
   private readonly resultKey = "results"
+  private runResultKey: string
 
   constructor({
     memoryLimit,
@@ -41,8 +42,9 @@ export class IsolatedVM implements VM {
     this.jail = this.vm.global
     this.jail.setSync("global", this.jail.derefInto())
 
+    this.runResultKey = crypto.randomUUID()
     this.addToContext({
-      [this.resultKey]: { out: "" },
+      [this.resultKey]: { [this.runResultKey]: "" },
     })
 
     this.invocationTimeout = invocationTimeout
@@ -163,7 +165,7 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `results.out=${this.codeWrapper(code)}`
+    code = `results['${this.runResultKey}']=${this.codeWrapper(code)}`
 
     const script = this.isolate.compileScriptSync(code)
 
@@ -171,7 +173,7 @@ export class IsolatedVM implements VM {
 
     // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
-    return result.out
+    return result[this.runResultKey]
   }
 
   private registerCallbacks(functions: Record<string, any>) {
