@@ -6,7 +6,7 @@
     Button,
     notifications,
   } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
   import ConditionalUIDrawer from "./ConditionalUIDrawer.svelte"
 
   export let componentInstance
@@ -22,7 +22,7 @@
 
   const save = async () => {
     try {
-      await store.actions.components.updateConditions(tempValue)
+      await componentStore.updateConditions(tempValue)
     } catch (error) {
       notifications.error("Error updating conditions")
     }
