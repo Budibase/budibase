@@ -17,8 +17,7 @@
     DatePicker,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
-  import { tables } from "stores/backend"
+  import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
@@ -44,7 +43,7 @@
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"

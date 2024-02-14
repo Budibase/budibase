@@ -1,6 +1,6 @@
 <script>
   import { ModalContent, Body, Input, notifications } from "@budibase/bbui"
-  import { tables, datasources } from "stores/backend"
+  import { tables, datasources } from "stores/builder"
   import { goto } from "@roxi/routify"
   import { DB_TYPE_EXTERNAL } from "constants/backend"
 
