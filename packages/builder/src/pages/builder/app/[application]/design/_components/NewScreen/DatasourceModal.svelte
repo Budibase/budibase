@@ -4,37 +4,33 @@
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import { IntegrationNames } from "constants"
   import { onMount } from "svelte"
-  import rowListScreen from "builderStore/store/screenTemplates/rowListScreen"
   import DatasourceTemplateRow from "./DatasourceTemplateRow.svelte"
 
-  export let mode
   export let onCancel
   export let onConfirm
-  export let initialScreens = []
 
-  let selectedScreens = [...initialScreens]
+  let selectedSources = []
 
   $: filteredSources = $datasources.list?.filter(datasource => {
     return datasource.source !== IntegrationNames.REST && datasource["entities"]
   })
 
   const toggleSelection = datasource => {
-    const { resourceId } = datasource
-    if (selectedScreens.find(s => s.resourceId === resourceId)) {
-      selectedScreens = selectedScreens.filter(
-        screen => screen.resourceId !== resourceId
+    const exists = selectedSources.find(
+      d => d.resourceId === datasource.resourceId
+    )
+    if (exists) {
+      selectedSources = selectedSources.filter(
+        d => d.resourceId === datasource.resourceId
       )
     } else {
-      selectedScreens = [
-        ...selectedScreens,
-        rowListScreen([datasource], mode)[0],
-      ]
+      selectedSources = [...selectedSources, datasource]
     }
   }
 
   const confirmDatasourceSelection = async () => {
     await onConfirm({
-      templates: selectedScreens,
+      datasources: selectedSources,
     })
   }
 
@@ -54,7 +50,7 @@
     cancelText="Back"
     onConfirm={confirmDatasourceSelection}
     {onCancel}
-    disabled={!selectedScreens.length}
+    disabled={!selectedSources.length}
     size="L"
   >
     <Body size="S">
@@ -85,8 +81,8 @@
               resourceId: table._id,
               type: "table",
             }}
-            {@const selected = selectedScreens.find(
-              screen => screen.resourceId === tableDS.resourceId
+            {@const selected = selectedSources.find(
+              datasource => datasource.resourceId === tableDS.resourceId
             )}
             <DatasourceTemplateRow
               on:click={() => toggleSelection(tableDS)}
@@ -103,7 +99,7 @@
                 tableId: view.tableId,
                 type: "viewV2",
               }}
-              {@const selected = selectedScreens.find(
+              {@const selected = selectedSources.find(
                 x => x.resourceId === viewDS.resourceId
               )}
               <DatasourceTemplateRow

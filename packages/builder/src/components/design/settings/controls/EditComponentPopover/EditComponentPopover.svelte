@@ -3,7 +3,8 @@
   import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
-  import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { customPositionHandler } from "."
+  import ComponentSettingsSection from "../../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
 
   export let anchor
   export let componentInstance
@@ -58,25 +59,6 @@
     patchFn(nestedComponentInstance)
 
     dispatch("change", nestedComponentInstance)
-  }
-
-  const customPositionHandler = (anchorBounds, eleBounds, cfg) => {
-    let { left, top } = cfg
-    let percentageOffset = 30
-    // left-outside
-    left = anchorBounds.left - eleBounds.width - 18
-
-    // shift up from the anchor, if space allows
-    let offsetPos = Math.floor(eleBounds.height / 100) * percentageOffset
-    let defaultTop = anchorBounds.top - offsetPos
-
-    if (window.innerHeight - defaultTop < eleBounds.height) {
-      top = window.innerHeight - eleBounds.height - 5
-    } else {
-      top = anchorBounds.top - offsetPos
-    }
-
-    return { ...cfg, left, top }
   }
 </script>
 

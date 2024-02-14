@@ -1,5 +1,5 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"

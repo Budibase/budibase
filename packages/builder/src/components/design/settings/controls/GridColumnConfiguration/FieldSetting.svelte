@@ -1,5 +1,5 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"

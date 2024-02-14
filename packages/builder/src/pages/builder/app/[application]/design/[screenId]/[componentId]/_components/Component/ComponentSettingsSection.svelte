@@ -177,7 +177,9 @@
               defaultValue={setting.defaultValue}
               nested={setting.nested}
               onChange={val => updateSetting(setting, val)}
-              highlighted={$store.highlightedSettingKey === setting.key}
+              highlighted={$store.highlightedSetting?.key === setting.key
+                ? $store.highlightedSetting
+                : null}
               propertyFocus={$store.propertyFocus === setting.key}
               info={setting.info}
               disableBindings={setting.disableBindings}

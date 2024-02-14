@@ -100,6 +100,7 @@
       maxWidth={300}
       dismissible={false}
       offset={15}
+      handlePostionUpdate={tourStep?.positionHandler}
     >
       <div class="tour-content">
         <Layout noPadding gap="M">
@@ -120,7 +121,7 @@
           </Body>
           <div class="tour-footer">
             <div class="tour-navigation">
-              {#if typeof tourOnSkip === "function"}
+              {#if typeof tourOnSkip === "function" && !lastStep}
                 <Link
                   secondary
                   quiet

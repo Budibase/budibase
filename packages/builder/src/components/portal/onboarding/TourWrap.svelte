@@ -1,30 +1,35 @@
 <script>
   import { tourHandler } from "./tourHandler"
-  import { TOURS } from "./tours"
+  import { TOURSBYSTEP } from "./tours"
   import { onMount, onDestroy } from "svelte"
   import { store } from "builderStore"
 
-  export let tourStepKey
+  export let stepKeys = []
 
-  let currentTourStep
   let ready = false
-  let registered = false
   let handler
+  let registered = []
 
   const registerTourNode = (tourKey, stepKey) => {
-    if (ready && !registered && tourKey) {
-      currentTourStep = TOURS[tourKey].steps.find(step => step.id === stepKey)
-      if (!currentTourStep) {
-        return
-      }
-      const elem = document.querySelector(currentTourStep.query)
+    const step = TOURSBYSTEP[stepKey]
+    if (
+      ready &&
+      step &&
+      !registered.includes(stepKey) &&
+      step?.tour === tourKey
+    ) {
+      const elem = document.querySelector(step.query)
       handler = tourHandler(elem, stepKey)
-      registered = true
+      registered.push(stepKey)
     }
   }
 
   $: tourKeyWatch = $store.tourKey
-  $: registerTourNode(tourKeyWatch, tourStepKey, ready)
+  $: if (tourKeyWatch || stepKeys || ready) {
+    stepKeys.forEach(tourStepKey => {
+      registerTourNode(tourKeyWatch, tourStepKey)
+    })
+  }
 
   onMount(() => {
     ready = true
