@@ -47,6 +47,8 @@ export const getActionContextKey = action => {
       return key(action.parameters.componentId, ActionTypes.ClearForm)
     case "Change Form Step":
       return key(action.parameters.componentId, ActionTypes.ChangeFormStep)
+    case "Clear Row Selection":
+      return key(action.parameters.componentId, ActionTypes.ClearRowSelection)
     default:
       return null
   }
@@ -387,14 +389,14 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const OpenSidePanelHandler = action => {
+const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
     sidePanelStore.actions.open(id)
   }
 }
 
-const CloseSidePanelHandler = () => {
+const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
@@ -414,8 +416,8 @@ const handlerMap = {
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
-  ["Open Side Panel"]: OpenSidePanelHandler,
-  ["Close Side Panel"]: CloseSidePanelHandler,
+  ["Open Side Panel"]: openSidePanelHandler,
+  ["Close Side Panel"]: closeSidePanelHandler,
 }
 
 const confirmTextMap = {
