@@ -1,7 +1,7 @@
 <script>
   import { helpers } from "@budibase/shared-core"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { componentStore } from "stores/builder"
+  import { componentStore, previewStore } from "stores/builder"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
@@ -27,7 +27,7 @@
     tag,
     includeHidden
   )
-  $: context = $store.selectedComponentContext
+  $: context = $previewStore.selectedComponentContext
 
   const getSections = (instance, definition, isScreen, tag, includeHidden) => {
     const settings = definition?.settings ?? []
@@ -148,7 +148,7 @@
   }
 
   onMount(() => {
-    store.actions.preview.sendEvent("request-context")
+    previewStore.sendEvent("request-context")
   })
 </script>
 
