@@ -84,7 +84,11 @@ export class IsolatedVM implements VM {
     const script = this.isolate.compileScriptSync(
       `${injectedRequire};${helpersSource};helpers=helpers.default`
     )
-    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
+
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
 
     return this
   }
@@ -150,7 +154,10 @@ export class IsolatedVM implements VM {
     const script = this.isolate.compileScriptSync(
       `${textDecoderPolyfill};${bsonSource}`
     )
-    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
 
     return this
   }
@@ -169,7 +176,10 @@ export class IsolatedVM implements VM {
 
     const script = this.isolate.compileScriptSync(code)
 
-    script.runSync(this.vm, { timeout: this.invocationTimeout, release: true })
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
 
     // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
@@ -213,7 +223,10 @@ export class IsolatedVM implements VM {
   private getFromContext(key: string) {
     const ref = this.vm.global.getSync(key, { reference: true })
     const result = ref.copySync()
-    ref.release()
+
+    new Promise(() => {
+      ref.release()
+    })
     return result
   }
 }
