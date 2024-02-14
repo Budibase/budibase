@@ -619,6 +619,7 @@ const getDeviceBindings = () => {
 /**
  * Gets all selected rows bindings for tables in the current asset.
  * TODO: remove in future because we don't need a separate store for this
+ * DEPRECATED
  */
 const getSelectedRowsBindings = asset => {
   let bindings = []
@@ -634,8 +635,8 @@ const getSelectedRowsBindings = asset => {
         runtimeBinding: `${safeState}.${makePropSafe(table._id)}.${makePropSafe(
           "selectedRows"
         )}`,
-        readableBinding: `${table._instanceName}.Selected rows`,
-        category: "Selected rows",
+        readableBinding: `${table._instanceName}.Selected Row IDs (deprecated)`,
+        category: "Selected Row IDs (deprecated)",
         icon: "ViewRow",
         display: { name: table._instanceName },
       }))
@@ -651,8 +652,8 @@ const getSelectedRowsBindings = asset => {
         runtimeBinding: `${safeState}.${makePropSafe(
           block._id + "-table"
         )}.${makePropSafe("selectedRows")}`,
-        readableBinding: `${block._instanceName}.Selected rows`,
-        category: "Selected rows",
+        readableBinding: `${block._instanceName}.Selected Row IDs (deprecated)`,
+        category: "Selected Row IDs (deprecated)",
         icon: "ViewRow",
         display: { name: block._instanceName },
       }))

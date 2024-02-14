@@ -1,3 +1,4 @@
+const vm = require("vm")
 const handlebars = require("handlebars")
 const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
@@ -365,6 +366,7 @@ module.exports.doesContainString = (template, string) => {
 }
 
 module.exports.setJSRunner = javascript.setJSRunner
+module.exports.setOnErrorLog = javascript.setOnErrorLog
 
 module.exports.convertToJS = hbs => {
   const blocks = exports.findHBSBlocks(hbs)
@@ -401,3 +403,19 @@ const errors = require("./errors")
 module.exports.JsErrorTimeout = errors.JsErrorTimeout
 
 module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+
+if (process && !process.env.NO_JS) {
+  /**
+   * Use polyfilled vm to run JS scripts in a browser Env
+   */
+  javascript.setJSRunner((js, context) => {
+    context = {
+      ...context,
+      alert: undefined,
+      setInterval: undefined,
+      setTimeout: undefined,
+    }
+    vm.createContext(context)
+    return vm.runInNewContext(js, context, { timeout: 1000 })
+  })
+}

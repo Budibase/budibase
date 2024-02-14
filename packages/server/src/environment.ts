@@ -97,11 +97,7 @@ const environment = {
   APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
   JS_RUNNER_MEMORY_LIMIT:
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) || 64,
-}
-
-// threading can cause memory issues with node-ts in development
-if (coreEnv.isDev() && environment.DISABLE_THREADING == null) {
-  environment._set("DISABLE_THREADING", "1")
+  LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
 }
 
 // clean up any environment variable edge cases
