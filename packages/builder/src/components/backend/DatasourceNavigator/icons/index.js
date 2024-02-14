@@ -17,7 +17,7 @@ import Redis from "./Redis.svelte"
 import Snowflake from "./Snowflake.svelte"
 import Azure from "./Azure.svelte"
 import Custom from "./Custom.svelte"
-import { integrations } from "stores/backend"
+import { integrations } from "stores/builder"
 import { get } from "svelte/store"
 
 const ICONS = {
