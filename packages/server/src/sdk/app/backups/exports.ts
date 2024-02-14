@@ -14,6 +14,7 @@ import {
   ATTACHMENT_DIRECTORY,
 } from "./constants"
 import fs from "fs"
+import fsp from "fs/promises"
 import { join } from "path"
 import env from "../../../environment"
 import { v4 as uuid } from "uuid"
@@ -117,7 +118,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
           ObjectStoreBuckets.APPS,
           join(appPath, path)
         )
-        fs.writeFileSync(join(tmpPath, path), contents)
+        await fsp.writeFile(join(tmpPath, path), contents)
       }
     }
     // get all the files
@@ -131,14 +132,14 @@ export async function exportApp(appId: string, config?: ExportOpts) {
 
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
-    const allFiles = fs.readdirSync(downloadedPath)
+    const allFiles = await fsp.readdir(downloadedPath)
     for (let file of allFiles) {
       const path = join(downloadedPath, file)
       // move out of app directory, simplify structure
-      fs.renameSync(path, join(downloadedPath, "..", file))
+      await fsp.rename(path, join(downloadedPath, "..", file))
     }
     // remove the old app directory created by object export
-    fs.rmdirSync(downloadedPath)
+    await fsp.rmdir(downloadedPath)
   }
   // enforce an export of app DB to the tmp path
   const dbPath = join(tmpPath, DB_EXPORT_FILE)
@@ -148,7 +149,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   })
 
   if (config?.encryptPassword) {
-    for (let file of fs.readdirSync(tmpPath)) {
+    for (let file of await fsp.readdir(tmpPath)) {
       const path = join(tmpPath, file)
 
       // skip the attachments - too big to encrypt
@@ -157,7 +158,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
           { dir: tmpPath, filename: file },
           config.encryptPassword
         )
-        fs.rmSync(path)
+        await fsp.rm(path)
       }
     }
   }
@@ -165,9 +166,9 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   // if tar requested, return where the tarball is
   if (config?.tar) {
     // now the tmpPath contains both the DB export and attachments, tar this
-    const tarPath = await tarFilesToTmp(tmpPath, fs.readdirSync(tmpPath))
+    const tarPath = await tarFilesToTmp(tmpPath, await fsp.readdir(tmpPath))
     // cleanup the tmp export files as tarball returned
-    fs.rmSync(tmpPath, { recursive: true, force: true })
+    await fsp.rm(tmpPath, { recursive: true, force: true })
 
     return tarPath
   }

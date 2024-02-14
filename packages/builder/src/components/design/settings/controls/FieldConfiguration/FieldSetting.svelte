@@ -3,9 +3,9 @@
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { store } from "builderStore"
-  import { runtimeToReadableBinding } from "builderStore/dataBinding"
+  import { runtimeToReadableBinding } from "dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
+  import { componentStore } from "stores/builder"
 
   export let item
   export let componentBindings
@@ -37,7 +37,7 @@
   }
 
   $: readableText = getReadableText(item)
-  $: componentDef = store.actions.components.getDefinition(item._component)
+  $: componentDef = componentStore.getDefinition(item._component)
 </script>
 
 <div class="list-item-body">

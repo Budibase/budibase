@@ -1,167 +1,68 @@
-import ivm from "isolated-vm"
+import vm from "vm"
 import env from "../environment"
-import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
-import { context } from "@budibase/backend-core"
+import { setJSRunner, setOnErrorLog } from "@budibase/string-templates"
+import { context, logging, timers } from "@budibase/backend-core"
 import tracer from "dd-trace"
-import fs from "fs"
-import url from "url"
-import crypto from "crypto"
-import querystring from "querystring"
+import { serializeError } from "serialize-error"
 
-const helpersSource = fs.readFileSync(
-  `${require.resolve("@budibase/string-templates/index-helpers")}`,
-  "utf8"
-)
-
-class ExecutionTimeoutError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = "ExecutionTimeoutError"
-  }
-}
+type TrackerFn = <T>(f: () => T) => T
 
 export function init() {
-  setJSRunner((js: string, ctx: Record<string, any>) => {
+  setJSRunner((js: string, ctx: vm.Context) => {
     return tracer.trace("runJS", {}, span => {
-      try {
-        const bbCtx = context.getCurrentContext()!
-
-        const isolateRefs = bbCtx.isolateRefs
-        if (!isolateRefs) {
-          const jsIsolate = new ivm.Isolate({
-            memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-          })
-          const jsContext = jsIsolate.createContextSync()
-
-          const injectedRequire = `const require = function(val){
-        switch (val) {
-          case "url": 
-            return {
-              resolve: (...params) => urlResolveCb(...params),
-              parse: (...params) => urlParseCb(...params),
-            }
-          case "querystring":
-            return {
-              escape: (...params) => querystringEscapeCb(...params),
-            }
-        }
-      };`
-
-          const global = jsContext.global
-          global.setSync(
-            "urlResolveCb",
-            new ivm.Callback((...params: Parameters<typeof url.resolve>) =>
-              url.resolve(...params)
-            )
-          )
-
-          global.setSync(
-            "urlParseCb",
-            new ivm.Callback((...params: Parameters<typeof url.parse>) =>
-              url.parse(...params)
-            )
-          )
-
-          global.setSync(
-            "querystringEscapeCb",
-            new ivm.Callback(
-              (...params: Parameters<typeof querystring.escape>) =>
-                querystring.escape(...params)
-            )
-          )
-
-          global.setSync(
-            "helpersStripProtocol",
-            new ivm.Callback((str: string) => {
-              var parsed = url.parse(str) as any
-              parsed.protocol = ""
-              return parsed.format()
+      const perRequestLimit = env.JS_PER_REQUEST_TIMEOUT_MS
+      let track: TrackerFn = f => f()
+      if (perRequestLimit) {
+        const bbCtx = tracer.trace("runJS.getCurrentContext", {}, span =>
+          context.getCurrentContext()
+        )
+        if (bbCtx) {
+          if (!bbCtx.jsExecutionTracker) {
+            span?.addTags({
+              createdExecutionTracker: true,
             })
-          )
-
-          const helpersModule = jsIsolate.compileModuleSync(
-            `${injectedRequire};${helpersSource}`
-          )
-
-          const cryptoModule = jsIsolate.compileModuleSync(`export default {
-        randomUUID: cryptoRandomUUIDCb,
-      }`)
-          cryptoModule.instantiateSync(jsContext, specifier => {
-            throw new Error(`No imports allowed. Required: ${specifier}`)
-          })
-
-          global.setSync(
-            "cryptoRandomUUIDCb",
-            new ivm.Callback(
-              (...params: Parameters<typeof crypto.randomUUID>) => {
-                return crypto.randomUUID(...params)
-              }
-            )
-          )
-
-          helpersModule.instantiateSync(jsContext, specifier => {
-            if (specifier === "crypto") {
-              return cryptoModule
-            }
-            throw new Error(`No imports allowed. Required: ${specifier}`)
-          })
-
-          for (const [key, value] of Object.entries(ctx)) {
-            if (key === "helpers") {
-              // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
-              continue
-            }
-            global.setSync(key, value)
-          }
-
-          bbCtx.isolateRefs = { jsContext, jsIsolate, helpersModule }
-        }
-
-        let { jsIsolate, jsContext, helpersModule } = bbCtx.isolateRefs!
-
-        const perRequestLimit = env.JS_PER_REQUEST_TIME_LIMIT_MS
-        if (perRequestLimit) {
-          const cpuMs = Number(jsIsolate.cpuTime) / 1e6
-          if (cpuMs > perRequestLimit) {
-            throw new ExecutionTimeoutError(
-              `CPU time limit exceeded (${cpuMs}ms > ${perRequestLimit}ms)`
+            bbCtx.jsExecutionTracker = tracer.trace(
+              "runJS.createExecutionTimeTracker",
+              {},
+              span => timers.ExecutionTimeTracker.withLimit(perRequestLimit)
             )
           }
-        }
-
-        const script = jsIsolate.compileModuleSync(
-          `import helpers from "compiled_module";const result=${js};cb(result)`,
-          {}
-        )
-
-        script.instantiateSync(jsContext, specifier => {
-          if (specifier === "compiled_module") {
-            return helpersModule
-          }
-
-          throw new Error(`"${specifier}" import not allowed`)
-        })
-
-        let result
-        jsContext.global.setSync(
-          "cb",
-          new ivm.Callback((value: any) => {
-            result = value
+          span?.addTags({
+            js: {
+              limitMS: bbCtx.jsExecutionTracker.limitMs,
+              elapsedMS: bbCtx.jsExecutionTracker.elapsedMS,
+            },
           })
-        )
-
-        script.evaluateSync({
-          timeout: env.JS_PER_EXECUTION_TIME_LIMIT_MS,
-        })
-
-        return result
-      } catch (error: any) {
-        if (error.message === "Script execution timed out.") {
-          throw new JsErrorTimeout()
+          // We call checkLimit() here to prevent paying the cost of creating
+          // a new VM context below when we don't need to.
+          tracer.trace("runJS.checkLimitAndBind", {}, span => {
+            bbCtx.jsExecutionTracker!.checkLimit()
+            track = bbCtx.jsExecutionTracker!.track.bind(
+              bbCtx.jsExecutionTracker
+            )
+          })
         }
-
-        throw error
       }
+
+      ctx = {
+        ...ctx,
+        alert: undefined,
+        setInterval: undefined,
+        setTimeout: undefined,
+      }
+
+      vm.createContext(ctx)
+      return track(() =>
+        vm.runInNewContext(js, ctx, {
+          timeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
+        })
+      )
     })
   })
+
+  if (env.LOG_JS_ERRORS) {
+    setOnErrorLog((error: Error) => {
+      logging.logWarn(JSON.stringify(serializeError(error)))
+    })
+  }
 }

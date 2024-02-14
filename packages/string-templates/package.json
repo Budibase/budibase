@@ -2,17 +2,16 @@
   "name": "@budibase/string-templates",
   "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "src/index.cjs",
+  "main": "src/index.js",
   "module": "dist/bundle.mjs",
   "license": "MPL-2.0",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "require": "./src/index.cjs",
+      "require": "./src/index.js",
       "import": "./dist/bundle.mjs"
     },
     "./package.json": "./package.json",
-    "./index-helpers": "./dist/index-helpers.bundled.js",
     "./test/utils": "./test/utils.js"
   },
   "files": [
@@ -21,10 +20,9 @@
     "manifest.json"
   ],
   "scripts": {
-    "build:esbuild": "esbuild --minify --bundle src/index-helpers.js --outfile=dist/index-helpers.bundled.js --platform=node --format=esm --external:handlebars",
     "build:es": "yarn node ../../scripts/build.js -e src/index.mjs -o ./dist/bundle.mjs -p tsconfig.json --format=esm",
-    "build": "yarn build:esbuild && tsc && yarn build:es",
-    "dev": "concurrently \"yarn build:esbuild --watch\" \"tsc && yarn build:es --watch\"",
+    "build": "yarn build:es && tsc && rollup -c",
+    "dev": "concurrently \"tsc --watch\" \"yarn build:es --watch\"",
     "test": "jest",
     "manifest": "node ./scripts/gen-collection-info.js"
   },
@@ -32,8 +30,7 @@
     "@budibase/handlebars-helpers": "^0.13.1",
     "dayjs": "^1.10.8",
     "handlebars": "^4.7.6",
-    "lodash.clonedeep": "^4.5.0",
-    "vm2": "^3.9.19"
+    "lodash.clonedeep": "^4.5.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^17.1.0",

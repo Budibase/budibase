@@ -1,15 +1,20 @@
 <script>
   import { syncURLToState } from "helpers/urlStateSync"
-  import { store, selectedScreen } from "builderStore"
+  import {
+    builderStore,
+    screenStore,
+    selectedScreen,
+    componentStore,
+  } from "stores/builder"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { findComponent } from "builderStore/componentUtils"
+  import { findComponent } from "helpers/components"
   import ComponentSettingsPanel from "./_components/Component/ComponentSettingsPanel.svelte"
   import NavigationPanel from "./_components/Navigation/index.svelte"
   import ScreenSettingsPanel from "./_components/Screen/index.svelte"
 
-  $: componentId = $store.selectedComponentId
-  $: store.actions.websocket.selectResource(componentId)
+  $: componentId = $componentStore.selectedComponentId
+  $: builderStore.selectResource(componentId)
   $: params = routify.params
   $: routeComponentId = $params.componentId
 
@@ -22,8 +27,8 @@
   }
 
   const validate = id => {
-    if (id === `${$store.selectedScreenId}-screen`) return true
-    if (id === `${$store.selectedScreenId}-navigation`) return true
+    if (id === `${$screenStore.selectedScreenId}-screen`) return true
+    if (id === `${$screenStore.selectedScreenId}-navigation`) return true
 
     return !!findComponent($selectedScreen.props, id)
   }
@@ -34,7 +39,8 @@
     stateKey: "selectedComponentId",
     validate,
     fallbackUrl: "../",
-    store,
+    store: componentStore,
+    update: componentStore.select,
     routify,
     beforeNavigate: closeNewComponentPanel,
   })
@@ -42,9 +48,9 @@
   onDestroy(stopSyncing)
 </script>
 
-{#if routeComponentId === `${$store.selectedScreenId}-screen`}
+{#if routeComponentId === `${$screenStore.selectedScreenId}-screen`}
   <ScreenSettingsPanel />
-{:else if routeComponentId === `${$store.selectedScreenId}-navigation`}
+{:else if routeComponentId === `${$screenStore.selectedScreenId}-navigation`}
   <NavigationPanel />
 {:else}
   <ComponentSettingsPanel />

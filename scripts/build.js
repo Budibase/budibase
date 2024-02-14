@@ -50,6 +50,7 @@ function runBuild(entry, outfile) {
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
+      ".ivm.bundle.js": "text",
     },
     metafile: true,
     external: [
@@ -61,6 +62,7 @@ function runBuild(entry, outfile) {
       "bcrypt",
       "bcryptjs",
       "graphql/*",
+      "bson",
     ],
   }
 

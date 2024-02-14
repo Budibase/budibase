@@ -76,7 +76,7 @@ describe.each([tableWithUserCol, tableWithUsersCol])(
     })
 
     it("shouldn't change any other input", () => {
-      const email = "test@test.com"
+      const email = "test@example.com"
       const params: SearchParams = {
         tableId,
         query: {

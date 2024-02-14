@@ -1,4 +1,4 @@
-import { validate as isValidUUID } from "uuid"
+// import { validate as isValidUUID } from "uuid"
 
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
@@ -47,29 +47,37 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
+  // TODO This should be reenabled when running on isolated-vm
+  it.skip("should prevent sandbox escape", async () => {
+    const output = await processJS(
+      `return this.constructor.constructor("return process")()`
+    )
+    expect(output).toBe("Error while executing JS")
+  })
+
   describe("helpers", () => {
     runJsHelpersTests({
       funcWrap: (func: any) => config.doInContext(config.getAppId(), func),
-      testsToSkip: ["random", "uuid"],
+      // testsToSkip: ["random", "uuid"],
     })
 
-    describe("uuid", () => {
-      it("uuid helper returns a valid uuid", async () => {
-        const result = await processJS("return helpers.uuid()")
-        expect(result).toBeDefined()
-        expect(isValidUUID(result)).toBe(true)
-      })
-    })
+    // describe("uuid", () => {
+    //   it("uuid helper returns a valid uuid", async () => {
+    //     const result = await processJS("return helpers.uuid()")
+    //     expect(result).toBeDefined()
+    //     expect(isValidUUID(result)).toBe(true)
+    //   })
+    // })
 
-    describe("random", () => {
-      it("random helper returns a valid number", async () => {
-        const min = 1
-        const max = 8
-        const result = await processJS(`return helpers.random(${min}, ${max})`)
-        expect(result).toBeDefined()
-        expect(result).toBeGreaterThanOrEqual(min)
-        expect(result).toBeLessThanOrEqual(max)
-      })
-    })
+    // describe("random", () => {
+    //   it("random helper returns a valid number", async () => {
+    //     const min = 1
+    //     const max = 8
+    //     const result = await processJS(`return helpers.random(${min}, ${max})`)
+    //     expect(result).toBeDefined()
+    //     expect(result).toBeGreaterThanOrEqual(min)
+    //     expect(result).toBeLessThanOrEqual(max)
+    //   })
+    // })
   })
 })
