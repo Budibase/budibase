@@ -1,11 +1,11 @@
 <script>
   import { notifications } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { themeStore, appStore } from "stores/builder"
   import { Constants } from "@budibase/frontend-core"
 
   const onChangeTheme = async theme => {
     try {
-      await store.actions.theme.save(`spectrum--${theme}`)
+      await themeStore.save(`spectrum--${theme}`, $appStore.appId)
     } catch (error) {
       notifications.error("Error updating theme")
     }
@@ -16,7 +16,7 @@
   {#each Constants.Themes as theme}
     <div
       class="theme"
-      class:selected={`spectrum--${theme.class}` === $store.theme}
+      class:selected={`spectrum--${theme.class}` === $themeStore.theme}
       on:click={() => onChangeTheme(theme.class)}
     >
       <div

@@ -7,7 +7,7 @@ import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs from "fs"
+import fs, { ReadStream } from "fs"
 import env from "../environment"
 import { budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
@@ -184,7 +184,7 @@ export async function upload({
 export async function streamUpload(
   bucketName: string,
   filename: string,
-  stream: any,
+  stream: ReadStream | ReadableStream,
   extra = {}
 ) {
   const objectStore = ObjectStore(bucketName)
@@ -255,7 +255,8 @@ export async function listAllObjects(bucketName: string, path: string) {
       objects = objects.concat(response.Contents)
     }
     isTruncated = !!response.IsTruncated
-  } while (isTruncated)
+    token = response.NextContinuationToken
+  } while (isTruncated && token)
   return objects
 }
 

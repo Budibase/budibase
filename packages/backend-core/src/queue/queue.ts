@@ -2,7 +2,7 @@ import env from "../environment"
 import { getRedisOptions } from "../redis/utils"
 import { JobQueue } from "./constants"
 import InMemoryQueue from "./inMemoryQueue"
-import BullQueue, { QueueOptions } from "bull"
+import BullQueue, { QueueOptions, JobOptions } from "bull"
 import { addListeners, StalledFn } from "./listeners"
 import { Duration } from "../utils"
 import * as timers from "../timers"
@@ -24,16 +24,23 @@ async function cleanup() {
 
 export function createQueue<T>(
   jobQueue: JobQueue,
-  opts: { removeStalledCb?: StalledFn } = {}
+  opts: {
+    removeStalledCb?: StalledFn
+    maxStalledCount?: number
+    jobOptions?: JobOptions
+  } = {}
 ): BullQueue.Queue<T> {
   const redisOpts = getRedisOptions()
   const queueConfig: QueueOptions = {
     redis: redisOpts,
     settings: {
-      maxStalledCount: 0,
+      maxStalledCount: opts.maxStalledCount ? opts.maxStalledCount : 0,
       lockDuration: QUEUE_LOCK_MS,
       lockRenewTime: QUEUE_LOCK_RENEW_INTERNAL_MS,
     },
+  }
+  if (opts.jobOptions) {
+    queueConfig.defaultJobOptions = opts.jobOptions
   }
   let queue: any
   if (!env.isTest()) {

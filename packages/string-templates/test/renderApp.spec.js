@@ -1,4 +1,4 @@
-const { processString } = require("../src/index.cjs")
+const { processString } = require("../src/index.js")
 
 describe("specific test case for whether or not full app template can still be rendered", () => {
   it("should be able to render the app template", async () => {

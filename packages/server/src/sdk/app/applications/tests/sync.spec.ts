@@ -94,8 +94,8 @@ function buildRoles() {
 }
 
 describe("app user/group sync", () => {
-  const groupEmail = "test2@test.com",
-    normalEmail = "test@test.com"
+  const groupEmail = "test2@example.com",
+    normalEmail = "test@example.com"
   async function checkEmail(
     email: string,
     opts?: { group?: boolean; notFound?: boolean }
@@ -131,7 +131,7 @@ describe("app user/group sync", () => {
   })
 
   it("should be able to handle builder users", async () => {
-    await createUser("test3@test.com", {}, true)
-    await checkEmail("test3@test.com")
+    await createUser("test3@example.com", {}, true)
+    await checkEmail("test3@example.com")
   })
 })
