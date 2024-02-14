@@ -1,6 +1,6 @@
 <script>
   import { Label, Select, Body } from "@budibase/bbui"
-  import { findAllMatchingComponents } from "builderStore/componentUtils"
+  import { findAllMatchingComponents } from "helpers/components"
   import { currentAsset } from "builderStore"
 
   export let parameters
