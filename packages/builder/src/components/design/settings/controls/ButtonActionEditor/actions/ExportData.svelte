@@ -41,7 +41,7 @@
     },
     {
       label: "[tab]",
-      value: "  ",
+      value: "\t",
     },
     {
       label: "[space]",

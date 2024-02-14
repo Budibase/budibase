@@ -33,8 +33,8 @@
   })
 
   $: {
-    value = (value || []).filter(column =>
-      Object.keys(schema || {}).includes(column.name || column)
+    value = (value || []).filter(
+      column => (schema || {})[column.name || column] !== undefined
     )
   }
 
