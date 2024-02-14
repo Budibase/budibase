@@ -86,10 +86,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   })
 
   try {
-    await Promise.race([
-      queryController.executeV2(ctx, { isAutomation: true }),
-      utils.timeout(env.QUERY_THREAD_TIMEOUT, { reject: true }),
-    ])
+    await queryController.executeV2(ctx, { isAutomation: true })
     const { data, ...rest } = ctx.body
 
     return {

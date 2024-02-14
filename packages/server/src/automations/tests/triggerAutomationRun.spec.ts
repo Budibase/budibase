@@ -3,6 +3,7 @@ jest.spyOn(global.console, "error")
 import * as setup from "./utilities"
 import * as automation from "../index"
 import { serverLogAutomation } from "../../tests/utilities/structures"
+import { AUTOMATION_ASYNC_TIMEOUT } from "../../constants"
 
 describe("Test triggering an automation from another automation", () => {
   let config = setup.getConfig()
@@ -22,7 +23,10 @@ describe("Test triggering an automation from another automation", () => {
     let newAutomation = await config.createAutomation(automation)
 
     const inputs: any = {
-      automation: { automationId: newAutomation._id, timeout: 12000 },
+      automation: {
+        automationId: newAutomation._id,
+        timeout: AUTOMATION_ASYNC_TIMEOUT,
+      },
     }
     const res = await setup.runStep(
       setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
@@ -33,7 +37,12 @@ describe("Test triggering an automation from another automation", () => {
   })
 
   it("should fail gracefully if the automation id is incorrect", async () => {
-    const inputs: any = { automation: { automationId: null, timeout: 12000 } }
+    const inputs: any = {
+      automation: {
+        automationId: null,
+        timeout: AUTOMATION_ASYNC_TIMEOUT,
+      },
+    }
     const res = await setup.runStep(
       setup.actions.TRIGGER_AUTOMATION_RUN.stepId,
       inputs
