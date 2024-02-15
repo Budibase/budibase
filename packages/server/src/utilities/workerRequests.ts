@@ -64,12 +64,7 @@ export function createRequest(request: Request): RequestInit {
       if (value === undefined) {
         continue
       }
-
-      if (Array.isArray(value)) {
-        headers[header] = value[0]
-      } else {
-        headers[header] = value
-      }
+      headers[header] = Array.isArray(value) ? value[0] : value
     }
     // be specific about auth headers
     const cookie = ctx.headers[constants.Header.COOKIE],
@@ -77,11 +72,9 @@ export function createRequest(request: Request): RequestInit {
     if (cookie) {
       headers[constants.Header.COOKIE] = cookie
     } else if (apiKey) {
-      if (Array.isArray(apiKey)) {
-        headers[constants.Header.API_KEY] = apiKey[0]
-      } else {
-        headers[constants.Header.API_KEY] = apiKey
-      }
+      headers[constants.Header.API_KEY] = Array.isArray(apiKey)
+        ? apiKey[0]
+        : apiKey
     }
   }
 
