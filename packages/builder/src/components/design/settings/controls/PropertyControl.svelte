@@ -26,7 +26,6 @@
   export let disableBindings = false
   export let wide
 
-  $: nullishValue = value == null || value === ""
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)

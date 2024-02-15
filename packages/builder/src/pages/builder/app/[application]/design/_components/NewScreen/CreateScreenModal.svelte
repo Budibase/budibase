@@ -48,7 +48,6 @@
     }
 
     try {
-      let screenId
       let createdScreens = []
 
       for (let screen of screens) {
@@ -73,7 +72,6 @@
 
         // Create the screen
         const response = await screenStore.save(screen)
-        screenId = response._id
         createdScreens.push(response)
 
         // Add link in layout. We only ever actually create 1 screen now, even

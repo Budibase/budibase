@@ -1,5 +1,5 @@
 <script>
-  import { ModalContent, Layout, Body, Label } from "@budibase/bbui"
+  import { ModalContent, Layout, Body } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
 
   export let onCancel = () => {}
@@ -19,7 +19,6 @@
     disabled={!type}
     size="L"
   >
-    <!-- svelte-ignore a11y-click-events-have-key-events -->
     <Layout noPadding gap="S">
       <div
         class="form-type"
