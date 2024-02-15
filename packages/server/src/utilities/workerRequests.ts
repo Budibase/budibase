@@ -38,15 +38,24 @@ function ensureHeadersIsObject(headers: HeadersInit | undefined): Headers {
   return headersObj
 }
 
-export function request(request: RequestInit & { ctx?: Ctx }): RequestInit {
-  const ctx = request.ctx
-  request.headers = ensureHeadersIsObject(request.headers)
+interface Request {
+  ctx?: Ctx
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
+  headers?: { [key: string]: string }
+  body?: { [key: string]: any }
+}
 
-  if (!ctx) {
-    if (coreEnv.INTERNAL_API_KEY) {
-      request.headers.set(constants.Header.API_KEY, coreEnv.INTERNAL_API_KEY)
-    }
-  } else if (ctx.headers) {
+export function createRequest(request: Request): RequestInit {
+  const headers: Record<string, string> = {}
+  const requestInit: RequestInit = {
+    method: request.method,
+  }
+
+  const ctx = request.ctx
+
+  if (!ctx && coreEnv.INTERNAL_API_KEY) {
+    headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
+  } else if (ctx && ctx.headers) {
     // copy all Budibase utilised headers over - copying everything can have
     // side effects like requests being rejected due to odd content types etc
     for (let header of Object.values(constants.Header)) {
@@ -56,34 +65,25 @@ export function request(request: RequestInit & { ctx?: Ctx }): RequestInit {
       }
 
       if (Array.isArray(value)) {
-        for (let v of value) {
-          request.headers.append(header, v)
-        }
+        headers[header] = value[0]
       } else {
-        request.headers.set(header, value)
+        headers[header] = value
       }
     }
   }
 
   // apply tenancy if its available
   if (tenancy.isTenantIdSet()) {
-    request.headers.set(constants.Header.TENANT_ID, tenancy.getTenantId())
+    headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
   }
+
   if (request.body && Object.keys(request.body).length > 0) {
-    request.headers.set("Content-Type", "application/json")
-    request.body =
-      typeof request.body === "object"
-        ? JSON.stringify(request.body)
-        : request.body
-  } else {
-    delete request.body
+    headers["Content-Type"] = "application/json"
+    requestInit.body = JSON.stringify(request.body)
   }
 
-  // add x-budibase-correlation-id header
-  logging.correlation.setHeader(request.headers)
-
-  delete request.ctx
-  return request
+  logging.correlation.setHeader(headers)
+  return requestInit
 }
 
 async function checkResponse(
@@ -132,9 +132,9 @@ export async function sendSmtpEmail({
   // tenant ID will be set in header
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/email/send`),
-    request({
+    createRequest({
       method: "POST",
-      body: JSON.stringify({
+      body: {
         email: to,
         from,
         contents,
@@ -144,7 +144,7 @@ export async function sendSmtpEmail({
         purpose: "custom",
         automation,
         invite,
-      }),
+      },
     })
   )
   return checkResponse(response, "send email")
@@ -154,7 +154,7 @@ export async function removeAppFromUserRoles(ctx: Ctx, appId: string) {
   const prodAppId = dbCore.getProdAppID(appId)
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + `/api/global/roles/${prodAppId}`),
-    request({
+    createRequest({
       ctx,
       method: "DELETE",
     })
@@ -166,7 +166,7 @@ export async function allGlobalUsers(ctx: Ctx) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
-    request({ ctx, method: "GET" })
+    createRequest({ ctx, method: "GET" })
   )
   return checkResponse(response, "get users", { ctx })
 }
@@ -175,7 +175,7 @@ export async function saveGlobalUser(ctx: Ctx) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/users"),
     // we don't want to use API key when getting self
-    request({ ctx, method: "POST", body: ctx.request.body })
+    createRequest({ ctx, method: "POST", body: ctx.request.body })
   )
   return checkResponse(response, "save user", { ctx })
 }
@@ -186,7 +186,7 @@ export async function deleteGlobalUser(ctx: Ctx) {
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
     ),
     // we don't want to use API key when getting self
-    request({ ctx, method: "DELETE" })
+    createRequest({ ctx, method: "DELETE" })
   )
   return checkResponse(response, "delete user", { ctx })
 }
@@ -197,7 +197,7 @@ export async function readGlobalUser(ctx: Ctx): Promise<User> {
       env.WORKER_URL + `/api/global/users/${ctx.params.userId}`
     ),
     // we don't want to use API key when getting self
-    request({ ctx, method: "GET" })
+    createRequest({ ctx, method: "GET" })
   )
   return checkResponse(response, "get user", { ctx })
 }
@@ -207,7 +207,7 @@ export async function getChecklist(): Promise<{
 }> {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/configs/checklist"),
-    request({ method: "GET" })
+    createRequest({ method: "GET" })
   )
   return checkResponse(response, "get checklist")
 }
@@ -215,7 +215,7 @@ export async function getChecklist(): Promise<{
 export async function generateApiKey(userId: string) {
   const response = await fetch(
     checkSlashesInUrl(env.WORKER_URL + "/api/global/self/api_key"),
-    request({ method: "POST", body: JSON.stringify({ userId }) })
+    createRequest({ method: "POST", body: { userId } })
   )
   return checkResponse(response, "generate API key")
 }
