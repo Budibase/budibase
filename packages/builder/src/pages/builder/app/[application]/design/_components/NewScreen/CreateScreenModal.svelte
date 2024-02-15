@@ -155,7 +155,7 @@
 
   // Handler for Datasource Screen Creation
   const completeDatasourceScreenCreation = async () => {
-    templates = rowListScreen(selectedDatasources)
+    templates = rowListScreen(selectedDatasources, mode)
 
     const screens = templates.map(template => {
       let screenTemplate = template.create()
@@ -192,10 +192,17 @@
   }
 
   const loadNewScreen = createdScreens => {
-    const lastScreen = createdScreens.slice(-1)
+    const lastScreen = createdScreens.slice(-1)[0]
 
     // Go to new screen
-    $goto(`./${lastScreen._id}`)
+    if (lastScreen?.props?._children.length) {
+      // Focus on the main component for the streen type
+      const mainComponent = lastScreen?.props?._children?.[0]._id
+      $goto(`./${lastScreen._id}/${mainComponent}`)
+    } else {
+      $goto(`./${lastScreen._id}`)
+    }
+
     screenStore.select(lastScreen._id)
   }
 
@@ -206,8 +213,6 @@
       return screenTemplate
     })
     const createdScreens = await createScreens({ screens, screenAccessRole })
-    const lastScreen = createdScreens?.slice(-1)?.pop()
-    const mainComponent = lastScreen?.props?._children?.[0]._id
 
     if (formType === "Update" || formType === "Create") {
       const associatedTour =
@@ -217,18 +222,12 @@
 
       const tourRequired = !$auth?.user?.tours?.[associatedTour]
       if (tourRequired) {
-        builderStore.update(state => ({
-          ...state,
-          tourStepKey: null,
-          tourNodes: null,
-          tourKey: associatedTour,
-        }))
+        builderStore.setTour(associatedTour)
       }
     }
 
     // Go to new screen
-    $goto(`./${lastScreen._id}/${mainComponent}`)
-    screenStore.select(lastScreen._id)
+    loadNewScreen(createdScreens)
   }
 
   // Submit screen config for creation.

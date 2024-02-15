@@ -4,7 +4,7 @@
   import blankImage from "./images/blank.png"
   import tableImage from "./images/table.png"
   import gridImage from "./images/grid.png"
-  import formImage from "./images/form.png" //optimized example
+  import formImage from "./images/form.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import { screenStore } from "stores/builder"
 

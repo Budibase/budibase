@@ -7,7 +7,7 @@ import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 
 export const INITIAL_BUILDER_STATE = {
   previousTopNavPath: {},
-  highlightedSettingKey: null,
+  highlightedSetting: null,
   propertyFocus: null,
   builderSidePanel: false,
   onboarding: false,
@@ -61,7 +61,7 @@ export class BuilderStore extends BudiStore {
   highlightSetting(key, type) {
     this.update(state => ({
       ...state,
-      highlightedSetting: { key, type: type || "info" },
+      highlightedSetting: key ? { key, type: type || "info" } : null,
     }))
   }
 
@@ -135,9 +135,18 @@ export class BuilderStore extends BudiStore {
     }))
   }
 
-  startTour(tourKey) {
+  endBuilderOnboarding() {
     this.update(state => ({
       ...state,
+      onboarding: false,
+    }))
+  }
+
+  setTour(tourKey) {
+    this.update(state => ({
+      ...state,
+      tourStepKey: null,
+      tourNodes: null,
       tourKey: tourKey,
     }))
   }
