@@ -14,22 +14,11 @@ export function request(ctx?: Ctx, request?: any) {
   if (!request.headers) {
     request.headers = {}
   }
-
   if (!ctx) {
     request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
-  } else if (ctx.headers) {
-    // copy all Budibase utilised headers over - copying everything can have
-    // side effects like requests being rejected due to odd content types etc
-    for (let header of Object.values(constants.Header)) {
-      if (ctx.headers[header]) {
-        request.headers[header] = ctx.headers[header]
-      }
+    if (tenancy.isTenantIdSet()) {
+      request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
     }
-  }
-
-  // apply tenancy if its available
-  if (tenancy.isTenantIdSet()) {
-    request.headers[constants.Header.TENANT_ID] = tenancy.getTenantId()
   }
   if (request.body && Object.keys(request.body).length > 0) {
     request.headers["Content-Type"] = "application/json"
@@ -39,6 +28,9 @@ export function request(ctx?: Ctx, request?: any) {
         : request.body
   } else {
     delete request.body
+  }
+  if (ctx && ctx.headers) {
+    request.headers = ctx.headers
   }
 
   // add x-budibase-correlation-id header
@@ -62,7 +54,7 @@ async function checkResponse(
     }
     const msg = `Unable to ${errorMsg} - ${responseErrorMessage}`
     if (ctx) {
-      ctx.throw(response.status || 500, msg)
+      ctx.throw(msg, response.status)
     } else {
       throw msg
     }
