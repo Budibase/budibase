@@ -22,7 +22,7 @@ import {
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
 
 // simple function to append "readable" to all read queries
