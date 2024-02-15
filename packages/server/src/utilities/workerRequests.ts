@@ -17,7 +17,7 @@ export function request(ctx?: Ctx, request?: any) {
 
   if (!ctx) {
     request.headers[constants.Header.API_KEY] = coreEnv.INTERNAL_API_KEY
-  } else {
+  } else if (ctx.headers) {
     // copy all Budibase utilised headers over - copying everything can have
     // side effects like requests being rejected due to odd content types etc
     for (let header of Object.values(constants.Header)) {
