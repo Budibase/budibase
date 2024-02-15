@@ -92,12 +92,13 @@ const resetBuilderHistory = () => {
 
 export const initialise = async pkg => {
   const { application } = pkg
+  // must be first operation to make sure subsequent requests have correct app ID
+  appStore.syncAppPackage(pkg)
   await Promise.all([
     appStore.syncAppRoutes(),
     componentStore.refreshDefinitions(application?.appId),
   ])
   builderStore.init(application)
-  appStore.syncAppPackage(pkg)
   navigationStore.syncAppNavigation(application?.navigation)
   themeStore.syncAppTheme(application)
   screenStore.syncAppScreens(pkg)
