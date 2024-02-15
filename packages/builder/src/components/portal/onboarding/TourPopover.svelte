@@ -1,6 +1,6 @@
 <script>
   import { Popover, Layout, Heading, Body, Button, Link } from "@budibase/bbui"
-  import { TOURS } from "./tours.js"
+  import { TOURS, getCurrentStepIdx } from "./tours.js"
   import { goto, layout, isActive } from "@roxi/routify"
   import { builderStore } from "stores/builder"
 
@@ -20,6 +20,12 @@
 
   const updateTourStep = (targetStepKey, tourKey) => {
     if (!tourKey) {
+      tourSteps = null
+      tourStepIdx = null
+      lastStep = null
+      tourStep = null
+      popoverAnchor = null
+      popover = null
       return
     }
     if (!tourSteps?.length) {
@@ -78,16 +84,6 @@
       }
     }
   }
-
-  const getCurrentStepIdx = (steps, tourStepKey) => {
-    if (!steps?.length) {
-      return
-    }
-    if (steps?.length && !tourStepKey) {
-      return 0
-    }
-    return steps.findIndex(step => step.id === tourStepKey)
-  }
 </script>
 
 {#if tourKey}
@@ -100,6 +96,7 @@
       dismissible={false}
       offset={15}
       handlePostionUpdate={tourStep?.positionHandler}
+      customZindex={3}
     >
       <div class="tour-content">
         <Layout noPadding gap="M">

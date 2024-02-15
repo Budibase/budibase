@@ -32,14 +32,18 @@ export const TOUR_KEYS = {
   BUILDER_FORM_VIEW_UPDATE: "builder-form-view-update",
 }
 
+export const getCurrentStepIdx = (steps, tourStepKey) => {
+  if (!steps?.length) {
+    return
+  }
+  if (steps?.length && !tourStepKey) {
+    return 0
+  }
+  return steps.findIndex(step => step.id === tourStepKey)
+}
+
 const resetTourState = () => {
-  builderStore.update(state => ({
-    ...state,
-    tourNodes: undefined,
-    tourKey: undefined,
-    tourKeyStep: undefined,
-    onboarding: false,
-  }))
+  builderStore.setTour()
 }
 
 const endUserOnboarding = async ({ skipped = false } = {}) => {
@@ -58,6 +62,7 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
       // Update the cached user
       await auth.getSelf()
 
+      builderStore.endBuilderOnboarding()
       resetTourState()
     } catch (e) {
       console.error("Onboarding failed", e)
@@ -222,6 +227,7 @@ const getTours = () => {
           },
           positionHandler: customPositionHandler,
           align: "left-outside",
+          scrollIntoView: true,
         },
       ],
       onSkip: async () => {
