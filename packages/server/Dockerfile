@@ -66,6 +66,7 @@ COPY packages/server/dist/ dist/
 COPY packages/server/docker_run.sh .
 COPY packages/server/builder/ builder/
 COPY packages/server/client/ client/
+COPY packages/server/pm2.config.js .
 
 ARG BUDIBASE_VERSION
 ARG GIT_COMMIT_SHA
