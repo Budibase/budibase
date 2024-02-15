@@ -100,11 +100,6 @@ const environment = {
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
 }
 
-// threading can cause memory issues with node-ts in development
-if (coreEnv.isDev() && environment.DISABLE_THREADING == null) {
-  environment._set("DISABLE_THREADING", "1")
-}
-
 // clean up any environment variable edge cases
 for (let [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
