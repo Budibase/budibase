@@ -13,7 +13,7 @@
     Body,
     Helpers,
   } from "@budibase/bbui"
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
