@@ -65,7 +65,7 @@ export async function run({ inputs, context }: AutomationStepInput) {
       success = true
     try {
       stdout = execSync(command, {
-        timeout: environment.QUERY_THREAD_TIMEOUT || 500,
+        timeout: environment.QUERY_THREAD_TIMEOUT,
       }).toString()
     } catch (err: any) {
       stdout = err.message
