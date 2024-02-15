@@ -127,16 +127,10 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(
-        transformer,
-        {
-          data: rows,
-          params: enrichedParameters,
-        },
-        {
-          parseBson: datasource.source === SourceName.MONGODB,
-        }
-      )
+      const runner = new ScriptRunner(transformer, {
+        data: rows,
+        params: enrichedParameters,
+      })
       rows = runner.execute()
     }
 
@@ -156,11 +150,6 @@ class QueryRunner {
 
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
       return this.execute()
-    }
-
-    // check for undefined response
-    if (!rows) {
-      rows = []
     }
 
     // needs to an array for next step

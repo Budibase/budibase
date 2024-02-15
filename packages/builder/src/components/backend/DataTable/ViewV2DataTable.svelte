@@ -1,5 +1,5 @@
 <script>
-  import { viewsV2 } from "stores/backend"
+  import { viewsV2 } from "stores/builder"
   import { Grid } from "@budibase/frontend-core"
   import { API } from "api"
   import GridCreateEditRowModal from "components/backend/DataTable/modals/grid/GridCreateEditRowModal.svelte"
