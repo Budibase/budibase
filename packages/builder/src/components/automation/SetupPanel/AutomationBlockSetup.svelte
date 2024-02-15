@@ -79,6 +79,7 @@
     disableWrapping: true,
   })
   $: editingJs = codeMode === EditorModes.JS
+  $: requiredProperties = block.schema.inputs.required || []
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
@@ -359,6 +360,11 @@
     )
   }
 
+  function getFieldLabel(key, value) {
+    const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
+    return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
+  }
+
   onMount(async () => {
     try {
       await environment.loadVariables()
@@ -376,7 +382,7 @@
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{value.title || (key === "row" ? "Table" : key)}</Label
+              : null}>{getFieldLabel(key, value)}</Label
           >
         {/if}
         <div class:field-width={shouldRenderField(value)}>
