@@ -72,9 +72,9 @@ const environment = {
   HTTP_MB_LIMIT: process.env.HTTP_MB_LIMIT,
   FORKED_PROCESS_NAME: process.env.FORKED_PROCESS_NAME || "main",
   JS_PER_INVOCATION_TIMEOUT_MS:
-    parseIntSafe(process.env.JS_PER_INVOCATION_TIMEOUT_MS) || 1000,
+    parseIntSafe(process.env.JS_PER_EXECUTION_TIME_LIMIT_MS) || 1000,
   JS_PER_REQUEST_TIMEOUT_MS: parseIntSafe(
-    process.env.JS_PER_REQUEST_TIMEOUT_MS
+    process.env.JS_PER_REQUEST_TIME_LIMIT_MS
   ),
   // old
   CLIENT_ID: process.env.CLIENT_ID,
@@ -97,11 +97,7 @@ const environment = {
   APP_MIGRATION_TIMEOUT: parseIntSafe(process.env.APP_MIGRATION_TIMEOUT),
   JS_RUNNER_MEMORY_LIMIT:
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) || 64,
-}
-
-// threading can cause memory issues with node-ts in development
-if (coreEnv.isDev() && environment.DISABLE_THREADING == null) {
-  environment._set("DISABLE_THREADING", "1")
+  LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
 }
 
 // clean up any environment variable edge cases

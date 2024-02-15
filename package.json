@@ -106,7 +106,6 @@
     "axios": "1.6.3",
     "xml2js": "0.6.2",
     "unset-value": "2.0.1",
-    "got": "13.0.0",
     "passport": "0.6.0"
   },
   "engines": {

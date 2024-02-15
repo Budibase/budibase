@@ -5,7 +5,7 @@
     tables as tablesStore,
     integrations as integrationsStore,
     datasources as datasourcesStore,
-  } from "stores/backend"
+  } from "stores/builder"
   import { DatasourceFeature } from "@budibase/types"
   import { API } from "api"
   import Panel from "./Panel.svelte"

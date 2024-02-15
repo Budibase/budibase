@@ -1,20 +1,20 @@
 <script>
-  import {
-    store,
-    userSelectedResourceMap,
-    selectedComponentPath,
-    selectedComponent,
-    selectedScreen,
-    hoverStore,
-  } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { notifications } from "@budibase/bbui"
   import {
+    selectedScreen,
+    componentStore,
+    userSelectedResourceMap,
+    selectedComponent,
+    selectedComponentPath,
+    hoverStore,
+  } from "stores/builder"
+  import {
     findComponentPath,
     getComponentText,
     getComponentName,
-  } from "builderStore/componentUtils"
+  } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
   import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
@@ -26,8 +26,8 @@
 
   $: filteredComponents = components?.filter(component => {
     return (
-      !$store.componentToPaste?.isCut ||
-      component._id !== $store.componentToPaste?._id
+      !$componentStore.componentToPaste?.isCut ||
+      component._id !== $componentStore.componentToPaste?._id
     )
   })
 
@@ -42,12 +42,12 @@
   }
 
   const getComponentIcon = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.icon
   }
 
   const componentSupportsChildren = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.hasChildren
   }
 
@@ -83,7 +83,7 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const hover = hoverStore.actions.update
+  const hover = hoverStore.hover
 </script>
 
 <ul>
@@ -91,7 +91,7 @@
     {@const opened = isOpen(component, $selectedComponentPath, openNodes)}
     <li
       on:click|stopPropagation={() => {
-        $store.selectedComponentId = component._id
+        componentStore.select(component._id)
       }}
       id={`component-${component._id}`}
     >
@@ -112,7 +112,7 @@
         iconTooltip={getComponentName(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
-        selected={$store.selectedComponentId === component._id}
+        selected={$componentStore.selectedComponentId === component._id}
         {opened}
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}

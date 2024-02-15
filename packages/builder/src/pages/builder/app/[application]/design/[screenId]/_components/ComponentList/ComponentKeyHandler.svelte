@@ -1,7 +1,11 @@
 <script>
   import { onMount } from "svelte"
-  import { selectedComponent, selectedScreen, store } from "builderStore"
-  import { findComponent } from "builderStore/componentUtils"
+  import {
+    selectedScreen,
+    componentStore,
+    selectedComponent,
+  } from "stores/builder"
+  import { findComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
@@ -14,28 +18,26 @@
 
   const keyHandlers = {
     ["Ctrl+ArrowUp"]: async component => {
-      await store.actions.components.moveUp(component)
+      await componentStore.moveUp(component)
     },
     ["Ctrl+ArrowDown"]: async component => {
-      await store.actions.components.moveDown(component)
+      await componentStore.moveDown(component)
     },
     ["Ctrl+c"]: component => {
-      store.actions.components.copy(component, false)
+      componentStore.copy(component, false)
     },
     ["Ctrl+x"]: component => {
-      store.actions.components.copy(component, true)
+      componentStore.copy(component, true)
     },
     ["Ctrl+v"]: async component => {
-      await store.actions.components.paste(component, "inside")
+      await componentStore.paste(component, "inside")
     },
     ["Ctrl+d"]: async component => {
-      store.actions.components.copy(component)
-      await store.actions.components.paste(component, "below")
+      componentStore.copy(component)
+      await componentStore.paste(component, "below")
     },
     ["Ctrl+e"]: component => {
-      const definition = store.actions.components.getDefinition(
-        component._component
-      )
+      const definition = componentStore.getDefinition(component._component)
       const isBlock = definition?.block === true
       const canEject = !(definition?.ejectable === false)
       if (isBlock && canEject) {
@@ -55,10 +57,10 @@
       confirmDeleteDialog.show()
     },
     ["ArrowUp"]: () => {
-      store.actions.components.selectPrevious()
+      componentStore.selectPrevious()
     },
     ["ArrowDown"]: () => {
-      store.actions.components.selectNext()
+      componentStore.selectNext()
     },
     ["ArrowRight"]: component => {
       componentTreeNodesStore.expandNode(component._id)
@@ -96,7 +98,7 @@
     },
     ["Escape"]: () => {
       if ($isActive(`./:componentId/new`)) {
-        $goto(`./${$store.selectedComponentId}`)
+        $goto(`./${$componentStore.selectedComponentId}`)
       }
     },
   }
@@ -192,12 +194,12 @@
   title="Confirm Deletion"
   body={`Are you sure you want to delete "${componentToDelete?._instanceName}"?`}
   okText="Delete Component"
-  onOk={() => store.actions.components.delete(componentToDelete)}
+  onOk={() => componentStore.delete(componentToDelete)}
 />
 <ConfirmDialog
   bind:this={confirmEjectDialog}
   title="Eject block"
   body={`Ejecting a block breaks it down into multiple components and cannot be undone. Are you sure you want to eject "${componentToEject?._instanceName}"?`}
-  onOk={() => store.actions.components.requestEjectBlock(componentToEject?._id)}
+  onOk={() => componentStore.requestEjectBlock(componentToEject?._id)}
   okText="Eject block"
 />

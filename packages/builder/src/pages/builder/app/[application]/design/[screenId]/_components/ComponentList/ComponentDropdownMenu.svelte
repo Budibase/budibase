@@ -1,12 +1,12 @@
 <script>
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let component
   export let opened
 
-  $: definition = store.actions.components.getDefinition(component?._component)
-  $: noPaste = !$store.componentToPaste
+  $: definition = componentStore.getDefinition(component?._component)
+  $: noPaste = !$componentStore.componentToPaste
   $: isBlock = definition?.block === true
   $: canEject = !(definition?.ejectable === false)
 

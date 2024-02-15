@@ -1,4 +1,4 @@
-const { processString, processObject, isValid } = require("../src/index.cjs")
+const { processString, processObject, isValid } = require("../src/index.js")
 const tableJson = require("./examples/table.json")
 const dayjs = require("dayjs")
 const { UUID_REGEX } = require("./constants")
