@@ -69,6 +69,7 @@ export enum AutomationActionStepId {
   slack = "slack",
   zapier = "zapier",
   integromat = "integromat",
+  n8n = "n8n",
 }
 
 export interface EmailInvite {
