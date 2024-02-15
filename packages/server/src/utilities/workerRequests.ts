@@ -75,9 +75,13 @@ export function createRequest(request: Request): RequestInit {
     const cookie = ctx.headers[constants.Header.COOKIE],
       apiKey = ctx.headers[constants.Header.API_KEY]
     if (cookie) {
-      request.headers[constants.Header.COOKIE] = cookie
+      headers[constants.Header.COOKIE] = cookie
     } else if (apiKey) {
-      request.headers[constants.Header.API_KEY] = apiKey
+      if (Array.isArray(apiKey)) {
+        headers[constants.Header.API_KEY] = apiKey[0]
+      } else {
+        headers[constants.Header.API_KEY] = apiKey
+      }
     }
   }
 
