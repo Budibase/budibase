@@ -86,6 +86,7 @@
   showPopover={drawers.length === 0}
   clickOutsideOverride={drawers.length > 0}
   maxHeight={600}
+  offset={18}
   handlePostionUpdate={customPositionHandler}
 >
   <span class="popover-wrap">
