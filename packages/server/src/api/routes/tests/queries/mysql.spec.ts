@@ -1,27 +1,24 @@
 import { Datasource, Query } from "@budibase/types"
 import * as setup from "../utilities"
 import { databaseTestProviders } from "../../../../integrations/tests/utils"
-import { Client } from "pg"
+import mysql from "mysql2/promise"
 
-jest.unmock("pg")
+jest.unmock("mysql2")
+jest.unmock("mysql2/promise")
 
 const createTableSQL = `
 CREATE TABLE test_table (
-    id serial PRIMARY KEY,
-    name VARCHAR ( 50 ) NOT NULL
-);
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+)
 `
 
 const insertSQL = `
-INSERT INTO test_table (name) VALUES ('one');
-INSERT INTO test_table (name) VALUES ('two');
-INSERT INTO test_table (name) VALUES ('three');
-INSERT INTO test_table (name) VALUES ('four');
-INSERT INTO test_table (name) VALUES ('five');
+INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')
 `
 
 const dropTableSQL = `
-DROP TABLE test_table;
+DROP TABLE test_table
 `
 
 describe("/queries", () => {
@@ -42,41 +39,40 @@ describe("/queries", () => {
     return await config.api.query.create({ ...defaultQuery, ...query })
   }
 
-  async function withClient(
-    callback: (client: Client) => Promise<void>
+  async function withConnection(
+    callback: (client: mysql.Connection) => Promise<void>
   ): Promise<void> {
-    const ds = await databaseTestProviders.postgres.datasource()
-    const client = new Client(ds.config!)
-    await client.connect()
+    const ds = await databaseTestProviders.mysql.datasource()
+    const con = await mysql.createConnection(ds.config!)
     try {
-      await callback(client)
+      await callback(con)
     } finally {
-      await client.end()
+      con.end()
     }
   }
 
   afterAll(async () => {
-    await databaseTestProviders.postgres.stop()
+    await databaseTestProviders.mysql.stop()
     setup.afterAll()
   })
 
   beforeAll(async () => {
     await config.init()
     datasource = await config.api.datasource.create(
-      await databaseTestProviders.postgres.datasource()
+      await databaseTestProviders.mysql.datasource()
     )
   })
 
   beforeEach(async () => {
-    await withClient(async client => {
-      await client.query(createTableSQL)
-      await client.query(insertSQL)
+    await withConnection(async connection => {
+      const resp = await connection.query(createTableSQL)
+      await connection.query(insertSQL)
     })
   })
 
   afterEach(async () => {
-    await withClient(async client => {
-      await client.query(dropTableSQL)
+    await withConnection(async connection => {
+      await connection.query(dropTableSQL)
     })
   })
 
@@ -160,8 +156,8 @@ describe("/queries", () => {
       },
     ])
 
-    await withClient(async client => {
-      const { rows } = await client.query(
+    await withConnection(async connection => {
+      const [rows] = await connection.query(
         "SELECT * FROM test_table WHERE name = 'baz'"
       )
       expect(rows).toHaveLength(1)
@@ -199,8 +195,8 @@ describe("/queries", () => {
       },
     ])
 
-    await withClient(async client => {
-      const { rows } = await client.query(
+    await withConnection(async connection => {
+      const [rows] = await connection.query(
         "SELECT * FROM test_table WHERE id = 1"
       )
       expect(rows).toEqual([{ id: 1, name: "foo" }])
@@ -233,8 +229,8 @@ describe("/queries", () => {
       },
     ])
 
-    await withClient(async client => {
-      const { rows } = await client.query(
+    await withConnection(async connection => {
+      const [rows] = await connection.query(
         "SELECT * FROM test_table WHERE id = 1"
       )
       expect(rows).toHaveLength(0)

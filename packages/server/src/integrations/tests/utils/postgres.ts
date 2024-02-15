@@ -8,9 +8,7 @@ export async function start(): Promise<StartedTestContainer> {
     .withExposedPorts(5432)
     .withEnvironment({ POSTGRES_PASSWORD: "password" })
     .withWaitStrategy(
-      Wait.forSuccessfulCommand(
-        "pg_isready -h localhost -p 5432"
-      ).withStartupTimeout(10000)
+      Wait.forSuccessfulCommand("pg_isready -h localhost -p 5432")
     )
     .start()
 }
