@@ -64,3 +64,12 @@ export interface ExecuteQueryRequest {
 export interface ExecuteQueryResponse {
   data: Row[]
 }
+
+export enum HttpMethod {
+  GET = "GET",
+  POST = "POST",
+  PATCH = "PATCH",
+  PUT = "PUT",
+  HEAD = "HEAD",
+  DELETE = "DELETE",
+}
