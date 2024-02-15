@@ -26,6 +26,7 @@
       tourStep = null
       popoverAnchor = null
       popover = null
+      skipping = false
       return
     }
     if (!tourSteps?.length) {
