@@ -95,7 +95,7 @@
       anchor={popoverAnchor}
       maxWidth={300}
       dismissible={false}
-      offset={15}
+      offset={12}
       handlePostionUpdate={tourStep?.positionHandler}
       customZindex={3}
     >

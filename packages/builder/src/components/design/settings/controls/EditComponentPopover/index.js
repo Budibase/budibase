@@ -1,8 +1,8 @@
 export const customPositionHandler = (anchorBounds, eleBounds, cfg) => {
-  let { left, top } = cfg
+  let { left, top, offset } = cfg
   let percentageOffset = 30
   // left-outside
-  left = anchorBounds.left - eleBounds.width - 18
+  left = anchorBounds.left - eleBounds.width - (offset || 5)
 
   // shift up from the anchor, if space allows
   let offsetPos = Math.floor(eleBounds.height / 100) * percentageOffset
