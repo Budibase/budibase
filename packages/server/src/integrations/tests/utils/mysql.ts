@@ -14,8 +14,9 @@ export async function start(): Promise<StartedTestContainer> {
         // run against a MySQL that's mid-restart and fail. To avoid this, we run
         // the ping command three times with a small delay between each.
         `
-          mysqladmin ping -h localhost -P 3306 -u root -ppassword && sleep 0.5 &&
-          mysqladmin ping -h localhost -P 3306 -u root -ppassword && sleep 0.5 &&
+          mysqladmin ping -h localhost -P 3306 -u root -ppassword && sleep 1 &&
+          mysqladmin ping -h localhost -P 3306 -u root -ppassword && sleep 1 &&
+          mysqladmin ping -h localhost -P 3306 -u root -ppassword && sleep 1 &&
           mysqladmin ping -h localhost -P 3306 -u root -ppassword
         `
       )
