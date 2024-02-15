@@ -17,28 +17,6 @@ import {
 } from "@budibase/backend-core"
 import { Ctx, User, EmailInvite } from "@budibase/types"
 
-function ensureHeadersIsObject(headers: HeadersInit | undefined): Headers {
-  if (headers instanceof Headers) {
-    return headers
-  }
-
-  const headersObj = new Headers()
-  if (headers === undefined) {
-    return headersObj
-  }
-
-  if (Array.isArray(headers)) {
-    for (const [key, value] of headers) {
-      headersObj.append(key, value)
-    }
-  } else {
-    for (const key in headers) {
-      headersObj.append(key, headers[key])
-    }
-  }
-  return headersObj
-}
-
 interface Request {
   ctx?: Ctx
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
@@ -89,6 +67,7 @@ export function createRequest(request: Request): RequestInit {
   }
 
   logging.correlation.setHeader(headers)
+  requestInit.headers = headers
   return requestInit
 }
 
