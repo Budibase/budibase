@@ -42,10 +42,6 @@ export const getCurrentStepIdx = (steps, tourStepKey) => {
   return steps.findIndex(step => step.id === tourStepKey)
 }
 
-const resetTourState = () => {
-  builderStore.setTour()
-}
-
 const endUserOnboarding = async ({ skipped = false } = {}) => {
   // Mark the users onboarding as complete
   // Clear all tour related state
@@ -63,7 +59,7 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
       await auth.getSelf()
 
       builderStore.endBuilderOnboarding()
-      resetTourState()
+      builderStore.setTour()
     } catch (e) {
       console.error("Onboarding failed", e)
       return false
@@ -87,7 +83,8 @@ const endTour = async ({ key, skipped = false } = {}) => {
   // Update the cached user
   await auth.getSelf()
 
-  resetTourState()
+  // Reset tour state
+  builderStore.setTour()
 }
 
 const tourEvent = (eventKey, skipped) => {
