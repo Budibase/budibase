@@ -13,6 +13,7 @@ import {
   tenancy,
   logging,
   env as coreEnv,
+  utils,
 } from "@budibase/backend-core"
 import { Ctx, User, EmailInvite } from "@budibase/types"
 
@@ -69,6 +70,14 @@ export function createRequest(request: Request): RequestInit {
       } else {
         headers[header] = value
       }
+    }
+    // be specific about auth headers
+    const cookie = ctx.headers[constants.Header.COOKIE],
+      apiKey = ctx.headers[constants.Header.API_KEY]
+    if (cookie) {
+      request.headers[constants.Header.COOKIE] = cookie
+    } else if (apiKey) {
+      request.headers[constants.Header.API_KEY] = apiKey
     }
   }
 
