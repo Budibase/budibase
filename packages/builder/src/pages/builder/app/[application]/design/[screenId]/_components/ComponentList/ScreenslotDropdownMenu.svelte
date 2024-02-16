@@ -1,11 +1,11 @@
 <script>
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
   import { ActionMenu, MenuItem, Icon, notifications } from "@budibase/bbui"
 
   export let component
 
-  $: definition = store.actions.components.getDefinition(component?._component)
-  $: noPaste = !$store.componentToPaste
+  $: definition = componentStore.getDefinition(component?._component)
+  $: noPaste = !$componentStore.componentToPaste
 
   // "editable" has been repurposed for inline text editing.
   // It remains here for legacy compatibility.
@@ -14,12 +14,12 @@
   $: showMenu = definition?.editable !== false && definition?.static !== true
 
   const storeComponentForCopy = (cut = false) => {
-    store.actions.components.copy(component, cut)
+    componentStore.copy(component, cut)
   }
 
   const pasteComponent = mode => {
     try {
-      store.actions.components.paste(component, mode)
+      componentStore.paste(component, mode)
     } catch (error) {
       notifications.error("Error saving component")
     }

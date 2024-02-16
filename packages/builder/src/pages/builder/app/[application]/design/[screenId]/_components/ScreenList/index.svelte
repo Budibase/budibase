@@ -1,6 +1,10 @@
 <script>
   import { Layout } from "@budibase/bbui"
-  import { store, sortedScreens, userSelectedResourceMap } from "builderStore"
+  import {
+    screenStore,
+    sortedScreens,
+    userSelectedResourceMap,
+  } from "stores/builder"
   import NavItem from "components/common/NavItem.svelte"
   import RoleIndicator from "./RoleIndicator.svelte"
   import DropdownMenu from "./DropdownMenu.svelte"
@@ -55,9 +59,9 @@
           scrollable
           icon={screen.routing.homeScreen ? "Home" : null}
           indentLevel={0}
-          selected={$store.selectedScreenId === screen._id}
+          selected={$screenStore.selectedScreenId === screen._id}
           text={screen.routing.route}
-          on:click={() => store.actions.screens.select(screen._id)}
+          on:click={() => screenStore.select(screen._id)}
           rightAlignIcon
           showTooltip
           selectedBy={$userSelectedResourceMap[screen._id]}
