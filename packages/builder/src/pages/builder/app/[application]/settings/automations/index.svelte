@@ -14,7 +14,7 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import StatusRenderer from "./_components/StatusRenderer.svelte"
   import HistoryDetailsPanel from "./_components/HistoryDetailsPanel.svelte"
-  import { automationStore, store } from "builderStore"
+  import { automationStore, appStore } from "stores/builder"
   import { createPaginationStore } from "helpers/pagination"
   import { getContext, onDestroy, onMount } from "svelte"
   import dayjs from "dayjs"
@@ -36,15 +36,12 @@
   let status = null
   let timeRange = null
   let loaded = false
-
-  $: app = $apps.find(app => app.devId === $store.appId?.includes(app.appId))
+  $: app = $apps.find(app => $appStore.appId?.includes(app.appId))
   $: licensePlan = $auth.user?.license?.plan
   $: page = $pageInfo.page
   $: fetchLogs(automationId, status, page, timeRange)
   $: isCloud = $admin.cloud
-
   $: chainAutomations = app?.automations?.chainAutomations ?? !isCloud
-
   const timeOptions = [
     { value: "90-d", label: "Past 90 days" },
     { value: "30-d", label: "Past 30 days" },
@@ -132,7 +129,7 @@
 
   async function save({ detail }) {
     try {
-      await apps.update($store.appId, {
+      await apps.update($appStore.appId, {
         automations: {
           chainAutomations: detail,
         },
@@ -266,7 +263,7 @@
 {#if selectedHistory}
   <Portal target="#side-panel">
     <HistoryDetailsPanel
-      appId={$store.appId}
+      appId={$appStore.appId}
       bind:history={selectedHistory}
       close={sidePanel.close}
     />

@@ -1,6 +1,6 @@
 <script>
   import { Select, Label, notifications, ModalContent } from "@budibase/bbui"
-  import { tables, views } from "stores/backend"
+  import { tables, views } from "stores/builder"
   import { FIELDS } from "constants/backend"
 
   const CALCULATIONS = [
