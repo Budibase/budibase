@@ -30,6 +30,7 @@
     ActionTypes,
     createContextStore,
     Provider,
+    generateGoldenSample,
   } = getContext("sdk")
 
   let grid
@@ -47,6 +48,19 @@
       metadata: { dataSource: table },
     },
   ]
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(grid?.getContext()?.rows)
+    const goldenRow = generateGoldenSample(rows)
+    const id = [get(component).id]
+    return {
+      [id]: goldenRow,
+      eventContext: {
+        row: goldenRow,
+      },
+    }
+  }
 
   // Parses columns to fix older formats
   const getParsedColumns = columns => {

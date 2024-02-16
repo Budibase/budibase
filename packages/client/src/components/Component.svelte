@@ -575,6 +575,15 @@
     }
   }
 
+  const getDataContext = () => {
+    const normalContext = get(context)
+    const additionalContext = ref?.getAdditionalDataContext?.()
+    return {
+      ...normalContext,
+      ...additionalContext,
+    }
+  }
+
   onMount(() => {
     // Register this component instance for external access
     if ($appStore.isDevApp) {
@@ -583,7 +592,7 @@
           component: instance._component,
           getSettings: () => cachedSettings,
           getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-          getDataContext: () => get(context),
+          getDataContext: getDataContext,
           reload: () => initialise(instance, true),
           setEphemeralStyles: styles => (ephemeralStyles = styles),
           state: store,
