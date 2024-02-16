@@ -1,9 +1,6 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
-import {
-  AbstractWaitStrategy,
-  WaitStrategy,
-} from "testcontainers/build/wait-strategies/wait-strategy"
+import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 
 let container: StartedTestContainer | undefined
 
