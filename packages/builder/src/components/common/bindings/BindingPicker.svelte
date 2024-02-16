@@ -69,8 +69,6 @@
     return names
   }
 
-  $: console.log(context)
-
   const getBindingValue = binding => {
     const hbs = `{{ ${binding.runtimeBinding} }}`
     return processStringSync(hbs, context)
