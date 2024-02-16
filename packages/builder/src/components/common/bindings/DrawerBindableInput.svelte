@@ -24,7 +24,6 @@
   export let drawerLeft
   export let key
   export let disableBindings = false
-  export let context = null
 
   const dispatch = createEventDispatcher()
 
@@ -106,7 +105,6 @@
     bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
-    {context}
     {bindings}
     {allowJS}
     {allowHelpers}

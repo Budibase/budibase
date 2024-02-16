@@ -24,7 +24,6 @@
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
-  export let context = null
   export let wide
 
   $: nullishValue = value == null || value === ""
@@ -99,7 +98,6 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
-      {context}
       {nested}
       {key}
       {type}

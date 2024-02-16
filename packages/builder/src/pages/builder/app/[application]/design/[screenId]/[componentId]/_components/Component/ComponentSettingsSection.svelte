@@ -27,7 +27,6 @@
     tag,
     includeHidden
   )
-  $: context = $previewStore.selectedComponentContext
 
   const getSections = (instance, definition, isScreen, tag, includeHidden) => {
     const settings = definition?.settings ?? []
@@ -199,7 +198,6 @@
                 min: setting.min ?? null,
                 max: setting.max ?? null,
               }}
-              {context}
               {bindings}
               {componentBindings}
               {componentInstance}
