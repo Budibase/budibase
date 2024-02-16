@@ -1,5 +1,5 @@
 <script>
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
   import { onMount } from "svelte"
   import { Label, Checkbox, Select } from "@budibase/bbui"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
@@ -8,7 +8,7 @@
   export let parameters
   export let bindings = []
 
-  $: urlOptions = $store.screens
+  $: urlOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
 

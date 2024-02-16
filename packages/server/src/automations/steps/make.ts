@@ -34,28 +34,8 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.JSON,
           title: "Payload",
         },
-        value1: {
-          type: AutomationIOType.STRING,
-          title: "Input Value 1",
-        },
-        value2: {
-          type: AutomationIOType.STRING,
-          title: "Input Value 2",
-        },
-        value3: {
-          type: AutomationIOType.STRING,
-          title: "Input Value 3",
-        },
-        value4: {
-          type: AutomationIOType.STRING,
-          title: "Input Value 4",
-        },
-        value5: {
-          type: AutomationIOType.STRING,
-          title: "Input Value 5",
-        },
       },
-      required: ["url", "value1", "value2", "value3", "value4", "value5"],
+      required: ["url", "body"],
     },
     outputs: {
       properties: {
