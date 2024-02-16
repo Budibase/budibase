@@ -135,13 +135,10 @@
         selected={mode}
         on:select={onChangeMode}
         beforeSwitch={selectedMode => {
-          if (selectedMode == mode) {
+          if (selectedMode === mode) {
             return true
           }
-
-          //Get the current mode value
           const editorValue = usingJS ? decodeJSBinding(jsValue) : hbsValue
-
           if (editorValue) {
             targetMode = selectedMode
             return false
@@ -204,9 +201,9 @@
                     <div class="syntax-error">
                       Current Handlebars syntax is invalid, please check the
                       guide
-                      <a href="https://handlebarsjs.com/guide/" target="_blank"
-                        >here</a
-                      >
+                      <a href="https://handlebarsjs.com/guide/" target="_blank">
+                        here
+                      </a>
                       for more details.
                     </div>
                   {:else}
@@ -523,9 +520,10 @@
     border-radius: var(--border-radius-s);
     font-family: monospace;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    max-height: 200px;
-    overflow: auto;
-    white-space: pre;
-    word-wrap: anywhere;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 92px;
   }
 </style>

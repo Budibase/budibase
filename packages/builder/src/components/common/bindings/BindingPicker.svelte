@@ -10,7 +10,6 @@
   export let mode
   export let allowHelpers
   export let context = null
-  export let noPaddingTop = false
 
   let search = ""
   let popover
@@ -69,6 +68,8 @@
     }
     return names
   }
+
+  $: console.log(context)
 
   const getBindingValue = binding => {
     const hbs = `{{ ${binding.runtimeBinding} }}`
@@ -165,15 +166,13 @@
                 class="binding"
                 on:mouseenter={e => {
                   let val = getBindingValue(binding)
-                  if (val === "") {
-                    val = " "
+                  if (val !== "") {
+                    popoverAnchor = e.target
+                    hoverTarget = {
+                      code: val,
+                    }
+                    popover.show()
                   }
-                  popoverAnchor = e.target
-                  hoverTarget = {
-                    code: val,
-                  }
-                  popover.show()
-                  e.stopPropagation()
                 }}
                 on:mouseleave={() => {
                   popover.hide()
