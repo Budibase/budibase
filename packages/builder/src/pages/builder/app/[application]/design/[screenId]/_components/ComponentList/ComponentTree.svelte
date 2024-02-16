@@ -1,32 +1,33 @@
 <script>
-  import {
-    store,
-    userSelectedResourceMap,
-    selectedComponentPath,
-    selectedComponent,
-    selectedScreen,
-    hoverStore,
-  } from "builderStore"
   import ComponentDropdownMenu from "./ComponentDropdownMenu.svelte"
   import NavItem from "components/common/NavItem.svelte"
   import { notifications } from "@budibase/bbui"
   import {
+    selectedScreen,
+    componentStore,
+    userSelectedResourceMap,
+    selectedComponent,
+    selectedComponentPath,
+    hoverStore,
+  } from "stores/builder"
+  import {
     findComponentPath,
     getComponentText,
     getComponentName,
-  } from "builderStore/componentUtils"
+  } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
+  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   export let components = []
   export let level = 0
 
-  let closedNodes = {}
+  $: openNodes = $componentTreeNodesStore
 
   $: filteredComponents = components?.filter(component => {
     return (
-      !$store.componentToPaste?.isCut ||
-      component._id !== $store.componentToPaste?._id
+      !$componentStore.componentToPaste?.isCut ||
+      component._id !== $componentStore.componentToPaste?._id
     )
   })
 
@@ -41,26 +42,17 @@
   }
 
   const getComponentIcon = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.icon
   }
 
   const componentSupportsChildren = component => {
-    const def = store.actions.components.getDefinition(component?._component)
+    const def = componentStore.getDefinition(component?._component)
     return def?.hasChildren
   }
 
   const componentHasChildren = component => {
     return componentSupportsChildren(component) && component._children?.length
-  }
-
-  function toggleNodeOpen(componentId) {
-    if (closedNodes[componentId]) {
-      delete closedNodes[componentId]
-    } else {
-      closedNodes[componentId] = true
-    }
-    closedNodes = closedNodes
   }
 
   const onDrop = async e => {
@@ -72,14 +64,14 @@
     }
   }
 
-  const isOpen = (component, selectedComponentPath, closedNodes) => {
+  const isOpen = (component, selectedComponentPath, openNodes) => {
     if (!component?._children?.length) {
       return false
     }
-    if (selectedComponentPath.includes(component._id)) {
+    if (selectedComponentPath.slice(0, -1).includes(component._id)) {
       return true
     }
-    return !closedNodes[component._id]
+    return openNodes[`nodeOpen-${component._id}`]
   }
 
   const isChildOfSelectedComponent = component => {
@@ -91,15 +83,15 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const hover = hoverStore.actions.update
+  const hover = hoverStore.hover
 </script>
 
 <ul>
   {#each filteredComponents || [] as component, index (component._id)}
-    {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
+    {@const opened = isOpen(component, $selectedComponentPath, openNodes)}
     <li
       on:click|stopPropagation={() => {
-        $store.selectedComponentId = component._id
+        componentStore.select(component._id)
       }}
       id={`component-${component._id}`}
     >
@@ -110,7 +102,7 @@
         on:dragend={dndStore.actions.reset}
         on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
-        on:iconClick={() => toggleNodeOpen(component._id)}
+        on:iconClick={() => componentTreeNodesStore.toggleNode(component._id)}
         on:drop={onDrop}
         hovering={$hoverStore.componentId === component._id}
         on:mouseenter={() => hover(component._id)}
@@ -120,13 +112,14 @@
         iconTooltip={getComponentName(component)}
         withArrow={componentHasChildren(component)}
         indentLevel={level}
-        selected={$store.selectedComponentId === component._id}
+        selected={$componentStore.selectedComponentId === component._id}
         {opened}
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}
       >
-        <ComponentDropdownMenu {component} />
+        <ComponentDropdownMenu {opened} {component} />
       </NavItem>
+
       {#if opened}
         <svelte:self
           components={component._children}
@@ -143,13 +136,6 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
-  }
-  ul :global(.icon.arrow) {
-    transition: opacity 130ms ease-out;
-    opacity: 0;
-  }
-  ul:hover :global(.icon.arrow) {
-    opacity: 1;
   }
   ul,
   li {

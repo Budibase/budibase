@@ -1,6 +1,6 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
-  import { Icon, Body, StatusLight, AbsTooltip } from "@budibase/bbui"
+  import { automationStore, selectedAutomation } from "stores/builder"
+  import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "constants/backend/automations"

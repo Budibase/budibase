@@ -1,5 +1,5 @@
 import { get } from "svelte/store"
-import { store } from "builderStore"
+import { builderStore } from "stores/builder"
 import { auth } from "stores/portal"
 import analytics from "analytics"
 import { OnboardingData, OnboardingDesign, OnboardingPublish } from "./steps"
@@ -37,11 +37,11 @@ const endUserOnboarding = async ({ skipped = false } = {}) => {
       // Update the cached user
       await auth.getSelf()
 
-      store.update(state => ({
+      builderStore.update(state => ({
         ...state,
-        tourNodes: undefined,
-        tourKey: undefined,
-        tourKeyStep: undefined,
+        tourNodes: null,
+        tourKey: null,
+        tourStepKey: null,
         onboarding: false,
       }))
     } catch (e) {
