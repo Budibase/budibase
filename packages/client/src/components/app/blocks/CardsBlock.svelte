@@ -4,6 +4,7 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
   import { enrichSearchColumns, enrichFilter } from "utils/blocks.js"
+  import { get } from "svelte/store"
 
   export let title
   export let dataSource
@@ -31,7 +32,9 @@
   export let linkColumn
   export let noRowsMessage
 
-  const { fetchDatasourceSchema } = getContext("sdk")
+  const context = getContext("context")
+  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
+  const component = getContext("component")
 
   let formId
   let dataProviderId
@@ -61,6 +64,16 @@
       },
     },
   ]
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(context)[dataProviderId]?.rows || []
+    const goldenRow = generateGoldenSample(rows)
+    const id = get(component).id
+    return {
+      [`${id}-repeater`]: goldenRow,
+    }
+  }
 
   // Builds a full details page URL for the card title
   const buildFullCardUrl = (link, url, repeaterId, linkColumn) => {

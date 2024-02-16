@@ -60,6 +60,10 @@ export const createPreviewStore = () => {
     })
   }
 
+  const requestComponentContext = () => {
+    sendEvent("request-context")
+  }
+
   return {
     subscribe: store.subscribe,
     setDevice,
@@ -69,6 +73,7 @@ export const createPreviewStore = () => {
     stopDrag,
     showPreview,
     setSelectedComponentContext,
+    requestComponentContext,
   }
 }
 

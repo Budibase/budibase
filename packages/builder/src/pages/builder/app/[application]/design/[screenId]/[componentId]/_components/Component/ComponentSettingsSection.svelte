@@ -1,14 +1,13 @@
 <script>
   import { helpers } from "@budibase/shared-core"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { componentStore, previewStore } from "stores/builder"
+  import { componentStore } from "stores/builder"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import ResetFieldsButton from "components/design/settings/controls/ResetFieldsButton.svelte"
   import EjectBlockButton from "components/design/settings/controls/EjectBlockButton.svelte"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import InfoDisplay from "./InfoDisplay.svelte"
   import analytics, { Events } from "analytics"
-  import { onMount } from "svelte"
 
   export let componentDefinition
   export let componentInstance
@@ -145,10 +144,6 @@
     }
     return shouldDisplay(instance, setting)
   }
-
-  onMount(() => {
-    previewStore.sendEvent("request-context")
-  })
 </script>
 
 {#each sections as section, idx (section.name)}

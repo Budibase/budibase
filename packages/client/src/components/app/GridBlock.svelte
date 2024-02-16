@@ -53,7 +53,7 @@
   export const getAdditionalDataContext = () => {
     const rows = get(grid?.getContext()?.rows)
     const goldenRow = generateGoldenSample(rows)
-    const id = [get(component).id]
+    const id = get(component).id
     return {
       [id]: goldenRow,
       eventContext: {
