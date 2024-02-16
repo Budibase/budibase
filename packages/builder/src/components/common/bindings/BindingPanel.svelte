@@ -33,6 +33,7 @@
   } from "../CodeEditor"
   import BindingPicker from "./BindingPicker.svelte"
   import { BindingHelpers } from "./utils"
+  import formatHighlight from "json-format-highlight"
 
   const dispatch = createEventDispatcher()
 
@@ -123,6 +124,24 @@
     onSelectBinding("", { forceJS: true })
   }
 
+  const highlight = json => {
+    // Attempt to parse and then stringify, in case this is valid JSON
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 2)
+    } catch (err) {
+      // Ignore
+    }
+
+    return formatHighlight(json, {
+      keyColor: "#e06c75",
+      numberColor: "#e5c07b",
+      stringColor: "#98c379",
+      trueColor: "#d19a66",
+      falseColor: "#d19a66",
+      nullColor: "#c678dd",
+    })
+  }
+
   onMount(() => {
     valid = isValid(readableToRuntimeBinding(bindings, value))
   })
@@ -192,7 +211,7 @@
               </div>
               {#if expressionResult}
                 <div class="result">
-                  {expressionResult}
+                  {@html highlight(expressionResult)}
                 </div>
               {/if}
               <div class="binding-footer">
@@ -301,7 +320,7 @@
                 </div>
                 {#if expressionResult}
                   <div class="result">
-                    {expressionResult}
+                    {@html highlight(expressionResult)}
                   </div>
                 {/if}
                 <div class="binding-footer">
@@ -524,6 +543,6 @@
     overflow-x: hidden;
     white-space: pre-wrap;
     word-wrap: break-word;
-    max-height: 92px;
+    max-height: 128px;
   }
 </style>

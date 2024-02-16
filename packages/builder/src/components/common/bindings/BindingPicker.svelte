@@ -3,6 +3,7 @@
   import { convertToJS, processStringSync } from "@budibase/string-templates"
   import { Input, Layout, ActionButton, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "constants/completions"
+  import formatHighlight from "json-format-highlight"
 
   export let addHelper
   export let addBinding
@@ -70,8 +71,20 @@
   }
 
   const getBindingValue = binding => {
-    const hbs = `{{ ${binding.runtimeBinding} }}`
-    return processStringSync(hbs, context)
+    const hbs = `{{ literal ${binding.runtimeBinding} }}`
+    const res = processStringSync(hbs, context)
+    return JSON.stringify(res, null, 2)
+  }
+
+  const highlight = json => {
+    return formatHighlight(json, {
+      keyColor: "#e06c75",
+      numberColor: "#e5c07b",
+      stringColor: "#98c379",
+      trueColor: "#d19a66",
+      falseColor: "#d19a66",
+      nullColor: "#c678dd",
+    })
   }
 </script>
 
@@ -79,7 +92,7 @@
   align="left-outside"
   bind:this={popover}
   anchor={popoverAnchor}
-  maxWidth={400}
+  maxWidth={600}
   maxHeight={300}
   dismissible={false}
 >
@@ -92,7 +105,7 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        <pre>{hoverTarget.code}</pre>
+        <pre>{@html highlight(hoverTarget.code)}</pre>
       {/if}
     </Layout>
   </div>
@@ -387,8 +400,14 @@
     padding: 0;
     margin: 0;
     font-size: 12px;
-    white-space: pre-wrap;
-    word-break: break-all;
+    white-space: pre;
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  .helper pre :global(span) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
   .helper :global(p) {
     padding: 0;
