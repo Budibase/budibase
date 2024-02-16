@@ -270,6 +270,7 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
+            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -4639,6 +4640,7 @@
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
+    "actions": ["ClearRowSelection"],
     "size": {
       "width": 600,
       "height": 400

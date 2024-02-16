@@ -1,8 +1,12 @@
-export function setCookie(name, value) {
+export function setCookie(name, value, domain) {
   if (getCookie(name)) {
     removeCookie(name)
   }
-  window.document.cookie = `${name}=${value}; Path=/;`
+  let cookieString = `${name}=${value}; Path=/;`
+  if (domain) {
+    cookieString += ` Domain=${domain};`
+  }
+  window.document.cookie = cookieString
 }
 
 export function getCookie(cookieName) {
