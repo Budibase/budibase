@@ -1,6 +1,7 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
   import { previewStore } from "stores/builder"
+  import { onMount } from "svelte"
 
   export let bindings = []
   export let valid
@@ -21,6 +22,8 @@
       type: null,
     }))
   }
+
+  onMount(previewStore.requestComponentContext)
 </script>
 
 <BindingPanel
