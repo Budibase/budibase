@@ -14,7 +14,7 @@
     Table,
   } from "@budibase/bbui"
   import { backups, licensing, auth, admin } from "stores/portal"
-  import { store } from "builderStore"
+  import { appStore } from "stores/builder"
   import { createPaginationStore } from "helpers/pagination"
   import TimeAgoRenderer from "./_components/TimeAgoRenderer.svelte"
   import AppSizeRenderer from "./_components/AppSizeRenderer.svelte"
@@ -101,7 +101,7 @@
 
   async function fetchBackups(filters, page, startDate, endDate) {
     const response = await backups.searchBackups({
-      appId: $store.appId,
+      appId: $appStore.appId,
       ...filters,
       page,
       startDate,
@@ -117,7 +117,7 @@
     try {
       loading = true
       let response = await backups.createManualBackup({
-        appId: $store.appId,
+        appId: $appStore.appId,
       })
       await fetchBackups(filterOpt, page)
       notifications.success(response.message)
@@ -143,20 +143,20 @@
   async function handleButtonClick({ detail }) {
     if (detail.type === "backupDelete") {
       await backups.deleteBackup({
-        appId: $store.appId,
+        appId: $appStore.appId,
         backupId: detail.backupId,
       })
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupRestore") {
       await backups.restoreBackup({
-        appId: $store.appId,
+        appId: $appStore.appId,
         backupId: detail.backupId,
         name: detail.restoreBackupName,
       })
       await fetchBackups(filterOpt, page)
     } else if (detail.type === "backupUpdate") {
       await backups.updateBackup({
-        appId: $store.appId,
+        appId: $appStore.appId,
         backupId: detail.backupId,
         name: detail.name,
       })
