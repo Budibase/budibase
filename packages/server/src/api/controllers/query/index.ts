@@ -15,11 +15,14 @@ import {
   SessionCookie,
   QuerySchema,
   FieldType,
+  type ExecuteQueryRequest,
+  type ExecuteQueryResponse,
+  type Row,
 } from "@budibase/types"
 import { ValidQueryNameRegex } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
 
 // simple function to append "readable" to all read queries
@@ -223,7 +226,7 @@ export async function preview(ctx: UserCtx) {
 }
 
 async function execute(
-  ctx: UserCtx,
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | Row[]>,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()

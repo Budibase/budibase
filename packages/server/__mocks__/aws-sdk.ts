@@ -1,7 +1,13 @@
+import fs from "fs"
+import { join } from "path"
+
 module AwsMock {
   const aws: any = {}
 
-  const response = (body: any) => () => ({ promise: () => body })
+  const response = (body: any, extra?: any) => () => ({
+    promise: () => body,
+    ...extra,
+  })
 
   function DocumentClient() {
     // @ts-ignore
@@ -54,7 +60,7 @@ module AwsMock {
 
     // @ts-ignore
     this.getSignedUrl = (operation, params) => {
-      return `http://test.com/${params.Bucket}/${params.Key}`
+      return `http://example.com/${params.Bucket}/${params.Key}`
     }
 
     // @ts-ignore
@@ -73,9 +79,18 @@ module AwsMock {
 
     // @ts-ignore
     this.getObject = jest.fn(
-      response({
-        Body: "",
-      })
+      response(
+        {
+          Body: "",
+        },
+        {
+          createReadStream: jest
+            .fn()
+            .mockReturnValue(
+              fs.createReadStream(join(__dirname, "aws-sdk.ts"))
+            ),
+        }
+      )
     )
   }
 

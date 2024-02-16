@@ -1,5 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    permissions,
+  } from "stores/builder"
   import {
     Icon,
     Divider,
@@ -17,7 +21,6 @@
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
-  import { permissions } from "stores/backend"
 
   export let block
   export let testDataModal

@@ -6,6 +6,7 @@ import * as context from "./context"
 import semver from "semver"
 import { bustCache, withCache, TTL, CacheKey } from "./cache/generic"
 import environment from "./environment"
+import { logAlert } from "./logging"
 
 export const getInstall = async (): Promise<Installation> => {
   return withCache(CacheKey.INSTALLATION, TTL.ONE_DAY, getInstallFromDB, {
@@ -80,27 +81,35 @@ export const checkInstallVersion = async (): Promise<void> => {
   const currentVersion = install.version
   const newVersion = environment.VERSION
 
-  if (currentVersion !== newVersion) {
-    const isUpgrade = semver.gt(newVersion, currentVersion)
-    const isDowngrade = semver.lt(newVersion, currentVersion)
+  try {
+    if (currentVersion !== newVersion) {
+      const isUpgrade = semver.gt(newVersion, currentVersion)
+      const isDowngrade = semver.lt(newVersion, currentVersion)
 
-    const success = await updateVersion(newVersion)
+      const success = await updateVersion(newVersion)
 
-    if (success) {
-      await context.doInIdentityContext(
-        {
-          _id: install.installId,
-          type: IdentityType.INSTALLATION,
-        },
-        async () => {
-          if (isUpgrade) {
-            await events.installation.upgraded(currentVersion, newVersion)
-          } else if (isDowngrade) {
-            await events.installation.downgraded(currentVersion, newVersion)
+      if (success) {
+        await context.doInIdentityContext(
+          {
+            _id: install.installId,
+            type: IdentityType.INSTALLATION,
+          },
+          async () => {
+            if (isUpgrade) {
+              await events.installation.upgraded(currentVersion, newVersion)
+            } else if (isDowngrade) {
+              await events.installation.downgraded(currentVersion, newVersion)
+            }
           }
-        }
-      )
-      await events.identification.identifyInstallationGroup(install.installId)
+        )
+        await events.identification.identifyInstallationGroup(install.installId)
+      }
+    }
+  } catch (err: any) {
+    if (err?.message?.includes("Invalid Version")) {
+      logAlert(`Invalid version "${newVersion}" - is it semver?`)
+    } else {
+      logAlert("Failed to retrieve version", err)
     }
   }
 }

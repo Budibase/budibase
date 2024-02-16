@@ -47,6 +47,8 @@ export const getActionContextKey = action => {
       return key(action.parameters.componentId, ActionTypes.ClearForm)
     case "Change Form Step":
       return key(action.parameters.componentId, ActionTypes.ChangeFormStep)
+    case "Clear Row Selection":
+      return key(action.parameters.componentId, ActionTypes.ClearRowSelection)
     default:
       return null
   }
@@ -211,29 +213,27 @@ const deleteRowHandler = async action => {
 
 const triggerAutomationHandler = async action => {
   const { fields, notificationOverride, timeout } = action.parameters
-  if (fields) {
-    try {
-      const result = await API.triggerAutomation({
-        automationId: action.parameters.automationId,
-        fields,
-        timeout,
-      })
+  try {
+    const result = await API.triggerAutomation({
+      automationId: action.parameters.automationId,
+      fields,
+      timeout,
+    })
 
-      // Value will exist if automation is synchronous, so return it.
-      if (result.value) {
-        if (!notificationOverride) {
-          notificationStore.actions.success("Automation ran successfully")
-        }
-        return { result }
-      }
-
+    // Value will exist if automation is synchronous, so return it.
+    if (result.value) {
       if (!notificationOverride) {
-        notificationStore.actions.success("Automation triggered")
+        notificationStore.actions.success("Automation ran successfully")
       }
-    } catch (error) {
-      // Abort next actions
-      return false
+      return { result }
     }
+
+    if (!notificationOverride) {
+      notificationStore.actions.success("Automation triggered")
+    }
+  } catch (error) {
+    // Abort next actions
+    return false
   }
 }
 const navigationHandler = action => {
@@ -343,7 +343,10 @@ const exportDataHandler = async action => {
         format: action.parameters.type,
         columns: action.parameters.columns,
       })
-      download(data, `${selection.tableId}.${action.parameters.type}`)
+      download(
+        new Blob([data], { type: "text/plain" }),
+        `${selection.tableId}.${action.parameters.type}`
+      )
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
@@ -382,14 +385,14 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const OpenSidePanelHandler = action => {
+const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
     sidePanelStore.actions.open(id)
   }
 }
 
-const CloseSidePanelHandler = () => {
+const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
@@ -409,8 +412,8 @@ const handlerMap = {
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
-  ["Open Side Panel"]: OpenSidePanelHandler,
-  ["Close Side Panel"]: CloseSidePanelHandler,
+  ["Open Side Panel"]: openSidePanelHandler,
+  ["Close Side Panel"]: closeSidePanelHandler,
 }
 
 const confirmTextMap = {
