@@ -4,11 +4,12 @@ import { context } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { BuiltInVM, IsolatedVM } from "./vm"
 
+const USE_ISOLATED_VM = true
+
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
-      const useIsolatedVm = env.ISOLATEDVM_JS_RUNNER
-      if (!useIsolatedVm) {
+      if (!USE_ISOLATED_VM) {
         const vm = new BuiltInVM(ctx, span)
         return vm.execute(js)
       }
@@ -31,8 +32,7 @@ export function init() {
 
           bbCtx.vm = vm
         }
-        const result = vm.execute(js)
-        return result
+        return vm.execute(js)
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
           throw new JsErrorTimeout()
