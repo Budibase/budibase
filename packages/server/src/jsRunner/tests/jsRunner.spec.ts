@@ -49,6 +49,7 @@ describe.each([
     if (useIsolatedVM) {
       expect(output).toBe("Error while executing JS")
     } else {
+      // This was not an issue without isolated-vm
       expect(output).not.toBe("Error while executing JS")
       expect(output).toEqual(process.env)
     }
