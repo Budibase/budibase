@@ -38,10 +38,9 @@ export class IsolatedVM implements VM {
     invocationTimeout?: number
     isolateAccumulatedTimeout?: number
   } = {}) {
-    memoryLimit = memoryLimit || environment.JS_RUNNER_MEMORY_LIMIT
-    invocationTimeout = memoryLimit || 1000
-
-    this.isolate = new ivm.Isolate({ memoryLimit })
+    this.isolate = new ivm.Isolate({
+      memoryLimit: memoryLimit || environment.JS_RUNNER_MEMORY_LIMIT,
+    })
     this.vm = this.isolate.createContextSync()
     this.jail = this.vm.global
     this.jail.setSync("global", this.jail.derefInto())
@@ -51,7 +50,8 @@ export class IsolatedVM implements VM {
       [this.resultKey]: { [this.runResultKey]: "" },
     })
 
-    this.invocationTimeout = invocationTimeout
+    this.invocationTimeout =
+      invocationTimeout || environment.JS_PER_INVOCATION_TIMEOUT_MS
     this.isolateAccumulatedTimeout = isolateAccumulatedTimeout
   }
 
