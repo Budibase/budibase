@@ -7,40 +7,12 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
+import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
     super(message)
     this.name = "ExecutionTimeoutError"
-  }
-}
-
-class ModuleHandler {
-  private modules: {
-    import: string
-    moduleKey: string
-    module: ivm.Module
-  }[] = []
-
-  private generateRandomKey = () => `i${crypto.randomUUID().replace(/-/g, "")}`
-
-  registerModule(module: ivm.Module, imports: string) {
-    this.modules.push({
-      moduleKey: this.generateRandomKey(),
-      import: imports,
-      module: module,
-    })
-  }
-
-  generateImports() {
-    return this.modules
-      .map(m => `import ${m.import} from "${m.moduleKey}"`)
-      .join(";")
-  }
-
-  getModule(key: string) {
-    const module = this.modules.find(m => m.moduleKey === key)
-    return module?.module
   }
 }
 
@@ -54,26 +26,29 @@ export class IsolatedVM implements VM {
   // By default the wrapper returns itself
   private codeWrapper: (code: string) => string = code => code
 
-  private moduleHandler = new ModuleHandler()
-
   private readonly resultKey = "results"
+  private runResultKey: string
 
   constructor({
     memoryLimit,
     invocationTimeout,
     isolateAccumulatedTimeout,
   }: {
-    memoryLimit: number
-    invocationTimeout: number
+    memoryLimit?: number
+    invocationTimeout?: number
     isolateAccumulatedTimeout?: number
-  }) {
+  } = {}) {
+    memoryLimit = memoryLimit || environment.JS_RUNNER_MEMORY_LIMIT
+    invocationTimeout = memoryLimit || 1000
+
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
     this.jail = this.vm.global
     this.jail.setSync("global", this.jail.derefInto())
 
+    this.runResultKey = crypto.randomUUID()
     this.addToContext({
-      [this.resultKey]: { out: "" },
+      [this.resultKey]: { [this.runResultKey]: "" },
     })
 
     this.invocationTimeout = invocationTimeout
@@ -90,6 +65,10 @@ export class IsolatedVM implements VM {
       escape: querystring.escape,
     })
 
+    const cryptoModule = this.registerCallbacks({
+      randomUUID: crypto.randomUUID,
+    })
+
     this.addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
         var parsed = url.parse(str) as any
@@ -98,34 +77,23 @@ export class IsolatedVM implements VM {
       }),
     })
 
-    const injectedRequire = `const require=function req(val) {
+    const injectedRequire = `require=function req(val) {
         switch (val) {
             case "url": return ${urlModule};
             case "querystring": return ${querystringModule};
+            case "crypto": return ${cryptoModule};
         }
       }`
     const helpersSource = loadBundle(BundleType.HELPERS)
-    const helpersModule = this.isolate.compileModuleSync(
-      `${injectedRequire};${helpersSource}`
+    const script = this.isolate.compileScriptSync(
+      `${injectedRequire};${helpersSource};helpers=helpers.default`
     )
 
-    helpersModule.instantiateSync(this.vm, specifier => {
-      if (specifier === "crypto") {
-        const cryptoModule = this.registerCallbacks({
-          randomUUID: crypto.randomUUID,
-        })
-        const module = this.isolate.compileModuleSync(
-          `export default ${cryptoModule}`
-        )
-        module.instantiateSync(this.vm, specifier => {
-          throw new Error(`No imports allowed. Required: ${specifier}`)
-        })
-        return module
-      }
-      throw new Error(`No imports allowed. Required: ${specifier}`)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
     })
 
-    this.moduleHandler.registerModule(helpersModule, "helpers")
     return this
   }
 
@@ -147,9 +115,9 @@ export class IsolatedVM implements VM {
     // 4. Stringify the result in order to convert the result from BSON to json
     this.codeWrapper = code =>
       `(function(){
-            const data = deserialize(bsonData, { validation: { utf8: false } }).data;
+            const data = bson.deserialize(bsonData, { validation: { utf8: false } }).data;
             const result = ${code}
-            return toJson(result);
+            return bson.toJson(result);
         })();`
 
     const bsonSource = loadBundle(BundleType.BSON)
@@ -169,7 +137,7 @@ export class IsolatedVM implements VM {
     })
 
     // "Polyfilling" text decoder. `bson.deserialize` requires decoding. We are creating a bridge function so we don't need to inject the full library
-    const textDecoderPolyfill = class TextDecoder {
+    const textDecoderPolyfill = class TextDecoderMock {
       constructorArgs
 
       constructor(...constructorArgs: any) {
@@ -183,15 +151,17 @@ export class IsolatedVM implements VM {
           functionArgs: input,
         })
       }
-    }.toString()
-    const bsonModule = this.isolate.compileModuleSync(
+    }
+      .toString()
+      .replace(/TextDecoderMock/, "TextDecoder")
+
+    const script = this.isolate.compileScriptSync(
       `${textDecoderPolyfill};${bsonSource}`
     )
-    bsonModule.instantiateSync(this.vm, specifier => {
-      throw new Error(`No imports allowed. Required: ${specifier}`)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
     })
-
-    this.moduleHandler.registerModule(bsonModule, "{deserialize, toJson}")
 
     return this
   }
@@ -206,25 +176,18 @@ export class IsolatedVM implements VM {
       }
     }
 
-    code = `${this.moduleHandler.generateImports()};results.out=${this.codeWrapper(
-      code
-    )};`
+    code = `results['${this.runResultKey}']=${this.codeWrapper(code)}`
 
-    const script = this.isolate.compileModuleSync(code)
+    const script = this.isolate.compileScriptSync(code)
 
-    script.instantiateSync(this.vm, specifier => {
-      const module = this.moduleHandler.getModule(specifier)
-      if (module) {
-        return module
-      }
-
-      throw new Error(`"${specifier}" import not allowed`)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
     })
 
-    script.evaluateSync({ timeout: this.invocationTimeout })
-
+    // We can't rely on the script run result as it will not work for non-transferable values
     const result = this.getFromContext(this.resultKey)
-    return result.out
+    return result[this.runResultKey]
   }
 
   private registerCallbacks(functions: Record<string, any>) {
@@ -264,7 +227,10 @@ export class IsolatedVM implements VM {
   private getFromContext(key: string) {
     const ref = this.vm.global.getSync(key, { reference: true })
     const result = ref.copySync()
-    ref.release()
+
+    new Promise(() => {
+      ref.release()
+    })
     return result
   }
 }
