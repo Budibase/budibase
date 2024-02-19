@@ -49,7 +49,6 @@ function runBuild(entry, outfile) {
     preserveSymlinks: true,
     loader: {
       ".svelte": "copy",
-      ".ivm.bundle.js": "text",
     },
     metafile: true,
     external: [
@@ -70,7 +69,7 @@ function runBuild(entry, outfile) {
     platform: "node",
     outfile,
   }).then(result => {
-    glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
+    glob(`${process.cwd()}/src/**/*.{hbs,ivm.bundle.js}`, {}, (err, files) => {
       for (const file of files) {
         fs.copyFileSync(file, `${process.cwd()}/dist/${path.basename(file)}`)
       }
