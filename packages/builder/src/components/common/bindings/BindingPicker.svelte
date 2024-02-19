@@ -124,11 +124,11 @@
   align="left-outside"
   bind:this={popover}
   anchor={popoverAnchor}
-  maxWidth={600}
+  minWidth={0}
+  maxWidth={480}
   maxHeight={300}
   dismissible={false}
   on:mouseenter={stopHiding}
-  on:mouseleave={hidePopover}
 >
   <div class="helper">
     <Layout gap="S">

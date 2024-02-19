@@ -15,6 +15,7 @@ export default function positionDropdown(element, opts) {
       align,
       maxHeight,
       maxWidth,
+      minWidth,
       useAnchorWidth,
       offset = 5,
       customUpdate,
@@ -28,7 +29,7 @@ export default function positionDropdown(element, opts) {
     const elementBounds = element.getBoundingClientRect()
     let styles = {
       maxHeight: null,
-      minWidth: null,
+      minWidth,
       maxWidth,
       left: null,
       top: null,

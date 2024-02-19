@@ -12,6 +12,7 @@
   export let anchor
   export let align = "right"
   export let portalTarget
+  export let minWidth
   export let maxWidth
   export let maxHeight
   export let open = false
@@ -21,7 +22,6 @@
   export let customHeight
   export let animate = true
   export let customZindex
-
   export let handlePostionUpdate
   export let showPopover = true
   export let clickOutsideOverride = false
@@ -86,6 +86,7 @@
         align,
         maxHeight,
         maxWidth,
+        minWidth,
         useAnchorWidth,
         offset,
         customUpdate: handlePostionUpdate,
