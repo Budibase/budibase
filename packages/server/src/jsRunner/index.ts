@@ -1,13 +1,17 @@
 import env from "../environment"
-import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
-import tracer from "dd-trace"
-
-import { IsolatedVM } from "./vm"
+import { JsErrorTimeout, setJSRunner } from "@budibase/string-templates"
 import { context } from "@budibase/backend-core"
+import tracer from "dd-trace"
+import { BuiltInVM, IsolatedVM } from "./vm"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
+      if (!env.useIsolatedVM.JS_RUNNER) {
+        const vm = new BuiltInVM(ctx, span)
+        return vm.execute(js)
+      }
+
       try {
         const bbCtx = context.getCurrentContext()!
 
@@ -26,9 +30,7 @@ export function init() {
 
           bbCtx.vm = vm
         }
-
         const result = vm.execute(js)
-
         return result
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {

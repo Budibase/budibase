@@ -126,6 +126,10 @@ const environment = {
   getDefaults: () => {
     return DEFAULTS
   },
+  useIsolatedVM: {
+    QUERY_TRANSFORMERS: !!process.env.QUERY_TRANSFORMERS_ISOLATEDVM,
+    JS_RUNNER: !!process.env.JS_RUNNER_ISOLATEDVM,
+  },
 }
 
 // clean up any environment variable edge cases
