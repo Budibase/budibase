@@ -1,7 +1,7 @@
 <script>
   import { Button, Select, Input, Label } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { flags } from "stores/backend"
+  import { flags } from "stores/builder"
   import { helpers, REBOOT_CRON } from "@budibase/shared-core"
 
   const dispatch = createEventDispatcher()
