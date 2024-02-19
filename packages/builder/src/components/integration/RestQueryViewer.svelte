@@ -159,7 +159,7 @@
     newQuery.fields.queryString = queryString
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
-    newQuery.schema = schema
+    newQuery.schema = schema || {}
 
     return newQuery
   }
