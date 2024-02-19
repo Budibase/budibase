@@ -144,5 +144,26 @@ describe("jsRunner (using isolated-vm)", () => {
       expect(result).toBeDefined()
       expect(result).toBe(3)
     })
+
+    it("should handle test case 4", async () => {
+      const context = {
+        "Time Sheets": ["a", "b"]
+      }
+      const result = await processJS(`
+      let hours = 0
+      if (($("[Time Sheets]") != null) == true){
+        for (i = 0; i < $("[Time Sheets]").length; i++){
+          let hoursLogged = "Time Sheets." + i + ".Hours"
+          hours += $(hoursLogged)
+        }
+        return hours
+      }
+      if (($("[Time Sheets]") != null) == false){
+        return hours
+      }
+      `, context)
+      expect(result).toBeDefined()
+      expect(result).toBe("0ab")
+    })
   })
 })
