@@ -1,6 +1,7 @@
 import newid from "./newid"
 import { context, db as dbCore } from "@budibase/backend-core"
 import {
+  FieldType,
   DocumentType,
   FieldSchema,
   RelationshipFieldMetadata,
@@ -9,7 +10,6 @@ import {
   DatabaseQueryOpts,
   LinkDocument,
 } from "@budibase/types"
-import { FieldTypes } from "../constants"
 
 export { DocumentType, VirtualDocumentType } from "@budibase/types"
 
@@ -330,5 +330,5 @@ export function extractViewInfoFromID(viewId: string) {
 export function isRelationshipColumn(
   column: FieldSchema
 ): column is RelationshipFieldMetadata {
-  return column.type === FieldTypes.LINK
+  return column.type === FieldType.LINK
 }

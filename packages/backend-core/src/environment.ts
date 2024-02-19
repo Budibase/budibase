@@ -179,6 +179,7 @@ const environment = {
   ...getPackageJsonFields(),
   DISABLE_PINO_LOGGER: process.env.DISABLE_PINO_LOGGER,
   OFFLINE_MODE: process.env.OFFLINE_MODE,
+  SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   _set(key: any, value: any) {
     process.env[key] = value
     // @ts-ignore

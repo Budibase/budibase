@@ -3,7 +3,7 @@
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import { isOnlyUser } from "builderStore"
+  import { isOnlyUser } from "stores/builder"
 
   let deleteModal
 </script>
@@ -15,9 +15,9 @@
       <Content showMobileNav>
         <SideNav slot="side-nav">
           <SideNavItem
-            text="Automation History"
-            url={$url("./automation-history")}
-            active={$isActive("./automation-history")}
+            text="Automations"
+            url={$url("./automations")}
+            active={$isActive("./automations")}
           />
           <SideNavItem
             text="Backups"

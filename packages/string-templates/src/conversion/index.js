@@ -1,4 +1,4 @@
-const { getHelperList } = require("../helpers")
+const { getJsHelperList } = require("../helpers")
 
 function getLayers(fullBlock) {
   let layers = []
@@ -109,10 +109,10 @@ module.exports.convertHBSBlock = (block, blockNumber) => {
   const layers = getLayers(block)
 
   let value = null
-  const list = getHelperList()
+  const list = getJsHelperList()
   for (let layer of layers) {
     const parts = splitBySpace(layer)
-    if (value || parts.length > 1) {
+    if (value || parts.length > 1 || list[parts[0]]) {
       // first of layer should always be the helper
       const helper = parts.splice(0, 1)
       if (list[helper]) {

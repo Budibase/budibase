@@ -1,12 +1,13 @@
-import ScriptRunner from "../../utilities/scriptRunner"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
+import { VM2 } from "../../jsRunner/vm"
 
-export async function execute(ctx: BBContext) {
+export async function execute(ctx: Ctx) {
   const { script, context } = ctx.request.body
-  const runner = new ScriptRunner(script, context)
-  ctx.body = runner.execute()
+  const runner = new VM2(context)
+  const result = runner.execute(script)
+  ctx.body = result
 }
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: Ctx) {
   ctx.throw(501, "Not currently implemented")
 }

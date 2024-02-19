@@ -10,8 +10,8 @@ const marked = require("marked")
  * https://github.com/budibase/handlebars-helpers
  */
 const { join } = require("path")
+const path = require("path")
 
-const DIRECTORY = join(__dirname, "..", "..", "..")
 const COLLECTIONS = [
   "math",
   "array",
@@ -36,7 +36,7 @@ const ADDED_HELPERS = {
     duration: {
       args: ["time", "durationType"],
       numArgs: 2,
-      example: '{{duration timeLeft "seconds"}} -> a few seconds',
+      example: '{{duration 8 "seconds"}} -> a few seconds',
       description:
         "Produce a humanized duration left/until given an amount of time and the type of time measurement.",
     },
@@ -115,8 +115,12 @@ function getCommentInfo(file, func) {
     docs.example = docs.example.replace("product", "multiply")
   }
   docs.description = blocks[0].trim()
+  docs.acceptsBlock = docs.tags.some(el => el.title === "block")
+  docs.acceptsInline = docs.tags.some(el => el.title === "inline")
   return docs
 }
+
+const excludeFunctions = { string: ["raw"] }
 
 /**
  * This script is very specific to purpose, parsing the handlebars-helpers files to attempt to get information about them.
@@ -125,7 +129,7 @@ function run() {
   const foundNames = []
   for (let collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
-      `${DIRECTORY}/node_modules/${HELPER_LIBRARY}/lib/${collection}.js`,
+      `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
       "utf8"
     )
     const collectionInfo = {}
@@ -136,7 +140,8 @@ function run() {
       // skip built in functions and ones seen already
       if (
         HelperFunctionBuiltin.indexOf(name) !== -1 ||
-        foundNames.indexOf(name) !== -1
+        foundNames.indexOf(name) !== -1 ||
+        excludeFunctions[collection]?.includes(name)
       ) {
         continue
       }
@@ -156,6 +161,7 @@ function run() {
         numArgs: args.length,
         example: jsDocInfo.example || undefined,
         description: jsDocInfo.description,
+        requiresBlock: jsDocInfo.acceptsBlock && !jsDocInfo.acceptsInline,
       })
     }
     outputJSON[collection] = collectionInfo

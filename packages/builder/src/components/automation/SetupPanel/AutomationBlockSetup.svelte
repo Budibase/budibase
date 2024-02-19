@@ -15,11 +15,9 @@
     Icon,
     Checkbox,
     DatePicker,
-    Detail,
   } from "@budibase/bbui"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import { automationStore, selectedAutomation } from "builderStore"
-  import { tables } from "stores/backend"
+  import { automationStore, selectedAutomation, tables } from "stores/builder"
   import { environment, licensing } from "stores/portal"
   import WebhookDisplay from "../Shared/WebhookDisplay.svelte"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
@@ -28,10 +26,13 @@
   import CodeEditorModal from "./CodeEditorModal.svelte"
   import QuerySelector from "./QuerySelector.svelte"
   import QueryParamSelector from "./QueryParamSelector.svelte"
+  import AutomationSelector from "./AutomationSelector.svelte"
   import CronBuilder from "./CronBuilder.svelte"
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import BindingPicker from "components/common/bindings/BindingPicker.svelte"
+  import { BindingHelpers } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
     hbAutocomplete,
@@ -42,7 +43,7 @@
   import {
     getSchemaForDatasourcePlus,
     getEnvironmentBindings,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
   import { onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
@@ -51,12 +52,11 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
-
   let webhookModal
   let drawer
   let fillWidth = true
   let inputData
-  let codeBindingOpen = false
+  let insertAtPos, getCaretPosition
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
@@ -75,6 +75,11 @@
   $: isUpdateRow = stepId === ActionStepID.UPDATE_ROW
   $: codeMode =
     stepId === "EXECUTE_BASH" ? EditorModes.Handlebars : EditorModes.JS
+  $: bindingsHelpers = new BindingHelpers(getCaretPosition, insertAtPos, {
+    disableWrapping: true,
+  })
+  $: editingJs = codeMode === EditorModes.JS
+  $: requiredProperties = block.schema.inputs.required || []
 
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
@@ -101,7 +106,6 @@
       }
     }
   }
-
   const onChange = Utils.sequential(async (e, key) => {
     // We need to cache the schema as part of the definition because it is
     // used in the server to detect relationships. It would be far better to
@@ -145,6 +149,7 @@
     if (!block || !automation) {
       return []
     }
+
     // Find previous steps to the selected one
     let allSteps = [...automation.steps]
 
@@ -156,22 +161,98 @@
     // Extract all outputs from all previous steps as available bindingsx§x
     let bindings = []
     let loopBlockCount = 0
+    const addBinding = (name, value, icon, idx, isLoopBlock, bindingName) => {
+      if (!name) return
+      const runtimeBinding = determineRuntimeBinding(name, idx, isLoopBlock)
+      const categoryName = determineCategoryName(idx, isLoopBlock, bindingName)
+
+      bindings.push(
+        createBindingObject(
+          name,
+          value,
+          icon,
+          idx,
+          loopBlockCount,
+          isLoopBlock,
+          runtimeBinding,
+          categoryName,
+          bindingName
+        )
+      )
+    }
+
+    const determineRuntimeBinding = (name, idx, isLoopBlock) => {
+      let runtimeName
+
+      /* Begin special cases for generating custom schemas based on triggers */
+      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+        return `trigger.fields.${name}`
+      }
+
+      if (
+        idx === 0 &&
+        (automation.trigger?.event === "row:update" ||
+          automation.trigger?.event === "row:save")
+      ) {
+        if (name !== "id" && name !== "revision") return `trigger.row.${name}`
+      }
+      /* End special cases for generating custom schemas based on triggers */
+
+      if (isLoopBlock) {
+        runtimeName = `loop.${name}`
+      } else if (block.name.startsWith("JS")) {
+        runtimeName = `steps[${idx - loopBlockCount}].${name}`
+      } else {
+        runtimeName = `steps.${idx - loopBlockCount}.${name}`
+      }
+      return idx === 0 ? `trigger.${name}` : runtimeName
+    }
+
+    const determineCategoryName = (idx, isLoopBlock, bindingName) => {
+      if (idx === 0) return "Trigger outputs"
+      if (isLoopBlock) return "Loop Outputs"
+      return bindingName
+        ? `${bindingName} outputs`
+        : `Step ${idx - loopBlockCount} outputs`
+    }
+
+    const createBindingObject = (
+      name,
+      value,
+      icon,
+      idx,
+      loopBlockCount,
+      isLoopBlock,
+      runtimeBinding,
+      categoryName,
+      bindingName
+    ) => {
+      return {
+        readableBinding: bindingName
+          ? `${bindingName}.${name}`
+          : runtimeBinding,
+        runtimeBinding,
+        type: value.type,
+        description: value.description,
+        icon,
+        category: categoryName,
+        display: {
+          type: value.type,
+          name,
+          rank: isLoopBlock ? idx + 1 : idx - loopBlockCount,
+        },
+      }
+    }
+
     for (let idx = 0; idx < blockIdx; idx++) {
       let wasLoopBlock = allSteps[idx - 1]?.stepId === ActionStepID.LOOP
       let isLoopBlock =
         allSteps[idx]?.stepId === ActionStepID.LOOP &&
-        allSteps.find(x => x.blockToLoop === block.id)
+        allSteps.some(x => x.blockToLoop === block.id)
+      let schema = cloneDeep(allSteps[idx]?.schema?.outputs?.properties) ?? {}
+      let bindingName =
+        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
 
-      // If the previous block was a loop block, decrement the index so the following
-      // steps are in the correct order
-      if (wasLoopBlock) {
-        loopBlockCount++
-        continue
-      }
-
-      let schema = allSteps[idx]?.schema?.outputs?.properties ?? {}
-
-      // If its a Loop Block, we need to add this custom schema
       if (isLoopBlock) {
         schema = {
           currentItem: {
@@ -180,54 +261,44 @@
           },
         }
       }
-      const outputs = Object.entries(schema)
-      let bindingIcon = ""
-      let bindingRank = 0
-      if (idx === 0) {
-        bindingIcon = automation.trigger.icon
-      } else if (isLoopBlock) {
-        bindingIcon = "Reuse"
-        bindingRank = idx + 1
-      } else {
-        bindingIcon = allSteps[idx].icon
-        bindingRank = idx - loopBlockCount
+
+      if (idx === 0 && automation.trigger?.event === "app:trigger") {
+        schema = Object.fromEntries(
+          Object.keys(automation.trigger.inputs.fields || []).map(key => [
+            key,
+            { type: automation.trigger.inputs.fields[key] },
+          ])
+        )
       }
-      let bindingName =
-        automation.stepNames?.[allSteps[idx - loopBlockCount].id]
-      bindings = bindings.concat(
-        outputs.map(([name, value]) => {
-          let runtimeName = isLoopBlock
-            ? `loop.${name}`
-            : block.name.startsWith("JS")
-            ? `steps[${idx - loopBlockCount}].${name}`
-            : `steps.${idx - loopBlockCount}.${name}`
-          const runtime = idx === 0 ? `trigger.${name}` : runtimeName
-
-          let categoryName
-          if (idx === 0) {
-            categoryName = "Trigger outputs"
-          } else if (isLoopBlock) {
-            categoryName = "Loop Outputs"
-          } else if (bindingName) {
-            categoryName = `${bindingName} outputs`
-          } else {
-            categoryName = `Step ${idx - loopBlockCount} outputs`
+      if (
+        (idx === 0 && automation.trigger.event === "row:update") ||
+        (idx === 0 && automation.trigger.event === "row:save")
+      ) {
+        let table = $tables.list.find(
+          table => table._id === automation.trigger.inputs.tableId
+        )
+        // We want to generate our own schema for the bindings from the table schema itself
+        for (const key in table?.schema) {
+          schema[key] = {
+            type: table.schema[key].type,
           }
+        }
+        // remove the original binding
+        delete schema.row
+      }
+      let icon =
+        idx === 0
+          ? automation.trigger.icon
+          : isLoopBlock
+          ? "Reuse"
+          : allSteps[idx].icon
 
-          return {
-            readableBinding: bindingName ? `${bindingName}.${name}` : runtime,
-            runtimeBinding: runtime,
-            type: value.type,
-            description: value.description,
-            icon: bindingIcon,
-            category: categoryName,
-            display: {
-              type: value.type,
-              name: name,
-              rank: bindingRank,
-            },
-          }
-        })
+      if (wasLoopBlock) {
+        loopBlockCount++
+        continue
+      }
+      Object.entries(schema).forEach(([name, value]) =>
+        addBinding(name, value, icon, idx, isLoopBlock, bindingName)
       )
     }
 
@@ -245,10 +316,8 @@
         })
       )
     }
-
     return bindings
   }
-
   function lookForFilters(properties) {
     if (!properties) {
       return []
@@ -286,8 +355,14 @@
       value.customType !== "code" &&
       value.customType !== "queryParams" &&
       value.customType !== "cron" &&
-      value.customType !== "triggerSchema"
+      value.customType !== "triggerSchema" &&
+      value.customType !== "automationFields"
     )
+  }
+
+  function getFieldLabel(key, value) {
+    const requiredSuffix = requiredProperties.includes(key) ? "*" : ""
+    return `${value.title || (key === "row" ? "Table" : key)} ${requiredSuffix}`
   }
 
   onMount(async () => {
@@ -307,7 +382,7 @@
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{value.title || (key === "row" ? "Table" : key)}</Label
+              : null}>{getFieldLabel(key, value)}</Label
           >
         {/if}
         <div class:field-width={shouldRenderField(value)}>
@@ -421,6 +496,12 @@
               on:change={e => onChange(e, key)}
               value={inputData[key]}
             />
+          {:else if value.customType === "automationFields"}
+            <AutomationSelector
+              on:change={e => onChange(e, key)}
+              value={inputData[key]}
+              {bindings}
+            />
           {:else if value.customType === "queryParams"}
             <QueryParamSelector
               on:change={e => onChange(e, key)}
@@ -468,39 +549,51 @@
             />
           {:else if value.customType === "code"}
             <CodeEditorModal>
-              {#if codeMode == EditorModes.JS}
-                <ActionButton
-                  on:click={() => (codeBindingOpen = !codeBindingOpen)}
-                  quiet
-                  icon={codeBindingOpen ? "ChevronDown" : "ChevronRight"}
-                >
-                  <Detail size="S">Bindings</Detail>
-                </ActionButton>
-                {#if codeBindingOpen}
-                  <pre>{JSON.stringify(bindings, null, 2)}</pre>
-                {/if}
-              {/if}
-              <CodeEditor
-                value={inputData[key]}
-                on:change={e => {
-                  // need to pass without the value inside
-                  onChange({ detail: e.detail }, key)
-                  inputData[key] = e.detail
-                }}
-                completions={stepCompletions}
-                mode={codeMode}
-                autocompleteEnabled={codeMode != EditorModes.JS}
-                height={500}
-              />
-              <div class="messaging">
-                {#if codeMode == EditorModes.Handlebars}
-                  <Icon name="FlashOn" />
-                  <div class="messaging-wrap">
-                    <div>
-                      Add available bindings by typing <strong>
-                        &#125;&#125;
-                      </strong>
-                    </div>
+              <div class:js-editor={editingJs}>
+                <div class:js-code={editingJs} style="width: 100%">
+                  <CodeEditor
+                    value={inputData[key]}
+                    on:change={e => {
+                      // need to pass without the value inside
+                      onChange({ detail: e.detail }, key)
+                      inputData[key] = e.detail
+                    }}
+                    completions={stepCompletions}
+                    mode={codeMode}
+                    autocompleteEnabled={codeMode !== EditorModes.JS}
+                    bind:getCaretPosition
+                    bind:insertAtPos
+                    height={500}
+                  />
+                  <div class="messaging">
+                    {#if codeMode === EditorModes.Handlebars}
+                      <Icon name="FlashOn" />
+                      <div class="messaging-wrap">
+                        <div>
+                          Add available bindings by typing <strong>
+                            &#125;&#125;
+                          </strong>
+                        </div>
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+                {#if editingJs}
+                  <div class="js-binding-picker">
+                    <BindingPicker
+                      {bindings}
+                      allowHelpers={false}
+                      addBinding={binding =>
+                        bindingsHelpers.onSelectBinding(
+                          inputData[key],
+                          binding,
+                          {
+                            js: true,
+                            dontDecode: true,
+                          }
+                        )}
+                      mode="javascript"
+                    />
                   </div>
                 {/if}
               </div>
@@ -586,5 +679,21 @@
 
   .test :global(.drawer) {
     width: 10000px !important;
+  }
+
+  .js-editor {
+    display: flex;
+    flex-direction: row;
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  .js-code {
+    flex: 7;
+  }
+
+  .js-binding-picker {
+    flex: 3;
+    margin-top: calc((var(--spacing-xl) * -1) + 1px);
   }
 </style>

@@ -13,7 +13,7 @@
     Body,
     Helpers,
   } from "@budibase/bbui"
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { RelationshipErrorChecker } from "./relationshipErrors"
   import { onMount } from "svelte"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
@@ -88,8 +88,12 @@
       hasValidated = false
     })
   }
+
   $: valid =
-    getErrorCount(errors) === 0 && allRequiredAttributesSet(relationshipType)
+    getErrorCount(errors) === 0 &&
+    allRequiredAttributesSet(relationshipType) &&
+    fromId &&
+    toId
   $: isManyToMany = relationshipType === RelationshipType.MANY_TO_MANY
   $: isManyToOne =
     relationshipType === RelationshipType.MANY_TO_ONE ||
@@ -369,6 +373,7 @@
   confirmText="Save"
   onConfirm={saveRelationship}
   disabled={!valid}
+  size="L"
 >
   <div class="headings">
     <Detail>Tables</Detail>

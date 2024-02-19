@@ -1,5 +1,6 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
+  import { Helpers } from "@budibase/bbui"
   import { getContext, setContext } from "svelte"
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
@@ -11,6 +12,8 @@
   export let noRowsMessage
   export let steps
   export let dataSource
+  export let buttonPosition = "bottom"
+  export let size
 
   const { fetchDatasourceSchema } = getContext("sdk")
   const component = getContext("component")
@@ -39,7 +42,7 @@
   let schema
 
   $: fetchSchema(dataSource)
-  $: enrichedSteps = enrichSteps(steps, schema, $component.id)
+  $: enrichedSteps = enrichSteps(steps, schema, $component.id, $currentStep)
   $: updateCurrentStep(enrichedSteps, $builderStore, $component)
 
   const updateCurrentStep = (steps, builderStore, component) => {
@@ -113,6 +116,7 @@
         dataSource,
       })
       return {
+        _stepId: Helpers.uuid(),
         fields: getDefaultFields(fields || [], schema),
         title: title ?? defaultProps.title,
         desc,
@@ -127,6 +131,7 @@
     type="form"
     context="form"
     props={{
+      size,
       dataSource,
       actionType: actionType === "Create" ? "Create" : "Update",
       readonly: actionType === "View",
@@ -139,7 +144,7 @@
       },
     }}
   >
-    {#each enrichedSteps as step, stepIdx}
+    {#each enrichedSteps as step, stepIdx (step._stepId)}
       <BlockComponent
         type="formstep"
         props={{ step: stepIdx + 1, _instanceName: `Step ${stepIdx + 1}` }}
@@ -154,16 +159,42 @@
             size: "shrink",
           }}
         >
-          <BlockComponent type="container" order={0}>
-            <BlockComponent type="heading" props={{ text: step.title }} />
+          <BlockComponent
+            type="container"
+            props={{
+              direction: "column",
+              gap: "S",
+            }}
+            order={0}
+          >
+            <BlockComponent
+              type="container"
+              props={{
+                direction: "row",
+                hAlign: "stretch",
+                vAlign: "center",
+                gap: "M",
+                wrap: true,
+              }}
+              order={0}
+            >
+              <BlockComponent type="heading" props={{ text: step.title }} />
+              {#if buttonPosition === "top"}
+                <BlockComponent
+                  type="buttongroup"
+                  props={{ buttons: step.buttons }}
+                />
+              {/if}
+            </BlockComponent>
           </BlockComponent>
           <BlockComponent type="text" props={{ text: step.desc }} order={1} />
+
           <BlockComponent type="container" order={2}>
             <div
               class="form-block fields"
               class:mobile={$context.device.mobile}
             >
-              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${stepIdx}_${fieldIdx}`)}
+              {#each step.fields as field, fieldIdx (`${field.field || field.name}_${fieldIdx}`)}
                 {#if getComponentForField(field)}
                   <BlockComponent
                     type={getComponentForField(field)}
@@ -176,16 +207,13 @@
               {/each}
             </div>
           </BlockComponent>
-          <BlockComponent
-            type="buttongroup"
-            props={{ buttons: step.buttons }}
-            styles={{
-              normal: {
-                "margin-top": "16px",
-              },
-            }}
-            order={3}
-          />
+          {#if buttonPosition === "bottom"}
+            <BlockComponent
+              type="buttongroup"
+              props={{ buttons: step.buttons }}
+              order={3}
+            />
+          {/if}
         </BlockComponent>
       </BlockComponent>
     {/each}

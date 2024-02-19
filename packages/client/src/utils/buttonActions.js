@@ -17,6 +17,56 @@ import { ActionTypes } from "constants"
 import { enrichDataBindings } from "./enrichDataBinding"
 import { Helpers } from "@budibase/bbui"
 
+// Default action handler, which extracts an action from context that was
+// provided by another component and executes it with all action parameters
+const contextActionHandler = async (action, context) => {
+  const key = getActionContextKey(action)
+  const fn = context[key]
+  if (fn) {
+    return await fn(action.parameters)
+  }
+}
+
+// Generates the context key, which is the key that this action depends on in
+// context to provide the function it will run. This is broken out as a util
+// because we reuse this inside the core Component.svelte file to determine
+// what the required action context keys are for all action settings.
+export const getActionContextKey = action => {
+  const type = action?.["##eventHandlerType"]
+  const key = (componentId, type) => `${componentId}_${type}`
+  switch (type) {
+    case "Scroll To Field":
+      return key(action.parameters.componentId, ActionTypes.ScrollTo)
+    case "Update Field Value":
+      return key(action.parameters.componentId, ActionTypes.UpdateFieldValue)
+    case "Validate Form":
+      return key(action.parameters.componentId, ActionTypes.ValidateForm)
+    case "Refresh Data Provider":
+      return key(action.parameters.componentId, ActionTypes.RefreshDatasource)
+    case "Clear Form":
+      return key(action.parameters.componentId, ActionTypes.ClearForm)
+    case "Change Form Step":
+      return key(action.parameters.componentId, ActionTypes.ChangeFormStep)
+    case "Clear Row Selection":
+      return key(action.parameters.componentId, ActionTypes.ClearRowSelection)
+    default:
+      return null
+  }
+}
+
+// If button actions depend on context, they must declare which keys they need
+export const getActionDependentContextKeys = action => {
+  const type = action?.["##eventHandlerType"]
+  switch (type) {
+    case "Save Row":
+    case "Duplicate Row":
+      if (action.parameters?.providerId) {
+        return [action.parameters.providerId]
+      }
+  }
+  return []
+}
+
 const saveRowHandler = async (action, context) => {
   const { fields, providerId, tableId, notificationOverride } =
     action.parameters
@@ -32,20 +82,21 @@ const saveRowHandler = async (action, context) => {
     }
   }
   if (tableId) {
-    payload.tableId = tableId
+    if (tableId.startsWith("view")) {
+      payload._viewId = tableId
+    } else {
+      payload.tableId = tableId
+    }
   }
   try {
     const row = await API.saveRow(payload)
-
     if (!notificationOverride) {
       notificationStore.actions.success("Row saved")
     }
-
     // Refresh related datasources
     await dataSourceStore.actions.invalidateDataSource(tableId, {
       invalidateRelationships: true,
     })
-
     return { row }
   } catch (error) {
     // Abort next actions
@@ -64,7 +115,11 @@ const duplicateRowHandler = async (action, context) => {
       }
     }
     if (tableId) {
-      payload.tableId = tableId
+      if (tableId.startsWith("view")) {
+        payload._viewId = tableId
+      } else {
+        payload.tableId = tableId
+      }
     }
     delete payload._id
     delete payload._rev
@@ -73,12 +128,10 @@ const duplicateRowHandler = async (action, context) => {
       if (!notificationOverride) {
         notificationStore.actions.success("Row saved")
       }
-
       // Refresh related datasources
       await dataSourceStore.actions.invalidateDataSource(tableId, {
         invalidateRelationships: true,
       })
-
       return { row }
     } catch (error) {
       // Abort next actions
@@ -160,45 +213,32 @@ const deleteRowHandler = async action => {
 
 const triggerAutomationHandler = async action => {
   const { fields, notificationOverride, timeout } = action.parameters
-  if (fields) {
-    try {
-      const result = await API.triggerAutomation({
-        automationId: action.parameters.automationId,
-        fields,
-        timeout,
-      })
+  try {
+    const result = await API.triggerAutomation({
+      automationId: action.parameters.automationId,
+      fields,
+      timeout,
+    })
 
-      // Value will exist if automation is synchronous, so return it.
-      if (result.value) {
-        if (!notificationOverride) {
-          notificationStore.actions.success("Automation ran successfully")
-        }
-        return { result }
-      }
-
+    // Value will exist if automation is synchronous, so return it.
+    if (result.value) {
       if (!notificationOverride) {
-        notificationStore.actions.success("Automation triggered")
+        notificationStore.actions.success("Automation ran successfully")
       }
-    } catch (error) {
-      // Abort next actions
-      return false
+      return { result }
     }
+
+    if (!notificationOverride) {
+      notificationStore.actions.success("Automation triggered")
+    }
+  } catch (error) {
+    // Abort next actions
+    return false
   }
 }
 const navigationHandler = action => {
   const { url, peek, externalNewTab } = action.parameters
   routeStore.actions.navigate(url, peek, externalNewTab)
-}
-
-const scrollHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.ScrollTo,
-    {
-      field: action.parameters.field,
-    }
-  )
 }
 
 const queryExecutionHandler = async action => {
@@ -236,47 +276,6 @@ const queryExecutionHandler = async action => {
   }
 }
 
-const executeActionHandler = async (
-  context,
-  componentId,
-  actionType,
-  params
-) => {
-  const fn = context[`${componentId}_${actionType}`]
-  if (fn) {
-    return await fn(params)
-  }
-}
-
-const updateFieldValueHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.UpdateFieldValue,
-    {
-      type: action.parameters.type,
-      field: action.parameters.field,
-      value: action.parameters.value,
-    }
-  )
-}
-
-const validateFormHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.ValidateForm
-  )
-}
-
-const refreshDataProviderHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.RefreshDatasource
-  )
-}
-
 const logoutHandler = async action => {
   await authStore.actions.logOut()
   let redirectUrl = "/builder/auth/login"
@@ -291,23 +290,6 @@ const logoutHandler = async action => {
   if (internal) {
     window.location.reload()
   }
-}
-
-const clearFormHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.ClearForm
-  )
-}
-
-const changeFormStepHandler = async (action, context) => {
-  return await executeActionHandler(
-    context,
-    action.parameters.componentId,
-    ActionTypes.ChangeFormStep,
-    action.parameters
-  )
 }
 
 const closeScreenModalHandler = action => {
@@ -361,7 +343,10 @@ const exportDataHandler = async action => {
         format: action.parameters.type,
         columns: action.parameters.columns,
       })
-      download(data, `${selection.tableId}.${action.parameters.type}`)
+      download(
+        new Blob([data], { type: "text/plain" }),
+        `${selection.tableId}.${action.parameters.type}`
+      )
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
@@ -400,14 +385,14 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const OpenSidePanelHandler = action => {
+const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
     sidePanelStore.actions.open(id)
   }
 }
 
-const CloseSidePanelHandler = () => {
+const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
@@ -417,24 +402,18 @@ const handlerMap = {
   ["Duplicate Row"]: duplicateRowHandler,
   ["Delete Row"]: deleteRowHandler,
   ["Navigate To"]: navigationHandler,
-  ["Scroll To Field"]: scrollHandler,
   ["Execute Query"]: queryExecutionHandler,
   ["Trigger Automation"]: triggerAutomationHandler,
-  ["Validate Form"]: validateFormHandler,
-  ["Update Field Value"]: updateFieldValueHandler,
-  ["Refresh Data Provider"]: refreshDataProviderHandler,
   ["Log Out"]: logoutHandler,
-  ["Clear Form"]: clearFormHandler,
   ["Close Screen Modal"]: closeScreenModalHandler,
-  ["Change Form Step"]: changeFormStepHandler,
   ["Update State"]: updateStateHandler,
   ["Upload File to S3"]: s3UploadHandler,
   ["Export Data"]: exportDataHandler,
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
-  ["Open Side Panel"]: OpenSidePanelHandler,
-  ["Close Side Panel"]: CloseSidePanelHandler,
+  ["Open Side Panel"]: openSidePanelHandler,
+  ["Close Side Panel"]: closeSidePanelHandler,
 }
 
 const confirmTextMap = {
@@ -461,7 +440,12 @@ export const enrichButtonActions = (actions, context) => {
     return actions
   }
 
-  const handlers = actions.map(def => handlerMap[def["##eventHandlerType"]])
+  // Get handlers for each action. If no bespoke handler is configured, fall
+  // back to simply executing this action from context.
+  const handlers = actions.map(def => {
+    return handlerMap[def["##eventHandlerType"]] || contextActionHandler
+  })
+
   return async eventContext => {
     // Button context is built up as actions are executed.
     // Inherit any previous button context which may have come from actions

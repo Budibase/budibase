@@ -67,7 +67,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.create({
+    let table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,
@@ -120,7 +120,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.create({
+    let table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,

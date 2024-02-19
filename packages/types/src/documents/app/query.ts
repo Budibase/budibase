@@ -1,4 +1,11 @@
 import { Document } from "../document"
+import type { Row } from "./row"
+
+export interface QuerySchema {
+  name?: string
+  type: string
+  subtype?: string
+}
 
 export interface Query extends Document {
   datasourceId: string
@@ -6,14 +13,26 @@ export interface Query extends Document {
   parameters: QueryParameter[]
   fields: RestQueryFields | any
   transformer: string | null
-  schema: Record<string, { name?: string; type: string }>
+  schema: Record<string, QuerySchema | string>
   readable: boolean
   queryVerb: string
+}
+
+export interface QueryPreview extends Omit<Query, "_id"> {
+  queryId: string
 }
 
 export interface QueryParameter {
   name: string
   default: string
+}
+
+export interface QueryResponse {
+  rows: any[]
+  keys: string[]
+  info: any
+  extra: any
+  pagination: any
 }
 
 export interface RestQueryFields {
@@ -48,4 +67,22 @@ export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
   flags?: {
     urlName?: boolean
   }
+}
+
+export interface ExecuteQueryRequest {
+  parameters?: { [key: string]: string }
+  pagination?: any
+}
+
+export interface ExecuteQueryResponse {
+  data: Row[]
+}
+
+export enum HttpMethod {
+  GET = "GET",
+  POST = "POST",
+  PATCH = "PATCH",
+  PUT = "PUT",
+  HEAD = "HEAD",
+  DELETE = "DELETE",
 }

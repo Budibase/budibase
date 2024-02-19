@@ -3,14 +3,14 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { store } from "./builderStore"
+import { appStore } from "stores/builder"
 import { get } from "svelte/store"
-import { auth } from "./stores/portal"
+import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
     // Attach app ID header from store
-    let appId = get(store).appId
+    let appId = get(appStore).appId
     if (appId) {
       headers["x-budibase-app-id"] = appId
     }
@@ -44,5 +44,16 @@ export const API = createAPIClient({
         location.reload()
       }
     }
+  },
+  onMigrationDetected: appId => {
+    const updatingUrl = `/builder/app/updating/${appId}`
+
+    if (window.location.pathname === updatingUrl) {
+      return
+    }
+
+    get(navigation).goto(
+      `${updatingUrl}?returnUrl=${encodeURIComponent(window.location.pathname)}`
+    )
   },
 })

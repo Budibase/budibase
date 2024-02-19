@@ -23,7 +23,6 @@
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
       "\\.(css|less|sass|scss)$": "identity-obj-proxy",
       "components(.*)$": "<rootDir>/src/components$1",
-      "builderStore(.*)$": "<rootDir>/src/builderStore$1",
       "stores(.*)$": "<rootDir>/src/stores$1",
       "analytics(.*)$": "<rootDir>/src/analytics$1",
       "constants/backend": "<rootDir>/src/constants/backend/index.js"
@@ -66,6 +65,7 @@
     "@fortawesome/free-solid-svg-icons": "^6.4.2",
     "@spectrum-css/page": "^3.0.1",
     "@spectrum-css/vars": "^3.0.1",
+    "@zerodevx/svelte-json-view": "^1.0.7",
     "codemirror": "^5.59.0",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",

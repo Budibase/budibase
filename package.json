@@ -46,7 +46,7 @@
     "kill-accountportal": "kill-port 3001 4003",
     "kill-all": "yarn run kill-builder && yarn run kill-server && yarn kill-accountportal",
     "dev": "yarn run kill-all && lerna run --parallel prebuild && lerna run --stream dev --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
-    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
+    "dev:noserver": "yarn run kill-builder && lerna run --stream dev:stack:up --ignore @budibase/account-portal-server && lerna run --stream dev --ignore @budibase/backend-core --ignore @budibase/server --ignore @budibase/worker --ignore=@budibase/account-portal-ui --ignore @budibase/account-portal-server",
     "dev:server": "yarn run kill-server && lerna run --stream dev --scope @budibase/worker --scope @budibase/server",
     "dev:accountportal": "yarn kill-accountportal && lerna run dev --stream --scope @budibase/account-portal-ui --scope @budibase/account-portal-server",
     "dev:all": "yarn run kill-all && lerna run --stream dev",
@@ -58,7 +58,7 @@
     "lint": "yarn run lint:eslint && yarn run lint:prettier",
     "lint:fix:eslint": "eslint --fix --max-warnings=0 packages qa-core",
     "lint:fix:prettier": "prettier --write \"packages/**/*.{js,ts,svelte}\" && prettier --write \"examples/**/*.{js,ts,svelte}\" && prettier --write \"qa-core/**/*.{js,ts,svelte}\"",
-    "lint:fix": "yarn run lint:fix:prettier && yarn run lint:fix:eslint",
+    "lint:fix": "yarn run lint:fix:eslint && yarn run lint:fix:prettier",
     "build:specs": "lerna run --stream specs",
     "build:docker:airgap": "node hosting/scripts/airgapped/airgappedDockerBuild",
     "build:docker:airgap:single": "SINGLE_IMAGE=1 node hosting/scripts/airgapped/airgappedDockerBuild",
@@ -97,7 +97,16 @@
     "@budibase/backend-core": "0.0.0",
     "@budibase/shared-core": "0.0.0",
     "@budibase/string-templates": "0.0.0",
-    "@budibase/types": "0.0.0"
+    "@budibase/types": "0.0.0",
+    "tough-cookie": "4.1.3",
+    "node-fetch": "2.6.7",
+    "semver": "7.5.3",
+    "http-cache-semantics": "4.1.1",
+    "msgpackr": "1.10.1",
+    "axios": "1.6.3",
+    "xml2js": "0.6.2",
+    "unset-value": "2.0.1",
+    "passport": "0.6.0"
   },
   "engines": {
     "node": ">=20.0.0 <21.0.0"

@@ -1,10 +1,11 @@
 import { context, events } from "@budibase/backend-core"
 import {
-  AutoFieldSubTypes,
+  AutoFieldSubType,
   FieldSubtype,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
   InternalTable,
+  NumberFieldMetadata,
   RelationshipType,
   Row,
   SaveTableRequest,
@@ -16,7 +17,13 @@ import {
 import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import sdk from "../../../sdk"
-import uuid from "uuid"
+import * as uuid from "uuid"
+
+import tk from "timekeeper"
+import { mocks } from "@budibase/backend-core/tests"
+import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
+
+tk.freeze(mocks.date.MOCK_DATE)
 
 const { basicTable } = setup.structures
 
@@ -58,6 +65,67 @@ describe("/tables", () => {
       expect(res.body.name).toEqual("TestTable")
       expect(events.table.created).toBeCalledTimes(1)
       expect(events.table.created).toBeCalledWith(res.body)
+    })
+
+    it("creates all the passed fields", async () => {
+      const tableData: TableToBuild = {
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+        views: {
+          "table view": {
+            id: "viewId",
+            version: 2,
+            name: "table view",
+            tableId: "tableId",
+          },
+        },
+      }
+      const testTable = await config.createTable(tableData)
+
+      const expected: Table = {
+        ...tableData,
+        type: "table",
+        views: {
+          "table view": {
+            ...tableData.views!["table view"],
+            schema: {
+              autoId: {
+                autocolumn: true,
+                constraints: {
+                  presence: false,
+                  type: "number",
+                },
+                name: "id",
+                type: FieldType.NUMBER,
+                subtype: AutoFieldSubType.AUTO_ID,
+                visible: false,
+              } as NumberFieldMetadata,
+            },
+          },
+        },
+        sourceType: TableSourceType.INTERNAL,
+        sourceId: expect.any(String),
+        _rev: expect.stringMatching(/^1-.+/),
+        _id: expect.any(String),
+        createdAt: mocks.date.MOCK_DATE.toISOString(),
+        updatedAt: mocks.date.MOCK_DATE.toISOString(),
+      }
+      expect(testTable).toEqual(expected)
+
+      const persistedTable = await config.api.table.get(testTable._id!)
+      expect(persistedTable).toEqual(expected)
     })
 
     it("creates a table via data import", async () => {
@@ -152,6 +220,56 @@ describe("/tables", () => {
       expect(res.body.name).toBeUndefined()
     })
 
+    it("updates only the passed fields", async () => {
+      const testTable = await config.createTable({
+        name: "TestTable",
+        type: "table",
+        schema: {
+          autoId: {
+            name: "id",
+            type: FieldType.NUMBER,
+            subtype: AutoFieldSubType.AUTO_ID,
+            autocolumn: true,
+            constraints: {
+              type: "number",
+              presence: false,
+            },
+          },
+        },
+        views: {
+          view1: {
+            id: "viewId",
+            version: 2,
+            name: "table view",
+            tableId: "tableId",
+          },
+        },
+      })
+
+      const response = await request
+        .post(`/api/tables`)
+        .send({
+          ...testTable,
+          name: "UpdatedName",
+        })
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(response.body).toEqual({
+        ...testTable,
+        name: "UpdatedName",
+        _rev: expect.stringMatching(/^2-.+/),
+      })
+
+      const persistedTable = await config.api.table.get(testTable._id!)
+      expect(persistedTable).toEqual({
+        ...testTable,
+        name: "UpdatedName",
+        _rev: expect.stringMatching(/^2-.+/),
+      })
+    })
+
     describe("user table", () => {
       it("should add roleId and email field when adjusting user table schema", async () => {
         const res = await request
@@ -205,7 +323,7 @@ describe("/tables", () => {
           autoId: {
             name: "id",
             type: FieldType.NUMBER,
-            subtype: AutoFieldSubTypes.AUTO_ID,
+            subtype: AutoFieldSubType.AUTO_ID,
             autocolumn: true,
             constraints: {
               type: "number",
@@ -230,6 +348,7 @@ describe("/tables", () => {
 
   describe("fetch", () => {
     let testTable: Table
+    const enrichViewSchemasMock = jest.spyOn(sdk.tables, "enrichViewSchemas")
 
     beforeEach(async () => {
       testTable = await config.createTable(testTable)
@@ -237,6 +356,10 @@ describe("/tables", () => {
 
     afterEach(() => {
       delete testTable._rev
+    })
+
+    afterAll(() => {
+      enrichViewSchemasMock.mockRestore()
     })
 
     it("returns all the tables for that instance in the response body", async () => {
@@ -287,7 +410,7 @@ describe("/tables", () => {
 
     it("should enrich the view schemas for viewsV2", async () => {
       const tableId = config.table!._id!
-      jest.spyOn(sdk.tables, "enrichViewSchemas").mockImplementation(t => ({
+      enrichViewSchemasMock.mockImplementation(t => ({
         ...t,
         views: {
           view1: {
@@ -295,7 +418,7 @@ describe("/tables", () => {
             name: "view1",
             schema: {},
             id: "new_view_id",
-            tableId,
+            tableId: t._id!,
           },
         },
       }))
@@ -362,11 +485,7 @@ describe("/tables", () => {
     let testTable: Table
 
     beforeEach(async () => {
-      testTable = await config.createTable(testTable)
-    })
-
-    afterEach(() => {
-      delete testTable._rev
+      testTable = await config.createTable()
     })
 
     it("returns a success response when a table is deleted.", async () => {
@@ -438,7 +557,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a one-to-many user relationship to a user column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -496,7 +615,7 @@ describe("/tables", () => {
       // We found a bug just after releasing this feature where if the row was created from the
       // users table, not the table linking to it, the migration would succeed but lose the data.
       // This happened because the order of the documents in the link was reversed.
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -554,7 +673,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-many user relationship to a users column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -611,7 +730,7 @@ describe("/tables", () => {
     })
 
     it("should successfully migrate a many-to-one user relationship to a users column", async () => {
-      const table = await config.api.table.create({
+      const table = await config.api.table.save({
         name: "table",
         type: "table",
         sourceId: INTERNAL_TABLE_SOURCE_ID,
@@ -670,7 +789,7 @@ describe("/tables", () => {
     describe("unhappy paths", () => {
       let table: Table
       beforeAll(async () => {
-        table = await config.api.table.create({
+        table = await config.api.table.save({
           name: "table",
           type: "table",
           sourceId: INTERNAL_TABLE_SOURCE_ID,

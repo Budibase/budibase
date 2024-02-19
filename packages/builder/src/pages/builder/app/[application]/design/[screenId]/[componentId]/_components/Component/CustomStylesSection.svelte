@@ -5,24 +5,32 @@
     Drawer,
     Button,
     notifications,
+    AbsTooltip,
+    Icon,
+    Body,
   } from "@budibase/bbui"
-  import { selectedScreen, store } from "builderStore"
+  import { selectedScreen, componentStore } from "stores/builder"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import {
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   export let componentInstance
+  export let componentDefinition
+  export let iconTooltip
+  export let componentTitle
 
   let tempValue
   let drawer
 
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
+
+  $: icon = componentDefinition?.icon
 
   const openDrawer = () => {
     tempValue = runtimeToReadableBinding(
@@ -35,7 +43,7 @@
   const save = async () => {
     try {
       const value = readableToRuntimeBinding(bindings, tempValue)
-      await store.actions.components.updateCustomStyle(value)
+      await componentStore.updateCustomStyle(value)
     } catch (error) {
       notifications.error("Error updating custom style")
     }
@@ -54,7 +62,19 @@
 {#key componentInstance?._id}
   <Drawer bind:this={drawer} title="Custom CSS">
     <svelte:fragment slot="description">
-      Custom CSS overrides all other component styles.
+      <div class="header">
+        Your CSS will overwrite styles for:
+        {#if icon}
+          <AbsTooltip type="info" text={iconTooltip}>
+            <Icon
+              color={`var(--spectrum-global-color-gray-600)`}
+              size="S"
+              name={icon}
+            />
+          </AbsTooltip>
+          <Body size="S"><b>{componentTitle || ""}</b></Body>
+        {/if}
+      </div>
     </svelte:fragment>
     <Button cta slot="buttons" on:click={save}>Save</Button>
     <svelte:component
@@ -68,3 +88,13 @@
     />
   </Drawer>
 {/key}
+
+<style>
+  .header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+</style>

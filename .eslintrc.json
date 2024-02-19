@@ -43,7 +43,18 @@
         "no-useless-escape": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
-        "local-rules/no-budibase-imports": "error"
+        "local-rules/no-budibase-imports": "error",
+        "local-rules/no-test-com": "error"
+      }
+    },
+    {
+      "files": [
+        "packages/builder/**/*",
+        "packages/client/**/*",
+        "packages/frontend-core/**/*"
+      ],
+      "rules": {
+        "no-console": ["error", { "allow": ["warn", "error", "debug"] }]
       }
     }
   ],

@@ -15,7 +15,7 @@
   } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/backend"
+  import { tables, datasources } from "stores/builder"
   import { TableNames, UNEDITABLE_USER_FIELDS } from "constants"
   import {
     FIELDS,
@@ -28,7 +28,7 @@
     PrettyRelationshipDefinitions,
     DB_TYPE_EXTERNAL,
   } from "constants/backend"
-  import { getAutoColumnInformation, buildAutoColumn } from "builderStore/utils"
+  import { getAutoColumnInformation, buildAutoColumn } from "helpers/utils"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import { getBindings } from "components/backend/DataTable/formula"
@@ -170,22 +170,6 @@
           relationshipPart1 = part1
           relationshipPart2 = part2
         }
-      }
-    }
-    if (!savingColumn && !originalName) {
-      let highestNumber = 0
-      Object.keys(table.schema).forEach(columnName => {
-        const columnNumber = extractColumnNumber(columnName)
-        if (columnNumber > highestNumber) {
-          highestNumber = columnNumber
-        }
-        return highestNumber
-      })
-
-      if (highestNumber >= 1) {
-        editableColumn.name = `Column 0${highestNumber + 1}`
-      } else {
-        editableColumn.name = "Column 01"
       }
     }
 
@@ -387,11 +371,6 @@
   function hideDeleteDialog() {
     confirmDeleteDialog.hide()
     deleteColName = ""
-  }
-
-  function extractColumnNumber(columnName) {
-    const match = columnName.match(/Column (\d+)/)
-    return match ? parseInt(match[1]) : 0
   }
 
   function getAllowedTypes() {

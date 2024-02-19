@@ -4,7 +4,7 @@
     tables,
     datasources,
     sortedIntegrations as integrations,
-  } from "stores/backend"
+  } from "stores/builder"
 
   import { hasData } from "stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"

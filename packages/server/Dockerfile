@@ -66,6 +66,7 @@ COPY packages/server/dist/ dist/
 COPY packages/server/docker_run.sh .
 COPY packages/server/builder/ builder/
 COPY packages/server/client/ client/
+COPY packages/server/pm2.config.js .
 
 ARG BUDIBASE_VERSION
 ARG GIT_COMMIT_SHA
@@ -82,6 +83,8 @@ EXPOSE 4001
 # due to this causing yarn to stop installing dev dependencies
 # which are actually needed to get this environment up and running
 ENV NODE_ENV=production
+# this is required for isolated-vm to work on Node 20+
+ENV NODE_OPTIONS="--no-node-snapshot"
 ENV CLUSTER_MODE=${CLUSTER_MODE}
 ENV TOP_LEVEL_PATH=/app
 
