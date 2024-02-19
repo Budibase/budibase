@@ -18,7 +18,8 @@ import { Datasource, Query, SourceName, VM } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
-import environment from "../environment"
+
+const USE_ISOLATED_VM = true
 
 class QueryRunner {
   datasource: Datasource
@@ -129,7 +130,7 @@ class QueryRunner {
     // transform as required
     if (transformer) {
       let runner: VM
-      if (!environment.ISOLATEDVM_QUERY_TRANSFORMERS) {
+      if (!USE_ISOLATED_VM) {
         runner = new VM2({
           data: rows,
           params: enrichedParameters,

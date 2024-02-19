@@ -1,7 +1,4 @@
-import vm from "vm"
-
 import { validate as isValidUUID } from "uuid"
-
 import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
 const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
@@ -9,19 +6,13 @@ const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
 import tk from "timekeeper"
 import { init } from ".."
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
-import environment from "../../environment"
 
 tk.freeze("2021-01-21T12:00:00")
 
-describe.each([
-  ["vm", false],
-  ["isolated-vm", true],
-])("jsRunner (using %s)", (_, useIsolatedVM) => {
+describe("jsRunner (using isolated-vm)", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
-    environment._set("ISOLATEDVM_JS_RUNNER", useIsolatedVM)
-
     // Register js runner
     init()
     await config.init()
@@ -51,13 +42,7 @@ describe.each([
     const output = await processJS(
       `return this.constructor.constructor("return process.env")()`
     )
-    if (useIsolatedVM) {
-      expect(output).toBe("Error while executing JS")
-    } else {
-      // This was not an issue without isolated-vm
-      expect(output).not.toBe("Error while executing JS")
-      expect(output).toEqual(process.env)
-    }
+    expect(output).toBe("Error while executing JS")
   })
 
   describe("helpers", () => {
