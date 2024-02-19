@@ -50,7 +50,8 @@ export class IsolatedVM implements VM {
       [this.resultKey]: { [this.runResultKey]: "" },
     })
 
-    this.invocationTimeout = invocationTimeout || 1000
+    this.invocationTimeout =
+      invocationTimeout || environment.JS_PER_INVOCATION_TIMEOUT_MS
     this.isolateAccumulatedTimeout = isolateAccumulatedTimeout
   }
 
