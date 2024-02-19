@@ -20,7 +20,7 @@
     "manifest.json"
   ],
   "scripts": {
-    "build:es": "yarn node ../../scripts/build.js -e src/index.mjs -o ./dist/bundle.mjs -p tsconfig.json --format=esm",
+    "build:es": "yarn node ../../scripts/build.js -e src/index.mjs -o ./dist/bundle.mjs -p tsconfig.json --format=esm --platform=browser",
     "build": "yarn build:es && tsc",
     "dev": "concurrently \"tsc --watch\" \"yarn build:es --watch\"",
     "test": "jest",

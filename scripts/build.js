@@ -67,11 +67,12 @@ function runBuild(entry, outfile) {
   }
 
   const watch = argv["watch"]
+  const platform = argv["platform"] || "node"
 
   const func = watch ? context : build
   func({
     ...sharedConfig,
-    platform: "node",
+    platform,
     outfile,
   }).then(result => {
     glob(`${process.cwd()}/src/**/*.hbs`, {}, (err, files) => {
