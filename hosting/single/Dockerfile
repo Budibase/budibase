@@ -3,7 +3,6 @@ FROM node:20-slim as build
 # install node-gyp dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends g++ make python3 jq
 
-
 # copy and install dependencies
 WORKDIR /app
 COPY package.json .
@@ -42,7 +41,6 @@ COPY packages/string-templates packages/string-templates
 FROM budibase/couchdb as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
-ENV NODE_MAJOR 20
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
 # e.g. docker build --build-arg TARGETBUILD=aas ....
 ARG TARGETBUILD=single
@@ -60,10 +58,8 @@ RUN apt install -y software-properties-common apt-transport-https ca-certificate
     && apt install postgresql-client-15 -y \
     && apt remove software-properties-common apt-transport-https gpg -y
 
-# install other dependencies, nodejs, oracle requirements, jdk8, redis, nginx
-WORKDIR /nodejs
-COPY scripts/install-node.sh ./install.sh
-RUN chmod +x install.sh && ./install.sh
+# We use pm2 in order to run multiple node processes in a single container
+RUN npm install --global pm2
 
 # setup nginx
 COPY hosting/single/nginx/nginx.conf /etc/nginx
