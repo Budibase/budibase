@@ -61,7 +61,7 @@ export function ssoProfile(user?: User): SSOProfile {
     },
     _json: {
       email: user.email,
-      picture: "http://test.com",
+      picture: "http://example.com",
     },
     provider: generator.string(),
   }

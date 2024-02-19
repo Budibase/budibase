@@ -1,5 +1,5 @@
 <script>
-  import { automationStore } from "builderStore"
+  import { automationStore } from "stores/builder"
   import {
     notifications,
     Input,
