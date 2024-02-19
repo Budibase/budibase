@@ -139,7 +139,10 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        <pre>{@html highlight(hoverTarget.code)}</pre>
+        <pre>
+          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+          {@html highlight(hoverTarget.code)}
+        </pre>
       {/if}
     </Layout>
   </div>
