@@ -12,12 +12,11 @@ const {
   default: TsconfigPathsPlugin,
 } = require("@esbuild-plugins/tsconfig-paths")
 const { nodeExternalsPlugin } = require("esbuild-node-externals")
-
 var { argv } = require("yargs")
 
-function runBuild(entry, outfile) {
+function runBuild(entry, outfile, opts) {
   const isDev = process.env.NODE_ENV !== "production"
-  const tsconfig = argv["p"] || `tsconfig.build.json`
+  const tsconfig = opts?.tsconfig || `tsconfig.build.json`
   const tsconfigPathPluginContent = JSON.parse(
     fs.readFileSync(tsconfig, "utf-8")
   )
@@ -41,11 +40,12 @@ function runBuild(entry, outfile) {
     bundle: true,
     minify: !isDev,
     sourcemap: isDev,
-    format: argv["format"],
+    format: opts?.format,
     tsconfig,
     plugins: [
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
       nodeExternalsPlugin(),
+      ...(opts?.plugins || []),
     ],
     preserveSymlinks: true,
     loader: {
@@ -66,8 +66,8 @@ function runBuild(entry, outfile) {
     ],
   }
 
-  const watch = argv["watch"]
-  const platform = argv["platform"] || "node"
+  const watch = !!opts?.watch
+  const platform = opts?.platform || "node"
 
   const func = watch ? context : build
   func({
@@ -103,7 +103,12 @@ if (require.main === module) {
   const entry = argv["e"] || "./src/index.ts"
   const outfile =
     argv["o"] || `dist/${entry.split("/").pop().replace(".ts", ".js")}`
-  runBuild(entry, outfile)
+  runBuild(entry, outfile, {
+    tsconfig: argv["p"],
+    format: argv["format"],
+    watch: argv["watch"],
+    platform: argv["platform"],
+  })
 } else {
   module.exports = runBuild
 }
