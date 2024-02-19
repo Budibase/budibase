@@ -16,7 +16,9 @@ export function init() {
 
   if (env.LOG_JS_ERRORS) {
     setOnErrorLog((error: Error) => {
-      logging.logWarn(JSON.stringify(serializeError(error)))
+      logging.logWarn(
+        `Error while executing js: ${JSON.stringify(serializeError(error))}`
+      )
     })
   }
 }
