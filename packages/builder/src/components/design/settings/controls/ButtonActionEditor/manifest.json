@@ -156,6 +156,11 @@
       "type": "application",
       "component": "CloseSidePanel",
       "dependsOnFeature": "sidePanel"
+    },
+    {
+      "name": "Clear Row Selection",
+      "type": "data",
+      "component": "ClearRowSelection"
     }
   ]
 }

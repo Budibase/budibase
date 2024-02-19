@@ -14,6 +14,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    appStore,
   } = sdk
   const component = getContext("component")
   const context = getContext("context")
@@ -228,7 +229,12 @@
               </div>
               {#if !embedded}
                 <div class="portal">
-                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                  <Icon
+                    hoverable
+                    name="Apps"
+                    on:click={navigateToPortal}
+                    disabled={$appStore.isDevApp}
+                  />
                 </div>
               {/if}
             </div>

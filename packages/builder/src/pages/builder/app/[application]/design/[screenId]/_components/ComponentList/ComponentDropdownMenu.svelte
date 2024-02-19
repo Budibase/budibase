@@ -1,11 +1,12 @@
 <script>
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
   import { ActionMenu, MenuItem, Icon } from "@budibase/bbui"
 
   export let component
+  export let opened
 
-  $: definition = store.actions.components.getDefinition(component?._component)
-  $: noPaste = !$store.componentToPaste
+  $: definition = componentStore.getDefinition(component?._component)
+  $: noPaste = !$componentStore.componentToPaste
   $: isBlock = definition?.block === true
   $: canEject = !(definition?.ejectable === false)
 
@@ -85,6 +86,39 @@
   >
     Paste
   </MenuItem>
+
+  {#if component?._children?.length}
+    <MenuItem
+      icon="TreeExpand"
+      keyBind="!ArrowRight"
+      on:click={() => keyboardEvent("ArrowRight", false)}
+      disabled={opened}
+    >
+      Expand
+    </MenuItem>
+    <MenuItem
+      icon="TreeCollapse"
+      keyBind="!ArrowLeft"
+      on:click={() => keyboardEvent("ArrowLeft", false)}
+      disabled={!opened}
+    >
+      Collapse
+    </MenuItem>
+    <MenuItem
+      icon="TreeExpandAll"
+      keyBind="Ctrl+!ArrowRight"
+      on:click={() => keyboardEvent("ArrowRight", true)}
+    >
+      Expand All
+    </MenuItem>
+    <MenuItem
+      icon="TreeCollapseAll"
+      keyBind="Ctrl+!ArrowLeft"
+      on:click={() => keyboardEvent("ArrowLeft", true)}
+    >
+      Collapse All
+    </MenuItem>
+  {/if}
 </ActionMenu>
 
 <style>

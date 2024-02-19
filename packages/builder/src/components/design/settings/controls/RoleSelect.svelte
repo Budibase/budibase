@@ -1,6 +1,6 @@
 <script>
   import { Select } from "@budibase/bbui"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { RoleUtils } from "@budibase/frontend-core"
 
   export let value

@@ -7,26 +7,28 @@ import {
   QueryVariable,
   QueryResponse,
 } from "./definitions"
-import ScriptRunner from "../utilities/scriptRunner"
+import { IsolatedVM, VM2 } from "../jsRunner/vm"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Query } from "@budibase/types"
+import { Datasource, Query, SourceName, VM } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
 
+const USE_ISOLATED_VM = true
+
 class QueryRunner {
-  datasource: any
+  datasource: Datasource
   queryVerb: string
   queryId: string
   fields: any
   parameters: any
   pagination: any
-  transformer: any
+  transformer: string
   cachedVariables: any[]
   ctx: any
   queryResponse: any
@@ -68,7 +70,7 @@ class QueryRunner {
       throw "Integration type does not exist."
     }
 
-    if (datasourceClone.config.authConfigs) {
+    if (datasourceClone.config?.authConfigs) {
       const updatedConfigs = []
       for (let config of datasourceClone.config.authConfigs) {
         updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
@@ -93,7 +95,7 @@ class QueryRunner {
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
-    if (datasourceClone.config.defaultHeaders) {
+    if (datasourceClone.config?.defaultHeaders) {
       datasourceClone.config.defaultHeaders = await sdk.queries.enrichContext(
         datasourceClone.config.defaultHeaders,
         enrichedContext
@@ -127,11 +129,26 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
-        data: rows,
-        params: enrichedParameters,
-      })
-      rows = runner.execute()
+      let runner: VM
+      if (!USE_ISOLATED_VM) {
+        runner = new VM2({
+          data: rows,
+          params: enrichedParameters,
+        })
+      } else {
+        transformer = `(function(){\n${transformer}\n})();`
+        let isolatedVm = new IsolatedVM().withContext({
+          data: rows,
+          params: enrichedParameters,
+        })
+        if (datasource.source === SourceName.MONGODB) {
+          isolatedVm = isolatedVm.withParsingBson(rows)
+        }
+
+        runner = isolatedVm
+      }
+
+      rows = runner.execute(transformer)
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -150,11 +167,6 @@ class QueryRunner {
 
       await threadUtils.invalidateDynamicVariables(this.cachedVariables)
       return this.execute()
-    }
-
-    // check for undefined response
-    if (!rows) {
-      rows = []
     }
 
     // needs to an array for next step
