@@ -7,16 +7,26 @@ const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
 import tk from "timekeeper"
 import { init } from ".."
 import TestConfiguration from "../../tests/utilities/TestConfiguration"
+import environment from "../../environment"
 
 tk.freeze("2021-01-21T12:00:00")
 
-describe("jsRunner", () => {
+describe.each([
+  ["vm", false],
+  ["isolated-vm", true],
+])("jsRunner (using %s)", (_, useIsolatedVM) => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    environment._set("ISOLATEDVM_JS_RUNNER", useIsolatedVM)
+
     // Register js runner
     init()
     await config.init()
+  })
+
+  afterAll(() => {
+    config.end()
   })
 
   const processJS = (js: string, context?: object) => {
@@ -30,7 +40,7 @@ describe("jsRunner", () => {
     expect(output).toBe(3)
   })
 
-  it("should prevent sandbox escape", async () => {
+  it.only("should prevent sandbox escape", async () => {
     const output = await processJS(
       `return this.constructor.constructor("return process")()`
     )

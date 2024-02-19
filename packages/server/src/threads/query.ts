@@ -129,7 +129,7 @@ class QueryRunner {
     // transform as required
     if (transformer) {
       let runner: VM
-      if (!environment.useIsolatedVM.QUERY_TRANSFORMERS) {
+      if (!environment.ISOLATEDVM_QUERY_TRANSFORMERS) {
         runner = new VM2({
           data: rows,
           params: enrichedParameters,
