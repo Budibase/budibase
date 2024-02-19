@@ -107,6 +107,8 @@ const environment = {
     parseIntSafe(process.env.JS_RUNNER_MEMORY_LIMIT) ||
     DEFAULTS.JS_RUNNER_MEMORY_LIMIT,
   LOG_JS_ERRORS: process.env.LOG_JS_ERRORS,
+  ISOLATEDVM_QUERY_TRANSFORMERS: true,
+  ISOLATEDVM_JS_RUNNER: true,
   // old
   CLIENT_ID: process.env.CLIENT_ID,
   _set(key: string, value: any) {
@@ -127,8 +129,6 @@ const environment = {
   getDefaults: () => {
     return DEFAULTS
   },
-  ISOLATEDVM_QUERY_TRANSFORMERS: !!process.env.ISOLATEDVM_QUERY_TRANSFORMERS,
-  ISOLATEDVM_JS_RUNNER: !!process.env.ISOLATEDVM_JS_RUNNER,
 }
 
 function cleanVariables() {
