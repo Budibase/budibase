@@ -101,6 +101,8 @@
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
       transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
+      on:mouseenter
+      on:mouseleave
     >
       <slot />
     </div>
