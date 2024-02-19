@@ -7,7 +7,7 @@ import {
   QueryVariable,
   QueryResponse,
 } from "./definitions"
-import ScriptRunner from "../utilities/scriptRunner"
+import { VM2 } from "../jsRunner/vm"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
@@ -26,7 +26,7 @@ class QueryRunner {
   fields: any
   parameters: any
   pagination: any
-  transformer: any
+  transformer: string
   cachedVariables: any[]
   ctx: any
   queryResponse: any
@@ -127,11 +127,11 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
+      const runner = new VM2({
         data: rows,
         params: enrichedParameters,
       })
-      rows = runner.execute()
+      rows = runner.execute(transformer)
     }
 
     // if the request fails we retry once, invalidating the cached value
