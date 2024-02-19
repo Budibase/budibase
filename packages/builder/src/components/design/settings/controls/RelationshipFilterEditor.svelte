@@ -1,11 +1,10 @@
 <script>
-  import { currentAsset } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
   import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { tables } from "stores/backend"
+    findClosestMatchingComponent,
+    findComponent,
+  } from "helpers/components"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { tables, selectedScreen, componentStore } from "stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 
   export let componentInstance
@@ -15,14 +14,29 @@
 
   // Find the closest parent form
   $: form = findClosestMatchingComponent(
-    $currentAsset.props,
+    $selectedScreen.props,
     componentInstance._id,
     component => component._component.endsWith("/form")
   )
 
+  const resolveDatasource = (selectedScreen, componentInstance, form) => {
+    if (!form && componentInstance._id != $componentStore.selectedComponentId) {
+      const block = findComponent(
+        selectedScreen.props,
+        $componentStore.selectedComponentId
+      )
+      const def = componentStore.getDefinition(block._component)
+      return def?.block === true
+        ? getDatasourceForProvider(selectedScreen, block)
+        : {}
+    } else {
+      return getDatasourceForProvider(selectedScreen, form)
+    }
+  }
+
   // Get that form's schema
-  $: datasource = getDatasourceForProvider($currentAsset, form)
-  $: formSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
+  $: datasource = resolveDatasource($selectedScreen, componentInstance, form)
+  $: formSchema = getSchemaForDatasource($selectedScreen, datasource)?.schema
 
   // Get the schema for the relationship field that this picker is using
   $: columnSchema = formSchema?.[column]

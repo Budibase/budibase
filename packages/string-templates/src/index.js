@@ -1,3 +1,4 @@
+const vm = require("vm")
 const handlebars = require("handlebars")
 const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
@@ -10,6 +11,7 @@ const {
 } = require("./utilities")
 const { convertHBSBlock } = require("./conversion")
 const javascript = require("./helpers/javascript")
+const { helpersToRemoveForJs } = require("./helpers/list")
 
 const hbsInstance = handlebars.create()
 registerAll(hbsInstance)
@@ -364,6 +366,7 @@ module.exports.doesContainString = (template, string) => {
 }
 
 module.exports.setJSRunner = javascript.setJSRunner
+module.exports.setOnErrorLog = javascript.setOnErrorLog
 
 module.exports.convertToJS = hbs => {
   const blocks = exports.findHBSBlocks(hbs)
@@ -394,3 +397,25 @@ module.exports.convertToJS = hbs => {
 }
 
 module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
+
+const errors = require("./errors")
+// We cannot use dynamic exports, otherwise the typescript file will not be generating it
+module.exports.JsErrorTimeout = errors.JsErrorTimeout
+
+module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+
+if (process && !process.env.NO_JS) {
+  /**
+   * Use polyfilled vm to run JS scripts in a browser Env
+   */
+  javascript.setJSRunner((js, context) => {
+    context = {
+      ...context,
+      alert: undefined,
+      setInterval: undefined,
+      setTimeout: undefined,
+    }
+    vm.createContext(context)
+    return vm.runInNewContext(js, context, { timeout: 1000 })
+  })
+}

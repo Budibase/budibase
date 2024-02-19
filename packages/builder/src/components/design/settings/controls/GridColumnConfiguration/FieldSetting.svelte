@@ -1,15 +1,25 @@
 <script>
   import EditComponentPopover from "../EditComponentPopover.svelte"
-  import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { store } from "builderStore"
+  import { FIELDS } from "constants/backend"
 
   export let item
   export let anchor
 
   const dispatch = createEventDispatcher()
+
+  $: fieldIconLookupMap = buildFieldIconLookupMap(FIELDS)
+
+  const buildFieldIconLookupMap = fields => {
+    let map = {}
+    Object.values(fields).forEach(fieldInfo => {
+      map[fieldInfo.type] = fieldInfo.icon
+    })
+    return map
+  }
+
   const onToggle = item => {
     return e => {
       item.active = e.detail
@@ -24,13 +34,6 @@
         return { ...setting, nested: true }
       })
   }
-
-  const getIcon = () => {
-    const component = `@budibase/standard-components/${
-      FieldTypeToComponentMap[item.columnType]
-    }`
-    return store.actions.components.getDefinition(component).icon
-  }
 </script>
 
 <div class="list-item-body">
@@ -42,7 +45,7 @@
       on:change
     >
       <div slot="header" class="type-icon">
-        <Icon name={getIcon()} />
+        <Icon name={fieldIconLookupMap[item.columnType]} />
         <span>{item.field}</span>
       </div>
     </EditComponentPopover>

@@ -69,7 +69,10 @@
     }
     const col = linkColumn || "_id"
     const split = url.split("/:")
-    return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
+    if (split.length > 1) {
+      return `${split[0]}/{{ ${safe(repeaterId)}.${safe(col)} }}`
+    }
+    return url
   }
 
   // Load the datasource schema so we can determine column types
@@ -88,7 +91,7 @@
     <BlockComponent
       type="form"
       bind:id={formId}
-      props={{ dataSource, disableValidation: true }}
+      props={{ dataSource, disableSchemaValidation: true }}
     >
       {#if title || enrichedSearchColumns?.length || showTitleButton}
         <BlockComponent

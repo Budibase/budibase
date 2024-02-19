@@ -1,12 +1,12 @@
 <script>
   import { createEventDispatcher, setContext } from "svelte"
-  import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
-  import { getDatasourceForProvider } from "builderStore/dataBinding"
-  import { currentAsset, store } from "builderStore"
+  import ComponentSettingsSection from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import { getDatasourceForProvider } from "dataBinding"
+  import { selectedScreen, componentStore, previewStore } from "stores/builder"
   import { Helpers } from "@budibase/bbui"
   import { derived, writable } from "svelte/store"
   import { Utils } from "@budibase/frontend-core"
-  import { cloneDeep } from "lodash"
+  import { cloneDeep, isEqual } from "lodash"
 
   export let componentInstance
   export let componentBindings
@@ -21,21 +21,32 @@
   const currentStep = derived(multiStepStore, state => state.currentStep)
   const componentType = "@budibase/standard-components/multistepformblockstep"
 
+  let cachedValue
+  let cachedInstance = {}
+
+  $: if (!isEqual(cachedValue, value)) {
+    cachedValue = value
+  }
+
+  $: if (!isEqual(componentInstance, cachedInstance)) {
+    cachedInstance = componentInstance
+  }
+
   setContext("multi-step-form-block", multiStepStore)
 
-  $: stepCount = value?.length || 0
+  $: stepCount = cachedValue?.length || 0
   $: updateStore(stepCount)
-  $: dataSource = getDatasourceForProvider($currentAsset, componentInstance)
+  $: dataSource = getDatasourceForProvider($selectedScreen, cachedInstance)
   $: emitCurrentStep($currentStep)
   $: stepLabel = getStepLabel($multiStepStore)
   $: stepDef = getDefinition(stepLabel)
-  $: stepSettings = value?.[$currentStep] || {}
+  $: stepSettings = cachedValue?.[$currentStep] || {}
   $: defaults = Utils.buildMultiStepFormBlockDefaultProps({
-    _id: componentInstance._id,
+    _id: cachedInstance._id,
     stepCount: $multiStepStore.stepCount,
     currentStep: $multiStepStore.currentStep,
-    actionType: componentInstance.actionType,
-    dataSource: componentInstance.dataSource,
+    actionType: cachedInstance.actionType,
+    dataSource: cachedInstance.dataSource,
   })
   $: stepInstance = {
     _id: Helpers.uuid(),
@@ -51,7 +62,7 @@
   }
 
   const getDefinition = stepLabel => {
-    let def = cloneDeep(store.actions.components.getDefinition(componentType))
+    let def = cloneDeep(componentStore.getDefinition(componentType))
     def.settings.find(x => x.key === "steps").label = stepLabel
     return def
   }
@@ -74,7 +85,7 @@
   }
 
   const emitCurrentStep = step => {
-    store.actions.preview.sendEvent("builder-meta", {
+    previewStore.sendEvent("builder-meta", {
       componentId: componentInstance._id,
       step: step,
     })

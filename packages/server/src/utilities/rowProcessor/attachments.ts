@@ -1,6 +1,12 @@
-import { FieldTypes, ObjectStoreBuckets } from "../../constants"
+import { ObjectStoreBuckets } from "../../constants"
 import { context, db as dbCore, objectStore } from "@budibase/backend-core"
-import { RenameColumn, Row, RowAttachment, Table } from "@budibase/types"
+import {
+  FieldType,
+  RenameColumn,
+  Row,
+  RowAttachment,
+  Table,
+} from "@budibase/types"
 
 export class AttachmentCleanup {
   static async coreCleanup(fileListFn: () => string[]): Promise<void> {
@@ -28,7 +34,7 @@ export class AttachmentCleanup {
       let files: string[] = []
       const tableSchema = opts.oldTable?.schema || table.schema
       for (let [key, schema] of Object.entries(tableSchema)) {
-        if (schema.type !== FieldTypes.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }
         const columnRemoved = opts.oldTable && !table.schema[key]
@@ -62,10 +68,13 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldTypes.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }
         rows.forEach(row => {
+          if (!Array.isArray(row[key])) {
+            return
+          }
           files = files.concat(
             row[key].map((attachment: any) => attachment.key)
           )
@@ -79,7 +88,7 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       for (let [key, schema] of Object.entries(table.schema)) {
-        if (schema.type !== FieldTypes.ATTACHMENT) {
+        if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }
         const oldKeys =

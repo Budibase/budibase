@@ -9,7 +9,7 @@ function user() {
     _id: "user",
     _rev: "rev",
     createdAt: Date.now(),
-    email: "test@test.com",
+    email: "test@example.com",
     roles: {},
     tenantId: "default",
     status: "active",

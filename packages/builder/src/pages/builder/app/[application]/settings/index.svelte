@@ -1,5 +1,5 @@
 <script>
   import { redirect } from "@roxi/routify"
 
-  $redirect("../settings/automation-history")
+  $redirect("../settings/automations")
 </script>

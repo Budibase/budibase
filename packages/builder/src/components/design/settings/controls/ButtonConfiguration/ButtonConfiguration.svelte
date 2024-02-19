@@ -2,9 +2,10 @@
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
-  import { getEventContextBindings } from "builderStore/dataBinding"
+  import { componentStore } from "stores/builder"
+  import { getEventContextBindings } from "dataBinding"
+  import { cloneDeep, isEqual } from "lodash/fp"
 
   export let componentInstance
   export let componentBindings
@@ -17,8 +18,13 @@
   const dispatch = createEventDispatcher()
 
   let focusItem
+  let cachedValue
 
-  $: buttonList = sanitizeValue(value) || []
+  $: if (!isEqual(value, cachedValue)) {
+    cachedValue = cloneDeep(value)
+  }
+
+  $: buttonList = sanitizeValue(cachedValue) || []
   $: buttonCount = buttonList.length
   $: eventContextBindings = getEventContextBindings({
     componentInstance,
@@ -61,7 +67,7 @@
   }
 
   const buildPseudoInstance = cfg => {
-    return store.actions.components.createInstance(
+    return componentStore.createInstance(
       `@budibase/standard-components/button`,
       {
         _instanceName: Helpers.uuid(),

@@ -16,7 +16,6 @@ import {
   expectAnyExternalColsAttributes,
   generator,
 } from "@budibase/backend-core/tests"
-import datasource from "../../../../../api/routes/datasource"
 
 jest.unmock("mysql2/promise")
 
@@ -30,13 +29,15 @@ describe.skip("external", () => {
   beforeAll(async () => {
     const container = await new GenericContainer("mysql")
       .withExposedPorts(3306)
-      .withEnv("MYSQL_ROOT_PASSWORD", "admin")
-      .withEnv("MYSQL_DATABASE", "db")
-      .withEnv("MYSQL_USER", "user")
-      .withEnv("MYSQL_PASSWORD", "password")
+      .withEnvironment({
+        MYSQL_ROOT_PASSWORD: "admin",
+        MYSQL_DATABASE: "db",
+        MYSQL_USER: "user",
+        MYSQL_PASSWORD: "password",
+      })
       .start()
 
-    const host = container.getContainerIpAddress()
+    const host = container.getHost()
     const port = container.getMappedPort(3306)
 
     await config.init()

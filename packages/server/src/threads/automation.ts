@@ -43,22 +43,19 @@ const CRON_STEP_ID = triggerDefs.CRON.stepId
 const STOPPED_STATUS = { success: true, status: AutomationStatus.STOPPED }
 
 function getLoopIterations(loopStep: LoopStep) {
-  let binding = loopStep.inputs.binding
+  const binding = loopStep.inputs.binding
   if (!binding) {
     return 0
   }
-  const isString = typeof binding === "string"
   try {
-    if (isString) {
-      binding = JSON.parse(binding)
+    const json = typeof binding === "string" ? JSON.parse(binding) : binding
+    if (Array.isArray(json)) {
+      return json.length
     }
   } catch (err) {
     // ignore error - wasn't able to parse
   }
-  if (Array.isArray(binding)) {
-    return binding.length
-  }
-  if (isString) {
+  if (typeof binding === "string") {
     return automationUtils.stringSplit(binding).length
   }
   return 0
@@ -256,7 +253,7 @@ class Orchestrator {
         this._context.env = await sdkUtils.getEnvironmentVariables()
         let automation = this._automation
         let stopped = false
-        let loopStep: AutomationStep | undefined = undefined
+        let loopStep: LoopStep | undefined = undefined
 
         let stepCount = 0
         let loopStepNumber: any = undefined
@@ -306,12 +303,12 @@ class Orchestrator {
             if (timeout) {
               setTimeout(() => {
                 timeoutFlag = true
-              }, timeout || 12000)
+              }, timeout || env.AUTOMATION_THREAD_TIMEOUT)
             }
 
             stepCount++
             if (step.stepId === LOOP_STEP_ID) {
-              loopStep = step
+              loopStep = step as LoopStep
               loopStepNumber = stepCount
               continue
             }
@@ -331,7 +328,6 @@ class Orchestrator {
                 }
                 try {
                   loopStep.inputs.binding = automationUtils.typecastForLooping(
-                    loopStep as LoopStep,
                     loopStep.inputs as LoopInput
                   )
                 } catch (err) {
@@ -348,7 +344,7 @@ class Orchestrator {
                   loopStep = undefined
                   break
                 }
-                let item = []
+                let item: any[] = []
                 if (
                   typeof loopStep.inputs.binding === "string" &&
                   loopStep.inputs.option === "String"
@@ -399,7 +395,8 @@ class Orchestrator {
 
                 if (
                   index === env.AUTOMATION_MAX_ITERATIONS ||
-                  index === parseInt(loopStep.inputs.iterations)
+                  (loopStep.inputs.iterations &&
+                    index === parseInt(loopStep.inputs.iterations))
                 ) {
                   this.updateContextAndOutput(
                     loopStepNumber,
@@ -615,7 +612,7 @@ export function execute(job: Job<AutomationData>, callback: WorkerCallback) {
   })
 }
 
-export function executeSynchronously(job: Job) {
+export async function executeInThread(job: Job<AutomationData>) {
   const appId = job.data.event.appId
   if (!appId) {
     throw new Error("Unable to execute, event doesn't contain app ID.")
@@ -624,13 +621,13 @@ export function executeSynchronously(job: Job) {
   const timeoutPromise = new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(new Error("Timeout exceeded"))
-    }, job.data.event.timeout || 12000)
+    }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)
   })
 
-  return context.doInAppContext(appId, async () => {
+  return await context.doInAppContext(appId, async () => {
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
-    return context.doInEnvironmentContext(envVars, async () => {
+    return await context.doInEnvironmentContext(envVars, async () => {
       const automationOrchestrator = new Orchestrator(job)
       return await Promise.race([
         automationOrchestrator.execute(),

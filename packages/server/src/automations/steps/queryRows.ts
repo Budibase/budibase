@@ -1,9 +1,9 @@
 import * as rowController from "../../api/controllers/row"
 import * as tableController from "../../api/controllers/table"
-import { FieldTypes } from "../../constants"
 import { buildCtx } from "./utils"
 import * as automationUtils from "../automationUtils"
 import {
+  FieldType,
   AutomationActionStepId,
   AutomationCustomIOType,
   AutomationFeature,
@@ -103,8 +103,7 @@ function typeCoercion(filters: SearchFilters, table: Table) {
     return filters
   }
   for (let key of Object.keys(filters)) {
-    // @ts-ignore
-    const searchParam = filters[key]
+    const searchParam = filters[key as keyof SearchFilters]
     if (typeof searchParam === "object") {
       for (let [property, value] of Object.entries(searchParam)) {
         // We need to strip numerical prefixes here, so that we can look up
@@ -116,8 +115,14 @@ function typeCoercion(filters: SearchFilters, table: Table) {
         if (!column || typeof value !== "string") {
           continue
         }
-        if (column.type === FieldTypes.NUMBER) {
-          searchParam[property] = parseFloat(value)
+        if (column.type === FieldType.NUMBER) {
+          if (key === "oneOf") {
+            searchParam[property] = value
+              .split(",")
+              .map(item => parseFloat(item))
+          } else {
+            searchParam[property] = parseFloat(value)
+          }
         }
       }
     }
@@ -143,11 +148,11 @@ export async function run({ inputs, appId }: AutomationStepInput) {
     }
   }
   const table = await getTable(appId, tableId)
-  let sortType = FieldTypes.STRING
+  let sortType = FieldType.STRING
   if (table && table.schema && table.schema[sortColumn] && sortColumn) {
     const fieldType = table.schema[sortColumn].type
     sortType =
-      fieldType === FieldTypes.NUMBER ? FieldTypes.NUMBER : FieldTypes.STRING
+      fieldType === FieldType.NUMBER ? FieldType.NUMBER : FieldType.STRING
   }
   const ctx: any = buildCtx(appId, null, {
     params: {

@@ -14,6 +14,7 @@ import {
   dndIsDragging,
   confirmationStore,
   roleStore,
+  appStore,
   stateStore,
   createContextStore,
 } from "stores"
@@ -28,12 +29,14 @@ import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
+import { fetchData, LuceneUtils, Constants } from "@budibase/frontend-core"
 
 export default {
   API,
 
   // Stores
   authStore,
+  appStore,
   notificationStore,
   routeStore,
   rowSelectionStore,
@@ -54,6 +57,9 @@ export default {
   linkable,
   getAction,
   fetchDatasourceSchema,
+  fetchData,
+  LuceneUtils,
+  ContextScopes: Constants.ContextScopes,
   getAPIKey,
   enrichButtonActions,
   processStringSync,

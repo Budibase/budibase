@@ -9,12 +9,14 @@ import * as serverLog from "./steps/serverLog"
 import * as discord from "./steps/discord"
 import * as slack from "./steps/slack"
 import * as zapier from "./steps/zapier"
+import * as n8n from "./steps/n8n"
 import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
 import * as queryRow from "./steps/queryRows"
 import * as loop from "./steps/loop"
 import * as collect from "./steps/collect"
+import * as triggerAutomationRun from "./steps/triggerAutomationRun"
 import env from "../environment"
 import {
   AutomationStepSchema,
@@ -41,11 +43,13 @@ const ACTION_IMPLS: Record<
   FILTER: filter.run,
   QUERY_ROWS: queryRow.run,
   COLLECT: collect.run,
+  TRIGGER_AUTOMATION_RUN: triggerAutomationRun.run,
   // these used to be lowercase step IDs, maintain for backwards compat
   discord: discord.run,
   slack: slack.run,
   zapier: zapier.run,
   integromat: make.run,
+  n8n: n8n.run,
 }
 export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
   {
@@ -62,11 +66,13 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
     QUERY_ROWS: queryRow.definition,
     LOOP: loop.definition,
     COLLECT: collect.definition,
+    TRIGGER_AUTOMATION_RUN: triggerAutomationRun.definition,
     // these used to be lowercase step IDs, maintain for backwards compat
     discord: discord.definition,
     slack: slack.definition,
     zapier: zapier.definition,
     integromat: make.definition,
+    n8n: n8n.definition,
   }
 
 // don't add the bash script/definitions unless in self host

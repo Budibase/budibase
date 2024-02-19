@@ -1,12 +1,11 @@
-import { FieldSubtype } from "@budibase/types"
-import { FieldTypes } from "../constants"
+import { FieldType, FieldSubtype } from "@budibase/types"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
 import { parseCsvExport } from "../api/controllers/view/exporters"
 
 interface SchemaColumn {
   readonly name: string
-  readonly type: FieldTypes
+  readonly type: FieldType
   readonly subtype: FieldSubtype
   readonly autocolumn?: boolean
   readonly constraints?: {
@@ -36,13 +35,13 @@ interface ValidationResults {
 }
 
 const PARSERS: any = {
-  [FieldTypes.NUMBER]: (attribute?: string) => {
+  [FieldType.NUMBER]: (attribute?: string) => {
     if (!attribute) {
       return attribute
     }
     return Number(attribute)
   },
-  [FieldTypes.DATETIME]: (attribute?: string) => {
+  [FieldType.DATETIME]: (attribute?: string) => {
     if (!attribute) {
       return attribute
     }
@@ -60,7 +59,7 @@ export function isSchema(schema: any): schema is Schema {
         column !== null &&
         typeof column === "object" &&
         typeof column.type === "string" &&
-        Object.values(FieldTypes).includes(column.type as FieldTypes)
+        Object.values(FieldType).includes(column.type as FieldType)
       )
     })
   )
@@ -110,20 +109,17 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
         isAutoColumn
       ) {
         return
-      } else if (
-        columnType === FieldTypes.NUMBER &&
-        isNaN(Number(columnData))
-      ) {
+      } else if (columnType === FieldType.NUMBER && isNaN(Number(columnData))) {
         // If provided must be a valid number
         results.schemaValidation[columnName] = false
       } else if (
         // If provided must be a valid date
-        columnType === FieldTypes.DATETIME &&
+        columnType === FieldType.DATETIME &&
         isNaN(new Date(columnData).getTime())
       ) {
         results.schemaValidation[columnName] = false
       } else if (
-        columnType === FieldTypes.BB_REFERENCE &&
+        columnType === FieldType.BB_REFERENCE &&
         !isValidBBReference(columnData, columnSubtype)
       ) {
         results.schemaValidation[columnName] = false
@@ -155,15 +151,15 @@ export function parse(rows: Rows, schema: Schema): Rows {
       const columnType = schema[columnName].type
       const columnSubtype = schema[columnName].subtype
 
-      if (columnType === FieldTypes.NUMBER) {
+      if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
-      } else if (columnType === FieldTypes.DATETIME) {
+      } else if (columnType === FieldType.DATETIME) {
         // If provided must be a valid date
         parsedRow[columnName] = columnData
           ? new Date(columnData).toISOString()
           : columnData
-      } else if (columnType === FieldTypes.BB_REFERENCE) {
+      } else if (columnType === FieldType.BB_REFERENCE) {
         const parsedValues =
           !!columnData && parseCsvExport<{ _id: string }[]>(columnData)
         if (!parsedValues) {

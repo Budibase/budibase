@@ -21,7 +21,9 @@ import {
   Table,
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
+  Query,
 } from "@budibase/types"
+import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 const { BUILTIN_ROLE_IDS } = roles
 
@@ -153,10 +155,63 @@ export function basicAutomation(appId?: string): Automation {
   }
 }
 
-export function loopAutomation(tableId: string, loopOpts?: any): Automation {
+export function serverLogAutomation(appId?: string): Automation {
+  return {
+    name: "My Automation",
+    screenId: "kasdkfldsafkl",
+    live: true,
+    uiTree: {},
+    definition: {
+      trigger: {
+        stepId: AutomationTriggerStepId.APP,
+        name: "test",
+        tagline: "test",
+        icon: "test",
+        description: "test",
+        type: AutomationStepType.TRIGGER,
+        id: "test",
+        inputs: {},
+        schema: {
+          inputs: {
+            properties: {},
+          },
+          outputs: {
+            properties: {},
+          },
+        },
+      },
+      steps: [
+        {
+          stepId: AutomationActionStepId.SERVER_LOG,
+          name: "Backend log",
+          tagline: "Console log a value in the backend",
+          icon: "Monitoring",
+          description: "Logs the given text to the server (using console.log)",
+          internal: true,
+          features: {
+            LOOPING: true,
+          },
+          inputs: {
+            text: "log statement",
+          },
+          schema: BUILTIN_ACTION_DEFINITIONS.SERVER_LOG.schema,
+          id: "y8lkZbeSe",
+          type: AutomationStepType.ACTION,
+        },
+      ],
+    },
+    type: "automation",
+    appId: appId!,
+  }
+}
+
+export function loopAutomation(
+  tableId: string,
+  loopOpts?: LoopInput
+): Automation {
   if (!loopOpts) {
     loopOpts = {
-      option: "Array",
+      option: LoopStepType.ARRAY,
       binding: "{{ steps.1.rows }}",
     }
   }
@@ -309,7 +364,7 @@ export function basicDatasource(): { datasource: Datasource } {
   }
 }
 
-export function basicQuery(datasourceId: string) {
+export function basicQuery(datasourceId: string): Query {
   return {
     datasourceId: datasourceId,
     name: "New Query",
@@ -317,6 +372,8 @@ export function basicQuery(datasourceId: string) {
     fields: {},
     schema: {},
     queryVerb: "read",
+    transformer: null,
+    readable: true,
   }
 }
 

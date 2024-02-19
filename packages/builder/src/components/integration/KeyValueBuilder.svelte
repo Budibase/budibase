@@ -35,6 +35,7 @@
   export let bindingDrawerLeft
   export let allowHelpers = true
   export let customButtonText = null
+  export let compare = (option, value) => option === value
 
   let fields = Object.entries(object || {}).map(([name, value]) => ({
     name,
@@ -84,6 +85,16 @@
     activity = newActivity
     dispatch("change", fields)
   }
+
+  function isJsonArray(value) {
+    if (!value || typeof value === "string") {
+      return false
+    }
+    if (value.type === "array") {
+      return true
+    }
+    return value.type === "json" && value.subtype === "array"
+  }
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
@@ -111,8 +122,15 @@
         bind:value={field.name}
         on:blur={changed}
       />
-      {#if options}
-        <Select bind:value={field.value} on:change={changed} {options} />
+      {#if isJsonArray(field.value)}
+        <Select readonly={true} value="Array" options={["Array"]} />
+      {:else if options}
+        <Select
+          bind:value={field.value}
+          {compare}
+          on:change={changed}
+          {options}
+        />
       {:else if bindings && bindings.length}
         <DrawerBindableInput
           {bindings}

@@ -1,8 +1,8 @@
 <script>
   import { ModalContent, Input } from "@budibase/bbui"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import { get } from "svelte/store"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
 
   export let onConfirm
   export let onCancel
@@ -13,6 +13,7 @@
   const appPrefix = "/app"
   let touched = false
   let error
+  let modal
 
   $: appUrl = screenUrl
     ? `${window.location.origin}${appPrefix}${screenUrl}`
@@ -35,7 +36,7 @@
     if (!screenRole) {
       return false
     }
-    return get(store).screens.some(
+    return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === screenRole
@@ -50,6 +51,7 @@
 </script>
 
 <ModalContent
+  bind:this={modal}
   size="M"
   title={"Screen details"}
   {confirmText}
@@ -58,15 +60,17 @@
   cancelText={"Back"}
   disabled={!screenUrl || error || !touched}
 >
-  <Input
-    label="Enter a URL for the new screen"
-    {error}
-    bind:value={screenUrl}
-    on:change={routeChanged}
-  />
-  <div class="app-server" title={appUrl}>
-    {appUrl}
-  </div>
+  <form on:submit|preventDefault={() => modal.confirm()}>
+    <Input
+      label="Enter a URL for the new screen"
+      {error}
+      bind:value={screenUrl}
+      on:change={routeChanged}
+    />
+    <div class="app-server" title={appUrl}>
+      {appUrl}
+    </div>
+  </form>
 </ModalContent>
 
 <style>
