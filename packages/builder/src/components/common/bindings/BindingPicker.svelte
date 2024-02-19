@@ -18,6 +18,7 @@
   let hoverTarget
   let helpers = handlebarsCompletions()
   let selectedCategory
+  let hideTimeout
 
   $: bindingIcons = bindings?.reduce((acc, ele) => {
     if (ele.icon) {
@@ -86,6 +87,37 @@
       nullColor: "#c678dd",
     })
   }
+
+  const showPopover = (target, binding) => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+    let val = getBindingValue(binding)
+    if (val !== "") {
+      popoverAnchor = target
+      hoverTarget = {
+        code: val,
+      }
+      popover.show()
+    }
+  }
+
+  const hidePopover = () => {
+    hideTimeout = setTimeout(() => {
+      popover.hide()
+      popoverAnchor = null
+      hoverTarget = null
+      hideTimeout = null
+    }, 100)
+  }
+
+  const stopHiding = () => {
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
+  }
 </script>
 
 <Popover
@@ -95,6 +127,8 @@
   maxWidth={600}
   maxHeight={300}
   dismissible={false}
+  on:mouseenter={stopHiding}
+  on:mouseleave={hidePopover}
 >
   <div class="helper">
     <Layout gap="S">
@@ -175,21 +209,8 @@
             {#each category.bindings as binding}
               <li
                 class="binding"
-                on:mouseenter={e => {
-                  let val = getBindingValue(binding)
-                  if (val !== "") {
-                    popoverAnchor = e.target
-                    hoverTarget = {
-                      code: val,
-                    }
-                    popover.show()
-                  }
-                }}
-                on:mouseleave={() => {
-                  popover.hide()
-                  popoverAnchor = null
-                  hoverTarget = null
-                }}
+                on:mouseenter={e => showPopover(e.target, binding)}
+                on:mouseleave={hidePopover}
                 on:focus={() => {}}
                 on:blur={() => {}}
                 on:click={() => addBinding(binding)}
