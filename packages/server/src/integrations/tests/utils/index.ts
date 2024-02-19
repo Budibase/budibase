@@ -3,6 +3,7 @@ jest.unmock("pg")
 import { Datasource } from "@budibase/types"
 import * as postgres from "./postgres"
 import * as mongodb from "./mongodb"
+import * as mysql from "./mysql"
 import { StartedTestContainer } from "testcontainers"
 
 jest.setTimeout(30000)
@@ -13,4 +14,4 @@ export interface DatabaseProvider {
   datasource(): Promise<Datasource>
 }
 
-export const databaseTestProviders = { postgres, mongodb }
+export const databaseTestProviders = { postgres, mongodb, mysql }
