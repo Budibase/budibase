@@ -18,7 +18,7 @@ import { Datasource, Query, SourceName, VM } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
-import environment from "src/environment"
+import environment from "../environment"
 
 class QueryRunner {
   datasource: Datasource
