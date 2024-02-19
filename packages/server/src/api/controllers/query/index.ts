@@ -24,7 +24,7 @@ import {
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 
 const Runner = new Thread(ThreadType.QUERY, {
-  timeoutMs: env.QUERY_THREAD_TIMEOUT || 10000,
+  timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
 
 export async function fetch(ctx: UserCtx) {
