@@ -7,7 +7,8 @@ import { BuiltInVM, IsolatedVM } from "./vm"
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
-      if (!env.useIsolatedVM.JS_RUNNER) {
+      const useIsolatedVm = env.ISOLATEDVM_JS_RUNNER
+      if (!useIsolatedVm) {
         const vm = new BuiltInVM(ctx, span)
         return vm.execute(js)
       }
