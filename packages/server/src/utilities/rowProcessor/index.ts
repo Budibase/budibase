@@ -223,7 +223,6 @@ export async function outputProcessing<T extends Row[] | Row>(
     if (column.type === FieldType.ATTACHMENT) {
       for (let row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
-          row[property] = []
           continue
         }
         row[property].forEach((attachment: RowAttachment) => {
