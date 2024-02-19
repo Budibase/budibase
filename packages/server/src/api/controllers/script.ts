@@ -1,10 +1,11 @@
 import { Ctx } from "@budibase/types"
-import { VM2 } from "../../jsRunner/vm"
+import { IsolatedVM } from "../../jsRunner/vm"
 
 export async function execute(ctx: Ctx) {
   const { script, context } = ctx.request.body
-  const runner = new VM2(context)
-  const result = runner.execute(script)
+  const runner = new IsolatedVM().withContext(context)
+
+  const result = runner.execute(`(function(){\n${script}\n})();`)
   ctx.body = result
 }
 
