@@ -103,6 +103,14 @@ describe("attachment cleanup", () => {
     expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
   })
 
+  it("should handle row deletion and not throw when attachments are undefined", async () => {
+    await AttachmentCleanup.rowDelete(table(), [
+      {
+        attach: undefined,
+      },
+    ])
+  })
+
   it("shouldn't cleanup attachments if row not updated", async () => {
     await AttachmentCleanup.rowUpdate(table(), { row: row(), oldRow: row() })
     expect(mockedDeleteFiles).not.toBeCalled()
