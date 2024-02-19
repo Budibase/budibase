@@ -5,7 +5,6 @@
     Label,
     Input,
     Select,
-    Divider,
     Layout,
     Icon,
     Button,
@@ -124,7 +123,6 @@
         {#each query.fields.steps ?? [] as step, index}
           <div class="block">
             <div class="subblock">
-              <Divider noMargin />
               <div class="blockSection">
                 <div class="block-options">
                   Stage {index + 1}
