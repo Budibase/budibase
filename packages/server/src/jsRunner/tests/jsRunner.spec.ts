@@ -1,3 +1,5 @@
+import vm from "vm"
+
 import { validate as isValidUUID } from "uuid"
 
 import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
@@ -40,11 +42,16 @@ describe.each([
     expect(output).toBe(3)
   })
 
-  it.only("should prevent sandbox escape", async () => {
+  it("should prevent sandbox escape", async () => {
     const output = await processJS(
-      `return this.constructor.constructor("return process")()`
+      `return this.constructor.constructor("return process.env")()`
     )
-    expect(output).toBe("Error while executing JS")
+    if (useIsolatedVM) {
+      expect(output).toBe("Error while executing JS")
+    } else {
+      expect(output).not.toBe("Error while executing JS")
+      expect(output).toEqual(process.env)
+    }
   })
 
   describe("helpers", () => {
