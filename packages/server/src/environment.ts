@@ -113,6 +113,7 @@ const environment = {
     process.env[key] = value
     // @ts-ignore
     environment[key] = value
+    cleanVariables()
   },
   isTest: coreEnv.isTest,
   isJest: coreEnv.isJest,
@@ -128,18 +129,22 @@ const environment = {
   },
 }
 
-// clean up any environment variable edge cases
-for (let [key, value] of Object.entries(environment)) {
-  // handle the edge case of "0" to disable an environment variable
-  if (value === "0") {
-    // @ts-ignore
-    environment[key] = 0
-  }
-  // handle the edge case of "false" to disable an environment variable
-  if (value === "false") {
-    // @ts-ignore
-    environment[key] = 0
+function cleanVariables() {
+  // clean up any environment variable edge cases
+  for (let [key, value] of Object.entries(environment)) {
+    // handle the edge case of "0" to disable an environment variable
+    if (value === "0") {
+      // @ts-ignore
+      environment[key] = 0
+    }
+    // handle the edge case of "false" to disable an environment variable
+    if (value === "false") {
+      // @ts-ignore
+      environment[key] = 0
+    }
   }
 }
+
+cleanVariables()
 
 export default environment
