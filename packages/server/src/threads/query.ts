@@ -136,6 +136,7 @@ class QueryRunner {
           params: enrichedParameters,
         })
       } else {
+        transformer = `(function(){\n${transformer}\n})();`
         let isolatedVm = new IsolatedVM().withContext({
           data: rows,
           params: enrichedParameters,
