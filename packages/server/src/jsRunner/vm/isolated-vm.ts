@@ -7,6 +7,7 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
+import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
   constructor(message: string) {
@@ -33,10 +34,13 @@ export class IsolatedVM implements VM {
     invocationTimeout,
     isolateAccumulatedTimeout,
   }: {
-    memoryLimit: number
-    invocationTimeout: number
+    memoryLimit?: number
+    invocationTimeout?: number
     isolateAccumulatedTimeout?: number
-  }) {
+  } = {}) {
+    memoryLimit = memoryLimit || environment.JS_RUNNER_MEMORY_LIMIT
+    invocationTimeout = memoryLimit || 1000
+
     this.isolate = new ivm.Isolate({ memoryLimit })
     this.vm = this.isolate.createContextSync()
     this.jail = this.vm.global
