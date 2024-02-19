@@ -4,7 +4,8 @@ import { IsolatedVM } from "../../jsRunner/vm"
 export async function execute(ctx: Ctx) {
   const { script, context } = ctx.request.body
   const runner = new IsolatedVM(context)
-  const result = runner.execute(script)
+
+  const result = runner.execute(`(function(){\n${script}\n})();`)
   ctx.body = result
 }
 
