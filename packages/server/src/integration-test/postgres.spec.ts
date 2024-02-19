@@ -41,12 +41,12 @@ describe("postgres integrations", () => {
     makeRequest = generateMakeRequest(apiKey, true)
 
     postgresDatasource = await config.api.datasource.create(
-      await databaseTestProviders.postgres.getDsConfig()
+      await databaseTestProviders.postgres.datasource()
     )
   })
 
   afterAll(async () => {
-    await databaseTestProviders.postgres.stopContainer()
+    await databaseTestProviders.postgres.stop()
   })
 
   beforeEach(async () => {
@@ -1041,14 +1041,14 @@ describe("postgres integrations", () => {
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
       const response = await config.api.datasource.verify({
-        datasource: await databaseTestProviders.postgres.getDsConfig(),
+        datasource: await databaseTestProviders.postgres.datasource(),
       })
       expect(response.status).toBe(200)
       expect(response.body.connected).toBe(true)
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await databaseTestProviders.postgres.getDsConfig()
+      const dbConfig = await databaseTestProviders.postgres.datasource()
       const response = await config.api.datasource.verify({
         datasource: {
           ...dbConfig,
@@ -1082,7 +1082,7 @@ describe("postgres integrations", () => {
 
     beforeEach(async () => {
       client = new Client(
-        (await databaseTestProviders.postgres.getDsConfig()).config!
+        (await databaseTestProviders.postgres.datasource()).config!
       )
       await client.connect()
     })
@@ -1125,7 +1125,7 @@ describe("postgres integrations", () => {
       schema2 = "test-2"
 
     beforeAll(async () => {
-      const dsConfig = await databaseTestProviders.postgres.getDsConfig()
+      const dsConfig = await databaseTestProviders.postgres.datasource()
       const dbConfig = dsConfig.config!
 
       client = new Client(dbConfig)

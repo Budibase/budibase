@@ -8,7 +8,7 @@ const {
   doesContainString,
   disableEscaping,
   findHBSBlocks,
-} = require("../src/index.cjs")
+} = require("../src/index.js")
 
 describe("Test that the string processing works correctly", () => {
   it("should process a basic template string", async () => {
