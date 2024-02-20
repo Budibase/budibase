@@ -24,13 +24,11 @@ export function init() {
         const bbCtx = context.getCurrentContext()!
 
         if (!bbCtx.vm) {
-          const vm = new IsolatedVM({
+          bbCtx.vm = new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
             invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
             isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
           }).withHelpers()
-
-          bbCtx.vm = vm
         }
         const { helpers, ...rest } = ctx
         return bbCtx.vm.withContext(rest, () => bbCtx.vm!.execute(js))
