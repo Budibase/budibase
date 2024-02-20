@@ -117,7 +117,7 @@
   const indentWithTabCustom = {
     key: "Tab",
     run: view => {
-      if (completionStatus(view.state) == "active") {
+      if (completionStatus(view.state) === "active") {
         acceptCompletion(view)
         return true
       }
@@ -131,7 +131,7 @@
   }
 
   const buildKeymap = () => {
-    const baseMap = [
+    return [
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...historyKeymap,
@@ -139,7 +139,6 @@
       ...completionKeymap,
       indentWithTabCustom,
     ]
-    return baseMap
   }
 
   const buildBaseExtensions = () => {
@@ -215,7 +214,7 @@
       )
     }
 
-    if (mode.name == "javascript") {
+    if (mode.name === "javascript") {
       complete.push(javascript())
       complete.push(highlightWhitespace())
       complete.push(lineNumbers())
@@ -320,5 +319,20 @@
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
     padding: 4px 6px;
+  }
+
+  .code-editor :global(.binding__example) {
+    padding: 0;
+    margin: 0;
+    font-size: 12px;
+    white-space: pre;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    max-height: 480px;
+  }
+  .code-editor :global(.binding__example span) {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 </style>

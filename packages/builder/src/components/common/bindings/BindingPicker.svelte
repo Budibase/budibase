@@ -71,36 +71,26 @@
     return names
   }
 
-  const getBindingValue = binding => {
-    const hbs = `{{ literal ${binding.runtimeBinding} }}`
-    const res = processStringSync(hbs, context)
-    return JSON.stringify(res, null, 2)
+  const showBindingPopover = (binding, target) => {
+    stopHidingPopover()
+    popoverAnchor = target
+    hoverTarget = {
+      code: binding.valueHTML,
+    }
+    popover.show()
   }
 
-  const highlight = json => {
-    return formatHighlight(json, {
-      keyColor: "#e06c75",
-      numberColor: "#e5c07b",
-      stringColor: "#98c379",
-      trueColor: "#d19a66",
-      falseColor: "#d19a66",
-      nullColor: "#c678dd",
-    })
-  }
-
-  const showPopover = (target, binding) => {
-    if (hideTimeout) {
-      clearTimeout(hideTimeout)
-      hideTimeout = null
+  const showHelperPopover = (helper, target) => {
+    stopHidingPopover()
+    if (!helper.displayText && helper.description) {
+      return
     }
-    let val = getBindingValue(binding)
-    if (val !== "") {
-      popoverAnchor = target
-      hoverTarget = {
-        code: val,
-      }
-      popover.show()
+    popoverAnchor = target
+    hoverTarget = {
+      description: helper.description,
+      code: getHelperExample(helper, mode.name === "javascript"),
     }
+    popover.show()
   }
 
   const hidePopover = () => {
@@ -112,7 +102,7 @@
     }, 100)
   }
 
-  const stopHiding = () => {
+  const stopHidingPopover = () => {
     if (hideTimeout) {
       clearTimeout(hideTimeout)
       hideTimeout = null
@@ -126,9 +116,10 @@
   anchor={popoverAnchor}
   minWidth={0}
   maxWidth={480}
-  maxHeight={300}
+  maxHeight={480}
   dismissible={false}
-  on:mouseenter={stopHiding}
+  on:mouseenter={stopHidingPopover}
+  on:mouseleave={hidePopover}
 >
   <div class="helper">
     <Layout gap="S">
@@ -139,10 +130,8 @@
         </div>
       {/if}
       {#if hoverTarget.code}
-        <pre>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          {@html highlight(hoverTarget.code)}
-        </pre>
+        <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+        <pre>{@html hoverTarget.code}</pre>
       {/if}
     </Layout>
   </div>
@@ -212,10 +201,8 @@
             {#each category.bindings as binding}
               <li
                 class="binding"
-                on:mouseenter={e => showPopover(e.target, binding)}
+                on:mouseenter={e => showBindingPopover(binding, e.target)}
                 on:mouseleave={hidePopover}
-                on:focus={() => {}}
-                on:blur={() => {}}
                 on:click={() => addBinding(binding)}
               >
                 <span class="binding__label">
@@ -227,7 +214,6 @@
                     {binding.readableBinding}
                   {/if}
                 </span>
-
                 {#if binding.display?.type || binding.fieldSchema?.type}
                   <span class="binding__typeWrap">
                     <span class="binding__type">
@@ -250,26 +236,9 @@
             {#each filteredHelpers as helper}
               <li
                 class="binding"
+                on:mouseenter={e => showHelperPopover(helper, e.target)}
+                on:mouseleave={hidePopover}
                 on:click={() => addHelper(helper, mode.name === "javascript")}
-                on:mouseenter={e => {
-                  popoverAnchor = e.target
-                  if (!helper.displayText && helper.description) {
-                    return
-                  }
-                  hoverTarget = {
-                    description: helper.description,
-                    code: getHelperExample(helper, mode.name === "javascript"),
-                  }
-                  popover.show()
-                  e.stopPropagation()
-                }}
-                on:mouseleave={() => {
-                  popover.hide()
-                  popoverAnchor = null
-                  hoverTarget = null
-                }}
-                on:focus={() => {}}
-                on:blur={() => {}}
               >
                 <span class="binding__label">{helper.displayText}</span>
                 <span class="binding__typeWrap">
@@ -287,16 +256,16 @@
 <style>
   .search :global(input) {
     border: none;
-    border-radius: 0px;
+    border-radius: 0;
     background: none;
-    padding: 0px;
+    padding: 0;
   }
 
   .search {
     padding: var(--spacing-m) var(--spacing-l);
     display: flex;
     align-items: center;
-    border-top: 0px;
+    border-top: 0;
     border-bottom: var(--border-light);
     border-left: 2px solid transparent;
     border-right: 2px solid transparent;
@@ -316,17 +285,17 @@
   }
 
   ul.category-list {
-    padding: 0px var(--spacing-l);
+    padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
   }
   .sub-section {
     padding: var(--spacing-l);
-    padding-top: 0px;
+    padding-top: 0;
   }
   .sub-section-back {
     padding: var(--spacing-l);
     padding-top: var(--spacing-xl);
-    padding-bottom: 0px;
+    padding-bottom: 0;
   }
   .cat-heading {
     margin-bottom: var(--spacing-l);
