@@ -45,7 +45,7 @@ describe("Test isolated vm directly", () => {
     }
     const result = await compare(`
       const dataUnnested = data.data.searchProducts.results
-      const emptyLink = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRRC3hpq0MXqXssA28Lm5NrzcOYAyr--q3xyg&usqp=CAU"
+      const emptyLink = "https://budibase.com"
       let pImage = emptyLink
       let sImage = emptyLink
       let uImage = emptyLink
