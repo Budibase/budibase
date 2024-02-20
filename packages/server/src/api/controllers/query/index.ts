@@ -158,13 +158,7 @@ export async function preview(ctx: UserCtx) {
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
-  function getFieldMetadata(
-    field: any,
-    key: string,
-    nestedSchemaFields: {
-      [key: string]: Record<string, string | QuerySchema>
-    }
-  ): QuerySchema {
+  function getFieldMetadata(field: any, key: string): QuerySchema {
     const makeQuerySchema = (
       type: FieldType,
       name: string,
@@ -194,10 +188,6 @@ export async function preview(ctx: UserCtx) {
             } else {
               fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
             }
-            nestedSchemaFields[key] = buildSchemaFromArray(
-              field,
-              nestedSchemaFields
-            )
           } else {
             fieldMetadata = makeQuerySchema(FieldType.JSON, key)
           }
@@ -209,21 +199,23 @@ export async function preview(ctx: UserCtx) {
     return fieldMetadata
   }
 
-  function buildSchemaFromArray(
-    fieldArray: any[],
+  function buildNestedSchema(
     nestedSchemaFields: {
       [key: string]: Record<string, string | QuerySchema>
-    }
+    },
+    key: string,
+    fieldArray: any[]
   ) {
     let schema: { [key: string]: any } = {}
+    // build the schema by aggregating all row objects in the array
     for (const item of fieldArray) {
       if (JsonUtils.hasSchema(item)) {
         for (const [key, value] of Object.entries(item)) {
-          schema[key] = getFieldMetadata(value, key, nestedSchemaFields)
+          schema[key] = getFieldMetadata(value, key)
         }
       }
     }
-    return schema
+    nestedSchemaFields[key] = schema
   }
 
   function getSchemaFields(
@@ -241,11 +233,14 @@ export async function preview(ctx: UserCtx) {
     } = {}
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
-        previewSchema[key] = getFieldMetadata(
-          rows[0][key],
-          key,
-          nestedSchemaFields
-        )
+        const fieldMetadata = getFieldMetadata(rows[0][key], key)
+        previewSchema[key] = fieldMetadata
+        if (
+          fieldMetadata.type === FieldType.JSON &&
+          fieldMetadata.subtype === JsonFieldSubType.ARRAY
+        ) {
+          buildNestedSchema(nestedSchemaFields, key, rows[0][key])
+        }
       }
     }
     return { previewSchema, nestedSchemaFields }

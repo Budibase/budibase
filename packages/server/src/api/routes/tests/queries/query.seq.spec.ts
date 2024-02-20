@@ -278,9 +278,7 @@ describe("/queries", () => {
 
       const res = await config.previewQuery(request, config, queryPreview)
       expect(res.body).toEqual({
-        nestedSchemaFields: {
-          contacts: {},
-        },
+        nestedSchemaFields: {},
         rows,
         schema: {
           contacts: { type: "array", name: "contacts" },
