@@ -131,24 +131,21 @@ class QueryRunner {
     if (transformer) {
       let runner: VM
       if (!USE_ISOLATED_VM) {
-        runner = new VM2({
-          data: rows,
-          params: enrichedParameters,
-        })
+        runner = new VM2()
       } else {
         transformer = `(function(){\n${transformer}\n})();`
-        let isolatedVm = new IsolatedVM().withContext({
-          data: rows,
-          params: enrichedParameters,
-        })
+        let vm = new IsolatedVM()
         if (datasource.source === SourceName.MONGODB) {
-          isolatedVm = isolatedVm.withParsingBson(rows)
+          vm = vm.withParsingBson(rows)
         }
-
-        runner = isolatedVm
+        runner = vm
       }
 
-      rows = runner.execute(transformer)
+      const ctx = {
+        data: rows,
+        params: enrichedParameters,
+      }
+      rows = runner.withContext(ctx, () => runner.execute(transformer))
     }
 
     // if the request fails we retry once, invalidating the cached value

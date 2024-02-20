@@ -15,6 +15,17 @@ export class BuiltInVM implements VM {
     this.span = span
   }
 
+  withContext<T>(context: Record<string, any>, executeWithContext: () => T): T {
+    this.ctx = vm.createContext(context)
+    try {
+      return executeWithContext()
+    } finally {
+      for (const key in context) {
+        delete this.ctx[key]
+      }
+    }
+  }
+
   execute(code: string) {
     const perRequestLimit = env.JS_PER_REQUEST_TIMEOUT_MS
     let track: TrackerFn = f => f()
