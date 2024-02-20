@@ -97,11 +97,11 @@ export class IsolatedVM implements VM {
     return this
   }
 
-  withContext<T>(context: Record<string, any>, f: () => T) {
+  withContext<T>(context: Record<string, any>, executeWithContext: () => T) {
     this.addToContext(context)
 
     try {
-      return f()
+      return executeWithContext()
     } finally {
       this.removeFromContext(Object.keys(context))
     }
