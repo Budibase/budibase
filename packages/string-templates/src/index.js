@@ -2,7 +2,7 @@ const vm = require("vm")
 const handlebars = require("handlebars")
 const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
-const { atob, btoa, isBackendService, isJSAllowed } = require("./utilities")
+const { atob, btoa, isBackendService } = require("./utilities")
 const manifest = require("../manifest.json")
 const {
   FIND_HBS_REGEX,
