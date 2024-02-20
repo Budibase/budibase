@@ -97,10 +97,14 @@ export class IsolatedVM implements VM {
     return this
   }
 
-  withContext(context: Record<string, any>) {
+  withContext<T>(context: Record<string, any>, executeWithContext: () => T) {
     this.addToContext(context)
 
-    return this
+    try {
+      return executeWithContext()
+    } finally {
+      this.removeFromContext(Object.keys(context))
+    }
   }
 
   withParsingBson(data: any) {
@@ -221,6 +225,12 @@ export class IsolatedVM implements VM {
           ? value
           : new ivm.ExternalCopy(value).copyInto({ release: true })
       )
+    }
+  }
+
+  private removeFromContext(keys: string[]) {
+    for (let key of keys) {
+      this.jail.deleteSync(key)
     }
   }
 
