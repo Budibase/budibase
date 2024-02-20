@@ -21,17 +21,22 @@ export function init() {
       }
 
       try {
-        const bbCtx = context.getCurrentContext()!
+        const bbCtx = context.getCurrentContext()
 
-        if (!bbCtx.vm) {
-          bbCtx.vm = new IsolatedVM({
-            memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-            invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
-            isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
-          }).withHelpers()
+        const vm = bbCtx?.vm
+          ? bbCtx.vm
+          : new IsolatedVM({
+              memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+              invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
+              isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
+            }).withHelpers()
+
+        if (bbCtx) {
+          // If we have a context, we want to persist it to reuse the isolate
+          bbCtx.vm = vm
         }
         const { helpers, ...rest } = ctx
-        return bbCtx.vm.withContext(rest, () => bbCtx.vm!.execute(js))
+        return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
           throw new JsErrorTimeout()
