@@ -119,17 +119,19 @@ function getAuthConfig(ctx: UserCtx) {
   return authConfigCtx
 }
 
-function enrichedParameters(parameters: QueryParameter[]): {
+function enrichParameters(
+  queryParameters: QueryParameter[],
+  requestParameters: { [key: string]: string } = {}
+): {
   [key: string]: string
 } {
-  const enrichedParameters: { [key: string]: string } = {}
   // make sure parameters are fully enriched with defaults
-  for (let parameter of parameters) {
-    if (!enrichedParameters[parameter.name]) {
-      enrichedParameters[parameter.name] = parameter.default
+  for (let parameter of queryParameters) {
+    if (!requestParameters[parameter.name]) {
+      requestParameters[parameter.name] = parameter.default
     }
   }
-  return enrichedParameters
+  return requestParameters
 }
 
 export async function preview(ctx: UserCtx) {
@@ -255,7 +257,7 @@ export async function preview(ctx: UserCtx) {
       datasource,
       queryVerb,
       fields,
-      parameters: enrichedParameters(parameters),
+      parameters: enrichParameters(parameters),
       transformer,
       queryId,
       schema,
@@ -319,7 +321,10 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichedParameters(query.parameters),
+      parameters: enrichParameters(
+        query.parameters,
+        ctx.request.body.parameters
+      ),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
