@@ -38,7 +38,7 @@ COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
 COPY packages/string-templates packages/string-templates
 
 
-FROM budibase/couchdb as runner
+FROM budibase/couchdb:v3.3.3 as runner
 ARG TARGETARCH
 ENV TARGETARCH $TARGETARCH
 #TARGETBUILD can be set to single (for single docker image) or aas (for azure app service)
