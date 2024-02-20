@@ -160,7 +160,7 @@ export async function preview(ctx: UserCtx) {
     })
     let type = typeof field,
       fieldMetadata = makeQuerySchema(FieldType.STRING, key)
-    if (field)
+    if (field != null)
       switch (type) {
         case "boolean":
           fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
@@ -169,8 +169,7 @@ export async function preview(ctx: UserCtx) {
           if (field instanceof Date) {
             fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
           } else if (Array.isArray(field)) {
-            const firstFiveItems = field.slice(0, 5)
-            if (firstFiveItems.some(item => JsonUtils.hasSchema(item))) {
+            if (field.some(item => JsonUtils.hasSchema(item))) {
               fieldMetadata = makeQuerySchema(
                 FieldType.JSON,
                 key,
@@ -180,7 +179,7 @@ export async function preview(ctx: UserCtx) {
               fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
             }
             nestedSchemaFields[key] = buildSchemaFromArray(
-              firstFiveItems,
+              field,
               nestedSchemaFields
             )
           } else {
@@ -195,19 +194,16 @@ export async function preview(ctx: UserCtx) {
   }
 
   function buildSchemaFromArray(
-    firstFiveItems: any[],
+    fieldArray: any[],
     nestedSchemaFields: {
       [key: string]: Record<string, string | QuerySchema>
     }
   ) {
-    let schema = {}
-    for (const item of firstFiveItems) {
+    let schema: { [key: string]: any } = {}
+    for (const item of fieldArray) {
       if (JsonUtils.hasSchema(item)) {
         for (const [key, value] of Object.entries(item)) {
-          schema = {
-            ...schema,
-            [key]: getFieldMetadata(value, key, nestedSchemaFields),
-          }
+          schema[key] = getFieldMetadata(value, key, nestedSchemaFields)
         }
       }
     }

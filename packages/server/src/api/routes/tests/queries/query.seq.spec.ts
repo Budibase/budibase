@@ -288,7 +288,7 @@ describe("/queries", () => {
       delete datasource.config
     })
 
-    it("should generate a nested schema based on the first five rows", async () => {
+    it("should generate a nested schema based on all the nested items", async () => {
       const query = {
         datasourceId: datasource._id,
         parameters: {},
@@ -318,8 +318,8 @@ describe("/queries", () => {
               phoneNumber: "0800-999-5555",
             },
             {
-              name: "SIXTH ROW - IGNORE ME",
-              ignoreMe: true,
+              name: "Name",
+              isActive: false,
             },
           ],
         },
@@ -360,6 +360,14 @@ describe("/queries", () => {
             phoneNumber: {
               type: "string",
               name: "phoneNumber",
+            },
+            name: {
+              type: "string",
+              name: "name",
+            },
+            isActive: {
+              type: "boolean",
+              name: "isActive",
             },
           },
         },
