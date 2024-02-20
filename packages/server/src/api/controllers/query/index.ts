@@ -142,6 +142,78 @@ export async function preview(ctx: UserCtx) {
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
+  function getFieldMetadata(
+    field: any,
+    key: string,
+    nestedSchemaFields: {
+      [key: string]: Record<string, string | QuerySchema>
+    }
+  ): QuerySchema {
+    const makeQuerySchema = (
+      type: FieldType,
+      name: string,
+      subtype?: string
+    ): QuerySchema => ({
+      type,
+      name,
+      subtype,
+    })
+    let type = typeof field,
+      fieldMetadata = makeQuerySchema(FieldType.STRING, key)
+    if (field)
+      switch (type) {
+        case "boolean":
+          fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
+          break
+        case "object":
+          if (field instanceof Date) {
+            fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
+          } else if (Array.isArray(field)) {
+            const firstFiveItems = field.slice(0, 5)
+            if (firstFiveItems.some(item => JsonUtils.hasSchema(item))) {
+              fieldMetadata = makeQuerySchema(
+                FieldType.JSON,
+                key,
+                JsonFieldSubType.ARRAY
+              )
+            } else {
+              fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
+            }
+            nestedSchemaFields[key] = buildSchemaFromArray(
+              firstFiveItems,
+              nestedSchemaFields
+            )
+          } else {
+            fieldMetadata = makeQuerySchema(FieldType.JSON, key)
+          }
+          break
+        case "number":
+          fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
+          break
+      }
+    return fieldMetadata
+  }
+
+  function buildSchemaFromArray(
+    firstFiveItems: any[],
+    nestedSchemaFields: {
+      [key: string]: Record<string, string | QuerySchema>
+    }
+  ) {
+    let schema = {}
+    for (const item of firstFiveItems) {
+      if (JsonUtils.hasSchema(item)) {
+        for (const [key, value] of Object.entries(item)) {
+          schema = {
+            ...schema,
+            [key]: getFieldMetadata(value, key, nestedSchemaFields),
+          }
+        }
+      }
+    }
+    return schema
+  }
+
   function getSchemaFields(
     rows: any[],
     keys: string[]
@@ -155,51 +227,13 @@ export async function preview(ctx: UserCtx) {
     const nestedSchemaFields: {
       [key: string]: Record<string, string | QuerySchema>
     } = {}
-    const makeQuerySchema = (
-      type: FieldType,
-      name: string,
-      subtype?: string
-    ): QuerySchema => ({
-      type,
-      name,
-      subtype,
-    })
     if (rows?.length > 0) {
       for (let key of [...new Set(keys)] as string[]) {
-        const field = rows[0][key]
-        let type = typeof field,
-          fieldMetadata = makeQuerySchema(FieldType.STRING, key)
-        if (field)
-          switch (type) {
-            case "boolean":
-              fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
-              break
-            case "object":
-              if (field instanceof Date) {
-                fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
-              } else if (Array.isArray(field)) {
-                if (JsonUtils.hasSchema(field[0])) {
-                  fieldMetadata = makeQuerySchema(
-                    FieldType.JSON,
-                    key,
-                    JsonFieldSubType.ARRAY
-                  )
-                } else {
-                  fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
-                }
-                nestedSchemaFields[key] = getSchemaFields(
-                  field,
-                  Object.keys(field[0])
-                ).previewSchema
-              } else {
-                fieldMetadata = makeQuerySchema(FieldType.JSON, key)
-              }
-              break
-            case "number":
-              fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
-              break
-          }
-        previewSchema[key] = fieldMetadata
+        previewSchema[key] = getFieldMetadata(
+          rows[0][key],
+          key,
+          nestedSchemaFields
+        )
       }
     }
     return { previewSchema, nestedSchemaFields }

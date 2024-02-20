@@ -1,4 +1,5 @@
 import tk from "timekeeper"
+const pg = require("pg")
 
 // Mock out postgres for this
 jest.mock("pg")
@@ -248,6 +249,126 @@ describe("/queries", () => {
         method: "POST",
         url: `/api/queries/preview`,
       })
+    })
+
+    it("should not error when trying to generate a nested schema for an empty array", async () => {
+      const query = {
+        datasourceId: datasource._id,
+        parameters: {},
+        fields: {},
+        queryVerb: "read",
+        name: datasource.name,
+      }
+      const rows = [
+        {
+          contacts: [],
+        },
+      ]
+      pg.queryMock.mockImplementation(() => ({
+        rows,
+      }))
+
+      const res = await request
+        .post(`/api/queries/preview`)
+        .send(query)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body).toEqual({
+        nestedSchemaFields: {
+          contacts: {},
+        },
+        rows,
+        schema: {
+          contacts: { type: "array", name: "contacts" },
+        },
+      })
+      expect(res.body.rows.length).toEqual(1)
+      delete datasource.config
+    })
+
+    it("should generate a nested schema based on the first five rows", async () => {
+      const query = {
+        datasourceId: datasource._id,
+        parameters: {},
+        fields: {},
+        queryVerb: "read",
+        name: datasource.name,
+      }
+      const rows = [
+        {
+          contacts: [
+            {
+              address: "123 Lane",
+            },
+            {
+              address: "456 Drive",
+            },
+            {
+              postcode: "BT1 12N",
+              lat: 54.59,
+              long: -5.92,
+            },
+            {
+              city: "Belfast",
+            },
+            {
+              address: "789 Avenue",
+              phoneNumber: "0800-999-5555",
+            },
+            {
+              name: "SIXTH ROW - IGNORE ME",
+              ignoreMe: true,
+            },
+          ],
+        },
+      ]
+      pg.queryMock.mockImplementation(() => ({
+        rows,
+      }))
+
+      const res = await request
+        .post(`/api/queries/preview`)
+        .send(query)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+      expect(res.body).toEqual({
+        nestedSchemaFields: {
+          contacts: {
+            address: {
+              type: "string",
+              name: "address",
+            },
+            postcode: {
+              type: "string",
+              name: "postcode",
+            },
+            lat: {
+              type: "number",
+              name: "lat",
+            },
+            long: {
+              type: "number",
+              name: "long",
+            },
+            city: {
+              type: "string",
+              name: "city",
+            },
+            phoneNumber: {
+              type: "string",
+              name: "phoneNumber",
+            },
+          },
+        },
+        rows,
+        schema: {
+          contacts: { type: "json", name: "contacts", subtype: "array" },
+        },
+      })
+      expect(res.body.rows.length).toEqual(1)
+      delete datasource.config
     })
   })
 
