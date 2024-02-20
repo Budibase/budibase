@@ -23,22 +23,17 @@ export function init() {
       try {
         const bbCtx = context.getCurrentContext()!
 
-        let { vm } = bbCtx
-        if (!vm) {
-          // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
-          const { helpers, ...ctxToPass } = ctx
-
-          vm = new IsolatedVM({
+        if (!bbCtx.vm) {
+          const vm = new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
             invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
             isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
-          })
-            .withContext(ctxToPass)
-            .withHelpers()
+          }).withHelpers()
 
           bbCtx.vm = vm
         }
-        return vm.execute(js)
+        const { helpers, ...rest } = ctx
+        return bbCtx.vm.withContext(rest, () => bbCtx.vm!.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
           throw new JsErrorTimeout()
