@@ -8,18 +8,11 @@ import {
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 
-import { BuiltInVM, IsolatedVM } from "./vm"
-
-const USE_ISOLATED_VM = true
+import { IsolatedVM } from "./vm"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
-      if (!USE_ISOLATED_VM) {
-        const vm = new BuiltInVM(ctx, span)
-        return vm.execute(js)
-      }
-
       try {
         const bbCtx = context.getCurrentContext()
 
