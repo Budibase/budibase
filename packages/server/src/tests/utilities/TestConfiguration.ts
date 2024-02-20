@@ -1,4 +1,5 @@
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
+import { QueryPreview } from "@budibase/types"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -867,23 +868,10 @@ export default class TestConfiguration {
 
   // QUERY
 
-  async previewQuery(
-    request: any,
-    config: any,
-    datasource: any,
-    fields: any,
-    params: any,
-    verb?: string
-  ) {
+  async previewQuery(request: any, config: any, queryPreview: QueryPreview) {
     return request
       .post(`/api/queries/preview`)
-      .send({
-        datasourceId: datasource._id,
-        parameters: params || {},
-        fields,
-        queryVerb: verb || "read",
-        name: datasource.name,
-      })
+      .send(queryPreview)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)

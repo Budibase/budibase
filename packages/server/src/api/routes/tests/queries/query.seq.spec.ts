@@ -24,7 +24,13 @@ import { checkCacheForDynamicVariable } from "../../../../threads/utils"
 
 const { basicQuery, basicDatasource } = setup.structures
 import { events, db as dbCore } from "@budibase/backend-core"
-import { Datasource, Query, SourceName } from "@budibase/types"
+import {
+  Datasource,
+  Query,
+  SourceName,
+  QueryPreview,
+  QueryParameter,
+} from "@budibase/types"
 
 tk.freeze(Date.now())
 
@@ -220,19 +226,17 @@ describe("/queries", () => {
 
   describe("preview", () => {
     it("should be able to preview the query", async () => {
-      const query = {
+      const queryPreview: QueryPreview = {
         datasourceId: datasource._id,
-        parameters: {},
-        fields: {},
         queryVerb: "read",
-        name: datasource.name,
+        fields: {},
+        parameters: [],
+        transformer: "return data",
+        name: datasource.name!,
+        schema: {},
+        readable: true,
       }
-      const res = await request
-        .post(`/api/queries/preview`)
-        .send(query)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.previewQuery(request, config, queryPreview)
       // these responses come from the mock
       expect(res.body.schema).toEqual({
         a: { type: "string", name: "a" },
@@ -241,7 +245,7 @@ describe("/queries", () => {
       expect(res.body.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
       delete datasource.config
-      expect(events.query.previewed).toBeCalledWith(datasource, query)
+      expect(events.query.previewed).toBeCalledWith(datasource, queryPreview)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -253,12 +257,15 @@ describe("/queries", () => {
     })
 
     it("should not error when trying to generate a nested schema for an empty array", async () => {
-      const query = {
+      const queryPreview: QueryPreview = {
         datasourceId: datasource._id,
-        parameters: {},
+        parameters: [],
         fields: {},
         queryVerb: "read",
-        name: datasource.name,
+        name: datasource.name!,
+        transformer: "return data",
+        schema: {},
+        readable: true,
       }
       const rows = [
         {
@@ -269,12 +276,7 @@ describe("/queries", () => {
         rows,
       }))
 
-      const res = await request
-        .post(`/api/queries/preview`)
-        .send(query)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.previewQuery(request, config, queryPreview)
       expect(res.body).toEqual({
         nestedSchemaFields: {
           contacts: {},
@@ -289,12 +291,15 @@ describe("/queries", () => {
     })
 
     it("should generate a nested schema based on all the nested items", async () => {
-      const query = {
+      const queryPreview: QueryPreview = {
         datasourceId: datasource._id,
-        parameters: {},
+        parameters: [],
         fields: {},
         queryVerb: "read",
-        name: datasource.name,
+        name: datasource.name!,
+        transformer: "return data",
+        schema: {},
+        readable: true,
       }
       const rows = [
         {
@@ -328,12 +333,7 @@ describe("/queries", () => {
         rows,
       }))
 
-      const res = await request
-        .post(`/api/queries/preview`)
-        .send(query)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const res = await config.previewQuery(request, config, queryPreview)
       expect(res.body).toEqual({
         nestedSchemaFields: {
           contacts: {
@@ -413,7 +413,17 @@ describe("/queries", () => {
 
   describe("variables", () => {
     async function preview(datasource: Datasource, fields: any) {
-      return config.previewQuery(request, config, datasource, fields, undefined)
+      const queryPreview: QueryPreview = {
+        datasourceId: datasource._id!,
+        parameters: [],
+        fields,
+        queryVerb: "read",
+        name: datasource.name!,
+        transformer: "return data",
+        schema: {},
+        readable: true,
+      }
+      return config.previewQuery(request, config, queryPreview)
     }
 
     it("should work with static variables", async () => {
@@ -501,24 +511,37 @@ describe("/queries", () => {
     async function previewGet(
       datasource: Datasource,
       fields: any,
-      params: any
+      params: QueryParameter[]
     ) {
-      return config.previewQuery(request, config, datasource, fields, params)
+      const queryPreview: QueryPreview = {
+        datasourceId: datasource._id!,
+        parameters: params,
+        fields,
+        queryVerb: "read",
+        name: datasource.name!,
+        transformer: "return data",
+        schema: {},
+        readable: true,
+      }
+      return config.previewQuery(request, config, queryPreview)
     }
 
     async function previewPost(
       datasource: Datasource,
       fields: any,
-      params: any
+      params: QueryParameter[]
     ) {
-      return config.previewQuery(
-        request,
-        config,
-        datasource,
+      const queryPreview: QueryPreview = {
+        datasourceId: datasource._id!,
+        parameters: params,
         fields,
-        params,
-        "create"
-      )
+        queryVerb: "create",
+        name: datasource.name!,
+        transformer: null,
+        schema: {},
+        readable: false,
+      }
+      return config.previewQuery(request, config, queryPreview)
     }
 
     it("should parse global and query level header mappings", async () => {
@@ -540,7 +563,7 @@ describe("/queries", () => {
             secondHdr: "1234",
           },
         },
-        undefined
+        []
       )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
@@ -567,11 +590,11 @@ describe("/queries", () => {
           queryString:
             "test={{myEmail}}&testName={{myName}}&testParam={{testParam}}",
         },
-        {
-          myEmail: "{{[user].[email]}}",
-          myName: "{{[user].[firstName]}}",
-          testParam: "1234",
-        }
+        [
+          { name: "myEmail", default: "{{[user].[email]}}" },
+          { name: "myName", default: "{{[user].[firstName]}}" },
+          { name: "testParam", default: "1234" },
+        ]
       )
 
       expect(res.body.rows[0].url).toEqual(
@@ -596,9 +619,7 @@ describe("/queries", () => {
             "This is plain text and this is my email: {{[user].[email]}}. This is a test param: {{testParam}}",
           bodyType: "text",
         },
-        {
-          testParam: "1234",
-        }
+        [{ name: "testParam", default: "1234" }]
       )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
@@ -623,10 +644,10 @@ describe("/queries", () => {
             '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
           bodyType: "json",
         },
-        {
-          testParam: "1234",
-          userRef: "{{[user].[firstName]}}",
-        }
+        [
+          { name: "testParam", default: "1234" },
+          { name: "userRef", default: "{{[user].[firstName]}}" },
+        ]
       )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
@@ -651,10 +672,10 @@ describe("/queries", () => {
             "<ref>{{userId}}</ref> <somestring>testing</somestring> </note>",
           bodyType: "xml",
         },
-        {
-          testParam: "1234",
-          userId: "{{[user].[firstName]}}",
-        }
+        [
+          { name: "testParam", default: "1234" },
+          { name: "userId", default: "{{[user].[firstName]}}" },
+        ]
       )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
@@ -679,10 +700,10 @@ describe("/queries", () => {
             '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
           bodyType: "form",
         },
-        {
-          testParam: "1234",
-          userRef: "{{[user].[firstName]}}",
-        }
+        [
+          { name: "testParam", default: "1234" },
+          { name: "userRef", default: "{{[user].[firstName]}}" },
+        ]
       )
 
       const parsedRequest = JSON.parse(res.body.extra.raw)
@@ -714,10 +735,10 @@ describe("/queries", () => {
             '{"email":"{{[user].[email]}}","queryCode":{{testParam}},"userRef":"{{userRef}}"}',
           bodyType: "encoded",
         },
-        {
-          testParam: "1234",
-          userRef: "{{[user].[firstName]}}",
-        }
+        [
+          { name: "testParam", default: "1234" },
+          { name: "userRef", default: "{{[user].[firstName]}}" },
+        ]
       )
       const parsedRequest = JSON.parse(res.body.extra.raw)
 

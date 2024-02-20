@@ -7,10 +7,7 @@ import {
   bodySubResource,
   paramResource,
 } from "../../middleware/resourceId"
-import {
-  generateQueryPreviewValidation,
-  generateQueryValidation,
-} from "../controllers/query/validation"
+import { generateQueryValidation } from "../controllers/query/validation"
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
@@ -30,7 +27,7 @@ router
     "/api/queries/preview",
     bodyResource("datasourceId"),
     authorized(BUILDER),
-    generateQueryPreviewValidation(),
+    generateQueryValidation(),
     queryController.preview
   )
   .get(

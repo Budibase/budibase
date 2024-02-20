@@ -20,6 +20,7 @@ import {
   type ExecuteQueryRequest,
   type ExecuteQueryResponse,
   type Row,
+  QueryParameter,
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 
@@ -116,6 +117,19 @@ function getAuthConfig(ctx: UserCtx) {
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
   return authConfigCtx
+}
+
+function enrichedParameters(parameters: QueryParameter[]): {
+  [key: string]: string
+} {
+  const enrichedParameters: { [key: string]: string } = {}
+  // make sure parameters are fully enriched with defaults
+  for (let parameter of parameters) {
+    if (!enrichedParameters[parameter.name]) {
+      enrichedParameters[parameter.name] = parameter.default
+    }
+  }
+  return enrichedParameters
 }
 
 export async function preview(ctx: UserCtx) {
@@ -241,7 +255,7 @@ export async function preview(ctx: UserCtx) {
       datasource,
       queryVerb,
       fields,
-      parameters,
+      parameters: enrichedParameters(parameters),
       transformer,
       queryId,
       schema,
@@ -296,15 +310,6 @@ async function execute(
   if (!opts.isAutomation) {
     authConfigCtx = getAuthConfig(ctx)
   }
-  const enrichedParameters = ctx.request.body.parameters || {}
-  // make sure parameters are fully enriched with defaults
-  if (query && query.parameters) {
-    for (let parameter of query.parameters) {
-      if (!enrichedParameters[parameter.name]) {
-        enrichedParameters[parameter.name] = parameter.default
-      }
-    }
-  }
 
   // call the relevant CRUD method on the integration class
   try {
@@ -314,7 +319,7 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichedParameters,
+      parameters: enrichedParameters(query.parameters),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
