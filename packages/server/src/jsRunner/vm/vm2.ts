@@ -16,10 +16,10 @@ export class VM2 implements VM {
     this.vm.setGlobal("results", this.results)
   }
 
-  withContext<T>(context: Record<string, any>, fn: () => T): T {
+  withContext<T>(context: Record<string, any>, executeWithContext: () => T): T {
     this.vm.setGlobals(context)
     try {
-      return fn()
+      return executeWithContext()
     } finally {
       for (const key in context) {
         this.vm.setGlobal(key, undefined)
