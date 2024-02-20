@@ -255,6 +255,11 @@ export const buildBindingInfoNode = (completion, binding) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
+  if (binding.valueHTML) {
+    ele.innerHTML = `<div class="binding__example">${binding.valueHTML}</div>`
+    return ele
+  }
+
   const exampleNodeHtml = binding.readableBinding
     ? `<div class="binding__example">{{ ${binding.readableBinding} }}</div>`
     : ""

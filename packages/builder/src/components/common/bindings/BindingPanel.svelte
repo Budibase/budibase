@@ -62,16 +62,45 @@
   let targetMode = null
   let expressionResult
 
+  $: enrichedBindings = enrichBindings(bindings, context)
   $: usingJS = mode === "JavaScript"
   $: editorMode =
     mode === "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
-  $: bindingCompletions = bindingsToCompletions(bindings, editorMode)
-  $: runtimeExpression = readableToRuntimeBinding(bindings, value)
+  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
+  $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: expressionResult = processStringSync(runtimeExpression || "", context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
+  const getBindingValue = (binding, context) => {
+    const hbs = `{{ literal ${binding.runtimeBinding} }}`
+    const res = processStringSync(hbs, context)
+    return JSON.stringify(res, null, 2)
+  }
+
+  const highlightJSON = json => {
+    return formatHighlight(json, {
+      keyColor: "#e06c75",
+      numberColor: "#e5c07b",
+      stringColor: "#98c379",
+      trueColor: "#d19a66",
+      falseColor: "#d19a66",
+      nullColor: "#c678dd",
+    })
+  }
+
+  const enrichBindings = (bindings, context) => {
+    return bindings.map(binding => {
+      const value = getBindingValue(binding, context)
+      return {
+        ...binding,
+        value,
+        valueHTML: highlightJSON(value),
+      }
+    })
+  }
+
   const updateValue = val => {
-    const runtimeExpression = readableToRuntimeBinding(bindings, val)
+    const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     valid = isValid(runtimeExpression)
     if (valid) {
       dispatch("change", val)
@@ -116,9 +145,9 @@
   }
 
   const convert = () => {
-    const runtime = readableToRuntimeBinding(bindings, hbsValue)
+    const runtime = readableToRuntimeBinding(enrichedBindings, hbsValue)
     const runtimeJs = encodeJSBinding(convertToJS(runtime))
-    jsValue = runtimeToReadableBinding(bindings, runtimeJs)
+    jsValue = runtimeToReadableBinding(enrichedBindings, runtimeJs)
     hbsValue = null
     mode = "JavaScript"
     onSelectBinding("", { forceJS: true })
@@ -143,7 +172,7 @@
   }
 
   onMount(() => {
-    valid = isValid(readableToRuntimeBinding(bindings, value))
+    valid = isValid(readableToRuntimeBinding(enrichedBindings, value))
   })
 </script>
 
@@ -261,7 +290,7 @@
             {#if sidebar}
               <div class="binding-picker">
                 <BindingPicker
-                  {bindings}
+                  bindings={enrichedBindings}
                   {allowHelpers}
                   {context}
                   addHelper={onSelectHelper}
@@ -348,7 +377,7 @@
               {#if sidebar}
                 <div class="binding-picker">
                   <BindingPicker
-                    {bindings}
+                    bindings={enrichedBindings}
                     {allowHelpers}
                     {context}
                     addHelper={onSelectHelper}
