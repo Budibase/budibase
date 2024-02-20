@@ -21,9 +21,9 @@ export function init() {
       }
 
       try {
-        const bbCtx = context.getCurrentContext()!
+        const bbCtx = context.getCurrentContext()
 
-        let { vm } = bbCtx
+        let vm = bbCtx?.vm
         if (!vm) {
           // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
           const { helpers, ...ctxToPass } = ctx
@@ -36,7 +36,10 @@ export function init() {
             .withContext(ctxToPass)
             .withHelpers()
 
-          bbCtx.vm = vm
+          if (bbCtx) {
+            // If we have a context, we want to persist it to reuse the isolate
+            bbCtx.vm = vm
+          }
         }
         return vm.execute(js)
       } catch (error: any) {
