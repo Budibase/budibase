@@ -1,5 +1,4 @@
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
-import { QueryPreview } from "@budibase/types"
 
 // init the licensing mock
 import * as pro from "@budibase/pro"
@@ -53,6 +52,7 @@ import {
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  QueryPreview,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
