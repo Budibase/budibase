@@ -1,13 +1,13 @@
-const Helper = require("./Helper")
-const { SafeString } = require("handlebars")
-const externalHandlebars = require("./external")
-const { processJS } = require("./javascript")
-const {
+import Helper from "./Helper"
+import { SafeString } from "handlebars"
+import * as externalHandlebars from "./external"
+import { processJS } from "./javascript"
+import {
   HelperFunctionNames,
   HelperFunctionBuiltin,
   LITERAL_MARKER,
-} = require("./constants")
-const { getJsHelperList } = require("./list")
+} from "./constants"
+export { getJsHelperList } from "./list"
 
 const HTML_SWAPS = {
   "<": "&lt;",
@@ -70,31 +70,29 @@ const HELPERS = [
   }),
 ]
 
-module.exports.HelperNames = () => {
+export function HelperNames() {
   return Object.values(HelperFunctionNames).concat(
     HelperFunctionBuiltin,
     externalHandlebars.externalHelperNames
   )
 }
 
-module.exports.registerMinimum = handlebars => {
+export function registerMinimum(handlebars) {
   for (let helper of HELPERS) {
     helper.register(handlebars)
   }
 }
 
-module.exports.registerAll = handlebars => {
-  module.exports.registerMinimum(handlebars)
+export function registerAll(handlebars) {
+  registerMinimum(handlebars)
   // register imported helpers
   externalHandlebars.registerAll(handlebars)
 }
 
-module.exports.unregisterAll = handlebars => {
+export function unregisterAll(handlebars) {
   for (let helper of HELPERS) {
     helper.unregister(handlebars)
   }
   // unregister all imported helpers
   externalHandlebars.unregisterAll(handlebars)
 }
-
-module.exports.getJsHelperList = getJsHelperList
