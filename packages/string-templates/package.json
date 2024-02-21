@@ -4,6 +4,7 @@
   "description": "Handlebars wrapper for Budibase templating.",
   "main": "dist/bundle.cjs",
   "module": "dist/bundle.mjs",
+  "types": "src/index.ts",
   "license": "MPL-2.0",
   "exports": {
     ".": {
