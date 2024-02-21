@@ -16,7 +16,8 @@
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
       "@budibase/shared-core": ["../shared-core/src"],
-      "@budibase/pro": ["../pro/src"]
+      "@budibase/pro": ["../pro/src"],
+      "@budibase/string-templates": ["../string-templates/src"]
     }
   },
   "include": ["src/**/*"],
