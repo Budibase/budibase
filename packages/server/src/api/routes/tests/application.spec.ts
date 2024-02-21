@@ -35,41 +35,30 @@ describe("/applications", () => {
 
   describe("create", () => {
     it("creates empty app", async () => {
-      const res = await request
-        .post("/api/applications")
-        .field("name", utils.newid())
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
+      const app = await config.api.application.create({ name: utils.newid() })
+      expect(app._id).toBeDefined()
       expect(events.app.created).toBeCalledTimes(1)
     })
 
     it("creates app from template", async () => {
-      const res = await request
-        .post("/api/applications")
-        .field("name", utils.newid())
-        .field("useTemplate", "true")
-        .field("templateKey", "test")
-        .field("templateString", "{}") // override the file download
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
+      const app = await config.api.application.create({
+        name: utils.newid(),
+        useTemplate: "true",
+        templateKey: "test",
+        templateString: "{}",
+      })
+      expect(app._id).toBeDefined()
       expect(events.app.created).toBeCalledTimes(1)
       expect(events.app.templateImported).toBeCalledTimes(1)
     })
 
     it("creates app from file", async () => {
-      const res = await request
-        .post("/api/applications")
-        .field("name", utils.newid())
-        .field("useTemplate", "true")
-        .set(config.defaultHeaders())
-        .attach("templateFile", "src/api/routes/tests/data/export.txt")
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
+      const app = await config.api.application.create({
+        name: utils.newid(),
+        useTemplate: "true",
+        templateFile: "src/api/routes/tests/data/export.txt",
+      })
+      expect(app._id).toBeDefined()
       expect(events.app.created).toBeCalledTimes(1)
       expect(events.app.fileImported).toBeCalledTimes(1)
     })
@@ -84,24 +73,21 @@ describe("/applications", () => {
     })
 
     it("migrates navigation settings from old apps", async () => {
-      const res = await request
-        .post("/api/applications")
-        .field("name", "Old App")
-        .field("useTemplate", "true")
-        .set(config.defaultHeaders())
-        .attach("templateFile", "src/api/routes/tests/data/old-app.txt")
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._id).toBeDefined()
-      expect(res.body.navigation).toBeDefined()
-      expect(res.body.navigation.hideLogo).toBe(true)
-      expect(res.body.navigation.title).toBe("Custom Title")
-      expect(res.body.navigation.hideLogo).toBe(true)
-      expect(res.body.navigation.navigation).toBe("Left")
-      expect(res.body.navigation.navBackground).toBe(
+      const app = await config.api.application.create({
+        name: "Old App",
+        useTemplate: "true",
+        templateFile: "src/api/routes/tests/data/old-app.txt",
+      })
+      expect(app._id).toBeDefined()
+      expect(app.navigation).toBeDefined()
+      expect(app.navigation!.hideLogo).toBe(true)
+      expect(app.navigation!.title).toBe("Custom Title")
+      expect(app.navigation!.hideLogo).toBe(true)
+      expect(app.navigation!.navigation).toBe("Left")
+      expect(app.navigation!.navBackground).toBe(
         "var(--spectrum-global-color-blue-600)"
       )
-      expect(res.body.navigation.navTextColor).toBe(
+      expect(app.navigation!.navTextColor).toBe(
         "var(--spectrum-global-color-gray-50)"
       )
       expect(events.app.created).toBeCalledTimes(1)
@@ -118,15 +104,10 @@ describe("/applications", () => {
     it("lists all applications", async () => {
       await config.createApp("app1")
       await config.createApp("app2")
-
-      const res = await request
-        .get(`/api/applications?status=${AppStatus.DEV}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const apps = await config.api.application.fetch({ status: AppStatus.DEV })
 
       // two created apps + the inited app
-      expect(res.body.length).toBe(3)
+      expect(apps.length).toBe(3)
     })
   })
 

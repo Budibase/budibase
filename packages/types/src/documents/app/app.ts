@@ -73,3 +73,15 @@ export interface AppFeatures {
 export interface AutomationSettings {
   chainAutomations?: boolean
 }
+
+export interface CreateAppRequest {
+  name: string
+  url?: string
+  useTemplate?: string
+  templateName?: string
+  templateKey?: string
+  templateFile?: string
+  includeSampleData?: boolean
+  encryptionPassword?: string
+  templateString?: string
+}
