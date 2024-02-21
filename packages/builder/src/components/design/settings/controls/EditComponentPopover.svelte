@@ -1,9 +1,9 @@
 <script>
   import { Icon, Popover, Layout } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
   import { cloneDeep } from "lodash/fp"
   import { createEventDispatcher, getContext } from "svelte"
-  import ComponentSettingsSection from "../../../../pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
+  import ComponentSettingsSection from "pages/builder/app/[application]/design/[screenId]/[componentId]/_components/Component/ComponentSettingsSection.svelte"
 
   export let anchor
   export let componentInstance
@@ -30,9 +30,7 @@
     open = true
   }
 
-  $: componentDef = store.actions.components.getDefinition(
-    componentInstance._component
-  )
+  $: componentDef = componentStore.getDefinition(componentInstance._component)
   $: parsedComponentDef = processComponentDefinitionSettings(componentDef)
 
   const processComponentDefinitionSettings = componentDef => {
@@ -51,10 +49,7 @@
   const updateSetting = async (setting, value) => {
     const nestedComponentInstance = cloneDeep(componentInstance)
 
-    const patchFn = store.actions.components.updateComponentSetting(
-      setting.key,
-      value
-    )
+    const patchFn = componentStore.updateComponentSetting(setting.key, value)
     patchFn(nestedComponentInstance)
 
     dispatch("change", nestedComponentInstance)

@@ -2,7 +2,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
   import {
     Button,
     Popover,
@@ -17,19 +17,20 @@
     notifications,
   } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
-  import { store, currentAsset } from "builderStore"
   import {
     tables as tablesStore,
     queries as queriesStore,
     viewsV2 as viewsV2Store,
     views as viewsStore,
+    selectedScreen,
+    componentStore,
     datasources,
     integrations,
-  } from "stores/backend"
+  } from "stores/builder"
   import BindingBuilder from "components/integration/QueryBindingBuilder.svelte"
   import IntegrationQueryEditor from "components/integration/index.svelte"
   import { makePropSafe as safe } from "@budibase/string-templates"
-  import { findAllComponents } from "builderStore/componentUtils"
+  import { findAllComponents } from "helpers/components"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import DataSourceCategory from "components/design/settings/controls/DataSourceSelect/DataSourceCategory.svelte"
   import { API } from "api"
@@ -75,11 +76,11 @@
       ...query,
       type: "query",
     }))
-  $: dataProviders = findAllComponents($currentAsset.props)
+  $: dataProviders = findAllComponents($selectedScreen.props)
     .filter(component => {
       return (
         component._component?.endsWith("/dataprovider") &&
-        component._id !== $store.selectedComponentId
+        component._id !== $componentStore.selectedComponentId
       )
     })
     .map(provider => ({
@@ -126,10 +127,14 @@
       }
     })
   $: jsonArrays = bindings
-    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .filter(
+      x =>
+        x.fieldSchema?.type === "jsonarray" ||
+        (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
+    )
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding, tableId } = binding
-      const { name, type, prefixKeys } = binding.fieldSchema
+      const { name, type, prefixKeys, subtype } = binding.fieldSchema
       return {
         providerId,
         label: readableBinding,
@@ -137,7 +142,8 @@
         fieldType: type,
         tableId,
         prefixKeys,
-        type: "jsonarray",
+        type: type === "jsonarray" ? "jsonarray" : "queryarray",
+        subtype,
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })

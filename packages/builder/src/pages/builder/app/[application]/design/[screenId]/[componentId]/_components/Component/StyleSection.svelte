@@ -1,7 +1,7 @@
 <script>
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import { DetailSummary, notifications } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
 
   export let name
   export let properties
@@ -25,7 +25,7 @@
 
   const updateStyle = async (key, val) => {
     try {
-      await store.actions.components.updateStyle(key, val)
+      await componentStore.updateStyle(key, val)
     } catch (error) {
       notifications.error("Error updating style")
     }

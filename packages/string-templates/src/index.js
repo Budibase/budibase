@@ -1,7 +1,8 @@
+const vm = require("vm")
 const handlebars = require("handlebars")
 const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
-const { atob, btoa } = require("./utilities")
+const { atob, btoa, isBackendService } = require("./utilities")
 const manifest = require("../manifest.json")
 const {
   FIND_HBS_REGEX,
@@ -365,6 +366,7 @@ module.exports.doesContainString = (template, string) => {
 }
 
 module.exports.setJSRunner = javascript.setJSRunner
+module.exports.setOnErrorLog = javascript.setOnErrorLog
 
 module.exports.convertToJS = hbs => {
   const blocks = exports.findHBSBlocks(hbs)
@@ -401,3 +403,26 @@ const errors = require("./errors")
 module.exports.JsErrorTimeout = errors.JsErrorTimeout
 
 module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+
+function defaultJSSetup() {
+  if (!isBackendService()) {
+    /**
+     * Use polyfilled vm to run JS scripts in a browser Env
+     */
+    javascript.setJSRunner((js, context) => {
+      context = {
+        ...context,
+        alert: undefined,
+        setInterval: undefined,
+        setTimeout: undefined,
+      }
+      vm.createContext(context)
+      return vm.runInNewContext(js, context, { timeout: 1000 })
+    })
+  } else {
+    javascript.removeJSRunner()
+  }
+}
+defaultJSSetup()
+
+module.exports.defaultJSSetup = defaultJSSetup

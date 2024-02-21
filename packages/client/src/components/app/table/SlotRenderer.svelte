@@ -3,9 +3,9 @@
 
   export let row
 
-  const { Provider } = getContext("sdk")
+  const { Provider, ContextScopes } = getContext("sdk")
 </script>
 
-<Provider data={row}>
+<Provider data={row} scope={ContextScopes.Local}>
   <slot />
 </Provider>

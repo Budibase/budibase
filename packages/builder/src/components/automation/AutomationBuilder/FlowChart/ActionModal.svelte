@@ -9,11 +9,11 @@
     Tags,
     Tag,
   } from "@budibase/bbui"
-  import { automationStore, selectedAutomation } from "builderStore"
+  import { automationStore, selectedAutomation } from "stores/builder"
   import { admin, licensing } from "stores/portal"
   import { externalActions } from "./ExternalActions"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
-  import { checkForCollectStep } from "builderStore/utils"
+  import { checkForCollectStep } from "helpers/utils"
 
   export let blockIdx
   export let lastStep
@@ -128,10 +128,10 @@
         >
           <div class="item-body">
             <img
-              width="20"
-              height="20"
+              width={20}
+              height={20}
               src={externalActions[action.stepId].icon}
-              alt="zapier"
+              alt={externalActions[action.stepId].name}
             />
             <span class="icon-spacing">
               <Body size="XS">
