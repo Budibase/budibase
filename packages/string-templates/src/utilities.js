@@ -4,6 +4,14 @@ module.exports.FIND_HBS_REGEX = /{{([^{].*?)}}/g
 module.exports.FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
 module.exports.FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
 
+module.exports.isBackendService = () => {
+  return typeof window === "undefined"
+}
+
+module.exports.isJSAllowed = () => {
+  return process && !process.env.NO_JS
+}
+
 // originally this could be done with a single regex using look behinds
 // but safari does not support this feature
 // original regex: /(?<!{){{[^{}]+}}(?!})/g

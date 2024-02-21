@@ -1,42 +1,49 @@
+import { serializeError } from "serialize-error"
 import env from "../environment"
-import { setJSRunner, JsErrorTimeout } from "@budibase/string-templates"
+import {
+  JsErrorTimeout,
+  setJSRunner,
+  setOnErrorLog,
+} from "@budibase/string-templates"
+import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 
 import { IsolatedVM } from "./vm"
-import { context } from "@budibase/backend-core"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
     return tracer.trace("runJS", {}, span => {
       try {
-        const bbCtx = context.getCurrentContext()!
+        const bbCtx = context.getCurrentContext()
 
-        let { vm } = bbCtx
-        if (!vm) {
-          // Can't copy the native helpers into the isolate. We just ignore them as they are handled properly from the helpersSource
-          const { helpers, ...ctxToPass } = ctx
+        const vm = bbCtx?.vm
+          ? bbCtx.vm
+          : new IsolatedVM({
+              memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
+              invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
+              isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
+            }).withHelpers()
 
-          vm = new IsolatedVM({
-            memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
-            invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
-            isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
-          })
-            .withContext(ctxToPass)
-            .withHelpers()
-
+        if (bbCtx) {
+          // If we have a context, we want to persist it to reuse the isolate
           bbCtx.vm = vm
         }
-
-        const result = vm.execute(js)
-
-        return result
+        const { helpers, ...rest } = ctx
+        return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {
           throw new JsErrorTimeout()
         }
-
         throw error
       }
     })
   })
+
+  if (env.LOG_JS_ERRORS) {
+    setOnErrorLog((error: Error) => {
+      logging.logWarn(
+        `Error while executing js: ${JSON.stringify(serializeError(error))}`
+      )
+    })
+  }
 }

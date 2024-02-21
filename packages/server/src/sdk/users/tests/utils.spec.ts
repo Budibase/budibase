@@ -84,7 +84,8 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
 
         const metadata = await rawUserMetadata()
-        expect(metadata).toHaveLength(2)
+
+        expect(metadata).toHaveLength(2 + 1) // ADMIN user created in test bootstrap still in the application
         expect(metadata).toContainEqual(
           expect.objectContaining({
             _id: db.generateUserMetadataID(user1._id!),
@@ -121,7 +122,7 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
 
         const metadata = await rawUserMetadata()
-        expect(metadata).toHaveLength(1) //ADMIN user created in test bootstrap still in the application
+        expect(metadata).toHaveLength(1) // ADMIN user created in test bootstrap still in the application
       })
     })
   })
