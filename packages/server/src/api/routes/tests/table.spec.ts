@@ -368,10 +368,12 @@ describe("/tables", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      const fetchedTable = res.body[0]
-      expect(fetchedTable.name).toEqual(testTable.name)
-      expect(fetchedTable.type).toEqual("table")
-      expect(fetchedTable.sourceType).toEqual("internal")
+
+      const table = res.body.find((t: Table) => t._id === testTable._id)
+      expect(table).toBeDefined()
+      expect(table.name).toEqual(testTable.name)
+      expect(table.type).toEqual("table")
+      expect(table.sourceType).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {
