@@ -236,13 +236,13 @@ describe("/queries", () => {
         schema: {},
         readable: true,
       }
-      const res = await config.previewQuery(request, config, queryPreview)
+      const responseBody = await config.api.query.previewQuery(queryPreview)
       // these responses come from the mock
-      expect(res.body.schema).toEqual({
+      expect(responseBody.schema).toEqual({
         a: { type: "string", name: "a" },
         b: { type: "number", name: "b" },
       })
-      expect(res.body.rows.length).toEqual(1)
+      expect(responseBody.rows.length).toEqual(1)
       expect(events.query.previewed).toBeCalledTimes(1)
       delete datasource.config
       expect(events.query.previewed).toBeCalledWith(datasource, queryPreview)
@@ -276,15 +276,15 @@ describe("/queries", () => {
         rows,
       }))
 
-      const res = await config.previewQuery(request, config, queryPreview)
-      expect(res.body).toEqual({
+      const responseBody = await config.api.query.previewQuery(queryPreview)
+      expect(responseBody).toEqual({
         nestedSchemaFields: {},
         rows,
         schema: {
           contacts: { type: "array", name: "contacts" },
         },
       })
-      expect(res.body.rows.length).toEqual(1)
+      expect(responseBody.rows.length).toEqual(1)
       delete datasource.config
     })
 
@@ -331,8 +331,8 @@ describe("/queries", () => {
         rows,
       }))
 
-      const res = await config.previewQuery(request, config, queryPreview)
-      expect(res.body).toEqual({
+      const responseBody = await config.api.query.previewQuery(queryPreview)
+      expect(responseBody).toEqual({
         nestedSchemaFields: {
           contacts: {
             address: {
@@ -374,7 +374,7 @@ describe("/queries", () => {
           contacts: { type: "json", name: "contacts", subtype: "array" },
         },
       })
-      expect(res.body.rows.length).toEqual(1)
+      expect(responseBody.rows.length).toEqual(1)
       delete datasource.config
     })
   })
@@ -421,7 +421,7 @@ describe("/queries", () => {
         schema: {},
         readable: true,
       }
-      return config.previewQuery(request, config, queryPreview)
+      return await config.api.query.previewQuery(queryPreview)
     }
 
     it("should work with static variables", async () => {
@@ -431,31 +431,31 @@ describe("/queries", () => {
           variable2: "1",
         },
       })
-      const res = await preview(datasource, {
+      const responseBody = await preview(datasource, {
         path: "www.{{ variable }}.com",
         queryString: "test={{ variable2 }}",
       })
       // these responses come from the mock
-      expect(res.body.schema).toEqual({
+      expect(responseBody.schema).toEqual({
         opts: { type: "json", name: "opts" },
         url: { type: "string", name: "url" },
         value: { type: "string", name: "value" },
       })
-      expect(res.body.rows[0].url).toEqual("http://www.google.com?test=1")
+      expect(responseBody.rows[0].url).toEqual("http://www.google.com?test=1")
     })
 
     it("should work with dynamic variables", async () => {
       const { datasource } = await config.dynamicVariableDatasource()
-      const res = await preview(datasource, {
+      const responseBody = await preview(datasource, {
         path: "www.google.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schema).toEqual({
+      expect(responseBody.schema).toEqual({
         opts: { type: "json", name: "opts" },
         url: { type: "string", name: "url" },
         value: { type: "string", name: "value" },
       })
-      expect(res.body.rows[0].url).toContain("doctype%20html")
+      expect(responseBody.rows[0].url).toContain("doctype%20html")
     })
 
     it("check that it automatically retries on fail with cached dynamics", async () => {
@@ -469,16 +469,16 @@ describe("/queries", () => {
       // check its in cache
       const contents = await checkCacheForDynamicVariable(base._id, "variable3")
       expect(contents.rows.length).toEqual(1)
-      const res = await preview(datasource, {
+      const responseBody = await preview(datasource, {
         path: "www.failonce.com",
         queryString: "test={{ variable3 }}",
       })
-      expect(res.body.schema).toEqual({
+      expect(responseBody.schema).toEqual({
         fails: { type: "number", name: "fails" },
         opts: { type: "json", name: "opts" },
         url: { type: "string", name: "url" },
       })
-      expect(res.body.rows[0].fails).toEqual(1)
+      expect(responseBody.rows[0].fails).toEqual(1)
     })
 
     it("deletes variables when linked query is deleted", async () => {
@@ -521,7 +521,7 @@ describe("/queries", () => {
         schema: {},
         readable: true,
       }
-      return config.previewQuery(request, config, queryPreview)
+      return await config.api.query.previewQuery(queryPreview)
     }
 
     async function previewPost(
@@ -539,7 +539,7 @@ describe("/queries", () => {
         schema: {},
         readable: false,
       }
-      return config.previewQuery(request, config, queryPreview)
+      return await config.api.query.previewQuery(queryPreview)
     }
 
     it("should parse global and query level header mappings", async () => {
@@ -551,7 +551,7 @@ describe("/queries", () => {
           emailHdr: "{{[user].[email]}}",
         },
       })
-      const res = await previewGet(
+      const responseBody = await previewGet(
         datasource,
         {
           path: "www.google.com",
@@ -564,14 +564,14 @@ describe("/queries", () => {
         []
       )
 
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
       expect(parsedRequest.opts.headers).toEqual({
         test: "headerVal",
         emailHdr: userDetails.email,
         queryHdr: userDetails.firstName,
         secondHdr: "1234",
       })
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?email=" + userDetails.email.replace("@", "%40")
       )
     })
@@ -581,7 +581,7 @@ describe("/queries", () => {
 
       const datasource = await config.restDatasource()
 
-      const res = await previewGet(
+      const responseBody = await previewGet(
         datasource,
         {
           path: "www.google.com",
@@ -595,7 +595,7 @@ describe("/queries", () => {
         ]
       )
 
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?test=" +
           userDetails.email.replace("@", "%40") +
           "&testName=" +
@@ -608,7 +608,7 @@ describe("/queries", () => {
       const userDetails = config.getUserDetails()
       const datasource = await config.restDatasource()
 
-      const res = await previewPost(
+      const responseBody = await previewPost(
         datasource,
         {
           path: "www.google.com",
@@ -620,11 +620,11 @@ describe("/queries", () => {
         [{ name: "testParam", default: "1234" }]
       )
 
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
       expect(parsedRequest.opts.body).toEqual(
         `This is plain text and this is my email: ${userDetails.email}. This is a test param: 1234`
       )
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?testParam=1234"
       )
     })
@@ -633,7 +633,7 @@ describe("/queries", () => {
       const userDetails = config.getUserDetails()
       const datasource = await config.restDatasource()
 
-      const res = await previewPost(
+      const responseBody = await previewPost(
         datasource,
         {
           path: "www.google.com",
@@ -648,10 +648,10 @@ describe("/queries", () => {
         ]
       )
 
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
       const test = `{"email":"${userDetails.email}","queryCode":1234,"userRef":"${userDetails.firstName}"}`
       expect(parsedRequest.opts.body).toEqual(test)
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?testParam=1234"
       )
     })
@@ -660,7 +660,7 @@ describe("/queries", () => {
       const userDetails = config.getUserDetails()
       const datasource = await config.restDatasource()
 
-      const res = await previewPost(
+      const responseBody = await previewPost(
         datasource,
         {
           path: "www.google.com",
@@ -676,11 +676,11 @@ describe("/queries", () => {
         ]
       )
 
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
       const test = `<note> <email>${userDetails.email}</email> <code>1234</code> <ref>${userDetails.firstName}</ref> <somestring>testing</somestring> </note>`
 
       expect(parsedRequest.opts.body).toEqual(test)
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?testParam=1234"
       )
     })
@@ -689,7 +689,7 @@ describe("/queries", () => {
       const userDetails = config.getUserDetails()
       const datasource = await config.restDatasource()
 
-      const res = await previewPost(
+      const responseBody = await previewPost(
         datasource,
         {
           path: "www.google.com",
@@ -704,7 +704,7 @@ describe("/queries", () => {
         ]
       )
 
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
 
       const emailData = parsedRequest.opts.body._streams[1]
       expect(emailData).toEqual(userDetails.email)
@@ -715,7 +715,7 @@ describe("/queries", () => {
       const userRef = parsedRequest.opts.body._streams[7]
       expect(userRef).toEqual(userDetails.firstName)
 
-      expect(res.body.rows[0].url).toEqual(
+      expect(responseBody.rows[0].url).toEqual(
         "http://www.google.com?testParam=1234"
       )
     })
@@ -724,7 +724,7 @@ describe("/queries", () => {
       const userDetails = config.getUserDetails()
       const datasource = await config.restDatasource()
 
-      const res = await previewPost(
+      const responseBody = await previewPost(
         datasource,
         {
           path: "www.google.com",
@@ -738,7 +738,7 @@ describe("/queries", () => {
           { name: "userRef", default: "{{[user].[firstName]}}" },
         ]
       )
-      const parsedRequest = JSON.parse(res.body.extra.raw)
+      const parsedRequest = JSON.parse(responseBody.extra.raw)
 
       expect(parsedRequest.opts.body.email).toEqual(userDetails.email)
       expect(parsedRequest.opts.body.queryCode).toEqual("1234")

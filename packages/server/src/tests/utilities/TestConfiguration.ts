@@ -52,7 +52,6 @@ import {
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  QueryPreview,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
@@ -866,15 +865,6 @@ export default class TestConfiguration {
   }
 
   // QUERY
-
-  async previewQuery(request: any, config: any, queryPreview: QueryPreview) {
-    return request
-      .post(`/api/queries/preview`)
-      .send(queryPreview)
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
 
   async createQuery(config?: any) {
     if (!this.datasource && !config) {
