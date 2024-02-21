@@ -3,6 +3,7 @@ import {
   Event,
   Datasource,
   Query,
+  QueryPreview,
   QueryCreatedEvent,
   QueryUpdatedEvent,
   QueryDeletedEvent,
@@ -68,9 +69,9 @@ const run = async (count: number, timestamp?: string | number) => {
   await publishEvent(Event.QUERIES_RUN, properties, timestamp)
 }
 
-const previewed = async (datasource: Datasource, query: Query) => {
+const previewed = async (datasource: Datasource, query: QueryPreview) => {
   const properties: QueryPreviewedEvent = {
-    queryId: query._id,
+    queryId: query.queryId,
     datasourceId: datasource._id as string,
     source: datasource.source,
     queryVerb: query.queryVerb,

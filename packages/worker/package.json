@@ -48,7 +48,7 @@
     "bcrypt": "5.1.0",
     "bcryptjs": "2.4.3",
     "bull": "4.10.1",
-    "dd-trace": "5.0.0",
+    "dd-trace": "5.2.0",
     "dotenv": "8.6.0",
     "global-agent": "3.0.0",
     "ical-generator": "4.1.0",
@@ -68,7 +68,9 @@
     "passport-local": "1.0.0",
     "pouchdb": "7.3.0",
     "pouchdb-all-dbs": "1.1.1",
-    "server-destroy": "1.0.1"
+    "server-destroy": "1.0.1",
+    "undici": "^6.0.1",
+    "undici-types": "^6.0.1"
   },
   "devDependencies": {
     "@swc/core": "1.3.71",

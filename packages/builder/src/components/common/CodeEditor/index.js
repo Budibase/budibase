@@ -286,7 +286,13 @@ export const hbInsert = (value, from, to, text) => {
   return parsedInsert
 }
 
-export function jsInsert(value, from, to, text, { helper, disableWrapping }) {
+export function jsInsert(
+  value,
+  from,
+  to,
+  text,
+  { helper, disableWrapping } = {}
+) {
   let parsedInsert = ""
 
   const left = from ? value.substring(0, from) : ""
