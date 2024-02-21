@@ -1,4 +1,4 @@
-const { date, duration } = require("./date")
+import { date, duration } from "./date"
 
 // https://github.com/evanw/esbuild/issues/56
 const externalCollections = {
@@ -13,8 +13,7 @@ const externalCollections = {
   uuid: require("@budibase/handlebars-helpers/lib/uuid"),
 }
 
-const helpersToRemoveForJs = ["sortBy"]
-module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+export const helpersToRemoveForJs = ["sortBy"]
 
 const addedHelpers = {
   date: date,
@@ -23,7 +22,7 @@ const addedHelpers = {
 
 let helpers = undefined
 
-module.exports.getJsHelperList = () => {
+export function getJsHelperList() {
   if (helpers) {
     return helpers
   }

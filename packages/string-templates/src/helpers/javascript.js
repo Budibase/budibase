@@ -1,18 +1,17 @@
-const { atob, isBackendService, isJSAllowed } = require("../utilities")
-const cloneDeep = require("lodash.clonedeep")
-const { LITERAL_MARKER } = require("../helpers/constants")
-const { getJsHelperList } = require("./list")
+import { atob, isBackendService, isJSAllowed } from "../utilities"
+import cloneDeep from "lodash.clonedeep"
+import { LITERAL_MARKER } from "../helpers/constants"
+import { getJsHelperList } from "./list"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
 let runJS
-module.exports.setJSRunner = runner => (runJS = runner)
-module.exports.removeJSRunner = () => {
-  runJS = undefined
-}
+export const setJSRunner = runner => (runJS = runner)
+
+export const removeJSRunner = () => (runJS = undefined)
 
 let onErrorLog
-module.exports.setOnErrorLog = delegate => (onErrorLog = delegate)
+export const setOnErrorLog = delegate => (onErrorLog = delegate)
 
 // Helper utility to strip square brackets from a value
 const removeSquareBrackets = value => {
@@ -41,7 +40,7 @@ const getContextValue = (path, context) => {
 }
 
 // Evaluates JS code against a certain context
-module.exports.processJS = (handlebars, context) => {
+export function processJS(handlebars, context) {
   if (!isJSAllowed() || (isBackendService() && !runJS)) {
     throw new Error("JS disabled in environment.")
   }
