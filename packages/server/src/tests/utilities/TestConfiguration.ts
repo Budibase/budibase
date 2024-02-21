@@ -515,11 +515,12 @@ export default class TestConfiguration {
   }
 
   async newTenant(appName = newid()): Promise<App> {
+    this.csrfToken = generator.hash()
+
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
     this.userMetadataId = generateUserMetadataID(this.user._id)
 
-    this.csrfToken = generator.hash()
     return this.createApp(appName)
   }
 
