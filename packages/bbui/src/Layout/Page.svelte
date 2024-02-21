@@ -43,6 +43,7 @@
     flex-direction: row;
     justify-content: flex-start;
     align-items: stretch;
+    overflow-y: scroll !important;
     flex: 1 1 auto;
     overflow-x: hidden;
   }
