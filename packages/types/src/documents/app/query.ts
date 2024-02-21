@@ -19,7 +19,7 @@ export interface Query extends Document {
 }
 
 export interface QueryPreview extends Omit<Query, "_id"> {
-  queryId?: string
+  queryId: string
 }
 
 export interface QueryParameter {

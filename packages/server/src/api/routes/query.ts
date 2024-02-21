@@ -8,8 +8,8 @@ import {
   paramResource,
 } from "../../middleware/resourceId"
 import {
-  generateQueryValidation,
   generateQueryPreviewValidation,
+  generateQueryValidation,
 } from "../controllers/query/validation"
 
 const { BUILDER, PermissionType, PermissionLevel } = permissions

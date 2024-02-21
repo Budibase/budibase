@@ -14,7 +14,6 @@ jest.mock("pg", () => {
 import * as setup from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
-import { QueryPreview } from "@budibase/types"
 
 const structures = setup.structures
 
@@ -121,19 +120,16 @@ describe("/api/env/variables", () => {
       .expect(200)
     expect(response.body.datasource._id).toBeDefined()
 
-    const queryPreview: QueryPreview = {
+    const query = {
       datasourceId: response.body.datasource._id,
-      parameters: [],
+      parameters: {},
       fields: {},
       queryVerb: "read",
       name: response.body.datasource.name,
-      transformer: null,
-      schema: {},
-      readable: true,
     }
     const res = await request
       .post(`/api/queries/preview`)
-      .send(queryPreview)
+      .send(query)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
@@ -143,7 +139,7 @@ describe("/api/env/variables", () => {
     delete response.body.datasource.config
     expect(events.query.previewed).toBeCalledWith(
       response.body.datasource,
-      queryPreview
+      query
     )
     expect(pg.Client).toHaveBeenCalledWith({ password: "test", ssl: undefined })
   })
