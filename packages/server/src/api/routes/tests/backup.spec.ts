@@ -8,7 +8,6 @@ import { mocks } from "@budibase/backend-core/tests"
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
-  let request = setup.getRequest()
   let config = setup.getConfig()
 
   afterAll(setup.afterAll)
@@ -59,10 +58,8 @@ describe("/backups", () => {
       await config.createScreen()
       const exportRes = await config.api.backup.createBackup(appId)
       expect(exportRes.backupId).toBeDefined()
-      const importRes = await config.api.backup.importBackup(
-        appId,
-        exportRes.backupId
-      )
+      await config.api.backup.waitForBackupToComplete(appId, exportRes.backupId)
+      await config.api.backup.importBackup(appId, exportRes.backupId)
     })
   })
 

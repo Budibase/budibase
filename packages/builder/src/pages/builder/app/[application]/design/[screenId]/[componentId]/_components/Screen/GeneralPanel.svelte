@@ -10,10 +10,10 @@
   } from "@budibase/bbui"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
-  import { selectedScreen, store } from "builderStore"
-  import sanitizeUrl from "builderStore/store/screenTemplates/utils/sanitizeUrl"
+  import { selectedScreen, screenStore } from "stores/builder"
+  import sanitizeUrl from "helpers/sanitizeUrl"
   import ButtonActionEditor from "components/design/settings/controls/ButtonActionEditor/ButtonActionEditor.svelte"
-  import { getBindableProperties } from "builderStore/dataBinding"
+  import { getBindableProperties } from "dataBinding"
 
   $: bindings = getBindableProperties($selectedScreen, null)
 
@@ -21,7 +21,7 @@
 
   const routeTaken = url => {
     const roleId = get(selectedScreen).routing.roleId || "BASIC"
-    return get(store).screens.some(
+    return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId
@@ -30,7 +30,7 @@
 
   const roleTaken = roleId => {
     const url = get(selectedScreen).routing.route
-    return get(store).screens.some(
+    return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === roleId
@@ -64,7 +64,7 @@
 
     // Update screen setting
     try {
-      await store.actions.screens.updateSetting(get(selectedScreen), key, value)
+      await screenStore.updateSetting(get(selectedScreen), key, value)
     } catch (error) {
       console.error(error)
       notifications.error("Error saving screen settings")
@@ -127,7 +127,7 @@
   ]
 
   const removeCustomLayout = async () => {
-    return store.actions.screens.removeCustomLayout(get(selectedScreen))
+    return screenStore.removeCustomLayout(get(selectedScreen))
   }
 </script>
 

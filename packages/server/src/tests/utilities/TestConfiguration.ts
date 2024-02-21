@@ -76,20 +76,12 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-type DefaultUserValues = {
-  globalUserId: string
-  email: string
-  firstName: string
-  lastName: string
-  csrfToken: string
-}
-
-interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
 }
 
-class TestConfiguration {
+export default class TestConfiguration {
   server: any
   request: supertest.SuperTest<supertest.Test> | undefined
   started: boolean
@@ -99,14 +91,17 @@ class TestConfiguration {
   prodApp: any
   prodAppId: any
   user: any
-  globalUserId: any
   userMetadataId: any
   table?: Table
   automation: any
   datasource?: Datasource
   tenantId?: string
-  defaultUserValues: DefaultUserValues
   api: API
+  csrfToken?: string
+
+  private get globalUserId() {
+    return this.user._id
+  }
 
   constructor(openServer = true) {
     if (openServer) {
@@ -121,19 +116,8 @@ class TestConfiguration {
     }
     this.appId = null
     this.allApps = []
-    this.defaultUserValues = this.populateDefaultUserValues()
 
     this.api = new API(this)
-  }
-
-  populateDefaultUserValues(): DefaultUserValues {
-    return {
-      globalUserId: `us_${newid()}`,
-      email: generator.email(),
-      firstName: generator.first(),
-      lastName: generator.last(),
-      csrfToken: generator.hash(),
-    }
   }
 
   getRequest() {
@@ -162,10 +146,10 @@ class TestConfiguration {
 
   getUserDetails() {
     return {
-      globalId: this.defaultUserValues.globalUserId,
-      email: this.defaultUserValues.email,
-      firstName: this.defaultUserValues.firstName,
-      lastName: this.defaultUserValues.lastName,
+      globalId: this.globalUserId,
+      email: this.user.email,
+      firstName: this.user.firstName,
+      lastName: this.user.lastName,
     }
   }
 
@@ -300,15 +284,27 @@ class TestConfiguration {
   }
 
   // USER / AUTH
-  async globalUser({
-    id = this.defaultUserValues.globalUserId,
-    firstName = this.defaultUserValues.firstName,
-    lastName = this.defaultUserValues.lastName,
-    builder = true,
-    admin = false,
-    email = this.defaultUserValues.email,
-    roles,
-  }: any = {}): Promise<User> {
+  async globalUser(
+    config: {
+      id?: string
+      firstName?: string
+      lastName?: string
+      builder?: boolean
+      admin?: boolean
+      email?: string
+      roles?: any
+    } = {}
+  ): Promise<User> {
+    const {
+      id = `us_${newid()}`,
+      firstName = generator.first(),
+      lastName = generator.last(),
+      builder = true,
+      admin = false,
+      email = generator.email(),
+      roles,
+    } = config
+
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
@@ -327,7 +323,7 @@ class TestConfiguration {
     await sessions.createASession(id, {
       sessionId: "sessionid",
       tenantId: this.getTenantId(),
-      csrfToken: this.defaultUserValues.csrfToken,
+      csrfToken: this.csrfToken,
     })
     if (builder) {
       user.builder = { global: true }
@@ -357,14 +353,16 @@ class TestConfiguration {
       roles?: UserRoles
     } = {}
   ): Promise<User> {
-    let { id, firstName, lastName, email, builder, admin, roles } = user
-    firstName = firstName || this.defaultUserValues.firstName
-    lastName = lastName || this.defaultUserValues.lastName
-    email = email || this.defaultUserValues.email
-    roles = roles || {}
-    if (builder == null) {
-      builder = true
-    }
+    const {
+      id,
+      firstName = generator.first(),
+      lastName = generator.last(),
+      email = generator.email(),
+      builder = true,
+      admin,
+      roles,
+    } = user
+
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
@@ -373,7 +371,7 @@ class TestConfiguration {
       email,
       builder,
       admin,
-      roles,
+      roles: roles || {},
     })
     await cache.user.invalidateUser(globalId)
     return resp
@@ -448,7 +446,7 @@ class TestConfiguration {
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
-      userId: this.defaultUserValues.globalUserId,
+      userId: this.globalUserId,
       sessionId: "sessionid",
       tenantId,
     }
@@ -457,7 +455,7 @@ class TestConfiguration {
     const headers: any = {
       Accept: "application/json",
       Cookie: [`${constants.Cookie.Auth}=${authToken}`],
-      [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
+      [constants.Header.CSRF_TOKEN]: this.csrfToken,
       Host: this.tenantHost(),
       ...extras,
     }
@@ -487,7 +485,7 @@ class TestConfiguration {
 
   async basicRoleHeaders() {
     return await this.roleHeaders({
-      email: this.defaultUserValues.email,
+      email: generator.email(),
       builder: false,
       prodApp: true,
       roleId: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -495,7 +493,7 @@ class TestConfiguration {
   }
 
   async roleHeaders({
-    email = this.defaultUserValues.email,
+    email = generator.email(),
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
@@ -519,11 +517,12 @@ class TestConfiguration {
   }
 
   async newTenant(appName = newid()): Promise<App> {
-    this.defaultUserValues = this.populateDefaultUserValues()
+    this.csrfToken = generator.hash()
+
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
-    this.globalUserId = this.user._id
-    this.userMetadataId = generateUserMetadataID(this.globalUserId)
+    this.userMetadataId = generateUserMetadataID(this.user._id)
+
     return this.createApp(appName)
   }
 
@@ -533,7 +532,7 @@ class TestConfiguration {
 
   // API
 
-  async generateApiKey(userId = this.defaultUserValues.globalUserId) {
+  async generateApiKey(userId = this.user._id) {
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
     let devInfo: any
@@ -912,4 +911,4 @@ class TestConfiguration {
   }
 }
 
-export = TestConfiguration
+module.exports = TestConfiguration

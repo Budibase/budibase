@@ -17,6 +17,7 @@ import { downloadTemplate } from "../../../utilities/fileSystem"
 import { ObjectStoreBuckets } from "../../../constants"
 import { join } from "path"
 import fs from "fs"
+import fsp from "fs/promises"
 import sdk from "../../"
 import { v4 as uuid } from "uuid"
 import tar from "tar"
@@ -119,7 +120,7 @@ async function getTemplateStream(template: TemplateType) {
 
 export async function untarFile(file: { path: string }) {
   const tmpPath = join(budibaseTempDir(), uuid())
-  fs.mkdirSync(tmpPath)
+  await fsp.mkdir(tmpPath)
   // extract the tarball
   await tar.extract({
     cwd: tmpPath,
@@ -130,12 +131,12 @@ export async function untarFile(file: { path: string }) {
 
 async function decryptFiles(path: string, password: string) {
   try {
-    for (let file of fs.readdirSync(path)) {
+    for (let file of await fsp.readdir(path)) {
       const inputPath = join(path, file)
       if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
         const outputPath = inputPath.replace(/\.enc$/, "")
         await encryption.decryptFile(inputPath, outputPath, password)
-        fs.rmSync(inputPath)
+        await fsp.rm(inputPath)
       }
     }
   } catch (err: any) {
@@ -164,14 +165,14 @@ export async function importApp(
   let dbStream: any
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
-    template.file && fs.lstatSync(template.file.path).isDirectory()
+    template.file && (await fsp.lstat(template.file.path)).isDirectory()
   let tmpPath: string | undefined = undefined
   if (template.file && (isTar || isDirectory)) {
     tmpPath = isTar ? await untarFile(template.file) : template.file.path
     if (isTar && template.file.password) {
       await decryptFiles(tmpPath, template.file.password)
     }
-    const contents = fs.readdirSync(tmpPath)
+    const contents = await fsp.readdir(tmpPath)
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
       let promises = []
@@ -182,7 +183,7 @@ export async function importApp(
           continue
         }
         filename = join(prodAppId, filename)
-        if (fs.lstatSync(path).isDirectory()) {
+        if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
@@ -211,7 +212,7 @@ export async function importApp(
   await updateAutomations(prodAppId, db)
   // clear up afterward
   if (tmpPath) {
-    fs.rmSync(tmpPath, { recursive: true, force: true })
+    await fsp.rm(tmpPath, { recursive: true, force: true })
   }
   return ok
 }

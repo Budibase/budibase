@@ -10,7 +10,7 @@ export class EmailAPI extends TestAPI {
     return this.request
       .post(`/api/global/email/send`)
       .send({
-        email: "test@test.com",
+        email: "test@example.com",
         purpose,
         tenantId: this.config.getTenantId(),
         userId: this.config.user?._id!,

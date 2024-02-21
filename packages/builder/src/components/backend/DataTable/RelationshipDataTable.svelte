@@ -1,7 +1,7 @@
 <script>
   import { API } from "api"
   import Table from "./Table.svelte"
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
   import { notifications } from "@budibase/bbui"
 
   export let tableId

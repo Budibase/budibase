@@ -31,6 +31,19 @@ export class BackupAPI extends TestAPI {
     return result.body as CreateAppBackupResponse
   }
 
+  waitForBackupToComplete = async (appId: string, backupId: string) => {
+    for (let i = 0; i < 10; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      const result = await this.request
+        .get(`/api/apps/${appId}/backups/${backupId}/file`)
+        .set(this.config.defaultHeaders())
+      if (result.status === 200) {
+        return
+      }
+    }
+    throw new Error("Backup did not complete")
+  }
+
   importBackup = async (
     appId: string,
     backupId: string

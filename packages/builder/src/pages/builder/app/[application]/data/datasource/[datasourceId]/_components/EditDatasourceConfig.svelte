@@ -1,7 +1,7 @@
 <script>
   import { keepOpen, Modal, notifications } from "@budibase/bbui"
   import { integrationForDatasource } from "stores/selectors"
-  import { datasources, integrations } from "stores/backend"
+  import { datasources, integrations } from "stores/builder"
   import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
   import EditDatasourceConfigButton from "./EditDatasourceConfigButton.svelte"
 

@@ -490,7 +490,7 @@ describe("/api/global/users", () => {
     it("should not be able to update email address", async () => {
       const email = structures.email()
       const user = await config.createUser(structures.users.user({ email }))
-      user.email = "new@test.com"
+      user.email = "new@example.com"
 
       const response = await config.api.users.saveUser(user, 400)
 
