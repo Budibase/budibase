@@ -1,7 +1,7 @@
 import { date, duration } from "./date"
 
 // https://github.com/evanw/esbuild/issues/56
-const externalCollections = {
+const externalCollections: Record<string, () => any> = {
   math: require("@budibase/handlebars-helpers/lib/math"),
   array: require("@budibase/handlebars-helpers/lib/array"),
   number: require("@budibase/handlebars-helpers/lib/number"),

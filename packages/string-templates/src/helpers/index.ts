@@ -44,8 +44,9 @@ const HELPERS = [
     if (value == null || typeof value !== "string") {
       return value == null ? "" : value
     }
-    if (value && value.string) {
-      value = value.string
+    // TODO: check, this should always be false
+    if (value && (value as any).string) {
+      value = (value as any).string
     }
     let text = value
     if (__opts && __opts.escapeNewlines) {

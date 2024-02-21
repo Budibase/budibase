@@ -1,12 +1,22 @@
 import dayjs from "dayjs"
-dayjs.extend(require("dayjs/plugin/duration"))
-dayjs.extend(require("dayjs/plugin/advancedFormat"))
-dayjs.extend(require("dayjs/plugin/isoWeek"))
-dayjs.extend(require("dayjs/plugin/weekYear"))
-dayjs.extend(require("dayjs/plugin/weekOfYear"))
-dayjs.extend(require("dayjs/plugin/relativeTime"))
-dayjs.extend(require("dayjs/plugin/utc"))
-dayjs.extend(require("dayjs/plugin/timezone"))
+
+import dayjsDurationPlugin from "dayjs/plugin/duration"
+import dayjsAdvancedFormatPlugin from "dayjs/plugin/advancedFormat"
+import dayjsIsoWeekPlugin from "dayjs/plugin/isoWeek"
+import dayjsWeekYearPlugin from "dayjs/plugin/weekYear"
+import dayjsWeekOfYearPlugin from "dayjs/plugin/weekOfYear"
+import dayjsRelativeTimePlugin from "dayjs/plugin/relativeTime"
+import dayjsUtcPlugin from "dayjs/plugin/utc"
+import dayjsTimezonePlugin from "dayjs/plugin/timezone"
+
+dayjs.extend(dayjsDurationPlugin)
+dayjs.extend(dayjsAdvancedFormatPlugin)
+dayjs.extend(dayjsIsoWeekPlugin)
+dayjs.extend(dayjsWeekYearPlugin)
+dayjs.extend(dayjsWeekOfYearPlugin)
+dayjs.extend(dayjsRelativeTimePlugin)
+dayjs.extend(dayjsUtcPlugin)
+dayjs.extend(dayjsTimezonePlugin)
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -58,7 +68,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-function initialConfig(str, pattern, options) {
+function initialConfig(str, pattern, options = {}) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -72,7 +82,7 @@ function initialConfig(str, pattern, options) {
   return { str, pattern, options }
 }
 
-function setLocale(str, pattern, options) {
+function setLocale(str, pattern, options = {}) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }

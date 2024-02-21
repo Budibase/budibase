@@ -6,6 +6,9 @@ export const PostProcessorNames = {
 
 /* eslint-disable no-unused-vars */
 class Postprocessor {
+  name
+  private fn
+
   constructor(name, fn) {
     this.name = name
     this.fn = fn

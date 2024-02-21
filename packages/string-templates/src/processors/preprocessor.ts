@@ -11,7 +11,7 @@ export const PreprocessorNames = {
 
 /* eslint-disable no-unused-vars */
 class Preprocessor {
-  private name: string
+  name: string
   private fn: any
 
   constructor(name, fn) {
