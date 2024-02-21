@@ -114,7 +114,7 @@ export function convertHBSBlock(block, blockNumber) {
     const parts = splitBySpace(layer)
     if (value || parts.length > 1 || list[parts[0]]) {
       // first of layer should always be the helper
-      const helper = parts.splice(0, 1)
+      const [helper] = parts.splice(0, 1)
       if (list[helper]) {
         value = `helpers.${helper}(${buildList(parts, value)})`
       }

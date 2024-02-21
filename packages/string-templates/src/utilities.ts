@@ -15,14 +15,14 @@ export const isJSAllowed = () => {
 // originally this could be done with a single regex using look behinds
 // but safari does not support this feature
 // original regex: /(?<!{){{[^{}]+}}(?!})/g
-export const findDoubleHbsInstances = string => {
+export const findDoubleHbsInstances = (string: string): string[] => {
   let copied = string
   const doubleRegex = new RegExp(FIND_HBS_REGEX)
   const regex = new RegExp(FIND_TRIPLE_HBS_REGEX)
   const tripleMatches = copied.match(regex)
   // remove triple braces
   if (tripleMatches) {
-    tripleMatches.forEach(match => {
+    tripleMatches.forEach((match: string) => {
       copied = copied.replace(match, "")
     })
   }
@@ -30,16 +30,21 @@ export const findDoubleHbsInstances = string => {
   return doubleMatches ? doubleMatches : []
 }
 
-export const isAlphaNumeric = char => {
+export const isAlphaNumeric = (char: string) => {
   return char.match(ALPHA_NUMERIC_REGEX)
 }
 
-export const swapStrings = (string, start, length, swap) => {
+export const swapStrings = (
+  string: string,
+  start: number,
+  length: number,
+  swap: string
+) => {
   return string.slice(0, start) + swap + string.slice(start + length)
 }
 
 export const removeHandlebarsStatements = (
-  string,
+  string: string,
   replacement = "Invalid binding"
 ) => {
   let regexp = new RegExp(FIND_HBS_REGEX)
@@ -54,10 +59,10 @@ export const removeHandlebarsStatements = (
   return string
 }
 
-export const btoa = plainText => {
+export const btoa = (plainText: string) => {
   return Buffer.from(plainText, "utf-8").toString("base64")
 }
 
-export const atob = base64 => {
+export const atob = (base64: string) => {
   return Buffer.from(base64, "base64").toString("utf-8")
 }

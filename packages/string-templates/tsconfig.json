@@ -1,6 +1,9 @@
 {
   "include": ["src/**/*"],
   "compilerOptions": {
+    "target": "es6",
+    "moduleResolution": "node",
+    "lib": ["dom"],
     "allowJs": true,
     "declaration": true,
     "emitDeclarationOnly": true,

@@ -1,4 +1,8 @@
 export default class Helper {
+  private name
+  private fn
+  private useValueFallback
+
   constructor(name, fn, useValueFallback = true) {
     this.name = name
     this.fn = fn
