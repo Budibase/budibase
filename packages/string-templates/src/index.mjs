@@ -1,4 +1,4 @@
-import templates from "./index.js"
+import * as templates from "./index.js"
 
 /**
  * ES6 entrypoint for rollup
