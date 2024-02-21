@@ -1,4 +1,4 @@
-const vm = require("vm")
+import vm from "vm"
 
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
@@ -17,10 +17,10 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-const { processString, setJSRunner } = require("../src/index")
+import { processString, setJSRunner } from "../src/index"
 
-const tk = require("timekeeper")
-const { getParsedManifest, runJsHelpersTests } = require("./utils")
+import tk from "timekeeper"
+import { getParsedManifest, runJsHelpersTests } from "./utils"
 
 tk.freeze("2021-01-21T12:00:00")
 

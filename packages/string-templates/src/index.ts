@@ -79,7 +79,7 @@ function createTemplate(string, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-export async function processObject(object, context, opts) {
+export async function processObject(object, context, opts?) {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
@@ -214,7 +214,7 @@ export function makePropSafe(property) {
  * @param [opts] optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-export function isValid(string, opts) {
+export function isValid(string, opts?) {
   const validCases = [
     "string",
     "number",
@@ -256,11 +256,8 @@ export function isValid(string, opts) {
  * This manifest provides information about each of the helpers and how it can be used.
  * @returns The manifest JSON which has been generated from the helpers.
  */
-let manifest
+import manifest from "../manifest.json"
 export function getManifest() {
-  if (!manifest) {
-    manifest = fs.readFileSync(require.resolve("../manifest.json"), "utf-8")
-  }
   return manifest
 }
 

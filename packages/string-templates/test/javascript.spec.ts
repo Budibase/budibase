@@ -7,7 +7,7 @@ const {
 } = require("../src/index")
 const { UUID_REGEX } = require("./constants")
 
-const processJS = (js, context) => {
+const processJS = (js, context?) => {
   return processStringSync(encodeJSBinding(js), context)
 }
 

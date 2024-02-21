@@ -188,9 +188,7 @@ describe("test the date helpers", () => {
         time: date.toUTCString(),
       }
     )
-    const formatted = new dayjs(date)
-      .tz("America/New_York")
-      .format("HH-mm-ss Z")
+    const formatted = dayjs(date).tz("America/New_York").format("HH-mm-ss Z")
     expect(output).toBe(formatted)
   })
 
@@ -200,7 +198,7 @@ describe("test the date helpers", () => {
       time: date.toUTCString(),
     })
     const timezone = dayjs.tz.guess()
-    const offset = new dayjs(date).tz(timezone).format("Z")
+    const offset = dayjs(date).tz(timezone).format("Z")
     expect(output).toBe(offset)
   })
 })
