@@ -24,7 +24,6 @@ const config = (format, outputFile) => ({
     commonjs(),
     globals(),
     builtins(),
-    json(),
     injectProcessEnv({
       NO_JS: process.env.NO_JS,
     }),
