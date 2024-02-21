@@ -1,31 +1,18 @@
 import fs from "fs"
 import path from "path"
-import { IsolatedVM, VM2 } from "../vm"
+import { IsolatedVM } from "../vm"
 
-function runJSWithIsolatedVM(script: string, context?: any) {
+function runJSWithIsolatedVM(script: string, context: any) {
   const runner = new IsolatedVM()
-  if (context) {
-    runner.withContext(context)
-  }
-  return runner.execute(`(function(){\n${script}\n})();`)
-}
-
-function runJSWithVM2(script: string, context?: any) {
-  const runner = new VM2(context)
-  return runner.execute(script)
-}
-
-function compare(script: string, context?: any) {
-  const resultIsolated = runJSWithIsolatedVM(script, context)
-  const resultVM = runJSWithVM2(script, context)
-  expect(resultIsolated).toEqual(resultVM)
-  return resultIsolated
+  return runner.withContext(context, () => {
+    return runner.execute(`(function(){\n${script}\n})();`)
+  })
 }
 
 describe("Test isolated vm directly", () => {
   it("should handle a very large file", () => {
     const marked = fs.readFileSync(path.join(__dirname, "marked.txt"), "utf-8")
-    const result = compare(marked, {
+    const result = runJSWithIsolatedVM(marked, {
       trigger: { row: { Message: "dddd" } },
     })
     expect(result).toBe("<p>dddd</p>\n")
@@ -36,14 +23,13 @@ describe("Test isolated vm directly", () => {
       data: {
         data: {
           searchProducts: {
-            results: [
-              { imageLinks: ["_S/"] }
-            ]
-          }
-        }
-      }
+            results: [{ imageLinks: ["_S/"] }],
+          },
+        },
+      },
     }
-    const result = await compare(`
+    const result = await runJSWithIsolatedVM(
+      `
       const dataUnnested = data.data.searchProducts.results
       const emptyLink = "https://budibase.com"
       let pImage = emptyLink
@@ -78,7 +64,9 @@ describe("Test isolated vm directly", () => {
       })
 
       return dataTransformed
-      `, context)
+      `,
+      context
+    )
     expect(result).toBeDefined()
     expect(result.length).toBe(1)
     expect(result[0].imageLinks.length).toBe(6)
