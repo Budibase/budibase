@@ -7,7 +7,6 @@ import sdk from "../../../sdk"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
-import { QueryPreview } from "@budibase/types"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
@@ -64,17 +63,14 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        const queryPreview: QueryPreview = {
+        return config.previewQuery(
+          request,
+          config,
+          datasource,
           fields,
-          datasourceId: datasource._id,
-          parameters: [],
-          transformer: null,
-          queryVerb: "read",
-          name: datasource.name,
-          schema: {},
-          readable: true,
-        }
-        return config.api.query.previewQuery(queryPreview)
+          undefined,
+          ""
+        )
       }
 
       it("should invalidate changed or removed variables", async () => {

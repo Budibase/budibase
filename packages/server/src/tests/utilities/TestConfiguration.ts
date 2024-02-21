@@ -866,6 +866,28 @@ export default class TestConfiguration {
 
   // QUERY
 
+  async previewQuery(
+    request: any,
+    config: any,
+    datasource: any,
+    fields: any,
+    params: any,
+    verb?: string
+  ) {
+    return request
+      .post(`/api/queries/preview`)
+      .send({
+        datasourceId: datasource._id,
+        parameters: params || {},
+        fields,
+        queryVerb: verb || "read",
+        name: datasource.name,
+      })
+      .set(config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
+  }
+
   async createQuery(config?: any) {
     if (!this.datasource && !config) {
       throw "No datasource created for query."

@@ -366,7 +366,7 @@ export function basicDatasource(): { datasource: Datasource } {
 
 export function basicQuery(datasourceId: string): Query {
   return {
-    datasourceId,
+    datasourceId: datasourceId,
     name: "New Query",
     parameters: [],
     fields: {},
