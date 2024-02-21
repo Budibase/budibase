@@ -95,6 +95,7 @@
     "mssql": "10.0.1",
     "mysql2": "3.5.2",
     "node-fetch": "2.6.7",
+    "node-llama-cpp": "^2.8.7",
     "object-sizeof": "2.6.1",
     "open": "8.4.0",
     "openai": "^3.2.1",
