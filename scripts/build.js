@@ -84,7 +84,6 @@ async function runBuild(entry, outfile) {
     ],
     preserveSymlinks: true,
     loader: {
-      ".ivm.bundle.js": "text",
     },
     metafile: true,
     external: [
@@ -104,7 +103,7 @@ async function runBuild(entry, outfile) {
 
   const hbsFiles = (async () => {
     const dir = await readdir('./', { recursive: true });
-    const files = dir.filter(entry => entry.endsWith('.hbs'));
+    const files = dir.filter(entry => entry.endsWith('.hbs') || entry.endsWith('ivm.bundle.js'));
     const fileCopyPromises = files.map(file => copyFile(file, `dist/${path.basename(file)}`))
 
     await Promise.all(fileCopyPromises)
