@@ -74,7 +74,7 @@ describe("/datasources", () => {
           schema: {},
           readable: true,
         }
-        return config.previewQuery(request, config, queryPreview)
+        return config.api.query.previewQuery(queryPreview)
       }
 
       it("should invalidate changed or removed variables", async () => {
