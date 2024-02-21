@@ -1,6 +1,5 @@
 import commonjs from "@rollup/plugin-commonjs"
 import resolve from "rollup-plugin-node-resolve"
-import json from "@rollup/plugin-json"
 import { terser } from "rollup-plugin-terser"
 import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
@@ -29,7 +28,7 @@ const config = (format, outputFile) => ({
     injectProcessEnv({
       NO_JS: process.env.NO_JS,
     }),
-    // production && terser(),
+    production && terser(),
   ],
 })
 
