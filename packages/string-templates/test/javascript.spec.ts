@@ -4,7 +4,7 @@ const {
   processStringSync,
   encodeJSBinding,
   setJSRunner,
-} = require("../src/index.js")
+} = require("../src/index")
 const { UUID_REGEX } = require("./constants")
 
 const processJS = (js, context) => {
