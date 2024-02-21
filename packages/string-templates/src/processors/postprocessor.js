@@ -1,6 +1,6 @@
-const { LITERAL_MARKER } = require("../helpers/constants")
+import { LITERAL_MARKER } from "../helpers/constants"
 
-const PostProcessorNames = {
+export const PostProcessorNames = {
   CONVERT_LITERALS: "convert-literals",
 }
 
@@ -16,9 +16,7 @@ class Postprocessor {
   }
 }
 
-module.exports.PostProcessorNames = PostProcessorNames
-
-module.exports.processors = [
+export const processors = [
   new Postprocessor(PostProcessorNames.CONVERT_LITERALS, statement => {
     if (typeof statement !== "string" || !statement.includes(LITERAL_MARKER)) {
       return statement

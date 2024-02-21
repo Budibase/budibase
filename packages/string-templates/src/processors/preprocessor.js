@@ -1,9 +1,9 @@
-const { HelperNames } = require("../helpers")
-const { swapStrings, isAlphaNumeric } = require("../utilities")
+import { HelperNames } from "../helpers"
+import { swapStrings, isAlphaNumeric } from "../utilities"
 
 const FUNCTION_CASES = ["#", "else", "/"]
 
-const PreprocessorNames = {
+export const PreprocessorNames = {
   SWAP_TO_DOT: "swap-to-dot-notation",
   FIX_FUNCTIONS: "fix-functions",
   FINALISE: "finalise",
@@ -23,7 +23,7 @@ class Preprocessor {
   }
 }
 
-module.exports.processors = [
+export const processors = [
   new Preprocessor(PreprocessorNames.SWAP_TO_DOT, statement => {
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
@@ -74,5 +74,3 @@ module.exports.processors = [
     return `{{ all ${insideStatement} }}`
   }),
 ]
-
-module.exports.PreprocessorNames = PreprocessorNames
