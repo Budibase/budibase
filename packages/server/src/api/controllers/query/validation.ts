@@ -3,11 +3,10 @@ import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
-export function queryValidation() {
-  return Joi.object({
+function baseQueryValidation() {
+  return {
     _id: OPTIONAL_STRING,
     _rev: OPTIONAL_STRING,
-    name: OPTIONAL_STRING,
     fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
     readable: Joi.boolean(),
@@ -23,10 +22,27 @@ export function queryValidation() {
     transformer: OPTIONAL_STRING,
     flags: Joi.object().optional(),
     queryId: OPTIONAL_STRING,
+  }
+}
+
+export function queryValidation() {
+  return Joi.object({
+    ...baseQueryValidation(),
+    name: Joi.string().required(),
   }).unknown(true)
 }
 
 export function generateQueryValidation() {
   // prettier-ignore
   return auth.joiValidator.body(queryValidation())
+}
+
+export function generateQueryPreviewValidation() {
+  // prettier-ignore
+  return auth.joiValidator.body(
+    Joi.object({
+      ...baseQueryValidation(),
+      name: OPTIONAL_STRING,
+    }).unknown(true)
+  )
 }
