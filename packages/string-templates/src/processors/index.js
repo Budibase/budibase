@@ -1,6 +1,6 @@
-const { FIND_HBS_REGEX } = require("../utilities")
-const preprocessor = require("./preprocessor")
-const postprocessor = require("./postprocessor")
+import { FIND_HBS_REGEX } from "../utilities"
+import * as preprocessor from "./preprocessor"
+import * as postprocessor from "./postprocessor"
 
 function process(output, processors, opts) {
   for (let processor of processors) {
@@ -21,7 +21,7 @@ function process(output, processors, opts) {
   return output
 }
 
-module.exports.preprocess = (string, opts) => {
+export function preprocess(string, opts) {
   let processors = preprocessor.processors
   if (opts.noFinalise) {
     processors = processors.filter(
@@ -30,7 +30,7 @@ module.exports.preprocess = (string, opts) => {
   }
   return process(string, processors, opts)
 }
-module.exports.postprocess = string => {
+export function postprocess(string) {
   let processors = postprocessor.processors
   return process(string, processors)
 }
