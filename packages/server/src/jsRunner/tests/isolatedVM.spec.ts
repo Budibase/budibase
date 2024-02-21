@@ -71,4 +71,29 @@ describe("Test isolated vm directly", () => {
     expect(result.length).toBe(1)
     expect(result[0].imageLinks.length).toBe(6)
   })
+
+  it("should handle automation script example", () => {
+    const context = {
+      steps: [{}, { response: "hello" }, { items: [{ rows: [{ a: 1 }] }] }],
+    }
+    const result = runJSWithIsolatedVM(
+      `const queryResults = steps[2].items;
+      
+      const intervals = steps[1].response;
+      const whereNoItemsReturned = [];
+      let index = 0;
+      
+      for (let queryResult of queryResults) {
+        if (queryResult.rows.length === 0) {
+          whereNoItemsReturned.push(intervals[index]);
+        }
+        index++;
+      }
+      
+      return whereNoItemsReturned;
+      `,
+      context
+    )
+    expect(result).toEqual([])
+  })
 })
