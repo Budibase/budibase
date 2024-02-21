@@ -89,7 +89,7 @@ export const runJsHelpersTests = ({
     const jsExamples = Object.keys(manifest).reduce((acc, v) => {
       acc[v] = manifest[v].filter(([key]) => jsHelpers[key])
       return acc
-    }, {})
+    }, {} as typeof manifest)
 
     describe.each(Object.keys(jsExamples))("%s", collection => {
       const examplesToRun = jsExamples[collection]
