@@ -7,19 +7,17 @@ import {
   QueryVariable,
   QueryResponse,
 } from "./definitions"
-import { IsolatedVM, VM2 } from "../jsRunner/vm"
+import { IsolatedVM } from "../jsRunner/vm"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName, VM } from "@budibase/types"
+import { Datasource, Query, SourceName } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
-
-const USE_ISOLATED_VM = true
 
 class QueryRunner {
   datasource: Datasource
@@ -129,26 +127,17 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      let runner: VM
-      if (!USE_ISOLATED_VM) {
-        runner = new VM2({
-          data: rows,
-          params: enrichedParameters,
-        })
-      } else {
-        transformer = `(function(){\n${transformer}\n})();`
-        let isolatedVm = new IsolatedVM().withContext({
-          data: rows,
-          params: enrichedParameters,
-        })
-        if (datasource.source === SourceName.MONGODB) {
-          isolatedVm = isolatedVm.withParsingBson(rows)
-        }
-
-        runner = isolatedVm
+      transformer = `(function(){\n${transformer}\n})();`
+      let vm = new IsolatedVM()
+      if (datasource.source === SourceName.MONGODB) {
+        vm = vm.withParsingBson(rows)
       }
 
-      rows = runner.execute(transformer)
+      const ctx = {
+        data: rows,
+        params: enrichedParameters,
+      }
+      rows = vm.withContext(ctx, () => vm.execute(transformer))
     }
 
     // if the request fails we retry once, invalidating the cached value
