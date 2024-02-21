@@ -1,11 +1,7 @@
-const { getManifest } = require("../src")
-const { getJsHelperList } = require("../src/helpers")
+import { getManifest } from "../src"
+import { getJsHelperList } from "../src/helpers"
 
-const {
-  convertToJS,
-  processStringSync,
-  encodeJSBinding,
-} = require("../src/index.js")
+import { convertToJS, processStringSync, encodeJSBinding } from "../src/index"
 
 function tryParseJson(str) {
   if (typeof str !== "string") {
@@ -19,23 +15,35 @@ function tryParseJson(str) {
   }
 }
 
-const getParsedManifest = () => {
+type ExampleType = [
+  string,
+  {
+    hbs: string
+    js: string
+    requiresHbsBody: boolean
+  }
+]
+
+export const getParsedManifest = () => {
   const manifest = getManifest()
   const collections = Object.keys(manifest)
+
   const examples = collections.reduce((acc, collection) => {
-    const functions = Object.entries(manifest[collection])
-      .filter(([_, details]) => details.example)
-      .map(([name, details]) => {
+    const functions = Object.entries<{
+      example: string
+      requiresBlock: boolean
+    }>(manifest[collection])
+      .filter(
+        ([_, details]) =>
+          details.example?.split("->").map(x => x.trim()).length > 1
+      )
+      .map(([name, details]): ExampleType => {
         const example = details.example
         let [hbs, js] = example.split("->").map(x => x.trim())
-        if (!js) {
-          // The function has no return value
-          return
-        }
 
         // Trim 's
         js = js.replace(/^'|'$/g, "")
-        let parsedExpected
+        let parsedExpected: string
         if ((parsedExpected = tryParseJson(js))) {
           if (Array.isArray(parsedExpected)) {
             if (typeof parsedExpected[0] === "object") {
@@ -48,19 +56,23 @@ const getParsedManifest = () => {
         const requiresHbsBody = details.requiresBlock
         return [name, { hbs, js, requiresHbsBody }]
       })
-      .filter(x => !!x)
 
-    if (Object.keys(functions).length) {
+    if (functions.length) {
       acc[collection] = functions
     }
     return acc
-  }, {})
+  }, {} as Record<string, ExampleType[]>)
 
   return examples
 }
-module.exports.getParsedManifest = getParsedManifest
 
-module.exports.runJsHelpersTests = ({ funcWrap, testsToSkip } = {}) => {
+export const runJsHelpersTests = ({
+  funcWrap,
+  testsToSkip,
+}: {
+  funcWrap?: any
+  testsToSkip?: any
+} = {}) => {
   funcWrap = funcWrap || (delegate => delegate())
   const manifest = getParsedManifest()
 
@@ -73,7 +85,7 @@ module.exports.runJsHelpersTests = ({ funcWrap, testsToSkip } = {}) => {
   }
 
   describe("can be parsed and run as js", () => {
-    const jsHelpers = getJsHelperList()
+    const jsHelpers = getJsHelperList()!
     const jsExamples = Object.keys(manifest).reduce((acc, v) => {
       acc[v] = manifest[v].filter(([key]) => jsHelpers[key])
       return acc
