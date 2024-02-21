@@ -168,6 +168,8 @@ export async function preview(ctx: UserCtx) {
       name,
       subtype,
     })
+    // Because custom queries have no fixed schema, we dynamically determine the schema,
+    // however types cannot be determined from null. We have no 'unknown' type, so we default to string.
     let type = typeof field,
       fieldMetadata = makeQuerySchema(FieldType.STRING, key)
     if (field != null)
