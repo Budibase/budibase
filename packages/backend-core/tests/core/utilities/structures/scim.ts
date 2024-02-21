@@ -13,7 +13,7 @@ interface CreateUserRequestFields {
 export function createUserRequest(userData?: Partial<CreateUserRequestFields>) {
   const defaultValues = {
     externalId: uuid(),
-    email: generator.email(),
+    email: generator.email({ domain: "example.com" }),
     firstName: generator.first(),
     lastName: generator.last(),
     username: generator.name(),

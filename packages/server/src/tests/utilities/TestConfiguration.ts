@@ -301,7 +301,7 @@ export default class TestConfiguration {
       lastName = generator.last(),
       builder = true,
       admin = false,
-      email = generator.email(),
+      email = generator.email({ domain: "example.com" }),
       roles,
     } = config
 
@@ -357,7 +357,7 @@ export default class TestConfiguration {
       id,
       firstName = generator.first(),
       lastName = generator.last(),
-      email = generator.email(),
+      email = generator.email({ domain: "example.com" }),
       builder = true,
       admin,
       roles,
@@ -485,7 +485,7 @@ export default class TestConfiguration {
 
   async basicRoleHeaders() {
     return await this.roleHeaders({
-      email: generator.email(),
+      email: generator.email({ domain: "example.com" }),
       builder: false,
       prodApp: true,
       roleId: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -493,7 +493,7 @@ export default class TestConfiguration {
   }
 
   async roleHeaders({
-    email = generator.email(),
+    email = generator.email({ domain: "example.com" }),
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
