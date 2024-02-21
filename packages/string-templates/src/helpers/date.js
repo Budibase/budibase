@@ -1,4 +1,4 @@
-const dayjs = require("dayjs")
+import dayjs from "dayjs"
 dayjs.extend(require("dayjs/plugin/duration"))
 dayjs.extend(require("dayjs/plugin/advancedFormat"))
 dayjs.extend(require("dayjs/plugin/isoWeek"))
@@ -83,7 +83,7 @@ function setLocale(str, pattern, options) {
   dayjs.locale(opts.lang || opts.language)
 }
 
-module.exports.date = (str, pattern, options) => {
+export const date = (str, pattern, options) => {
   const config = initialConfig(str, pattern, options)
 
   // if no args are passed, return a formatted date
@@ -109,7 +109,7 @@ module.exports.date = (str, pattern, options) => {
   return date.format(config.pattern)
 }
 
-module.exports.duration = (str, pattern, format) => {
+export const duration = (str, pattern, format) => {
   const config = initialConfig(str, pattern)
 
   setLocale(config.str, config.pattern)

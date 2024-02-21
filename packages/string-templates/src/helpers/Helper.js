@@ -1,4 +1,4 @@
-class Helper {
+export default class Helper {
   constructor(name, fn, useValueFallback = true) {
     this.name = name
     this.fn = fn
@@ -25,5 +25,3 @@ class Helper {
     handlebars.unregisterHelper(this.name)
   }
 }
-
-module.exports = Helper
