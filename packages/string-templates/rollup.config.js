@@ -18,7 +18,7 @@ export default [
       file: "./dist/bundle.cjs",
     },
     plugins: [
-      typescript({ tsconfig: "tsconfig.build.json" }),
+      typescript({ tsconfig: "tsconfig.json" }),
       resolve({
         preferBuiltins: true,
         browser: true,
