@@ -1,11 +1,11 @@
 declare const svelte: {
-  render(any): SvelteReturn;
-};
-
-export interface SvelteReturn {
-  head: any;
-  html: any;
-  css: any;
+  render(any): SvelteReturn
 }
 
-export default svelte;
+export interface SvelteReturn {
+  head: any
+  html: any
+  css: any
+}
+
+export default svelte
