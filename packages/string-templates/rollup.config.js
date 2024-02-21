@@ -9,28 +9,31 @@ import injectProcessEnv from "rollup-plugin-inject-process-env"
 
 const production = !process.env.ROLLUP_WATCH
 
-export default [
-  {
-    input: "src/index.ts",
-    output: {
-      sourcemap: !production,
-      format: "cjs",
-      file: "./dist/bundle.cjs",
-    },
-    plugins: [
-      typescript({ tsconfig: "tsconfig.json" }),
-      resolve({
-        preferBuiltins: true,
-        browser: true,
-      }),
-      commonjs(),
-      globals(),
-      builtins(),
-      json(),
-      injectProcessEnv({
-        NO_JS: process.env.NO_JS,
-      }),
-      production && terser(),
-    ],
+const config = (format, outputFile) => ({
+  input: "src/index.ts",
+  output: {
+    sourcemap: !production,
+    format,
+    file: outputFile,
   },
+  plugins: [
+    typescript({ tsconfig: "tsconfig.json" }),
+    resolve({
+      preferBuiltins: true,
+      browser: true,
+    }),
+    commonjs(),
+    globals(),
+    builtins(),
+    json(),
+    injectProcessEnv({
+      NO_JS: process.env.NO_JS,
+    }),
+    // production && terser(),
+  ],
+})
+
+export default [
+  config("cjs", "./dist/bundle.cjs"),
+  config("esm", "./dist/bundle.mjs"),
 ]
