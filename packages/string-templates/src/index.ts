@@ -1,10 +1,11 @@
-import fs from "fs"
 import { createContext, runInNewContext } from "vm"
 import { create } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
-import { atob, btoa, isBackendService } from "./utilities"
 import {
+  atob,
+  btoa,
+  isBackendService,
   FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
   findDoubleHbsInstances,
@@ -12,6 +13,8 @@ import {
 import { convertHBSBlock } from "./conversion"
 import { setJSRunner, removeJSRunner } from "./helpers/javascript"
 import { helpersToRemoveForJs } from "./helpers/list"
+
+import manifest from "../manifest.json"
 
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 
@@ -256,7 +259,6 @@ export function isValid(string, opts?) {
  * This manifest provides information about each of the helpers and how it can be used.
  * @returns The manifest JSON which has been generated from the helpers.
  */
-import manifest from "../manifest.json"
 export function getManifest() {
   return manifest
 }

@@ -5,8 +5,10 @@ jest.mock("../src/utilities", () => {
     isBackendService: jest.fn().mockReturnValue(true),
   }
 })
-const { defaultJSSetup, processStringSync, encodeJSBinding } = require("../src")
-const { isBackendService } = require("../src/utilities")
+
+import { defaultJSSetup, processStringSync, encodeJSBinding } from "../src"
+import { isBackendService } from "../src/utilities"
+
 const mockedBackendService = jest.mocked(isBackendService)
 
 const binding = encodeJSBinding("return 1")
