@@ -102,7 +102,11 @@ export async function processObject(object, context, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
-export async function processString(string, context, opts) {
+export async function processString(
+  string: string,
+  context: object,
+  opts?: { noHelpers: boolean }
+) {
   // TODO: carry out any async calls before carrying out async call
   return processStringSync(string, context, opts)
 }

@@ -76,7 +76,7 @@ describe("Test that the object processing works correctly", () => {
   it("should fail gracefully when object passed in has cycles", async () => {
     let error = null
     try {
-      const innerObj = { a: "thing {{ a }}" }
+      const innerObj: any = { a: "thing {{ a }}" }
       innerObj.b = innerObj
       await processObject(innerObj, { a: 1 })
     } catch (err) {
