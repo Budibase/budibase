@@ -91,7 +91,6 @@ export default class TestConfiguration {
   prodApp: any
   prodAppId: any
   user: any
-  globalUserId: any
   userMetadataId: any
   table?: Table
   automation: any
@@ -99,6 +98,10 @@ export default class TestConfiguration {
   tenantId?: string
   api: API
   csrfToken?: string
+
+  private get globalUserId() {
+    return this.user._id
+  }
 
   constructor(openServer = true) {
     if (openServer) {
@@ -139,6 +142,15 @@ export default class TestConfiguration {
 
   getProdAppId() {
     return this.prodAppId
+  }
+
+  getUserDetails() {
+    return {
+      globalId: this.globalUserId,
+      email: this.user.email,
+      firstName: this.user.firstName,
+      lastName: this.user.lastName,
+    }
   }
 
   async doInContext<T>(
@@ -432,7 +444,7 @@ export default class TestConfiguration {
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
     const authObj: AuthToken = {
-      userId: this.user.globalUserId,
+      userId: this.globalUserId,
       sessionId: "sessionid",
       tenantId,
     }
@@ -505,8 +517,7 @@ export default class TestConfiguration {
   async newTenant(appName = newid()): Promise<App> {
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
-    this.globalUserId = this.user._id
-    this.userMetadataId = generateUserMetadataID(this.globalUserId)
+    this.userMetadataId = generateUserMetadataID(this.user._id)
 
     this.csrfToken = generator.hash()
     return this.createApp(appName)
@@ -518,7 +529,7 @@ export default class TestConfiguration {
 
   // API
 
-  async generateApiKey(userId = this.user.globalUserId) {
+  async generateApiKey(userId = this.user._id) {
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
     let devInfo: any
