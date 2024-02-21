@@ -68,7 +68,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-function initialConfig(str, pattern, options = {}) {
+function initialConfig(str, pattern, options?) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -82,7 +82,7 @@ function initialConfig(str, pattern, options = {}) {
   return { str, pattern, options }
 }
 
-function setLocale(str, pattern, options = {}) {
+function setLocale(str, pattern, options?) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }
