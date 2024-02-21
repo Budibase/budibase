@@ -353,14 +353,16 @@ export default class TestConfiguration {
       roles?: UserRoles
     } = {}
   ): Promise<User> {
-    let { id, firstName, lastName, email, builder, admin, roles } = user
-    ;(firstName = firstName || generator.first()),
-      (lastName = lastName || generator.last()),
-      (email = email || generator.email())
-    roles = roles || {}
-    if (builder == null) {
-      builder = true
-    }
+    const {
+      id,
+      firstName = generator.first(),
+      lastName = generator.last(),
+      email = generator.email(),
+      builder = true,
+      admin,
+      roles,
+    } = user
+
     const globalId = !id ? `us_${Math.random()}` : `us_${id}`
     const resp = await this.globalUser({
       id: globalId,
@@ -369,7 +371,7 @@ export default class TestConfiguration {
       email,
       builder,
       admin,
-      roles,
+      roles: roles || {},
     })
     await cache.user.invalidateUser(globalId)
     return resp
