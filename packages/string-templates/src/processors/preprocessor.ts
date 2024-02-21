@@ -11,12 +11,15 @@ export const PreprocessorNames = {
 
 /* eslint-disable no-unused-vars */
 class Preprocessor {
+  private name: string
+  private fn: any
+
   constructor(name, fn) {
     this.name = name
     this.fn = fn
   }
 
-  process(fullString, statement, opts) {
+  process(fullString: string, statement: string, opts: Object) {
     const output = this.fn(statement, opts)
     const idx = fullString.indexOf(statement)
     return swapStrings(fullString, idx, statement.length, output)
