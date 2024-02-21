@@ -1,4 +1,4 @@
-const { getJsHelperList } = require("../helpers")
+import { getJsHelperList } from "../helpers"
 
 function getLayers(fullBlock) {
   let layers = []
@@ -103,7 +103,7 @@ function splitBySpace(layer) {
   return parts
 }
 
-module.exports.convertHBSBlock = (block, blockNumber) => {
+export function convertHBSBlock(block, blockNumber) {
   const braceLength = block[2] === "{" ? 3 : 2
   block = block.substring(braceLength, block.length - braceLength).trim()
   const layers = getLayers(block)
