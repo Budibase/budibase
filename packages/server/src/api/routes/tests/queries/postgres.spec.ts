@@ -167,4 +167,77 @@ describe("/queries", () => {
       expect(rows).toHaveLength(1)
     })
   })
+
+  it("should be able to update rows", async () => {
+    const query = await createQuery({
+      fields: {
+        sql: "UPDATE test_table SET name = {{ name }} WHERE id = {{ id }}",
+      },
+      parameters: [
+        {
+          name: "id",
+          default: "",
+        },
+        {
+          name: "name",
+          default: "updated",
+        },
+      ],
+      queryVerb: "update",
+    })
+
+    const result = await config.api.query.execute(query._id!, {
+      parameters: {
+        id: "1",
+        name: "foo",
+      },
+    })
+
+    expect(result.data).toEqual([
+      {
+        updated: true,
+      },
+    ])
+
+    await withClient(async client => {
+      const { rows } = await client.query(
+        "SELECT * FROM test_table WHERE id = 1"
+      )
+      expect(rows).toEqual([{ id: 1, name: "foo" }])
+    })
+  })
+
+  it("should be able to delete rows", async () => {
+    const query = await createQuery({
+      fields: {
+        sql: "DELETE FROM test_table WHERE id = {{ id }}",
+      },
+      parameters: [
+        {
+          name: "id",
+          default: "",
+        },
+      ],
+      queryVerb: "delete",
+    })
+
+    const result = await config.api.query.execute(query._id!, {
+      parameters: {
+        id: "1",
+      },
+    })
+
+    expect(result.data).toEqual([
+      {
+        deleted: true,
+      },
+    ])
+
+    await withClient(async client => {
+      const { rows } = await client.query(
+        "SELECT * FROM test_table WHERE id = 1"
+      )
+      expect(rows).toHaveLength(0)
+    })
+  })
 })

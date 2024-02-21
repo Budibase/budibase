@@ -1,4 +1,3 @@
-import * as actions from "../../automations/actions"
 import * as triggers from "../../automations/triggers"
 import {
   getAutomationParams,
@@ -20,11 +19,12 @@ import {
   Automation,
   AutomationActionStepId,
   AutomationResults,
-  BBContext,
+  UserCtx,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import env from "../../environment"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -72,7 +72,7 @@ function cleanAutomationInputs(automation: Automation) {
   return automation
 }
 
-export async function create(ctx: BBContext) {
+export async function create(ctx: UserCtx) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -141,7 +141,7 @@ export async function handleStepEvents(
   }
 }
 
-export async function update(ctx: BBContext) {
+export async function update(ctx: UserCtx) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -192,7 +192,7 @@ export async function update(ctx: BBContext) {
   builderSocket?.emitAutomationUpdate(ctx, automation)
 }
 
-export async function fetch(ctx: BBContext) {
+export async function fetch(ctx: UserCtx) {
   const db = context.getAppDB()
   const response = await db.allDocs(
     getAutomationParams(null, {
@@ -202,12 +202,12 @@ export async function fetch(ctx: BBContext) {
   ctx.body = response.rows.map(row => row.doc)
 }
 
-export async function find(ctx: BBContext) {
+export async function find(ctx: UserCtx) {
   const db = context.getAppDB()
   ctx.body = await db.get(ctx.params.id)
 }
 
-export async function destroy(ctx: BBContext) {
+export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
   const oldAutomation = await db.get<Automation>(automationId)
@@ -221,11 +221,11 @@ export async function destroy(ctx: BBContext) {
   builderSocket?.emitAutomationDeletion(ctx, automationId)
 }
 
-export async function logSearch(ctx: BBContext) {
+export async function logSearch(ctx: UserCtx) {
   ctx.body = await automations.logs.logSearch(ctx.request.body)
 }
 
-export async function clearLogError(ctx: BBContext) {
+export async function clearLogError(ctx: UserCtx) {
   const { automationId, appId } = ctx.request.body
   await context.doInAppContext(appId, async () => {
     const db = context.getProdAppDB()
@@ -244,15 +244,15 @@ export async function clearLogError(ctx: BBContext) {
   })
 }
 
-export async function getActionList(ctx: BBContext) {
+export async function getActionList(ctx: UserCtx) {
   ctx.body = await getActionDefinitions()
 }
 
-export async function getTriggerList(ctx: BBContext) {
+export async function getTriggerList(ctx: UserCtx) {
   ctx.body = getTriggerDefinitions()
 }
 
-export async function getDefinitionList(ctx: BBContext) {
+export async function getDefinitionList(ctx: UserCtx) {
   ctx.body = {
     trigger: getTriggerDefinitions(),
     action: await getActionDefinitions(),
@@ -265,7 +265,7 @@ export async function getDefinitionList(ctx: BBContext) {
  *                   *
  *********************/
 
-export async function trigger(ctx: BBContext) {
+export async function trigger(ctx: UserCtx) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
 
@@ -275,7 +275,9 @@ export async function trigger(ctx: BBContext) {
       automation,
       {
         fields: ctx.request.body.fields,
-        timeout: ctx.request.body.timeout * 1000 || 120000,
+        timeout:
+          ctx.request.body.timeout * 1000 ||
+          env.getDefaults().AUTOMATION_SYNC_TIMEOUT,
       },
       { getResponses: true }
     )
@@ -310,7 +312,7 @@ function prepareTestInput(input: any) {
   return input
 }
 
-export async function test(ctx: BBContext) {
+export async function test(ctx: UserCtx) {
   const db = context.getAppDB()
   let automation = await db.get<Automation>(ctx.params.id)
   await setTestFlag(automation._id!)
