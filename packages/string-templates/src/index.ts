@@ -137,7 +137,7 @@ export function processObjectSync(object, context, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-export function processStringSync(string, context, opts) {
+export function processStringSync(string, context, opts?) {
   // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {

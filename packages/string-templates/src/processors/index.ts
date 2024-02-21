@@ -2,7 +2,7 @@ import { FIND_HBS_REGEX } from "../utilities"
 import * as preprocessor from "./preprocessor"
 import * as postprocessor from "./postprocessor"
 
-function process(output, processors, opts = {}) {
+function process(output, processors, opts?) {
   for (let processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {
