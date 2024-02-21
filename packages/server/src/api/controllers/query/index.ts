@@ -232,7 +232,7 @@ export async function preview(ctx: UserCtx) {
       [key: string]: Record<string, string | QuerySchema>
     } = {}
     if (rows?.length > 0) {
-      for (let key of [...new Set(keys)] as string[]) {
+      for (let key of new Set(keys)) {
         const fieldMetadata = getFieldMetadata(rows[0][key], key)
         previewSchema[key] = fieldMetadata
         if (
