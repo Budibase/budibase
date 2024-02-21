@@ -3,7 +3,7 @@ import { create } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
 import { atob, btoa, isBackendService } from "./utilities"
-import manifest from "../manifest.json"
+const manifest = require("../manifest.json")
 import {
   FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
