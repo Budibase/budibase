@@ -10,11 +10,11 @@ const production = !process.env.ROLLUP_WATCH
 
 export default [
   {
-    input: "src/index.mjs",
+    input: "src/index.js",
     output: {
       sourcemap: !production,
-      format: "esm",
-      file: "./dist/bundle.mjs",
+      format: "cjs",
+      file: "./dist/bundle.cjs",
     },
     plugins: [
       resolve({
