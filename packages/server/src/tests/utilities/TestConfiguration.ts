@@ -301,7 +301,7 @@ export default class TestConfiguration {
       lastName = generator.last(),
       builder = true,
       admin = false,
-      email,
+      email = generator.email(),
       roles,
     } = config
 
