@@ -105,7 +105,7 @@ export async function processObject(object, context, opts?) {
 export async function processString(
   string: string,
   context: object,
-  opts?: { noHelpers: boolean }
+  opts?: { noHelpers?: boolean; escapeNewlines?: boolean }
 ) {
   // TODO: carry out any async calls before carrying out async call
   return processStringSync(string, context, opts)
@@ -367,7 +367,7 @@ export function doesContainString(template, string) {
 export function convertToJS(hbs) {
   const blocks = findHBSBlocks(hbs)
   let js = "return `",
-    prevBlock = null
+    prevBlock: string | null = null
   const variables = {}
   if (blocks.length === 0) {
     js += hbs
