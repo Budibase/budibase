@@ -20,6 +20,7 @@ import {
   type ExecuteQueryRequest,
   type ExecuteQueryResponse,
   type Row,
+  QueryParameter,
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 
@@ -118,6 +119,21 @@ function getAuthConfig(ctx: UserCtx) {
   return authConfigCtx
 }
 
+function enrichParameters(
+  queryParameters: QueryParameter[],
+  requestParameters: { [key: string]: string } = {}
+): {
+  [key: string]: string
+} {
+  // make sure parameters are fully enriched with defaults
+  for (let parameter of queryParameters) {
+    if (!requestParameters[parameter.name]) {
+      requestParameters[parameter.name] = parameter.default
+    }
+  }
+  return requestParameters
+}
+
 export async function preview(ctx: UserCtx) {
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     ctx.request.body.datasourceId
@@ -142,6 +158,68 @@ export async function preview(ctx: UserCtx) {
 
   const authConfigCtx: any = getAuthConfig(ctx)
 
+  function getFieldMetadata(field: any, key: string): QuerySchema {
+    const makeQuerySchema = (
+      type: FieldType,
+      name: string,
+      subtype?: string
+    ): QuerySchema => ({
+      type,
+      name,
+      subtype,
+    })
+    // Because custom queries have no fixed schema, we dynamically determine the schema,
+    // however types cannot be determined from null. We have no 'unknown' type, so we default to string.
+    let type = typeof field,
+      fieldMetadata = makeQuerySchema(FieldType.STRING, key)
+    if (field != null)
+      switch (type) {
+        case "boolean":
+          fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
+          break
+        case "object":
+          if (field instanceof Date) {
+            fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
+          } else if (Array.isArray(field)) {
+            if (field.some(item => JsonUtils.hasSchema(item))) {
+              fieldMetadata = makeQuerySchema(
+                FieldType.JSON,
+                key,
+                JsonFieldSubType.ARRAY
+              )
+            } else {
+              fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
+            }
+          } else {
+            fieldMetadata = makeQuerySchema(FieldType.JSON, key)
+          }
+          break
+        case "number":
+          fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
+          break
+      }
+    return fieldMetadata
+  }
+
+  function buildNestedSchema(
+    nestedSchemaFields: {
+      [key: string]: Record<string, string | QuerySchema>
+    },
+    key: string,
+    fieldArray: any[]
+  ) {
+    let schema: { [key: string]: any } = {}
+    // build the schema by aggregating all row objects in the array
+    for (const item of fieldArray) {
+      if (JsonUtils.hasSchema(item)) {
+        for (const [key, value] of Object.entries(item)) {
+          schema[key] = getFieldMetadata(value, key)
+        }
+      }
+    }
+    nestedSchemaFields[key] = schema
+  }
+
   function getSchemaFields(
     rows: any[],
     keys: string[]
@@ -155,51 +233,16 @@ export async function preview(ctx: UserCtx) {
     const nestedSchemaFields: {
       [key: string]: Record<string, string | QuerySchema>
     } = {}
-    const makeQuerySchema = (
-      type: FieldType,
-      name: string,
-      subtype?: string
-    ): QuerySchema => ({
-      type,
-      name,
-      subtype,
-    })
     if (rows?.length > 0) {
-      for (let key of [...new Set(keys)] as string[]) {
-        const field = rows[0][key]
-        let type = typeof field,
-          fieldMetadata = makeQuerySchema(FieldType.STRING, key)
-        if (field)
-          switch (type) {
-            case "boolean":
-              fieldMetadata = makeQuerySchema(FieldType.BOOLEAN, key)
-              break
-            case "object":
-              if (field instanceof Date) {
-                fieldMetadata = makeQuerySchema(FieldType.DATETIME, key)
-              } else if (Array.isArray(field)) {
-                if (JsonUtils.hasSchema(field[0])) {
-                  fieldMetadata = makeQuerySchema(
-                    FieldType.JSON,
-                    key,
-                    JsonFieldSubType.ARRAY
-                  )
-                } else {
-                  fieldMetadata = makeQuerySchema(FieldType.ARRAY, key)
-                }
-                nestedSchemaFields[key] = getSchemaFields(
-                  field,
-                  Object.keys(field[0])
-                ).previewSchema
-              } else {
-                fieldMetadata = makeQuerySchema(FieldType.JSON, key)
-              }
-              break
-            case "number":
-              fieldMetadata = makeQuerySchema(FieldType.NUMBER, key)
-              break
-          }
+      for (let key of new Set(keys)) {
+        const fieldMetadata = getFieldMetadata(rows[0][key], key)
         previewSchema[key] = fieldMetadata
+        if (
+          fieldMetadata.type === FieldType.JSON &&
+          fieldMetadata.subtype === JsonFieldSubType.ARRAY
+        ) {
+          buildNestedSchema(nestedSchemaFields, key, rows[0][key])
+        }
       }
     }
     return { previewSchema, nestedSchemaFields }
@@ -211,7 +254,7 @@ export async function preview(ctx: UserCtx) {
       datasource,
       queryVerb,
       fields,
-      parameters,
+      parameters: enrichParameters(parameters),
       transformer,
       queryId,
       schema,
@@ -266,15 +309,6 @@ async function execute(
   if (!opts.isAutomation) {
     authConfigCtx = getAuthConfig(ctx)
   }
-  const enrichedParameters = ctx.request.body.parameters || {}
-  // make sure parameters are fully enriched with defaults
-  if (query && query.parameters) {
-    for (let parameter of query.parameters) {
-      if (!enrichedParameters[parameter.name]) {
-        enrichedParameters[parameter.name] = parameter.default
-      }
-    }
-  }
 
   // call the relevant CRUD method on the integration class
   try {
@@ -284,7 +318,10 @@ async function execute(
       queryVerb: query.queryVerb,
       fields: query.fields,
       pagination: ctx.request.body.pagination,
-      parameters: enrichedParameters,
+      parameters: enrichParameters(
+        query.parameters,
+        ctx.request.body.parameters
+      ),
       transformer: query.transformer,
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
