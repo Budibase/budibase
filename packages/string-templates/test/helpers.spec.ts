@@ -1,7 +1,7 @@
-const { processString, processObject, isValid } = require("../src/index.js")
-const tableJson = require("./examples/table.json")
-const dayjs = require("dayjs")
-const { UUID_REGEX } = require("./constants")
+import { processString, processObject, isValid } from "../src/index"
+import tableJson from "./examples/table.json"
+import dayjs from "dayjs"
+import { UUID_REGEX } from "./constants"
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
