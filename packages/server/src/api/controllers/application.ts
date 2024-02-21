@@ -47,6 +47,7 @@ import {
   PlanType,
   Screen,
   UserCtx,
+  CreateAppRequest,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -116,8 +117,8 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  templateString: string
-  useTemplate: string
+  templateString?: string
+  useTemplate?: string
   file?: {
     type: string
     path: string
@@ -231,17 +232,21 @@ export async function fetchAppPackage(ctx: UserCtx) {
   }
 }
 
-async function performAppCreate(ctx: UserCtx) {
+async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url,
-    encryptionPassword = ctx.request.body.encryptionPassword
+  const {
+    name,
+    url,
+    encryptionPassword,
+    useTemplate,
+    templateKey,
+    templateString,
+  } = ctx.request.body
 
   checkAppName(ctx, apps, name)
-  const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
-  checkAppUrl(ctx, apps, url)
+  const appUrl = sdk.applications.getAppUrl({ name, url })
+  checkAppUrl(ctx, apps, appUrl)
 
-  const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
@@ -268,7 +273,7 @@ async function performAppCreate(ctx: UserCtx) {
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
       name: name,
-      url: url,
+      url: appUrl,
       template: templateKey,
       instance,
       tenantId: tenancy.getTenantId(),
