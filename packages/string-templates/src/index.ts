@@ -1,9 +1,9 @@
+import fs from "fs"
 import { createContext, runInNewContext } from "vm"
 import { create } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
 import { atob, btoa, isBackendService } from "./utilities"
-const manifest = require("../manifest.json")
 import {
   FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
@@ -252,7 +252,11 @@ export function isValid(string, opts) {
  * This manifest provides information about each of the helpers and how it can be used.
  * @returns The manifest JSON which has been generated from the helpers.
  */
+let manifest
 export function getManifest() {
+  if (!manifest) {
+    manifest = fs.readFileSync(require.resolve("../manifest.json"), "utf-8")
+  }
   return manifest
 }
 

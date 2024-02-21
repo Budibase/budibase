@@ -1,7 +1,7 @@
 import { date, duration } from "./date"
 
 // https://github.com/evanw/esbuild/issues/56
-const externalCollections: Record<string, () => any> = {
+const getExternalCollections = (): Record<string, () => any> => ({
   math: require("@budibase/handlebars-helpers/lib/math"),
   array: require("@budibase/handlebars-helpers/lib/array"),
   number: require("@budibase/handlebars-helpers/lib/number"),
@@ -11,7 +11,7 @@ const externalCollections: Record<string, () => any> = {
   object: require("@budibase/handlebars-helpers/lib/object"),
   regex: require("@budibase/handlebars-helpers/lib/regex"),
   uuid: require("@budibase/handlebars-helpers/lib/uuid"),
-}
+})
 
 export const helpersToRemoveForJs = ["sortBy"]
 
@@ -28,7 +28,7 @@ export function getJsHelperList() {
   }
 
   helpers = {}
-  for (let collection of Object.values(externalCollections)) {
+  for (let collection of Object.values(getExternalCollections())) {
     for (let [key, func] of Object.entries(collection)) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
       helpers[key] = (...props) => func(...props, {})
