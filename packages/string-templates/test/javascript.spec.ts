@@ -1,11 +1,7 @@
-const vm = require("vm")
+import vm from "vm"
 
-const {
-  processStringSync,
-  encodeJSBinding,
-  setJSRunner,
-} = require("../src/index")
-const { UUID_REGEX } = require("./constants")
+import { processStringSync, encodeJSBinding, setJSRunner } from "../src/index"
+import { UUID_REGEX } from "./constants"
 
 const processJS = (js, context?) => {
   return processStringSync(encodeJSBinding(js), context)

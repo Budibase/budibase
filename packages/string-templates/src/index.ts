@@ -108,7 +108,7 @@ export async function processObject(object, context, opts?) {
 export async function processString(
   string: string,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean }
+  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
 ) {
   // TODO: carry out any async calls before carrying out async call
   return processStringSync(string, context, opts)

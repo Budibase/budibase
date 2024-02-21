@@ -1,4 +1,4 @@
-const {
+import {
   processObject,
   processString,
   isValid,
@@ -8,7 +8,7 @@ const {
   doesContainString,
   disableEscaping,
   findHBSBlocks,
-} = require("../src/index")
+} from "../src/index"
 
 describe("Test that the string processing works correctly", () => {
   it("should process a basic template string", async () => {
@@ -28,7 +28,7 @@ describe("Test that the string processing works correctly", () => {
   it("should fail gracefully when wrong type passed in", async () => {
     let error = null
     try {
-      await processString(null, null)
+      await processString(null as any, null as any)
     } catch (err) {
       error = err
     }
