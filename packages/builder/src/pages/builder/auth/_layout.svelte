@@ -10,7 +10,7 @@
     $redirect("../")
   }
 
-  if ($admin.cloud && $admin?.checklist?.branding) {
+  if ($admin?.cloud && $admin?.checklist?.branding) {
     let url = new URL(window.location.href)
     let hostname = url.hostname
     let parts = hostname.split(".")
