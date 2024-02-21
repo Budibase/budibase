@@ -17,8 +17,8 @@ export const isJSAllowed = () => {
 // original regex: /(?<!{){{[^{}]+}}(?!})/g
 export const findDoubleHbsInstances = string => {
   let copied = string
-  const doubleRegex = new RegExp(exports.FIND_HBS_REGEX)
-  const regex = new RegExp(exports.FIND_TRIPLE_HBS_REGEX)
+  const doubleRegex = new RegExp(FIND_HBS_REGEX)
+  const regex = new RegExp(FIND_TRIPLE_HBS_REGEX)
   const tripleMatches = copied.match(regex)
   // remove triple braces
   if (tripleMatches) {
@@ -42,14 +42,14 @@ export const removeHandlebarsStatements = (
   string,
   replacement = "Invalid binding"
 ) => {
-  let regexp = new RegExp(exports.FIND_HBS_REGEX)
+  let regexp = new RegExp(FIND_HBS_REGEX)
   let matches = string.match(regexp)
   if (matches == null) {
     return string
   }
   for (let match of matches) {
     const idx = string.indexOf(match)
-    string = exports.swapStrings(string, idx, match.length, replacement)
+    string = swapStrings(string, idx, match.length, replacement)
   }
   return string
 }
