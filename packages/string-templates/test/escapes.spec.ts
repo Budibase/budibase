@@ -1,4 +1,4 @@
-const { processString } = require("../src/index.js")
+import { processString } from "../src/index"
 
 describe("Handling context properties with spaces in their name", () => {
   it("should allow through literal specifiers", async () => {
