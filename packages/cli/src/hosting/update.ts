@@ -13,7 +13,12 @@ import { COMPOSE_PATH } from "./makeFiles"
 import { info, success } from "../utils"
 import { start } from "./start"
 
-const BB_COMPOSE_SERVICES = ["app-service", "worker-service", "proxy-service"]
+const BB_COMPOSE_SERVICES = [
+  "app-service",
+  "worker-service",
+  "proxy-service",
+  "couchdb-service",
+]
 const BB_SINGLE_SERVICE = ["budibase"]
 
 export async function update() {
