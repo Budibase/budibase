@@ -1,21 +1,21 @@
 const ALPHA_NUMERIC_REGEX = /^[A-Za-z0-9]+$/g
 
-module.exports.FIND_HBS_REGEX = /{{([^{].*?)}}/g
-module.exports.FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
-module.exports.FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
+export const FIND_HBS_REGEX = /{{([^{].*?)}}/g
+export const FIND_ANY_HBS_REGEX = /{?{{([^{].*?)}}}?/g
+export const FIND_TRIPLE_HBS_REGEX = /{{{([^{].*?)}}}/g
 
-module.exports.isBackendService = () => {
+export const isBackendService = () => {
   return typeof window === "undefined"
 }
 
-module.exports.isJSAllowed = () => {
+export const isJSAllowed = () => {
   return process && !process.env.NO_JS
 }
 
 // originally this could be done with a single regex using look behinds
 // but safari does not support this feature
 // original regex: /(?<!{){{[^{}]+}}(?!})/g
-module.exports.findDoubleHbsInstances = string => {
+export const findDoubleHbsInstances = string => {
   let copied = string
   const doubleRegex = new RegExp(exports.FIND_HBS_REGEX)
   const regex = new RegExp(exports.FIND_TRIPLE_HBS_REGEX)
@@ -30,15 +30,15 @@ module.exports.findDoubleHbsInstances = string => {
   return doubleMatches ? doubleMatches : []
 }
 
-module.exports.isAlphaNumeric = char => {
+export const isAlphaNumeric = char => {
   return char.match(ALPHA_NUMERIC_REGEX)
 }
 
-module.exports.swapStrings = (string, start, length, swap) => {
+export const swapStrings = (string, start, length, swap) => {
   return string.slice(0, start) + swap + string.slice(start + length)
 }
 
-module.exports.removeHandlebarsStatements = (
+export const removeHandlebarsStatements = (
   string,
   replacement = "Invalid binding"
 ) => {
@@ -54,10 +54,10 @@ module.exports.removeHandlebarsStatements = (
   return string
 }
 
-module.exports.btoa = plainText => {
+export const btoa = plainText => {
   return Buffer.from(plainText, "utf-8").toString("base64")
 }
 
-module.exports.atob = base64 => {
+export const atob = base64 => {
   return Buffer.from(base64, "base64").toString("utf-8")
 }
