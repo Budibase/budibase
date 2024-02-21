@@ -65,4 +65,4 @@ export function unregisterAll(handlebars) {
   externalHelperNames = []
 }
 
-export const externalHelperNames = []
+export let externalHelperNames = []
