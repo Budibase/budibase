@@ -41,5 +41,19 @@
     "@types/pouchdb": "^6.4.0",
     "ts-node": "10.8.1",
     "typescript": "5.2.2"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      }
+    }
   }
 }
