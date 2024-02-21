@@ -1,9 +1,6 @@
 import { writable, get } from "svelte/store"
-import { store as frontendStore, selectedScreen } from "builderStore"
-import {
-  findComponentParent,
-  findComponentPath,
-} from "builderStore/componentUtils"
+import { findComponentParent, findComponentPath } from "helpers/components"
+import { selectedScreen, componentStore } from "stores/builder"
 
 export const DropPosition = {
   ABOVE: "above",
@@ -36,9 +33,7 @@ const createDNDStore = () => {
       })
     },
     dragover: ({ component, mousePosition }) => {
-      const definition = frontendStore.actions.components.getDefinition(
-        component._component
-      )
+      const definition = componentStore.getDefinition(component._component)
       const canHaveChildren = definition?.hasChildren
       const hasChildren = component._children?.length > 0
 
@@ -112,11 +107,8 @@ const createDNDStore = () => {
       actions.reset()
 
       // Cut and paste the component
-      frontendStore.actions.components.copy(state.source, true, false)
-      await frontendStore.actions.components.paste(
-        state.target,
-        state.dropPosition
-      )
+      componentStore.copy(state.source, true, false)
+      await componentStore.paste(state.target, state.dropPosition)
     },
   }
 

@@ -1,12 +1,18 @@
-const { atob } = require("../utilities")
+const { atob, isBackendService, isJSAllowed } = require("../utilities")
 const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
 const { getJsHelperList } = require("./list")
 
 // The method of executing JS scripts depends on the bundle being built.
-// This setter is used in the entrypoint (either index.cjs or index.mjs).
+// This setter is used in the entrypoint (either index.js or index.mjs).
 let runJS
 module.exports.setJSRunner = runner => (runJS = runner)
+module.exports.removeJSRunner = () => {
+  runJS = undefined
+}
+
+let onErrorLog
+module.exports.setOnErrorLog = delegate => (onErrorLog = delegate)
 
 // Helper utility to strip square brackets from a value
 const removeSquareBrackets = value => {
@@ -36,7 +42,7 @@ const getContextValue = (path, context) => {
 
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
-  if (process && process.env.NO_JS) {
+  if (!isJSAllowed() || (isBackendService() && !runJS)) {
     throw new Error("JS disabled in environment.")
   }
   try {
@@ -56,6 +62,8 @@ module.exports.processJS = (handlebars, context) => {
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
   } catch (error) {
+    onErrorLog && onErrorLog(error)
+
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
       return "Timed out while executing JS"
     }

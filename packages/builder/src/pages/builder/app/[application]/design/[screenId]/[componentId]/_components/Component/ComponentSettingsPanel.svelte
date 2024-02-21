@@ -1,39 +1,42 @@
 <script>
   import Panel from "components/design/Panel.svelte"
-  import { store, selectedComponent, selectedScreen } from "builderStore"
-  import { getComponentName } from "builderStore/componentUtils"
+  import {
+    selectedScreen,
+    componentStore,
+    selectedComponent,
+  } from "stores/builder"
   import ComponentSettingsSection from "./ComponentSettingsSection.svelte"
   import DesignSection from "./DesignSection.svelte"
   import CustomStylesSection from "./CustomStylesSection.svelte"
   import ConditionalUISection from "./ConditionalUISection.svelte"
-  import { notifications, ActionButton } from "@budibase/bbui"
-
+  import { getComponentName } from "helpers/components"
   import {
     getBindableProperties,
     getComponentBindableProperties,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
+  import { ActionButton, notifications } from "@budibase/bbui"
   import { capitalise } from "helpers"
 
   const onUpdateName = async value => {
     try {
-      await store.actions.components.updateSetting("_instanceName", value)
+      await componentStore.updateSetting("_instanceName", value)
     } catch (error) {
       notifications.error("Error updating component name")
     }
   }
 
   $: componentInstance = $selectedComponent
-  $: componentDefinition = store.actions.components.getDefinition(
+  $: componentDefinition = componentStore.getDefinition(
     $selectedComponent?._component
   )
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
 
   $: componentBindings = getComponentBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
   $: isScreen = $selectedComponent?._id === $selectedScreen?.props._id
   $: title = isScreen ? "Screen" : $selectedComponent?._instanceName

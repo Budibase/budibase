@@ -3,7 +3,7 @@
     automationStore,
     selectedAutomation,
     automationHistoryStore,
-  } from "builderStore"
+  } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -130,6 +130,7 @@
     flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .header.scrolling {

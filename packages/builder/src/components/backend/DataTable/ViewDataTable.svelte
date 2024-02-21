@@ -1,6 +1,6 @@
 <script>
   import { API } from "api"
-  import { tables } from "stores/backend"
+  import { tables } from "stores/builder"
 
   import Table from "./Table.svelte"
   import CalculateButton from "./buttons/CalculateButton.svelte"

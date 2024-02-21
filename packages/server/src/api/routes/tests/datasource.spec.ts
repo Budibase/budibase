@@ -77,7 +77,7 @@ describe("/datasources", () => {
         const { datasource, query } = await config.dynamicVariableDatasource()
         // preview once to cache variables
         await preview(datasource, {
-          path: "www.test.com",
+          path: "www.example.com",
           queryString: "test={{ variable3 }}",
         })
         // check variables in cache
