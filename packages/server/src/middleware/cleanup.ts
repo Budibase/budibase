@@ -2,14 +2,28 @@ import { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
 
 export default async (ctx: Ctx, next: any) => {
-  const resp = next()
+  const resp = await next()
 
   const current = context.getCurrentContext()
-  if (current?.cleanup) {
-    for (let fn of current.cleanup || []) {
+  if (!current || !current.cleanup) {
+    return resp
+  }
+
+  let errors = []
+  for (let fn of current.cleanup) {
+    try {
       await fn()
+    } catch (e) {
+      // We catch errors here to ensure we at least attempt to run all cleanup
+      // functions. We'll throw the first error we encounter after all cleanup
+      // functions have been run.
+      errors.push(e)
     }
-    delete current.cleanup
+  }
+  delete current.cleanup
+
+  if (errors.length > 0) {
+    throw errors[0]
   }
 
   return resp
