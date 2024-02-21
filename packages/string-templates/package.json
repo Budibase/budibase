@@ -3,12 +3,15 @@
   "type": "module",
   "version": "0.0.0",
   "description": "Handlebars wrapper for Budibase templating.",
-  "main": "dist/index.cjs",
-  "module": "src/index.mjs",
+  "main": "dist/bundle.cjs",
+  "module": "src/index.ts",
   "license": "MPL-2.0",
   "types": "dist/index.d.ts",
   "exports": {
-    ".": "./src/index.mjs",
+    ".": {
+      "require": "./dist/bundle.cjs",
+      "import": "./src/index.ts"
+    },
     "./package.json": "./package.json",
     "./test/utils": "./test/utils.js"
   },
