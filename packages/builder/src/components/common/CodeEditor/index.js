@@ -35,19 +35,6 @@ export const getDefaultTheme = opts => {
         backgroundColor: "var(--spectrum-global-color-gray-75)",
         color: "var(--spectrum-global-color-gray-500)",
       },
-      ".cm-activeLineGutter": {
-        backgroundColor: "var(--spectrum-global-color-gray-200)",
-        color: "var(--spectrum-global-color-gray-700)",
-      },
-      ".cm-activeLine": {
-        backgroundColor: "var(--spectrum-global-color-gray-75)",
-      },
-      ".cm-line": {
-        padding: "0 var(--spacing-s)",
-      },
-      ".cm-selectionBackground": {
-        backgroundColor: "var(--spectrum-global-color-gray-200) !important",
-      },
       "&.cm-focused .cm-cursor": {
         borderLeftColor: "var(--spectrum-alias-text-color)",
       },
