@@ -13,7 +13,7 @@ async function fetchDefinitions(ctx: BBContext) {
     console.error("Error fetching definitions:", error)
     ctx.status = 500
     ctx.body = { error: "Internal server error" }
-    
+
     return {}
   }
 }
@@ -24,14 +24,14 @@ export async function fetch(ctx: BBContext) {
 
 export async function find(ctx: BBContext) {
   const def = await getDefinition(ctx.params.type)
-  if (ctx.params.type in await fetchDefinitions(ctx)) {
-    ctx.body = def;
-    ctx.status = 200;
+  if (ctx.params.type in (await fetchDefinitions(ctx))) {
+    ctx.body = def
+    ctx.status = 200
   } else {
-    ctx.status = 400;
+    ctx.status = 400
     ctx.body = {
       message: `Cannot find definition '${ctx.params.type}'`,
       status: 400,
-    };
+    }
   }
 }
