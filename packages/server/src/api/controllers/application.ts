@@ -26,6 +26,7 @@ import {
   env as envCore,
   ErrorCode,
   events,
+  HTTPError,
   migrations,
   objectStore,
   roles,
@@ -119,7 +120,7 @@ interface AppTemplate {
   templateString: string
   useTemplate: string
   file?: {
-    type: string
+    type?: string
     path: string
     password?: string
   }
@@ -252,6 +253,10 @@ async function performAppCreate(ctx: UserCtx) {
       ...(ctx.request.files.templateFile as any),
       password: encryptionPassword,
     }
+  } else if (typeof ctx.request.body.file?.path === "string") {
+    instanceConfig.file = {
+      path: ctx.request.body.file?.path,
+    }
   }
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
   const appId = generateDevAppID(generateAppID(tenantId))
@@ -361,12 +366,20 @@ async function creationEvents(request: any, app: App) {
     else if (request.files?.templateFile) {
       creationFns.push(a => events.app.fileImported(a))
     }
+    // from server file path
+    else if (request.body.file && request.duplicate) {
+      // explicitly pass in the newly created app id
+      creationFns.push(a => events.app.duplicated(a, app.appId))
+    }
     // unknown
     else {
       console.error("Could not determine template creation event")
     }
   }
-  creationFns.push(a => events.app.created(a))
+
+  if (!request.duplicate) {
+    creationFns.push(a => events.app.created(a))
+  }
 
   for (let fn of creationFns) {
     await fn(app)
@@ -380,7 +393,9 @@ async function appPostCreate(ctx: UserCtx, app: App) {
     tenantId,
     appId: app.appId,
   })
+
   await creationEvents(ctx.request, app)
+
   // app import & template creation
   if (ctx.request.body.useTemplate === "true") {
     const { rows } = await getUniqueRows([app.appId])
@@ -611,6 +626,61 @@ export async function importToApp(ctx: UserCtx) {
     )
   }
   ctx.body = { message: "app updated" }
+}
+
+/**
+ * Create a copy of the latest dev application.
+ * Performs an export of the app, then imports from the export dir path
+ */
+export async function duplicateApp(ctx: UserCtx) {
+  const { name: appName, url: possibleUrl } = ctx.request.body
+  const { appId: sourceAppId } = ctx.params
+  const [app] = await dbCore.getAppsByIDs([sourceAppId])
+
+  if (!app) {
+    ctx.throw(404, "Source app not found")
+  }
+
+  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+
+  checkAppName(ctx, apps, appName)
+  const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
+  checkAppUrl(ctx, apps, url)
+
+  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+    excludeRows: false,
+    tar: false,
+  })
+
+  // Build a create request that triggers an import from the export path above.
+  const createReq: any = {
+    request: {
+      body: {
+        name: appName,
+        url: possibleUrl,
+        useTemplate: "true",
+        file: {
+          path: tmpPath,
+        },
+      },
+      // Mark the create as a duplicate to kick off the correct event.
+      duplicate: true,
+    },
+  }
+
+  await create(createReq)
+  const { body: newApplication } = createReq
+
+  if (!newApplication) {
+    ctx.throw(500, "There was a problem duplicating the application")
+  }
+
+  ctx.body = {
+    message: "app duplicated",
+    duplicateAppId: newApplication?.appId,
+    sourceAppId,
+  }
+  ctx.status = 200
 }
 
 export async function updateAppPackage(appPackage: any, appId: any) {

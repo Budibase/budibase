@@ -60,6 +60,11 @@ router
     controller.destroy
   )
   .post(
+    "/api/applications/:appId/duplicate",
+    authorized(permissions.GLOBAL_BUILDER),
+    controller.duplicateApp
+  )
+  .post(
     "/api/applications/:appId/import",
     authorized(permissions.BUILDER),
     controller.importToApp

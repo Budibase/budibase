@@ -3,8 +3,15 @@
   import { goto } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { apps } from "stores/portal"
-  import { appStore } from "stores/builder"
   import { API } from "api"
+
+  export let appId
+  export let appName
+  export let onDeleteSuccess = () => {
+    $goto("/builder")
+  }
+
+  let deleting = false
 
   export const show = () => {
     deletionModal.show()
@@ -17,14 +24,24 @@
   let deletionModal
   let deletionConfirmationAppName
 
+  const copyName = () => {
+    deletionConfirmationAppName = appName
+  }
+
   const deleteApp = async () => {
+    if (!appId) {
+      console.log("No app id provided")
+      return
+    }
+    deleting = true
     try {
-      await API.deleteApp($appStore.appId)
+      await API.deleteApp(appId)
       apps.load()
       notifications.success("App deleted successfully")
-      $goto("/builder")
+      onDeleteSuccess()
     } catch (err) {
       notifications.error("Error deleting app")
+      deleting = false
     }
   }
 </script>
@@ -35,14 +52,19 @@
   okText="Delete"
   onOk={deleteApp}
   onCancel={() => (deletionConfirmationAppName = null)}
-  disabled={deletionConfirmationAppName !== $appStore.name}
+  disabled={deletionConfirmationAppName !== appName || deleting}
 >
-  Are you sure you want to delete <b>{$appStore.name}</b>?
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  Are you sure you want to delete
+  <b class="app-name" on:click={copyName}>{appName}</b>?
   <br />
   Please enter the app name below to confirm.
   <br /><br />
-  <Input
-    bind:value={deletionConfirmationAppName}
-    placeholder={$appStore.name}
-  />
+  <Input bind:value={deletionConfirmationAppName} placeholder={appName} />
 </ConfirmDialog>
+
+<style>
+  .app-name {
+    cursor: pointer;
+  }
+</style>

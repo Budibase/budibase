@@ -107,6 +107,44 @@ describe("/applications", () => {
       expect(events.app.created).toBeCalledTimes(1)
       expect(events.app.fileImported).toBeCalledTimes(1)
     })
+
+    it("should reject with a known name", async () => {
+      let createError
+
+      const app = config.getApp()
+      expect(app).toBeDefined()
+      try {
+        await config.createApp(app?.name!)
+      } catch (err: any) {
+        createError = err
+        // Must be reset back to its original value or it breaks all
+        // subsequent tests
+        config.appId = app?.appId!
+      }
+
+      expect(createError).toBeDefined()
+      expect(createError.message).toEqual(
+        "Error 400 - App name is already in use."
+      )
+    })
+
+    it("should reject with a known url", async () => {
+      let createError
+
+      const app = config.getApp()
+      expect(app).toBeDefined()
+      try {
+        await config.createApp("made up", app?.url!)
+      } catch (err: any) {
+        createError = err
+        config.appId = app?.appId!
+      }
+
+      expect(createError).toBeDefined()
+      expect(createError.message).toEqual(
+        "Error 400 - App URL is already in use."
+      )
+    })
   })
 
   describe("fetch", () => {
@@ -322,6 +360,63 @@ describe("/applications", () => {
         .expect(200)
       expect(events.app.deleted).toBeCalledTimes(1)
       expect(events.app.unpublished).toBeCalledTimes(1)
+    })
+  })
+
+  describe("POST /api/applications/:appId/duplicate", () => {
+    it("should duplicate an existing app", async () => {
+      await config.createApp("to-dupe")
+      const sourceAppId = config.getProdAppId()
+
+      const resp = await request
+        .post(`/api/applications/${sourceAppId}/duplicate`)
+        .field("name", "to-dupe copy")
+        .field("url", "/to-dupe-copy")
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      expect(events.app.duplicated).toBeCalled()
+      expect(resp.body.duplicateAppId).toBeDefined()
+      expect(resp.body.sourceAppId).toEqual(sourceAppId)
+      expect(resp.body.duplicateAppId).not.toEqual(sourceAppId)
+    })
+
+    it("should reject an unknown app id with a 404", async () => {
+      await request
+        .post(`/api/applications/app_1234_not_real/duplicate`)
+        .field("name", "to-dupe copy")
+        .field("url", "/to-dupe-copy")
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(404)
+    })
+
+    it("should reject with a known name", async () => {
+      await config.createApp("known name")
+      const sourceAppId = config.getProdAppId()
+      const resp = await request
+        .post(`/api/applications/${sourceAppId}/duplicate`)
+        .field("name", "known name")
+        .field("url", "/known-name")
+        .set(config.defaultHeaders())
+        .expect(400)
+
+      expect(resp.body.message).toEqual("App name is already in use.")
+    })
+
+    it("should reject with a known url", async () => {
+      await config.createApp("known-url")
+      const sourceAppId = config.getProdAppId()
+
+      const resp = await request
+        .post(`/api/applications/${sourceAppId}/duplicate`)
+        .field("name", "this is fine")
+        .field("url", "/known-url")
+        .set(config.defaultHeaders())
+        .expect(400)
+
+      expect(resp.body.message).toEqual("App URL is already in use.")
     })
   })
 

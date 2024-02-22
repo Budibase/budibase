@@ -5,6 +5,7 @@
   import { goto } from "@roxi/routify"
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
+  import AppRowContext from "./AppRowContext.svelte"
 
   export let app
   export let lockedAction
@@ -74,12 +75,10 @@
 
   {#if isBuilder}
     <div class="app-row-actions">
-      <Button size="S" secondary on:click={lockedAction || goToOverview}>
-        Manage
-      </Button>
-      <Button size="S" primary on:click={lockedAction || goToBuilder}>
+      <Button size="S" secondary on:click={lockedAction || goToBuilder}>
         Edit
       </Button>
+      <AppRowContext {app} />
     </div>
   {:else if app.deployed}
     <!-- this can happen if an app builder has app user access to an app -->
