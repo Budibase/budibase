@@ -113,7 +113,7 @@ export async function processObject(
 export async function processString(
   string: string,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+  opts?: ProcessOptions
 ) {
   // TODO: carry out any async calls before carrying out async call
   return processStringSync(string, context, opts)
@@ -156,7 +156,7 @@ export function processObjectSync(
 export function processStringSync(
   string: string,
   context: object,
-  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound: any }
+  opts?: ProcessOptions
 ) {
   // Take a copy of input in case of error
   const input = string
@@ -397,7 +397,7 @@ export function convertToJS(hbs: string) {
     prevBlock = block
     const { variable, value } = convertHBSBlock(block, count++)
     variables[variable] = value
-    js += `${stringPart.split()}\${${variable}}`
+    js += `${stringPart.split("")}\${${variable}}`
   }
   let varBlock = ""
   for (let [variable, value] of Object.entries(variables)) {
