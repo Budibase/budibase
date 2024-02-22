@@ -125,6 +125,13 @@ function enrichParameters(
 ): {
   [key: string]: string
 } {
+  // ensure backwards compatibility with object type parameters
+  if (!Array.isArray(queryParameters)) {
+    queryParameters = Object.entries(queryParameters).map(([key, value]) => ({
+      name: key,
+      default: value,
+    })) as QueryParameter[]
+  }
   // make sure parameters are fully enriched with defaults
   for (let parameter of queryParameters) {
     if (!requestParameters[parameter.name]) {

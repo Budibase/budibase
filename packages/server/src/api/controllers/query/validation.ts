@@ -10,11 +10,14 @@ function baseQueryValidation() {
     fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
     readable: Joi.boolean(),
-    parameters: Joi.array().items(
-      Joi.object({
-        name: Joi.string(),
-        default: Joi.string().allow(""),
-      })
+    parameters: Joi.alternatives(
+      Joi.array().items(
+        Joi.object({
+          name: Joi.string(),
+          default: Joi.string().allow(""),
+        })
+      ),
+      Joi.object({}).required().unknown(true)
     ),
     queryVerb: Joi.string().required(),
     extra: Joi.object().optional(),
