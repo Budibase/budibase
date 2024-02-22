@@ -46,6 +46,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ConfirmDialog
   bind:this={deletionModal}
   title="Delete app"
@@ -54,9 +55,10 @@
   onCancel={() => (deletionConfirmationAppName = null)}
   disabled={deletionConfirmationAppName !== appName || deleting}
 >
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
   Are you sure you want to delete
-  <b class="app-name" on:click={copyName}>{appName}</b>?
+  <b class="app-name" role="button" tabindex={-1} on:click={copyName}>
+    {appName}
+  </b>?
   <br />
   Please enter the app name below to confirm.
   <br /><br />
