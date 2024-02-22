@@ -2,6 +2,7 @@ import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai"
 import environment from "../environment"
 import { IDiscriminativeModel, ILargeLanguageModel } from "./";
 import { TableSchema, Screen, Automation } from "@budibase/types";
+import * as Prompts from "./prompts"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",
@@ -44,7 +45,7 @@ export class ChatGPT implements ILargeLanguageModel {
 
   async textToSQL(prompt: string, tableSchema: string, dialect: any): Promise<string | undefined> {
     const completion = await this.chatCompletion(
-      `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`,
+      Prompts.generateSQL(prompt, tableSchema),
       {
         temperature: 0.7,
         max_tokens: 150,
@@ -57,45 +58,21 @@ export class ChatGPT implements ILargeLanguageModel {
   }
 
   async generateBudibaseTableSchema(prompt: string): Promise<TableSchema> {
-    // {
-    //   "_id": "ta_40ccfc10f02f46d9be53551bd121d4c2",
-    //   "_rev": "3-67a7a8f1fbd96cad02c7b434ed913dc5",
-    //   "name": "test",
-    //   "schema": {
-    //   "name": {
-    //     "type": "string",
-    //       "constraints": {
-    //       "type": "string",
-    //         "length": {
-    //         "maximum": null
-    //       },
-    //       "presence": false
-    //     },
-    //     "name": "name"
-    //   },
-    //   "age": {
-    //     "type": "number",
-    //       "name": "age",
-    //       "constraints": {
-    //       "type": "number",
-    //         "presence": false,
-    //         "numericality": {
-    //         "greaterThanOrEqualTo": "",
-    //           "lessThanOrEqualTo": ""
-    //       }
-    //     }
-    //   }
-    // },
-    //   "type": "table",
-    //   "sourceId": "bb_internal",
-    //   "sourceType": "internal",
-    //   "views": {},
-    //   "createdAt": "2024-01-02T13:29:24.592Z",
-    //   "updatedAt": "2024-01-02T13:29:44.862Z",
-    //   "indexes": [],
-    //   "primaryDisplay": "name"
-    // }
-    return Promise.resolve({})
+    try {
+      const completion = await this.chatCompletion(
+        Prompts.generateBudibaseTable(prompt),
+        {
+          temperature: 0.7,
+          top_p: 1.0,
+          frequency_penalty: 0.0,
+          presence_penalty: 0.0,
+        }
+      )
+      return <TableSchema>JSON.parse(completion!)
+    } catch (err) {
+      console.error("Error generating budibase schema", err)
+      return <TableSchema>{}
+    }
   }
 
   //

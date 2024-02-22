@@ -49,8 +49,8 @@ router
   .post(
     "/api/ai/generate/table",
     // authorized(permissions.BUILDER),
-    sqlPromptValidator(),
-    controller.generateSQL
+    aiPromptValidator(),
+    controller.generateBudibaseTableSchema
   )
 
 export default router

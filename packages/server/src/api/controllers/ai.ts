@@ -11,7 +11,7 @@ export async function prompt(ctx: Ctx) {
     // TODO: possibly split out at a higher level on the controller
     const LLM = ai[model as keyof typeof ai]
     const client: ILargeLanguageModel = new LLM()
-    const response =await client.prompt(prompt)
+    const response = await client.prompt(prompt)
     ctx.body = { response }
   } catch (err) {
     console.error("Something went wrong", err)
@@ -58,4 +58,17 @@ export async function generateSQL(ctx: Ctx) {
   }
 }
 
+export async function generateBudibaseTableSchema(ctx: Ctx) {
+  try {
+    const { model, prompt } = ctx.request.body
+    // TODO: possibly split out at a higher level on the controller
+    const LLM = ai[model as keyof typeof ai]
+    const client: ILargeLanguageModel = new LLM()
+    // @ts-ignore
+    const response = await client.generateBudibaseTableSchema(prompt)
+    ctx.body = response
+  } catch (err) {
+    console.error("Something went wrong", err)
+  }
+}
 
