@@ -100,6 +100,7 @@
   -->
   <Portal target=".modal-container">
     {#if visible}
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
       <div class="spectrum-Underlay is-open" on:mousedown|self={cancel}>
         <div
           class="background"

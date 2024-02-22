@@ -5,6 +5,8 @@
   export let disabled = false
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="side-nav-item">
   {#if url}
     <a class="text" on:click href={url} class:active class:disabled>
