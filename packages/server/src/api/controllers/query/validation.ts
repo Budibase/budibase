@@ -10,7 +10,7 @@ function baseQueryValidation() {
     fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
     readable: Joi.boolean(),
-    parameters: Joi.alternatives(
+    parameters: Joi.alternatives().try(
       Joi.array().items(
         Joi.object({
           name: Joi.string(),
