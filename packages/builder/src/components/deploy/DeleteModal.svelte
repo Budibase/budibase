@@ -30,7 +30,7 @@
 
   const deleteApp = async () => {
     if (!appId) {
-      console.log("No app id provided")
+      console.error("No app id provided")
       return
     }
     deleting = true
