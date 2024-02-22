@@ -84,6 +84,18 @@ export const buildAppEndpoints = API => ({
   },
 
   /**
+   * Duplicate an existing app
+   * @param app the app to dupe
+   */
+  duplicateApp: async (app, appId) => {
+    return await API.post({
+      url: `/api/applications/${appId}/duplicate`,
+      body: app,
+      json: false,
+    })
+  },
+
+  /**
    * Update an application using an export - the body
    * should be of type FormData, with a "file" and a "password" if encrypted.
    * @param appId The ID of the app to update - this will always be

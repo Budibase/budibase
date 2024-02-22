@@ -550,12 +550,16 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string): Promise<App> {
+  async createApp(appName: string, url?: string): Promise<App> {
     // create dev app
     // clear any old app
     this.appId = null
     this.app = await context.doInTenant(this.tenantId!, async () => {
-      const app = await this._req({ name: appName }, null, appController.create)
+      const app = await this._req(
+        { name: appName, url },
+        null,
+        appController.create
+      )
       this.appId = app.appId!
       return app
     })

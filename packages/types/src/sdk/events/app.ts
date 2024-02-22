@@ -44,6 +44,14 @@ export interface AppFileImportedEvent extends BaseEvent {
   }
 }
 
+export interface AppDuplicatedEvent extends BaseEvent {
+  duplicateAppId: string
+  appId: string
+  audited: {
+    name: string
+  }
+}
+
 export interface AppTemplateImportedEvent extends BaseEvent {
   appId: string
   templateKey: string
