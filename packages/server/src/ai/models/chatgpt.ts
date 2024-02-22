@@ -1,8 +1,8 @@
 import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai"
-import environment from "../environment"
-import { IDiscriminativeModel, ILargeLanguageModel } from "./";
+import environment from "../../environment"
+import { IDiscriminativeModel, ILargeLanguageModel } from "./index";
 import { TableSchema, Screen, Automation } from "@budibase/types";
-import * as Prompts from "./prompts"
+import * as Prompts from "../prompts"
 
 enum Model {
   GPT_35_TURBO = "gpt-3.5-turbo",

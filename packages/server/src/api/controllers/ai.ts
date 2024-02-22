@@ -1,8 +1,8 @@
 import { db as dbCore, tenancy, context } from "@budibase/backend-core"
-import * as ai from "../../ai"
+import * as ai from "../../ai/models"
 import sdk from "../../sdk"
 import { Ctx } from "@budibase/types"
-import { ILargeLanguageModel } from "../../ai"
+import { ILargeLanguageModel } from "../../ai/models"
 
 export async function prompt(ctx: Ctx) {
   // const db = tenancy.getGlobalDB()
