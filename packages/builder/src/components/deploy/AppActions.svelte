@@ -149,6 +149,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="action-top-nav">
   <div class="action-buttons">
     {#if updateAvailable && $isOnlyUser}
