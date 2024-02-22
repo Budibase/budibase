@@ -132,6 +132,7 @@
     flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .header.scrolling {
