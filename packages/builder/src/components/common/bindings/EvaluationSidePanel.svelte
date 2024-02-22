@@ -1,0 +1,122 @@
+<script>
+  import formatHighlight from "json-format-highlight"
+  import { Icon, notifications } from "@budibase/bbui"
+  import { copyToClipboard } from "@budibase/bbui/helpers"
+
+  export let expressionResult
+
+  $: error = expressionResult === "Error while executing JS"
+  $: empty = expressionResult == null || expressionResult === ""
+  $: success = !error && !empty
+
+  const highlight = json => {
+    // Attempt to parse and then stringify, in case this is valid JSON
+    try {
+      json = JSON.stringify(JSON.parse(json), null, 2)
+    } catch (err) {
+      // Ignore
+    }
+
+    return formatHighlight(json, {
+      keyColor: "#e06c75",
+      numberColor: "#e5c07b",
+      stringColor: "#98c379",
+      trueColor: "#d19a66",
+      falseColor: "#d19a66",
+      nullColor: "#c678dd",
+    })
+  }
+
+  const copy = () => {
+    let clipboardVal = expressionResult
+    if (typeof clipboardVal === "object") {
+      clipboardVal = JSON.stringify(clipboardVal, null, 2)
+    }
+    copyToClipboard(clipboardVal)
+    notifications.success("Value copied to clipboard")
+  }
+</script>
+
+<div class="evaluation-side-panel">
+  <div class="header" class:success class:error>
+    <div class="header-content">
+      {#if success}
+        <Icon
+          name="CheckmarkCircle"
+          color="var(--spectrum-global-color-green-600)"
+        />
+        <span>Success</span>
+        <Icon name="Copy" hoverable on:click={copy} />
+      {:else if error}
+        <Icon name="Alert" color="var(--spectrum-global-color-red-600)" />
+        <span> Error </span>
+        <Icon name="Copy" hoverable on:click={copy} />
+      {:else}
+        <span>Run</span>
+      {/if}
+    </div>
+  </div>
+  <div class="body">
+    {#if expressionResult}
+      {@html highlight(expressionResult)}
+    {:else}
+      Your expression will be evaluated here
+    {/if}
+  </div>
+</div>
+
+<style>
+  .evaluation-side-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-left: var(--border-light);
+  }
+  .header {
+    padding: var(--spacing-m);
+    flex: 0 0 auto;
+    position: relative;
+    border-bottom: var(--border-light);
+  }
+  .header-content {
+    height: var(--spectrum-alias-item-height-m);
+    display: flex;
+    align-items: center;
+    z-index: 2;
+    position: relative;
+    gap: var(--spacing-m);
+  }
+  .header-content span {
+    flex: 1 1 auto;
+  }
+  .header.success::before,
+  .header.error::before {
+    content: "";
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    position: absolute;
+    opacity: 10%;
+  }
+  .header.success::before {
+    background: var(--spectrum-global-color-green-600);
+  }
+  .header.error::before {
+    background: var(--spectrum-global-color-red-400);
+  }
+  .body {
+    flex: 1 1 auto;
+    padding: var(--spacing-m);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    height: 0;
+  }
+</style>

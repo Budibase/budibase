@@ -31,7 +31,7 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import BindingPicker from "components/common/bindings/BindingPicker.svelte"
+  import BindingPicker from "components/common/bindings/BindingSidePanel.svelte"
   import { BindingHelpers } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,

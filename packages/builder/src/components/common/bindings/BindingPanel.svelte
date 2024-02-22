@@ -1,15 +1,6 @@
 <script>
-  import {
-    DrawerContent,
-    Tabs,
-    Tab,
-    Body,
-    Button,
-    ActionButton,
-    Heading,
-    Icon,
-  } from "@budibase/bbui"
-  import { createEventDispatcher, onMount, getContext } from "svelte"
+  import { DrawerContent, ActionButton, Icon } from "@budibase/bbui"
+  import { createEventDispatcher, onMount } from "svelte"
   import {
     isValid,
     decodeJSBinding,
@@ -21,8 +12,6 @@
     readableToRuntimeBinding,
     runtimeToReadableBinding,
   } from "dataBinding"
-
-  import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -31,17 +20,15 @@
     EditorModes,
     bindingsToCompletions,
   } from "../CodeEditor"
-  import BindingPicker from "./BindingPicker.svelte"
+  import BindingSidePanel from "./BindingSidePanel.svelte"
+  import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
+  import { capitalise } from "helpers"
 
   const dispatch = createEventDispatcher()
 
   export let bindings
-  // jsValue/hbsValue are the state of the value that is being built
-  // within this binding panel - the value should not be updated until
-  // the binding panel is saved. This is the default value of the
-  // expression when the binding panel is opened, but shouldn't be updated.
   export let value = ""
   export let valid
   export let allowJS = false
@@ -49,23 +36,32 @@
   export let context = null
   export let autofocusEditor = false
 
-  const drawerActions = getContext("drawer-actions")
-  const bindingDrawerActions = getContext("binding-drawer-actions")
+  const Modes = {
+    Text: "Text",
+    JavaScript: "JavaScript",
+  }
+  const SidePanels = {
+    Bindings: "FlashOn",
+    Evaluation: "Play",
+  }
+
+  let initialValueJS = value?.startsWith?.("{{ js ")
+  let mode = initialValueJS ? Modes.JavaScript : Modes.Text
+  let sidePanel = null
 
   let getCaretPosition
   let insertAtPos
-  let initialValueJS = typeof value === "string" && value?.startsWith("{{ js ")
-  let mode = initialValueJS ? "JavaScript" : "Text"
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
-  let sidebar = true
   let targetMode = null
   let expressionResult
 
+  $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
+  $: sideTabs = [SidePanels.Evaluation, SidePanels.Bindings]
   $: enrichedBindings = enrichBindings(bindings, context)
-  $: usingJS = mode === "JavaScript"
+  $: usingJS = mode === Modes.JavaScript
   $: editorMode =
-    mode === "JavaScript" ? EditorModes.JS : EditorModes.Handlebars
+    mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: expressionResult = processStringSync(runtimeExpression || "", context)
@@ -117,9 +113,13 @@
     bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
   }
 
-  const onChangeMode = e => {
-    mode = e.detail
-    updateValue(mode === "JavaScript" ? jsValue : hbsValue)
+  const changeMode = newMode => {
+    mode = newMode
+    updateValue(newMode === Modes.JavaScript ? jsValue : hbsValue)
+  }
+
+  const changeSidePanel = newSidePanel => {
+    sidePanel = newSidePanel === sidePanel ? null : newSidePanel
   }
 
   const onChangeHBSValue = e => {
@@ -153,412 +153,292 @@
     onSelectBinding("", { forceJS: true })
   }
 
-  const highlight = json => {
-    // Attempt to parse and then stringify, in case this is valid JSON
-    try {
-      json = JSON.stringify(JSON.parse(json), null, 2)
-    } catch (err) {
-      // Ignore
-    }
-
-    return formatHighlight(json, {
-      keyColor: "#e06c75",
-      numberColor: "#e5c07b",
-      stringColor: "#98c379",
-      trueColor: "#d19a66",
-      falseColor: "#d19a66",
-      nullColor: "#c678dd",
-    })
-  }
-
   onMount(() => {
     valid = isValid(readableToRuntimeBinding(enrichedBindings, value))
   })
 </script>
 
-<span class="binding-drawer">
-  <DrawerContent>
+<DrawerContent padding={false}>
+  <div class="binding-panel">
     <div class="main">
-      <Tabs
-        selected={mode}
-        on:select={onChangeMode}
-        beforeSwitch={selectedMode => {
-          if (selectedMode === mode) {
-            return true
-          }
-          const editorValue = usingJS ? decodeJSBinding(jsValue) : hbsValue
-          if (editorValue) {
-            targetMode = selectedMode
-            return false
-          }
-          return true
-        }}
-      >
-        <Tab title="Text">
-          <div class="main-content" class:binding-panel={sidebar}>
-            <div class="editor">
-              <div class="overlay-wrap">
-                {#if targetMode}
-                  <div class="mode-overlay">
-                    <div class="prompt-body">
-                      <Heading size="S">
-                        {`Switch to ${targetMode}?`}
-                      </Heading>
-                      <Body>This will discard anything in your binding</Body>
-                      <div class="switch-actions">
-                        <Button
-                          secondary
-                          size="S"
-                          on:click={() => {
-                            targetMode = null
-                          }}
-                        >
-                          No - keep text
-                        </Button>
-                        <Button cta size="S" on:click={switchMode}>
-                          Yes - discard text
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                {/if}
-                <CodeEditor
-                  value={hbsValue}
-                  on:change={onChangeHBSValue}
-                  bind:getCaretPosition
-                  bind:insertAtPos
-                  completions={[
-                    hbAutocomplete([
-                      ...bindingCompletions,
-                      ...getHelperCompletions(editorMode),
-                    ]),
-                  ]}
-                  placeholder=""
-                  height="100%"
-                  autofocus={autofocusEditor}
-                />
-              </div>
-              {#if expressionResult}
-                <div class="result">
-                  {@html highlight(expressionResult)}
-                </div>
-              {/if}
-              <div class="binding-footer">
-                <div class="messaging">
-                  {#if !valid}
-                    <div class="syntax-error">
-                      Current Handlebars syntax is invalid, please check the
-                      guide
-                      <a href="https://handlebarsjs.com/guide/" target="_blank">
-                        here
-                      </a>
-                      for more details.
-                    </div>
-                  {:else}
-                    <Icon name="FlashOn" />
-                    <div class="messaging-wrap">
-                      <div>
-                        Add available bindings by typing &#123;&#123; or use the
-                        menu on the right
-                      </div>
-                    </div>
-                  {/if}
-                </div>
-                <div class="actions">
-                  {#if $admin.isDev && allowJS}
-                    <ActionButton
-                      secondary
-                      on:click={() => {
-                        convert()
-                        targetMode = null
-                      }}
-                    >
-                      Convert To JS
-                    </ActionButton>
-                  {/if}
-                  <ActionButton
-                    secondary
-                    icon={sidebar ? "RailRightClose" : "RailRightOpen"}
-                    on:click={() => {
-                      sidebar = !sidebar
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {#if sidebar}
-              <div class="binding-picker">
-                <BindingPicker
-                  bindings={enrichedBindings}
-                  {allowHelpers}
-                  {context}
-                  addHelper={onSelectHelper}
-                  addBinding={onSelectBinding}
-                  mode={editorMode}
-                />
-              </div>
-            {/if}
-          </div>
-        </Tab>
-        {#if allowJS}
-          <Tab title="JavaScript">
-            <div class="main-content" class:binding-panel={sidebar}>
-              <div class="editor">
-                <div class="overlay-wrap">
-                  {#if targetMode}
-                    <div class="mode-overlay">
-                      <div class="prompt-body">
-                        <Heading size="S">
-                          {`Switch to ${targetMode}?`}
-                        </Heading>
-                        <Body>This will discard anything in your binding</Body>
-                        <div class="switch-actions">
-                          <Button
-                            secondary
-                            size="S"
-                            on:click={() => {
-                              targetMode = null
-                            }}
-                          >
-                            No - keep javascript
-                          </Button>
-                          <Button cta size="S" on:click={switchMode}>
-                            Yes - discard javascript
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  {/if}
-
-                  <CodeEditor
-                    value={decodeJSBinding(jsValue)}
-                    on:change={onChangeJSValue}
-                    completions={[
-                      jsAutocomplete([
-                        ...bindingCompletions,
-                        ...getHelperCompletions(editorMode),
-                      ]),
-                    ]}
-                    mode={EditorModes.JS}
-                    bind:getCaretPosition
-                    bind:insertAtPos
-                    height="100%"
-                    autofocus={autofocusEditor}
-                  />
-                </div>
-                {#if expressionResult}
-                  <div class="result">
-                    {@html highlight(expressionResult)}
-                  </div>
-                {/if}
-                <div class="binding-footer">
-                  <div class="messaging">
-                    <Icon name="FlashOn" />
-                    <div class="messaging-wrap">
-                      <div>
-                        Add available bindings by typing $ or use the menu on
-                        the right
-                      </div>
-                    </div>
-                  </div>
-                  <div class="actions">
-                    <ActionButton
-                      secondary
-                      icon={sidebar ? "RailRightClose" : "RailRightOpen"}
-                      on:click={() => {
-                        sidebar = !sidebar
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {#if sidebar}
-                <div class="binding-picker">
-                  <BindingPicker
-                    bindings={enrichedBindings}
-                    {allowHelpers}
-                    {context}
-                    addHelper={onSelectHelper}
-                    addBinding={onSelectBinding}
-                    mode={editorMode}
-                  />
-                </div>
-              {/if}
-            </div>
-          </Tab>
-        {/if}
-        <div class="drawer-actions">
-          {#if typeof drawerActions?.hide === "function" && drawerActions?.headless}
-            <Button
-              secondary
+      <div class="tabs">
+        <div class="editor-tabs">
+          {#each editorTabs as tab}
+            <ActionButton
+              size="M"
               quiet
-              on:click={() => {
-                drawerActions.hide()
-              }}
+              selected={mode === tab}
+              on:click={() => changeMode(tab)}
             >
-              Cancel
-            </Button>
-          {/if}
-          {#if typeof bindingDrawerActions?.save === "function" && drawerActions?.headless}
-            <Button
-              cta
-              disabled={!valid}
-              on:click={() => {
-                bindingDrawerActions.save()
-              }}
-            >
-              Save
-            </Button>
-          {/if}
+              {capitalise(tab)}
+            </ActionButton>
+          {/each}
         </div>
-      </Tabs>
+        <div class="side-tabs">
+          {#each sideTabs as tab}
+            <ActionButton
+              size="M"
+              quiet
+              selected={sidePanel === tab}
+              on:click={() => changeSidePanel(tab)}
+            >
+              <Icon name={tab} size="S" />
+            </ActionButton>
+          {/each}
+        </div>
+      </div>
+      <div class="editor">
+        {#if mode === Modes.Text}
+          <CodeEditor
+            value={hbsValue}
+            on:change={onChangeHBSValue}
+            bind:getCaretPosition
+            bind:insertAtPos
+            completions={[
+              hbAutocomplete([
+                ...bindingCompletions,
+                ...getHelperCompletions(editorMode),
+              ]),
+            ]}
+            height="100%"
+            autofocus={autofocusEditor}
+            placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
+          />
+        {:else if mode === Modes.JavaScript}
+          <CodeEditor
+            value={decodeJSBinding(jsValue)}
+            on:change={onChangeJSValue}
+            completions={[
+              jsAutocomplete([
+                ...bindingCompletions,
+                ...getHelperCompletions(editorMode),
+              ]),
+            ]}
+            mode={EditorModes.JS}
+            bind:getCaretPosition
+            bind:insertAtPos
+            height="100%"
+            autofocus={autofocusEditor}
+            placeholder="Add bindings by typing $ or use the menu on the right"
+          />
+        {/if}
+      </div>
     </div>
-  </DrawerContent>
-</span>
+    <div class="side" class:visible={!!sidePanel}>
+      {#if sidePanel === SidePanels.Bindings}
+        <BindingSidePanel
+          bindings={enrichedBindings}
+          {allowHelpers}
+          {context}
+          addHelper={onSelectHelper}
+          addBinding={onSelectBinding}
+          mode={editorMode}
+        />
+      {:else if sidePanel === SidePanels.Evaluation}
+        <EvaluationSidePanel {expressionResult} />
+      {/if}
+    </div>
+  </div>
+</DrawerContent>
 
 <style>
-  .binding-drawer :global(.container > .main) {
-    overflow: hidden;
-    height: 100%;
-    padding: 0px;
-  }
-
-  .binding-drawer :global(.container > .main > .main) {
-    overflow: hidden;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .binding-drawer :global(.spectrum-Tabs-content) {
-    flex: 1;
-    overflow: hidden;
-  }
-
-  .binding-drawer :global(.spectrum-Tabs-content > div),
-  .binding-drawer :global(.spectrum-Tabs-content > div > div),
-  .binding-drawer :global(.spectrum-Tabs-content .main-content) {
+  .binding-panel {
     height: 100%;
   }
-
-  .binding-drawer .main-content {
-    grid-template-rows: unset;
-  }
-
-  .messaging {
+  .binding-panel,
+  .tabs {
     display: flex;
-    align-items: center;
-    gap: var(--spacing-m);
-    min-width: 0;
-    flex: 1;
-  }
-  .messaging-wrap {
-    overflow: hidden;
-  }
-  .messaging-wrap > div {
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-  }
-  .main :global(textarea) {
-    min-height: 202px !important;
-  }
-
-  .main-content {
-    padding: var(--spacing-s) var(--spacing-xl);
-  }
-
-  .main :global(.spectrum-Tabs div.drawer-actions) {
-    display: flex;
-    gap: var(--spacing-m);
-    margin-left: auto;
-  }
-
-  .main :global(.spectrum-Tabs-content),
-  .main :global(.spectrum-Tabs-content .main-content) {
-    margin-top: 0px;
-    padding: 0px;
-  }
-
-  .main :global(.spectrum-Tabs) {
-    display: flex;
-  }
-
-  .syntax-error {
-    color: var(--red);
-    font-size: 12px;
-  }
-  .syntax-error a {
-    color: var(--red);
-    text-decoration: underline;
-  }
-
-  .binding-footer {
-    width: 100%;
-    display: flex;
+    flex-direction: row;
     justify-content: space-between;
+    align-items: stretch;
   }
-  .main-content {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 380px;
-  }
-  .main-content.binding-panel {
-    grid-template-columns: 1fr 320px;
-  }
-  .binding-picker {
-    border-left: 2px solid var(--border-light);
-    border-left: var(--border-light);
-    overflow: scroll;
-    height: 100%;
-  }
-  .editor {
-    padding: var(--spacing-xl);
-    min-width: 0;
+  .main {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
-    overflow: hidden;
+    justify-content: flex-start;
+    align-items: stretch;
   }
-  .overlay-wrap {
-    position: relative;
-    flex: 1;
-    overflow: hidden;
+  .side {
+    flex: 0 0 0;
+    transition: flex 130ms ease-out;
   }
-  .mode-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 2;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: var(
-      --spectrum-textfield-m-background-color,
-      var(--spectrum-global-color-gray-50)
-    );
-    border-radius: var(--border-radius-s);
-  }
-  .prompt-body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-l);
-  }
-  .prompt-body .switch-actions {
-    display: flex;
-    gap: var(--spacing-l);
+  .side.visible {
+    flex: 0 0 420px;
   }
 
-  .binding-drawer :global(.code-editor),
-  .binding-drawer :global(.code-editor > div) {
+  /* Tabs */
+  .tabs {
+    padding: var(--spacing-m);
+    border-bottom: 2px solid transparent;
+  }
+  .editor-tabs,
+  .side-tabs {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-s);
+  }
+  .side-tabs :global(.icon) {
+    width: 16px;
+    display: flex;
+  }
+
+  /* Editor */
+  .editor {
+    flex: 1 1 auto;
+    height: 0;
+  }
+  .editor :global(.code-editor),
+  .editor :global(.code-editor > div),
+  .editor :global(.cm-editor) {
     height: 100%;
   }
+  .editor :global(.cm-editor) {
+    border: none;
+    border-radius: 0;
+  }
+
+  /*.binding-drawer :global(.container > .main) {*/
+  /*  overflow: hidden;*/
+  /*  height: 100%;*/
+  /*  padding: 0px;*/
+  /*}*/
+  /*.binding-drawer :global(.container > .main > .main) {*/
+  /*  overflow: hidden;*/
+  /*  height: 100%;*/
+  /*  display: flex;*/
+  /*  flex-direction: column;*/
+  /*}*/
+
+  /*.binding-drawer :global(.spectrum-Tabs-content) {*/
+  /*  flex: 1;*/
+  /*  overflow: hidden;*/
+  /*}*/
+
+  /*.binding-drawer :global(.spectrum-Tabs-content > div),*/
+  /*.binding-drawer :global(.spectrum-Tabs-content > div > div),*/
+  /*.binding-drawer :global(.spectrum-Tabs-content .main-content) {*/
+  /*  height: 100%;*/
+  /*}*/
+
+  /*.binding-drawer .main-content {*/
+  /*  grid-template-rows: unset;*/
+  /*}*/
+
+  /*.messaging {*/
+  /*  display: flex;*/
+  /*  align-items: center;*/
+  /*  gap: var(--spacing-m);*/
+  /*  min-width: 0;*/
+  /*  flex: 1;*/
+  /*}*/
+  /*.messaging-wrap {*/
+  /*  overflow: hidden;*/
+  /*}*/
+  /*.messaging-wrap > div {*/
+  /*  text-overflow: ellipsis;*/
+  /*  white-space: nowrap;*/
+  /*  overflow: hidden;*/
+  /*}*/
+  /*.main :global(textarea) {*/
+  /*  min-height: 202px !important;*/
+  /*}*/
+
+  /*.main-content {*/
+  /*  padding: var(--spacing-s) var(--spacing-xl);*/
+  /*}*/
+
+  /*.main :global(.spectrum-Tabs div.drawer-actions) {*/
+  /*  display: flex;*/
+  /*  gap: var(--spacing-m);*/
+  /*  margin-left: auto;*/
+  /*}*/
+
+  /*.main :global(.spectrum-Tabs-content),*/
+  /*.main :global(.spectrum-Tabs-content .main-content) {*/
+  /*  margin-top: 0px;*/
+  /*  padding: 0px;*/
+  /*}*/
+
+  /*.main :global(.spectrum-Tabs) {*/
+  /*  display: flex;*/
+  /*}*/
+
+  /*.syntax-error {*/
+  /*  color: var(--red);*/
+  /*  font-size: 12px;*/
+  /*}*/
+  /*.syntax-error a {*/
+  /*  color: var(--red);*/
+  /*  text-decoration: underline;*/
+  /*}*/
+
+  /*.binding-footer {*/
+  /*  width: 100%;*/
+  /*  display: flex;*/
+  /*  justify-content: space-between;*/
+  /*}*/
+  /*.main-content {*/
+  /*  display: grid;*/
+  /*  grid-template-columns: 1fr;*/
+  /*  grid-template-rows: 380px;*/
+  /*}*/
+  /*.main-content.binding-panel {*/
+  /*  grid-template-columns: 1fr 320px;*/
+  /*}*/
+  /*.binding-picker {*/
+  /*  border-left: 2px solid var(--border-light);*/
+  /*  border-left: var(--border-light);*/
+  /*  overflow: scroll;*/
+  /*  height: 100%;*/
+  /*}*/
+  /*.editor {*/
+  /*  padding: var(--spacing-xl);*/
+  /*  min-width: 0;*/
+  /*  display: flex;*/
+  /*  flex-direction: column;*/
+  /*  gap: var(--spacing-xl);*/
+  /*  overflow: hidden;*/
+  /*}*/
+  /*.overlay-wrap {*/
+  /*  position: relative;*/
+  /*  flex: 1;*/
+  /*  overflow: hidden;*/
+  /*}*/
+  /*.mode-overlay {*/
+  /*  position: absolute;*/
+  /*  top: 0;*/
+  /*  left: 0;*/
+  /*  z-index: 2;*/
+  /*  width: 100%;*/
+  /*  height: 100%;*/
+  /*  display: flex;*/
+  /*  align-items: center;*/
+  /*  justify-content: center;*/
+  /*  background-color: var(*/
+  /*    --spectrum-textfield-m-background-color,*/
+  /*    var(--spectrum-global-color-gray-50)*/
+  /*  );*/
+  /*  border-radius: var(--border-radius-s);*/
+  /*}*/
+  /*.prompt-body {*/
+  /*  display: flex;*/
+  /*  flex-direction: column;*/
+  /*  align-items: center;*/
+  /*  justify-content: center;*/
+  /*  gap: var(--spacing-l);*/
+  /*}*/
+  /*.prompt-body .switch-actions {*/
+  /*  display: flex;*/
+  /*  gap: var(--spacing-l);*/
+  /*}*/
+
+  /*.binding-drawer :global(.code-editor),*/
+  /*.binding-drawer :global(.code-editor > div) {*/
+  /*  height: 100%;*/
+  /*}*/
 
   .result {
     margin: 0;
@@ -568,10 +448,5 @@
     border-radius: var(--border-radius-s);
     font-family: monospace;
     border: 1px solid var(--spectrum-global-color-gray-300);
-    overflow-y: scroll;
-    overflow-x: hidden;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    max-height: 128px;
   }
 </style>
