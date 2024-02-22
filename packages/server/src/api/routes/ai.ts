@@ -10,6 +10,18 @@ function aiPromptValidator() {
   return auth.joiValidator.body(
     Joi.object({
       prompt: Joi.string().required(),
+      // TODO: fix these models here and use an enum
+      model: Joi.string().required().valid("ChatGPT"),
+    }).unknown(false)
+  )
+}
+
+function sqlPromptValidator() {
+  return auth.joiValidator.body(
+    Joi.object({
+      prompt: Joi.string().required(),
+      datasourceId: Joi.string().required(),
+      tableName: Joi.string().required(),
       model: Joi.string().required().valid("ChatGPT"),
     }).unknown(false)
   )
@@ -18,21 +30,27 @@ function aiPromptValidator() {
 router
   .post(
     "/api/ai/prompt",
-    function(ctx: any, next: any) {
-      return next()
-    },
     // authorized(permissions.BUILDER),
     aiPromptValidator(),
     controller.prompt
   )
   .post(
     "/api/ai/summarizetext",
-    function(ctx: any, next: any) {
-      return next()
-    },
     // authorized(permissions.BUILDER),
     aiPromptValidator(),
     controller.summariseText
+  )
+  .post(
+    "/api/ai/generate/sql",
+    // authorized(permissions.BUILDER),
+    sqlPromptValidator(),
+    controller.generateSQL
+  )
+  .post(
+    "/api/ai/generate/table",
+    // authorized(permissions.BUILDER),
+    sqlPromptValidator(),
+    controller.generateSQL
   )
 
 export default router

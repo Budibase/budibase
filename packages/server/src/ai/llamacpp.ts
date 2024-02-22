@@ -1,6 +1,7 @@
 import { ILargeLanguageModel } from "./"
+import * as llama from "node-llama-cpp"
 
-class Llama implements ILargeLanguageModel {
+class LlamaCpp implements ILargeLanguageModel {
   https://petstore.swagger.io/?url=https://lite.koboldai.net/kobold_api.json
   https://js.langchain.com/docs/integrations/llms/llama_cpp
 

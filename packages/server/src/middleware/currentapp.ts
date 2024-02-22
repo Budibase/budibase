@@ -33,7 +33,8 @@ export default async (ctx: UserCtx, next: any) => {
       !isWebhookEndpoint(ctx) &&
       !users.isBuilder(ctx.user, requestAppId)
     ) {
-      return ctx.redirect("/")
+      // TODO: restore
+      // return ctx.redirect("/")
     }
   }
 

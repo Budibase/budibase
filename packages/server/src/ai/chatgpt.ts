@@ -1,4 +1,4 @@
-import { Configuration, OpenAIApi } from "openai"
+import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai"
 import environment from "../environment"
 import { IDiscriminativeModel, ILargeLanguageModel } from "./";
 import { TableSchema, Screen, Automation } from "@budibase/types";
@@ -19,11 +19,12 @@ export class ChatGPT implements ILargeLanguageModel {
     this.client = new OpenAIApi(configuration)
   }
 
-  async chatCompletion(prompt: string) {
+  async chatCompletion(prompt: string, promptOptions: Partial<CreateChatCompletionRequest> = {}) {
     try {
       const completion = await this.client.createChatCompletion({
         model: Model.GPT_4,
         messages: [{ role: "user", content: prompt }],
+        ...promptOptions
       })
       return completion?.data?.choices[0]?.message?.content
     } catch (err) {
@@ -41,19 +42,19 @@ export class ChatGPT implements ILargeLanguageModel {
     return this.chatCompletion(summarizePrompt)
   }
 
-  // async textToSQL(prompt: string, dialect: SQLDialect): Promise<string> {
-  //   const tableSchema = `whatever`
-  //   const completion = await this.client.createCompletion({
-  //     model: Model.GPT_4,
-  //     prompt: `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}`,
-  //     temperature: 0.7,
-  //     max_tokens: 150,
-  //     top_p: 1.0,
-  //     frequency_penalty: 0.0,
-  //     presence_penalty: 0.0,
-  //   })
-  //   return completion?.data?.choices[0]?.text?.trim()
-  // }
+  async textToSQL(prompt: string, tableSchema: string, dialect: any): Promise<string | undefined> {
+    const completion = await this.chatCompletion(
+      `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`,
+      {
+        temperature: 0.7,
+        max_tokens: 150,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+      }
+    )
+    return completion
+  }
 
   async generateBudibaseTableSchema(prompt: string): Promise<TableSchema> {
     // {

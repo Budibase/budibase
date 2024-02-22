@@ -23,7 +23,8 @@ export interface IOpenSourceModel {
 export interface ILargeLanguageModel {
   prompt(prompt: string): Promise<string | undefined>
   summarizeText(prompt: string): Promise<string | undefined>
-  textToSQL?(prompt: string, dialect: SQLDialect): Promise<string | undefined>
+  // TODO: Provide dialect support if required
+  textToSQL(prompt: string, tableSchema: string, dialect?: SQLDialect): Promise<string | undefined>
   generateBudibaseTableSchema?(prompt: string): Promise<TableSchema>
   generateBudibaseScreen?(prompt: string, type: ScreenTemplateType): Promise<Screen>
   generateBudibaseAutomation?(prompt: string): Promise<Automation>
