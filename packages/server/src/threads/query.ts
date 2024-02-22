@@ -7,7 +7,7 @@ import {
   QueryVariable,
   QueryResponse,
 } from "./definitions"
-import ScriptRunner from "../utilities/scriptRunner"
+import { IsolatedVM } from "../jsRunner/vm"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
@@ -26,7 +26,7 @@ class QueryRunner {
   fields: any
   parameters: any
   pagination: any
-  transformer: any
+  transformer: string
   cachedVariables: any[]
   ctx: any
   queryResponse: any
@@ -127,11 +127,17 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
+      transformer = `(function(){\n${transformer}\n})();`
+      let vm = new IsolatedVM()
+      if (datasource.source === SourceName.MONGODB) {
+        vm = vm.withParsingBson(rows)
+      }
+
+      const ctx = {
         data: rows,
         params: enrichedParameters,
-      })
-      rows = runner.execute()
+      }
+      rows = vm.withContext(ctx, () => vm.execute(transformer))
     }
 
     // if the request fails we retry once, invalidating the cached value

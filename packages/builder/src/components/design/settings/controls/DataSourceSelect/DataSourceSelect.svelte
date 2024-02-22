@@ -127,10 +127,14 @@
       }
     })
   $: jsonArrays = bindings
-    .filter(x => x.fieldSchema?.type === "jsonarray")
+    .filter(
+      x =>
+        x.fieldSchema?.type === "jsonarray" ||
+        (x.fieldSchema?.type === "json" && x.fieldSchema?.subtype === "array")
+    )
     .map(binding => {
       const { providerId, readableBinding, runtimeBinding, tableId } = binding
-      const { name, type, prefixKeys } = binding.fieldSchema
+      const { name, type, prefixKeys, subtype } = binding.fieldSchema
       return {
         providerId,
         label: readableBinding,
@@ -138,7 +142,8 @@
         fieldType: type,
         tableId,
         prefixKeys,
-        type: "jsonarray",
+        type: type === "jsonarray" ? "jsonarray" : "queryarray",
+        subtype,
         value: `{{ literal ${runtimeBinding} }}`,
       }
     })

@@ -425,7 +425,7 @@ const generateComponentContextBindings = (asset, componentContext) => {
       table = info.table
 
       // Determine what to prefix bindings with
-      if (datasource.type === "jsonarray") {
+      if (datasource.type === "jsonarray" || datasource.type === "queryarray") {
         // For JSON arrays, use the array name as the readable prefix
         const split = datasource.label.split(".")
         readablePrefix = split[split.length - 1]
@@ -902,6 +902,19 @@ export const getSchemaForDatasource = (asset, datasource, options) => {
       table = tables.find(table => table._id === datasource.tableId)
       let tableSchema = table?.schema
       schema = JSONUtils.getJSONArrayDatasourceSchema(tableSchema, datasource)
+    }
+
+    // "queryarray" datasources are arrays inside JSON responses
+    else if (type === "queryarray") {
+      const queries = get(queriesStores).list
+      table = queries.find(query => query._id === datasource.tableId)
+      let tableSchema = table?.schema
+      let nestedSchemaFields = table?.nestedSchemaFields
+      schema = JSONUtils.generateQueryArraySchemas(
+        tableSchema,
+        nestedSchemaFields
+      )
+      schema = JSONUtils.getJSONArrayDatasourceSchema(schema, datasource)
     }
 
     // Otherwise we assume we're targeting an internal table or a plus

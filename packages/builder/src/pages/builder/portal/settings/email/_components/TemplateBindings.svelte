@@ -5,6 +5,8 @@
   export let onBindingClick = () => {}
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="bindings">
   {#each bindings as binding}
     <div class="binding" on:click={() => onBindingClick(binding)}>
