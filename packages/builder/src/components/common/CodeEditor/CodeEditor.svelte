@@ -299,10 +299,51 @@
 <style>
   /* Unify spacing between HBS and JS */
   .code-editor :global(.cm-content) {
-    padding: var(--spacing-m) 0;
+    padding: 10px 0;
   }
   .code-editor {
     font-size: 12px;
+  }
+
+  /* Overrides to ensure background selection is pixel perfect with active line */
+  .code-editor :global(.cm-line) {
+    height: 16px;
+    padding: 0 var(--spacing-s);
+  }
+  .code-editor :global(.cm-activeLine) {
+    position: relative;
+    background: transparent;
+  }
+  .code-editor :global(.cm-activeLine::before) {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    height: calc(100% - 2px);
+    width: 100%;
+    background: var(--spectrum-global-color-gray-75);
+    z-index: -2;
+  }
+  .code-editor :global(.cm-gutterElement) {
+    margin-bottom: 0;
+  }
+  .code-editor :global(.cm-activeLineGutter) {
+    color: var(--spectrum-global-color-gray-700);
+    background: transparent;
+    position: relative;
+  }
+  .code-editor :global(.cm-activeLineGutter::before) {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 1px;
+    height: calc(100% - 2px);
+    width: 100%;
+    background: var(--spectrum-global-color-gray-200);
+    z-index: -2;
+  }
+  .code-editor :global(.cm-selectionBackground) {
+    background-color: var(--spectrum-global-color-gray-300) !important;
   }
 
   .code-editor :global(.cm-tooltip.cm-completionInfo) {
@@ -330,6 +371,7 @@
     padding: 0;
     margin: 0;
     font-size: 12px;
+    font-family: var(--font-mono);
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
