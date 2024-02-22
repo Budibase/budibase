@@ -46,8 +46,8 @@ function testObject(object: any) {
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
-let templateCache = {}
-function createTemplate(string: string, opts: ProcessOptions) {
+const templateCache: Record<string, HandlebarsTemplateDelegate<any>> = {}
+function createTemplate(string: string, opts?: ProcessOptions) {
   opts = { ...defaultOpts, ...opts }
 
   // Finalising adds a helper, can't do this with no helpers
@@ -87,7 +87,7 @@ export async function processObject(
   object: { [x: string]: any },
   context: object,
   opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
-) {
+): Promise<object | Array<any>> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
@@ -114,7 +114,7 @@ export async function processString(
   string: string,
   context: object,
   opts?: ProcessOptions
-) {
+): Promise<string> {
   // TODO: carry out any async calls before carrying out async call
   return processStringSync(string, context, opts)
 }
@@ -132,7 +132,7 @@ export function processObjectSync(
   object: { [x: string]: any },
   context: any,
   opts: any
-) {
+): object | Array<any> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
@@ -157,7 +157,7 @@ export function processStringSync(
   string: string,
   context: object,
   opts?: ProcessOptions
-) {
+): string {
   // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
@@ -220,7 +220,7 @@ export function disableEscaping(string: string) {
  * @param {string} property The property which is to be wrapped.
  * @returns {string} The wrapped property ready to be added to a templating string.
  */
-export function makePropSafe(property: any) {
+export function makePropSafe(property: any): string {
   return `[${property}]`.replace("[[", "[").replace("]]", "]")
 }
 
@@ -230,7 +230,7 @@ export function makePropSafe(property: any) {
  * @param [opts] optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-export function isValid(string: any, opts?: any) {
+export function isValid(string: any, opts?: any): boolean {
   const validCases = [
     "string",
     "number",
@@ -251,7 +251,7 @@ export function isValid(string: any, opts?: any) {
     })
     template(context)
     return true
-  } catch (err) {
+  } catch (err: any) {
     const msg = err && err.message ? err.message : err
     if (!msg) {
       return false
@@ -281,7 +281,7 @@ export function getManifest() {
  * @param handlebars the HBS expression to check
  * @returns {boolean} whether the expression is JS or not
  */
-export function isJSBinding(handlebars: any) {
+export function isJSBinding(handlebars: any): boolean {
   return decodeJSBinding(handlebars) != null
 }
 
@@ -290,7 +290,7 @@ export function isJSBinding(handlebars: any) {
  * @param javascript the JS code to encode
  * @returns {string} the JS HBS expression
  */
-export function encodeJSBinding(javascript: string) {
+export function encodeJSBinding(javascript: string): string {
   return `{{ js "${btoa(javascript)}" }}`
 }
 
@@ -299,7 +299,7 @@ export function encodeJSBinding(javascript: string) {
  * @param handlebars the JS HBS expression
  * @returns {string|null} the raw JS code
  */
-export function decodeJSBinding(handlebars: string) {
+export function decodeJSBinding(handlebars: string): string | null {
   if (!handlebars || typeof handlebars !== "string") {
     return null
   }
@@ -324,7 +324,7 @@ export function decodeJSBinding(handlebars: string) {
  * @param {string[]} strings The strings to look for.
  * @returns {boolean} Will return true if all strings found in HBS statement.
  */
-export function doesContainStrings(template: string, strings: any[]) {
+export function doesContainStrings(template: string, strings: any[]): boolean {
   let regexp = new RegExp(FIND_HBS_REGEX)
   let matches = template.match(regexp)
   if (matches == null) {
@@ -333,7 +333,7 @@ export function doesContainStrings(template: string, strings: any[]) {
   for (let match of matches) {
     let hbs = match
     if (isJSBinding(match)) {
-      hbs = decodeJSBinding(match)
+      hbs = decodeJSBinding(match)!
     }
     let allFound = true
     for (let string of strings) {
@@ -354,7 +354,7 @@ export function doesContainStrings(template: string, strings: any[]) {
  * @param {string} string The string to search within.
  * @return {string[]} The found HBS blocks.
  */
-export function findHBSBlocks(string: string) {
+export function findHBSBlocks(string: string): string[] {
   if (!string || typeof string !== "string") {
     return []
   }
@@ -375,7 +375,7 @@ export function findHBSBlocks(string: string) {
  * @param {string} string The word or sentence to search for.
  * @returns {boolean} The this return true if the string is found, false if not.
  */
-export function doesContainString(template: any, string: any) {
+export function doesContainString(template: any, string: any): boolean {
   return doesContainStrings(template, [string])
 }
 
@@ -383,7 +383,7 @@ export function convertToJS(hbs: string) {
   const blocks = findHBSBlocks(hbs)
   let js = "return `",
     prevBlock: string | null = null
-  const variables = {}
+  const variables: Record<string, any> = {}
   if (blocks.length === 0) {
     js += hbs
   }
