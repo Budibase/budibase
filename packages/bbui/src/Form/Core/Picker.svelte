@@ -146,6 +146,7 @@
     <use xlink:href="#spectrum-css-icon-Chevron100" />
   </svg>
 </button>
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <Popover
   anchor={customAnchor ? customAnchor : button}
   align={align || "left"}
