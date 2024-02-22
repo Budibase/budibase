@@ -58,7 +58,7 @@ export const useCloudFree = () => {
 // FEATURES
 
 const useFeature = (feature: Feature) => {
-  const license = cloneDeep(UNLIMITED_LICENSE)
+  const license = cloneDeep(getCachedLicense() || UNLIMITED_LICENSE)
   const opts: UseLicenseOpts = {
     features: [feature],
   }
