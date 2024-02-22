@@ -1,8 +1,9 @@
 import { FIND_HBS_REGEX } from "../utilities"
 import * as preprocessor from "./preprocessor"
 import * as postprocessor from "./postprocessor"
+import { ProcessOptions } from "../types"
 
-function process(output, processors, opts?) {
+function process(output: string, processors: any[], opts?: ProcessOptions) {
   for (let processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {
@@ -21,7 +22,7 @@ function process(output, processors, opts?) {
   return output
 }
 
-export function preprocess(string, opts) {
+export function preprocess(string: string, opts: ProcessOptions) {
   let processors = preprocessor.processors
   if (opts.noFinalise) {
     processors = processors.filter(
@@ -30,7 +31,7 @@ export function preprocess(string, opts) {
   }
   return process(string, processors, opts)
 }
-export function postprocess(string) {
+export function postprocess(string: string) {
   let processors = postprocessor.processors
   return process(string, processors)
 }
