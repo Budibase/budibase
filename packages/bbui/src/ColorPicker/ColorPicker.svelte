@@ -123,6 +123,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   bind:this={preview}
   class="preview size--{size || 'M'}"
@@ -137,6 +139,8 @@
   />
 </div>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <Popover bind:this={dropdown} anchor={preview} maxHeight={320} {offset} {align}>
   <Layout paddingX="XL" paddingY="L">
     <div class="container">

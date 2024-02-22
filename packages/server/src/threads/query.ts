@@ -43,7 +43,7 @@ class QueryRunner {
     this.parameters = input.parameters
     this.pagination = input.pagination
     this.transformer = input.transformer
-    this.queryId = input.queryId!
+    this.queryId = input.queryId
     this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []

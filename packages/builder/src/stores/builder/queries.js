@@ -1,5 +1,6 @@
 import { writable, get, derived } from "svelte/store"
-import { datasources, integrations } from "./"
+import { datasources } from "./datasources"
+import { integrations } from "./integrations"
 import { API } from "api"
 import { duplicateName } from "helpers/duplicate"
 
@@ -75,7 +76,17 @@ export function createQueriesStore() {
   }
 
   const preview = async query => {
-    const result = await API.previewQuery(query)
+    const parameters = query.parameters.reduce(
+      (acc, next) => ({
+        ...acc,
+        [next.name]: next.default,
+      }),
+      {}
+    )
+    const result = await API.previewQuery({
+      ...query,
+      parameters,
+    })
     // Assume all the fields are strings and create a basic schema from the
     // unique fields returned by the server
     const schema = {}

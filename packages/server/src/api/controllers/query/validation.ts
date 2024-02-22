@@ -3,10 +3,11 @@ import Joi from "joi"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
-function baseQueryValidation() {
-  return {
-    _id: OPTIONAL_STRING,
-    _rev: OPTIONAL_STRING,
+export function queryValidation() {
+  return Joi.object({
+    _id: Joi.string(),
+    _rev: Joi.string(),
+    name: Joi.string().required(),
     fields: Joi.object().required(),
     datasourceId: Joi.string().required(),
     readable: Joi.boolean(),
@@ -16,19 +17,11 @@ function baseQueryValidation() {
         default: Joi.string().allow(""),
       })
     ),
-    queryVerb: Joi.string().required(),
+    queryVerb: Joi.string().allow().required(),
     extra: Joi.object().optional(),
     schema: Joi.object({}).required().unknown(true),
     transformer: OPTIONAL_STRING,
     flags: Joi.object().optional(),
-    queryId: OPTIONAL_STRING,
-  }
-}
-
-export function queryValidation() {
-  return Joi.object({
-    ...baseQueryValidation(),
-    name: Joi.string().required(),
   }).unknown(true)
 }
 
@@ -39,10 +32,19 @@ export function generateQueryValidation() {
 
 export function generateQueryPreviewValidation() {
   // prettier-ignore
-  return auth.joiValidator.body(
-    Joi.object({
-      ...baseQueryValidation(),
-      name: OPTIONAL_STRING,
-    }).unknown(true)
-  )
+  return auth.joiValidator.body(Joi.object({
+    _id: OPTIONAL_STRING,
+    _rev: OPTIONAL_STRING,
+    readable: Joi.boolean().optional(),
+    fields: Joi.object().required(),
+    queryVerb: Joi.string().required(),
+    name: OPTIONAL_STRING,
+    flags: Joi.object().optional(),
+    schema: Joi.object().optional(),
+    extra: Joi.object().optional(),
+    datasourceId: Joi.string().required(),
+    transformer: OPTIONAL_STRING,
+    parameters: Joi.object({}).required().unknown(true),
+    queryId: OPTIONAL_STRING,
+  }).unknown(true))
 }
