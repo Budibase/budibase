@@ -8,9 +8,9 @@ export async function fetch(ctx: BBContext) {
     ctx.status = 200
     ctx.body = definitions
   } catch (error) {
-    console.error('Error fetching definitions:', error)
+    console.error("Error fetching definitions:", error)
     ctx.status = 500
-    ctx.body = { error: 'Internal server error' }
+    ctx.body = { error: "Internal server error" }
   }
 }
 
