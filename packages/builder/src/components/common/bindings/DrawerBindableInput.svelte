@@ -91,11 +91,7 @@
   bind:this={bindingDrawer}
   {title}
   left={drawerLeft}
-  headless
 >
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
     Save
   </Button>

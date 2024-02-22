@@ -1,4 +1,8 @@
-<div class="drawer-contents">
+<script>
+  export let padding = true
+</script>
+
+<div class="drawer-contents" class:padding>
   <div class:no-sidebar={!$$slots.sidebar} class="container">
     {#if $$slots.sidebar}
       <div class="sidebar">
@@ -13,7 +17,7 @@
 
 <style>
   .drawer-contents {
-    height: 40vh;
+    height: 400px;
     overflow-y: auto;
   }
   .container {
@@ -27,13 +31,15 @@
   .sidebar {
     border-right: var(--border-light);
     overflow: auto;
-    padding: var(--spacing-xl);
     scrollbar-width: none;
+  }
+  .padding .sidebar {
+    padding: var(--spacing-xl);
   }
   .sidebar::-webkit-scrollbar {
     display: none;
   }
-  .main {
+  .padding .main {
     padding: var(--spacing-xl);
   }
   .main :global(textarea) {

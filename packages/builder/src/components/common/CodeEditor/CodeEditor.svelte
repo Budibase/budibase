@@ -153,6 +153,8 @@
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
       highlightActiveLineGutter(),
       highlightSpecialChars(),
+      lineNumbers(),
+      foldGutter(),
       EditorView.lineWrapping,
       EditorView.updateListener.of(v => {
         const docStr = v.state.doc?.toString()
@@ -217,8 +219,6 @@
     if (mode.name === "javascript") {
       complete.push(javascript())
       complete.push(highlightWhitespace())
-      complete.push(lineNumbers())
-      complete.push(foldGutter())
     }
 
     if (placeholder) {
@@ -297,9 +297,14 @@
 </div>
 
 <style>
-  .code-editor.handlebars :global(.cm-content) {
-    font-family: var(--font-sans);
+  /* Unify spacing between HBS and JS */
+  .code-editor :global(.cm-content) {
+    padding: var(--spacing-m) 0;
   }
+  .code-editor {
+    font-size: 12px;
+  }
+
   .code-editor :global(.cm-tooltip.cm-completionInfo) {
     padding: var(--spacing-m);
   }

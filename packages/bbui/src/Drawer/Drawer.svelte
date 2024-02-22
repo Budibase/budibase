@@ -9,7 +9,7 @@
   export let title
   export let fillWidth
   export let left = "314px"
-  export let width = "calc(100% - 626px)"
+  export let width = "calc(100% - 648px)"
   export let headless = false
 
   const dispatch = createEventDispatcher()
@@ -68,10 +68,7 @@
       {#if !headless}
         <header>
           <div class="text">
-            <Heading size="XS">{title}</Heading>
-            <Body size="S">
-              <slot name="description" />
-            </Body>
+            {title}
           </div>
           <div class="buttons">
             <Button secondary quiet on:click={hide}>Cancel</Button>
@@ -85,10 +82,6 @@
 {/if}
 
 <style>
-  .drawer.headless :global(.drawer-contents) {
-    height: calc(40vh + 75px);
-  }
-
   .buttons {
     display: flex;
     gap: var(--spacing-m);
@@ -98,8 +91,11 @@
     position: absolute;
     bottom: 0;
     background: var(--background);
-    border-top: var(--border-light);
+    border: var(--border-light);
     z-index: 3;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 8px;
   }
 
   .fillWidth {
@@ -112,7 +108,7 @@
     justify-content: space-between;
     align-items: center;
     border-bottom: var(--border-light);
-    padding: var(--spacing-l) var(--spacing-xl);
+    padding: var(--spacing-m) var(--spacing-xl);
     gap: var(--spacing-xl);
   }
 

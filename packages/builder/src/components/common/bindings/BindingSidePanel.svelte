@@ -137,123 +137,129 @@
   </div>
 </Popover>
 
-<Layout noPadding gap="S">
-  {#if selectedCategory}
-    <div class="sub-section-back">
-      <ActionButton
-        secondary
-        icon={"ArrowLeft"}
-        on:click={() => {
-          selectedCategory = null
-        }}
-      >
-        Back
-      </ActionButton>
-    </div>
-  {/if}
-
-  {#if !selectedCategory}
-    <div class="search">
-      <span class="search-input">
-        <Input
-          placeholder={"Search for bindings"}
-          autocomplete="off"
-          bind:value={search}
-        />
-      </span>
-
-      <span
-        class="search-input-icon"
-        on:click={() => {
-          search = null
-        }}
-        class:searching={search}
-      >
-        <Icon name={search ? "Close" : "Search"} />
-      </span>
-    </div>
-  {/if}
-
-  {#if !selectedCategory && !search}
-    <ul class="category-list">
-      {#each categoryNames as categoryName}
-        <li
+<div class="binding-side-panel">
+  <Layout noPadding gap="S">
+    {#if selectedCategory}
+      <div class="sub-section-back">
+        <ActionButton
+          secondary
+          icon={"ArrowLeft"}
           on:click={() => {
-            selectedCategory = categoryName
+            selectedCategory = null
           }}
         >
-          <Icon name={categoryIcons[categoryName]} />
-          <span class="category-name">{categoryName} </span>
-          <span class="category-chevron"><Icon name="ChevronRight" /></span>
-        </li>
-      {/each}
-    </ul>
-  {/if}
+          Back
+        </ActionButton>
+      </div>
+    {/if}
 
-  {#if selectedCategory || search}
-    {#each filteredCategories as category}
-      {#if category.bindings?.length}
-        <div class="sub-section">
-          <div class="cat-heading">
-            <Icon name={categoryIcons[category.name]} />{category.name}
-          </div>
-          <ul>
-            {#each category.bindings as binding}
-              <li
-                class="binding"
-                on:mouseenter={e => showBindingPopover(binding, e.target)}
-                on:mouseleave={hidePopover}
-                on:click={() => addBinding(binding)}
-              >
-                <span class="binding__label">
-                  {#if binding.display?.name}
-                    {binding.display.name}
-                  {:else if binding.fieldSchema?.name}
-                    {binding.fieldSchema?.name}
-                  {:else}
-                    {binding.readableBinding}
-                  {/if}
-                </span>
-                {#if binding.display?.type || binding.fieldSchema?.type}
-                  <span class="binding__typeWrap">
-                    <span class="binding__type">
-                      {binding.display?.type || binding.fieldSchema?.type}
-                    </span>
+    {#if !selectedCategory}
+      <div class="search">
+        <span class="search-input">
+          <Input
+            placeholder={"Search for bindings"}
+            autocomplete="off"
+            bind:value={search}
+          />
+        </span>
+
+        <span
+          class="search-input-icon"
+          on:click={() => {
+            search = null
+          }}
+          class:searching={search}
+        >
+          <Icon name={search ? "Close" : "Search"} />
+        </span>
+      </div>
+    {/if}
+
+    {#if !selectedCategory && !search}
+      <ul class="category-list">
+        {#each categoryNames as categoryName}
+          <li
+            on:click={() => {
+              selectedCategory = categoryName
+            }}
+          >
+            <Icon name={categoryIcons[categoryName]} />
+            <span class="category-name">{categoryName} </span>
+            <span class="category-chevron"><Icon name="ChevronRight" /></span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+
+    {#if selectedCategory || search}
+      {#each filteredCategories as category}
+        {#if category.bindings?.length}
+          <div class="sub-section">
+            <div class="cat-heading">
+              <Icon name={categoryIcons[category.name]} />{category.name}
+            </div>
+            <ul>
+              {#each category.bindings as binding}
+                <li
+                  class="binding"
+                  on:mouseenter={e => showBindingPopover(binding, e.target)}
+                  on:mouseleave={hidePopover}
+                  on:click={() => addBinding(binding)}
+                >
+                  <span class="binding__label">
+                    {#if binding.display?.name}
+                      {binding.display.name}
+                    {:else if binding.fieldSchema?.name}
+                      {binding.fieldSchema?.name}
+                    {:else}
+                      {binding.readableBinding}
+                    {/if}
                   </span>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        </div>
-      {/if}
-    {/each}
+                  {#if binding.display?.type || binding.fieldSchema?.type}
+                    <span class="binding__typeWrap">
+                      <span class="binding__type">
+                        {binding.display?.type || binding.fieldSchema?.type}
+                      </span>
+                    </span>
+                  {/if}
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
+      {/each}
 
-    {#if selectedCategory === "Helpers" || search}
-      {#if filteredHelpers?.length}
-        <div class="sub-section">
-          <div class="cat-heading">Helpers</div>
-          <ul class="helpers">
-            {#each filteredHelpers as helper}
-              <li
-                class="binding"
-                on:mouseenter={e => showHelperPopover(helper, e.target)}
-                on:mouseleave={hidePopover}
-                on:click={() => addHelper(helper, mode.name === "javascript")}
-              >
-                <span class="binding__label">{helper.displayText}</span>
-                <span class="binding__typeWrap">
-                  <span class="binding__type">function</span>
-                </span>
-              </li>
-            {/each}
-          </ul>
-        </div>
+      {#if selectedCategory === "Helpers" || search}
+        {#if filteredHelpers?.length}
+          <div class="sub-section">
+            <div class="cat-heading">Helpers</div>
+            <ul class="helpers">
+              {#each filteredHelpers as helper}
+                <li
+                  class="binding"
+                  on:mouseenter={e => showHelperPopover(helper, e.target)}
+                  on:mouseleave={hidePopover}
+                  on:click={() => addHelper(helper, mode.name === "javascript")}
+                >
+                  <span class="binding__label">{helper.displayText}</span>
+                  <span class="binding__typeWrap">
+                    <span class="binding__type">function</span>
+                  </span>
+                </li>
+              {/each}
+            </ul>
+          </div>
+        {/if}
       {/if}
     {/if}
-  {/if}
-</Layout>
+  </Layout>
+</div>
 
 <style>
+  .binding-side-panel {
+    border-left: var(--border-light);
+  }
+
   .search :global(input) {
     border: none;
     border-radius: 0;
