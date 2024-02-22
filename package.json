@@ -22,7 +22,7 @@
     "nx-cloud": "16.0.5",
     "prettier": "2.8.8",
     "prettier-plugin-svelte": "^2.3.0",
-    "svelte": "3.49.0",
+    "svelte": "^4.2.10",
     "svelte-eslint-parser": "^0.33.1",
     "typescript": "5.2.2",
     "yargs": "^17.7.2"
