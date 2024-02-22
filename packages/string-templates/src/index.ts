@@ -1,4 +1,4 @@
-import { createContext, runInNewContext } from "vm"
+import { Context, createContext, runInNewContext } from "vm"
 import { create } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
@@ -15,6 +15,7 @@ import { setJSRunner, removeJSRunner } from "./helpers/javascript"
 import { helpersToRemoveForJs } from "./helpers/list"
 
 import manifest from "../manifest.json"
+import { ProcessOptions } from "./types"
 
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
 
@@ -22,7 +23,7 @@ const hbsInstance = create()
 registerAll(hbsInstance)
 const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers)
-const defaultOpts = {
+const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,
   noEscaping: false,
@@ -33,7 +34,7 @@ const defaultOpts = {
 /**
  * Utility function to check if the object is valid.
  */
-function testObject(object) {
+function testObject(object: any) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)
@@ -46,7 +47,7 @@ function testObject(object) {
  * Creates a HBS template function for a given string, and optionally caches it.
  */
 let templateCache = {}
-function createTemplate(string, opts) {
+function createTemplate(string: string, opts: ProcessOptions) {
   opts = { ...defaultOpts, ...opts }
 
   // Finalising adds a helper, can't do this with no helpers
@@ -82,7 +83,11 @@ function createTemplate(string, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-export async function processObject(object, context, opts?) {
+export async function processObject(
+  object: { [x: string]: any },
+  context: object,
+  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+) {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     if (object[key] != null) {
@@ -123,7 +128,11 @@ export async function processString(
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-export function processObjectSync(object, context, opts) {
+export function processObjectSync(
+  object: { [x: string]: any },
+  context: any,
+  opts: any
+) {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
@@ -144,13 +153,17 @@ export function processObjectSync(object, context, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-export function processStringSync(string, context, opts?) {
+export function processStringSync(
+  string: string,
+  context: object,
+  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound: any }
+) {
   // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  function process(stringPart) {
+  function process(stringPart: string) {
     const template = createTemplate(stringPart, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
     return postprocess(
@@ -186,7 +199,7 @@ export function processStringSync(string, context, opts?) {
  * this function will find any double braces and switch to triple.
  * @param string the string to have double HBS statements converted to triple.
  */
-export function disableEscaping(string) {
+export function disableEscaping(string: string) {
   const matches = findDoubleHbsInstances(string)
   if (matches == null) {
     return string
@@ -207,7 +220,7 @@ export function disableEscaping(string) {
  * @param {string} property The property which is to be wrapped.
  * @returns {string} The wrapped property ready to be added to a templating string.
  */
-export function makePropSafe(property) {
+export function makePropSafe(property: any) {
   return `[${property}]`.replace("[[", "[").replace("]]", "]")
 }
 
@@ -217,7 +230,7 @@ export function makePropSafe(property) {
  * @param [opts] optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-export function isValid(string, opts?) {
+export function isValid(string: any, opts?: any) {
   const validCases = [
     "string",
     "number",
@@ -268,7 +281,7 @@ export function getManifest() {
  * @param handlebars the HBS expression to check
  * @returns {boolean} whether the expression is JS or not
  */
-export function isJSBinding(handlebars) {
+export function isJSBinding(handlebars: any) {
   return decodeJSBinding(handlebars) != null
 }
 
@@ -277,7 +290,7 @@ export function isJSBinding(handlebars) {
  * @param javascript the JS code to encode
  * @returns {string} the JS HBS expression
  */
-export function encodeJSBinding(javascript) {
+export function encodeJSBinding(javascript: string) {
   return `{{ js "${btoa(javascript)}" }}`
 }
 
@@ -286,7 +299,7 @@ export function encodeJSBinding(javascript) {
  * @param handlebars the JS HBS expression
  * @returns {string|null} the raw JS code
  */
-export function decodeJSBinding(handlebars) {
+export function decodeJSBinding(handlebars: string) {
   if (!handlebars || typeof handlebars !== "string") {
     return null
   }
@@ -311,7 +324,7 @@ export function decodeJSBinding(handlebars) {
  * @param {string[]} strings The strings to look for.
  * @returns {boolean} Will return true if all strings found in HBS statement.
  */
-export function doesContainStrings(template, strings) {
+export function doesContainStrings(template: string, strings: any[]) {
   let regexp = new RegExp(FIND_HBS_REGEX)
   let matches = template.match(regexp)
   if (matches == null) {
@@ -341,7 +354,7 @@ export function doesContainStrings(template, strings) {
  * @param {string} string The string to search within.
  * @return {string[]} The found HBS blocks.
  */
-export function findHBSBlocks(string) {
+export function findHBSBlocks(string: string) {
   if (!string || typeof string !== "string") {
     return []
   }
@@ -362,11 +375,11 @@ export function findHBSBlocks(string) {
  * @param {string} string The word or sentence to search for.
  * @returns {boolean} The this return true if the string is found, false if not.
  */
-export function doesContainString(template, string) {
+export function doesContainString(template: any, string: any) {
   return doesContainStrings(template, [string])
 }
 
-export function convertToJS(hbs) {
+export function convertToJS(hbs: string) {
   const blocks = findHBSBlocks(hbs)
   let js = "return `",
     prevBlock: string | null = null
@@ -407,7 +420,7 @@ function defaultJSSetup() {
     /**
      * Use polyfilled vm to run JS scripts in a browser Env
      */
-    setJSRunner((js, context) => {
+    setJSRunner((js: string, context: Context) => {
       context = {
         ...context,
         alert: undefined,

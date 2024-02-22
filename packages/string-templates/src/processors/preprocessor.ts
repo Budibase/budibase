@@ -14,7 +14,7 @@ class Preprocessor {
   name: string
   private fn: any
 
-  constructor(name, fn) {
+  constructor(name: string, fn: any) {
     this.name = name
     this.fn = fn
   }
@@ -27,7 +27,7 @@ class Preprocessor {
 }
 
 export const processors = [
-  new Preprocessor(PreprocessorNames.SWAP_TO_DOT, statement => {
+  new Preprocessor(PreprocessorNames.SWAP_TO_DOT, (statement: string) => {
     let startBraceIdx = statement.indexOf("[")
     let lastIdx = 0
     while (startBraceIdx !== -1) {
@@ -42,7 +42,7 @@ export const processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, statement => {
+  new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, (statement: string) => {
     for (let specialCase of FUNCTION_CASES) {
       const toFind = `{ ${specialCase}`,
         replacement = `{${specialCase}`
@@ -51,29 +51,32 @@ export const processors = [
     return statement
   }),
 
-  new Preprocessor(PreprocessorNames.FINALISE, (statement, opts) => {
-    const noHelpers = opts && opts.noHelpers
-    let insideStatement = statement.slice(2, statement.length - 2)
-    if (insideStatement.charAt(0) === " ") {
-      insideStatement = insideStatement.slice(1)
-    }
-    if (insideStatement.charAt(insideStatement.length - 1) === " ") {
-      insideStatement = insideStatement.slice(0, insideStatement.length - 1)
-    }
-    const possibleHelper = insideStatement.split(" ")[0]
-    // function helpers can't be wrapped
-    for (let specialCase of FUNCTION_CASES) {
-      if (possibleHelper.includes(specialCase)) {
-        return statement
+  new Preprocessor(
+    PreprocessorNames.FINALISE,
+    (statement: string, opts: { noHelpers: any }) => {
+      const noHelpers = opts && opts.noHelpers
+      let insideStatement = statement.slice(2, statement.length - 2)
+      if (insideStatement.charAt(0) === " ") {
+        insideStatement = insideStatement.slice(1)
       }
+      if (insideStatement.charAt(insideStatement.length - 1) === " ") {
+        insideStatement = insideStatement.slice(0, insideStatement.length - 1)
+      }
+      const possibleHelper = insideStatement.split(" ")[0]
+      // function helpers can't be wrapped
+      for (let specialCase of FUNCTION_CASES) {
+        if (possibleHelper.includes(specialCase)) {
+          return statement
+        }
+      }
+      const testHelper = possibleHelper.trim().toLowerCase()
+      if (
+        !noHelpers &&
+        HelperNames().some(option => testHelper === option.toLowerCase())
+      ) {
+        insideStatement = `(${insideStatement})`
+      }
+      return `{{ all ${insideStatement} }}`
     }
-    const testHelper = possibleHelper.trim().toLowerCase()
-    if (
-      !noHelpers &&
-      HelperNames().some(option => testHelper === option.toLowerCase())
-    ) {
-      insideStatement = `(${insideStatement})`
-    }
-    return `{{ all ${insideStatement} }}`
-  }),
+  ),
 ]
