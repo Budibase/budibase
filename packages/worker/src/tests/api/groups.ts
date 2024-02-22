@@ -53,4 +53,12 @@ export class GroupsAPI extends TestAPI {
       .expect("Content-Type", /json/)
       .expect(200)
   }
+
+  fetch = ({ expect } = { expect: 200 }) => {
+    return this.request
+      .get(`/api/global/groups`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expect)
+  }
 }
