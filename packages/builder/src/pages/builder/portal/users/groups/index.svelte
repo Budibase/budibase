@@ -110,14 +110,10 @@
   <div class="controls">
     <ButtonGroup>
       {#if $licensing.groupsEnabled}
-        {#if !$features.isScimEnabled}
-          <!--Show the group create button-->
-          <Button disabled={readonly} cta on:click={showCreateGroupModal}>
-            Add group
-          </Button>
-        {:else}
-          <ScimInfo text="Users are synced from your AD" />
-        {/if}
+        <!--Show the group create button-->
+        <Button disabled={readonly} cta on:click={showCreateGroupModal}>
+          Add group
+        </Button>
       {:else}
         <Button
           primary
@@ -152,6 +148,10 @@
       allowEditRows={false}
       {customRenderers}
     />
+
+    {#if $features.isScimEnabled && filteredGroups?.some(g => g.scimInfo?.isSync)}
+      <ScimInfo text="Group synced externally" />
+    {/if}
   {/if}
 </Layout>
 
