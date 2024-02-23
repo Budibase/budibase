@@ -2,13 +2,13 @@
   import { IconAvatar } from "@budibase/bbui"
 
   export let text = ""
-  export let size = "S"
+  export let iconSize = "S"
 </script>
 
 <div class="scim-banner">
   <IconAvatar
-    name="Sync"
-    {size}
+    icon="Sync"
+    size={iconSize}
     background={"var(--spectrum-global-color-gray-500)"}
   />
   {text}
