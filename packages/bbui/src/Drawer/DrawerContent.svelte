@@ -41,10 +41,12 @@
   }
   .main {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
+    overflow-x: hidden;
   }
   .padding .main {
     padding: var(--spacing-xl);
+    height: calc(100% - var(--spacing-xl) * 2);
   }
   .main :global(textarea) {
     min-height: 200px;
