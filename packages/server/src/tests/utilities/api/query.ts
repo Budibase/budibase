@@ -1,6 +1,7 @@
 import TestConfiguration from "../TestConfiguration"
 import {
   Query,
+  QueryPreview,
   type ExecuteQueryRequest,
   type ExecuteQueryResponse,
 } from "@budibase/types"
@@ -34,6 +35,21 @@ export class QueryAPI extends TestAPI {
       .set(this.config.defaultHeaders())
       .send(body)
       .expect("Content-Type", /json/)
+
+    if (res.status !== 200) {
+      throw new Error(JSON.stringify(res.body))
+    }
+
+    return res.body
+  }
+
+  previewQuery = async (queryPreview: QueryPreview) => {
+    const res = await this.request
+      .post(`/api/queries/preview`)
+      .send(queryPreview)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(200)
 
     if (res.status !== 200) {
       throw new Error(JSON.stringify(res.body))
