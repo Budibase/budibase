@@ -76,17 +76,7 @@ export function createQueriesStore() {
   }
 
   const preview = async query => {
-    const parameters = query.parameters.reduce(
-      (acc, next) => ({
-        ...acc,
-        [next.name]: next.default,
-      }),
-      {}
-    )
-    const result = await API.previewQuery({
-      ...query,
-      parameters,
-    })
+    const result = await API.previewQuery(query)
     // Assume all the fields are strings and create a basic schema from the
     // unique fields returned by the server
     const schema = {}
