@@ -2,6 +2,10 @@ export function generateSQL(prompt: string, tableSchema: string) {
   return `Given the table schema:\n${tableSchema}\n\nGenerate a SQL query for the following request:\n${prompt}.\n Only provide the SQL.`
 }
 
+export function generateCode(prompt: string) {
+
+}
+
 export function generateBudibaseTable(prompt: string) {
   const exampleTable = {
     "_id": "ta_40ccfc10f02f46d9be53551bd121d4c2",
@@ -42,7 +46,3 @@ export function generateBudibaseTable(prompt: string) {
   }
   return `Given this custom schema as an example:\n ${JSON.stringify(exampleTable, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only generate the JSON.`
 }
-
-// export const sqlGeneration = () => {
-//
-// }

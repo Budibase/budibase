@@ -47,10 +47,28 @@ router
     controller.generateSQL
   )
   .post(
+    "/api/ai/generate/js",
+    // authorized(permissions.BUILDER),
+    sqlPromptValidator(),
+    controller.generateJS
+  )
+  .post(
     "/api/ai/generate/table",
     // authorized(permissions.BUILDER),
     aiPromptValidator(),
     controller.generateBudibaseTableSchema
   )
+  // .post(
+  //   "/api/ai/code/refactor",
+  //   // authorized(permissions.BUILDER),
+  //   aiPromptValidator(),
+  //   controller.summariseText
+  // )
+  // .post(
+  //   "/api/ai/code/debug",
+  //   // authorized(permissions.BUILDER),
+  //   aiPromptValidator(),
+  //   controller.summariseText
+  // )
 
 export default router

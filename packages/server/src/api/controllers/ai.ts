@@ -32,6 +32,32 @@ export async function summariseText(ctx: Ctx) {
   }
 }
 
+export async function generateJS(ctx: Ctx) {
+  // TODO: Provide support for multiple tables?
+  const { model, prompt, datasourceId, tableName } = ctx.request.body
+
+  const datasource = await sdk.datasources.get(datasourceId)
+  if (!datasource.entities) {
+    return ctx.throw(400, "datasource has no tables associated")
+  }
+
+  const schema = datasource.entities[tableName].schema
+  // Map the entities to something the model can use as context
+  const tableSchemaPrompt = [`Table: ${tableName}`]
+  for (let column in schema) {
+    tableSchemaPrompt.push(`${schema[column].name}: ${schema[column].externalType}`)
+  }
+
+  try {
+    const LLM = ai[model as keyof typeof ai]
+    const client: ILargeLanguageModel = new LLM()
+    const response = await client.textToSQL(prompt, tableSchemaPrompt.join("\n"))
+    ctx.body = { response }
+  } catch (err) {
+    console.error("Something went wrong", err)
+  }
+}
+
 export async function generateSQL(ctx: Ctx) {
   // TODO: Provide support for multiple tables?
   const { model, prompt, datasourceId, tableName } = ctx.request.body

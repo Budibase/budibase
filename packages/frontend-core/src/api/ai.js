@@ -17,4 +17,13 @@ export const buildAIEndpoints = API => ({
       body: { prompt, model },
     })
   },
+  /**
+   * Generate SQL queries for a certain datasource and table.
+   */
+  aiGenerateSQL: async ({ prompt, model, datasourceId, tableName }) => {
+    return await API.post({
+      url: "/api/ai/generate/sql",
+      body: { prompt, model, tableName, datasourceId },
+    })
+  },
 })

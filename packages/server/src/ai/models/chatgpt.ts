@@ -43,7 +43,21 @@ export class ChatGPT implements ILargeLanguageModel {
     return this.chatCompletion(summarizePrompt)
   }
 
-  async textToSQL(prompt: string, tableSchema: string, dialect: any): Promise<string | undefined> {
+  async generateCode(prompt: string): Promise<string | undefined> {
+    const completion = await this.chatCompletion(
+      Prompts.generateCode(prompt),
+      {
+        temperature: 0.7,
+        max_tokens: 150,
+        top_p: 1.0,
+        frequency_penalty: 0.0,
+        presence_penalty: 0.0,
+      }
+    )
+    return completion
+  }
+
+  async generateSQL(prompt: string, tableSchema: string, dialect: any): Promise<string | undefined> {
     const completion = await this.chatCompletion(
       Prompts.generateSQL(prompt, tableSchema),
       {

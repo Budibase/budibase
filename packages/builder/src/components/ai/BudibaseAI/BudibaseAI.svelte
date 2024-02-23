@@ -1,13 +1,23 @@
 <script>
-  import { onMount } from "svelte"
-  import { Button } from "@budibase/bbui"
-  import { API } from "api"
+  import { Button, Select, Icon, Layout, Heading, Body, Modal, ModalContent } from "@budibase/bbui"
+  import GenerateSQL from "./GenerateSQL.svelte"
+  import GenerateTableSchema from "./GenerateTableSchema.svelte"
+  import SummarizeText from "./SummarizeText.svelte"
+  import { Actions, Models } from "./constants"
 
-  onMount(() => {
-    API.prompt()
-  })
+  let action
+  let model
 </script>
 
-<div>
-  Yeet
-</div>
+<Layout>
+  <Icon name="MagicWand"/>
+  <Select label="Action" options={Object.keys(Actions)} bind:value={action} />
+  <Select label="Model" options={Object.keys(Models)} bind:value={model} />
+  {#if action === Actions.SUMMARIZE_TEXT}
+    <SummarizeText />
+  {:else if action === Actions.GENERATE_SQL}
+    <GenerateSQL />
+  {:else if action === Actions.GENERATE_TABLE_SCHEMA}
+    <GenerateTableSchema />
+  {/if}
+</Layout>

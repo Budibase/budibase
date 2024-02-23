@@ -1,6 +1,7 @@
 <script>
-  import { Layout } from "@budibase/bbui"
+  import { Layout, Popover } from "@budibase/bbui"
   import DatasourceNavigator from "components/backend/DatasourceNavigator/DatasourceNavigator.svelte"
+  import BudibaseAI from "components/ai/BudibaseAI/BudibaseAI.svelte"
   import Panel from "components/design/Panel.svelte"
   import { isActive, redirect, goto, params } from "@roxi/routify"
   import { datasources } from "stores/builder"
@@ -36,8 +37,10 @@
     </Panel>
   {/if}
 
+
   <div class="content">
-    <slot />
+<!--    <slot />-->
+    <BudibaseAI />
   </div>
 </div>
 
