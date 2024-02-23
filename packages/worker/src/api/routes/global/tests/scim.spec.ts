@@ -654,6 +654,26 @@ describe("scim", () => {
             totalResults: groupCount,
           })
         })
+
+        it("can fetch groups even if internal groups exist", async () => {
+          mocks.licenses.useGroups()
+          await config.api.groups.saveGroup(structures.userGroups.userGroup())
+          await config.api.groups.saveGroup(structures.userGroups.userGroup())
+
+          const response = await getScimGroups()
+
+          expect(response).toEqual({
+            Resources: expect.arrayContaining(groups),
+            itemsPerPage: 25,
+            schemas: ["urn:ietf:params:scim:api:messages:2.0:ListResponse"],
+            startIndex: 1,
+            totalResults: groupCount,
+          })
+
+          expect((await config.api.groups.fetch()).body.data).toHaveLength(
+            25 + 2 // scim groups + internal groups
+          )
+        })
       })
     })
 

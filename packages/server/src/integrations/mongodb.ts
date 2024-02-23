@@ -7,6 +7,7 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 import {
+  Document,
   MongoClient,
   ObjectId,
   Filter,
@@ -15,6 +16,10 @@ import {
   UpdateOptions,
   OperationOptions,
   MongoClientOptions,
+  DeleteResult,
+  UpdateResult,
+  InsertOneResult,
+  InsertManyResult,
 } from "mongodb"
 import environment from "../environment"
 
@@ -458,7 +463,9 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: MongoDBQuery) {
+  async create(
+    query: MongoDBQuery
+  ): Promise<InsertOneResult | InsertManyResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -488,7 +495,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async read(query: MongoDBQuery) {
+  async read(query: MongoDBQuery): Promise<NonNullable<unknown>> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -504,7 +511,7 @@ class MongoIntegration implements IntegrationBase {
           }
         }
         case "findOne": {
-          return await collection.findOne(json)
+          return (await collection.findOne(json)) || {}
         }
         case "findOneAndUpdate": {
           if (typeof query.json === "string") {
@@ -544,7 +551,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async update(query: MongoDBQuery) {
+  async update(query: MongoDBQuery): Promise<UpdateResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -588,7 +595,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: MongoDBQuery) {
+  async delete(query: MongoDBQuery): Promise<DeleteResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -633,7 +640,7 @@ class MongoIntegration implements IntegrationBase {
     json: object
     steps: any[]
     extra: { [key: string]: string }
-  }) {
+  }): Promise<Document[]> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)

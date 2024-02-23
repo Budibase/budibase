@@ -10,6 +10,8 @@
   Add the <mark>{requiredSetting.label}</mark> setting to start using your component
 </span>
 <span>-</span>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <span
   class="spectrum-Link"
   on:click={() => {
