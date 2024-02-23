@@ -20,7 +20,7 @@
   .align {
     display: flex;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
     gap: var(--spacing-m);
     max-width: var(--max-cell-width);
     flex: 1 1 auto;
