@@ -47,9 +47,8 @@
   let loaded = false
   let editModal, deleteModal
 
-  $: scimEnabled = $features.isScimEnabled
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
+  $: readonly = !sdk.users.isAdmin($auth.user) || group?.scimInfo?.isSync
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -135,7 +134,7 @@
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} {group} />
+      <GroupUsers {groupId} {readonly} />
     </Layout>
 
     <Layout noPadding gap="S">
