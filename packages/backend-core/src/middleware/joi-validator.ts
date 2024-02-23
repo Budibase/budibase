@@ -1,12 +1,12 @@
-import Joi, { ObjectSchema } from "joi"
-import { BBContext } from "@budibase/types"
+import Joi from "joi"
+import { Ctx } from "@budibase/types"
 
 function validate(
   schema: Joi.ObjectSchema | Joi.ArraySchema,
   property: string
 ) {
   // Return a Koa middleware function
-  return (ctx: BBContext, next: any) => {
+  return (ctx: Ctx, next: any) => {
     if (!schema) {
       return next()
     }
@@ -30,7 +30,6 @@ function validate(
     const { error } = schema.validate(params)
     if (error) {
       ctx.throw(400, `Invalid ${property} - ${error.message}`)
-      return
     }
     return next()
   }
