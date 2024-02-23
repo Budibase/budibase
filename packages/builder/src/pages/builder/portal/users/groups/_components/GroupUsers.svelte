@@ -5,14 +5,13 @@
   import { fetchData } from "@budibase/frontend-core"
   import { goto } from "@roxi/routify"
   import { API } from "api"
-  import { auth, features, groups } from "stores/portal"
+  import { groups } from "stores/portal"
   import { setContext } from "svelte"
   import ScimBanner from "../../_components/SCIMBanner.svelte"
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
-  import { sdk } from "@budibase/shared-core"
 
   export let groupId
-  export let group
+  export let readonly
 
   let emailSearch
   let fetchGroupUsers
@@ -50,9 +49,6 @@
     },
   ]
 
-  $: scimEnabled = $features.isScimEnabled && group.scimInfo?.isSync
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
-
   const removeUser = async id => {
     await groups.actions.removeUser(groupId, id)
     fetchGroupUsers.refresh()
@@ -64,7 +60,7 @@
 </script>
 
 <div class="header">
-  {#if !scimEnabled}
+  {#if !readonly}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
     <ScimBanner />
