@@ -11,7 +11,7 @@
 
   {#if group.scimInfo?.isSync}
     <div class="scim-sync">
-      <ScimInfo size="XXS" />
+      <ScimInfo iconSize="XXS" />
     </div>
   {/if}
 </div>

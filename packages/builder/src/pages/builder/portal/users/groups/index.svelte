@@ -21,7 +21,7 @@
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
+  import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
 
   const DefaultGroup = {
@@ -116,7 +116,7 @@
             Add group
           </Button>
         {:else}
-          <ScimBanner />
+          <ScimInfo text="Users are synced from your AD" />
         {/if}
       {:else}
         <Button
