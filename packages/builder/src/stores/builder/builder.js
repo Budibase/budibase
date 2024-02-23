@@ -2,7 +2,6 @@ import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
 import BudiStore from "./BudiStore"
-import { previewStore } from "./preview.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 
 export const INITIAL_BUILDER_STATE = {
@@ -26,7 +25,6 @@ export class BuilderStore extends BudiStore {
     this.reset = this.reset.bind(this)
     this.highlightSetting = this.highlightSetting.bind(this)
     this.propertyFocus = this.propertyFocus.bind(this)
-    this.hover = this.hover.bind(this)
     this.hideBuilderSidePanel = this.hideBuilderSidePanel.bind(this)
     this.showBuilderSidePanel = this.showBuilderSidePanel.bind(this)
     this.setPreviousTopNavPath = this.setPreviousTopNavPath.bind(this)
@@ -149,20 +147,6 @@ export class BuilderStore extends BudiStore {
       tourNodes: null,
       tourKey: tourKey,
     }))
-  }
-
-  hover(componentId, notifyClient = true) {
-    const store = get(this.store)
-    if (componentId === store.hoveredComponentId) {
-      return
-    }
-    this.update(state => {
-      state.hoveredComponentId = componentId
-      return state
-    })
-    if (notifyClient) {
-      previewStore.sendEvent("hover-component", componentId)
-    }
   }
 }
 
