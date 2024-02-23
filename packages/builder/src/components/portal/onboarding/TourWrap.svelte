@@ -17,15 +17,7 @@
     }
   }
 
-  $: tourKeyWatch = $builderStore.tourKey
-  $: tourStepKeyWatch = $builderStore.tourStepKey
-  $: if (tourKeyWatch || stepKeys || ready) {
-    stepKeys.forEach(tourStepKey => {
-      registerTourNode(tourKeyWatch, tourStepKey)
-    })
-  }
-
-  $: if (tourKeyWatch || tourStepKeyWatch) {
+  const scrollToStep = () => {
     let tourStepIdx = getCurrentStepIdx(
       TOURS[tourKeyWatch]?.steps,
       tourStepKeyWatch
@@ -38,6 +30,15 @@
       }
     }
   }
+
+  $: tourKeyWatch = $builderStore.tourKey
+  $: tourStepKeyWatch = $builderStore.tourStepKey
+  $: if (tourKeyWatch || stepKeys || ready) {
+    stepKeys.forEach(tourStepKey => {
+      registerTourNode(tourKeyWatch, tourStepKey)
+    })
+  }
+  $: scrollToStep(tourKeyWatch, tourStepKeyWatch)
 
   onMount(() => {
     ready = true
