@@ -39,6 +39,10 @@
   .sidebar::-webkit-scrollbar {
     display: none;
   }
+  .main {
+    height: 100%;
+    overflow: hidden;
+  }
   .padding .main {
     padding: var(--spacing-xl);
   }
