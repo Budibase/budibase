@@ -35,6 +35,7 @@ import { processDates, processFormulas } from "../../../utilities/rowProcessor"
 import { db as dbCore } from "@budibase/backend-core"
 import AliasTables from "./alias"
 import sdk from "../../../sdk"
+import env from "../../../environment"
 
 export interface ManyRelationship {
   tableId?: string
@@ -884,12 +885,20 @@ export class ExternalRequest<T extends Operation> {
       },
     }
 
-    const aliasing = new AliasTables(Object.keys(this.tables))
     // remove any relationships that could block deletion
     if (operation === Operation.DELETE && id) {
       await this.removeRelationshipsToRow(table, generateRowIdField(id))
     }
-    const response = await aliasing.queryWithAliasing(json)
+
+    // aliasing can be disabled fully if desired
+    let response
+    if (!env.SQL_ALIASING_DISABLE) {
+      const aliasing = new AliasTables(Object.keys(this.tables))
+      response = await aliasing.queryWithAliasing(json)
+    } else {
+      response = await getDatasourceAndQuery(json)
+    }
+
     // handle many-to-many relationships now if we know the ID (could be auto increment)
     if (operation !== Operation.READ) {
       await this.handleManyRelationships(

@@ -688,7 +688,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   }
 
   log(query: string, values?: any[]) {
-    if (!environment.ENABLE_SQL_LOGGING) {
+    if (!environment.SQL_LOGGING_ENABLE) {
       return
     }
     const sqlClient = this.getSqlClient()
