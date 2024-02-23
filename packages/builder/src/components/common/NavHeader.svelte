@@ -39,6 +39,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:search>
   <input
     readonly={!search}
