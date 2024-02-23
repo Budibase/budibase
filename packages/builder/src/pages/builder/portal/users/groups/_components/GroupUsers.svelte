@@ -12,6 +12,7 @@
   import { sdk } from "@budibase/shared-core"
 
   export let groupId
+  export let group
 
   let emailSearch
   let fetchGroupUsers
@@ -49,7 +50,7 @@
     },
   ]
 
-  $: scimEnabled = $features.isScimEnabled
+  $: scimEnabled = $features.isScimEnabled && group.scimInfo?.isSync
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
 
   const removeUser = async id => {

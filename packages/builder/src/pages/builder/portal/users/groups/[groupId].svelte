@@ -135,7 +135,7 @@
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} />
+      <GroupUsers {groupId} {group} />
     </Layout>
 
     <Layout noPadding gap="S">
