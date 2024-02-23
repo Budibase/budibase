@@ -1,17 +1,21 @@
 import fs from "fs"
 import path from "path"
 import { IsolatedVM } from "../vm"
+import { iifeWrapper } from "../utilities"
 
-function runJSWithIsolatedVM(script: string, context: any) {
+function runJSWithIsolatedVM(script: string, context: Record<string, any>) {
   const runner = new IsolatedVM()
   return runner.withContext(context, () => {
-    return runner.execute(`(function(){\n${script}\n})();`)
+    return runner.execute(iifeWrapper(script))
   })
 }
 
 describe("Test isolated vm directly", () => {
   it("should handle a very large file", () => {
-    const marked = fs.readFileSync(path.join(__dirname, "marked.txt"), "utf-8")
+    const marked = fs.readFileSync(
+      path.join(__dirname, "largeJSExample.txt"),
+      "utf-8"
+    )
     const result = runJSWithIsolatedVM(marked, {
       trigger: { row: { Message: "dddd" } },
     })
@@ -69,7 +73,14 @@ describe("Test isolated vm directly", () => {
     )
     expect(result).toBeDefined()
     expect(result.length).toBe(1)
-    expect(result[0].imageLinks.length).toBe(6)
+    expect(result[0].imageLinks).toEqual([
+      "https://budibase.com",
+      "_S/",
+      "https://budibase.com",
+      "https://budibase.com",
+      "https://budibase.com",
+      "https://budibase.com",
+    ])
   })
 
   it("should handle automation script example", () => {
