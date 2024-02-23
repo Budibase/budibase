@@ -20,15 +20,22 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let highlighted
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
   export let wide
 
+  let highlightType
+
+  $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
+
+  $: if (!Array.isArray(value)) {
+    highlightType =
+      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
+  }
 
   const getAllBindings = (bindings, componentBindings, nested) => {
     if (!nested) {
@@ -70,21 +77,17 @@
   }
 
   onDestroy(() => {
-    if (highlighted) {
+    if (highlightedProp) {
       builderStore.highlightSetting(null)
     }
   })
-  let highlight
-  $: if (!Array.isArray(value)) {
-    highlight = highlighted?.type ? `highlighted-${highlighted?.type}` : ""
-  }
 </script>
 
 <div
   id={`${key}-prop-control-wrap`}
-  class={`property-control ${highlight}`}
+  class={`property-control ${highlightType}`}
   class:wide={!label || labelHidden || wide === true}
-  class:highlighted={highlighted && !Array.isArray(value)}
+  class:highlighted={highlightType}
   class:property-focus={propertyFocus}
 >
   {#if label && !labelHidden}
