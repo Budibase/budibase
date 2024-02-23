@@ -1,5 +1,6 @@
 import { writable, get, derived } from "svelte/store"
-import { datasources, integrations } from "./"
+import { datasources } from "./datasources"
+import { integrations } from "./integrations"
 import { API } from "api"
 import { duplicateName } from "helpers/duplicate"
 

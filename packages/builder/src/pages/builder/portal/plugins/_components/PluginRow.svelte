@@ -29,6 +29,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="row" on:click={() => detailsModal.show()}>
   <div class="title">
     <div class="name">
