@@ -297,6 +297,10 @@
 </div>
 
 <style>
+  .code-editor :global(.cm-editor) {
+    background: var(--spectrum-global-color-gray-50) !important;
+  }
+
   /* Unify spacing between HBS and JS */
   .code-editor :global(.cm-content) {
     padding: 10px 0;

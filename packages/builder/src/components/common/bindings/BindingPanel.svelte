@@ -25,6 +25,7 @@
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
+  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   const dispatch = createEventDispatcher()
 
@@ -173,6 +174,7 @@
               {capitalise(tab)}
             </ActionButton>
           {/each}
+          <DrawerBindableInput />
         </div>
         <div class="side-tabs">
           {#each sideTabs as tab}

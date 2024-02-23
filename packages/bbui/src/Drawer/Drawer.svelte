@@ -1,15 +1,16 @@
+<script context="module">
+  import { writable } from "svelte/store"
+
+  const openDrawers = writable([])
+</script>
+
 <script>
   import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
-  import Body from "../Typography/Body.svelte"
-  import Heading from "../Typography/Heading.svelte"
-  import { setContext, createEventDispatcher } from "svelte"
+  import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
 
   export let title
-  export let fillWidth
-  export let left = "314px"
-  export let width = "calc(100% - 648px)"
   export let headless = false
 
   const dispatch = createEventDispatcher()
@@ -17,12 +18,15 @@
   let visible = false
   let drawerId = generate()
 
+  $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
+
   export function show() {
     if (visible) {
       return
     }
     visible = true
     dispatch("drawerShow", drawerId)
+    openDrawers.update(state => [...state, drawerId])
   }
 
   export function hide() {
@@ -31,6 +35,7 @@
     }
     visible = false
     dispatch("drawerHide", drawerId)
+    openDrawers.update(state => state.filter(id => id !== drawerId))
   }
 
   setContext("drawer-actions", {
@@ -54,22 +59,33 @@
       },
     }
   }
+
+  const getScaleFactor = depth => {
+    // Quadratic function approaching a limit of 1 as depth tends to infinity
+    const lim = 1 - 1 / (depth * depth + 1)
+    // Scale drawers between 1 and 0.9 as depth approaches infinity
+    return 1 - lim * 0.1
+  }
+
+  onDestroy(() => {
+    if (visible) {
+      hide()
+    }
+  })
 </script>
 
 {#if visible}
-  <Portal>
-    <section
-      class:fillWidth
+  <Portal target=".drawer-container">
+    <div
       class="drawer"
       class:headless
       transition:slide|local
-      style={`width: ${width}; left: ${left};`}
+      style="--scale-factor:{getScaleFactor(depth)}"
+      class:stacked={depth > 0}
     >
       {#if !headless}
         <header>
-          <div class="text">
-            {title}
-          </div>
+          <div class="text">{title}</div>
           <div class="buttons">
             <Button secondary quiet on:click={hide}>Cancel</Button>
             <slot name="buttons" />
@@ -77,30 +93,41 @@
         </header>
       {/if}
       <slot name="body" />
-    </section>
+    </div>
   </Portal>
 {/if}
 
 <style>
-  .buttons {
-    display: flex;
-    gap: var(--spacing-m);
-  }
-
   .drawer {
+    --drawer-spacing: 10px;
     position: absolute;
-    bottom: 0;
+    left: var(--drawer-spacing);
+    bottom: var(--drawer-spacing);
+    transform: translateY(calc(-210% * (1 - var(--scale-factor))))
+      scale(var(--scale-factor));
+    width: calc(100% - 2 * var(--drawer-spacing));
     background: var(--background);
     border: var(--border-light);
     z-index: 3;
     border-radius: 8px;
     overflow: hidden;
-    margin: 8px;
+    box-sizing: border-box;
+    transition: transform 360ms ease-out;
   }
-
-  .fillWidth {
-    left: 260px !important;
-    width: calc(100% - 260px) !important;
+  .drawer::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--background);
+    pointer-events: none;
+    transition: opacity 360ms ease-out;
+    opacity: calc(10 * (1 - var(--scale-factor)));
+  }
+  .drawer.stacked::after {
+    pointer-events: all;
   }
 
   header {
