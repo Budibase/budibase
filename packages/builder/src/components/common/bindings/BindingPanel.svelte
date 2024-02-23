@@ -260,11 +260,12 @@
     align-items: stretch;
   }
   .side {
-    flex: 0 0 0;
-    transition: flex 130ms ease-out;
+    flex: 0 0 360px;
+    margin-right: -360px;
+    transition: margin-right 130ms ease-out;
   }
   .side.visible {
-    flex: 0 0 420px;
+    margin-right: 0;
   }
 
   /* Tabs */
@@ -298,155 +299,5 @@
   .editor :global(.cm-editor) {
     border: none;
     border-radius: 0;
-  }
-
-  /*.binding-drawer :global(.container > .main) {*/
-  /*  overflow: hidden;*/
-  /*  height: 100%;*/
-  /*  padding: 0px;*/
-  /*}*/
-  /*.binding-drawer :global(.container > .main > .main) {*/
-  /*  overflow: hidden;*/
-  /*  height: 100%;*/
-  /*  display: flex;*/
-  /*  flex-direction: column;*/
-  /*}*/
-
-  /*.binding-drawer :global(.spectrum-Tabs-content) {*/
-  /*  flex: 1;*/
-  /*  overflow: hidden;*/
-  /*}*/
-
-  /*.binding-drawer :global(.spectrum-Tabs-content > div),*/
-  /*.binding-drawer :global(.spectrum-Tabs-content > div > div),*/
-  /*.binding-drawer :global(.spectrum-Tabs-content .main-content) {*/
-  /*  height: 100%;*/
-  /*}*/
-
-  /*.binding-drawer .main-content {*/
-  /*  grid-template-rows: unset;*/
-  /*}*/
-
-  /*.messaging {*/
-  /*  display: flex;*/
-  /*  align-items: center;*/
-  /*  gap: var(--spacing-m);*/
-  /*  min-width: 0;*/
-  /*  flex: 1;*/
-  /*}*/
-  /*.messaging-wrap {*/
-  /*  overflow: hidden;*/
-  /*}*/
-  /*.messaging-wrap > div {*/
-  /*  text-overflow: ellipsis;*/
-  /*  white-space: nowrap;*/
-  /*  overflow: hidden;*/
-  /*}*/
-  /*.main :global(textarea) {*/
-  /*  min-height: 202px !important;*/
-  /*}*/
-
-  /*.main-content {*/
-  /*  padding: var(--spacing-s) var(--spacing-xl);*/
-  /*}*/
-
-  /*.main :global(.spectrum-Tabs div.drawer-actions) {*/
-  /*  display: flex;*/
-  /*  gap: var(--spacing-m);*/
-  /*  margin-left: auto;*/
-  /*}*/
-
-  /*.main :global(.spectrum-Tabs-content),*/
-  /*.main :global(.spectrum-Tabs-content .main-content) {*/
-  /*  margin-top: 0px;*/
-  /*  padding: 0px;*/
-  /*}*/
-
-  /*.main :global(.spectrum-Tabs) {*/
-  /*  display: flex;*/
-  /*}*/
-
-  /*.syntax-error {*/
-  /*  color: var(--red);*/
-  /*  font-size: 12px;*/
-  /*}*/
-  /*.syntax-error a {*/
-  /*  color: var(--red);*/
-  /*  text-decoration: underline;*/
-  /*}*/
-
-  /*.binding-footer {*/
-  /*  width: 100%;*/
-  /*  display: flex;*/
-  /*  justify-content: space-between;*/
-  /*}*/
-  /*.main-content {*/
-  /*  display: grid;*/
-  /*  grid-template-columns: 1fr;*/
-  /*  grid-template-rows: 380px;*/
-  /*}*/
-  /*.main-content.binding-panel {*/
-  /*  grid-template-columns: 1fr 320px;*/
-  /*}*/
-  /*.binding-picker {*/
-  /*  border-left: 2px solid var(--border-light);*/
-  /*  border-left: var(--border-light);*/
-  /*  overflow: scroll;*/
-  /*  height: 100%;*/
-  /*}*/
-  /*.editor {*/
-  /*  padding: var(--spacing-xl);*/
-  /*  min-width: 0;*/
-  /*  display: flex;*/
-  /*  flex-direction: column;*/
-  /*  gap: var(--spacing-xl);*/
-  /*  overflow: hidden;*/
-  /*}*/
-  /*.overlay-wrap {*/
-  /*  position: relative;*/
-  /*  flex: 1;*/
-  /*  overflow: hidden;*/
-  /*}*/
-  /*.mode-overlay {*/
-  /*  position: absolute;*/
-  /*  top: 0;*/
-  /*  left: 0;*/
-  /*  z-index: 2;*/
-  /*  width: 100%;*/
-  /*  height: 100%;*/
-  /*  display: flex;*/
-  /*  align-items: center;*/
-  /*  justify-content: center;*/
-  /*  background-color: var(*/
-  /*    --spectrum-textfield-m-background-color,*/
-  /*    var(--spectrum-global-color-gray-50)*/
-  /*  );*/
-  /*  border-radius: var(--border-radius-s);*/
-  /*}*/
-  /*.prompt-body {*/
-  /*  display: flex;*/
-  /*  flex-direction: column;*/
-  /*  align-items: center;*/
-  /*  justify-content: center;*/
-  /*  gap: var(--spacing-l);*/
-  /*}*/
-  /*.prompt-body .switch-actions {*/
-  /*  display: flex;*/
-  /*  gap: var(--spacing-l);*/
-  /*}*/
-
-  /*.binding-drawer :global(.code-editor),*/
-  /*.binding-drawer :global(.code-editor > div) {*/
-  /*  height: 100%;*/
-  /*}*/
-
-  .result {
-    margin: 0;
-    background: var(--spectrum-global-color-gray-200);
-    font-size: 14px;
-    padding: var(--spacing-l);
-    border-radius: var(--border-radius-s);
-    font-family: monospace;
-    border: 1px solid var(--spectrum-global-color-gray-300);
   }
 </style>

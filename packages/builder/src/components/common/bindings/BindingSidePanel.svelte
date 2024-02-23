@@ -140,21 +140,19 @@
 <div class="binding-side-panel">
   <Layout noPadding gap="S">
     {#if selectedCategory}
-      <div class="sub-section-back">
-        <ActionButton
-          secondary
-          icon={"ArrowLeft"}
-          on:click={() => {
-            selectedCategory = null
-          }}
-        >
-          Back
-        </ActionButton>
+      <div class="header">
+        <Icon
+          name="BackAndroid"
+          hoverable
+          size="S"
+          on:click={() => (selectedCategory = null)}
+        />
+        {selectedCategory}
       </div>
     {/if}
 
     {#if !selectedCategory}
-      <div class="search">
+      <div class="header">
         <span class="search-input">
           <Input
             placeholder={"Search for bindings"}
@@ -162,7 +160,6 @@
             bind:value={search}
           />
         </span>
-
         <span
           class="search-input-icon"
           on:click={() => {
@@ -195,9 +192,11 @@
       {#each filteredCategories as category}
         {#if category.bindings?.length}
           <div class="sub-section">
-            <div class="cat-heading">
-              <Icon name={categoryIcons[category.name]} />{category.name}
-            </div>
+            {#if filteredCategories.length > 1}
+              <div class="cat-heading">
+                <Icon name={categoryIcons[category.name]} />{category.name}
+              </div>
+            {/if}
             <ul>
               {#each category.bindings as binding}
                 <li
@@ -262,32 +261,28 @@
     overflow: auto;
   }
 
-  .search :global(input) {
+  .header {
+    height: 53px;
+    padding: 0 var(--spacing-l);
+    display: flex;
+    align-items: center;
+    border-bottom: var(--border-light);
+    position: sticky;
+    top: 0;
+    gap: var(--spacing-m);
+    background: var(--background);
+    z-index: 1;
+  }
+
+  .header :global(input) {
     border: none;
     border-radius: 0;
     background: none;
     padding: 0;
   }
-
-  .search {
-    padding: var(--spacing-m) var(--spacing-l);
-    display: flex;
-    align-items: center;
-    border-top: 0;
-    border-bottom: var(--border-light);
-    border-left: 2px solid transparent;
-    border-right: 2px solid transparent;
-    margin-right: 1px;
-    position: sticky;
-    top: 0;
-    background-color: var(--background);
-    z-index: 2;
-  }
-
   .search-input {
     flex: 1;
   }
-
   .search-input-icon.searching {
     cursor: pointer;
   }
@@ -300,14 +295,6 @@
     padding: var(--spacing-l);
     padding-top: 0;
   }
-  .sub-section-back {
-    padding: var(--spacing-l);
-    padding-top: var(--spacing-xl);
-    padding-bottom: 0;
-  }
-  .cat-heading {
-    margin-bottom: var(--spacing-l);
-  }
   ul.helpers li * {
     pointer-events: none;
   }
@@ -317,7 +304,6 @@
     align-items: center;
   }
   ul.category-list .category-name {
-    font-weight: 600;
     text-transform: capitalize;
   }
   ul.category-list .category-chevron {
@@ -331,6 +317,7 @@
   li.binding {
     display: flex;
     align-items: center;
+    gap: var(--spacing-m);
   }
   li.binding .binding__typeWrap {
     flex: 1;
@@ -346,8 +333,8 @@
   .cat-heading {
     font-size: var(--font-size-s);
     font-weight: 600;
-    text-transform: uppercase;
-    color: var(--spectrum-global-color-gray-600);
+    color: var(--spectrum-global-color-gray-700);
+    margin-bottom: var(--spacing-s);
   }
 
   .cat-heading {
@@ -384,17 +371,13 @@
   }
 
   .binding__label {
-    font-weight: 600;
     text-transform: capitalize;
   }
 
   .binding__type {
     font-family: var(--font-mono);
-    background-color: var(--spectrum-global-color-gray-200);
-    border-radius: var(--border-radius-s);
-    padding: 2px 4px;
-    margin-left: 2px;
-    font-weight: 600;
+    font-size: 10px;
+    color: var(--spectrum-global-color-gray-700);
   }
 
   .helper pre {
