@@ -6,6 +6,7 @@
 </script>
 
 <div class="app-panel">
+  <div class="drawer-container" />
   <div class="header">
     <div class="header-left">
       <UndoRedoControl store={screenStore.history} />
@@ -33,6 +34,15 @@
     justify-content: flex-start;
     align-items: stretch;
     padding: 9px var(--spacing-m);
+    position: relative;
+  }
+  .drawer-container {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    top: 0;
+    left: 0;
   }
   .header {
     display: flex;

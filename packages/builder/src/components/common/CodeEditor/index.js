@@ -44,8 +44,6 @@ export const getDefaultTheme = opts => {
         border:
           "var(--spectrum-alias-border-size-thin) solid var(--spectrum-alias-border-color)",
         borderRadius: "var(--border-radius-s)",
-        backgroundColor:
-          "var( --spectrum-textfield-m-background-color, var(--spectrum-global-color-gray-50) )",
         resize: resize ? `${resize}` : "",
         overflow: "hidden",
         color: "var(--spectrum-alias-text-color)",
