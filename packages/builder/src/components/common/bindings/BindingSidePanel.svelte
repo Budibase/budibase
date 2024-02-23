@@ -258,6 +258,8 @@
 <style>
   .binding-side-panel {
     border-left: var(--border-light);
+    height: 100%;
+    overflow: auto;
   }
 
   .search :global(input) {

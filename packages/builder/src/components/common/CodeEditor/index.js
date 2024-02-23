@@ -114,8 +114,7 @@ export const getDefaultTheme = opts => {
         backgroundColor: "var(--spectrum-global-color-gray-200)",
       },
       "& .binding-wrap": {
-        color: "var(--spectrum-global-color-blue-700)",
-        fontFamily: "monospace",
+        color: "var(--spectrum-global-color-orange-600)",
       },
     },
     { dark }

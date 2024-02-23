@@ -321,7 +321,7 @@
     top: 1px;
     height: calc(100% - 2px);
     width: 100%;
-    background: var(--spectrum-global-color-gray-75);
+    background: var(--spectrum-global-color-gray-100);
     z-index: -2;
   }
   .code-editor :global(.cm-gutterElement) {
@@ -343,7 +343,8 @@
     z-index: -2;
   }
   .code-editor :global(.cm-selectionBackground) {
-    background-color: var(--spectrum-global-color-gray-300) !important;
+    background-color: var(--spectrum-global-color-blue-400) !important;
+    opacity: 0.4;
   }
 
   .code-editor :global(.cm-tooltip.cm-completionInfo) {
