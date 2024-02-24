@@ -1,5 +1,5 @@
 <script>
-  import { DrawerContent, ActionButton, Icon } from "@budibase/bbui"
+  import { DrawerContent, ActionButton, Icon, Helpers } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import {
     isValid,
@@ -26,6 +26,7 @@
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+  import { Utils } from "@budibase/frontend-core"
 
   const dispatch = createEventDispatcher()
 
@@ -57,6 +58,7 @@
   let targetMode = null
   let expressionResult
   let drawerIsModal
+  let evaluating = false
 
   $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
   $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
@@ -67,8 +69,20 @@
     mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
-  $: expressionResult = processStringSync(runtimeExpression || "", context)
+  $: requestUpdateEvaluation(runtimeExpression, context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+
+  const updateEvaluation = (expression, context) => {
+    expressionResult = processStringSync(expression || "", context)
+    evaluating = false
+  }
+
+  const debouncedUpdateEvaluation = Utils.debounce(updateEvaluation, 260)
+
+  const requestUpdateEvaluation = (expression, context) => {
+    evaluating = true
+    debouncedUpdateEvaluation(expression, context)
+  }
 
   const getBindingValue = (binding, context) => {
     const hbs = `{{ literal ${binding.runtimeBinding} }}`
@@ -103,7 +117,7 @@
     valid = isValid(runtimeExpression)
     if (valid) {
       dispatch("change", val)
-      expressionResult = processStringSync(runtimeExpression || "", context)
+      requestUpdateEvaluation(runtimeExpression, context)
     }
   }
 
@@ -249,7 +263,7 @@
           mode={editorMode}
         />
       {:else if sidePanel === SidePanels.Evaluation}
-        <EvaluationSidePanel {expressionResult} />
+        <EvaluationSidePanel {expressionResult} {evaluating} />
       {/if}
     </div>
   </div>
