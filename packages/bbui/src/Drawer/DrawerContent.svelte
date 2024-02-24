@@ -17,7 +17,7 @@
 
 <style>
   .drawer-contents {
-    height: 400px;
+    height: 100%;
     overflow-y: auto;
   }
   .container {

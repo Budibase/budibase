@@ -1,6 +1,6 @@
 <script>
   import { DrawerContent, ActionButton, Icon } from "@budibase/bbui"
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, getContext, onMount } from "svelte"
   import {
     isValid,
     decodeJSBinding,
@@ -37,6 +37,7 @@
   export let context = null
   export let autofocusEditor = false
 
+  const drawerContext = getContext("drawer")
   const Modes = {
     Text: "Text",
     JavaScript: "JavaScript",
@@ -49,14 +50,15 @@
   let initialValueJS = value?.startsWith?.("{{ js ")
   let mode = initialValueJS ? Modes.JavaScript : Modes.Text
   let sidePanel = null
-
   let getCaretPosition
   let insertAtPos
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
   let targetMode = null
   let expressionResult
+  let drawerIsModal
 
+  $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
   $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
   $: sideTabs = [SidePanels.Evaluation, SidePanels.Bindings]
   $: enrichedBindings = enrichBindings(bindings, context)
@@ -187,6 +189,16 @@
               <Icon name={tab} size="S" />
             </ActionButton>
           {/each}
+          {#if drawerContext}
+            <ActionButton
+              size="M"
+              quiet
+              selected={drawerIsModal}
+              on:click={() => drawerContext.modal.set(!drawerIsModal)}
+            >
+              <Icon name={drawerIsModal ? "Minimize" : "Maximize"} size="S" />
+            </ActionButton>
+          {/if}
         </div>
       </div>
       <div class="editor">
