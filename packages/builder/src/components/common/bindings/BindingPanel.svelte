@@ -49,7 +49,7 @@
 
   let initialValueJS = value?.startsWith?.("{{ js ")
   let mode = initialValueJS ? Modes.JavaScript : Modes.Text
-  let sidePanel = null
+  let sidePanel = SidePanels.Bindings
   let getCaretPosition
   let insertAtPos
   let jsValue = initialValueJS ? value : null
@@ -274,6 +274,7 @@
     align-items: stretch;
   }
   .side {
+    overflow: hidden;
     flex: 0 0 360px;
     margin-right: -360px;
     transition: margin-right 130ms ease-out;
