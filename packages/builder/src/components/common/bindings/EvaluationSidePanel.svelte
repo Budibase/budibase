@@ -1,13 +1,16 @@
 <script>
   import formatHighlight from "json-format-highlight"
-  import { Icon, notifications } from "@budibase/bbui"
+  import { Icon, ProgressCircle, notifications } from "@budibase/bbui"
   import { copyToClipboard } from "@budibase/bbui/helpers"
+  import { fade } from "svelte/transition"
 
   export let expressionResult
+  export let evaluating = false
 
   $: error = expressionResult === "Error while executing JS"
   $: empty = expressionResult == null || expressionResult === ""
   $: success = !error && !empty
+  $: highlightedResult = highlight(expressionResult)
 
   const highlight = json => {
     // Attempt to parse and then stringify, in case this is valid JSON
@@ -16,7 +19,6 @@
     } catch (err) {
       // Ignore
     }
-
     return formatHighlight(json, {
       keyColor: "#e06c75",
       numberColor: "#e5c07b",
@@ -42,10 +44,22 @@
     <div class="header-content">
       {#if error}
         <Icon name="Alert" color="var(--spectrum-global-color-red-600)" />
-        <span> Error </span>
+        <div>Error</div>
+        {#if evaluating}
+          <div transition:fade|local={{ duration: 130 }}>
+            <ProgressCircle size="S" />
+          </div>
+        {/if}
+        <span />
         <Icon name="Copy" hoverable on:click={copy} />
       {:else}
-        <span>Preview</span>
+        <div>Preview</div>
+        {#if evaluating}
+          <div transition:fade|local={{ duration: 130 }}>
+            <ProgressCircle size="S" />
+          </div>
+        {/if}
+        <span />
         {#if !empty}
           <Icon name="Copy" hoverable on:click={copy} />
         {/if}
@@ -54,7 +68,7 @@
   </div>
   <div class="body">
     {#if expressionResult}
-      {@html highlight(expressionResult)}
+      {@html highlightedResult}
     {:else}
       Your expression will be evaluated here
     {/if}
