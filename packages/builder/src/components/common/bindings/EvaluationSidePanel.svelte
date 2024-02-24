@@ -40,19 +40,15 @@
 <div class="evaluation-side-panel">
   <div class="header" class:success class:error>
     <div class="header-content">
-      {#if success}
-        <Icon
-          name="CheckmarkCircle"
-          color="var(--spectrum-global-color-green-600)"
-        />
-        <span>Success</span>
-        <Icon name="Copy" hoverable on:click={copy} />
-      {:else if error}
+      {#if error}
         <Icon name="Alert" color="var(--spectrum-global-color-red-600)" />
         <span> Error </span>
         <Icon name="Copy" hoverable on:click={copy} />
       {:else}
-        <span>Run</span>
+        <span>Preview</span>
+        {#if !empty}
+          <Icon name="Copy" hoverable on:click={copy} />
+        {/if}
       {/if}
     </div>
   </div>
@@ -91,7 +87,6 @@
   .header-content span {
     flex: 1 1 auto;
   }
-  .header.success::before,
   .header.error::before {
     content: "";
     left: 0;
@@ -101,9 +96,6 @@
     z-index: 1;
     position: absolute;
     opacity: 10%;
-  }
-  .header.success::before {
-    background: var(--spectrum-global-color-green-600);
   }
   .header.error::before {
     background: var(--spectrum-global-color-red-400);
