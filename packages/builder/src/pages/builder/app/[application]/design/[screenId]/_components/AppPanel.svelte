@@ -35,6 +35,7 @@
     align-items: stretch;
     padding: 9px var(--spacing-m);
     position: relative;
+    transition: width 360ms ease-out;
   }
   .drawer-container {
     position: absolute;

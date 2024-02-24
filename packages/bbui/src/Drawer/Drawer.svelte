@@ -1,7 +1,52 @@
 <script context="module">
-  import { writable } from "svelte/store"
+  import { writable, get } from "svelte/store"
 
+  // Observe this class name if possible in order to know how to size the
+  // drawer. If this doesn't exist we'll use a fixed size.
+  const drawerContainer = "drawer-container"
+
+  // Context level stores to keep drawers in sync
   const openDrawers = writable([])
+  const modal = writable(false)
+  const drawerLeft = writable(null)
+  const drawerWidth = writable(null)
+
+  // Resize observer to keep track of size changes
+  let observer
+
+  // Starts observing the target node to watching to size changes.
+  // Invoked when the first drawer of a chain is rendered.
+  const observe = () => {
+    const target = document.getElementsByClassName(drawerContainer)[0]
+    if (observer || !target) {
+      return
+    }
+    observer = new ResizeObserver(entries => {
+      if (!entries?.[0]) {
+        return
+      }
+      const bounds = entries[0].target.getBoundingClientRect()
+      drawerLeft.set(bounds.left)
+      drawerWidth.set(bounds.width)
+    })
+    observer.observe(target)
+
+    // Manually measure once to ensure that we have dimensions for the initial
+    // paint
+    const bounds = target.getBoundingClientRect()
+    drawerLeft.set(bounds.left)
+    drawerWidth.set(bounds.width)
+  }
+
+  // Stops observing the target node.
+  // Invoked when the last drawer of a chain is removed.
+  const unobserve = () => {
+    if (get(openDrawers).length) {
+      return
+    }
+    observer.disconnect()
+    observer = null
+  }
 </script>
 
 <script>
@@ -9,21 +54,45 @@
   import Button from "../Button/Button.svelte"
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
+  import { fade } from "svelte/transition"
 
   export let title
   export let headless = false
 
   const dispatch = createEventDispatcher()
+  const spacing = 10
 
   let visible = false
   let drawerId = generate()
 
   $: depth = $openDrawers.length - $openDrawers.indexOf(drawerId) - 1
+  $: style = getStyle(depth, $drawerLeft, $drawerWidth, $modal)
+
+  const getStyle = (depth, left, width, modal) => {
+    let style = `
+      --scale-factor: ${getScaleFactor(depth)};
+      --spacing: ${spacing}px;
+    `
+    // Most modal styles are handled by class names
+    if (modal) {
+      return style
+    }
+
+    // Normal drawers need a few additional styles
+    left = left ? `${left + width / 2}px` : "20vw"
+    width = width ? `${width - 2 * spacing}px` : "60vw"
+    return `
+      ${style}
+      left: ${left};
+      width: ${width};
+    `
+  }
 
   export function show() {
     if (visible) {
       return
     }
+    observe()
     visible = true
     dispatch("drawerShow", drawerId)
     openDrawers.update(state => [...state, drawerId])
@@ -36,12 +105,16 @@
     visible = false
     dispatch("drawerHide", drawerId)
     openDrawers.update(state => state.filter(id => id !== drawerId))
+    if (!$openDrawers.length) {
+      modal.set(false)
+    }
+    unobserve()
   }
 
-  setContext("drawer-actions", {
+  setContext("drawer", {
     hide,
     show,
-    headless,
+    modal,
   })
 
   const easeInOutQuad = x => {
@@ -52,10 +125,14 @@
   // transition has a horrible overshoot
   const slide = () => {
     return {
-      duration: 360,
+      duration: 260,
       css: t => {
-        const translation = 100 - Math.round(easeInOutQuad(t) * 100)
-        return `transform: translateY(${translation}%);`
+        const f = easeInOutQuad(t)
+        const yOffset = (1 - f) * 200
+        return `
+          transform: translateX(-50%) translateY(calc(${yOffset}px + 50% - 1200px * (1 - var(--scale-factor))));
+          opacity:${f};
+        `
       },
     }
   }
@@ -75,13 +152,16 @@
 </script>
 
 {#if visible}
-  <Portal target=".drawer-container">
+  <Portal target=".modal-container">
+    {#if $modal}
+      <div transition:fade={{ duration: 260 }} class="underlay" />
+    {/if}
     <div
       class="drawer"
       class:headless
+      class:modal={$modal}
       transition:slide|local
-      style="--scale-factor:{getScaleFactor(depth)}"
-      class:stacked={depth > 0}
+      {style}
     >
       {#if !headless}
         <header>
@@ -93,41 +173,55 @@
         </header>
       {/if}
       <slot name="body" />
+      {#if !$modal && depth > 0}
+        <div class="overlay" transition:fade|local={{ duration: 260 }} />
+      {/if}
     </div>
   </Portal>
 {/if}
 
 <style>
   .drawer {
-    --drawer-spacing: 10px;
     position: absolute;
-    left: var(--drawer-spacing);
-    bottom: var(--drawer-spacing);
-    transform: translateY(calc(-210% * (1 - var(--scale-factor))))
-      scale(var(--scale-factor));
-    width: calc(100% - 2 * var(--drawer-spacing));
+    transform: translateX(-50%) scale(var(--scale-factor))
+      translateY(calc(50% - 800px * (1 - var(--scale-factor))));
     background: var(--background);
     border: var(--border-light);
     z-index: 3;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
-    transition: transform 360ms ease-out;
+    transition: transform 260ms ease-out, bottom 260ms ease-out,
+      left 260ms ease-out, width 260ms ease-out, height 260ms ease-out;
+    height: 420px;
+    bottom: calc(var(--spacing) + 210px);
+    max-width: calc(100vw - 200px);
+    max-height: calc(100vh - 200px);
   }
-  .drawer::after {
-    content: "";
-    position: absolute;
+  .drawer.modal {
+    left: 50vw;
+    bottom: 50vh;
+    width: 1600px;
+    height: 800px;
+  }
+
+  .overlay,
+  .underlay {
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: var(--background);
-    pointer-events: none;
     transition: opacity 360ms ease-out;
-    opacity: calc(10 * (1 - var(--scale-factor)));
+    z-index: 3;
+    opacity: 0.5;
   }
-  .drawer.stacked::after {
-    pointer-events: all;
+  .overlay {
+    position: absolute;
+    background: var(--background);
+  }
+  .underlay {
+    position: fixed;
+    background: var(--modal-background, rgba(0, 0, 0, 0.75));
   }
 
   header {
@@ -138,7 +232,6 @@
     padding: var(--spacing-m) var(--spacing-xl);
     gap: var(--spacing-xl);
   }
-
   .text {
     display: flex;
     flex-direction: column;
@@ -146,7 +239,6 @@
     align-items: flex-start;
     gap: var(--spacing-xs);
   }
-
   .buttons {
     display: flex;
     flex-direction: row;
