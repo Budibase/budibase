@@ -2,7 +2,7 @@
   import { tourHandler } from "./tourHandler"
   import { TOURS } from "./tours"
   import { onMount, onDestroy } from "svelte"
-  import { store } from "builderStore"
+  import { builderStore } from "stores/builder"
 
   export let tourStepKey
 
@@ -23,7 +23,7 @@
     }
   }
 
-  $: tourKeyWatch = $store.tourKey
+  $: tourKeyWatch = $builderStore.tourKey
   $: registerTourNode(tourKeyWatch, tourStepKey, ready)
 
   onMount(() => {

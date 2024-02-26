@@ -3,7 +3,7 @@
     automationStore,
     selectedAutomation,
     automationHistoryStore,
-  } from "builderStore"
+  } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import FlowItem from "./FlowItem.svelte"
   import TestDataModal from "./TestDataModal.svelte"
@@ -46,6 +46,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:scrolling>
   <div class="header-left">
     <UndoRedoControl store={automationHistoryStore} />
@@ -130,6 +132,7 @@
     flex-grow: 1;
     padding: 23px 23px 80px;
     box-sizing: border-box;
+    overflow-x: hidden;
   }
 
   .header.scrolling {

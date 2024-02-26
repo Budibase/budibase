@@ -1,6 +1,6 @@
 <script>
   import { Tabs, Tab, Heading, Body, Layout } from "@budibase/bbui"
-  import { datasources, integrations } from "stores/backend"
+  import { datasources, integrations } from "stores/builder"
   import ICONS from "components/backend/DatasourceNavigator/icons"
   import EditDatasourceConfig from "./_components/EditDatasourceConfig.svelte"
   import TablesPanel from "./_components/panels/Tables/index.svelte"
@@ -12,12 +12,16 @@
   import PromptQueryModal from "./_components/PromptQueryModal.svelte"
   import SettingsPanel from "./_components/panels/Settings.svelte"
   import { helpers } from "@budibase/shared-core"
+  import { admin } from "stores/portal"
+  import { IntegrationTypes } from "constants/backend"
 
   let selectedPanel = null
   let panelOptions = []
 
   $: datasource = $datasources.selected
 
+  $: isCloud = $admin.cloud
+  $: isPostgres = datasource?.source === IntegrationTypes.POSTGRES
   $: getOptions(datasource)
 
   const getOptions = datasource => {
@@ -41,7 +45,13 @@
     }
     // always the last option for SQL
     if (helpers.isSQL(datasource)) {
-      panelOptions.push("Settings")
+      if (isCloud && isPostgres) {
+        // We don't show the settings panel for Postgres on Budicloud because
+        // it requires pg_dump to work and we don't want to enable shell injection
+        // attacks.
+      } else {
+        panelOptions.push("Settings")
+      }
     }
   }
 </script>

@@ -3,7 +3,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import { createEventDispatcher, setContext } from "svelte"
@@ -125,6 +125,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="control" class:disabled>
   {#if !isValid(value)}
     <Input

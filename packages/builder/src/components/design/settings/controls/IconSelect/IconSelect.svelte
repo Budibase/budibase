@@ -116,11 +116,14 @@
   $: pagerText = `Page ${currentPage} of ${totalPages}`
 </script>
 
+a11y-click-events-have-key-events
 <div bind:this={buttonAnchor}>
   <ActionButton on:click={dropdown.show}>
     {displayValue}
   </ActionButton>
 </div>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <Popover bind:this={dropdown} on:open={setSelectedUI} anchor={buttonAnchor}>
   <div class="container">
     <div class="search-area">

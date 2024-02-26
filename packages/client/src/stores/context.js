@@ -1,5 +1,4 @@
 import { writable, derived } from "svelte/store"
-import { ContextScopes } from "constants"
 
 export const createContextStore = parentContext => {
   const context = writable({})
@@ -20,60 +19,34 @@ export const createContextStore = parentContext => {
   }
 
   // Provide some data in context
-  const provideData = (providerId, data, scope = ContextScopes.Global) => {
+  const provideData = (providerId, data) => {
     if (!providerId || data === undefined) {
       return
     }
 
-    // Proxy message up the chain if we have a parent and are providing global
-    // context
-    if (scope === ContextScopes.Global && parentContext) {
-      parentContext.actions.provideData(providerId, data, scope)
-    }
-
     // Otherwise this is either the context root, or we're providing a local
     // context override, so we need to update the local context instead
-    else {
-      context.update(state => {
-        state[providerId] = data
-        return state
-      })
-      broadcastChange(providerId)
-    }
+    context.update(state => {
+      state[providerId] = data
+      return state
+    })
+    broadcastChange(providerId)
   }
 
   // Provides some action in context
-  const provideAction = (
-    providerId,
-    actionType,
-    callback,
-    scope = ContextScopes.Global
-  ) => {
+  const provideAction = (providerId, actionType, callback) => {
     if (!providerId || !actionType) {
       return
     }
 
-    // Proxy message up the chain if we have a parent and are providing global
-    // context
-    if (scope === ContextScopes.Global && parentContext) {
-      parentContext.actions.provideAction(
-        providerId,
-        actionType,
-        callback,
-        scope
-      )
-    }
-
     // Otherwise this is either the context root, or we're providing a local
     // context override, so we need to update the local context instead
-    else {
-      const key = `${providerId}_${actionType}`
-      context.update(state => {
-        state[key] = callback
-        return state
-      })
-      broadcastChange(key)
-    }
+    const key = `${providerId}_${actionType}`
+    context.update(state => {
+      state[key] = callback
+      return state
+    })
+    broadcastChange(key)
   }
 
   const observeChanges = callback => {

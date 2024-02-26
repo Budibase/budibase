@@ -2,6 +2,7 @@ import { QueryVariable } from "./definitions"
 import env from "../environment"
 import * as db from "../db"
 import { redis, db as dbCore } from "@budibase/backend-core"
+import * as jsRunner from "../jsRunner"
 
 const VARIABLE_TTL_SECONDS = 3600
 let client: any
@@ -29,7 +30,9 @@ export function threadSetup() {
     console.debug(`[${env.FORKED_PROCESS_NAME}] thread setup skipped`)
     return
   }
+
   console.debug(`[${env.FORKED_PROCESS_NAME}] thread setup running`)
+  jsRunner.init()
   db.init()
 }
 

@@ -1,6 +1,6 @@
 <script>
   import { goto } from "@roxi/routify"
-  import { datasources, integrations, queries } from "stores/backend"
+  import { datasources, integrations, queries } from "stores/builder"
   import {
     Icon,
     Select,
@@ -40,7 +40,9 @@
   let schemaType
 
   let autoSchema = {}
+  let nestedSchemaFields = {}
   let rows = []
+  let keys = {}
 
   const parseQuery = query => {
     modified = false
@@ -82,18 +84,25 @@
         return
       }
 
+      nestedSchemaFields = response.nestedSchemaFields
+
       if (Object.keys(newQuery.schema).length === 0) {
         // Assign this to a variable instead of directly to the newQuery.schema so that a user
         // can change the table they're querying and have the schema update until they first
         // edit it
         autoSchema = response.schema
       }
-
       rows = response.rows
 
       notifications.success("Query executed successfully")
     } catch (error) {
-      notifications.error(`Query Error: ${error.message}`)
+      if (typeof error.message === "string") {
+        notifications.error(`Query Error: ${error.message}`)
+      } else if (typeof error.message?.code === "string") {
+        notifications.error(`Query Error: ${error.message.code}`)
+      } else {
+        notifications.error(`Query Error: ${JSON.stringify(error.message)}`)
+      }
 
       if (!suppressErrors) {
         throw error
@@ -113,6 +122,7 @@
           Object.keys(newQuery.schema).length === 0
             ? autoSchema
             : newQuery.schema,
+        nestedSchemaFields,
       })
 
       notifications.success("Query saved successfully")
@@ -137,8 +147,20 @@
   const handleScroll = e => {
     scrolling = e.target.scrollTop !== 0
   }
+
+  async function handleKeyDown(evt) {
+    keys[evt.key] = true
+    if ((keys["Meta"] || keys["Control"]) && keys["Enter"]) {
+      await runQuery({ suppressErrors: false })
+    }
+  }
+
+  function handleKeyUp(evt) {
+    delete keys[evt.key]
+  }
 </script>
 
+<svelte:window on:keydown={handleKeyDown} on:keyup={handleKeyUp} />
 <QueryViewerSavePromptModal
   checkIsModified={() => checkIsModified(newQuery)}
   attemptSave={() => runQuery({ suppressErrors: false }).then(saveQuery)}

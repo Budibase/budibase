@@ -1,5 +1,5 @@
 import { writable } from "svelte/store"
-import { AppStatus } from "../../constants"
+import { AppStatus } from "constants"
 import { API } from "api"
 
 // properties that should always come from the dev app, not the deployed

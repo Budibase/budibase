@@ -3,10 +3,15 @@
   import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
-  import { store, selectedComponent, selectedScreen } from "builderStore"
+  import {
+    previewStore,
+    selectedScreen,
+    componentStore,
+    selectedComponent,
+  } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
-  import { findComponentPath } from "builderStore/componentUtils"
+  import { findComponentPath } from "helpers/components"
 
   let searchString
   let searchRef
@@ -14,14 +19,14 @@
   let componentList = []
 
   $: allowedComponents = getAllowedComponents(
-    $store.components,
+    $componentStore.components,
     $selectedScreen,
     $selectedComponent
   )
   $: enrichedStructure = enrichStructure(
     structure,
-    $store.components,
-    $store.customComponents
+    $componentStore.components,
+    $componentStore.customComponents
   )
   $: filteredStructure = filterStructure(
     enrichedStructure,
@@ -42,9 +47,7 @@
 
     // Get initial set of allowed components
     let allowedComponents = []
-    const definition = store.actions.components.getDefinition(
-      component?._component
-    )
+    const definition = componentStore.getDefinition(component?._component)
     if (definition.legalDirectChildren?.length) {
       allowedComponents = definition.legalDirectChildren.map(x => {
         return `@budibase/standard-components/${x}`
@@ -59,7 +62,7 @@
       if (ancestor._component === `@budibase/standard-components/sidepanel`) {
         illegalChildren = []
       }
-      const def = store.actions.components.getDefinition(ancestor._component)
+      const def = componentStore.getDefinition(ancestor._component)
       const blacklist = def?.illegalChildren?.map(x => {
         return `@budibase/standard-components/${x}`
       })
@@ -172,7 +175,7 @@
 
   const addComponent = async component => {
     try {
-      await store.actions.components.create(component)
+      await componentStore.create(component)
     } catch (error) {
       notifications.error(error || "Error creating component")
     }
@@ -208,14 +211,16 @@
   })
 
   const onDragStart = component => {
-    store.actions.dnd.start(component)
+    previewStore.startDrag(component)
   }
 
   const onDragEnd = () => {
-    store.actions.dnd.stop()
+    previewStore.stopDrag()
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
   <Panel
     title="Add component"
