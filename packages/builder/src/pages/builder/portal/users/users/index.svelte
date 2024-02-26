@@ -37,7 +37,7 @@
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { OnboardingType } from "constants"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
+  import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
 
   const fetch = fetchData({
@@ -73,7 +73,7 @@
   let parsedInvites = []
 
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
-  $: readonly = !sdk.users.isAdmin($auth.user) || $features.isScimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user)
   $: debouncedUpdateFetch(searchEmail)
   $: schema = {
     email: {
@@ -320,8 +320,6 @@
           Import
         </Button>
       </div>
-    {:else}
-      <ScimBanner />
     {/if}
     <div class="controls-right">
       <Search bind:value={searchEmail} placeholder="Search" />
@@ -346,14 +344,19 @@
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
   />
-  <div class="pagination">
-    <Pagination
-      page={$fetch.pageNumber + 1}
-      hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
-      hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
-      goToPrevPage={fetch.prevPage}
-      goToNextPage={fetch.nextPage}
-    />
+  <div class="footer">
+    {#if $features.isScimEnabled && enrichedUsers?.some(g => g.scimInfo?.isSync)}
+      <ScimInfo text="User synced externally" />
+    {/if}
+    <div class="pagination">
+      <Pagination
+        page={$fetch.pageNumber + 1}
+        hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
+        hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+        goToPrevPage={fetch.prevPage}
+        goToNextPage={fetch.nextPage}
+      />
+    </div>
   </div>
   <Table
     schema={pendingSchema}
@@ -402,6 +405,13 @@
     display: flex;
     flex-direction: row;
     justify-content: flex-end;
+    margin-left: auto;
+  }
+  .footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
   }
   .controls {
     display: flex;
