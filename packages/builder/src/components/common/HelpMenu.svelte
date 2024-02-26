@@ -52,7 +52,7 @@
         <div class="icon">
           <FontAwesomeIcon name="fa-solid fa-play" />
         </div>
-        <Body size="S">Budibase University {isPremiumAndAbove}</Body>
+        <Body size="S">Budibase University</Body>
       </a>
       <div class="divider" />
       {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
