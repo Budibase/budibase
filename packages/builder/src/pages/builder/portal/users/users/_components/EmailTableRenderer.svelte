@@ -7,5 +7,5 @@
 
 {value}
 {#if row.scimInfo?.isSync}
-  <ScimInfo />
+  <ScimInfo iconSize="XS" />
 {/if}
