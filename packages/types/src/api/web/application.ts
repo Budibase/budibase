@@ -1,5 +1,5 @@
 import type { PlanType } from "../../sdk"
-import type { Layout, App } from "../../documents"
+import type { Layout, App, Screen } from "../../documents"
 
 export interface CreateAppRequest {
   name: string
