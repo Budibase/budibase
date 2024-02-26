@@ -1,4 +1,10 @@
-import { QueryJson, SearchFilters, Table, Row } from "@budibase/types"
+import {
+  QueryJson,
+  SearchFilters,
+  Table,
+  Row,
+  DatasourcePlusQueryResponse,
+} from "@budibase/types"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
 
@@ -68,9 +74,8 @@ export default class AliasTables {
     return map
   }
 
-  async queryWithAliasing(json: QueryJson) {
+  async queryWithAliasing(json: QueryJson): DatasourcePlusQueryResponse {
     json = cloneDeep(json)
-    const aliasField = (field: string) => this.aliasField(field)
     const aliasTable = (table: Table) => ({
       ...table,
       name: this.getAlias(table.name),
@@ -78,7 +83,7 @@ export default class AliasTables {
     // run through the query json to update anywhere a table may be used
     if (json.resource?.fields) {
       json.resource.fields = json.resource.fields.map(field =>
-        aliasField(field)
+        this.aliasField(field)
       )
     }
     if (json.filters) {
@@ -88,7 +93,7 @@ export default class AliasTables {
         }
         const aliasedFilters: typeof filter = {}
         for (let key of Object.keys(filter)) {
-          aliasedFilters[aliasField(key)] = filter[key]
+          aliasedFilters[this.aliasField(key)] = filter[key]
         }
         json.filters[filterKey as keyof SearchFilters] = aliasedFilters
       }
@@ -120,6 +125,10 @@ export default class AliasTables {
     }
     json.tableAliases = invertedTableAliases
     const response = await getDatasourceAndQuery(json)
-    return this.reverse(response)
+    if (Array.isArray(response)) {
+      return this.reverse(response)
+    } else {
+      return response
+    }
   }
 }

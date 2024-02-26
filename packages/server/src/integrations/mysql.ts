@@ -12,7 +12,7 @@ import {
   SourceName,
   Schema,
   TableSourceType,
-  FieldType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -381,7 +381,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     await this.connect()
     try {
       const queryFn = (query: any) =>

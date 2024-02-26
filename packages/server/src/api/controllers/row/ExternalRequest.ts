@@ -332,7 +332,7 @@ export class ExternalRequest<T extends Operation> {
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: buildFilters(rowId, {}, table),
     })
-    if (response.length > 0) {
+    if (Array.isArray(response)) {
       return response[0]
     } else {
       throw new Error(`Cannot fetch row by ID "${rowId}"`)
@@ -646,7 +646,7 @@ export class ExternalRequest<T extends Operation> {
         },
       })
       // this is the response from knex if no rows found
-      const rows: Row[] = !response[0].read ? response : []
+      const rows: Row[] = response?.[0].read ? [] : (response as Row[])
       const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
       related[storeTo] = { rows, isMany, tableId }
     }
@@ -899,15 +899,16 @@ export class ExternalRequest<T extends Operation> {
       response = await getDatasourceAndQuery(json)
     }
 
+    const responseRows = Array.isArray(response) ? response : []
     // handle many-to-many relationships now if we know the ID (could be auto increment)
     if (operation !== Operation.READ) {
       await this.handleManyRelationships(
         table._id || "",
-        response[0],
+        responseRows[0],
         processed.manyRelationships
       )
     }
-    const output = this.outputProcessing(response, table, relationships)
+    const output = this.outputProcessing(responseRows, table, relationships)
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
       return (
