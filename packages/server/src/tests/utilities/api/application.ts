@@ -48,7 +48,7 @@ export class ApplicationAPI extends TestAPI {
   publish = async (
     appId: string
   ): Promise<{ _id: string; status: string; appUrl: string }> => {
-    // While the publsih endpoint does take an :appId parameter, it doesn't
+    // While the publish endpoint does take an :appId parameter, it doesn't
     // use it. It uses the appId from the context.
     let headers = {
       ...this.config.defaultHeaders(),
@@ -82,9 +82,15 @@ export class ApplicationAPI extends TestAPI {
   }
 
   getRaw = async (appId: string): Promise<Response> => {
+    // While the appPackage endpoint does take an :appId parameter, it doesn't
+    // use it. It uses the appId from the context.
+    let headers = {
+      ...this.config.defaultHeaders(),
+      [constants.Header.APP_ID]: appId,
+    }
     const result = await this.request
       .get(`/api/applications/${appId}/appPackage`)
-      .set(this.config.defaultHeaders())
+      .set(headers)
       .expect("Content-Type", /json/)
       .expect(200)
     return result
@@ -135,6 +141,40 @@ export class ApplicationAPI extends TestAPI {
     }
 
     return result.body as App
+  }
+
+  updateClient = async (appId: string): Promise<void> => {
+    // While the updateClient endpoint does take an :appId parameter, it doesn't
+    // use it. It uses the appId from the context.
+    let headers = {
+      ...this.config.defaultHeaders(),
+      [constants.Header.APP_ID]: appId,
+    }
+    const response = await this.request
+      .post(`/api/applications/${appId}/client/update`)
+      .set(headers)
+      .expect("Content-Type", /json/)
+
+    if (response.statusCode !== 200) {
+      throw new Error(JSON.stringify(response.body))
+    }
+  }
+
+  revertClient = async (appId: string): Promise<void> => {
+    // While the revertClient endpoint does take an :appId parameter, it doesn't
+    // use it. It uses the appId from the context.
+    let headers = {
+      ...this.config.defaultHeaders(),
+      [constants.Header.APP_ID]: appId,
+    }
+    const response = await this.request
+      .post(`/api/applications/${appId}/client/revert`)
+      .set(headers)
+      .expect("Content-Type", /json/)
+
+    if (response.statusCode !== 200) {
+      throw new Error(JSON.stringify(response.body))
+    }
   }
 
   fetch = async ({ status }: { status?: AppStatus } = {}): Promise<App[]> => {

@@ -17,11 +17,9 @@ import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
 import type { App } from "@budibase/types"
-
-jest.setTimeout(150000000)
+import tk from "timekeeper"
 
 describe("/applications", () => {
-  let request = setup.getRequest()
   let config = setup.getConfig()
   let app: App
 
@@ -143,50 +141,37 @@ describe("/applications", () => {
 
   describe("manage client library version", () => {
     it("should be able to update the app client library version", async () => {
-      await request
-        .post(`/api/applications/${config.getAppId()}/client/update`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.updateClient(app.appId)
       expect(events.app.versionUpdated).toBeCalledTimes(1)
     })
 
     it("should be able to revert the app client library version", async () => {
-      // We need to first update the version so that we can then revert
-      await request
-        .post(`/api/applications/${config.getAppId()}/client/update`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      await request
-        .post(`/api/applications/${config.getAppId()}/client/revert`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.updateClient(app.appId)
+      await config.api.application.revertClient(app.appId)
       expect(events.app.versionReverted).toBeCalledTimes(1)
     })
   })
 
   describe("edited at", () => {
-    it("middleware should set edited at", async () => {
-      const headers = config.defaultHeaders()
-      headers["referer"] = `/${config.getAppId()}/test`
-      const res = await request
-        .put(`/api/applications/${config.getAppId()}`)
-        .send({
-          name: "UPDATED_NAME",
-        })
-        .set(headers)
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._rev).toBeDefined()
-      // retrieve the app to check it
-      const getRes = await request
-        .get(`/api/applications/${config.getAppId()}/appPackage`)
-        .set(headers)
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(getRes.body.application.updatedAt).toBeDefined()
+    it("middleware should set updatedAt", async () => {
+      const app = await tk.withFreeze(
+        "2021-01-01",
+        async () => await config.api.application.create({ name: utils.newid() })
+      )
+      expect(app.updatedAt).toEqual("2021-01-01T00:00:00.000Z")
+
+      const updatedApp = await tk.withFreeze(
+        "2021-02-01",
+        async () =>
+          await config.api.application.update(app.appId, {
+            name: "UPDATED_NAME",
+          })
+      )
+      expect(updatedApp._rev).toBeDefined()
+      expect(updatedApp.updatedAt).toEqual("2021-02-01T00:00:00.000Z")
+
+      const fetchedApp = await config.api.application.get(app.appId)
+      expect(fetchedApp.updatedAt).toEqual("2021-02-01T00:00:00.000Z")
     })
   })
 
