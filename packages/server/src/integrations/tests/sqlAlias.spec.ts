@@ -2,6 +2,8 @@ import { QueryJson } from "@budibase/types"
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
+import AliasTables from "../../api/controllers/row/alias"
+import { generator } from "@budibase/backend-core/tests"
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -155,6 +157,21 @@ describe("Captures of real examples", () => {
         sql: multiline(`delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 
              returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
       })
+    })
+  })
+
+  describe("check max character aliasing", () => {
+    it("should handle over 'z' max character alias", () => {
+      const tableNames = []
+      for (let i = 0; i < 100; i++) {
+        tableNames.push(generator.word())
+      }
+      const aliasing = new AliasTables(tableNames)
+      let alias: string = ""
+      for (let table of tableNames) {
+        alias = aliasing.getAlias(table)
+      }
+      expect(alias).toEqual("aaay")
     })
   })
 })
