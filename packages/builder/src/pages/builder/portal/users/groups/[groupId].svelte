@@ -13,7 +13,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { Breadcrumb, Breadcrumbs } from "components/portal/page"
   import { roles } from "stores/builder"
-  import { apps, auth, features, groups } from "stores/portal"
+  import { apps, auth, groups } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
