@@ -167,7 +167,7 @@
           }}
           class:searching={search}
         >
-          <Icon name={search ? "Close" : "Search"} />
+          <Icon size="S" name={search ? "Close" : "Search"} />
         </span>
       </div>
     {/if}
@@ -180,7 +180,11 @@
               selectedCategory = categoryName
             }}
           >
-            <Icon name={categoryIcons[categoryName]} />
+            <Icon
+              size="S"
+              color="var(--spectrum-global-color-gray-700)"
+              name={categoryIcons[categoryName]}
+            />
             <span class="category-name">{categoryName} </span>
             <span class="category-chevron"><Icon name="ChevronRight" /></span>
           </li>
@@ -302,6 +306,9 @@
     display: flex;
     gap: var(--spacing-m);
     align-items: center;
+  }
+  ul.category-list :global(.spectrum-Icon) {
+    margin: -4px 0;
   }
   ul.category-list .category-name {
     text-transform: capitalize;
