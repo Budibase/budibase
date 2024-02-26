@@ -2,11 +2,10 @@
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body } from "@budibase/bbui"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
-  import { auth } from "stores/portal"
-  import { emailSupportCheck } from "helpers/planTitle"
+  import { licensing } from "stores/portal"
+  import { isPremiumAndAbove } from "helpers/planTitle"
 
-  $: license = $auth.user?.license
-  $: isPremiumAndAbove = emailSupportCheck(license?.plan.type)
+  $: premiumOrAboveLicense = isPremiumAndAbove($licensing?.license.plan.type)
 
   let show
   let hide
@@ -57,17 +56,20 @@
       <div class="divider" />
       {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
         <a
-          href={isPremiumAndAbove
+          href={premiumOrAboveLicense
             ? "mailto:support@budibase.com"
             : "/builder/portal/account/usage"}
         >
-          <div class="premiumLinkContent" class:disabled={!isPremiumAndAbove}>
+          <div
+            class="premiumLinkContent"
+            class:disabled={!premiumOrAboveLicense}
+          >
             <div class="icon">
               <FontAwesomeIcon name="fa-solid fa-envelope" />
             </div>
             <Body size="S">Email support</Body>
           </div>
-          {#if !isPremiumAndAbove}
+          {#if !premiumOrAboveLicense}
             <div class="premiumBadge">
               <div class="icon">
                 <FontAwesomeIcon name="fa-solid fa-lock" />
