@@ -6,7 +6,7 @@ import { Plugin } from "@budibase/types"
 
 // URLS
 
-export function enrichPluginURLs(plugins: Plugin[]) {
+export function enrichPluginURLs(plugins: Plugin[]): Plugin[] {
   if (!plugins || !plugins.length) {
     return []
   }

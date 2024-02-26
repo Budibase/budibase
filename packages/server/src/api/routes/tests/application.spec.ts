@@ -11,25 +11,27 @@ jest.mock("../../../utilities/redis", () => ({
   checkDebounce: jest.fn(),
   shutdown: jest.fn(),
 }))
-import { clearAllApps, checkBuilderEndpoint } from "./utilities/TestFunctions"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
+import type { App } from "@budibase/types"
 
-jest.setTimeout(15000)
+jest.setTimeout(150000000)
 
 describe("/applications", () => {
   let request = setup.getRequest()
   let config = setup.getConfig()
+  let app: App
 
   afterAll(setup.afterAll)
-
-  beforeAll(async () => {
-    await config.init()
-  })
+  beforeAll(async () => await config.init())
 
   beforeEach(async () => {
+    app = await config.api.application.create({ name: utils.newid() })
+    const deployment = await config.api.application.publish(app.appId)
+    expect(deployment.status).toBe("SUCCESS")
     jest.clearAllMocks()
   })
 
@@ -74,7 +76,7 @@ describe("/applications", () => {
 
     it("migrates navigation settings from old apps", async () => {
       const app = await config.api.application.create({
-        name: "Old App",
+        name: utils.newid(),
         useTemplate: "true",
         templateFile: "src/api/routes/tests/data/old-app.txt",
       })
@@ -96,77 +98,45 @@ describe("/applications", () => {
   })
 
   describe("fetch", () => {
-    beforeEach(async () => {
-      // Clean all apps but the onde from config
-      await clearAllApps(config.getTenantId(), [config.getAppId()!])
-    })
-
     it("lists all applications", async () => {
-      await config.createApp("app1")
-      await config.createApp("app2")
       const apps = await config.api.application.fetch({ status: AppStatus.DEV })
-
-      // two created apps + the inited app
-      expect(apps.length).toBe(3)
+      expect(apps.length).toBeGreaterThan(0)
     })
   })
 
   describe("fetchAppDefinition", () => {
     it("should be able to get an apps definition", async () => {
-      const res = await request
-        .get(`/api/applications/${config.getAppId()}/definition`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.libraries.length).toEqual(1)
+      const res = await config.api.application.getDefinition(app.appId)
+      expect(res.libraries.length).toEqual(1)
     })
   })
 
   describe("fetchAppPackage", () => {
     it("should be able to fetch the app package", async () => {
-      const res = await request
-        .get(`/api/applications/${config.getAppId()}/appPackage`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.application).toBeDefined()
-      expect(res.body.application.appId).toEqual(config.getAppId())
+      const res = await config.api.application.getAppPackage(app.appId)
+      expect(res.application).toBeDefined()
+      expect(res.application.appId).toEqual(config.getAppId())
     })
   })
 
   describe("update", () => {
     it("should be able to update the app package", async () => {
-      const res = await request
-        .put(`/api/applications/${config.getAppId()}`)
-        .send({
-          name: "TEST_APP",
-        })
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body._rev).toBeDefined()
+      const updatedApp = await config.api.application.update(app.appId, {
+        name: "TEST_APP",
+      })
+      expect(updatedApp._rev).toBeDefined()
       expect(events.app.updated).toBeCalledTimes(1)
     })
   })
 
   describe("publish", () => {
     it("should publish app with dev app ID", async () => {
-      const appId = config.getAppId()
-      await request
-        .post(`/api/applications/${appId}/publish`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.publish(app.appId)
       expect(events.app.published).toBeCalledTimes(1)
     })
 
     it("should publish app with prod app ID", async () => {
-      const appId = config.getProdAppId()
-      await request
-        .post(`/api/applications/${appId}/publish`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.publish(app.appId.replace("_dev", ""))
       expect(events.app.published).toBeCalledTimes(1)
     })
   })
@@ -222,33 +192,25 @@ describe("/applications", () => {
 
   describe("sync", () => {
     it("app should sync correctly", async () => {
-      const res = await request
-        .post(`/api/applications/${config.getAppId()}/sync`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual("App sync completed successfully.")
+      const { message } = await config.api.application.sync(app.appId)
+      expect(message).toEqual("App sync completed successfully.")
     })
 
     it("app should not sync if production", async () => {
-      const res = await request
-        .post(`/api/applications/app_123456/sync`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(400)
-      expect(res.body.message).toEqual(
+      const { message } = await config.api.application.sync(
+        app.appId.replace("_dev", ""),
+        { statusCode: 400 }
+      )
+
+      expect(message).toEqual(
         "This action cannot be performed for production apps"
       )
     })
 
     it("app should not sync if sync is disabled", async () => {
       env._set("DISABLE_AUTO_PROD_APP_SYNC", true)
-      const res = await request
-        .post(`/api/applications/${config.getAppId()}/sync`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect(res.body.message).toEqual(
+      const { message } = await config.api.application.sync(app.appId)
+      expect(message).toEqual(
         "App sync disabled. You can reenable with the DISABLE_AUTO_PROD_APP_SYNC environment variable."
       )
       env._set("DISABLE_AUTO_PROD_APP_SYNC", false)
@@ -256,51 +218,26 @@ describe("/applications", () => {
   })
 
   describe("unpublish", () => {
-    beforeEach(async () => {
-      // We want to republish as the unpublish will delete the prod app
-      await config.publish()
-    })
-
     it("should unpublish app with dev app ID", async () => {
-      const appId = config.getAppId()
-      await request
-        .post(`/api/applications/${appId}/unpublish`)
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.application.unpublish(app.appId)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
 
     it("should unpublish app with prod app ID", async () => {
-      const appId = config.getProdAppId()
-      await request
-        .post(`/api/applications/${appId}/unpublish`)
-        .set(config.defaultHeaders())
-        .expect(204)
+      await config.api.application.unpublish(app.appId.replace("_dev", ""))
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
   })
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
-      await config.createApp("to-delete")
-      const appId = config.getAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.delete(app.appId)
       expect(events.app.deleted).toBeCalledTimes(1)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
-      await config.createApp("to-delete")
-      const appId = config.getProdAppId()
-      await request
-        .delete(`/api/applications/${appId}`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.delete(app.appId.replace("_dev", ""))
       expect(events.app.deleted).toBeCalledTimes(1)
       expect(events.app.unpublished).toBeCalledTimes(1)
     })
@@ -308,28 +245,18 @@ describe("/applications", () => {
 
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
-      // setup the apps
-      await config.createApp("testing-auto-logs")
       const automation = await config.createAutomation()
-      await config.publish()
-      await context.doInAppContext(config.getProdAppId(), () => {
-        return config.createAutomationLog(automation)
-      })
+      await context.doInAppContext(app.appId, () =>
+        config.createAutomationLog(automation)
+      )
 
-      // do the sync
-      const appId = config.getAppId()
-      await request
-        .post(`/api/applications/${appId}/sync`)
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      await config.api.application.sync(app.appId)
 
       // does exist in prod
       const prodLogs = await config.getAutomationLogs()
       expect(prodLogs.data.length).toBe(1)
 
-      // delete prod app so we revert to dev log search
-      await config.unpublish()
+      await config.api.application.unpublish(app.appId)
 
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()

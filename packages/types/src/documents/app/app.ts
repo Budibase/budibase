@@ -1,5 +1,5 @@
-import { User, Document } from "../"
-import { SocketSession } from "../../sdk"
+import { User, Document, Layout, Screen, Plugin } from "../"
+import { SocketSession, PlanType } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
 
@@ -24,6 +24,8 @@ export interface App extends Document {
   icon?: AppIcon
   features?: AppFeatures
   automations?: AutomationSettings
+  usedPlugins?: Plugin[]
+  upgradableVersion?: string
 }
 
 export interface AppInstance {
@@ -84,4 +86,19 @@ export interface CreateAppRequest {
   includeSampleData?: boolean
   encryptionPassword?: string
   templateString?: string
+}
+
+export interface FetchAppDefinitionResponse {
+  layouts: Layout[]
+  screens: Screen[]
+  libraries: string[]
+}
+
+export interface FetchAppPackageResponse {
+  application: App
+  licenseType: PlanType
+  screens: Screen[]
+  layouts: Layout[]
+  clientLibPath: string
+  hasLock: boolean
 }

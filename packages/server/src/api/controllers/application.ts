@@ -48,6 +48,8 @@ import {
   Screen,
   UserCtx,
   CreateAppRequest,
+  FetchAppDefinitionResponse,
+  type FetchAppPackageResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -59,23 +61,23 @@ import * as appMigrations from "../../appMigrations"
 async function getLayouts() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Layout>(
       getLayoutParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 async function getScreens() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Screen>(
       getScreenParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 function getUserRoleId(ctx: UserCtx) {
@@ -175,14 +177,16 @@ export const addSampleData = async (ctx: UserCtx) => {
   ctx.status = 200
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<null, App[]>) {
   ctx.body = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
 }
 
-export async function fetchAppDefinition(ctx: UserCtx) {
+export async function fetchAppDefinition(
+  ctx: UserCtx<null, FetchAppDefinitionResponse>
+) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
@@ -197,17 +201,19 @@ export async function fetchAppDefinition(ctx: UserCtx) {
   }
 }
 
-export async function fetchAppPackage(ctx: UserCtx) {
+export async function fetchAppPackage(
+  ctx: UserCtx<null, FetchAppPackageResponse>
+) {
   const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<any>(DocumentType.APP_METADATA)
+  let application = await db.get<App>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
-    application.usedPlugins
+    application.usedPlugins || []
   )
 
   // Only filter screens if the user is not a builder
@@ -425,7 +431,9 @@ export async function create(ctx: UserCtx) {
 
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
-export async function update(ctx: UserCtx) {
+export async function update(
+  ctx: UserCtx<{ name?: string; url?: string }, App>
+) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
   const name = ctx.request.body.name,
@@ -498,7 +506,7 @@ export async function revertClient(ctx: UserCtx) {
   const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
     version: revertedToVersion,
-    revertableVersion: null,
+    revertableVersion: undefined,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
@@ -618,12 +626,15 @@ export async function importToApp(ctx: UserCtx) {
   ctx.body = { message: "app updated" }
 }
 
-export async function updateAppPackage(appPackage: any, appId: any) {
+export async function updateAppPackage(
+  appPackage: Partial<App>,
+  appId: string
+) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get<App>(DocumentType.APP_METADATA)
 
-    const newAppPackage = { ...application, ...appPackage }
+    const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
     }
