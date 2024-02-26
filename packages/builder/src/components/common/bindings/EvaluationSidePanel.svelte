@@ -85,7 +85,7 @@
     border-left: var(--border-light);
   }
   .header {
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
     flex: 0 0 auto;
     position: relative;
     border-bottom: var(--border-light);
@@ -116,7 +116,7 @@
   }
   .body {
     flex: 1 1 auto;
-    padding: var(--spacing-m);
+    padding: var(--spacing-m) var(--spacing-l);
     font-family: var(--font-mono);
     font-size: 12px;
     overflow-y: scroll;

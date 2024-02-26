@@ -1,5 +1,12 @@
 <script>
-  import { DrawerContent, ActionButton, Icon, Helpers } from "@budibase/bbui"
+  import {
+    DrawerContent,
+    ActionButton,
+    Icon,
+    Heading,
+    Body,
+    Button,
+  } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import {
     isValid,
@@ -67,17 +74,16 @@
   $: usingJS = mode === Modes.JavaScript
   $: editorMode =
     mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
+  $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
   $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestUpdateEvaluation(runtimeExpression, context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
-  const updateEvaluation = (expression, context) => {
+  const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
     expressionResult = processStringSync(expression || "", context)
     evaluating = false
-  }
-
-  const debouncedUpdateEvaluation = Utils.debounce(updateEvaluation, 260)
+  }, 260)
 
   const requestUpdateEvaluation = (expression, context) => {
     evaluating = true
@@ -131,8 +137,22 @@
   }
 
   const changeMode = newMode => {
-    mode = newMode
-    updateValue(newMode === Modes.JavaScript ? jsValue : hbsValue)
+    if (targetMode || newMode === mode) {
+      return
+    }
+    if (editorValue) {
+      targetMode = newMode
+    } else {
+      mode = newMode
+    }
+  }
+
+  const confirmChangeMode = () => {
+    jsValue = null
+    hbsValue = null
+    updateValue(null)
+    mode = targetMode
+    targetMode = null
   }
 
   const changeSidePanel = newSidePanel => {
@@ -147,18 +167,6 @@
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
-  }
-
-  const switchMode = () => {
-    if (targetMode === "Text") {
-      jsValue = null
-      updateValue(jsValue)
-    } else {
-      hbsValue = null
-      updateValue(hbsValue)
-    }
-    mode = targetMode + ""
-    targetMode = null
   }
 
   const convert = () => {
@@ -250,6 +258,30 @@
             placeholder="Add bindings by typing $ or use the menu on the right"
           />
         {/if}
+        {#if targetMode}
+          <div class="mode-overlay">
+            <div class="prompt-body">
+              <Heading size="S">
+                Switch to {targetMode}?
+              </Heading>
+              <Body>This will discard anything in your binding</Body>
+              <div class="switch-actions">
+                <Button
+                  secondary
+                  size="S"
+                  on:click={() => {
+                    targetMode = null
+                  }}
+                >
+                  No - keep {mode}
+                </Button>
+                <Button cta size="S" on:click={confirmChangeMode}>
+                  Yes - discard {mode}
+                </Button>
+              </div>
+            </div>
+          </div>
+        {/if}
       </div>
     </div>
     <div class="side" class:visible={!!sidePanel}>
@@ -319,6 +351,7 @@
   .editor {
     flex: 1 1 auto;
     height: 0;
+    position: relative;
   }
   .editor :global(.code-editor),
   .editor :global(.code-editor > div),
@@ -328,5 +361,35 @@
   .editor :global(.cm-editor) {
     border: none;
     border-radius: 0;
+  }
+
+  /* Overlay */
+  .mode-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: var(
+      --spectrum-textfield-m-background-color,
+      var(--spectrum-global-color-gray-50)
+    );
+    border-radius: var(--border-radius-s);
+  }
+  .prompt-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-l);
+  }
+  .prompt-body .switch-actions {
+    display: flex;
+    gap: var(--spacing-l);
   }
 </style>
