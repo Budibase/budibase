@@ -3,6 +3,10 @@ import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
 
+function multiline(sql: string) {
+  return sql.replace(/\n/g, "").replace(/ +/g, " ")
+}
+
 describe("Captures of real examples", () => {
   const limit = 5000
   const relationshipLimit = 100
@@ -17,7 +21,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: ["A Street", 34, "London", "A", "B", "designer", 1990],
-        sql: `insert into "persons" ("address", "age", "city", "firstname", "lastname", "type", "year") values ($1, $2, $3, $4, $5, $6, $7) returning *`,
+        sql: multiline(`insert into "persons" ("address", "age", "city", "firstname", "lastname", "type", "year") 
+              values ($1, $2, $3, $4, $5, $6, $7) returning *`),
       })
     })
   })
@@ -28,7 +33,15 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [relationshipLimit, limit],
-        sql: `select "a"."year" as "a.year", "a"."firstname" as "a.firstname", "a"."personid" as "a.personid", "a"."address" as "a.address", "a"."age" as "a.age", "a"."type" as "a.type", "a"."city" as "a.city", "a"."lastname" as "a.lastname", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" from (select * from "persons" as "a" order by "a"."firstname" asc limit $1) as "a" left join "tasks" as "b" on "a"."personid" = "b"."qaid" or "a"."personid" = "b"."executorid" order by "a"."firstname" asc limit $2`,
+        sql: multiline(`select "a"."year" as "a.year", "a"."firstname" as "a.firstname", "a"."personid" as "a.personid", 
+              "a"."address" as "a.address", "a"."age" as "a.age", "a"."type" as "a.type", "a"."city" as "a.city", 
+              "a"."lastname" as "a.lastname", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", 
+              "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid", 
+              "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
+              "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
+              from (select * from "persons" as "a" order by "a"."firstname" asc limit $1) as "a" 
+              left join "tasks" as "b" on "a"."personid" = "b"."qaid" or "a"."personid" = "b"."executorid" 
+              order by "a"."firstname" asc limit $2`),
       })
     })
 
@@ -37,7 +50,13 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [relationshipLimit, "assembling", limit],
-        sql: `select "a"."productname" as "a.productname", "a"."productid" as "a.productid", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" left join "products_tasks" as "c" on "a"."productid" = "c"."productid" left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 order by "a"."productname" asc limit $3`,
+        sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
+              "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
+              "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
+              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
+              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" where "b"."taskname" = $2 
+              order by "a"."productname" asc limit $3`),
       })
     })
 
@@ -46,7 +65,13 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [relationshipLimit, limit],
-        sql: `select "a"."productname" as "a.productname", "a"."productid" as "a.productid", "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" left join "products_tasks" as "c" on "a"."productid" = "c"."productid" left join "tasks" as "b" on "b"."taskid" = "c"."taskid" order by "a"."productname" asc limit $2`,
+        sql: multiline(`select "a"."productname" as "a.productname", "a"."productid" as "a.productid", 
+              "b"."executorid" as "b.executorid", "b"."taskname" as "b.taskname", "b"."taskid" as "b.taskid", 
+              "b"."completed" as "b.completed", "b"."qaid" as "b.qaid" 
+              from (select * from "products" as "a" order by "a"."productname" asc limit $1) as "a" 
+              left join "products_tasks" as "c" on "a"."productid" = "c"."productid" 
+              left join "tasks" as "b" on "b"."taskid" = "c"."taskid" 
+              order by "a"."productname" asc limit $2`),
       })
     })
 
@@ -56,7 +81,12 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [...filters, limit, limit],
-        sql: `select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid", "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", "b"."productid" as "b.productid" from (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) limit $3) as "a" left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" left join "products" as "b" on "b"."productid" = "c"."productid" limit $4`,
+        sql: multiline(`select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", 
+             "a"."taskid" as "a.taskid", "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", 
+             "b"."productname" as "b.productname", "b"."productid" as "b.productid" 
+             from (select * from "tasks" as "a" where "a"."taskid" in ($1, $2) limit $3) as "a" 
+             left join "products_tasks" as "c" on "a"."taskid" = "c"."taskid" 
+             left join "products" as "b" on "b"."productid" = "c"."productid" limit $4`),
       })
     })
 
@@ -77,7 +107,19 @@ describe("Captures of real examples", () => {
           equalValue,
           limit,
         ],
-        sql: `select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid", "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", "b"."productid" as "b.productid", "c"."year" as "c.year", "c"."firstname" as "c.firstname", "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", "c"."city" as "c.city", "c"."lastname" as "c.lastname", "c"."year" as "c.year", "c"."firstname" as "c.firstname", "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", "c"."city" as "c.city", "c"."lastname" as "c.lastname" from (select * from "tasks" as "a" where not "a"."completed" = $1 order by "a"."taskname" asc limit $2) as "a" left join "products_tasks" as "d" on "a"."taskid" = "d"."taskid" left join "products" as "b" on "b"."productid" = "d"."productid" left join "persons" as "c" on "a"."executorid" = "c"."personid" or "a"."qaid" = "c"."personid" where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc limit $6`,
+        sql: multiline(`select "a"."executorid" as "a.executorid", "a"."taskname" as "a.taskname", "a"."taskid" as "a.taskid", 
+             "a"."completed" as "a.completed", "a"."qaid" as "a.qaid", "b"."productname" as "b.productname", 
+             "b"."productid" as "b.productid", "c"."year" as "c.year", "c"."firstname" as "c.firstname", 
+             "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", 
+             "c"."city" as "c.city", "c"."lastname" as "c.lastname", "c"."year" as "c.year", "c"."firstname" as "c.firstname", 
+             "c"."personid" as "c.personid", "c"."address" as "c.address", "c"."age" as "c.age", "c"."type" as "c.type", 
+             "c"."city" as "c.city", "c"."lastname" as "c.lastname" 
+             from (select * from "tasks" as "a" where not "a"."completed" = $1 
+             order by "a"."taskname" asc limit $2) as "a" 
+             left join "products_tasks" as "d" on "a"."taskid" = "d"."taskid" 
+             left join "products" as "b" on "b"."productid" = "d"."productid" 
+             left join "persons" as "c" on "a"."executorid" = "c"."personid" or "a"."qaid" = "c"."personid" 
+             where "c"."year" between $3 and $4 and "b"."productname" = $5 order by "a"."taskname" asc limit $6`),
       })
     })
   })
@@ -88,7 +130,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
-        sql: `update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`,
+        sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
+             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
       })
     })
 
@@ -97,7 +140,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: [1990, "C", "A Street", 34, "designer", "London", "B", 5],
-        sql: `update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`,
+        sql: multiline(`update "persons" as "a" set "year" = $1, "firstname" = $2, "address" = $3, "age" = $4, 
+             "type" = $5, "city" = $6, "lastname" = $7 where "a"."personid" = $8 returning *`),
       })
     })
   })
@@ -108,7 +152,8 @@ describe("Captures of real examples", () => {
       let query = new Sql(SqlClient.POSTGRES, limit)._query(queryJson)
       expect(query).toEqual({
         bindings: ["ddd", ""],
-        sql: `delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`,
+        sql: multiline(`delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 
+             returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
       })
     })
   })
