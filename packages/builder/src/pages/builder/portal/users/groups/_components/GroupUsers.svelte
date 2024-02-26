@@ -7,8 +7,9 @@
   import { API } from "api"
   import { groups } from "stores/portal"
   import { setContext } from "svelte"
-  import ScimBanner from "../../_components/SCIMBanner.svelte"
+
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
+  import ScimInfo from "../../_components/SCIMInfo.svelte"
 
   export let groupId
   export let readonly
@@ -63,7 +64,7 @@
   {#if !readonly}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
-    <ScimBanner />
+    <ScimInfo text="User synced externally" />
   {/if}
 
   <div class="controls-right">
