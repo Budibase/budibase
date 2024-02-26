@@ -28,6 +28,7 @@
   import GroupsTableRenderer from "./_components/GroupsTableRenderer.svelte"
   import AppsTableRenderer from "./_components/AppsTableRenderer.svelte"
   import RoleTableRenderer from "./_components/RoleTableRenderer.svelte"
+  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
   import { goto } from "@roxi/routify"
   import OnboardingTypeModal from "./_components/OnboardingTypeModal.svelte"
   import PasswordModal from "./_components/PasswordModal.svelte"
@@ -39,7 +40,6 @@
   import { OnboardingType } from "constants"
   import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
-  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
 
   const fetch = fetchData({
     API,

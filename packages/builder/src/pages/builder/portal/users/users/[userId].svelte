@@ -30,8 +30,8 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
   import { sdk } from "@budibase/shared-core"
+  import ScimInfo from "../_components/SCIMInfo.svelte"
 
   export let userId
 
@@ -89,7 +89,7 @@
 
   $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
+  $: readonly = !sdk.users.isAdmin($auth.user) || user?.scimInfo?.isSync
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
@@ -274,8 +274,8 @@
     <Layout noPadding gap="S">
       <div class="details-title">
         <Heading size="S">Details</Heading>
-        {#if scimEnabled}
-          <ScimBanner />
+        {#if user?.scimInfo?.isSync}
+          <ScimInfo text="User synced externally" />
         {/if}
       </div>
       <div class="fields">
