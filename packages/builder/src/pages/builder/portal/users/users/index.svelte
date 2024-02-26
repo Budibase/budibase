@@ -39,6 +39,7 @@
   import { OnboardingType } from "constants"
   import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
+  import EmailTableRenderer from "./_components/EmailTableRenderer.svelte"
 
   const fetch = fetchData({
     API,
@@ -63,6 +64,7 @@
   let selectedRows = []
   let bulkSaveResponse
   let customRenderers = [
+    { column: "email", component: EmailTableRenderer },
     { column: "userGroups", component: GroupsTableRenderer },
     { column: "apps", component: AppsTableRenderer },
     { column: "role", component: RoleTableRenderer },
