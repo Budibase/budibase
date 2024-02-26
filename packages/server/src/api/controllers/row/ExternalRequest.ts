@@ -19,6 +19,7 @@ import {
   SortJson,
   SortType,
   Table,
+  isManyToOne,
 } from "@budibase/types"
 import {
   breakExternalTableId,
@@ -104,23 +105,36 @@ function buildFilters(
   }
 }
 
-function removeRelationships(
+async function removeManyToManyRelationships(
   rowId: string,
   table: Table,
-  isManyToMany: boolean,
-  colName?: string
+  colName: string
 ) {
   const tableId = table._id!
   const filters = buildFilters(rowId, {}, table)
   // safety check, if there are no filters on deletion bad things happen
   if (Object.keys(filters).length !== 0) {
-    const op = isManyToMany ? Operation.DELETE : Operation.UPDATE
-    const body = colName && !isManyToMany ? { [colName]: null } : undefined
     return getDatasourceAndQuery({
-      endpoint: getEndpoint(tableId, op),
-      body,
+      endpoint: getEndpoint(tableId, Operation.DELETE),
+      body: { [colName]: null },
       filters,
     })
+  } else {
+    return []
+  }
+}
+
+async function removeOneToManyRelationships(rowId: string, table: Table) {
+  const tableId = table._id!
+  const filters = buildFilters(rowId, {}, table)
+  // safety check, if there are no filters on deletion bad things happen
+  if (Object.keys(filters).length !== 0) {
+    return getDatasourceAndQuery({
+      endpoint: getEndpoint(tableId, Operation.UPDATE),
+      filters,
+    })
+  } else {
+    return []
   }
 }
 
@@ -734,12 +748,10 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
       for (let row of rows) {
-        const promise = removeRelationships(
-          generateIdForRow(row, table),
-          table,
-          isMany,
-          colName
-        )
+        const rowId = generateIdForRow(row, table)
+        const promise: Promise<any> = isMany
+          ? removeManyToManyRelationships(rowId, table, colName)
+          : removeOneToManyRelationships(rowId, table)
         if (promise) {
           promises.push(promise)
         }
@@ -752,24 +764,23 @@ export class ExternalRequest<T extends Operation> {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
     for (let column of Object.values(table.schema)) {
-      if (
-        column.type !== FieldType.LINK ||
-        column.relationshipType === RelationshipType.ONE_TO_MANY
-      ) {
+      const relationshipColumn = column as RelationshipFieldMetadata
+      if (!isManyToOne(relationshipColumn)) {
         continue
       }
-      const relationshipColumn = column as ManyToOneRelationshipFieldMetadata
       const { rows, isMany, tableId } = related[relationshipColumn.fieldName]
       const table = this.getTable(tableId)!
       await Promise.all(
-        rows.map(row =>
-          removeRelationships(
-            generateIdForRow(row, table),
-            table,
-            isMany,
-            relationshipColumn.fieldName
-          )
-        )
+        rows.map(row => {
+          const rowId = generateIdForRow(row, table)
+          return isMany
+            ? removeManyToManyRelationships(
+                rowId,
+                table,
+                relationshipColumn.fieldName
+              )
+            : removeOneToManyRelationships(rowId, table)
+        })
       )
     }
   }
@@ -892,11 +903,11 @@ export class ExternalRequest<T extends Operation> {
 
     // aliasing can be disabled fully if desired
     let response
-    if (!env.SQL_ALIASING_DISABLE) {
+    if (env.SQL_ALIASING_DISABLE) {
+      response = await getDatasourceAndQuery(json)
+    } else {
       const aliasing = new AliasTables(Object.keys(this.tables))
       response = await aliasing.queryWithAliasing(json)
-    } else {
-      response = await getDatasourceAndQuery(json)
     }
 
     const responseRows = Array.isArray(response) ? response : []

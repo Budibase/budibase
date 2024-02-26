@@ -1,4 +1,3 @@
 #!/bin/bash
-docker-compose down
+docker-compose down -v
 docker volume prune -f
-docker volume rm postgres_pg_data
