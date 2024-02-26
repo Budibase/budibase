@@ -32,7 +32,7 @@ export default class AliasTables {
       char.substring(0, char.length - 1) +
       String.fromCharCode(char.charCodeAt(char.length - 1) + 1)
     // reached end of characters, extend number of characters used
-    if (this.character === "z") {
+    if (this.character.charAt(this.character.length - 1) === "z") {
       this.character = new Array(this.character.length + 1).fill("a").join("")
     }
     return char
