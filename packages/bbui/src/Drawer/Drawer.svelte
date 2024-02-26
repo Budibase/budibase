@@ -197,6 +197,9 @@
     bottom: calc(var(--spacing) + 210px);
     max-width: calc(100vw - 200px);
     max-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
   }
   .drawer.modal {
     left: 50vw;
