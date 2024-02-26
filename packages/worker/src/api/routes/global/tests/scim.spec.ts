@@ -413,6 +413,30 @@ describe("scim", () => {
 
         expect(res).toEqual(expectedScimUser)
       })
+
+      it("a user cannot be SCIM synchronised with another SCIM user", async () => {
+        const { body: internalUser } = await config.api.users.saveUser(
+          structures.users.user()
+        )
+
+        await postScimUser(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 200 }
+        )
+
+        await postScimUser(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 409 }
+        )
+      })
     })
 
     describe("GET /api/global/scim/v2/users/:id", () => {
