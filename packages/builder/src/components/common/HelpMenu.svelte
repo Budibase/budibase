@@ -3,9 +3,9 @@
   import { Popover, Heading, Body } from "@budibase/bbui"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
   import { licensing } from "stores/portal"
-  import { isPremiumAndAbove } from "helpers/planTitle"
+  import { isPremiumOrAbove } from "helpers/planTitle"
 
-  $: premiumOrAboveLicense = isPremiumAndAbove($licensing?.license.plan.type)
+  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license.plan.type)
 
   let show
   let hide
