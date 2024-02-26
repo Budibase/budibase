@@ -49,7 +49,7 @@ import {
   UserCtx,
   CreateAppRequest,
   FetchAppDefinitionResponse,
-  type FetchAppPackageResponse,
+  FetchAppPackageResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -177,7 +177,7 @@ export const addSampleData = async (ctx: UserCtx) => {
   ctx.status = 200
 }
 
-export async function fetch(ctx: UserCtx<null, App[]>) {
+export async function fetch(ctx: UserCtx<void, App[]>) {
   ctx.body = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
@@ -185,7 +185,7 @@ export async function fetch(ctx: UserCtx<null, App[]>) {
 }
 
 export async function fetchAppDefinition(
-  ctx: UserCtx<null, FetchAppDefinitionResponse>
+  ctx: UserCtx<void, FetchAppDefinitionResponse>
 ) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
@@ -202,7 +202,7 @@ export async function fetchAppDefinition(
 }
 
 export async function fetchAppPackage(
-  ctx: UserCtx<null, FetchAppPackageResponse>
+  ctx: UserCtx<void, FetchAppPackageResponse>
 ) {
   const db = context.getAppDB()
   const appId = context.getAppId()
@@ -213,7 +213,7 @@ export async function fetchAppPackage(
 
   // Enrich plugin URLs
   application.usedPlugins = objectStore.enrichPluginURLs(
-    application.usedPlugins || []
+    application.usedPlugins
   )
 
   // Only filter screens if the user is not a builder
