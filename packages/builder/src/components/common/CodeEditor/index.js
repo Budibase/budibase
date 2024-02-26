@@ -31,10 +31,6 @@ export const getDefaultTheme = opts => {
   const { height, resize, dark } = opts
   return EditorView.theme(
     {
-      ".cm-gutters": {
-        backgroundColor: "var(--spectrum-global-color-gray-75)",
-        color: "var(--spectrum-global-color-gray-500)",
-      },
       "&.cm-focused .cm-cursor": {
         borderLeftColor: "var(--spectrum-alias-text-color)",
       },

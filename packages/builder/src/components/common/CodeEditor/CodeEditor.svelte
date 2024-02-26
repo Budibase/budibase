@@ -297,11 +297,10 @@
 </div>
 
 <style>
+  /* Editor */
   .code-editor :global(.cm-editor) {
     background: var(--spectrum-global-color-gray-50) !important;
   }
-
-  /* Unify spacing between HBS and JS */
   .code-editor :global(.cm-content) {
     padding: 10px 0;
   }
@@ -309,7 +308,7 @@
     font-size: 12px;
   }
 
-  /* Overrides to ensure background selection is pixel perfect with active line */
+  /* Active line */
   .code-editor :global(.cm-line) {
     height: 16px;
     padding: 0 var(--spacing-s);
@@ -325,16 +324,23 @@
     top: 1px;
     height: calc(100% - 2px);
     width: 100%;
-    background: var(--spectrum-global-color-gray-100);
+    background: var(--spectrum-global-color-gray-100) !important;
     z-index: -2;
   }
+
+  /* Code selection */
+  .code-editor :global(.cm-selectionBackground) {
+    background-color: var(--spectrum-global-color-blue-400) !important;
+    opacity: 0.4;
+  }
+
+  /* Gutters */
   .code-editor :global(.cm-gutterElement) {
     margin-bottom: 0;
   }
-  .code-editor :global(.cm-activeLineGutter) {
-    color: var(--spectrum-global-color-gray-700);
-    background: transparent;
-    position: relative;
+  .code-editor :global(.cm-gutters) {
+    background-color: var(--spectrum-global-color-gray-75) !important;
+    color: var(--spectrum-global-color-gray-500);
   }
   .code-editor :global(.cm-activeLineGutter::before) {
     content: "";
@@ -343,14 +349,16 @@
     top: 1px;
     height: calc(100% - 2px);
     width: 100%;
-    background: var(--spectrum-global-color-gray-200);
+    background: var(--spectrum-global-color-gray-200) !important;
     z-index: -2;
   }
-  .code-editor :global(.cm-selectionBackground) {
-    background-color: var(--spectrum-global-color-blue-400) !important;
-    opacity: 0.4;
+  .code-editor :global(.cm-activeLineGutter) {
+    color: var(--spectrum-global-color-gray-700);
+    background: transparent;
+    position: relative;
   }
 
+  /* Completion popover */
   .code-editor :global(.cm-tooltip.cm-completionInfo) {
     padding: var(--spacing-m);
   }
@@ -365,13 +373,11 @@
       ),
       0, 0;
   }
-
   .code-editor :global(.autocomplete-option .cm-completionDetail) {
     background-color: var(--spectrum-global-color-gray-200);
     border-radius: var(--border-radius-s);
     padding: 4px 6px;
   }
-
   .code-editor :global(.binding__example) {
     padding: 0;
     margin: 0;
