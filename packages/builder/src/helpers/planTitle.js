@@ -25,3 +25,9 @@ export function getFormattedPlanName(userPlanType) {
   }
   return `${planName} Plan`
 }
+
+export function emailSupportCheck(userPlanType) {
+  const isPremiumAndAbove = ![PlanType.PRO, PlanType.TEAM, PlanType.FREE].includes(userPlanType);
+
+  return isPremiumAndAbove;
+}
