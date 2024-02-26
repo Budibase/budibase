@@ -47,6 +47,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if sdk.users.isAdmin($auth.user) && diagnosticInfo}
   <Layout noPadding>
     <Layout gap="XS" noPadding>
