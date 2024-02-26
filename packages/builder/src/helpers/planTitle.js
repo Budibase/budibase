@@ -27,5 +27,5 @@ export function getFormattedPlanName(userPlanType) {
 }
 
 export function isPremiumOrAbove(userPlanType) {
-  return ![PlanType.PRO, PlanType.TEAM, PlanType.FREE].includes(userPlanType);
+  return ![PlanType.PRO, PlanType.TEAM, PlanType.FREE].includes(userPlanType)
 }
