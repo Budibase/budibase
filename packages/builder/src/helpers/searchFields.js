@@ -1,4 +1,4 @@
-import { tables } from "../stores/backend"
+import { tables } from "stores/builder"
 import { BannedSearchTypes } from "../constants/backend"
 import { get } from "svelte/store"
 

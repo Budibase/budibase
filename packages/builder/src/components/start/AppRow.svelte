@@ -11,6 +11,7 @@
 
   $: editing = app.sessions?.length
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
+  $: unclickable = !isBuilder && !app.deployed
 
   const handleDefaultClick = () => {
     if (!isBuilder) {
@@ -31,11 +32,19 @@
   }
 
   const goToApp = () => {
-    window.open(`/app/${app.name}`, "_blank")
+    if (app.deployed && app.url) {
+      window.open(`/app${app.url}`, "_blank")
+    }
   }
 </script>
 
-<div class="app-row" on:click={lockedAction || handleDefaultClick}>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div
+  class="app-row"
+  on:click={lockedAction || handleDefaultClick}
+  class:unclickable
+>
   <div class="title">
     <div class="app-icon">
       <Icon size="L" name={app.icon?.name || "Apps"} color={app.icon?.color} />
@@ -74,7 +83,7 @@
         Edit
       </Button>
     </div>
-  {:else}
+  {:else if app.deployed}
     <!-- this can happen if an app builder has app user access to an app -->
     <div class="app-row-actions">
       <Button size="S" secondary>View</Button>
@@ -94,7 +103,7 @@
     transition: border 130ms ease-out;
     border: 1px solid transparent;
   }
-  .app-row:hover {
+  .app-row:not(.unclickable):hover {
     cursor: pointer;
     border-color: var(--spectrum-global-color-gray-300);
   }

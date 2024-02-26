@@ -10,11 +10,7 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
   ScrollTo: "ScrollTo",
-}
-
-export const ContextScopes = {
-  Local: "local",
-  Global: "global",
+  ClearRowSelection: "ClearRowSelection",
 }
 
 export const DNDPlaceholderID = "dnd-placeholder"
