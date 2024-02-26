@@ -74,17 +74,15 @@
       --spacing: ${spacing}px;
     `
     // Most modal styles are handled by class names
-    if (modal) {
+    if (modal || left == null || width == null) {
       return style
     }
 
-    // Normal drawers need a few additional styles
-    left = left ? `${left + width / 2}px` : "20vw"
-    width = width ? `${width - 2 * spacing}px` : "60vw"
+    // Drawers observing another dom node need custom position styles
     return `
       ${style}
-      left: ${left};
-      width: ${width};
+      left: ${left + spacing}px;
+      width: ${width - 2 * spacing}px;
     `
   }
 
@@ -130,7 +128,7 @@
         const f = easeInOutQuad(t)
         const yOffset = (1 - f) * 200
         return `
-          transform: translateX(-50%) translateY(calc(${yOffset}px + 50% - 1200px * (1 - var(--scale-factor))));
+          transform: translateY(calc(${yOffset}px - 800px * (1 - var(--scale-factor))));
           opacity:${f};
         `
       },
@@ -159,6 +157,7 @@
     <div
       class="drawer"
       class:headless
+      class:stacked={depth > 0}
       class:modal={$modal}
       transition:slide|local
       {style}
@@ -183,8 +182,10 @@
 <style>
   .drawer {
     position: absolute;
-    transform: translateX(-50%) scale(var(--scale-factor))
-      translateY(calc(50% - 800px * (1 - var(--scale-factor))));
+    left: 25vw;
+    width: 50vw;
+    bottom: var(--spacing);
+    height: 420px;
     background: var(--background);
     border: var(--border-light);
     z-index: 3;
@@ -193,19 +194,19 @@
     box-sizing: border-box;
     transition: transform 260ms ease-out, bottom 260ms ease-out,
       left 260ms ease-out, width 260ms ease-out, height 260ms ease-out;
-    height: 420px;
-    bottom: calc(var(--spacing) + 210px);
-    max-width: calc(100vw - 200px);
-    max-height: calc(100vh - 200px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
   }
   .drawer.modal {
-    left: 50vw;
-    bottom: 50vh;
-    width: 1600px;
-    height: 800px;
+    left: 15vw;
+    width: 70vw;
+    bottom: 15vh;
+    height: 70vh;
+  }
+  .drawer.stacked {
+    transform: translateY(calc(-1 * 1024px * (1 - var(--scale-factor))))
+      scale(var(--scale-factor));
   }
 
   .overlay,
