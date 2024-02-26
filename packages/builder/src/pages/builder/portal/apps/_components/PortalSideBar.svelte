@@ -3,8 +3,11 @@
   import { params, goto } from "@roxi/routify"
   import NavItem from "components/common/NavItem.svelte"
   import NavHeader from "components/common/NavHeader.svelte"
+  import AppRowContext from "components/start/AppRowContext.svelte"
+  import { AppStatus } from "constants"
 
   let searchString
+  let opened
 
   $: filteredApps = $apps
     .filter(app => {
@@ -12,6 +15,12 @@
         !searchString ||
         app.name.toLowerCase().includes(searchString.toLowerCase())
       )
+    })
+    .map(app => {
+      return {
+        ...app,
+        deployed: app.status === AppStatus.DEPLOYED,
+      }
     })
     .sort((a, b) => {
       const lowerA = a.name.toLowerCase()
@@ -42,8 +51,20 @@
         icon={app.icon?.name || "Apps"}
         iconColor={app.icon?.color}
         selected={$params.appId === app.appId}
+        highlighted={opened == app.appId}
         on:click={() => $goto(`./${app.appId}`)}
-      />
+      >
+        <AppRowContext
+          {app}
+          align="left"
+          on:open={() => {
+            opened = app.appId
+          }}
+          on:close={() => {
+            opened = null
+          }}
+        />
+      </NavItem>
     {/each}
   </div>
 </div>

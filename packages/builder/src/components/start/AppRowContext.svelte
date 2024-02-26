@@ -5,11 +5,11 @@
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
 
   export let app
+  export let align = "right"
 
   let deleteModal
   let exportModal
   let duplicateModal
-
   let exportPublishedVersion = false
 </script>
 
@@ -28,7 +28,7 @@
   <DuplicateAppModal appId={app.devId} appName={app.name} />
 </Modal>
 
-<ActionMenu align="right">
+<ActionMenu {align} on:open on:close>
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
