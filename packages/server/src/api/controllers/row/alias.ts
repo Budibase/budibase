@@ -28,7 +28,13 @@ export default class AliasTables {
     const char = this.character
     this.aliases[tableName] = char
     this.tableAliases[char] = tableName
-    this.character = String.fromCharCode(char.charCodeAt(0) + 1)
+    this.character =
+      char.substring(0, char.length - 1) +
+      String.fromCharCode(char.charCodeAt(char.length - 1) + 1)
+    // reached end of characters, extend number of characters used
+    if (this.character === "z") {
+      this.character = new Array(this.character.length + 1).fill("a").join("")
+    }
     return char
   }
 
