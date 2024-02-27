@@ -260,7 +260,7 @@
               {#if filter.field && filter.valueType === "Binding"}
                 <DrawerBindableInput
                   disabled={filter.noValue}
-                  title={`Value for "${filter.field}"`}
+                  title={filter.field}
                   value={filter.value}
                   placeholder="Value"
                   {panel}

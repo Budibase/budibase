@@ -130,7 +130,7 @@
           {:else}
             <DrawerBindableSlot
               fillWidth
-              title={value.title}
+              title={value.title || field}
               panel={AutomationBindingPanel}
               type={schema.type}
               {schema}
