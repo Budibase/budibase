@@ -1,5 +1,6 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-
+// Import component directly so the build process doesn't try and resolve other frontend-core
+// components that import file types unsupported by our build like images
 import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
 import AppComponent from "./templates/BudibaseApp.svelte"
 

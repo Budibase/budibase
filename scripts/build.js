@@ -17,18 +17,6 @@ const { nodeExternalsPlugin } = require("esbuild-node-externals")
 const svelteCompilePlugin = {
   name: 'svelteCompile',
   setup(build) {
-    // This resolve handler is necessary to bundle the Svelte runtime into the the final output,
-    // otherwise the bundled script will attempt to resolve it at runtime
-    build.onResolve({ filter: /svelte\/internal/ }, async () => {
-      return { path: `${process.cwd()}/../../node_modules/svelte/src/runtime/internal/ssr.js` }
-    })
-
-    build.onResolve({ filter: /^@budibase\/frontend-core/ }, async (args) => {
-      const path = `${process.cwd()}/../${args.path.replace("@budibase/", "")}`
-      console.log(path)
-      return { path }
-    })
-
     // Compiles `.svelte` files into JS classes so that they can be directly imported into our
     // Typescript packages
     build.onLoad({ filter: /\.svelte$/ }, async (args) => {
@@ -43,7 +31,7 @@ const svelteCompilePlugin = {
           contents: js.code,
           // The loader this is passed to, basically how the above provided content is "treated",
           // the contents provided above will be transpiled and bundled like any other JS file.
-          loader: 'js', 
+          loader: 'js',
           // Where to resolve any imports present in the loaded file
           resolveDir: dir
         }
@@ -86,11 +74,11 @@ async function runBuild(entry, outfile) {
     plugins: [
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
-      nodeExternalsPlugin(),
+      nodeExternalsPlugin({
+        allowList: ["@budibase/frontend-core", "svelte"]
+      }),
     ],
     preserveSymlinks: true,
-    loader: {
-    },
     metafile: true,
     external: [
       "deasync",
