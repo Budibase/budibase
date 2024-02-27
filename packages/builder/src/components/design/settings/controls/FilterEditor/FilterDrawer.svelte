@@ -26,7 +26,6 @@
   export let bindings = []
   export let panel = ClientBindingPanel
   export let allowBindings = true
-  export let fillWidth = false
   export let datasource
 
   const dispatch = createEventDispatcher()
@@ -266,7 +265,6 @@
                   {panel}
                   {bindings}
                   on:change={event => (filter.value = event.detail)}
-                  {fillWidth}
                 />
               {:else if ["string", "longform", "number", "bigint", "formula"].includes(filter.type)}
                 <Input disabled={filter.noValue} bind:value={filter.value} />

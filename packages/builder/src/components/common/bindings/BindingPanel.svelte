@@ -213,7 +213,7 @@
               <Icon name={tab} size="S" />
             </ActionButton>
           {/each}
-          {#if drawerContext}
+          {#if drawerContext && !drawerContext.forceModal}
             <ActionButton
               size="M"
               quiet
