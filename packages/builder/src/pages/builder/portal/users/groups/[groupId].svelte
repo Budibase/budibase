@@ -48,7 +48,7 @@
   let editModal, deleteModal
 
   $: group = $groups.find(x => x._id === groupId)
-  $: readonly = !sdk.users.isAdmin($auth.user)
+  $: readonly = !sdk.users.isAdmin($auth.user) || group?.scimInfo?.isSync
   $: groupApps = $apps
     .filter(app =>
       groups.actions
