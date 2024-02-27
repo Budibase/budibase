@@ -77,7 +77,7 @@
   {/if}
 </div>
 
-<Drawer bind:this={bindingDrawer} {title}>
+<Drawer bind:this={bindingDrawer} title={title ?? placeholder ?? "Bindings"}>
   <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
     Save
   </Button>

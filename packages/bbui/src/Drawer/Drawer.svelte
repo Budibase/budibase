@@ -161,7 +161,7 @@
       {style}
     >
       <header>
-        <div class="text">{title}</div>
+        <div class="text">{title || "Bindings"}</div>
         <div class="buttons">
           <Button secondary quiet on:click={hide}>Cancel</Button>
           <slot name="buttons" />
