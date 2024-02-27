@@ -106,12 +106,11 @@
     />
     <Label small>Export columns</Label>
     <ColumnEditor
-      value={parameters.columns}
+      bind:value={parameters.columns}
       allowCellEditing={false}
       componentInstance={selectedTable}
       on:change={e => {
         const columns = e.detail
-        parameters.columns = columns
         parameters.customHeaders = columns.reduce((headerMap, column) => {
           return {
             [column.name]: column.displayName,
