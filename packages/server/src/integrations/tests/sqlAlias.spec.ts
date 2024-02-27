@@ -174,4 +174,13 @@ describe("Captures of real examples", () => {
       expect(alias).toEqual("cv")
     })
   })
+
+  describe("check some edge cases", () => {
+    it("should handle table names/columns with dots in them", () => {
+      const tableNames = ["hello.world", "foo.bar.baz"]
+      const aliasing = new AliasTables(tableNames)
+      const aliased = aliasing.aliasField("hello.world.field")
+      expect(aliased).toEqual("a.field")
+    })
+  })
 })
