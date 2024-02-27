@@ -19,7 +19,6 @@
     auth,
     licensing,
     organisation,
-    features,
     admin,
   } from "stores/portal"
   import { onMount } from "svelte"
@@ -346,20 +345,17 @@
     {customRenderers}
     loading={!$fetch.loaded || !groupsLoaded}
   />
-  <div class="footer">
-    {#if $features.isScimEnabled && enrichedUsers?.some(g => g.scimInfo?.isSync)}
-      <ScimInfo text="User synced externally" />
-    {/if}
-    <div class="pagination">
-      <Pagination
-        page={$fetch.pageNumber + 1}
-        hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
-        hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
-        goToPrevPage={fetch.prevPage}
-        goToNextPage={fetch.nextPage}
-      />
-    </div>
+
+  <div class="pagination">
+    <Pagination
+      page={$fetch.pageNumber + 1}
+      hasPrevPage={$fetch.loading ? false : $fetch.hasPrevPage}
+      hasNextPage={$fetch.loading ? false : $fetch.hasNextPage}
+      goToPrevPage={fetch.prevPage}
+      goToNextPage={fetch.nextPage}
+    />
   </div>
+
   <Table
     schema={pendingSchema}
     data={parsedInvites}
@@ -408,12 +404,6 @@
     flex-direction: row;
     justify-content: flex-end;
     margin-left: auto;
-  }
-  .footer {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
   }
   .controls {
     display: flex;
