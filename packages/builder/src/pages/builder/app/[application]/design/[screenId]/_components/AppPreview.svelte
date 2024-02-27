@@ -236,8 +236,8 @@
   {#if loading}
     <div
       class={`loading ${$builderStore.theme}`}
-      class:tablet={$builderStore.previewDevice === "tablet"}
-      class:mobile={$builderStore.previewDevice === "mobile"}
+      class:tablet={$previewStore.previewDevice === "tablet"}
+      class:mobile={$previewStore.previewDevice === "mobile"}
     >
       <ClientAppSkeleton
         sideNav={$builderStore.navigation?.navigation === "Left"}

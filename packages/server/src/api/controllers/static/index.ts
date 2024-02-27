@@ -236,6 +236,9 @@ export const serveApp = async function (ctx: UserCtx) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
 
       const { head, html, css } = AppComponent.render({
+        hideDevTools,
+        sideNav,
+        hideFooter,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
