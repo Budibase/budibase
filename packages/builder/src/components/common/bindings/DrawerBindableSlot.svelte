@@ -16,7 +16,6 @@
   export let placeholder
   export let label
   export let disabled = false
-  export let fillWidth
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
@@ -171,7 +170,6 @@
 <Drawer
   on:drawerHide
   on:drawerShow
-  {fillWidth}
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
   left={drawerLeft}

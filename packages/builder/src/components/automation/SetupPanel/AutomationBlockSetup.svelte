@@ -52,11 +52,12 @@
   export let testData
   export let schemaProperties
   export let isTestModal = false
+
   let webhookModal
   let drawer
-  let fillWidth = true
   let inputData
   let insertAtPos, getCaretPosition
+
   $: filters = lookForFilters(schemaProperties) || []
   $: tempFilters = filters
   $: stepId = block.stepId
@@ -80,7 +81,6 @@
   })
   $: editingJs = codeMode === EditorModes.JS
   $: requiredProperties = block.schema.inputs.required || []
-
   $: stepCompletions =
     codeMode === EditorModes.Handlebars
       ? [hbAutocomplete([...bindingsToCompletions(bindings, codeMode)])]
@@ -377,12 +377,13 @@
 <div class="fields">
   {#each schemaProperties as [key, value]}
     {#if canShowField(key, value)}
+      {@const label = getFieldLabel(key, value)}
       <div class:block-field={shouldRenderField(value)}>
         {#if key !== "fields" && value.type !== "boolean" && shouldRenderField(value)}
           <Label
             tooltip={value.title === "Binding / Value"
               ? "If using the String input type, please use a comma or newline separated string"
-              : null}>{getFieldLabel(key, value)}</Label
+              : null}>{label}</Label
           >
         {/if}
         <div class:field-width={shouldRenderField(value)}>
@@ -415,8 +416,7 @@
             </div>
           {:else if value.type === "date"}
             <DrawerBindableSlot
-              fillWidth
-              title={value.title}
+              title={value.title ?? label}
               panel={AutomationBindingPanel}
               type={"date"}
               value={inputData[key]}
@@ -439,7 +439,7 @@
             />
           {:else if value.customType === "filters"}
             <ActionButton on:click={drawer.show}>Define filters</ActionButton>
-            <Drawer bind:this={drawer} {fillWidth} title="Filtering">
+            <Drawer bind:this={drawer} title="Filtering">
               <Button cta slot="buttons" on:click={() => saveFilters(key)}>
                 Save
               </Button>
@@ -450,7 +450,6 @@
                 {schemaFields}
                 datasource={{ type: "table", tableId }}
                 panel={AutomationBindingPanel}
-                fillWidth
                 on:change={e => (tempFilters = e.detail)}
               />
             </Drawer>
@@ -463,19 +462,17 @@
           {:else if value.customType === "email"}
             {#if isTestModal}
               <ModalBindableInput
-                title={value.title}
+                title={value.title ?? label}
                 value={inputData[key]}
                 panel={AutomationBindingPanel}
                 type="email"
                 on:change={e => onChange(e, key)}
                 {bindings}
-                fillWidth
                 updateOnChange={false}
               />
             {:else}
               <DrawerBindableInput
-                fillWidth
-                title={value.title}
+                title={value.title ?? label}
                 panel={AutomationBindingPanel}
                 type="email"
                 value={inputData[key]}
@@ -609,7 +606,7 @@
           {:else if value.type === "string" || value.type === "number" || value.type === "integer"}
             {#if isTestModal}
               <ModalBindableInput
-                title={value.title}
+                title={value.title || label}
                 value={inputData[key]}
                 panel={AutomationBindingPanel}
                 type={value.customType}
@@ -620,8 +617,7 @@
             {:else}
               <div class="test">
                 <DrawerBindableInput
-                  fillWidth={true}
-                  title={value.title}
+                  title={value.title ?? label}
                   panel={AutomationBindingPanel}
                   type={value.customType}
                   value={inputData[key]}

@@ -85,8 +85,8 @@
     on:change={e => onChange(e, field)}
     type="string"
     bindings={parsedBindings}
-    fillWidth={true}
     allowJS={true}
     updateOnChange={false}
+    title={schema.name}
   />
 {/if}

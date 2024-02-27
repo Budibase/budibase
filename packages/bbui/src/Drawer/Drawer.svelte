@@ -52,11 +52,12 @@
 <script>
   import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
-  import { setContext, createEventDispatcher, onDestroy } from "svelte"
+  import { setContext, createEventDispatcher, onMount } from "svelte"
   import { generate } from "shortid"
   import { fade } from "svelte/transition"
 
   export let title
+  export let forceModal = false
 
   const dispatch = createEventDispatcher()
   const spacing = 11
@@ -89,6 +90,9 @@
     if (visible) {
       return
     }
+    if (forceModal) {
+      modal.set(true)
+    }
     observe()
     visible = true
     dispatch("drawerShow", drawerId)
@@ -112,6 +116,7 @@
     hide,
     show,
     modal,
+    forceModal,
   })
 
   const easeInOutQuad = x => {
@@ -141,9 +146,14 @@
     return 1 - lim * 0.1
   }
 
-  onDestroy(() => {
-    if (visible) {
-      hide()
+  onMount(() => {
+    if (forceModal) {
+      modal.set(true)
+    }
+    return () => {
+      if (visible) {
+        hide()
+      }
     }
   })
 </script>
@@ -184,7 +194,7 @@
     height: 420px;
     background: var(--background);
     border: var(--border-light);
-    z-index: 3;
+    z-index: 999;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
@@ -212,7 +222,7 @@
     width: 100%;
     height: 100%;
     transition: opacity 360ms ease-out;
-    z-index: 3;
+    z-index: 999;
     opacity: 0.5;
   }
   .overlay {

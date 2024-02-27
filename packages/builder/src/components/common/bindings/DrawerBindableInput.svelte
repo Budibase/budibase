@@ -17,13 +17,12 @@
   export let placeholder
   export let label
   export let disabled = false
-  export let fillWidth
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
-  export let drawerLeft
   export let key
   export let disableBindings = false
+  export let forceModal = false
 
   const dispatch = createEventDispatcher()
 
@@ -87,10 +86,9 @@
 <Drawer
   on:drawerHide={onDrawerHide}
   on:drawerShow
-  {fillWidth}
   bind:this={bindingDrawer}
   title={title ?? placeholder ?? "Bindings"}
-  left={drawerLeft}
+  {forceModal}
 >
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
     Save
