@@ -1,9 +1,5 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-// Import component directly so the build process doesn't try and resolve other frontend-core
-// components that import file types unsupported by our build like images
-import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
 import AppComponent from "./templates/BudibaseApp.svelte"
-
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
@@ -239,12 +235,6 @@ export const serveApp = async function (ctx: UserCtx) {
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
 
-      const skeleton = ClientAppSkeleton.render({
-        hideDevTools,
-        sideNav,
-        hideFooter,
-      })
-
       const { head, html, css } = AppComponent.render({
         metaImage:
           branding?.metaImageUrl ||
@@ -270,12 +260,9 @@ export const serveApp = async function (ctx: UserCtx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId,
-        embedded: bbHeaderEmbed,
-        skeletonHtml: skeleton.html,
-        skeletonCss: `:root{${themeVariables}} ${skeleton.css.code}`,
-        skeletonHead: skeleton.head,
+        embedded: bbHeaderEmbed
       })
     } else {
       // just return the app info for jest to assert on

@@ -1,29 +1,18 @@
 <html>
+  <script>
+    document.fonts.ready.then(() => {
+      window.parent.postMessage({ type: "docLoaded" });
+    })
+  </script>
   <head>
-    <script>
-      document.fonts.ready.then(() => {
-        window.parent.postMessage({ type: "docLoaded" });
-      })
-    </script>
     {{{head}}}
-    {{{skeletonHead}}}
-
-    <style>
-      {{style}}
-    </style>
-
-    <script>
-      window["##BUDIBASE_APP_ID##"] = "{{appId}}"
-      window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
-    </script>
-    <style>
-      {{skeletonCss}}
-    </style>
+    <style>{{{css}}}</style>
   </head>
 
+  <script>
+    window["##BUDIBASE_APP_ID##"] = "{{appId}}"
+    window["##BUDIBASE_APP_EMBEDDED##"] = "{{embedded}}"
+  </script>
 
-  <body id="app">
-    {{skeletonHtml}}
-    {{body}}
-  </body>
+  {{{body}}}
 </html>

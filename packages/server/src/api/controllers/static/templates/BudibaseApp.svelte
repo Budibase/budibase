@@ -1,4 +1,5 @@
 <script>
+  import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
   export let title = ""
   export let favicon = ""
 
@@ -95,7 +96,8 @@
   </style>
 </svelte:head>
 
-<div>
+<body id="app">
+  <ClientAppSkeleton />
   <div id="error">
     {#if clientLibPath}
       <h1>There was an error loading your app</h1>
@@ -133,4 +135,4 @@
       document.getElementById("error").style.display = "flex"
     }
   </script>
-</div>
+</body>

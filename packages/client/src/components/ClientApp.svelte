@@ -103,6 +103,7 @@
 
   $: {
     if (dataLoaded && fontsLoaded) {
+      console.log("stuff remove");
       document.getElementById("clientAppSkeletonLoader")?.remove()
     }
   }
