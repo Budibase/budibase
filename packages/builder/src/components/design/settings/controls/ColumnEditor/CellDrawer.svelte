@@ -28,6 +28,7 @@
         placeholder="Default"
       />
       <DrawerBindableInput
+        title="Value"
         label="Value"
         value={column.template}
         on:change={e => (column.template = e.detail)}
