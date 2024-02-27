@@ -44,7 +44,7 @@
     if (get(openDrawers).length) {
       return
     }
-    observer.disconnect()
+    observer?.disconnect()
     observer = null
   }
 </script>
@@ -57,7 +57,6 @@
   import { fade } from "svelte/transition"
 
   export let title
-  export let headless = false
 
   const dispatch = createEventDispatcher()
   const spacing = 11
@@ -156,21 +155,18 @@
     {/if}
     <div
       class="drawer"
-      class:headless
       class:stacked={depth > 0}
       class:modal={$modal}
       transition:slide|local
       {style}
     >
-      {#if !headless}
-        <header>
-          <div class="text">{title}</div>
-          <div class="buttons">
-            <Button secondary quiet on:click={hide}>Cancel</Button>
-            <slot name="buttons" />
-          </div>
-        </header>
-      {/if}
+      <header>
+        <div class="text">{title}</div>
+        <div class="buttons">
+          <Button secondary quiet on:click={hide}>Cancel</Button>
+          <slot name="buttons" />
+        </div>
+      </header>
       <slot name="body" />
       {#if !$modal && depth > 0}
         <div class="overlay" transition:fade|local={{ duration: 260 }} />
