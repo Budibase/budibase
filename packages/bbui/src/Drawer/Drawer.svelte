@@ -46,13 +46,14 @@
     }
     observer?.disconnect()
     observer = null
+    modal.set(false)
   }
 </script>
 
 <script>
   import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
-  import { setContext, createEventDispatcher, onMount } from "svelte"
+  import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
   import { fade } from "svelte/transition"
 
@@ -106,9 +107,6 @@
     visible = false
     dispatch("drawerHide", drawerId)
     openDrawers.update(state => state.filter(id => id !== drawerId))
-    if (!$openDrawers.length) {
-      modal.set(false)
-    }
     unobserve()
   }
 
@@ -146,41 +144,38 @@
     return 1 - lim * 0.1
   }
 
-  onMount(() => {
-    if (forceModal) {
-      modal.set(true)
-    }
-    return () => {
-      if (visible) {
-        hide()
-      }
+  onDestroy(() => {
+    if (visible) {
+      hide()
     }
   })
 </script>
 
 {#if visible}
   <Portal target=".modal-container">
-    {#if $modal}
-      <div transition:fade={{ duration: 260 }} class="underlay" />
-    {/if}
-    <div
-      class="drawer"
-      class:stacked={depth > 0}
-      class:modal={$modal}
-      transition:slide|local
-      {style}
-    >
-      <header>
-        <div class="text">{title || "Bindings"}</div>
-        <div class="buttons">
-          <Button secondary quiet on:click={hide}>Cancel</Button>
-          <slot name="buttons" />
-        </div>
-      </header>
-      <slot name="body" />
-      {#if !$modal && depth > 0}
-        <div class="overlay" transition:fade|local={{ duration: 260 }} />
+    <div class="drawer-container">
+      {#if $modal}
+        <div transition:fade={{ duration: 260 }} class="underlay" />
       {/if}
+      <div
+        class="drawer"
+        class:stacked={depth > 0}
+        class:modal={$modal}
+        transition:slide|local
+        {style}
+      >
+        <header>
+          <div class="text">{title || "Bindings"}</div>
+          <div class="buttons">
+            <Button secondary quiet on:click={hide}>Cancel</Button>
+            <slot name="buttons" />
+          </div>
+        </header>
+        <slot name="body" />
+        {#if !$modal && depth > 0}
+          <div class="overlay" transition:fade|local={{ duration: 260 }} />
+        {/if}
+      </div>
     </div>
   </Portal>
 {/if}
