@@ -2,10 +2,6 @@ SELECT 'CREATE DATABASE main'
 WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'main')\gexec
 CREATE SCHEMA "test-1";
 CREATE TYPE person_job AS ENUM ('qa', 'programmer', 'designer', 'support');
-CREATE TABLE "Bad.Table" (
-    BadID SERIAL PRIMARY KEY,
-    "Bad.Column" text
-);
 CREATE TABLE Persons (
     PersonID SERIAL PRIMARY KEY,
     LastName varchar(255),
