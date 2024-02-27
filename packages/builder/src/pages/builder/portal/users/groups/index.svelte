@@ -13,7 +13,7 @@
     Search,
     notifications,
   } from "@budibase/bbui"
-  import { groups, auth, licensing, admin, features } from "stores/portal"
+  import { groups, auth, licensing, admin } from "stores/portal"
   import { onMount } from "svelte"
   import CreateEditGroupModal from "./_components/CreateEditGroupModal.svelte"
   import { cloneDeep } from "lodash/fp"
@@ -21,7 +21,6 @@
   import UsersTableRenderer from "./_components/UsersTableRenderer.svelte"
   import GroupNameTableRenderer from "./_components/GroupNameTableRenderer.svelte"
   import { goto } from "@roxi/routify"
-  import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
 
   const DefaultGroup = {
@@ -148,10 +147,6 @@
       allowEditRows={false}
       {customRenderers}
     />
-
-    {#if $features.isScimEnabled && filteredGroups?.some(g => g.scimInfo?.isSync)}
-      <ScimInfo text="Group synced externally" />
-    {/if}
   {/if}
 </Layout>
 

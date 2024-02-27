@@ -1,22 +1,40 @@
 <script>
   import Icon from "./Icon.svelte"
 
+  import Tooltip from "../Tooltip/Tooltip.svelte"
+  import { fade } from "svelte/transition"
+
   export let icon
   export let background
   export let color
   export let size = "M"
+  export let tooltip
+
+  let showTooltip = false
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="icon size--{size}"
   style="background: {background || `transparent`};"
   class:filled={!!background}
+  on:mouseover={() => (showTooltip = true)}
+  on:focus={() => (showTooltip = true)}
+  on:mouseleave={() => (showTooltip = false)}
+  on:click={() => (showTooltip = false)}
 >
   <Icon name={icon} color={background ? "white" : color} />
+  {#if tooltip && showTooltip}
+    <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
+      <Tooltip textWrapping direction="top" text={tooltip} />
+    </div>
+  {/if}
 </div>
 
 <style>
   .icon {
+    position: relative;
     width: 28px;
     height: 28px;
     flex: 0 0 28px;
@@ -66,5 +84,15 @@
   .icon.size--L.filled :global(.spectrum-Icon) {
     width: 22px;
     height: 22px;
+  }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    left: 50%;
+    bottom: calc(100% + 4px);
+    transform: translateX(-50%);
+    text-align: center;
+    z-index: 1;
   }
 </style>

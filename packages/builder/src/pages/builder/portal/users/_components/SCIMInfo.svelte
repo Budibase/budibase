@@ -10,6 +10,7 @@
     icon="Sync"
     size={iconSize}
     background={"var(--spectrum-global-color-gray-500)"}
+    tooltip="Synced from your AD"
   />
   {text}
 </div>
