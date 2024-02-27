@@ -274,7 +274,7 @@
       <div class="details-title">
         <Heading size="S">Details</Heading>
         {#if user?.scimInfo?.isSync}
-          <ScimInfo text="User synced externally" />
+          <ScimInfo text="User synced from your AD" />
         {/if}
       </div>
       <div class="fields">
