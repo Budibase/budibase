@@ -75,6 +75,7 @@
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
+      helper: false,
       code: binding.valueHTML,
     }
     popover.show()
@@ -87,6 +88,7 @@
     }
     popoverAnchor = target
     hoverTarget = {
+      helper: true,
       description: helper.description,
       code: getHelperExample(helper, mode.name === "javascript"),
     }
@@ -121,19 +123,17 @@
   on:mouseenter={stopHidingPopover}
   on:mouseleave={hidePopover}
 >
-  <div class="helper">
-    <Layout gap="S">
-      {#if hoverTarget.description}
-        <div>
-          <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-          {@html hoverTarget.description}
-        </div>
-      {/if}
-      {#if hoverTarget.code}
+  <div class="binding-popover" class:helper={hoverTarget.helper}>
+    {#if hoverTarget.description}
+      <div>
         <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-        <pre>{@html hoverTarget.code}</pre>
-      {/if}
-    </Layout>
+        {@html hoverTarget.description}
+      </div>
+    {/if}
+    {#if hoverTarget.code}
+      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
+      <pre>{@html hoverTarget.code}</pre>
+    {/if}
   </div>
 </Popover>
 
@@ -380,14 +380,19 @@
   .binding__label {
     text-transform: capitalize;
   }
-
   .binding__type {
     font-family: var(--font-mono);
     font-size: 10px;
     color: var(--spectrum-global-color-gray-700);
   }
 
-  .helper pre {
+  .binding-popover {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-m);
+    padding: var(--spacing-m);
+  }
+  .binding-popover pre {
     padding: 0;
     margin: 0;
     font-size: 12px;
@@ -395,12 +400,15 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .helper pre :global(span) {
+  .binding-popover.helper pre {
+    color: var(--spectrum-global-color-blue-700);
+  }
+  .binding-popover pre :global(span) {
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
   }
-  .helper :global(p) {
+  .binding-popover :global(p) {
     padding: 0;
     margin: 0;
   }
