@@ -1,9 +1,10 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
 
-require("svelte/register")
+import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
+import AppComponent from "./templates/BudibaseApp.svelte"
 
 import { join } from "../../../utilities/centralPath"
-import uuid from "uuid"
+import * as uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
@@ -236,23 +237,20 @@ export const serveApp = async function (ctx: UserCtx) {
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-      const Skeleton =
-        require("@budibase/frontend-core/src/components/ClientAppSkeleton.svelte").default
-      const skeleton = Skeleton.render({
+
+      const skeleton = ClientAppSkeleton.render({
         hideDevTools,
         sideNav,
         hideFooter,
       })
-      const App = require("./templates/BudibaseApp.svelte").default
 
-      const { head, html, css, ...rest } = App.render({
+      const { head, html, css } = AppComponent.render({
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
-        title: appInfo.name,
         production: env.isProd(),
         appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
@@ -284,8 +282,7 @@ export const serveApp = async function (ctx: UserCtx) {
     }
   } catch (error) {
     if (!env.isJest()) {
-      const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css } = App.render({
+      const { head, html, css } = AppComponent.render({
         title: branding?.metaTitle,
         metaTitle: branding?.metaTitle,
         metaImage:

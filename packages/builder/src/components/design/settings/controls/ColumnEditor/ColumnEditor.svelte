@@ -3,11 +3,8 @@
   import { createEventDispatcher } from "svelte"
   import ColumnDrawer from "./ColumnDrawer.svelte"
   import { cloneDeep } from "lodash/fp"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { currentAsset } from "builderStore"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { selectedScreen } from "stores/builder"
   import { getFields } from "helpers/searchFields"
 
   export let componentInstance
@@ -21,8 +18,8 @@
   let boundValue
 
   $: text = getText(value)
-  $: datasource = getDatasourceForProvider($currentAsset, componentInstance)
-  $: schema = getSchema($currentAsset, datasource)
+  $: datasource = getDatasourceForProvider($selectedScreen, componentInstance)
+  $: schema = getSchema($selectedScreen, datasource)
   $: options = allowCellEditing
     ? Object.keys(schema || {})
     : enrichedSchemaFields?.map(field => field.name)
@@ -31,6 +28,12 @@
   $: enrichedSchemaFields = getFields(Object.values(schema || {}), {
     allowLinks: true,
   })
+
+  $: {
+    value = (value || []).filter(
+      column => (schema || {})[column.name || column] !== undefined
+    )
+  }
 
   const getText = value => {
     if (!value?.length) {

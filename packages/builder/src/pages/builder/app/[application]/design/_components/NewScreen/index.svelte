@@ -5,15 +5,17 @@
   import tableImage from "./table.png"
   import gridImage from "./grid.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
 
   export let onClose = null
 
   let createScreenModal
 
-  $: hasScreens = $store.screens?.length
+  $: hasScreens = $screenStore.screens?.length
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="page">
   <CreationPage
     showClose={!!onClose}

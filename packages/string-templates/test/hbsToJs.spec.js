@@ -1,4 +1,4 @@
-const { convertToJS } = require("../src/index.cjs")
+const { convertToJS } = require("../src/index.js")
 
 function checkLines(response, lines) {
   const toCheck = response.split("\n")

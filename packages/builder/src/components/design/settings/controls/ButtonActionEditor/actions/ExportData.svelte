@@ -1,15 +1,9 @@
 <script>
-  import { Label, Select, Body, Multiselect } from "@budibase/bbui"
-  import {
-    findAllMatchingComponents,
-    findComponent,
-  } from "builderStore/componentUtils"
-  import { currentAsset } from "builderStore"
+  import { Label, Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
+  import ColumnEditor from "../../ColumnEditor/ColumnEditor.svelte"
+  import { findAllMatchingComponents } from "helpers/components"
+  import { selectedScreen } from "stores/builder"
 
   export let parameters
 
@@ -24,35 +18,64 @@
     },
   ]
 
-  $: tables = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("table")
-  ).map(table => ({
-    label: table._instanceName,
-    value: table._id,
-  }))
-  $: tableBlocks = findAllMatchingComponents($currentAsset?.props, component =>
-    component._component.endsWith("tableblock")
-  ).map(block => ({
-    label: block._instanceName,
-    value: `${block._id}-table`,
-  }))
-  $: componentOptions = tables.concat(tableBlocks)
-  $: columnOptions = getColumnOptions(parameters.tableComponentId)
+  const DELIMITERS = [
+    {
+      label: ",",
+      value: ",",
+    },
+    {
+      label: ";",
+      value: ";",
+    },
+    {
+      label: ":",
+      value: ":",
+    },
+    {
+      label: "|",
+      value: "|",
+    },
+    {
+      label: "~",
+      value: "~",
+    },
+    {
+      label: "[tab]",
+      value: "\t",
+    },
+    {
+      label: "[space]",
+      value: " ",
+    },
+  ]
 
-  const getColumnOptions = tableId => {
-    // Strip block suffix if block component
-    if (tableId?.includes("-")) {
-      tableId = tableId.split("-")[0]
-    }
-    const selectedTable = findComponent($currentAsset?.props, tableId)
-    const datasource = getDatasourceForProvider($currentAsset, selectedTable)
-    const { schema } = getSchemaForDatasource($currentAsset, datasource)
-    return Object.keys(schema || {})
-  }
+  $: tables = findAllMatchingComponents($selectedScreen?.props, component =>
+    component._component.endsWith("table")
+  )
+  $: tableBlocks = findAllMatchingComponents(
+    $selectedScreen?.props,
+    component => component._component.endsWith("tableblock")
+  )
+  $: components = tables.concat(tableBlocks)
+  $: componentOptions = components.map(table => ({
+    label: table._instanceName,
+    value: table._component.includes("tableblock")
+      ? `${table._id}-table`
+      : table._id,
+  }))
+  $: selectedTableId = parameters.tableComponentId?.includes("-")
+    ? parameters.tableComponentId.split("-")[0]
+    : parameters.tableComponentId
+  $: selectedTable = components.find(
+    component => component._id === selectedTableId
+  )
 
   onMount(() => {
     if (!parameters.type) {
       parameters.type = "csv"
+    }
+    if (!parameters.delimiter) {
+      parameters.delimiter = ","
     }
   })
 </script>
@@ -72,13 +95,29 @@
       options={componentOptions}
       on:change={() => (parameters.columns = [])}
     />
+    <span />
     <Label small>Export as</Label>
     <Select bind:value={parameters.type} options={FORMATS} />
+    <Select
+      bind:value={parameters.delimiter}
+      placeholder={null}
+      options={DELIMITERS}
+      disabled={parameters.type !== "csv"}
+    />
     <Label small>Export columns</Label>
-    <Multiselect
-      placeholder="All columns"
+    <ColumnEditor
       bind:value={parameters.columns}
-      options={columnOptions}
+      allowCellEditing={false}
+      componentInstance={selectedTable}
+      on:change={e => {
+        const columns = e.detail
+        parameters.customHeaders = columns.reduce((headerMap, column) => {
+          return {
+            [column.name]: column.displayName,
+            ...headerMap,
+          }
+        }, {})
+      }}
     />
   </div>
 </div>
@@ -102,8 +141,8 @@
   .params {
     display: grid;
     column-gap: var(--spacing-xs);
-    row-gap: var(--spacing-s);
-    grid-template-columns: 90px 1fr;
+    row-gap: var(--spacing-m);
+    grid-template-columns: 90px 1fr 90px;
     align-items: center;
   }
 </style>

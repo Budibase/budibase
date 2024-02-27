@@ -44,11 +44,11 @@ describe("utils", () => {
 
     it("gets appId from url", async () => {
       await config.doInTenant(async () => {
-        const url = "http://test.com"
+        const url = "http://example.com"
         env._set("PLATFORM_URL", url)
 
         const ctx = structures.koa.newContext()
-        ctx.host = `${config.tenantId}.test.com`
+        ctx.host = `${config.tenantId}.example.com`
 
         const expected = db.generateAppID(config.tenantId)
         const app = structures.apps.app(expected)
@@ -89,7 +89,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const expected = db.generateAppID()
       ctx.request.headers = {
-        referer: `http://test.com/builder/app/${expected}/design/screen_123/screens`,
+        referer: `http://example.com/builder/app/${expected}/design/screen_123/screens`,
       }
 
       const actual = await utils.getAppIdFromCtx(ctx)
@@ -100,7 +100,7 @@ describe("utils", () => {
       const ctx = structures.koa.newContext()
       const appId = db.generateAppID()
       ctx.request.headers = {
-        referer: `http://test.com/foo/app/${appId}/bar`,
+        referer: `http://example.com/foo/app/${appId}/bar`,
       }
 
       const actual = await utils.getAppIdFromCtx(ctx)

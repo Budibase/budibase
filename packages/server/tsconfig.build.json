@@ -19,8 +19,9 @@
       "@budibase/shared-core": ["../shared-core/src"],
       "@budibase/pro": ["../pro/src"],
       "@budibase/string-templates": ["../string-templates/src"],
-      "@budibase/frontend-core": ["../frontend-core/src"]
-    }
+      "@budibase/frontend-core": ["../frontend-core"]
+    },
+    "allowArbitraryExtensions": true
   },
   "include": ["src/**/*"],
   "exclude": [

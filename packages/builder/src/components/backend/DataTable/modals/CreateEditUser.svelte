@@ -1,6 +1,6 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { tables, roles } from "stores/backend"
+  import { tables, roles } from "stores/builder"
   import {
     notifications,
     keepOpen,

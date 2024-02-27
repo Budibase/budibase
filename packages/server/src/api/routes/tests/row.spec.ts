@@ -2031,7 +2031,7 @@ describe.each([
 
   describe("Formula JS protection", () => {
     it("should time out JS execution if a single cell takes too long", async () => {
-      await config.withEnv({ JS_PER_EXECUTION_TIME_LIMIT_MS: 20 }, async () => {
+      await config.withEnv({ JS_PER_INVOCATION_TIMEOUT_MS: 20 }, async () => {
         const js = Buffer.from(
           `
               let i = 0;
@@ -2071,8 +2071,8 @@ describe.each([
     it("should time out JS execution if a multiple cells take too long", async () => {
       await config.withEnv(
         {
-          JS_PER_EXECUTION_TIME_LIMIT_MS: 20,
-          JS_PER_REQUEST_TIME_LIMIT_MS: 40,
+          JS_PER_INVOCATION_TIMEOUT_MS: 20,
+          JS_PER_REQUEST_TIMEOUT_MS: 40,
         },
         async () => {
           const js = Buffer.from(
@@ -2133,6 +2133,49 @@ describe.each([
             }
           }
         }
+      )
+    })
+
+    it("should not carry over context between formulas", async () => {
+      const js = Buffer.from(`return $("[text]");`).toString("base64")
+      const table = await config.createTable({
+        name: "table",
+        type: "table",
+        schema: {
+          text: {
+            name: "text",
+            type: FieldType.STRING,
+          },
+          formula: {
+            name: "formula",
+            type: FieldType.FORMULA,
+            formula: `{{ js "${js}"}}`,
+            formulaType: FormulaType.DYNAMIC,
+          },
+        },
+      })
+
+      for (let i = 0; i < 10; i++) {
+        await config.api.row.save(table._id!, { text: `foo${i}` })
+      }
+
+      const { rows } = await config.api.row.search(table._id!)
+      expect(rows).toHaveLength(10)
+
+      const formulaValues = rows.map(r => r.formula)
+      expect(formulaValues).toEqual(
+        expect.arrayContaining([
+          "foo0",
+          "foo1",
+          "foo2",
+          "foo3",
+          "foo4",
+          "foo5",
+          "foo6",
+          "foo7",
+          "foo8",
+          "foo9",
+        ])
       )
     })
   })

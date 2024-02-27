@@ -47,6 +47,8 @@ export const getActionContextKey = action => {
       return key(action.parameters.componentId, ActionTypes.ClearForm)
     case "Change Form Step":
       return key(action.parameters.componentId, ActionTypes.ChangeFormStep)
+    case "Clear Row Selection":
+      return key(action.parameters.componentId, ActionTypes.ClearRowSelection)
     default:
       return null
   }
@@ -339,9 +341,16 @@ const exportDataHandler = async action => {
         tableId: selection.tableId,
         rows: selection.selectedRows,
         format: action.parameters.type,
-        columns: action.parameters.columns,
+        columns: action.parameters.columns?.map(
+          column => column.name || column
+        ),
+        delimiter: action.parameters.delimiter,
+        customHeaders: action.parameters.customHeaders,
       })
-      download(data, `${selection.tableId}.${action.parameters.type}`)
+      download(
+        new Blob([data], { type: "text/plain" }),
+        `${selection.tableId}.${action.parameters.type}`
+      )
     } catch (error) {
       notificationStore.actions.error("There was an error exporting the data")
     }
@@ -380,14 +389,14 @@ const showNotificationHandler = action => {
 
 const promptUserHandler = () => {}
 
-const OpenSidePanelHandler = action => {
+const openSidePanelHandler = action => {
   const { id } = action.parameters
   if (id) {
     sidePanelStore.actions.open(id)
   }
 }
 
-const CloseSidePanelHandler = () => {
+const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
@@ -407,8 +416,8 @@ const handlerMap = {
   ["Continue if / Stop if"]: continueIfHandler,
   ["Show Notification"]: showNotificationHandler,
   ["Prompt User"]: promptUserHandler,
-  ["Open Side Panel"]: OpenSidePanelHandler,
-  ["Close Side Panel"]: CloseSidePanelHandler,
+  ["Open Side Panel"]: openSidePanelHandler,
+  ["Close Side Panel"]: closeSidePanelHandler,
 }
 
 const confirmTextMap = {

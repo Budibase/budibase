@@ -14,6 +14,7 @@
     linkable,
     builderStore,
     sidePanelStore,
+    appStore,
   } = sdk
   const component = getContext("component")
   const context = getContext("context")
@@ -164,6 +165,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="component {screenId} layout layout--{typeClass}"
   use:styleable={$component.styles}
@@ -228,7 +231,12 @@
               </div>
               {#if !embedded}
                 <div class="portal">
-                  <Icon hoverable name="Apps" on:click={navigateToPortal} />
+                  <Icon
+                    hoverable
+                    name="Apps"
+                    on:click={navigateToPortal}
+                    disabled={$appStore.isDevApp}
+                  />
                 </div>
               {/if}
             </div>
