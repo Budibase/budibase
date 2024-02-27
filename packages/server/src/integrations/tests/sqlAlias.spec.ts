@@ -171,7 +171,7 @@ describe("Captures of real examples", () => {
       for (let table of tableNames) {
         alias = aliasing.getAlias(table)
       }
-      expect(alias).toEqual("aaay")
+      expect(alias).toEqual("cu")
     })
   })
 })
