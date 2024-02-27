@@ -1,5 +1,6 @@
 <script>
   import GroupIcon from "./GroupIcon.svelte"
+  import ScimInfo from "../../_components/SCIMInfo.svelte"
 
   export let value
   export let row
@@ -13,6 +14,9 @@
     </div>
   {:else}
     <div class="text">-</div>
+  {/if}
+  {#if row.scimInfo?.isSync}
+    <ScimInfo iconSize="XS" />
   {/if}
 </div>
 
