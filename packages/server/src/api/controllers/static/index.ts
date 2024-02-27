@@ -262,7 +262,7 @@ export const serveApp = async function (ctx: UserCtx) {
         body: html,
         css: `:root{${themeVariables}} ${css.code}`,
         appId,
-        embedded: bbHeaderEmbed
+        embedded: bbHeaderEmbed,
       })
     } else {
       // just return the app info for jest to assert on
