@@ -12,9 +12,9 @@
   export let usedPlugins
   export let appMigrating
 
-  export let hideDevTools;
-  export let sideNav;
-  export let hideFooter;
+  export let hideDevTools
+  export let sideNav
+  export let hideFooter
 </script>
 
 <svelte:head>
@@ -102,11 +102,7 @@
 </svelte:head>
 
 <body id="app">
-  <ClientAppSkeleton
-    {hideDevTools}
-    {sideNav}
-    {hideFooter}
-  />
+  <ClientAppSkeleton {hideDevTools} {sideNav} {hideFooter} />
   <div id="error">
     {#if clientLibPath}
       <h1>There was an error loading your app</h1>
