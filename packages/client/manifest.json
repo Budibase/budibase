@@ -89,13 +89,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -270,6 +270,7 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
+            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -297,13 +298,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],
@@ -460,16 +461,16 @@
         "key": "type",
         "options": [
           {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
             "label": "Primary",
             "value": "primary"
           },
           {
             "label": "Secondary",
             "value": "secondary"
-          },
-          {
-            "label": "Action",
-            "value": "cta"
           },
           {
             "label": "Warning",
@@ -480,7 +481,7 @@
             "value": "overBackground"
           }
         ],
-        "defaultValue": "primary"
+        "defaultValue": "cta"
       },
       {
         "type": "select",
@@ -601,13 +602,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -5916,13 +5917,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],
