@@ -1,9 +1,8 @@
 <script>
   import groupBy from "lodash/fp/groupBy"
-  import { convertToJS, processStringSync } from "@budibase/string-templates"
-  import { Input, Layout, ActionButton, Icon, Popover } from "@budibase/bbui"
+  import { convertToJS } from "@budibase/string-templates"
+  import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "constants/completions"
-  import formatHighlight from "json-format-highlight"
 
   export let addHelper
   export let addBinding
@@ -72,6 +71,9 @@
   }
 
   const showBindingPopover = (binding, target) => {
+    if (!context) {
+      return
+    }
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
