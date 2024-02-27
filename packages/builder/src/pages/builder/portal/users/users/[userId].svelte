@@ -18,7 +18,7 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing, features } from "stores/portal"
+  import { users, auth, groups, apps, licensing } from "stores/portal"
   import { roles } from "stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
@@ -87,7 +87,6 @@
   let user
   let loaded = false
 
-  $: scimEnabled = $features.isScimEnabled
   $: isSSO = !!user?.provider
   $: readonly = !sdk.users.isAdmin($auth.user) || user?.scimInfo?.isSync
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
