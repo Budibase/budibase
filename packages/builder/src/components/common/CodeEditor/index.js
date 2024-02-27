@@ -32,17 +32,17 @@ export const buildHelperInfoNode = (completion, helper) => {
   ele.classList.add("info-bubble")
 
   const exampleNodeHtml = helper.example
-    ? `<div class="binding__example">${helper.example}</div>`
+    ? `<div class="binding__example helper">${helper.example}</div>`
     : ""
   const descriptionMarkup = sanitizeHtml(helper.description, {
     allowedTags: [],
     allowedAttributes: {},
   })
-  const descriptionNodeHtml = `<div class="binding__description">${descriptionMarkup}</div>`
+  const descriptionNodeHtml = `<div class="binding__description helper">${descriptionMarkup}</div>`
 
   ele.innerHTML = `
-    ${exampleNodeHtml}
     ${descriptionNodeHtml}
+    ${exampleNodeHtml}
   `
   return ele
 }
