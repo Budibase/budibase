@@ -23,6 +23,7 @@
   export let key
   export let disableBindings = false
   export let forceModal = false
+  export let context = null
 
   const dispatch = createEventDispatcher()
 
@@ -102,6 +103,7 @@
     {bindings}
     {allowJS}
     {allowHelpers}
+    {context}
   />
 </Drawer>
 

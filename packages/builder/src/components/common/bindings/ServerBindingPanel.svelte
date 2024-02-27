@@ -5,6 +5,7 @@
   export let valid
   export let value = ""
   export let allowJS = false
+  export let context = null
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -23,5 +24,6 @@
   bindings={enrichedBindings}
   {value}
   {allowJS}
+  {context}
   on:change
 />
