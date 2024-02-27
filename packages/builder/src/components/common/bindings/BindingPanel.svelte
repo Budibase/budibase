@@ -69,7 +69,9 @@
 
   $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
   $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
-  $: sideTabs = [SidePanels.Evaluation, SidePanels.Bindings]
+  $: sideTabs = context
+    ? [SidePanels.Evaluation, SidePanels.Bindings]
+    : [SidePanels.Bindings]
   $: enrichedBindings = enrichBindings(bindings, context)
   $: usingJS = mode === Modes.JavaScript
   $: editorMode =
