@@ -173,7 +173,7 @@
   on:drawerShow
   {fillWidth}
   bind:this={bindingDrawer}
-  {title}
+  title={title ?? placeholder ?? "Bindings"}
   left={drawerLeft}
 >
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
