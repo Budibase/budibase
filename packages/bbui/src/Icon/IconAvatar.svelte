@@ -27,7 +27,7 @@
   <Icon name={icon} color={background ? "white" : color} />
   {#if tooltip && showTooltip}
     <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction="top" text={tooltip} />
+      <Tooltip textWrapping direction="right" text={tooltip} />
     </div>
   {/if}
 </div>
@@ -89,9 +89,9 @@
   .tooltip {
     position: absolute;
     pointer-events: none;
-    left: 50%;
-    bottom: calc(100% + 4px);
-    transform: translateX(-50%);
+    left: calc(50% + 8px);
+    bottom: calc(-50% + 6px);
+    /* transform: translateY(-50%); */
     text-align: center;
     z-index: 1;
   }
