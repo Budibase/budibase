@@ -36,6 +36,8 @@
   import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import { RowUtils } from "@budibase/frontend-core"
+  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
 
   const AUTO_TYPE = FIELDS.AUTO.type
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -93,6 +95,7 @@
   }
   let autoColumnInfo = getAutoColumnInformation()
 
+  $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
   $: if (primaryDisplay) {
     editableColumn.constraints.presence = { allowEmpty: false }
   }
@@ -667,6 +670,7 @@
       </div>
       <div class="input-length">
         <ModalBindableInput
+          panel={ServerBindingPanel}
           title="Formula"
           value={editableColumn.formula}
           on:change={e => {
@@ -677,6 +681,7 @@
           }}
           bindings={getBindings({ table })}
           allowJS
+          context={rowGoldenSample}
         />
       </div>
     </div>
