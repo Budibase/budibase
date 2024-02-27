@@ -25,7 +25,8 @@ export function cleanExportRows(
   rows: any[],
   schema: TableSchema,
   format: string,
-  columns?: string[]
+  columns?: string[],
+  customHeaders: { [key: string]: string } = {}
 ) {
   let cleanRows = [...rows]
 
@@ -53,9 +54,25 @@ export function cleanExportRows(
         }
       }
     }
+  } else if (format === Format.JSON) {
+    // Replace row keys with custom headers
+    for (let row of cleanRows) {
+      renameKeys(customHeaders, row)
+    }
   }
 
   return cleanRows
+}
+
+function renameKeys(keysMap: { [key: string]: any }, row: any) {
+  for (const key in keysMap) {
+    Object.defineProperty(
+      row,
+      keysMap[key],
+      Object.getOwnPropertyDescriptor(row, key) || {}
+    )
+    delete row[key]
+  }
 }
 
 function isForeignKey(key: string, table: Table) {
