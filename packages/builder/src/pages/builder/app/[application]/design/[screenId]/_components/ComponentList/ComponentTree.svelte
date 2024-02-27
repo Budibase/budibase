@@ -17,11 +17,12 @@
   } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
+  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   export let components = []
   export let level = 0
 
-  let closedNodes = {}
+  $: openNodes = $componentTreeNodesStore
 
   $: filteredComponents = components?.filter(component => {
     return (
@@ -54,15 +55,6 @@
     return componentSupportsChildren(component) && component._children?.length
   }
 
-  function toggleNodeOpen(componentId) {
-    if (closedNodes[componentId]) {
-      delete closedNodes[componentId]
-    } else {
-      closedNodes[componentId] = true
-    }
-    closedNodes = closedNodes
-  }
-
   const onDrop = async e => {
     e.stopPropagation()
     try {
@@ -72,14 +64,14 @@
     }
   }
 
-  const isOpen = (component, selectedComponentPath, closedNodes) => {
+  const isOpen = (component, selectedComponentPath, openNodes) => {
     if (!component?._children?.length) {
       return false
     }
-    if (selectedComponentPath.includes(component._id)) {
+    if (selectedComponentPath.slice(0, -1).includes(component._id)) {
       return true
     }
-    return !closedNodes[component._id]
+    return openNodes[`nodeOpen-${component._id}`]
   }
 
   const isChildOfSelectedComponent = component => {
@@ -94,9 +86,11 @@
   const hover = hoverStore.hover
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul>
   {#each filteredComponents || [] as component, index (component._id)}
-    {@const opened = isOpen(component, $selectedComponentPath, closedNodes)}
+    {@const opened = isOpen(component, $selectedComponentPath, openNodes)}
     <li
       on:click|stopPropagation={() => {
         componentStore.select(component._id)
@@ -110,7 +104,7 @@
         on:dragend={dndStore.actions.reset}
         on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
-        on:iconClick={() => toggleNodeOpen(component._id)}
+        on:iconClick={() => componentTreeNodesStore.toggleNode(component._id)}
         on:drop={onDrop}
         hovering={$hoverStore.componentId === component._id}
         on:mouseenter={() => hover(component._id)}
@@ -125,8 +119,9 @@
         highlighted={isChildOfSelectedComponent(component)}
         selectedBy={$userSelectedResourceMap[component._id]}
       >
-        <ComponentDropdownMenu {component} />
+        <ComponentDropdownMenu {opened} {component} />
       </NavItem>
+
       {#if opened}
         <svelte:self
           components={component._children}
@@ -143,13 +138,6 @@
     list-style: none;
     padding-left: 0;
     margin: 0;
-  }
-  ul :global(.icon.arrow) {
-    transition: opacity 130ms ease-out;
-    opacity: 0;
-  }
-  ul:hover :global(.icon.arrow) {
-    opacity: 1;
   }
   ul,
   li {

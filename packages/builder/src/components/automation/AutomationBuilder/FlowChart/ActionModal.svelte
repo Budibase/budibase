@@ -110,6 +110,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <ModalContent
   title="Add automation step"
   confirmText="Save"
@@ -128,10 +130,10 @@
         >
           <div class="item-body">
             <img
-              width="20"
-              height="20"
+              width={20}
+              height={20}
               src={externalActions[action.stepId].icon}
-              alt="zapier"
+              alt={externalActions[action.stepId].name}
             />
             <span class="icon-spacing">
               <Body size="XS">

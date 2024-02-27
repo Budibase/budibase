@@ -1,6 +1,6 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
 
-require("svelte/register")
+import AppComponent from "./templates/BudibaseApp.svelte"
 
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
@@ -175,15 +175,13 @@ export const serveApp = async function (ctx: Ctx) {
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
-      const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css } = App.render({
+      const { head, html, css } = AppComponent.render({
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
         metaDescription: branding?.metaDescription || "",
         metaTitle:
           branding?.metaTitle || `${appInfo.name} - built with Budibase`,
-        title: appInfo.name,
         production: env.isProd(),
         appId,
         clientLibPath: objectStore.clientLibraryUrl(appId!, appInfo.version),
@@ -212,8 +210,7 @@ export const serveApp = async function (ctx: Ctx) {
     }
   } catch (error) {
     if (!env.isJest()) {
-      const App = require("./templates/BudibaseApp.svelte").default
-      const { head, html, css } = App.render({
+      const { head, html, css } = AppComponent.render({
         title: branding?.metaTitle,
         metaTitle: branding?.metaTitle,
         metaImage:
