@@ -5,6 +5,7 @@
   import { sdk } from "@budibase/shared-core"
 
   export let value
+  export let row
 
   const groupContext = getContext("groups")
 
@@ -12,12 +13,11 @@
     e.stopPropagation()
     groupContext.removeGroup(value)
   }
+
+  $: disabled = !sdk.users.isAdmin($auth.user) || row?.scimInfo?.isSync
+  $: tooltip = row?.scimInfo?.isSync && "User added to the group via your AD"
 </script>
 
-<ActionButton
-  disabled={!sdk.users.isAdmin($auth.user)}
-  size="S"
-  on:click={onClick}
+<ActionButton {disabled} size="S" on:click={onClick} {tooltip}
+  >Remove</ActionButton
 >
-  Remove
-</ActionButton>
