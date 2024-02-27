@@ -8,33 +8,51 @@ import {
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
 
+class CharSequence {
+  static alphabet = "abcdefghijklmnopqrstuvwxyz"
+  counters: number[]
+
+  constructor() {
+    this.counters = [0]
+  }
+
+  get character() {
+    return this.counters.map(i => CharSequence.alphabet[i]).join("")
+  }
+
+  next() {
+    for (let i = this.counters.length - 1; i >= 0; i--) {
+      if (this.counters[i] < CharSequence.alphabet.length - 1) {
+        this.counters[i]++
+        return
+      }
+      this.counters[i] = 0
+    }
+    this.counters.unshift(0)
+  }
+}
+
 export default class AliasTables {
-  character: string
   aliases: Record<string, string>
   tableAliases: Record<string, string>
   tableNames: string[]
+  charSeq: CharSequence
 
   constructor(tableNames: string[]) {
     this.tableNames = tableNames
-    this.character = "a"
     this.aliases = {}
     this.tableAliases = {}
+    this.charSeq = new CharSequence()
   }
 
   getAlias(tableName: string) {
     if (this.aliases[tableName]) {
       return this.aliases[tableName]
     }
-    const char = this.character
+    const char = this.charSeq.character
+    this.charSeq.next()
     this.aliases[tableName] = char
     this.tableAliases[char] = tableName
-    this.character =
-      char.substring(0, char.length - 1) +
-      String.fromCharCode(char.charCodeAt(char.length - 1) + 1)
-    // reached end of characters, extend number of characters used
-    if (this.character.charAt(this.character.length - 1) === "z") {
-      this.character = new Array(this.character.length + 1).fill("a").join("")
-    }
     return char
   }
 
