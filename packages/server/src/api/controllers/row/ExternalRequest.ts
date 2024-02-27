@@ -640,14 +640,26 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      const isMany = field.relationshipType === RelationshipType.MANY_TO_MANY
-      const tableId = isMany ? field.through! : field.tableId!
+      let tableId: string | undefined,
+        lookupField: string | undefined,
+        fieldName: string | undefined
+      if (isManyToMany(field)) {
+        tableId = field.through
+        lookupField = primaryKey
+        fieldName = field.throughTo || primaryKey
+      } else if (isManyToOne(field)) {
+        tableId = field.tableId
+        lookupField = field.foreignKey
+        fieldName = field.fieldName
+      }
+      if (!tableId || !lookupField || !fieldName) {
+        throw new Error(
+          "Unable to lookup relationships - undefined column properties."
+        )
+      }
       const { tableName: relatedTableName } = breakExternalTableId(tableId)
       // @ts-ignore
       const linkPrimaryKey = this.tables[relatedTableName].primary[0]
-
-      const lookupField = isMany ? primaryKey : field.foreignKey
-      const fieldName = isMany ? field.throughTo || primaryKey : field.fieldName
       if (!lookupField || !row[lookupField]) {
         continue
       }
@@ -660,9 +672,12 @@ export class ExternalRequest<T extends Operation> {
         },
       })
       // this is the response from knex if no rows found
-      const rows: Row[] = response?.[0].read ? [] : (response as Row[])
-      const storeTo = isMany ? field.throughFrom || linkPrimaryKey : fieldName
-      related[storeTo] = { rows, isMany, tableId }
+      const rows: Row[] =
+        !Array.isArray(response) || response?.[0].read ? [] : response
+      const storeTo = isManyToMany(field)
+        ? field.throughFrom || linkPrimaryKey
+        : fieldName
+      related[storeTo] = { rows, isMany: isManyToMany(field), tableId }
     }
     return related
   }

@@ -164,14 +164,14 @@ describe("Captures of real examples", () => {
     it("should handle over 'z' max character alias", () => {
       const tableNames = []
       for (let i = 0; i < 100; i++) {
-        tableNames.push(generator.word())
+        tableNames.push(generator.guid())
       }
       const aliasing = new AliasTables(tableNames)
       let alias: string = ""
       for (let table of tableNames) {
         alias = aliasing.getAlias(table)
       }
-      expect(alias).toEqual("cu")
+      expect(alias).toEqual("cv")
     })
   })
 })

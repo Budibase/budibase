@@ -16,19 +16,17 @@ class CharSequence {
     this.counters = [0]
   }
 
-  get character() {
-    return this.counters.map(i => CharSequence.alphabet[i]).join("")
-  }
-
-  next() {
+  getCharacter(): string {
+    const char = this.counters.map(i => CharSequence.alphabet[i]).join("")
     for (let i = this.counters.length - 1; i >= 0; i--) {
       if (this.counters[i] < CharSequence.alphabet.length - 1) {
         this.counters[i]++
-        return
+        return char
       }
       this.counters[i] = 0
     }
     this.counters.unshift(0)
+    return char
   }
 }
 
@@ -49,8 +47,7 @@ export default class AliasTables {
     if (this.aliases[tableName]) {
       return this.aliases[tableName]
     }
-    const char = this.charSeq.character
-    this.charSeq.next()
+    const char = this.charSeq.getCharacter()
     this.aliases[tableName] = char
     this.tableAliases[char] = tableName
     return char
