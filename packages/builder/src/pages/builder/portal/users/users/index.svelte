@@ -37,7 +37,6 @@
   import { Constants, Utils, fetchData } from "@budibase/frontend-core"
   import { API } from "api"
   import { OnboardingType } from "constants"
-  import ScimInfo from "../_components/SCIMInfo.svelte"
   import { sdk } from "@budibase/shared-core"
 
   const fetch = fetchData({
@@ -248,19 +247,25 @@
     }
   }
 
-  const deleteRows = async () => {
+  const deleteUsers = async () => {
     try {
       let ids = selectedRows.map(user => user._id)
       if (ids.includes(get(auth).user._id)) {
         notifications.error("You cannot delete yourself")
         return
       }
+
+      if (selectedRows.some(u => u.scimInfo?.isSync)) {
+        notifications.error("You cannot remove users created via your AD")
+        return
+      }
+
       await users.bulkDelete(ids)
       notifications.success(`Successfully deleted ${selectedRows.length} rows`)
       selectedRows = []
       await fetch.refresh()
     } catch (error) {
-      notifications.error("Error deleting rows")
+      notifications.error("Error deleting users")
     }
   }
 
@@ -329,7 +334,7 @@
           item="user"
           on:updaterows
           {selectedRows}
-          {deleteRows}
+          deleteRows={deleteUsers}
         />
       {/if}
     </div>
