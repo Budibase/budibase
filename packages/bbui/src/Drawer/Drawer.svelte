@@ -60,7 +60,7 @@
   export let headless = false
 
   const dispatch = createEventDispatcher()
-  const spacing = 10
+  const spacing = 11
 
   let visible = false
   let drawerId = generate()

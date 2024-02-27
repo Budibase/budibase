@@ -332,7 +332,7 @@
   /* Tabs */
   .tabs {
     padding: var(--spacing-m);
-    border-bottom: 2px solid transparent;
+    border-bottom: var(--border-light);
   }
   .editor-tabs,
   .side-tabs {

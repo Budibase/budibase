@@ -42,7 +42,7 @@
   } from "@codemirror/commands"
   import { Compartment } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
-  import { EditorModes, getDefaultTheme } from "./"
+  import { EditorModes } from "./"
   import { themeStore } from "stores/portal"
 
   export let label
@@ -164,14 +164,7 @@
         dispatch("change", docStr)
       }),
       keymap.of(buildKeymap()),
-      themeConfig.of([
-        getDefaultTheme({
-          height: editorHeight,
-          resize,
-          dark: isDark,
-        }),
-        ...(isDark ? [oneDark] : []),
-      ]),
+      themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
   }
 
@@ -182,7 +175,7 @@
       complete.push(
         autocompletion({
           override: [...completions],
-          closeOnBlur: true,
+          closeOnBlur: false,
           icons: false,
           optionClass: () => "autocomplete-option",
         })
@@ -264,14 +257,7 @@
 
       // Issue theme compartment update
       editor.dispatch({
-        effects: themeConfig.reconfigure([
-          getDefaultTheme({
-            height: editorHeight,
-            resize,
-            dark: isDark,
-          }),
-          ...(isDark ? [oneDark] : []),
-        ]),
+        effects: themeConfig.reconfigure([...(isDark ? [oneDark] : [])]),
       })
     }
   }
@@ -312,6 +298,7 @@
   .code-editor :global(.cm-line) {
     height: 16px;
     padding: 0 var(--spacing-s);
+    color: var(--spectrum-alias-text-color);
   }
   .code-editor :global(.cm-activeLine) {
     position: relative;
@@ -358,30 +345,103 @@
     position: relative;
   }
 
+  /* Cursor color */
+  .code-editor :global(.cm-focused .cm-cursor) {
+    border-left-color: var(--spectrum-alias-text-color);
+  }
+
+  /* Placeholder */
+  .code-editor :global(.cm-placeholder) {
+    color: var(--spectrum-global-color-gray-700);
+    font-style: italic;
+  }
+
+  /* Highlight bindings */
+  .code-editor :global(.binding-wrap) {
+    color: var(--spectrum-global-color-blue-700);
+  }
+
   /* Completion popover */
-  .code-editor :global(.cm-tooltip.cm-completionInfo) {
+  .code-editor :global(.cm-tooltip-autocomplete) {
+    background: var(--spectrum-global-color-gray-75);
+    border-radius: 4px;
+    border: 1px solid var(--spectrum-global-color-gray-200);
+  }
+  .code-editor :global(.cm-tooltip-autocomplete > ul) {
+    max-height: 20em;
+  }
+
+  /* Completion section header*/
+  .code-editor :global(.info-section) {
+    display: flex;
+    align-items: center;
     padding: var(--spacing-m);
+    font-family: var(--font-sans);
+    font-size: var(--font-size-s);
+    gap: var(--spacing-m);
+    color: var(--spectrum-alias-text-color);
+    font-weight: 600;
   }
-  .code-editor :global(.cm-tooltip-autocomplete > ul > li[aria-selected]) {
-    border-radius: var(
-        --spectrum-popover-border-radius,
-        var(--spectrum-alias-border-radius-regular)
-      ),
-      var(
-        --spectrum-popover-border-radius,
-        var(--spectrum-alias-border-radius-regular)
-      ),
-      0, 0;
+  .code-editor :global(.info-section:not(:first-of-type)) {
+    border-top: 1px solid var(--spectrum-global-color-gray-200);
   }
+
+  /* Completion item container */
+  .code-editor :global(.autocomplete-option) {
+    padding: var(--spacing-s) var(--spacing-m) !important;
+    padding-left: calc(16px + 2 * var(--spacing-m)) !important;
+    display: flex;
+    gap: var(--spacing-m);
+    align-items: center;
+    color: var(--spectrum-alias-text-color);
+  }
+
+  /* Highlighted completion item */
+  .code-editor :global(.autocomplete-option[aria-selected]) {
+    background: var(--spectrum-global-color-blue-400);
+    color: white;
+  }
+  .code-editor
+    :global(.autocomplete-option[aria-selected] .cm-completionDetail) {
+    color: white;
+  }
+
+  /* Completion item label */
+  .code-editor :global(.cm-completionLabel) {
+    flex: 1 1 auto;
+    font-size: var(--font-size-s);
+    font-family: var(--font-sans);
+    text-transform: capitalize;
+  }
+
+  /* Completion item type */
   .code-editor :global(.autocomplete-option .cm-completionDetail) {
-    background-color: var(--spectrum-global-color-gray-200);
+    font-family: var(--font-mono);
+    color: var(--spectrum-global-color-gray-700);
+    font-style: normal;
+    text-transform: capitalize;
+    font-size: 10px;
+  }
+
+  /* Live binding value / helper container */
+  .code-editor :global(.cm-completionInfo) {
+    margin-left: var(--spacing-s);
+    border: 1px solid var(--spectrum-global-color-gray-300);
     border-radius: var(--border-radius-s);
-    padding: 4px 6px;
+    background-color: var(--spectrum-global-color-gray-50);
+    padding: var(--spacing-m);
+    margin-top: -2px;
+  }
+
+  /* Live binding value / helper value */
+  .code-editor :global(.binding__description) {
+    color: var(--spectrum-global-color-gray-700);
+    font-size: var(--font-size-s);
   }
   .code-editor :global(.binding__example) {
     padding: 0;
     margin: 0;
-    font-size: 12px;
+    font-size: var(--font-size-s);
     font-family: var(--font-mono);
     white-space: pre;
     text-overflow: ellipsis;
@@ -392,5 +452,14 @@
     overflow: hidden !important;
     text-overflow: ellipsis !important;
     white-space: nowrap !important;
+  }
+
+  /* Wrapper around helpers */
+  .code-editor :global(.info-bubble) {
+    font-size: var(--font-size-s);
+    display: grid;
+    grid-gap: var(--spacing-s);
+    grid-template-columns: 1fr;
+    color: var(--spectrum-global-color-gray-800);
   }
 </style>
