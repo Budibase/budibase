@@ -40,6 +40,7 @@
   <Select bind:value={parameters.type} options={types} placeholder={null} />
   <Label>Message</Label>
   <DrawerBindableInput
+    title="Message"
     {bindings}
     value={parameters.message}
     on:change={e => (parameters.message = e.detail)}

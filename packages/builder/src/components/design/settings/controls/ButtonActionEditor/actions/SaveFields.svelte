@@ -62,7 +62,7 @@
     {/if}
     <Label small>{valueLabel}</Label>
     <DrawerBindableInput
-      title={`Value for "${field[0]}"`}
+      title={field[0]}
       value={field[1]}
       {bindings}
       on:change={event => updateFieldValue(idx, event.detail)}

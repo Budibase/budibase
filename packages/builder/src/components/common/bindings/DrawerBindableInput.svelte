@@ -13,7 +13,7 @@
   export let panel = ClientBindingPanel
   export let value = ""
   export let bindings = []
-  export let title = "Bindings"
+  export let title
   export let placeholder
   export let label
   export let disabled = false
@@ -89,7 +89,7 @@
   on:drawerShow
   {fillWidth}
   bind:this={bindingDrawer}
-  {title}
+  title={title ?? placeholder ?? "Bindings"}
   left={drawerLeft}
 >
   <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
