@@ -10,8 +10,6 @@ import {
 import { TestConfiguration } from "../../../../tests"
 import { events } from "@budibase/backend-core"
 
-// this test can 409 - retries reduce issues with this
-jest.retryTimes(2, { logErrorsBeforeRetry: true })
 jest.setTimeout(30000)
 
 describe("scim", () => {
@@ -367,13 +365,77 @@ describe("scim", () => {
         })
       })
 
-      it("creating an existing user name returns a conflict", async () => {
-        const body = structures.scim.createUserRequest()
+      it("creating an external user that conflicts an internal one syncs the existing user", async () => {
+        const { body: internalUser } = await config.api.users.saveUser(
+          structures.users.user()
+        )
 
-        await postScimUser({ body })
+        const scimUserData = {
+          externalId: structures.uuid(),
+          email: internalUser.email,
+          firstName: structures.generator.first(),
+          lastName: structures.generator.last(),
+          username: structures.generator.name(),
+        }
+        const scimUserRequest = structures.scim.createUserRequest(scimUserData)
 
-        const res = await postScimUser({ body }, { expect: 409 })
-        expect((res as any).message).toBe("Email already in use")
+        const res = await postScimUser(
+          { body: scimUserRequest },
+          { expect: 200 }
+        )
+
+        const expectedScimUser: ScimUserResponse = {
+          schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
+          id: internalUser._id!,
+          externalId: scimUserRequest.externalId,
+          meta: {
+            resourceType: "User",
+            // @ts-ignore
+            created: mocks.date.MOCK_DATE.toISOString(),
+            // @ts-ignore
+            lastModified: mocks.date.MOCK_DATE.toISOString(),
+          },
+          userName: scimUserData.username,
+          name: {
+            formatted: `${scimUserData.firstName} ${scimUserData.lastName}`,
+            familyName: scimUserData.lastName,
+            givenName: scimUserData.firstName,
+          },
+          active: true,
+          emails: [
+            {
+              value: internalUser.email,
+              type: "work",
+              primary: true,
+            },
+          ],
+        }
+
+        expect(res).toEqual(expectedScimUser)
+      })
+
+      it("a user cannot be SCIM synchronised with another SCIM user", async () => {
+        const { body: internalUser } = await config.api.users.saveUser(
+          structures.users.user()
+        )
+
+        await postScimUser(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 200 }
+        )
+
+        await postScimUser(
+          {
+            body: structures.scim.createUserRequest({
+              email: internalUser.email,
+            }),
+          },
+          { expect: 409 }
+        )
       })
     })
 
