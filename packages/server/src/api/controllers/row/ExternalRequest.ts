@@ -346,7 +346,7 @@ export class ExternalRequest<T extends Operation> {
       endpoint: getEndpoint(table._id!, Operation.READ),
       filters: buildFilters(rowId, {}, table),
     })
-    if (Array.isArray(response)) {
+    if (Array.isArray(response) && response.length > 0) {
       return response[0]
     } else {
       throw new Error(`Cannot fetch row by ID "${rowId}"`)
