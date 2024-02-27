@@ -98,6 +98,7 @@
       onChange={handleChange}
       bindings={allBindings}
       name={key}
+      title={label}
       {nested}
       {key}
       {type}

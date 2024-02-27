@@ -77,11 +77,7 @@
   {/if}
 </div>
 
-<Drawer bind:this={bindingDrawer} {title} headless>
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
-
+<Drawer bind:this={bindingDrawer} {title}>
   <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
     Save
   </Button>
