@@ -49,6 +49,7 @@ import {
   AuthToken,
   Automation,
   CreateViewRequest,
+  Ctx,
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -68,6 +69,8 @@ import {
 import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
+import { Server } from "http"
+import { userDetailListType } from "aws-sdk/clients/iam"
 
 mocks.licenses.init(pro)
 
@@ -82,26 +85,22 @@ export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
 }
 
 export default class TestConfiguration {
-  server: any
-  request: supertest.SuperTest<supertest.Test> | undefined
+  server?: Server
+  request?: supertest.SuperTest<supertest.Test>
   started: boolean
-  appId: string | null
+  appId?: string
   allApps: any[]
   app?: App
-  prodApp: any
-  prodAppId: any
-  user: any
-  userMetadataId: any
+  prodApp?: App
+  prodAppId?: string
+  user?: User
+  userMetadataId?: string
   table?: Table
   automation: any
   datasource?: Datasource
   tenantId?: string
   api: API
   csrfToken?: string
-
-  private get globalUserId() {
-    return this.user._id
-  }
 
   constructor(openServer = true) {
     if (openServer) {
@@ -114,7 +113,7 @@ export default class TestConfiguration {
     } else {
       this.started = false
     }
-    this.appId = null
+    this.appId = undefined
     this.allApps = []
 
     this.api = new API(this)
@@ -134,37 +133,49 @@ export default class TestConfiguration {
 
   getAppId() {
     if (!this.appId) {
-      throw "appId has not been initialised properly"
+      throw new Error("appId has not been initialised properly")
     }
-
     return this.appId
   }
 
   getProdAppId() {
+    if (!this.prodAppId) {
+      throw new Error(
+        "prodAppId has not been initialised, call config.init() first"
+      )
+    }
     return this.prodAppId
   }
 
+  getUser(): User {
+    if (!this.user) {
+      throw new Error("User has not been initialised, call config.init() first")
+    }
+    return this.user
+  }
+
   getUserDetails() {
+    const user = this.getUser()
     return {
-      globalId: this.globalUserId,
-      email: this.user.email,
-      firstName: this.user.firstName,
-      lastName: this.user.lastName,
+      globalId: user._id!,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
     }
   }
 
   async doInContext<T>(
-    appId: string | null,
+    appId: string | undefined,
     task: () => Promise<T>
   ): Promise<T> {
-    if (!appId) {
-      appId = this.appId
-    }
-
     const tenant = this.getTenantId()
     return tenancy.doInTenant(tenant, () => {
+      if (!appId) {
+        appId = this.appId
+      }
+
       // check if already in a context
-      if (context.getAppId() == null && appId !== null) {
+      if (context.getAppId() == null && appId) {
         return context.doInAppContext(appId, async () => {
           return task()
         })
@@ -259,7 +270,11 @@ export default class TestConfiguration {
 
   // UTILS
 
-  _req(body: any, params: any, controlFunc: any) {
+  _req<Req extends Record<string, any>, Res, Context extends Ctx<Req, Res>>(
+    handler: (ctx: Context) => Promise<void>,
+    body?: Req,
+    params?: Record<string, string>
+  ) {
     // create a fake request ctx
     const request: any = {}
     const appId = this.appId
@@ -278,29 +293,19 @@ export default class TestConfiguration {
       throw new Error(`Error ${status} - ${message}`)
     }
     return this.doInContext(appId, async () => {
-      await controlFunc(request)
+      await handler(request)
       return request.body
     })
   }
 
   // USER / AUTH
-  async globalUser(
-    config: {
-      id?: string
-      firstName?: string
-      lastName?: string
-      builder?: boolean
-      admin?: boolean
-      email?: string
-      roles?: any
-    } = {}
-  ): Promise<User> {
+  async globalUser(config: Partial<User> = {}): Promise<User> {
     const {
-      id = `us_${newid()}`,
+      _id = `us_${newid()}`,
       firstName = generator.first(),
       lastName = generator.last(),
-      builder = true,
-      admin = false,
+      builder = { global: true },
+      admin = { global: false },
       email = generator.email(),
       roles,
     } = config
@@ -308,72 +313,30 @@ export default class TestConfiguration {
     const db = tenancy.getTenantDB(this.getTenantId())
     let existing
     try {
-      existing = await db.get<any>(id)
+      existing = await db.get<User>(_id)
     } catch (err) {
       existing = { email }
     }
     const user: User = {
-      _id: id,
+      _id: _id,
       ...existing,
       roles: roles || {},
       tenantId: this.getTenantId(),
       firstName,
       lastName,
     }
-    await sessions.createASession(id, {
+    await sessions.createASession(_id, {
       sessionId: "sessionid",
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
     })
-    if (builder) {
-      user.builder = { global: true }
-    } else {
-      user.builder = { global: false }
-    }
-    if (admin) {
-      user.admin = { global: true }
-    } else {
-      user.admin = { global: false }
-    }
     const resp = await db.put(user)
-    return {
-      _rev: resp.rev,
-      ...user,
-    }
+    return { _rev: resp.rev, ...user }
   }
 
-  async createUser(
-    user: {
-      id?: string
-      firstName?: string
-      lastName?: string
-      email?: string
-      builder?: boolean
-      admin?: boolean
-      roles?: UserRoles
-    } = {}
-  ): Promise<User> {
-    const {
-      id,
-      firstName = generator.first(),
-      lastName = generator.last(),
-      email = generator.email(),
-      builder = true,
-      admin,
-      roles,
-    } = user
-
-    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
-    const resp = await this.globalUser({
-      id: globalId,
-      firstName,
-      lastName,
-      email,
-      builder,
-      admin,
-      roles: roles || {},
-    })
-    await cache.user.invalidateUser(globalId)
+  async createUser(user: Partial<User> = {}): Promise<User> {
+    const resp = await this.globalUser(user)
+    await cache.user.invalidateUser(resp._id!)
     return resp
   }
 
@@ -381,7 +344,7 @@ export default class TestConfiguration {
     return context.doInTenant(this.tenantId!, async () => {
       const baseGroup = structures.userGroups.userGroup()
       baseGroup.roles = {
-        [this.prodAppId]: roleId,
+        [this.getProdAppId()]: roleId,
       }
       const { id, rev } = await pro.sdk.groups.save(baseGroup)
       return {
@@ -404,8 +367,18 @@ export default class TestConfiguration {
     })
   }
 
-  async login({ roleId, userId, builder, prodApp = false }: any = {}) {
-    const appId = prodApp ? this.prodAppId : this.appId
+  async login({
+    roleId,
+    userId,
+    builder,
+    prodApp,
+  }: {
+    roleId: string
+    userId: string
+    builder: boolean
+    prodApp: boolean
+  }) {
+    const appId = prodApp ? this.getProdAppId() : this.getAppId()
     return context.doInAppContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
       if (!this.request) {
@@ -414,9 +387,9 @@ export default class TestConfiguration {
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
         await this.globalUser({
-          id: userId,
-          builder,
-          roles: { [this.prodAppId]: roleId },
+          _id: userId,
+          builder: { global: builder },
+          roles: { [appId]: roleId },
         })
       }
       await sessions.createASession(userId, {
@@ -445,8 +418,9 @@ export default class TestConfiguration {
 
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
+    const user = this.getUser()
     const authObj: AuthToken = {
-      userId: this.globalUserId,
+      userId: user._id!,
       sessionId: "sessionid",
       tenantId,
     }
@@ -498,7 +472,7 @@ export default class TestConfiguration {
     builder = false,
     prodApp = true,
   } = {}) {
-    return this.login({ email, roleId, builder, prodApp })
+    return this.login({ userId: email, roleId, builder, prodApp })
   }
 
   // TENANCY
@@ -521,7 +495,7 @@ export default class TestConfiguration {
 
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
-    this.userMetadataId = generateUserMetadataID(this.user._id)
+    this.userMetadataId = generateUserMetadataID(this.user._id!)
 
     return this.createApp(appName)
   }
@@ -532,7 +506,11 @@ export default class TestConfiguration {
 
   // API
 
-  async generateApiKey(userId = this.user._id) {
+  async generateApiKey(userId?: string) {
+    const user = this.getUser()
+    if (!userId) {
+      userId = user._id!
+    }
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
     let devInfo: any
@@ -552,13 +530,15 @@ export default class TestConfiguration {
   async createApp(appName: string): Promise<App> {
     // create dev app
     // clear any old app
-    this.appId = null
+    this.appId = undefined
     this.app = await context.doInTenant(this.tenantId!, async () => {
-      const app = await this._req({ name: appName }, null, appController.create)
+      const app = (await this._req(appController.create, {
+        name: appName,
+      })) as App
       this.appId = app.appId!
       return app
     })
-    return await context.doInAppContext(this.getAppId(), async () => {
+    return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
 
@@ -570,7 +550,7 @@ export default class TestConfiguration {
   }
 
   async publish() {
-    await this._req(null, null, deployController.publishApp)
+    await this._req(deployController.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
@@ -582,13 +562,11 @@ export default class TestConfiguration {
   }
 
   async unpublish() {
-    const response = await this._req(
-      null,
-      { appId: this.appId },
-      appController.unpublish
-    )
-    this.prodAppId = null
-    this.prodApp = null
+    const response = await this._req(appController.unpublish, {
+      appId: this.appId,
+    })
+    this.prodAppId = undefined
+    this.prodApp = undefined
     return response
   }
 
@@ -716,8 +694,7 @@ export default class TestConfiguration {
   // ROLE
 
   async createRole(config?: any) {
-    config = config || basicRole()
-    return this._req(config, null, roleController.save)
+    return this._req(roleController.save, config || basicRole())
   }
 
   // VIEW
@@ -730,7 +707,7 @@ export default class TestConfiguration {
       tableId: this.table!._id,
       name: generator.guid(),
     }
-    return this._req(view, null, viewController.v1.save)
+    return this._req(viewController.v1.save, view)
   }
 
   async createView(
@@ -760,13 +737,13 @@ export default class TestConfiguration {
       delete config._rev
     }
     this.automation = (
-      await this._req(config, null, automationController.create)
+      await this._req(automationController.create, config)
     ).automation
     return this.automation
   }
 
   async getAllAutomations() {
-    return this._req(null, null, automationController.fetch)
+    return this._req(automationController.fetch)
   }
 
   async deleteAutomation(automation?: any) {
@@ -774,11 +751,10 @@ export default class TestConfiguration {
     if (!automation) {
       return
     }
-    return this._req(
-      null,
-      { id: automation._id, rev: automation._rev },
-      automationController.destroy
-    )
+    return this._req(automationController.destroy, {
+      id: automation._id,
+      rev: automation._rev,
+    })
   }
 
   async createWebhook(config?: any) {
@@ -787,7 +763,7 @@ export default class TestConfiguration {
     }
     config = config || basicWebhook(this.automation._id)
 
-    return (await this._req(config, null, webhookController.save)).webhook
+    return (await this._req(webhookController.save, config)).webhook
   }
 
   // DATASOURCE
@@ -871,21 +847,21 @@ export default class TestConfiguration {
       throw "No datasource created for query."
     }
     config = config || basicQuery(this.datasource!._id!)
-    return this._req(config, null, queryController.save)
+    return this._req(queryController.save, config)
   }
 
   // SCREEN
 
   async createScreen(config?: any) {
     config = config || basicScreen()
-    return this._req(config, null, screenController.save)
+    return this._req(screenController.save, config)
   }
 
   // LAYOUT
 
   async createLayout(config?: any) {
     config = config || basicLayout()
-    return await this._req(config, null, layoutController.save)
+    return await this._req(layoutController.save, config)
   }
 }
 
