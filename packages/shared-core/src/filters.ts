@@ -390,23 +390,52 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
     }
   )
 
-  // Match a document against all criteria
   const docMatch = (doc: any) => {
-    return (
-      stringMatch(doc) &&
-      fuzzyMatch(doc) &&
-      rangeMatch(doc) &&
-      equalMatch(doc) &&
-      notEqualMatch(doc) &&
-      emptyMatch(doc) &&
-      notEmptyMatch(doc) &&
-      oneOf(doc) &&
-      contains(doc) &&
-      containsAny(doc) &&
-      notContains(doc)
-    )
-  }
+    // Determine active filters based on query object
+    const activeFilterKeys = Object.entries(query || {})
+      .filter(
+        ([key, value]) =>
+          !["allOr", "onEmptyFilter"].includes(key) &&
+          Object.keys(value).length > 0
+      )
+      .map(([key]) => key)
 
+    // Apply filters dynamically based on activeFilterKeys
+    const results = activeFilterKeys.map(filterKey => {
+      switch (filterKey) {
+        case "string":
+          return stringMatch(doc)
+        case "fuzzy":
+          return fuzzyMatch(doc)
+        case "range":
+          return rangeMatch(doc)
+        case "equal":
+          return equalMatch(doc)
+        case "notEqual":
+          return notEqualMatch(doc)
+        case "empty":
+          return emptyMatch(doc)
+        case "notEmpty":
+          return notEmptyMatch(doc)
+        case "oneOf":
+          return oneOf(doc)
+        case "contains":
+          return contains(doc)
+        case "containsAny":
+          return containsAny(doc)
+        case "notContains":
+          return notContains(doc)
+        default:
+          return true // If the filter type is not recognized, default to true (assuming pass)
+      }
+    })
+
+    if (query!.allOr) {
+      return results.some(result => result === true)
+    } else {
+      return results.every(result => result === true)
+    }
+  }
   // Process all docs
   return docs.filter(docMatch)
 }
