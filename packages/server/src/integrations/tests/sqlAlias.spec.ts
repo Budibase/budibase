@@ -189,5 +189,12 @@ describe("Captures of real examples", () => {
       const aliased = aliasing.aliasField("`hello.world`.`field`")
       expect(aliased).toEqual("`a`.`field`")
     })
+
+    it("should handle if a table name is used in a column", () => {
+      const tableNames = ["hello", "world"]
+      const aliasing = new AliasTables(tableNames)
+      const aliased = aliasing.aliasField(`"hello"."world_relation"`)
+      expect(aliased).toEqual(`"a"."world_relation"`)
+    })
   })
 })
