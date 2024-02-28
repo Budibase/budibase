@@ -57,9 +57,13 @@ export default class AliasTables {
     const tableNames = this.tableNames
     if (field.includes(".")) {
       const [tableName, column] = field.split(".")
-      const foundTableName = tableNames.find(
-        name => tableName.includes(name) && tableName.indexOf(name) <= 1
-      )
+      const foundTableName = tableNames.find(name => {
+        const idx = tableName.indexOf(name)
+        if (idx === -1 || idx > 1) {
+          return
+        }
+        return Math.abs(tableName.length - name.length) <= 2
+      })
       if (foundTableName) {
         const aliasedTableName = tableName.replace(
           foundTableName,

@@ -17,7 +17,6 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-type KnexQuery = Knex.QueryBuilder
 // these are invalid dates sent by the client, need to convert them to a real max date
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
@@ -127,11 +126,11 @@ class InternalBuilder {
 
   // right now we only do filters on the specific table being queried
   addFilters(
-    query: KnexQuery,
+    query: Knex.QueryBuilder,
     filters: SearchFilters | undefined,
     tableName: string,
     opts: { aliases?: Record<string, string>; relationship?: boolean }
-  ): KnexQuery {
+  ): Knex.QueryBuilder {
     function getTableName(name: string) {
       const alias = opts.aliases?.[name]
       return alias || name
@@ -320,7 +319,7 @@ class InternalBuilder {
     return query
   }
 
-  addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
+  addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
     if (sort && Object.keys(sort || {}).length > 0) {
@@ -348,12 +347,12 @@ class InternalBuilder {
   }
 
   addRelationships(
-    query: KnexQuery,
+    query: Knex.QueryBuilder,
     fromTable: string,
     relationships: RelationshipsJson[] | undefined,
     schema: string | undefined,
     aliases?: Record<string, string>
-  ): KnexQuery {
+  ): Knex.QueryBuilder {
     if (!relationships) {
       return query
     }
@@ -429,7 +428,7 @@ class InternalBuilder {
     knex: Knex,
     endpoint: QueryJson["endpoint"],
     aliases?: QueryJson["tableAliases"]
-  ): KnexQuery {
+  ): Knex.QueryBuilder {
     const tableName = endpoint.entityId
     const tableAliased = aliases?.[tableName]
       ? `${tableName} as ${aliases?.[tableName]}`
@@ -441,7 +440,7 @@ class InternalBuilder {
     return query
   }
 
-  create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body } = json
     let query = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
@@ -460,7 +459,7 @@ class InternalBuilder {
     }
   }
 
-  bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
+  bulkCreate(knex: Knex, json: QueryJson): Knex.QueryBuilder {
     const { endpoint, body } = json
     let query = this.knexWithAlias(knex, endpoint)
     if (!Array.isArray(body)) {
@@ -470,7 +469,7 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
+  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
     let { endpoint, resource, filters, paginate, relationships, tableAliases } =
       json
 
@@ -531,7 +530,7 @@ class InternalBuilder {
     })
   }
 
-  update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     const parsedBody = parseBody(body)
@@ -546,7 +545,7 @@ class InternalBuilder {
     }
   }
 
-  delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  delete(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, filters, tableAliases } = json
     let query = this.knexWithAlias(knex, endpoint, tableAliases)
     query = this.addFilters(query, filters, endpoint.entityId, {
@@ -578,7 +577,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   _query(json: QueryJson, opts: QueryOptions = {}): Knex.SqlNative | Knex.Sql {
     const sqlClient = this.getSqlClient()
     const client = knex({ client: sqlClient })
-    let query: KnexQuery
+    let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
       case Operation.CREATE:

@@ -189,5 +189,16 @@ describe("Captures of real examples", () => {
       const aliased = aliasing.aliasField("`hello`.`world`")
       expect(aliased).toEqual("`a`.`world`")
     })
+
+    it("should handle table names in table names correctly", () => {
+      const tableNames = ["he", "hell", "hello"]
+      const aliasing = new AliasTables(tableNames)
+      const aliased1 = aliasing.aliasField("`he`.`world`")
+      const aliased2 = aliasing.aliasField("`hell`.`world`")
+      const aliased3 = aliasing.aliasField("`hello`.`world`")
+      expect(aliased1).toEqual("`a`.`world`")
+      expect(aliased2).toEqual("`b`.`world`")
+      expect(aliased3).toEqual("`c`.`world`")
+    })
   })
 })
