@@ -1,4 +1,6 @@
 <script>
+  import ClientAppSkeleton from "@budibase/frontend-core/src/components/ClientAppSkeleton.svelte"
+
   export let title = ""
   export let favicon = ""
 
@@ -9,6 +11,10 @@
   export let clientLibPath
   export let usedPlugins
   export let appMigrating
+
+  export let hideDevTools
+  export let sideNav
+  export let hideFooter
 </script>
 
 <svelte:head>
@@ -96,6 +102,7 @@
 </svelte:head>
 
 <body id="app">
+  <ClientAppSkeleton {hideDevTools} {sideNav} {hideFooter} />
   <div id="error">
     {#if clientLibPath}
       <h1>There was an error loading your app</h1>
