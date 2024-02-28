@@ -424,7 +424,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
 
   async query(json: QueryJson): DatasourcePlusQueryResponse {
     const operation = this._operation(json)
-    const input = this._query(json, { disableReturning: true })
+    const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {
