@@ -4,11 +4,6 @@ import { ReadStream } from "fs"
 
 type Headers = Record<string, string | string[] | undefined>
 
-export interface TestAPIOpts {
-  headers?: Headers
-  status?: number
-}
-
 export interface AttachedFile {
   name: string
   file: Buffer | ReadStream | string
