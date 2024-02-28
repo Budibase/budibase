@@ -400,7 +400,7 @@ class InternalBuilder {
     return query.limit(BASE_LIMIT)
   }
 
-  create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
     if (endpoint.schema) {
@@ -422,7 +422,7 @@ class InternalBuilder {
     }
   }
 
-  bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
+  bulkCreate(knex: Knex, json: QueryJson): Knex.QueryBuilder {
     const { endpoint, body } = json
     let query: KnexQuery = knex(endpoint.entityId)
     if (endpoint.schema) {
@@ -491,7 +491,7 @@ class InternalBuilder {
     return this.addFilters(query, filters, { relationship: true })
   }
 
-  update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
     if (endpoint.schema) {
@@ -507,7 +507,7 @@ class InternalBuilder {
     }
   }
 
-  delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
+  delete(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, filters } = json
     let query: KnexQuery = knex(endpoint.entityId)
     if (endpoint.schema) {
@@ -537,17 +537,17 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}) {
+  _query(json: QueryJson, opts: QueryOptions = {}): Knex.SqlNative | Knex.Sql {
     const sqlClient = this.getSqlClient()
     const client = knex({ client: sqlClient })
-    let query
+    let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
       case Operation.CREATE:
         query = builder.create(client, json, opts)
         break
       case Operation.READ:
-        query = builder.read(client, json, this.limit)
+        query = builder.read(client, json, this.limit) as Knex.QueryBuilder
         break
       case Operation.UPDATE:
         query = builder.update(client, json, opts)
@@ -565,8 +565,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       default:
         throw `Operation type is not supported by SQL query builder`
     }
-
-    // @ts-ignore
     return query.toSQL().toNative()
   }
 

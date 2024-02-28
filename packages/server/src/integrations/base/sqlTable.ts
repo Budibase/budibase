@@ -9,7 +9,7 @@ import {
   Table,
   FieldType,
 } from "@budibase/types"
-import { breakExternalTableId } from "../utils"
+import { breakExternalTableId, SqlClient } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
 import CreateTableBuilder = Knex.CreateTableBuilder
 import { utils } from "@budibase/shared-core"
@@ -197,13 +197,14 @@ class SqlTableQueryBuilder {
     return json.endpoint.operation
   }
 
-  _tableQuery(json: QueryJson): any {
+  _tableQuery(json: QueryJson): Knex.Sql | Knex.SqlNative {
     let client = knex({ client: this.sqlClient }).schema
-    if (json?.endpoint?.schema) {
-      client = client.withSchema(json.endpoint.schema)
+    let schemaName = json?.endpoint?.schema
+    if (schemaName) {
+      client = client.withSchema(schemaName)
     }
 
-    let query
+    let query: Knex.SchemaBuilder
     if (!json.table || !json.meta || !json.meta.tables) {
       throw "Cannot execute without table being specified"
     }
@@ -214,6 +215,18 @@ class SqlTableQueryBuilder {
       case Operation.UPDATE_TABLE:
         if (!json.meta || !json.meta.table) {
           throw "Must specify old table for update"
+        }
+        // renameColumn does not work for MySQL, so return a raw query
+        if (this.sqlClient === SqlClient.MY_SQL && json.meta.renamed) {
+          const updatedColumn = json.meta.renamed.updated
+          const tableName = schemaName
+            ? `\`${schemaName}\`.\`${json.table.name}\``
+            : `\`${json.table.name}\``
+          const externalType = json.table.schema[updatedColumn].externalType!
+          return {
+            sql: `ALTER TABLE ${tableName} CHANGE COLUMN \`${json.meta.renamed.old}\` \`${updatedColumn}\` ${externalType};`,
+            bindings: [],
+          }
         }
         query = buildUpdateTable(
           client,
