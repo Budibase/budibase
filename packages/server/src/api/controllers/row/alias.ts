@@ -55,11 +55,16 @@ export default class AliasTables {
 
   aliasField(field: string) {
     const tableNames = this.tableNames
-    const possibleTableName = field.substring(0, field.lastIndexOf("."))
-    const foundTable = tableNames.find(name => possibleTableName.includes(name))
-    if (foundTable) {
-      const aliasedTable = this.getAlias(foundTable)
-      field = field.replace(foundTable, aliasedTable)
+    if (field.includes(".")) {
+      const [tableName, column] = field.split(".")
+      const foundTableName = tableNames.find(name => tableName.includes(name))
+      if (foundTableName) {
+        const aliasedTableName = tableName.replace(
+          foundTableName,
+          this.getAlias(foundTableName)
+        )
+        return `${aliasedTableName}.${column}`
+      }
     }
     return field
   }

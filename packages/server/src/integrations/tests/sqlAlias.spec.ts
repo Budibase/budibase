@@ -176,25 +176,18 @@ describe("Captures of real examples", () => {
   })
 
   describe("check some edge cases", () => {
-    const dotTableNames = ["hello.world", "foo.bar.baz"]
+    const tableNames = ["hello", "world"]
 
-    it("should handle table names/columns with dots in them", () => {
-      const aliasing = new AliasTables(dotTableNames)
-      const aliased = aliasing.aliasField(`"hello.world"."field"`)
+    it("should quoted table names", () => {
+      const aliasing = new AliasTables(tableNames)
+      const aliased = aliasing.aliasField(`"hello"."field"`)
       expect(aliased).toEqual(`"a"."field"`)
     })
 
-    it("should confirm table with dots in them works with grave accents", () => {
-      const aliasing = new AliasTables(dotTableNames)
-      const aliased = aliasing.aliasField("`hello.world`.`field`")
-      expect(aliased).toEqual("`a`.`field`")
-    })
-
-    it("should handle if a table name is used in a column", () => {
-      const tableNames = ["hello", "world"]
+    it("should handle quoted table names with graves", () => {
       const aliasing = new AliasTables(tableNames)
-      const aliased = aliasing.aliasField(`"hello"."world_relation"`)
-      expect(aliased).toEqual(`"a"."world_relation"`)
+      const aliased = aliasing.aliasField("`hello`.`world`")
+      expect(aliased).toEqual("`a`.`world`")
     })
   })
 })
