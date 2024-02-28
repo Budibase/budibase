@@ -72,7 +72,9 @@ function cleanAutomationInputs(automation: Automation) {
   return automation
 }
 
-export async function create(ctx: UserCtx) {
+export async function create(
+  ctx: UserCtx<Automation, { message: string; automation: Automation }>
+) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId

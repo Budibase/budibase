@@ -61,7 +61,7 @@ import {
   Table,
   TableSourceType,
   User,
-  UserRoles,
+  UserCtx,
   View,
   WithRequired,
 } from "@budibase/types"
@@ -70,7 +70,6 @@ import API from "./api"
 import { cloneDeep } from "lodash"
 import jwt, { Secret } from "jsonwebtoken"
 import { Server } from "http"
-import { userDetailListType } from "aws-sdk/clients/iam"
 
 mocks.licenses.init(pro)
 
@@ -89,14 +88,14 @@ export default class TestConfiguration {
   request?: supertest.SuperTest<supertest.Test>
   started: boolean
   appId?: string
-  allApps: any[]
+  allApps: App[]
   app?: App
   prodApp?: App
   prodAppId?: string
   user?: User
   userMetadataId?: string
   table?: Table
-  automation: any
+  automation?: Automation
   datasource?: Datasource
   tenantId?: string
   api: API
@@ -124,16 +123,26 @@ export default class TestConfiguration {
   }
 
   getApp() {
+    if (!this.app) {
+      throw new Error("app has not been initialised, call config.init() first")
+    }
     return this.app
   }
 
   getProdApp() {
+    if (!this.prodApp) {
+      throw new Error(
+        "prodApp has not been initialised, call config.init() first"
+      )
+    }
     return this.prodApp
   }
 
   getAppId() {
     if (!this.appId) {
-      throw new Error("appId has not been initialised properly")
+      throw new Error(
+        "appId has not been initialised, call config.init() first"
+      )
     }
     return this.appId
   }
@@ -162,6 +171,15 @@ export default class TestConfiguration {
       firstName: user.firstName,
       lastName: user.lastName,
     }
+  }
+
+  getAutomation() {
+    if (!this.automation) {
+      throw new Error(
+        "automation has not been initialised, call config.init() first"
+      )
+    }
+    return this.automation
   }
 
   async doInContext<T>(
@@ -270,11 +288,11 @@ export default class TestConfiguration {
 
   // UTILS
 
-  _req<Req extends Record<string, any>, Res, Context extends Ctx<Req, Res>>(
-    handler: (ctx: Context) => Promise<void>,
+  _req<Req extends Record<string, any>, Res>(
+    handler: (ctx: UserCtx<Req, Res>) => Promise<void>,
     body?: Req,
     params?: Record<string, string>
-  ) {
+  ): Promise<Res> {
     // create a fake request ctx
     const request: any = {}
     const appId = this.appId
@@ -539,19 +557,20 @@ export default class TestConfiguration {
     // create dev app
     // clear any old app
     this.appId = undefined
-    this.app = await context.doInTenant(this.tenantId!, async () => {
-      const app = (await this._req(appController.create, {
-        name: appName,
-      })) as App
-      this.appId = app.appId!
-      return app
-    })
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+        })) as App
+    )
+    this.appId = this.app.appId
     return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
 
       this.allApps.push(this.prodApp)
-      this.allApps.push(this.app)
+      this.allApps.push(this.app!)
 
       return this.app!
     })
@@ -739,14 +758,13 @@ export default class TestConfiguration {
 
   // AUTOMATION
 
-  async createAutomation(config?: any) {
+  async createAutomation(config?: Automation) {
     config = config || basicAutomation()
     if (config._rev) {
       delete config._rev
     }
-    this.automation = (
-      await this._req(automationController.create, config)
-    ).automation
+    const res = await this._req(automationController.create, config)
+    this.automation = res.automation
     return this.automation
   }
 
@@ -769,7 +787,7 @@ export default class TestConfiguration {
     if (!this.automation) {
       throw "Must create an automation before creating webhook."
     }
-    config = config || basicWebhook(this.automation._id)
+    config = config || basicWebhook(this.automation._id!)
 
     return (await this._req(webhookController.save, config)).webhook
   }
