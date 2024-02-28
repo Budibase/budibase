@@ -539,7 +539,7 @@ export default class TestConfiguration {
     return this.createApp(appName)
   }
 
-  doInTenant(task: any) {
+  doInTenant<T>(task: () => T) {
     return context.doInTenant(this.getTenantId(), task)
   }
 
