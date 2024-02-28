@@ -135,7 +135,13 @@ export async function exportRows(
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
+  let exportRows = sdk.rows.utils.cleanExportRows(
+    rows,
+    schema,
+    format,
+    columns,
+    customHeaders
+  )
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
