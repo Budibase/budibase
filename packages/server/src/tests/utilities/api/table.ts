@@ -5,74 +5,33 @@ import {
   SaveTableResponse,
   Table,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { TestAPI, TestAPIOpts } from "./base"
 
 export class TableAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   save = async (
     data: SaveTableRequest,
-    { expectStatus } = { expectStatus: 200 }
+    opts?: TestAPIOpts
   ): Promise<SaveTableResponse> => {
-    const res = await this.request
-      .post(`/api/tables`)
-      .send(data)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body
+    return await this._post<SaveTableResponse>("/api/tables", data, opts)
   }
 
-  fetch = async (
-    { expectStatus } = { expectStatus: 200 }
-  ): Promise<Table[]> => {
-    const res = await this.request
-      .get(`/api/tables`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return res.body
+  fetch = async (opts?: TestAPIOpts): Promise<Table[]> => {
+    return await this._get<Table[]>("/api/tables", opts)
   }
 
-  get = async (
-    tableId: string,
-    { expectStatus } = { expectStatus: 200 }
-  ): Promise<Table> => {
-    const res = await this.request
-      .get(`/api/tables/${tableId}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return res.body
+  get = async (tableId: string, opts?: TestAPIOpts): Promise<Table> => {
+    return await this._get<Table>(`/api/tables/${tableId}`, opts)
   }
 
   migrate = async (
     tableId: string,
     data: MigrateRequest,
-    { expectStatus } = { expectStatus: 200 }
+    opts?: TestAPIOpts
   ): Promise<MigrateResponse> => {
-    const res = await this.request
-      .post(`/api/tables/${tableId}/migrate`)
-      .send(data)
-      .set(this.config.defaultHeaders())
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-    return res.body
+    return await this._post<MigrateResponse>(
+      `/api/tables/${tableId}/migrate`,
+      data,
+      opts
+    )
   }
 }

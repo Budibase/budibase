@@ -831,7 +831,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -846,7 +846,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -861,7 +861,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -880,7 +880,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
     })
