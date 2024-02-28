@@ -307,23 +307,28 @@ export default class TestConfiguration {
       builder = { global: true },
       admin = { global: false },
       email = generator.email(),
-      roles,
+      tenantId = this.getTenantId(),
+      roles = {},
     } = config
 
     const db = tenancy.getTenantDB(this.getTenantId())
-    let existing
+    let existing: Partial<User> = {}
     try {
       existing = await db.get<User>(_id)
     } catch (err) {
-      existing = { email }
+      // ignore
     }
     const user: User = {
-      _id: _id,
+      _id,
       ...existing,
-      roles: roles || {},
-      tenantId: this.getTenantId(),
+      ...config,
+      email,
+      roles,
+      tenantId,
       firstName,
       lastName,
+      builder,
+      admin,
     }
     await sessions.createASession(_id, {
       sessionId: "sessionid",
@@ -331,7 +336,10 @@ export default class TestConfiguration {
       csrfToken: this.csrfToken,
     })
     const resp = await db.put(user)
-    return { _rev: resp.rev, ...user }
+    return {
+      _rev: resp.rev,
+      ...user,
+    }
   }
 
   async createUser(user: Partial<User> = {}): Promise<User> {
@@ -751,7 +759,7 @@ export default class TestConfiguration {
     if (!automation) {
       return
     }
-    return this._req(automationController.destroy, {
+    return this._req(automationController.destroy, undefined, {
       id: automation._id,
       rev: automation._rev,
     })
