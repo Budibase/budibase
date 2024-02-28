@@ -20,12 +20,12 @@ import {
   AutomationActionStepId,
   AutomationResults,
   UserCtx,
+  DeleteAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import env from "../../environment"
-import { DocumentDestroyResponse } from "@budibase/nano"
 
 async function getActionDefinitions() {
   return removeDeprecated(await actionDefs())
@@ -210,7 +210,7 @@ export async function find(ctx: UserCtx) {
   ctx.body = await db.get(ctx.params.id)
 }
 
-export async function destroy(ctx: UserCtx<void, DocumentDestroyResponse>) {
+export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
   const oldAutomation = await db.get<Automation>(automationId)
