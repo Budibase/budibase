@@ -34,6 +34,8 @@
     label: `${option.label} - ${option.subtitle}`,
   }))
 
+  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
   const validEmails = userEmails => {
     if ($admin.cloud && userEmails.length > MAX_USERS_UPLOAD_LIMIT) {
       notifications.error(
@@ -106,12 +108,12 @@
   {/if}
   <RadioGroup bind:value={usersRole} options={roleOptions} />
 
-  {#if $licensing.groupsEnabled}
+  {#if $licensing.groupsEnabled && internalGroups?.length}
     <Multiselect
       bind:value={userGroups}
       placeholder="No groups"
       label="Groups"
-      options={$groups}
+      options={internalGroups}
       getOptionLabel={option => option.name}
       getOptionValue={option => option._id}
     />
