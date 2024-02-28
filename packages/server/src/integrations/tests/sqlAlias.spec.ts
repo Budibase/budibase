@@ -178,7 +178,7 @@ describe("Captures of real examples", () => {
   describe("check some edge cases", () => {
     const tableNames = ["hello", "world"]
 
-    it("should quoted table names", () => {
+    it("should handle quoted table names", () => {
       const aliasing = new AliasTables(tableNames)
       const aliased = aliasing.aliasField(`"hello"."field"`)
       expect(aliased).toEqual(`"a"."field"`)
