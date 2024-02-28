@@ -4,6 +4,7 @@ import { AppStatus } from "../../../../db/utils"
 import { roles, tenancy, context, db } from "@budibase/backend-core"
 import env from "../../../../environment"
 import Nano from "@budibase/nano"
+import TestConfiguration from "src/tests/utilities/TestConfiguration"
 
 class Request {
   appId: any
@@ -52,10 +53,10 @@ export const clearAllApps = async (
   })
 }
 
-export const clearAllAutomations = async (config: any) => {
+export const clearAllAutomations = async (config: TestConfiguration) => {
   const automations = await config.getAllAutomations()
   for (let auto of automations) {
-    await context.doInAppContext(config.appId, async () => {
+    await context.doInAppContext(config.getAppId(), async () => {
       await config.deleteAutomation(auto)
     })
   }
@@ -101,7 +102,12 @@ export const checkBuilderEndpoint = async ({
   method,
   url,
   body,
-}: any) => {
+}: {
+  config: TestConfiguration
+  method: string
+  url: string
+  body: any
+}) => {
   const headers = await config.login({
     userId: "us_fail",
     builder: false,
