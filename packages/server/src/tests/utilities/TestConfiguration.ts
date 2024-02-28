@@ -53,9 +53,12 @@ import {
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  Layout,
+  Query,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
+  Screen,
   SearchParams,
   SourceName,
   Table,
@@ -63,6 +66,7 @@ import {
   User,
   UserCtx,
   View,
+  Webhook,
   WithRequired,
 } from "@budibase/types"
 
@@ -182,6 +186,15 @@ export default class TestConfiguration {
     return this.automation
   }
 
+  getDatasource() {
+    if (!this.datasource) {
+      throw new Error(
+        "datasource has not been initialised, call config.init() first"
+      )
+    }
+    return this.datasource
+  }
+
   async doInContext<T>(
     appId: string | undefined,
     task: () => Promise<T>
@@ -288,10 +301,10 @@ export default class TestConfiguration {
 
   // UTILS
 
-  _req<Req extends Record<string, any>, Res>(
+  _req<Req extends Record<string, any> | void, Res>(
     handler: (ctx: UserCtx<Req, Res>) => Promise<void>,
     body?: Req,
-    params?: Record<string, string>
+    params?: Record<string, string | undefined>
   ): Promise<Res> {
     // create a fake request ctx
     const request: any = {}
@@ -399,7 +412,7 @@ export default class TestConfiguration {
     builder,
     prodApp,
   }: {
-    roleId: string
+    roleId?: string
     userId: string
     builder: boolean
     prodApp: boolean
@@ -415,7 +428,7 @@ export default class TestConfiguration {
         await this.globalUser({
           _id: userId,
           builder: { global: builder },
-          roles: { [appId]: roleId },
+          roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
       }
       await sessions.createASession(userId, {
@@ -772,7 +785,7 @@ export default class TestConfiguration {
     return this._req(automationController.fetch)
   }
 
-  async deleteAutomation(automation?: any) {
+  async deleteAutomation(automation?: Automation) {
     automation = automation || this.automation
     if (!automation) {
       return
@@ -783,7 +796,7 @@ export default class TestConfiguration {
     })
   }
 
-  async createWebhook(config?: any) {
+  async createWebhook(config?: Webhook) {
     if (!this.automation) {
       throw "Must create an automation before creating webhook."
     }
@@ -811,7 +824,7 @@ export default class TestConfiguration {
     return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async restDatasource(cfg?: any) {
+  async restDatasource(cfg?: Record<string, any>) {
     return this.createDatasource({
       datasource: {
         ...basicDatasource().datasource,
@@ -868,24 +881,23 @@ export default class TestConfiguration {
 
   // QUERY
 
-  async createQuery(config?: any) {
-    if (!this.datasource && !config) {
-      throw "No datasource created for query."
-    }
-    config = config || basicQuery(this.datasource!._id!)
-    return this._req(queryController.save, config)
+  async createQuery(config?: Query) {
+    return this._req(
+      queryController.save,
+      config || basicQuery(this.getDatasource()._id!)
+    )
   }
 
   // SCREEN
 
-  async createScreen(config?: any) {
+  async createScreen(config?: Screen) {
     config = config || basicScreen()
     return this._req(screenController.save, config)
   }
 
   // LAYOUT
 
-  async createLayout(config?: any) {
+  async createLayout(config?: Layout) {
     config = config || basicLayout()
     return await this._req(layoutController.save, config)
   }

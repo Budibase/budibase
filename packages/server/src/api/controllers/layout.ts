@@ -1,9 +1,9 @@
 import { EMPTY_LAYOUT } from "../../constants/layouts"
 import { generateLayoutID, getScreenParams } from "../../db/utils"
 import { events, context } from "@budibase/backend-core"
-import { BBContext, Layout } from "@budibase/types"
+import { BBContext, Layout, UserCtx } from "@budibase/types"
 
-export async function save(ctx: BBContext) {
+export async function save(ctx: UserCtx<Layout, Layout>) {
   const db = context.getAppDB()
   let layout = ctx.request.body
 
