@@ -87,11 +87,13 @@
   let user
   let loaded = false
 
+  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
   $: isSSO = !!user?.provider
   $: readonly = !sdk.users.isAdmin($auth.user) || user?.scimInfo?.isSync
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups($groups, searchTerm)
+  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
@@ -320,9 +322,11 @@
       <Layout gap="S" noPadding>
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
-          <div bind:this={popoverAnchor}>
-            <Button on:click={popover.show()} secondary>Add to group</Button>
-          </div>
+          {#if internalGroups?.length}
+            <div bind:this={popoverAnchor}>
+              <Button on:click={popover.show()} secondary>Add to group</Button>
+            </div>
+          {/if}
           <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
             <UserGroupPicker
               labelKey="name"
