@@ -5,16 +5,11 @@ import {
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
 import { Expectations, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
 import { constants } from "@budibase/backend-core"
 
 export class ApplicationAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   create = async (
     app: CreateAppRequest,
     expectations?: Expectations
