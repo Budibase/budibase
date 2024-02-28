@@ -79,8 +79,9 @@
   }
 
   async function saveGroup(group) {
+    const { scimInfo, ...dataToSave } = group
     try {
-      await groups.actions.save(group)
+      await groups.actions.save(dataToSave)
     } catch (error) {
       if (error.message) {
         notifications.error(error.message)
