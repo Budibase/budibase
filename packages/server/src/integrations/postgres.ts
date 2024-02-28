@@ -422,7 +422,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
 
   async query(json: QueryJson): DatasourcePlusQueryResponse {
     const operation = this._operation(json).toLowerCase()
-    const input = this._query(json)
+    const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {

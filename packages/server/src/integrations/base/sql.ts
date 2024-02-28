@@ -17,7 +17,7 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-type KnexQuery = Knex.QueryBuilder | Knex
+type KnexQuery = Knex.QueryBuilder
 // these are invalid dates sent by the client, need to convert them to a real max date
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
@@ -575,10 +575,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}) {
+  _query(json: QueryJson, opts: QueryOptions = {}): Knex.SqlNative | Knex.Sql {
     const sqlClient = this.getSqlClient()
     const client = knex({ client: sqlClient })
-    let query
+    let query: KnexQuery
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
       case Operation.CREATE:
@@ -603,8 +603,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       default:
         throw `Operation type is not supported by SQL query builder`
     }
-
-    // @ts-ignore
     return query.toSQL().toNative()
   }
 
