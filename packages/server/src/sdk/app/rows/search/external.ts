@@ -9,10 +9,9 @@ import {
   SearchParams,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
-import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
 import { breakExternalTableId } from "../../../../integrations/utils"
-import { cleanExportRows } from "../utils"
+import sdk from "../../../../sdk"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "../search"
 import { HTTPError, db } from "@budibase/backend-core"
@@ -101,7 +100,17 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, columns, rowIds, query, sort, sortOrder } = options
+  const {
+    tableId,
+    format,
+    columns,
+    rowIds,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
   let requestQuery: SearchFilters = {}
@@ -153,12 +162,23 @@ export async function exportRows(
   }
 
   const schema = datasource.entities[tableName].schema
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = sdk.rows.utils.cleanExportRows(
+    rows,
+    schema,
+    format,
+    columns,
+    customHeaders
+  )
 
   let content: string
   switch (format) {
     case exporters.Format.CSV:
-      content = exporters.csv(headers ?? Object.keys(schema), exportRows)
+      content = exporters.csv(
+        headers ?? Object.keys(schema),
+        exportRows,
+        delimiter,
+        customHeaders
+      )
       break
     case exporters.Format.JSON:
       content = exporters.json(exportRows)
