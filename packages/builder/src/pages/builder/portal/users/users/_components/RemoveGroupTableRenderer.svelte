@@ -15,7 +15,7 @@
   }
 
   $: disabled = !sdk.users.isAdmin($auth.user) || row?.scimInfo?.isSync
-  $: tooltip = row?.scimInfo?.isSync && "User added to the group via your AD"
+  $: tooltip = row?.scimInfo?.isSync && "This group is managed via your AD"
 </script>
 
 <ActionButton {disabled} size="S" on:click={onClick} {tooltip}
