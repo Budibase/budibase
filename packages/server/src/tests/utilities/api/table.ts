@@ -5,33 +5,35 @@ import {
   SaveTableResponse,
   Table,
 } from "@budibase/types"
-import { TestAPI, TestAPIOpts } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class TableAPI extends TestAPI {
   save = async (
     data: SaveTableRequest,
-    opts?: TestAPIOpts
+    expectations?: Expectations
   ): Promise<SaveTableResponse> => {
-    return await this._post<SaveTableResponse>("/api/tables", data, opts)
+    return await this._post<SaveTableResponse>("/api/tables", {
+      body: data,
+      expectations,
+    })
   }
 
-  fetch = async (opts?: TestAPIOpts): Promise<Table[]> => {
-    return await this._get<Table[]>("/api/tables", opts)
+  fetch = async (expectations?: Expectations): Promise<Table[]> => {
+    return await this._get<Table[]>("/api/tables", expectations)
   }
 
-  get = async (tableId: string, opts?: TestAPIOpts): Promise<Table> => {
-    return await this._get<Table>(`/api/tables/${tableId}`, opts)
+  get = async (tableId: string, expectations: Expectations): Promise<Table> => {
+    return await this._get<Table>(`/api/tables/${tableId}`, expectations)
   }
 
   migrate = async (
     tableId: string,
     data: MigrateRequest,
-    opts?: TestAPIOpts
+    expectations?: Expectations
   ): Promise<MigrateResponse> => {
-    return await this._post<MigrateResponse>(
-      `/api/tables/${tableId}/migrate`,
-      data,
-      opts
-    )
+    return await this._post<MigrateResponse>(`/api/tables/${tableId}/migrate`, {
+      body: data,
+      expectations,
+    })
   }
 }
