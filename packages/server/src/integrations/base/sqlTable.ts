@@ -135,7 +135,8 @@ function generateSchema(
   // need to check if any columns have been deleted
   if (oldTable) {
     const deletedColumns = Object.entries(oldTable.schema).filter(
-      ([key, column]) => isIgnoredType(column.type) && table.schema[key] == null
+      ([key, column]) =>
+        !isIgnoredType(column.type) && table.schema[key] == null
     )
     deletedColumns.forEach(([key, column]) => {
       if (renamed?.old === key || isIgnoredType(column.type)) {
