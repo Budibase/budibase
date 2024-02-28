@@ -1,3 +1,4 @@
+import exp from "constants"
 import TestConfiguration from "../TestConfiguration"
 import { SuperTest, Test } from "supertest"
 
@@ -11,10 +12,13 @@ export interface TestAPIOpts {
 export interface Expectations {
   status?: number
   contentType?: string | RegExp
+  headers?: Record<string, string | RegExp>
+  headersNotPresent?: string[]
 }
 
 export interface RequestOpts {
   headers?: Headers
+  query?: Record<string, string | undefined>
   body?: Record<string, any>
   fields?: Record<string, any>
   files?: Record<string, any>
@@ -30,11 +34,8 @@ export abstract class TestAPI {
     this.request = config.request!
   }
 
-  protected _get = async <T>(
-    url: string,
-    expectations?: Expectations
-  ): Promise<T> => {
-    return await this._request<T>("get", url, { expectations })
+  protected _get = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
+    return await this._request<T>("get", url, opts)
   }
 
   protected _post = async <T>(url: string, opts?: RequestOpts): Promise<T> => {
@@ -61,8 +62,25 @@ export abstract class TestAPI {
     url: string,
     opts?: RequestOpts
   ): Promise<T> => {
-    const { headers = {}, body, fields, files, expectations } = opts || {}
+    const {
+      headers = {},
+      query = {},
+      body,
+      fields,
+      files,
+      expectations,
+    } = opts || {}
     const { status = 200, contentType = /json/ } = expectations || {}
+
+    let queryParams = []
+    for (const [key, value] of Object.entries(query)) {
+      if (value) {
+        queryParams.push(`${key}=${value}`)
+      }
+    }
+    if (queryParams.length) {
+      url += `?${queryParams.join("&")}`
+    }
 
     let request = this.request[method](url).set(this.config.defaultHeaders())
     if (headers) {
@@ -81,11 +99,20 @@ export abstract class TestAPI {
         request = request.attach(key, value)
       }
     }
-    if (contentType) {
+    if (contentType && status !== 204) {
       if (contentType instanceof RegExp) {
         request = request.expect("Content-Type", contentType)
       } else {
         request = request.expect("Content-Type", contentType)
+      }
+    }
+    if (expectations?.headers) {
+      for (const [key, value] of Object.entries(expectations.headers)) {
+        if (value instanceof RegExp) {
+          request = request.expect(key, value)
+        } else {
+          request = request.expect(key, value)
+        }
       }
     }
 
@@ -97,6 +124,16 @@ export abstract class TestAPI {
           response.status
         } with body ${JSON.stringify(response.body)}`
       )
+    }
+
+    if (expectations?.headersNotPresent) {
+      for (const header of expectations.headersNotPresent) {
+        if (response.headers[header]) {
+          throw new Error(
+            `Expected header ${header} not to be present, found value "${response.headers[header]}"`
+          )
+        }
+      }
     }
 
     return response.body as T

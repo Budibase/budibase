@@ -19,11 +19,11 @@ export class TableAPI extends TestAPI {
   }
 
   fetch = async (expectations?: Expectations): Promise<Table[]> => {
-    return await this._get<Table[]>("/api/tables", expectations)
+    return await this._get<Table[]>("/api/tables", { expectations })
   }
 
   get = async (tableId: string, expectations: Expectations): Promise<Table> => {
-    return await this._get<Table>(`/api/tables/${tableId}`, expectations)
+    return await this._get<Table>(`/api/tables/${tableId}`, { expectations })
   }
 
   migrate = async (

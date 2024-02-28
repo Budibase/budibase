@@ -1,12 +1,12 @@
-import { Response } from "supertest"
 import {
   App,
+  PublishResponse,
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
 } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
 import { constants } from "@budibase/backend-core"
 
@@ -15,179 +15,124 @@ export class ApplicationAPI extends TestAPI {
     super(config)
   }
 
-  create = async (app: CreateAppRequest): Promise<App> => {
-    const request = this.request
-      .post("/api/applications")
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    for (const key of Object.keys(app)) {
-      request.field(key, (app as any)[key])
-    }
-
-    if (app.templateFile) {
-      request.attach("templateFile", app.templateFile)
-    }
-
-    const result = await request
-
-    if (result.statusCode !== 200) {
-      throw new Error(JSON.stringify(result.body))
-    }
-
-    return result.body as App
+  create = async (
+    app: CreateAppRequest,
+    expectations?: Expectations
+  ): Promise<App> => {
+    const files = app.templateFile ? { templateFile: app.templateFile } : {}
+    delete app.templateFile
+    return await this._post<App>("/api/applications", {
+      fields: app,
+      files,
+      expectations,
+    })
   }
 
-  delete = async (appId: string): Promise<void> => {
-    await this.request
-      .delete(`/api/applications/${appId}`)
-      .set(this.config.defaultHeaders())
-      .expect(200)
+  delete = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._delete(`/api/applications/${appId}`, { expectations })
   }
 
-  publish = async (
-    appId: string
-  ): Promise<{ _id: string; status: string; appUrl: string }> => {
-    // While the publish endpoint does take an :appId parameter, it doesn't
-    // use it. It uses the appId from the context.
-    let headers = {
-      ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
-    }
-    const result = await this.request
-      .post(`/api/applications/${appId}/publish`)
-      .set(headers)
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body as { _id: string; status: string; appUrl: string }
+  publish = async (appId: string): Promise<PublishResponse> => {
+    return await this._post<PublishResponse>(
+      `/api/applications/${appId}/publish`,
+      {
+        // While the publish endpoint does take an :appId parameter, it doesn't
+        // use it. It uses the appId from the context.
+        headers: {
+          [constants.Header.APP_ID]: appId,
+        },
+      }
+    )
   }
 
   unpublish = async (appId: string): Promise<void> => {
-    await this.request
-      .post(`/api/applications/${appId}/unpublish`)
-      .set(this.config.defaultHeaders())
-      .expect(204)
+    await this._post(`/api/applications/${appId}/unpublish`, {
+      expectations: { status: 204 },
+    })
   }
 
   sync = async (
     appId: string,
-    { statusCode }: { statusCode: number } = { statusCode: 200 }
+    expectations?: Expectations
   ): Promise<{ message: string }> => {
-    const result = await this.request
-      .post(`/api/applications/${appId}/sync`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(statusCode)
-    return result.body
+    return await this._post<{ message: string }>(
+      `/api/applications/${appId}/sync`,
+      { expectations }
+    )
   }
 
-  getRaw = async (appId: string): Promise<Response> => {
-    // While the appPackage endpoint does take an :appId parameter, it doesn't
-    // use it. It uses the appId from the context.
-    let headers = {
-      ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
-    }
-    const result = await this.request
-      .get(`/api/applications/${appId}/appPackage`)
-      .set(headers)
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result
-  }
-
-  get = async (appId: string): Promise<App> => {
-    const result = await this.getRaw(appId)
-    return result.body.application as App
+  get = async (appId: string, expectations?: Expectations): Promise<App> => {
+    return await this._get<App>(`/api/applications/${appId}`, {
+      // While the get endpoint does take an :appId parameter, it doesn't use
+      // it. It uses the appId from the context.
+      headers: {
+        [constants.Header.APP_ID]: appId,
+      },
+      expectations,
+    })
   }
 
   getDefinition = async (
-    appId: string
+    appId: string,
+    expectations?: Expectations
   ): Promise<FetchAppDefinitionResponse> => {
-    const result = await this.request
-      .get(`/api/applications/${appId}/definition`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body as FetchAppDefinitionResponse
+    return await this._get<FetchAppDefinitionResponse>(
+      `/api/applications/${appId}/definition`,
+      { expectations }
+    )
   }
 
-  getAppPackage = async (appId: string): Promise<FetchAppPackageResponse> => {
-    const result = await this.request
-      .get(`/api/applications/${appId}/appPackage`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body
+  getAppPackage = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<FetchAppPackageResponse> => {
+    return await this._get<FetchAppPackageResponse>(
+      `/api/applications/${appId}/appPackage`,
+      { expectations }
+    )
   }
 
   update = async (
     appId: string,
-    app: { name?: string; url?: string }
+    app: { name?: string; url?: string },
+    expectations?: Expectations
   ): Promise<App> => {
-    const request = this.request
-      .put(`/api/applications/${appId}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    for (const key of Object.keys(app)) {
-      request.field(key, (app as any)[key])
-    }
-
-    const result = await request
-
-    if (result.statusCode !== 200) {
-      throw new Error(JSON.stringify(result.body))
-    }
-
-    return result.body as App
+    return await this._put<App>(`/api/applications/${appId}`, {
+      fields: app,
+      expectations,
+    })
   }
 
-  updateClient = async (appId: string): Promise<void> => {
-    // While the updateClient endpoint does take an :appId parameter, it doesn't
-    // use it. It uses the appId from the context.
-    let headers = {
-      ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
-    }
-    const response = await this.request
-      .post(`/api/applications/${appId}/client/update`)
-      .set(headers)
-      .expect("Content-Type", /json/)
-
-    if (response.statusCode !== 200) {
-      throw new Error(JSON.stringify(response.body))
-    }
+  updateClient = async (
+    appId: string,
+    expectations?: Expectations
+  ): Promise<void> => {
+    await this._post(`/api/applications/${appId}/client/update`, {
+      // While the updateClient endpoint does take an :appId parameter, it doesn't
+      // use it. It uses the appId from the context.
+      headers: {
+        [constants.Header.APP_ID]: appId,
+      },
+      expectations,
+    })
   }
 
   revertClient = async (appId: string): Promise<void> => {
-    // While the revertClient endpoint does take an :appId parameter, it doesn't
-    // use it. It uses the appId from the context.
-    let headers = {
-      ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
-    }
-    const response = await this.request
-      .post(`/api/applications/${appId}/client/revert`)
-      .set(headers)
-      .expect("Content-Type", /json/)
-
-    if (response.statusCode !== 200) {
-      throw new Error(JSON.stringify(response.body))
-    }
+    await this._post(`/api/applications/${appId}/client/revert`, {
+      // While the revertClient endpoint does take an :appId parameter, it doesn't
+      // use it. It uses the appId from the context.
+      headers: {
+        [constants.Header.APP_ID]: appId,
+      },
+    })
   }
 
   fetch = async ({ status }: { status?: AppStatus } = {}): Promise<App[]> => {
-    let query = []
-    if (status) {
-      query.push(`status=${status}`)
-    }
-
-    const result = await this.request
-      .get(`/api/applications${query.length ? `?${query.join("&")}` : ""}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body as App[]
+    return await this._get<App[]>("/api/applications", {
+      query: { status },
+    })
   }
 }
