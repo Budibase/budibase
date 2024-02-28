@@ -248,10 +248,4 @@ describe("/applications", () => {
       expect(devLogs.data.length).toBe(0)
     })
   })
-
-  describe("permissions", () => {
-    it("should return the list of apps the user has access to", async () => {
-      const user = config.user
-    })
-  })
 })
