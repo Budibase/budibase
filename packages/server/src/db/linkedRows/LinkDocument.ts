@@ -1,4 +1,4 @@
-import { generateLinkID } from "../utils"
+import { generateLinkID, generateJunctionTableID } from "../utils"
 import { FieldType, LinkDocument } from "@budibase/types"
 
 /**

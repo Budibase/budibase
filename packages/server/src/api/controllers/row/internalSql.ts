@@ -145,7 +145,7 @@ export async function sqlSearch(ctx: UserCtx) {
     let sql = builder._query(request, {
       disableReturning: true,
       disablePreparedStatements: true,
-    })
+    }) as string
 
     // quick hack for docIds
     sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")

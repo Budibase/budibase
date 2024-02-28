@@ -146,4 +146,11 @@ export class DDInstrumentedDatabase implements Database {
       return this.db.getIndexes(...args)
     })
   }
+
+  sql<T>(sql: string): Promise<T> {
+    return tracer.trace("db.sql", span => {
+      span?.addTags({ db_name: this.name })
+      return this.db.sql(sql)
+    })
+  }
 }
