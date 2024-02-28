@@ -12,6 +12,8 @@ import {
   ConnectionInfo,
   Schema,
   TableSourceType,
+  Row,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   buildExternalTableId,
@@ -368,6 +370,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       const options: ExecuteOptions = { autoCommit: true }
       const bindings: BindParameters = query.bindings || []
 
+      this.log(query.sql, bindings)
       return await connection.execute<T>(query.sql, bindings, options)
     } finally {
       if (connection) {
@@ -419,9 +422,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): Promise<DatasourcePlusQueryResponse> {
     const operation = this._operation(json)
-    const input = this._query(json, { disableReturning: true })
+    const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {
@@ -443,7 +446,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       if (deletedRows?.rows?.length) {
         return deletedRows.rows
       } else if (response.rows?.length) {
-        return response.rows
+        return response.rows as Row[]
       } else {
         // get the last row that was updated
         if (
@@ -454,7 +457,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           const lastRow = await this.internalQuery({
             sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
           })
-          return lastRow.rows
+          return lastRow.rows as Row[]
         } else {
           return [{ [operation.toLowerCase()]: true }]
         }

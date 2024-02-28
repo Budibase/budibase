@@ -1,12 +1,21 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import { FieldType, Row, Table, TableSchema } from "@budibase/types"
+import {
+  FieldType,
+  QueryJson,
+  Row,
+  Table,
+  TableSchema,
+  DatasourcePlusQueryResponse,
+} from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
 
-export async function getDatasourceAndQuery(json: any) {
+export async function getDatasourceAndQuery(
+  json: QueryJson
+): Promise<DatasourcePlusQueryResponse> {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
@@ -16,7 +25,8 @@ export function cleanExportRows(
   rows: any[],
   schema: TableSchema,
   format: string,
-  columns?: string[]
+  columns?: string[],
+  customHeaders: { [key: string]: string } = {}
 ) {
   let cleanRows = [...rows]
 
@@ -44,9 +54,25 @@ export function cleanExportRows(
         }
       }
     }
+  } else if (format === Format.JSON) {
+    // Replace row keys with custom headers
+    for (let row of cleanRows) {
+      renameKeys(customHeaders, row)
+    }
   }
 
   return cleanRows
+}
+
+function renameKeys(keysMap: { [key: string]: any }, row: any) {
+  for (const key in keysMap) {
+    Object.defineProperty(
+      row,
+      keysMap[key],
+      Object.getOwnPropertyDescriptor(row, key) || {}
+    )
+    delete row[key]
+  }
 }
 
 function isForeignKey(key: string, table: Table) {

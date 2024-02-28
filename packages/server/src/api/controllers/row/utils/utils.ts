@@ -1,7 +1,15 @@
 import { InternalTables } from "../../../../db/utils"
 import * as userController from "../../user"
 import { context } from "@budibase/backend-core"
-import { Ctx, RelationshipsJson, Row, Table, UserCtx } from "@budibase/types"
+import {
+  Ctx,
+  DatasourcePlusQueryResponse,
+  FieldType,
+  RelationshipsJson,
+  Row,
+  Table,
+  UserCtx,
+} from "@budibase/types"
 import {
   processDates,
   processFormulas,
@@ -24,6 +32,34 @@ validateJs.extend(validateJs.validators.datetime, {
     return new Date(value).toISOString()
   },
 })
+
+export function processRelationshipFields(
+  table: Table,
+  tables: Record<string, Table>,
+  row: Row,
+  relationships: RelationshipsJson[]
+): Row {
+  for (let relationship of relationships) {
+    const linkedTable = tables[relationship.tableName]
+    if (!linkedTable || !row[relationship.column]) {
+      continue
+    }
+    for (let key of Object.keys(row[relationship.column])) {
+      let relatedRow: Row = row[relationship.column][key]
+      // add this row as context for the relationship
+      for (let col of Object.values(linkedTable.schema)) {
+        if (col.type === FieldType.LINK && col.tableId === table._id) {
+          relatedRow[col.name] = [row]
+        }
+      }
+      // process additional types
+      relatedRow = processDates(table, relatedRow)
+      relatedRow = processFormulas(linkedTable, relatedRow)
+      row[relationship.column][key] = relatedRow
+    }
+  }
+  return row
+}
 
 export async function findRow(ctx: UserCtx, tableId: string, rowId: string) {
   const db = context.getAppDB()
@@ -80,17 +116,17 @@ export async function validate(
 }
 
 export function sqlOutputProcessing(
-  rows: Row[] = [],
+  rows: DatasourcePlusQueryResponse,
   table: Table,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
   opts?: { internal?: boolean }
 ) {
-  if (!rows || rows.length === 0 || rows[0].read === true) {
+  if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
     return []
   }
   let finalRows: { [key: string]: Row } = {}
-  for (let row of rows) {
+  for (let row of rows as Row[]) {
     let rowId = row._id
     if (!rowId) {
       rowId = generateIdForRow(row, table)
@@ -103,7 +139,8 @@ export function sqlOutputProcessing(
         tables,
         row,
         finalRows,
-        relationships
+        relationships,
+        opts
       )
       continue
     }
@@ -126,19 +163,18 @@ export function sqlOutputProcessing(
       tables,
       row,
       finalRows,
-      relationships,
-      opts
+      relationships
     )
   }
 
-  // Process some additional data types
-  let finalRowArray = Object.values(finalRows)
-  finalRowArray = processDates(table, finalRowArray)
-  finalRowArray = processFormulas(table, finalRowArray) as Row[]
-
-  return finalRowArray.map((row: Row) =>
-    squashRelationshipColumns(table, tables, row, relationships)
+  // make sure all related rows are correct
+  let finalRowArray = Object.values(finalRows).map(row =>
+    processRelationshipFields(table, tables, row, relationships)
   )
+
+  // process some additional types
+  finalRowArray = processDates(table, finalRowArray)
+  return finalRowArray
 }
 
 export function isUserMetadataTable(tableId: string) {

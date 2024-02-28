@@ -1,11 +1,15 @@
-import { QueryJson, Datasource } from "@budibase/types"
+import {
+  QueryJson,
+  Datasource,
+  DatasourcePlusQueryResponse,
+} from "@budibase/types"
 import { getIntegration } from "../index"
 import sdk from "../../sdk"
 
 export async function makeExternalQuery(
   datasource: Datasource,
   json: QueryJson
-) {
+): Promise<DatasourcePlusQueryResponse> {
   datasource = await sdk.datasources.enrich(datasource)
   const Integration = await getIntegration(datasource.source)
   // query is the opinionated function

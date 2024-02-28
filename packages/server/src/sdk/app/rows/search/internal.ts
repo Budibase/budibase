@@ -85,7 +85,17 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, rowIds, columns, query, sort, sortOrder } = options
+  const {
+    tableId,
+    format,
+    rowIds,
+    columns,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  } = options
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
@@ -125,11 +135,16 @@ export async function exportRows(
     rows = result
   }
 
-  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, columns)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
-      content: csv(headers ?? Object.keys(rows[0]), exportRows),
+      content: csv(
+        headers ?? Object.keys(rows[0]),
+        exportRows,
+        delimiter,
+        customHeaders
+      ),
     }
   } else if (format === Format.JSON) {
     return {

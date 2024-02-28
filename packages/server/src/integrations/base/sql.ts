@@ -17,7 +17,6 @@ const envLimit = environment.SQL_MAX_ROWS
   : null
 const BASE_LIMIT = envLimit || 5000
 
-type KnexQuery = Knex.QueryBuilder | Knex
 // these are invalid dates sent by the client, need to convert them to a real max date
 const MIN_ISO_DATE = "0000-00-00T00:00:00.000Z"
 const MAX_ISO_DATE = "9999-00-00T00:00:00.000Z"
@@ -130,10 +129,15 @@ class InternalBuilder {
 
   // right now we only do filters on the specific table being queried
   addFilters(
-    query: KnexQuery,
+    query: Knex.QueryBuilder,
     filters: SearchFilters | undefined,
-    opts: { relationship?: boolean; tableName?: string }
-  ): KnexQuery {
+    tableName: string,
+    opts: { aliases?: Record<string, string>; relationship?: boolean }
+  ): Knex.QueryBuilder {
+    function getTableName(name: string) {
+      const alias = opts.aliases?.[name]
+      return alias || name
+    }
     function iterate(
       structure: { [key: string]: any },
       fn: (key: string, value: any) => void
@@ -142,10 +146,11 @@ class InternalBuilder {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
-          fn(`${opts.tableName}.${updatedKey}`, value)
+          fn(`${getTableName(tableName)}.${updatedKey}`, value)
         }
         if (opts.relationship && isRelationshipField) {
-          fn(updatedKey, value)
+          const [filterTableName, property] = updatedKey.split(".")
+          fn(`${getTableName(filterTableName)}.${property}`, value)
         }
       }
     }
@@ -317,7 +322,7 @@ class InternalBuilder {
     return query
   }
 
-  addSorting(query: KnexQuery, json: QueryJson): KnexQuery {
+  addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
     if (sort && Object.keys(sort || {}).length > 0) {
@@ -333,16 +338,28 @@ class InternalBuilder {
     return query
   }
 
+  tableNameWithSchema(
+    tableName: string,
+    opts?: { alias?: string; schema?: string }
+  ) {
+    let withSchema = opts?.schema ? `${opts.schema}.${tableName}` : tableName
+    if (opts?.alias) {
+      withSchema += ` as ${opts.alias}`
+    }
+    return withSchema
+  }
+
   addRelationships(
-    query: KnexQuery,
+    query: Knex.QueryBuilder,
     fromTable: string,
     relationships: RelationshipsJson[] | undefined,
-    schema: string | undefined
-  ): KnexQuery {
+    schema: string | undefined,
+    aliases?: Record<string, string>
+  ): Knex.QueryBuilder {
     if (!relationships) {
       return query
     }
-    const tableSets: Record<string, [any]> = {}
+    const tableSets: Record<string, [RelationshipsJson]> = {}
     // aggregate into table sets (all the same to tables)
     for (let relationship of relationships) {
       const keyObj: { toTable: string; throughTable: string | undefined } = {
@@ -361,10 +378,17 @@ class InternalBuilder {
     }
     for (let [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
-      const toTableWithSchema = schema ? `${schema}.${toTable}` : toTable
-      const throughTableWithSchema = schema
-        ? `${schema}.${throughTable}`
-        : throughTable
+      const toAlias = aliases?.[toTable] || toTable,
+        throughAlias = aliases?.[throughTable] || throughTable,
+        fromAlias = aliases?.[fromTable] || fromTable
+      let toTableWithSchema = this.tableNameWithSchema(toTable, {
+        alias: toAlias,
+        schema,
+      })
+      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
+        alias: throughAlias,
+        schema,
+      })
       if (!throughTable) {
         // @ts-ignore
         query = query.leftJoin(toTableWithSchema, function () {
@@ -372,7 +396,7 @@ class InternalBuilder {
             const from = relationship.from,
               to = relationship.to
             // @ts-ignore
-            this.orOn(`${fromTable}.${from}`, "=", `${toTable}.${to}`)
+            this.orOn(`${fromAlias}.${from}`, "=", `${toAlias}.${to}`)
           }
         })
       } else {
@@ -384,9 +408,9 @@ class InternalBuilder {
               const from = relationship.from
               // @ts-ignore
               this.orOn(
-                `${fromTable}.${fromPrimary}`,
+                `${fromAlias}.${fromPrimary}`,
                 "=",
-                `${throughTable}.${from}`
+                `${throughAlias}.${from}`
               )
             }
           })
@@ -395,7 +419,7 @@ class InternalBuilder {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
               // @ts-ignore
-              this.orOn(`${toTable}.${toPrimary}`, `${throughTable}.${to}`)
+              this.orOn(`${toAlias}.${toPrimary}`, `${throughAlias}.${to}`)
             }
           })
       }
@@ -403,12 +427,25 @@ class InternalBuilder {
     return query.limit(BASE_LIMIT)
   }
 
-  create(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
-    const { endpoint, body } = json
-    let query: KnexQuery = knex(endpoint.entityId)
+  knexWithAlias(
+    knex: Knex,
+    endpoint: QueryJson["endpoint"],
+    aliases?: QueryJson["tableAliases"]
+  ): Knex.QueryBuilder {
+    const tableName = endpoint.entityId
+    const tableAliased = aliases?.[tableName]
+      ? `${tableName} as ${aliases?.[tableName]}`
+      : tableName
+    let query = knex(tableAliased)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
+    return query
+  }
+
+  create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
+    const { endpoint, body } = json
+    let query = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
     // make sure no null values in body for creation
     for (let [key, value] of Object.entries(parsedBody)) {
@@ -425,12 +462,9 @@ class InternalBuilder {
     }
   }
 
-  bulkCreate(knex: Knex, json: QueryJson): KnexQuery {
+  bulkCreate(knex: Knex, json: QueryJson): Knex.QueryBuilder {
     const { endpoint, body } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+    let query = this.knexWithAlias(knex, endpoint)
     if (!Array.isArray(body)) {
       return query
     }
@@ -438,8 +472,10 @@ class InternalBuilder {
     return query.insert(parsedBody)
   }
 
-  read(knex: Knex, json: QueryJson, limit: number): KnexQuery {
-    let { endpoint, resource, filters, paginate, relationships } = json
+  read(knex: Knex, json: QueryJson, limit: number): Knex.QueryBuilder {
+    let { endpoint, resource, filters, paginate, relationships, tableAliases } =
+      json
+
     const tableName = endpoint.entityId
     // select all if not specified
     if (!resource) {
@@ -465,21 +501,20 @@ class InternalBuilder {
       foundLimit = paginate.limit
     }
     // start building the query
-    let query: KnexQuery = knex(tableName).limit(foundLimit)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+    let query = this.knexWithAlias(knex, endpoint, tableAliases)
+    query = query.limit(foundLimit)
     if (foundOffset) {
       query = query.offset(foundOffset)
     }
-    query = this.addFilters(query, filters, { tableName })
+    query = this.addFilters(query, filters, tableName, {
+      aliases: tableAliases,
+    })
     // add sorting to pre-query
     query = this.addSorting(query, json)
-    // @ts-ignore
-    let preQuery: KnexQuery = knex({
-      // @ts-ignore
-      [tableName]: query,
-    }).select(selectStatement)
+    const alias = tableAliases?.[tableName] || tableName
+    let preQuery = knex({
+      [alias]: query,
+    } as any).select(selectStatement) as any
     // have to add after as well (this breaks MS-SQL)
     if (this.client !== SqlClient.MS_SQL) {
       preQuery = this.addSorting(preQuery, json)
@@ -489,19 +524,22 @@ class InternalBuilder {
       preQuery,
       tableName,
       relationships,
-      endpoint.schema
+      endpoint.schema,
+      tableAliases
     )
-    return this.addFilters(query, filters, { relationship: true })
+    return this.addFilters(query, filters, tableName, {
+      relationship: true,
+      aliases: tableAliases,
+    })
   }
 
-  update(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
-    const { endpoint, body, filters } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
+  update(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
+    const { endpoint, body, filters, tableAliases } = json
+    let query = this.knexWithAlias(knex, endpoint, tableAliases)
     const parsedBody = parseBody(body)
-    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
+    query = this.addFilters(query, filters, endpoint.entityId, {
+      aliases: tableAliases,
+    })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.update(parsedBody)
@@ -510,13 +548,12 @@ class InternalBuilder {
     }
   }
 
-  delete(knex: Knex, json: QueryJson, opts: QueryOptions): KnexQuery {
-    const { endpoint, filters } = json
-    let query: KnexQuery = knex(endpoint.entityId)
-    if (endpoint.schema) {
-      query = query.withSchema(endpoint.schema)
-    }
-    query = this.addFilters(query, filters, { tableName: endpoint.entityId })
+  delete(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
+    const { endpoint, filters, tableAliases } = json
+    let query = this.knexWithAlias(knex, endpoint, tableAliases)
+    query = this.addFilters(query, filters, endpoint.entityId, {
+      aliases: tableAliases,
+    })
     // mysql can't use returning
     if (opts.disableReturning) {
       return query.delete()
@@ -540,7 +577,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(json: QueryJson, opts: QueryOptions = {}) {
+  _query(
+    json: QueryJson,
+    opts: QueryOptions = {}
+  ): Knex.SqlNative | Knex.Sql | string {
     const sqlClient = this.getSqlClient()
     const config: { client: string; useNullAsDefault?: boolean } = {
       client: sqlClient,
@@ -549,7 +589,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       config.useNullAsDefault = true
     }
     const client = knex(config)
-    let query
+    let query: Knex.QueryBuilder
     const builder = new InternalBuilder(sqlClient)
     switch (this._operation(json)) {
       case Operation.CREATE:
@@ -578,7 +618,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     if (opts?.disablePreparedStatements) {
       return query.toString()
     } else {
-      // @ts-ignore
       return query.toSQL().toNative()
     }
   }
@@ -660,6 +699,18 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return row
     }
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
+  }
+
+  log(query: string, values?: any[]) {
+    if (!environment.SQL_LOGGING_ENABLE) {
+      return
+    }
+    const sqlClient = this.getSqlClient()
+    let string = `[SQL] [${sqlClient.toUpperCase()}] query="${query}"`
+    if (values) {
+      string += ` values="${values.join(", ")}"`
+    }
+    console.log(string)
   }
 }
 
