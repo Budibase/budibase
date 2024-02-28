@@ -328,25 +328,34 @@ export const createActions = context => {
   }
 
   // Patches a row with some changes
-  const updateRow = async (rowId, changes, options = { save: true }) => {
+  const updateRow = async (
+    rowId,
+    changes,
+    options = { save: true, force: false }
+  ) => {
     const $rows = get(rows)
     const $rowLookupMap = get(rowLookupMap)
     const index = $rowLookupMap[rowId]
     const row = $rows[index]
-    if (index == null || !Object.keys(changes || {}).length) {
+    if (index == null) {
+      return
+    }
+    if (!options?.force && !Object.keys(changes || {}).length) {
       return
     }
 
     // Abandon if no changes
-    let same = true
-    for (let column of Object.keys(changes)) {
-      if (row[column] !== changes[column]) {
-        same = false
-        break
+    if (!options?.force) {
+      let same = true
+      for (let column of Object.keys(changes)) {
+        if (row[column] !== changes[column]) {
+          same = false
+          break
+        }
       }
-    }
-    if (same) {
-      return
+      if (same) {
+        return
+      }
     }
 
     // Immediately update state so that the change is reflected
@@ -359,7 +368,7 @@ export const createActions = context => {
     }))
 
     // Stop here if we don't want to persist the change
-    if (!options?.save) {
+    if (!options?.save && !options?.force) {
       return
     }
 
@@ -508,7 +517,14 @@ export const createActions = context => {
 }
 
 export const initialise = context => {
-  const { rowChangeCache, inProgressChanges, previousFocusedRowId } = context
+  const {
+    rowChangeCache,
+    inProgressChanges,
+    previousFocusedRowId,
+    previousFocusedCellId,
+    rows,
+    validation,
+  } = context
 
   // Wipe the row change cache when changing row
   previousFocusedRowId.subscribe(id => {
@@ -517,6 +533,17 @@ export const initialise = context => {
         delete state[id]
         return state
       })
+    }
+  })
+
+  // Ensure any unsaved changes are saved when changing cell
+  previousFocusedCellId.subscribe(id => {
+    const rowId = id?.split("-")[0]
+    const hasErrors = validation.actions.rowHasErrors(rowId)
+    const hasChanges = Object.keys(get(rowChangeCache)[rowId] || {}).length > 0
+    const isSavingChanges = get(inProgressChanges)[rowId]
+    if (rowId && !hasErrors && hasChanges && !isSavingChanges) {
+      rows.actions.updateRow(rowId, null, { force: true })
     }
   })
 }
