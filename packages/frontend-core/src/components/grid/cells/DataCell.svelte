@@ -59,13 +59,12 @@
     isReadonly: () => readonly,
     getType: () => column.schema.type,
     getValue: () => row[column.name],
-    setValue: (value, options = { save: true }) => {
+    setValue: value => {
       validation.actions.setError(cellId, null)
       updateValue({
         rowId: row._id,
         column: column.name,
         value,
-        save: options?.save,
       })
     },
   }
