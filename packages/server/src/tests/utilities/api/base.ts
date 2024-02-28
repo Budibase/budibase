@@ -1,12 +1,28 @@
-import exp from "constants"
 import TestConfiguration from "../TestConfiguration"
 import { SuperTest, Test } from "supertest"
+import { ReadStream } from "fs"
 
 type Headers = Record<string, string | string[] | undefined>
 
 export interface TestAPIOpts {
   headers?: Headers
   status?: number
+}
+
+export interface AttachedFile {
+  name: string
+  file: Buffer | ReadStream | string
+}
+
+function isAttachedFile(file: any): file is AttachedFile {
+  if (file === undefined) {
+    return false
+  }
+  const attachedFile = file as AttachedFile
+  return (
+    Object.hasOwnProperty.call(attachedFile, "file") &&
+    Object.hasOwnProperty.call(attachedFile, "name")
+  )
 }
 
 export interface Expectations {
@@ -21,7 +37,10 @@ export interface RequestOpts {
   query?: Record<string, string | undefined>
   body?: Record<string, any>
   fields?: Record<string, any>
-  files?: Record<string, any>
+  files?: Record<
+    string,
+    Buffer | ReadStream | string | AttachedFile | undefined
+  >
   expectations?: Expectations
 }
 
@@ -66,8 +85,8 @@ export abstract class TestAPI {
       headers = {},
       query = {},
       body,
-      fields,
-      files,
+      fields = {},
+      files = {},
       expectations,
     } = opts || {}
     const { status = 200, contentType = /json/ } = expectations || {}
@@ -89,30 +108,23 @@ export abstract class TestAPI {
     if (body) {
       request = request.send(body)
     }
-    if (fields) {
-      for (const [key, value] of Object.entries(fields)) {
-        request = request.field(key, value)
-      }
+    for (const [key, value] of Object.entries(fields)) {
+      request = request.field(key, value)
     }
-    if (files) {
-      for (const [key, value] of Object.entries(files)) {
-        request = request.attach(key, value)
+
+    for (const [key, value] of Object.entries(files)) {
+      if (isAttachedFile(value)) {
+        request = request.attach(key, value.file, value.name)
+      } else {
+        request = request.attach(key, value as any)
       }
     }
     if (contentType && status !== 204) {
-      if (contentType instanceof RegExp) {
-        request = request.expect("Content-Type", contentType)
-      } else {
-        request = request.expect("Content-Type", contentType)
-      }
+      request = request.expect("Content-Type", contentType as any)
     }
     if (expectations?.headers) {
       for (const [key, value] of Object.entries(expectations.headers)) {
-        if (value instanceof RegExp) {
-          request = request.expect(key, value)
-        } else {
-          request = request.expect(key, value)
-        }
+        request = request.expect(key, value as any)
       }
     }
 
