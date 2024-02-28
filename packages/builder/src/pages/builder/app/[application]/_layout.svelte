@@ -68,17 +68,17 @@
   // you browse to backend, when you click frontend, you will be
   // brought back to the same screen.
   const topItemNavigate = path => () => {
-    if (!loaded) {
-      setTimeout(topItemNavigate(path), 100)
-      return
-    }
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
-    if (!activeTopNav) return
-    builderStore.setPreviousTopNavPath(
-      activeTopNav.path,
-      window.location.pathname
-    )
+    if (activeTopNav) {
+      builderStore.setPreviousTopNavPath(
+        activeTopNav.path,
+        window.location.pathname
+      )
+    }
     $goto($builderStore.previousTopNavPath[path] || path)
+    if (!loaded) {
+      setTimeout($goto($builderStore.previousTopNavPath[path] || path), 200)
+    }
   }
 
   // Event handler for the command palette
