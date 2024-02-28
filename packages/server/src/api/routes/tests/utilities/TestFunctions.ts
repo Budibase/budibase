@@ -106,7 +106,7 @@ export const checkBuilderEndpoint = async ({
   config: TestConfiguration
   method: string
   url: string
-  body: any
+  body?: any
 }) => {
   const headers = await config.login({
     userId: "us_fail",
