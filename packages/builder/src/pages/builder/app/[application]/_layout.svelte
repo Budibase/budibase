@@ -76,9 +76,6 @@
       )
     }
     $goto($builderStore.previousTopNavPath[path] || path)
-    if (!loaded) {
-      setTimeout($goto($builderStore.previousTopNavPath[path] || path), 200)
-    }
   }
 
   // Event handler for the command palette
