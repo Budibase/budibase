@@ -48,6 +48,7 @@
   let editModal, deleteModal
 
   $: group = $groups.find(x => x._id === groupId)
+  $: console.warn({ group })
   $: readonly = !sdk.users.isAdmin($auth.user) || group?.scimInfo?.isSync
   $: groupApps = $apps
     .filter(app =>
@@ -79,9 +80,8 @@
   }
 
   async function saveGroup(group) {
-    const { scimInfo, ...dataToSave } = group
     try {
-      await groups.actions.save(dataToSave)
+      await groups.actions.save(group)
     } catch (error) {
       if (error.message) {
         notifications.error(error.message)
