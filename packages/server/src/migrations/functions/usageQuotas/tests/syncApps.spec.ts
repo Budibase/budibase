@@ -13,7 +13,7 @@ describe("syncApps", () => {
   afterAll(config.end)
 
   it("runs successfully", async () => {
-    return config.doInContext(null, async () => {
+    return config.doInContext(undefined, async () => {
       // create the usage quota doc and mock usages
       await quotas.getQuotaUsage()
       await quotas.setUsage(3, StaticQuotaName.APPS, QuotaUsageType.STATIC)
