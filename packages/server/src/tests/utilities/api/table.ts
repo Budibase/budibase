@@ -22,7 +22,10 @@ export class TableAPI extends TestAPI {
     return await this._get<Table[]>("/api/tables", { expectations })
   }
 
-  get = async (tableId: string, expectations: Expectations): Promise<Table> => {
+  get = async (
+    tableId: string,
+    expectations?: Expectations
+  ): Promise<Table> => {
     return await this._get<Table>(`/api/tables/${tableId}`, { expectations })
   }
 
