@@ -12,13 +12,9 @@
     isValid,
     decodeJSBinding,
     encodeJSBinding,
-    convertToJS,
     processStringSync,
   } from "@budibase/string-templates"
-  import {
-    readableToRuntimeBinding,
-    runtimeToReadableBinding,
-  } from "dataBinding"
+  import { readableToRuntimeBinding } from "dataBinding"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"
   import {
     getHelperCompletions,
@@ -93,7 +89,8 @@
   }
 
   const getBindingValue = (binding, context) => {
-    const hbs = `{{ literal ${binding.runtimeBinding} }}`
+    const js = `return $("${binding.runtimeBinding}")`
+    const hbs = encodeJSBinding(js)
     const res = processStringSync(hbs, context)
     return JSON.stringify(res, null, 2)
   }
@@ -169,15 +166,6 @@
   const onChangeJSValue = e => {
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
-  }
-
-  const convert = () => {
-    const runtime = readableToRuntimeBinding(enrichedBindings, hbsValue)
-    const runtimeJs = encodeJSBinding(convertToJS(runtime))
-    jsValue = runtimeToReadableBinding(enrichedBindings, runtimeJs)
-    hbsValue = null
-    mode = "JavaScript"
-    onSelectBinding("", { forceJS: true })
   }
 
   onMount(() => {
@@ -296,7 +284,11 @@
           mode={editorMode}
         />
       {:else if sidePanel === SidePanels.Evaluation}
-        <EvaluationSidePanel {expressionResult} {evaluating} />
+        <EvaluationSidePanel
+          {expressionResult}
+          {evaluating}
+          expression={editorValue}
+        />
       {/if}
     </div>
   </div>

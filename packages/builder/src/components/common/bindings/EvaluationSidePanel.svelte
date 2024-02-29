@@ -6,13 +6,17 @@
 
   export let expressionResult
   export let evaluating = false
+  export let expression = null
 
   $: error = expressionResult === "Error while executing JS"
-  $: empty = expressionResult == null || expressionResult === ""
+  $: empty = expression == null || expression?.trim() === ""
   $: success = !error && !empty
   $: highlightedResult = highlight(expressionResult)
 
   const highlight = json => {
+    if (json == null) {
+      return ""
+    }
     // Attempt to parse and then stringify, in case this is valid JSON
     try {
       json = JSON.stringify(JSON.parse(json), null, 2)
@@ -67,10 +71,10 @@
     </div>
   </div>
   <div class="body">
-    {#if expressionResult}
-      {@html highlightedResult}
-    {:else}
+    {#if empty}
       Your expression will be evaluated here
+    {:else}
+      {@html highlightedResult}
     {/if}
   </div>
 </div>
