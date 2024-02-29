@@ -344,15 +344,6 @@
     height: 0;
     position: relative;
   }
-  .editor :global(.code-editor),
-  .editor :global(.code-editor > div),
-  .editor :global(.cm-editor) {
-    height: 100%;
-  }
-  .editor :global(.cm-editor) {
-    border: none;
-    border-radius: 0;
-  }
 
   /* Overlay */
   .mode-overlay {

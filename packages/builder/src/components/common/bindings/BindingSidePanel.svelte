@@ -362,15 +362,15 @@
     padding: var(--spacing-m);
     border-radius: 4px;
     background-color: var(--spectrum-global-color-gray-200);
-    transition: background-color 130ms ease-in-out, color 130ms ease-in-out,
-      border-color 130ms ease-in-out;
+    transition: background-color 130ms ease-out, color 130ms ease-out,
+      border-color 130ms ease-out;
     word-wrap: break-word;
   }
   li:not(:last-of-type) {
     margin-bottom: var(--spacing-s);
   }
   li :global(*) {
-    transition: color 130ms ease-in-out;
+    transition: color 130ms ease-out;
   }
   li:hover {
     color: var(--spectrum-global-color-gray-900);

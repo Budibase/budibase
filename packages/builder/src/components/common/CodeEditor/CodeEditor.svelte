@@ -47,7 +47,6 @@
 
   export let label
   export let completions = []
-  export let height = 200
   export let resize = "none"
   export let mode = EditorModes.Handlebars
   export let value = ""
@@ -241,8 +240,6 @@
     }
   }
 
-  $: editorHeight = typeof height === "number" ? `${height}px` : height
-
   // Init when all elements are ready
   $: if (mounted && !isEditorInitialised) {
     isEditorInitialised = true
@@ -284,14 +281,22 @@
 
 <style>
   /* Editor */
+  .code-editor {
+    font-size: 12px;
+    height: 100%;
+  }
   .code-editor :global(.cm-editor) {
+    height: 100%;
     background: var(--spectrum-global-color-gray-50) !important;
+    outline: none;
+    border: none;
+    border-radius: 0;
   }
   .code-editor :global(.cm-content) {
     padding: 10px 0;
   }
-  .code-editor {
-    font-size: 12px;
+  .code-editor > div {
+    height: 100%;
   }
 
   /* Active line */
