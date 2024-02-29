@@ -123,7 +123,6 @@
   maxHeight={480}
   dismissible={false}
   on:mouseenter={stopHidingPopover}
-  on:mouseleave={hidePopover}
 >
   <div class="binding-popover" class:helper={hoverTarget.helper}>
     {#if hoverTarget.description}
@@ -413,5 +412,8 @@
   .binding-popover :global(p) {
     padding: 0;
     margin: 0;
+  }
+  .binding-popover.helper :global(code) {
+    font-size: 12px;
   }
 </style>
