@@ -12,7 +12,6 @@ import {
   SourceName,
   Schema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -261,7 +260,6 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       const bindings = opts?.disableCoercion
         ? baseBindings
         : bindingTypeCoerce(baseBindings)
-      this.log(query.sql, bindings)
       // Node MySQL is callback based, so we must wrap our call in a promise
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
@@ -381,7 +379,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson) {
     await this.connect()
     try {
       const queryFn = (query: any) =>

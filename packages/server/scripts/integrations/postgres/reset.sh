@@ -1,3 +1,3 @@
 #!/bin/bash
-docker-compose down -v
+docker-compose down
 docker volume prune -f
