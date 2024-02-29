@@ -11,6 +11,7 @@ import {
   Document,
   isDocument,
   RowResponse,
+  RowValue,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
@@ -221,7 +222,7 @@ export class DatabaseImpl implements Database {
     })
   }
 
-  async allDocs<T extends Document>(
+  async allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
