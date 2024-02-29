@@ -77,6 +77,35 @@ describe("docWritethrough", () => {
       })
     })
 
+    it("patching will persist keeping the previous data", async () => {
+      await config.doInTenant(async () => {
+        const patch1 = generatePatchObject(2)
+        const patch2 = generatePatchObject(2)
+        await docWritethrough.patch(patch1)
+        await docWritethrough.patch(patch2)
+
+        travelForward(WRITE_RATE_MS)
+
+        const patch3 = generatePatchObject(3)
+        await docWritethrough.patch(patch3)
+
+        travelForward(WRITE_RATE_MS)
+
+        const patch4 = generatePatchObject(3)
+        await docWritethrough.patch(patch4)
+
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({
+            _id: documentId,
+            ...patch1,
+            ...patch2,
+            ...patch3,
+            ...patch4,
+          })
+        )
+      })
+    })
+
     it("date audit fields are set correctly when persisting", async () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
