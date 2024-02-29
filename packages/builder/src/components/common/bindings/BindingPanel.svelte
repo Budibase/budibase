@@ -32,7 +32,6 @@
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
-  import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { Utils } from "@budibase/frontend-core"
   import { get } from "svelte/store"
 
@@ -201,7 +200,6 @@
               {capitalise(tab)}
             </ActionButton>
           {/each}
-          <DrawerBindableInput />
         </div>
         <div class="side-tabs">
           {#each sideTabs as tab}
