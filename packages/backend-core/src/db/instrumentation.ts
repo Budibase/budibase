@@ -38,6 +38,13 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
+  docExists(id: string): Promise<boolean> {
+    return tracer.trace("db.docExists", span => {
+      span?.addTags({ db_name: this.name, doc_id: id })
+      return this.db.docExists(id)
+    })
+  }
+
   getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean | undefined } | undefined
