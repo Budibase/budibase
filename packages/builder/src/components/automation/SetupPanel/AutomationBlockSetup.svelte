@@ -12,7 +12,6 @@
     Drawer,
     Modal,
     notifications,
-    Icon,
     Checkbox,
     DatePicker,
   } from "@budibase/bbui"

@@ -74,6 +74,7 @@
     {#if empty}
       Your expression will be evaluated here
     {:else}
+      <!-- eslint-disable-next-line svelte/no-at-html-tags-->
       {@html highlightedResult}
     {/if}
   </div>
