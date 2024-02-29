@@ -13,7 +13,6 @@ import {
   SourceName,
   Schema,
   TableSourceType,
-  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -330,7 +329,6 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         operation === Operation.CREATE
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
-      this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
@@ -494,7 +492,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson): DatasourcePlusQueryResponse {
+  async query(json: QueryJson) {
     const schema = this.config.schema
     await this.connect()
     if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
