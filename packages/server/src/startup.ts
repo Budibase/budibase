@@ -38,6 +38,7 @@ async function initRoutes(app: Koa) {
 
   // api routes
   app.use(api.router.routes())
+  app.use(api.router.allowedMethods())
 }
 
 async function initPro() {
