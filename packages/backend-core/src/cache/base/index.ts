@@ -60,7 +60,7 @@ export default class BaseCache {
    */
   async withCache(
     key: string,
-    ttl: number,
+    ttl: number | null = null,
     fetchFn: any,
     opts = { useTenancy: true }
   ) {
