@@ -95,9 +95,9 @@ async function invalidateVariables(
   updatedDatasource: Datasource
 ) {
   const existingVariables: DynamicVariable[] =
-    existingDatasource.config?.dynamicVariables
+    existingDatasource.config?.dynamicVariables || []
   const updatedVariables: DynamicVariable[] =
-    updatedDatasource.config?.dynamicVariables
+    updatedDatasource.config?.dynamicVariables || []
   const toInvalidate = []
 
   if (!existingVariables) {
