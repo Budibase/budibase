@@ -3,7 +3,6 @@ import { fetchData } from "../../../fetch"
 import { NewRowID, RowPageSize } from "../lib/constants"
 import { tick } from "svelte"
 import { Helpers } from "@budibase/bbui"
-import { isValid } from "@budibase/string-templates"
 
 export const createStores = () => {
   const rows = writable([])
