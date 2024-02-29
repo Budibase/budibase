@@ -9,7 +9,7 @@ export interface RowResponse<T extends Document | RowValue> {
   id: string
   key: string
   error: string
-  value: T | RowValue
+  value: T
   doc?: T
 }
 
