@@ -81,7 +81,7 @@ describe("sdk >> rows >> internal", () => {
         const response = await internalSdk.save(
           table._id!,
           row,
-          config.user._id
+          config.getUser()._id
         )
 
         expect(response).toEqual({
@@ -129,7 +129,7 @@ describe("sdk >> rows >> internal", () => {
         const response = await internalSdk.save(
           table._id!,
           row,
-          config.user._id
+          config.getUser()._id
         )
 
         expect(response).toEqual({
@@ -190,15 +190,15 @@ describe("sdk >> rows >> internal", () => {
 
       await config.doInContext(config.appId, async () => {
         for (const row of makeRows(5)) {
-          await internalSdk.save(table._id!, row, config.user._id)
+          await internalSdk.save(table._id!, row, config.getUser()._id)
         }
         await Promise.all(
           makeRows(10).map(row =>
-            internalSdk.save(table._id!, row, config.user._id)
+            internalSdk.save(table._id!, row, config.getUser()._id)
           )
         )
         for (const row of makeRows(5)) {
-          await internalSdk.save(table._id!, row, config.user._id)
+          await internalSdk.save(table._id!, row, config.getUser()._id)
         }
       })
 
