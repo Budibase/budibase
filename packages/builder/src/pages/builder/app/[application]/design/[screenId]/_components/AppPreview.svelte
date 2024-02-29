@@ -12,11 +12,17 @@
     hoverStore,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
+  import {
+    ProgressCircle,
+    Layout,
+    Heading,
+    Body,
+    Icon,
+    notifications,
+  } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
   import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
-  import { ClientAppSkeleton } from "@budibase/frontend-core"
 
   let iframe
   let layout
@@ -234,16 +240,8 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
   {#if loading}
-    <div
-      class={`loading ${$builderStore.theme}`}
-      class:tablet={$previewStore.previewDevice === "tablet"}
-      class:mobile={$previewStore.previewDevice === "mobile"}
-    >
-      <ClientAppSkeleton
-        sideNav={$builderStore.navigation?.navigation === "Left"}
-        hideFooter
-        hideDevTools
-      />
+    <div class="center">
+      <ProgressCircle />
     </div>
   {:else if error}
     <div class="center error">
@@ -260,6 +258,8 @@
     bind:this={iframe}
     src="/app/preview"
     class:hidden={loading || error}
+    class:tablet={$previewStore.previewDevice === "tablet"}
+    class:mobile={$previewStore.previewDevice === "mobile"}
   />
   <div
     class="add-component"
@@ -279,25 +279,6 @@
 />
 
 <style>
-  .loading {
-    position: absolute;
-    container-type: inline-size;
-    width: 100%;
-    height: 100%;
-    border: 2px solid transparent;
-    box-sizing: border-box;
-  }
-
-  .loading.tablet {
-    width: calc(1024px + 6px);
-    max-height: calc(768px + 6px);
-  }
-
-  .loading.mobile {
-    width: calc(390px + 6px);
-    max-height: calc(844px + 6px);
-  }
-
   .component-container {
     grid-row-start: middle;
     grid-column-start: middle;
