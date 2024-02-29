@@ -237,7 +237,6 @@
       {#if selectedCategory === "Helpers" || search}
         {#if filteredHelpers?.length}
           <div class="sub-section">
-            <div class="cat-heading">Helpers</div>
             <ul class="helpers">
               {#each filteredHelpers as helper}
                 <li
