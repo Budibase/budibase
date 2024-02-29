@@ -41,8 +41,9 @@ describe("docWritethrough", () => {
       docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
     })
 
-    it("patching will not persist if timeout does not hit", async () => {
+    it("patching will not persist if timeout from the creation does not hit", async () => {
       await config.doInTenant(async () => {
+        travelForward(WRITE_RATE_MS)
         await docWritethrough.patch(generatePatchObject(2))
         await docWritethrough.patch(generatePatchObject(2))
         travelForward(WRITE_RATE_MS - 1)
@@ -116,7 +117,7 @@ describe("docWritethrough", () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
-        const time1 = travelForward(WRITE_RATE_MS)
+        travelForward(WRITE_RATE_MS)
         const patch2 = generatePatchObject(1)
         await docWritethrough.patch(patch2)
 
@@ -140,6 +141,42 @@ describe("docWritethrough", () => {
             ...patch1,
             ...patch2,
             ...patch3,
+          })
+        )
+      })
+    })
+
+    it("concurrent patches to multiple DocWritethrough will not contaminate each other", async () => {
+      await config.doInTenant(async () => {
+        const secondDocWritethrough = new DocWritethrough(
+          db,
+          structures.db.id(),
+          WRITE_RATE_MS
+        )
+
+        const doc1Patch = generatePatchObject(2)
+        await docWritethrough.patch(doc1Patch)
+        const doc2Patch = generatePatchObject(1)
+        await secondDocWritethrough.patch(doc2Patch)
+
+        travelForward(WRITE_RATE_MS)
+
+        const doc1Patch2 = generatePatchObject(3)
+        await docWritethrough.patch(doc1Patch2)
+        const doc2Patch2 = generatePatchObject(3)
+        await secondDocWritethrough.patch(doc2Patch2)
+
+        expect(await db.get(docWritethrough.docId)).toEqual(
+          expect.objectContaining({
+            ...doc1Patch,
+            ...doc1Patch2,
+          })
+        )
+
+        expect(await db.get(secondDocWritethrough.docId)).toEqual(
+          expect.objectContaining({
+            ...doc2Patch,
+            ...doc2Patch2,
           })
         )
       })
