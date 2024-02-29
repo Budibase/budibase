@@ -135,6 +135,15 @@ export class DatabaseImpl implements Database {
     })
   }
 
+  async docExists(id: string): Promise<boolean> {
+    try {
+      await this.get(id)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   async getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean }
