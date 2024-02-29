@@ -1,21 +1,12 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import {
-  FieldType,
-  QueryJson,
-  Row,
-  Table,
-  TableSchema,
-  DatasourcePlusQueryResponse,
-} from "@budibase/types"
+import { FieldType, Row, Table, TableSchema } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
 
-export async function getDatasourceAndQuery(
-  json: QueryJson
-): DatasourcePlusQueryResponse {
+export async function getDatasourceAndQuery(json: any) {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)
