@@ -19,9 +19,9 @@ interface CacheItem {
 }
 
 export class DocWritethrough {
-  db: Database
-  docId: string
-  writeRateMs: number
+  private db: Database
+  private _docId: string
+  private writeRateMs: number
 
   constructor(
     db: Database,
@@ -29,8 +29,12 @@ export class DocWritethrough {
     writeRateMs: number = DEFAULT_WRITE_RATE_MS
   ) {
     this.db = db
-    this.docId = docId
+    this._docId = docId
     this.writeRateMs = writeRateMs
+  }
+
+  get docId() {
+    return this._docId
   }
 
   private makeCacheItem(): CacheItem {
