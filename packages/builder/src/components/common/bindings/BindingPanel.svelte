@@ -225,7 +225,6 @@
                 ...getHelperCompletions(editorMode),
               ]),
             ]}
-            height="100%"
             autofocus={autofocusEditor}
             placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
           />
@@ -242,7 +241,6 @@
             mode={EditorModes.JS}
             bind:getCaretPosition
             bind:insertAtPos
-            height="100%"
             autofocus={autofocusEditor}
             placeholder="Add bindings by typing $ or use the menu on the right"
           />

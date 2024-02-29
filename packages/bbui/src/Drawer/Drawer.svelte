@@ -211,6 +211,7 @@
     width: 70vw;
     bottom: 15vh;
     height: 70vh;
+    border: none;
   }
   .drawer.stacked {
     transform: translateY(calc(-1 * 1024px * (1 - var(--scale-factor))))

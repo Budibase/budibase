@@ -1,4 +1,3 @@
-import { EditorView } from "@codemirror/view"
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
