@@ -547,7 +547,7 @@
           {:else if value.customType === "code"}
             <CodeEditorModal>
               <div class:js-editor={editingJs}>
-                <div class:js-code={editingJs} style="width: 100%">
+                <div class:js-code={editingJs} style="width:100%;height:500px;">
                   <CodeEditor
                     value={inputData[key]}
                     on:change={e => {
@@ -560,20 +560,10 @@
                     autocompleteEnabled={codeMode !== EditorModes.JS}
                     bind:getCaretPosition
                     bind:insertAtPos
-                    height={500}
+                    placeholder={codeMode === EditorModes.Handlebars
+                      ? "Add bindings by typing {{"
+                      : null}
                   />
-                  <div class="messaging">
-                    {#if codeMode === EditorModes.Handlebars}
-                      <Icon name="FlashOn" />
-                      <div class="messaging-wrap">
-                        <div>
-                          Add available bindings by typing <strong>
-                            &#125;&#125;
-                          </strong>
-                        </div>
-                      </div>
-                    {/if}
-                  </div>
                 </div>
                 {#if editingJs}
                   <div class="js-binding-picker">
@@ -650,11 +640,6 @@
     width: 320px;
   }
 
-  .messaging {
-    display: flex;
-    align-items: center;
-    margin-top: var(--spacing-xl);
-  }
   .fields {
     display: flex;
     flex-direction: column;
@@ -666,7 +651,6 @@
   .block-field {
     display: flex; /* Use Flexbox */
     justify-content: space-between;
-    align-items: center;
     flex-direction: row; /* Arrange label and field side by side */
     align-items: center; /* Align vertically in the center */
     gap: 10px; /* Add some space between label and field */
