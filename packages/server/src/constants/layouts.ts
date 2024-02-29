@@ -1,9 +1,11 @@
+import { Layout } from "@budibase/types"
+
 export const BASE_LAYOUT_PROP_IDS = {
   PRIVATE: "layout_private_master",
   PUBLIC: "layout_public_master",
 }
 
-export const EMPTY_LAYOUT = {
+export const EMPTY_LAYOUT: Layout = {
   componentLibraries: ["@budibase/standard-components"],
   title: "{{ name }}",
   favicon: "./_shared/favicon.png",

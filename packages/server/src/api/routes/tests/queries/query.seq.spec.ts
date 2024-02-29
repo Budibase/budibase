@@ -467,7 +467,10 @@ describe("/queries", () => {
         queryString: "test={{ variable3 }}",
       })
       // check its in cache
-      const contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      const contents = await checkCacheForDynamicVariable(
+        base._id!,
+        "variable3"
+      )
       expect(contents.rows.length).toEqual(1)
       const responseBody = await preview(datasource, {
         path: "www.failonce.com",
@@ -490,7 +493,7 @@ describe("/queries", () => {
         queryString: "test={{ variable3 }}",
       })
       // check its in cache
-      let contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      let contents = await checkCacheForDynamicVariable(base._id!, "variable3")
       expect(contents.rows.length).toEqual(1)
 
       // delete the query
@@ -500,7 +503,7 @@ describe("/queries", () => {
         .expect(200)
 
       // check variables no longer in cache
-      contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      contents = await checkCacheForDynamicVariable(base._id!, "variable3")
       expect(contents).toBe(null)
     })
   })
