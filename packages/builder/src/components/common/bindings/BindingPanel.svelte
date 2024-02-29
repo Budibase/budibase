@@ -34,6 +34,7 @@
   import { capitalise } from "helpers"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { Utils } from "@budibase/frontend-core"
+  import { get } from "svelte/store"
 
   const dispatch = createEventDispatcher()
 
@@ -213,7 +214,7 @@
               <Icon name={tab} size="S" />
             </ActionButton>
           {/each}
-          {#if drawerContext && !drawerContext.forceModal}
+          {#if drawerContext && get(drawerContext.resizable)}
             <ActionButton
               size="M"
               quiet

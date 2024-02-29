@@ -8,6 +8,7 @@
   // Context level stores to keep drawers in sync
   const openDrawers = writable([])
   const modal = writable(false)
+  const resizable = writable(true)
   const drawerLeft = writable(null)
   const drawerWidth = writable(null)
 
@@ -45,8 +46,13 @@
       return
     }
     observer?.disconnect()
+
+    // Reset state
     observer = null
     modal.set(false)
+    resizable.set(true)
+    drawerLeft.set(null)
+    drawerWidth.set(null)
   }
 </script>
 
@@ -93,6 +99,7 @@
     }
     if (forceModal) {
       modal.set(true)
+      resizable.set(false)
     }
     observe()
     visible = true
@@ -114,7 +121,7 @@
     hide,
     show,
     modal,
-    forceModal,
+    resizable,
   })
 
   const easeInOutQuad = x => {
