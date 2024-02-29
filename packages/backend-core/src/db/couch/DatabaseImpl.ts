@@ -137,7 +137,7 @@ export class DatabaseImpl implements Database {
 
   async docExists(id: string): Promise<boolean> {
     try {
-      await this.get(id)
+      await this.performCall(db => () => db.head(id))
       return true
     } catch {
       return false
