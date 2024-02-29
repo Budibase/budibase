@@ -12,7 +12,7 @@ describe("syncUsers", () => {
   afterAll(config.end)
 
   it("syncs users", async () => {
-    return config.doInContext(null, async () => {
+    return config.doInContext(undefined, async () => {
       await config.createUser()
 
       await syncUsers.run()
