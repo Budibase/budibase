@@ -3,6 +3,10 @@ import { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 
 type Headers = Record<string, string | string[] | undefined>
+type SuccessStatus = 200 | 201 | 204
+type ErrorStatus = 400 | 401 | 403 | 404 | 500 | 502 | 503 | 504
+type Status = SuccessStatus | ErrorStatus
+type Method = "get" | "post" | "put" | "patch" | "delete"
 
 export interface AttachedFile {
   name: string
@@ -21,9 +25,10 @@ function isAttachedFile(file: any): file is AttachedFile {
 }
 
 export interface Expectations {
-  status?: number
+  status?: Status
   headers?: Record<string, string | RegExp>
   headersNotPresent?: string[]
+  body?: Record<string, any>
 }
 
 export interface RequestOpts {
@@ -137,7 +142,7 @@ export abstract class TestAPI {
   }
 
   protected _request = async <T>(
-    method: "get" | "post" | "put" | "patch" | "delete",
+    method: Method,
     url: string,
     opts?: RequestOpts
   ): Promise<T> => {
@@ -180,6 +185,10 @@ export abstract class TestAPI {
       }
     }
 
-    return response.body as T
+    if (expectations?.body) {
+      expect(response.body).toMatchObject(expectations.body)
+    }
+
+    return response.body
   }
 }
