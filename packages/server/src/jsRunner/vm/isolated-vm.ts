@@ -99,14 +99,7 @@ export class IsolatedVM implements VM {
   }
 
   withContext<T>(context: Record<string, any>, executeWithContext: () => T) {
-    this.addToContext({
-      ...context,
-      Snippets: {
-        specialFunction: function (special: string) {
-          return "hello world! " + special
-        },
-      },
-    })
+    this.addToContext(context)
 
     try {
       return executeWithContext()
