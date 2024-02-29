@@ -1,5 +1,11 @@
 import type Nano from "@budibase/nano"
-import { AllDocsResponse, AnyDocument, Document, ViewTemplateOpts } from "../"
+import {
+  AllDocsResponse,
+  AnyDocument,
+  Document,
+  RowValue,
+  ViewTemplateOpts,
+} from "../"
 import { Writable } from "stream"
 
 export enum SearchIndex {
@@ -135,7 +141,7 @@ export interface Database {
     opts?: DatabasePutOpts
   ): Promise<Nano.DocumentInsertResponse>
   bulkDocs(documents: AnyDocument[]): Promise<Nano.DocumentBulkResponse[]>
-  allDocs<T extends Document>(
+  allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>>
   query<T extends Document>(

@@ -15,10 +15,14 @@ import {
   FieldType,
   RelationshipFieldMetadata,
   SourceName,
+  UpdateDatasourceRequest,
   UpdateDatasourceResponse,
   UserCtx,
   VerifyDatasourceRequest,
   VerifyDatasourceResponse,
+  Table,
+  RowValue,
+  DynamicVariable,
 } from "@budibase/types"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
@@ -90,8 +94,10 @@ async function invalidateVariables(
   existingDatasource: Datasource,
   updatedDatasource: Datasource
 ) {
-  const existingVariables: any = existingDatasource.config?.dynamicVariables
-  const updatedVariables: any = updatedDatasource.config?.dynamicVariables
+  const existingVariables: DynamicVariable[] =
+    existingDatasource.config?.dynamicVariables
+  const updatedVariables: DynamicVariable[] =
+    updatedDatasource.config?.dynamicVariables
   const toInvalidate = []
 
   if (!existingVariables) {
@@ -103,9 +109,9 @@ async function invalidateVariables(
     toInvalidate.push(...existingVariables)
   } else {
     // invaldate changed / removed
-    existingVariables.forEach((existing: any) => {
+    existingVariables.forEach(existing => {
       const unchanged = updatedVariables.find(
-        (updated: any) =>
+        updated =>
           existing.name === updated.name &&
           existing.queryId === updated.queryId &&
           existing.value === updated.value
@@ -118,24 +124,32 @@ async function invalidateVariables(
   await invalidateDynamicVariables(toInvalidate)
 }
 
-export async function update(ctx: UserCtx<any, UpdateDatasourceResponse>) {
+export async function update(
+  ctx: UserCtx<UpdateDatasourceRequest, UpdateDatasourceResponse>
+) {
   const db = context.getAppDB()
   const datasourceId = ctx.params.datasourceId
   const baseDatasource = await sdk.datasources.get(datasourceId)
-  const auth = baseDatasource.config?.auth
   await invalidateVariables(baseDatasource, ctx.request.body)
 
   const isBudibaseSource =
     baseDatasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE
 
-  const dataSourceBody = isBudibaseSource
-    ? { name: ctx.request.body?.name }
+  const dataSourceBody: Datasource = isBudibaseSource
+    ? {
+        name: ctx.request.body?.name,
+        type: dbCore.BUDIBASE_DATASOURCE_TYPE,
+        source: SourceName.BUDIBASE,
+      }
     : ctx.request.body
 
   let datasource: Datasource = {
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
+
+  // this block is specific to GSheets, if no auth set, set it back
+  const auth = baseDatasource.config?.auth
   if (auth && !ctx.request.body.auth) {
     // don't strip auth config from DB
     datasource.config!.auth = auth
@@ -204,7 +218,7 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
   const db = context.getAppDB()
 
   // Get all internal tables
-  const internalTables = await db.allDocs(
+  const internalTables = await db.allDocs<Table>(
     getTableParams(null, {
       include_docs: true,
     })
@@ -212,8 +226,8 @@ async function destroyInternalTablesBySourceId(datasourceId: string) {
 
   // Filter by datasource and return the docs.
   const datasourceTableDocs = internalTables.rows.reduce(
-    (acc: any, table: any) => {
-      if (table.doc.sourceId == datasourceId) {
+    (acc: Table[], table) => {
+      if (table.doc?.sourceId == datasourceId) {
         acc.push(table.doc)
       }
       return acc
@@ -254,9 +268,9 @@ export async function destroy(ctx: UserCtx) {
   if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
     await destroyInternalTablesBySourceId(datasourceId)
   } else {
-    const queries = await db.allDocs(getQueryParams(datasourceId))
+    const queries = await db.allDocs<RowValue>(getQueryParams(datasourceId))
     await db.bulkDocs(
-      queries.rows.map((row: any) => ({
+      queries.rows.map(row => ({
         _id: row.id,
         _rev: row.value.rev,
         _deleted: true,

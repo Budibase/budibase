@@ -1,8 +1,8 @@
 import {
   DEFAULT_BB_DATASOURCE_ID,
-  DEFAULT_INVENTORY_TABLE_ID,
   DEFAULT_EMPLOYEE_TABLE_ID,
   DEFAULT_EXPENSES_TABLE_ID,
+  DEFAULT_INVENTORY_TABLE_ID,
   DEFAULT_JOBS_TABLE_ID,
 } from "../../constants"
 import { importToRows } from "../../api/controllers/table/utils"
@@ -15,19 +15,21 @@ import { expensesImport } from "./expensesImport"
 import { db as dbCore } from "@budibase/backend-core"
 import {
   AutoFieldSubType,
+  Datasource,
   FieldType,
   RelationshipType,
   Row,
+  SourceName,
   Table,
   TableSchema,
   TableSourceType,
 } from "@budibase/types"
 
-const defaultDatasource = {
+const defaultDatasource: Datasource = {
   _id: DEFAULT_BB_DATASOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Sample Data",
-  source: "BUDIBASE",
+  source: SourceName.BUDIBASE,
   config: {},
 }
 
