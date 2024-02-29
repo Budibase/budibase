@@ -12,7 +12,6 @@ import {
   SourceName,
   Schema,
   TableSourceType,
-  FieldType,
 } from "@budibase/types"
 import {
   getSqlQuery,
