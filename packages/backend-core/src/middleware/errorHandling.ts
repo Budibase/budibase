@@ -1,5 +1,6 @@
 import { APIError } from "@budibase/types"
 import * as errors from "../errors"
+import environment from "../environment"
 
 export async function errorHandling(ctx: any, next: any) {
   try {
@@ -14,15 +15,21 @@ export async function errorHandling(ctx: any, next: any) {
       console.error(err)
     }
 
-    const error = errors.getPublicError(err)
-    const body: APIError = {
-      message: err.message,
-      status: status,
-      validationErrors: err.validation,
-      error,
+    if (environment.isTest()) {
+      ctx.body = {
+        message: err.message,
+        status: status,
+        error: errors.getPublicError(err),
+        stack: err.stack,
+      }
+    } else {
+      ctx.body = {
+        message: err.message,
+        status: status,
+        validationErrors: err.validation,
+        error: errors.getPublicError(err),
+      }
     }
-
-    ctx.body = body
   }
 }
 

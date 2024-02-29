@@ -126,11 +126,27 @@ export abstract class TestAPI {
     const response = await request
 
     if (response.status !== status) {
-      throw new Error(
-        `Expected status ${status} but got ${
-          response.status
-        } with body ${JSON.stringify(response.body)}`
-      )
+      let message = `Expected status ${status} but got ${response.status}`
+
+      const stack = response.body.stack
+      delete response.body.stack
+
+      if (response.body) {
+        message += `\n\nBody:`
+        const body = JSON.stringify(response.body, null, 2)
+        for (const line of body.split("\n")) {
+          message += `\n⏐ ${line}`
+        }
+      }
+
+      if (stack) {
+        message += `\n\nStack from request handler:`
+        for (const line of stack.split("\n")) {
+          message += `\n⏐ ${line}`
+        }
+      }
+
+      throw new Error(message)
     }
 
     if (expectations?.headersNotPresent) {
