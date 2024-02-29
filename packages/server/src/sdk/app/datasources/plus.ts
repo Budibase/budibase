@@ -3,32 +3,11 @@ import {
   DatasourcePlus,
   IntegrationBase,
   Schema,
-  Table,
 } from "@budibase/types"
 import * as datasources from "./datasources"
 import tableSdk from "../tables"
 import { getIntegration } from "../../../integrations"
 import { context } from "@budibase/backend-core"
-
-function checkForSchemaErrors(schema: Record<string, Table>) {
-  const errors: Record<string, string> = {}
-  for (let [tableName, table] of Object.entries(schema)) {
-    if (tableName.includes(".")) {
-      errors[tableName] = "Table names containing dots are not supported."
-    } else {
-      const columnNames = Object.keys(table.schema)
-      const invalidColumnName = columnNames.find(columnName =>
-        columnName.includes(".")
-      )
-      if (invalidColumnName) {
-        errors[
-          tableName
-        ] = `Column '${invalidColumnName}' is not supported as it contains a dot.`
-      }
-    }
-  }
-  return errors
-}
 
 export async function buildFilteredSchema(
   datasource: Datasource,
@@ -51,19 +30,16 @@ export async function buildFilteredSchema(
       filteredSchema.errors[key] = schema.errors[key]
     }
   }
-
-  return {
-    ...filteredSchema,
-    errors: {
-      ...filteredSchema.errors,
-      ...checkForSchemaErrors(filteredSchema.tables),
-    },
-  }
+  return filteredSchema
 }
 
 async function buildSchemaHelper(datasource: Datasource): Promise<Schema> {
   const connector = (await getConnector(datasource)) as DatasourcePlus
-  return await connector.buildSchema(datasource._id!, datasource.entities!)
+  const externalSchema = await connector.buildSchema(
+    datasource._id!,
+    datasource.entities!
+  )
+  return externalSchema
 }
 
 export async function getConnector(
