@@ -1,5 +1,5 @@
 import TestConfiguration from "../TestConfiguration"
-import { SuperTest, Test } from "supertest"
+import { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 
 type Headers = Record<string, string | string[] | undefined>
@@ -22,7 +22,6 @@ function isAttachedFile(file: any): file is AttachedFile {
 
 export interface Expectations {
   status?: number
-  contentType?: string | RegExp
   headers?: Record<string, string | RegExp>
   headersNotPresent?: string[]
 }
@@ -71,11 +70,11 @@ export abstract class TestAPI {
     return await this._request<T>("delete", url, opts)
   }
 
-  protected _request = async <T>(
+  protected _requestRaw = async (
     method: "get" | "post" | "put" | "patch" | "delete",
     url: string,
     opts?: RequestOpts
-  ): Promise<T> => {
+  ): Promise<Response> => {
     const {
       headers = {},
       query = {},
@@ -84,7 +83,12 @@ export abstract class TestAPI {
       files = {},
       expectations,
     } = opts || {}
-    const { status = 200, contentType = /json/ } = expectations || {}
+    const { status = 200 } = expectations || {}
+    const expectHeaders = expectations?.headers || {}
+
+    if (status !== 204 && !expectHeaders["Content-Type"]) {
+      expectHeaders["Content-Type"] = "application/json"
+    }
 
     let queryParams = []
     for (const [key, value] of Object.entries(query)) {
@@ -118,16 +122,29 @@ export abstract class TestAPI {
         request = request.attach(key, value as any)
       }
     }
-    if (contentType && status !== 204) {
-      request = request.expect("Content-Type", contentType as any)
-    }
     if (expectations?.headers) {
       for (const [key, value] of Object.entries(expectations.headers)) {
+        if (value === undefined) {
+          throw new Error(
+            `Got an undefined expected value for header "${key}", if you want to check for the absence of a header, use headersNotPresent`
+          )
+        }
         request = request.expect(key, value as any)
       }
     }
 
-    const response = await request
+    return await request
+  }
+
+  protected _request = async <T>(
+    method: "get" | "post" | "put" | "patch" | "delete",
+    url: string,
+    opts?: RequestOpts
+  ): Promise<T> => {
+    const { expectations } = opts || {}
+    const { status = 200 } = expectations || {}
+
+    const response = await this._requestRaw(method, url, opts)
 
     if (response.status !== status) {
       let message = `Expected status ${status} but got ${response.status}`
