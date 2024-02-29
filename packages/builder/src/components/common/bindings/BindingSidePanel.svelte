@@ -123,6 +123,7 @@
   maxHeight={480}
   dismissible={false}
   on:mouseenter={stopHidingPopover}
+  on:mouseleave={hidePopover}
 >
   <div class="binding-popover" class:helper={hoverTarget.helper}>
     {#if hoverTarget.description}
