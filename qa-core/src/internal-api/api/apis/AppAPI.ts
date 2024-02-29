@@ -1,11 +1,10 @@
-import { App } from "@budibase/types"
+import { App, CreateAppRequest } from "@budibase/types"
 import { Response } from "node-fetch"
 import {
   RouteConfig,
   AppPackageResponse,
   DeployConfig,
   MessageResponse,
-  CreateAppRequest,
 } from "../../../types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"

@@ -15,6 +15,8 @@
   const close = () => dispatch("close")
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if visible}
   <div
     class="mobile-nav-underlay"
@@ -22,6 +24,8 @@
     on:click={close}
   />
 {/if}
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="mobile-nav" class:visible>
   <Layout noPadding gap="M">
     <div on:click={close}>

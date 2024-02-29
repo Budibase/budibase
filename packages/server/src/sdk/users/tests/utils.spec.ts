@@ -22,15 +22,18 @@ describe("syncGlobalUsers", () => {
       expect(metadata).toHaveLength(1)
       expect(metadata).toEqual([
         expect.objectContaining({
-          _id: db.generateUserMetadataID(config.user._id),
+          _id: db.generateUserMetadataID(config.getUser()._id!),
         }),
       ])
     })
   })
 
   it("admin and builders users are synced", async () => {
-    const user1 = await config.createUser({ admin: true })
-    const user2 = await config.createUser({ admin: false, builder: true })
+    const user1 = await config.createUser({ admin: { global: true } })
+    const user2 = await config.createUser({
+      admin: { global: false },
+      builder: { global: true },
+    })
     await config.doInContext(config.appId, async () => {
       expect(await rawUserMetadata()).toHaveLength(1)
       await syncGlobalUsers()
@@ -51,7 +54,10 @@ describe("syncGlobalUsers", () => {
   })
 
   it("app users are not synced if not specified", async () => {
-    const user = await config.createUser({ admin: false, builder: false })
+    const user = await config.createUser({
+      admin: { global: false },
+      builder: { global: false },
+    })
     await config.doInContext(config.appId, async () => {
       await syncGlobalUsers()
 
@@ -68,8 +74,14 @@ describe("syncGlobalUsers", () => {
   it("app users are added when group is assigned to app", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
-      const user1 = await config.createUser({ admin: false, builder: false })
-      const user2 = await config.createUser({ admin: false, builder: false })
+      const user1 = await config.createUser({
+        admin: { global: false },
+        builder: { global: false },
+      })
+      const user2 = await config.createUser({
+        admin: { global: false },
+        builder: { global: false },
+      })
       await proSdk.groups.addUsers(group.id, [user1._id!, user2._id!])
 
       await config.doInContext(config.appId, async () => {
@@ -84,7 +96,8 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
 
         const metadata = await rawUserMetadata()
-        expect(metadata).toHaveLength(2)
+
+        expect(metadata).toHaveLength(2 + 1) // ADMIN user created in test bootstrap still in the application
         expect(metadata).toContainEqual(
           expect.objectContaining({
             _id: db.generateUserMetadataID(user1._id!),
@@ -102,8 +115,14 @@ describe("syncGlobalUsers", () => {
   it("app users are removed when app is removed from user group", async () => {
     await config.doInTenant(async () => {
       const group = await proSdk.groups.save(structures.userGroups.userGroup())
-      const user1 = await config.createUser({ admin: false, builder: false })
-      const user2 = await config.createUser({ admin: false, builder: false })
+      const user1 = await config.createUser({
+        admin: { global: false },
+        builder: { global: false },
+      })
+      const user2 = await config.createUser({
+        admin: { global: false },
+        builder: { global: false },
+      })
       await proSdk.groups.updateGroupApps(group.id, {
         appsToAdd: [
           { appId: config.prodAppId!, roleId: roles.BUILTIN_ROLE_IDS.BASIC },
@@ -121,7 +140,7 @@ describe("syncGlobalUsers", () => {
         await syncGlobalUsers()
 
         const metadata = await rawUserMetadata()
-        expect(metadata).toHaveLength(1) //ADMIN user created in test bootstrap still in the application
+        expect(metadata).toHaveLength(1) // ADMIN user created in test bootstrap still in the application
       })
     })
   })
