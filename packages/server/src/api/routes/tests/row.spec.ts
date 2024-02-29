@@ -757,16 +757,16 @@ describe.each([
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        const res = await config.api.legacyView.get(table._id!)
-        expect(res.body.length).toEqual(1)
-        expect(res.body[0]._id).toEqual(row._id)
+        const rows = await config.api.legacyView.get(table._id!)
+        expect(rows.length).toEqual(1)
+        expect(rows[0]._id).toEqual(row._id)
         await assertRowUsage(rowUsage)
       })
 
       it("should throw an error if view doesn't exist", async () => {
         const rowUsage = await getRowUsage()
 
-        await config.api.legacyView.get("derp", { expectStatus: 404 })
+        await config.api.legacyView.get("derp", { status: 404 })
 
         await assertRowUsage(rowUsage)
       })
@@ -781,9 +781,9 @@ describe.each([
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        const res = await config.api.legacyView.get(view.name)
-        expect(res.body.length).toEqual(1)
-        expect(res.body[0]._id).toEqual(row._id)
+        const rows = await config.api.legacyView.get(view.name)
+        expect(rows.length).toEqual(1)
+        expect(rows[0]._id).toEqual(row._id)
 
         await assertRowUsage(rowUsage)
       })

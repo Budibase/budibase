@@ -1054,7 +1054,7 @@ describe("postgres integrations", () => {
 
     it("should state an invalid datasource cannot connect", async () => {
       const dbConfig = await databaseTestProviders.postgres.datasource()
-      const response = await config.api.datasource.verify(
+      await config.api.datasource.verify(
         {
           datasource: {
             ...dbConfig,
