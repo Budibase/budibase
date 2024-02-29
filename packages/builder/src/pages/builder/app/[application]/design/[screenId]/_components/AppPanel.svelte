@@ -33,7 +33,7 @@
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
-    padding: 9px var(--spacing-m);
+    padding: 9px 10px 12px 10px;
     position: relative;
     transition: width 360ms ease-out;
   }
