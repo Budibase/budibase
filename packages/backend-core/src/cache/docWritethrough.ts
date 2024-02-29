@@ -96,6 +96,10 @@ export class DocWritethrough {
         }
 
         await this.db.put(doc)
+
+        for (const key of keysToPersist) {
+          await cache.delete(key, { useTenancy: false })
+        }
       }
     )
 
