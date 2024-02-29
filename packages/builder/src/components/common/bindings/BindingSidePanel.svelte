@@ -71,7 +71,7 @@
   }
 
   const showBindingPopover = (binding, target) => {
-    if (!context) {
+    if (!context || !binding.value || binding.value === "") {
       return
     }
     stopHidingPopover()
