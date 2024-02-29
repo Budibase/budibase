@@ -15,21 +15,19 @@ export async function errorHandling(ctx: any, next: any) {
       console.error(err)
     }
 
-    if (environment.isTest()) {
-      ctx.body = {
-        message: err.message,
-        status: status,
-        error: errors.getPublicError(err),
-        stack: err.stack,
-      }
-    } else {
-      ctx.body = {
-        message: err.message,
-        status: status,
-        validationErrors: err.validation,
-        error: errors.getPublicError(err),
-      }
+    let error: APIError = {
+      message: err.message,
+      status: status,
+      validationErrors: err.validation,
+      error: errors.getPublicError(err),
     }
+
+    if (environment.isTest() && ctx.headers["x-budibase-include-stacktrace"]) {
+      // @ts-ignore
+      error.stack = err.stack
+    }
+
+    ctx.body = error
   }
 }
 

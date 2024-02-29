@@ -96,7 +96,11 @@ export abstract class TestAPI {
       url += `?${queryParams.join("&")}`
     }
 
-    let request = this.request[method](url).set(this.config.defaultHeaders())
+    let request = this.request[method](url).set(
+      this.config.defaultHeaders({
+        "x-budibase-include-stacktrace": "true",
+      })
+    )
     if (headers) {
       request = request.set(headers)
     }
