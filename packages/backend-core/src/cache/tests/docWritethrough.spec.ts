@@ -181,5 +181,33 @@ describe("docWritethrough", () => {
         )
       })
     })
+
+    it("cached values are persisted only once", async () => {
+      await config.doInTenant(async () => {
+        const initialPatch = generatePatchObject(5)
+
+        await docWritethrough.patch(initialPatch)
+        travelForward(WRITE_RATE_MS)
+
+        await docWritethrough.patch({})
+
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining(initialPatch)
+        )
+
+        await db.remove(await db.get(documentId))
+
+        travelForward(WRITE_RATE_MS)
+        const extraPatch = generatePatchObject(5)
+        await docWritethrough.patch(extraPatch)
+
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining(extraPatch)
+        )
+        expect(await db.get(documentId)).not.toEqual(
+          expect.objectContaining(initialPatch)
+        )
+      })
+    })
   })
 })
