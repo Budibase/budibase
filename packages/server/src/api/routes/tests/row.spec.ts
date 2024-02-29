@@ -1523,7 +1523,7 @@ describe.each([
         })
 
         it("allow public users to fetch when permissions are explicit", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: viewId,
@@ -1538,7 +1538,7 @@ describe.each([
         })
 
         it("allow public users to fetch when permissions are inherited", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: tableId,
@@ -1553,12 +1553,12 @@ describe.each([
         })
 
         it("respects inherited permissions, not allowing not public views from public tables", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: tableId,
           })
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.POWER,
             level: PermissionLevel.READ,
             resourceId: viewId,
