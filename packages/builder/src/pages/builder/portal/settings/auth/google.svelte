@@ -145,6 +145,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if providers.google}
   <Divider />
   <Layout gap="XS" noPadding>

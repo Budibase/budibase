@@ -40,6 +40,7 @@
   let schemaType
 
   let autoSchema = {}
+  let nestedSchemaFields = {}
   let rows = []
   let keys = {}
 
@@ -83,13 +84,14 @@
         return
       }
 
+      nestedSchemaFields = response.nestedSchemaFields
+
       if (Object.keys(newQuery.schema).length === 0) {
         // Assign this to a variable instead of directly to the newQuery.schema so that a user
         // can change the table they're querying and have the schema update until they first
         // edit it
         autoSchema = response.schema
       }
-
       rows = response.rows
 
       notifications.success("Query executed successfully")
@@ -120,6 +122,7 @@
           Object.keys(newQuery.schema).length === 0
             ? autoSchema
             : newQuery.schema,
+        nestedSchemaFields,
       })
 
       notifications.success("Query saved successfully")

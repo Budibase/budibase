@@ -72,6 +72,9 @@ export class AttachmentCleanup {
           continue
         }
         rows.forEach(row => {
+          if (!Array.isArray(row[key])) {
+            return
+          }
           files = files.concat(
             row[key].map((attachment: any) => attachment.key)
           )

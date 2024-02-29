@@ -189,11 +189,12 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const rowId = ctx.params.rowId as string
   // need table to work out where links go in row, as well as the link docs
-  const [table, row, links] = await Promise.all([
+  const [table, links] = await Promise.all([
     sdk.tables.getTable(tableId),
-    utils.findRow(ctx, tableId, rowId),
     linkRows.getLinkDocuments({ tableId, rowId, fieldName }),
   ])
+  let row = await utils.findRow(ctx, tableId, rowId)
+  row = await outputProcessing(table, row)
   const linkVals = links as LinkDocumentValue[]
 
   // look up the actual rows based on the ids

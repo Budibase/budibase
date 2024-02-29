@@ -31,7 +31,7 @@
   import Editor from "components/integration/QueryEditor.svelte"
   import ModalBindableInput from "components/common/bindings/ModalBindableInput.svelte"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
-  import BindingPicker from "components/common/bindings/BindingSidePanel.svelte"
+  import BindingSidePanel from "components/common/bindings/BindingSidePanel.svelte"
   import { BindingHelpers } from "components/common/bindings/utils"
   import {
     bindingsToCompletions,
@@ -577,7 +577,7 @@
                 </div>
                 {#if editingJs}
                   <div class="js-binding-picker">
-                    <BindingPicker
+                    <BindingSidePanel
                       {bindings}
                       allowHelpers={false}
                       addBinding={binding =>
