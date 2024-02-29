@@ -1,3 +1,11 @@
+import {
+  Operation,
+  QueryJson,
+  TableSourceType,
+  Table,
+  FieldType,
+} from "@budibase/types"
+
 const Sql = require("../base/sql").default
 const { SqlClient } = require("../utils")
 
@@ -17,7 +25,7 @@ function generateReadJson({
   filters,
   sort,
   paginate,
-}: any = {}) {
+}: any = {}): QueryJson {
   return {
     endpoint: endpoint(table || TABLE_NAME, "READ"),
     resource: {
@@ -28,6 +36,10 @@ function generateReadJson({
     paginate: paginate || {},
     meta: {
       table: {
+        type: "table",
+        sourceType: TableSourceType.EXTERNAL,
+        sourceId: "SOURCE_ID",
+        schema: {},
         name: table || TABLE_NAME,
         primary: ["id"],
       },
@@ -35,34 +47,40 @@ function generateReadJson({
   }
 }
 
-function generateCreateJson(table = TABLE_NAME, body = {}) {
+function generateCreateJson(table = TABLE_NAME, body = {}): QueryJson {
   return {
     endpoint: endpoint(table, "CREATE"),
     body,
   }
 }
 
-function generateUpdateJson(table = TABLE_NAME, body = {}, filters = {}) {
+function generateUpdateJson({
+  table = TABLE_NAME,
+  body = {},
+  filters = {},
+  meta = {},
+}): QueryJson {
   return {
     endpoint: endpoint(table, "UPDATE"),
     filters,
     body,
+    meta,
   }
 }
 
-function generateDeleteJson(table = TABLE_NAME, filters = {}) {
+function generateDeleteJson(table = TABLE_NAME, filters = {}): QueryJson {
   return {
     endpoint: endpoint(table, "DELETE"),
     filters,
   }
 }
 
-function generateRelationshipJson(config: { schema?: string } = {}) {
+function generateRelationshipJson(config: { schema?: string } = {}): QueryJson {
   return {
     endpoint: {
       datasourceId: "Postgres",
       entityId: "brands",
-      operation: "READ",
+      operation: Operation.READ,
       schema: config.schema,
     },
     resource: {
@@ -76,7 +94,6 @@ function generateRelationshipJson(config: { schema?: string } = {}) {
     },
     filters: {},
     sort: {},
-    paginate: {},
     relationships: [
       {
         from: "brand_id",
@@ -240,17 +257,17 @@ describe("SQL query builder", () => {
 
   it("should test an update statement", () => {
     const query = sql._query(
-      generateUpdateJson(
-        TABLE_NAME,
-        {
+      generateUpdateJson({
+        table: TABLE_NAME,
+        body: {
           name: "John",
         },
-        {
+        filters: {
           equal: {
             id: 1001,
           },
-        }
-      )
+        },
+      })
     )
     expect(query).toEqual({
       bindings: ["John", 1001],
@@ -681,5 +698,100 @@ describe("SQL query builder", () => {
       bindings: [dateObj],
       sql: `insert into \"test\" (\"name\") values ($1) returning *`,
     })
+  })
+
+  it("should be able to rename column for MySQL", () => {
+    const table: Table = {
+      type: "table",
+      sourceType: TableSourceType.EXTERNAL,
+      name: TABLE_NAME,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+      },
+      sourceId: "SOURCE_ID",
+    }
+    const oldTable: Table = {
+      ...table,
+      schema: {
+        name: {
+          type: FieldType.STRING,
+          name: "name",
+          externalType: "varchar(45)",
+        },
+      },
+    }
+    const query = new Sql(SqlClient.MY_SQL, limit)._query({
+      table,
+      endpoint: {
+        datasourceId: "MySQL",
+        operation: Operation.UPDATE_TABLE,
+        entityId: TABLE_NAME,
+      },
+      meta: {
+        table: oldTable,
+        tables: [oldTable],
+        renamed: {
+          old: "name",
+          updated: "first_name",
+        },
+      },
+    })
+    expect(query).toEqual({
+      bindings: [],
+      sql: `alter table \`${TABLE_NAME}\` change column \`name\` \`first_name\` varchar(45);`,
+    })
+  })
+
+  it("should be able to delete a column", () => {
+    const table: Table = {
+      type: "table",
+      sourceType: TableSourceType.EXTERNAL,
+      name: TABLE_NAME,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+      },
+      sourceId: "SOURCE_ID",
+    }
+    const oldTable: Table = {
+      ...table,
+      schema: {
+        first_name: {
+          type: FieldType.STRING,
+          name: "first_name",
+          externalType: "varchar(45)",
+        },
+        last_name: {
+          type: FieldType.STRING,
+          name: "last_name",
+          externalType: "varchar(45)",
+        },
+      },
+    }
+    const query = sql._query({
+      table,
+      endpoint: {
+        datasourceId: "Postgres",
+        operation: Operation.UPDATE_TABLE,
+        entityId: TABLE_NAME,
+      },
+      meta: {
+        table: oldTable,
+        tables: [oldTable],
+      },
+    })
+    expect(query).toEqual([
+      {
+        bindings: [],
+        sql: `alter table "${TABLE_NAME}" drop column "last_name"`,
+      },
+    ])
   })
 })
