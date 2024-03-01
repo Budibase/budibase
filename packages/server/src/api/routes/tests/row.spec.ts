@@ -630,7 +630,7 @@ describe.each([
       const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.deleteMany(table._id!, {
+      const res = await config.api.row.bulkDelete(table._id!, {
         rows: [createdRow],
       })
       expect(res[0]._id).toEqual(createdRow._id)
@@ -682,7 +682,7 @@ describe.each([
       const row2 = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.deleteMany(table._id!, {
+      const res = await config.api.row.bulkDelete(table._id!, {
         rows: [row1, row2],
       })
 
@@ -699,7 +699,7 @@ describe.each([
       ])
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.deleteMany(table._id!, {
+      const res = await config.api.row.bulkDelete(table._id!, {
         rows: [row1, row2._id!, { _id: row3._id }],
       })
 
@@ -1073,7 +1073,7 @@ describe.each([
         const createdRow = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        await config.api.row.deleteMany(view.id, { rows: [createdRow] })
+        await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
 
         await assertRowUsage(rowUsage - 1)
 
@@ -1099,7 +1099,7 @@ describe.each([
         ])
         const rowUsage = await getRowUsage()
 
-        await config.api.row.deleteMany(view.id, { rows: [rows[0], rows[2]] })
+        await config.api.row.bulkDelete(view.id, { rows: [rows[0], rows[2]] })
 
         await assertRowUsage(rowUsage - 2)
 

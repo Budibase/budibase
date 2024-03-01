@@ -83,7 +83,7 @@ export class RowAPI extends TestAPI {
     })
   }
 
-  deleteMany = async (
+  bulkDelete = async (
     sourceId: string,
     body: DeleteRows,
     expectations?: Expectations
