@@ -188,7 +188,7 @@ describe("/permission", () => {
       await config.publish()
 
       const res = await config.api.viewV2.publicSearch(view.id)
-      expect(res.body.rows[0]._id).toEqual(row._id)
+      expect(res.rows[0]._id).toEqual(row._id)
     })
 
     it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
@@ -238,7 +238,7 @@ describe("/permission", () => {
       await config.publish()
 
       const res = await config.api.viewV2.publicSearch(view.id)
-      expect(res.body.rows[0]._id).toEqual(row._id)
+      expect(res.rows[0]._id).toEqual(row._id)
     })
 
     it("shouldn't allow writing from a public user", async () => {
