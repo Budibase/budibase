@@ -398,7 +398,7 @@ describe("postgres integrations", () => {
         expect(res.status).toBe(200)
         expect(res.body).toEqual(updatedRow)
 
-        const persistedRow = await config.getRow(
+        const persistedRow = await config.api.row.get(
           primaryPostgresTable._id!,
           row.id
         )

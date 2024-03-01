@@ -9,42 +9,27 @@ import {
   SearchRowResponse,
   SearchParams,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class RowAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   get = async (
     sourceId: string,
     rowId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .get(`/api/${sourceId}/rows/${rowId}`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    if (expectStatus !== 404) {
-      request.expect("Content-Type", /json/)
-    }
-    return request
+    return await this._get<Row>(`/api/${sourceId}/rows/${rowId}`, {
+      expectations,
+    })
   }
 
   getEnriched = async (
     sourceId: string,
     rowId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .get(`/api/${sourceId}/${rowId}/enrich`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    if (expectStatus !== 404) {
-      request.expect("Content-Type", /json/)
-    }
-    return request
+    return await this._get<Row>(`/api/${sourceId}/${rowId}/enrich`, {
+      expectations,
+    })
   }
 
   save = async (
