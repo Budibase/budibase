@@ -15,7 +15,7 @@ async function getCache() {
 }
 
 interface CacheItem {
-  lastWrite: number
+  nextWrite: number
 }
 
 export class DocWritethrough {
@@ -40,8 +40,8 @@ export class DocWritethrough {
     return this._docId
   }
 
-  private makeCacheItem(): CacheItem {
-    return { lastWrite: Date.now() }
+  private makeNextWriteInfoItem(): CacheItem {
+    return { nextWrite: Date.now() + this.writeRateMs }
   }
 
   async patch(data: Record<string, any>) {
@@ -62,7 +62,10 @@ export class DocWritethrough {
         async () => {
           if (await this.shouldUpdateDb(cache)) {
             await this.persistToDb(cache)
-            await cache.store(this.docInfoCacheKey, this.makeCacheItem())
+            await cache.store(
+              this.docInfoCacheKey,
+              this.makeNextWriteInfoItem()
+            )
           }
         }
       )
@@ -75,9 +78,9 @@ export class DocWritethrough {
 
   private async shouldUpdateDb(cache: BaseCache) {
     const cacheItem = await cache.withCache(this.docInfoCacheKey, null, () =>
-      this.makeCacheItem()
+      this.makeNextWriteInfoItem()
     )
-    return cacheItem.lastWrite <= Date.now() - this.writeRateMs
+    return Date.now() >= cacheItem.nextWrite
   }
 
   private async storeToCache(cache: BaseCache, data: Record<string, any>) {
