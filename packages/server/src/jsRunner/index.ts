@@ -21,13 +21,15 @@ export function init() {
               memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
               invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
               isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
-            }).withHelpers()
+            })
+              .withHelpers()
+              .withSnippets()
 
         if (bbCtx) {
           // If we have a context, we want to persist it to reuse the isolate
           bbCtx.vm = vm
         }
-        const { helpers, ...rest } = ctx
+        const { helpers, snippets, ...rest } = ctx
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
         if (error.message === "Script execution timed out.") {

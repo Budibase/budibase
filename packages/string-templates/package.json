@@ -12,7 +12,8 @@
       "import": "./dist/bundle.mjs"
     },
     "./package.json": "./package.json",
-    "./test/utils": "./test/utils.js"
+    "./test/utils": "./test/utils.js",
+    "./iife": "./src/iife.js"
   },
   "files": [
     "dist",
