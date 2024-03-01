@@ -92,7 +92,7 @@ export abstract class TestAPI {
     const expectHeaders = expectations?.headers || {}
 
     if (status !== 204 && !expectHeaders["Content-Type"]) {
-      expectHeaders["Content-Type"] = "application/json"
+      expectHeaders["Content-Type"] = /^application\/json/
     }
 
     let queryParams = []
