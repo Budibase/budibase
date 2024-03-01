@@ -98,6 +98,7 @@ export interface QueryJson {
     idFilter?: SearchFilters
   }
   relationships?: RelationshipsJson[]
+  tableAliases?: Record<string, string>
 }
 
 export interface SqlQuery {
