@@ -17,8 +17,5 @@
     --modal-background: var(--spectrum-global-color-gray-50);
     --drop-shadow: rgba(0, 0, 0, 0.25) !important;
     --spectrum-global-color-blue-100: rgba(35, 40, 50) !important;
-
-    --spectrum-alias-background-color-secondary: var(--spectrum-global-color-gray-75);
-    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
 }
 
