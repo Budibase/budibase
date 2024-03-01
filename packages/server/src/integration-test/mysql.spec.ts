@@ -10,7 +10,9 @@ import {
   FieldType,
   RelationshipType,
   Row,
+  SaveTableResponse,
   Table,
+  TableRequest,
   TableSourceType,
 } from "@budibase/types"
 import _ from "lodash"
@@ -18,13 +20,27 @@ import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
+import { builderSocket } from "../websockets"
 // @ts-ignore
 fetch.mockSearch()
 
 const config = setup.getConfig()!
 
 jest.unmock("mysql2/promise")
-jest.mock("../websockets")
+jest.mock("../websockets", () => ({
+  clientAppSocket: jest.fn(),
+  gridAppSocket: jest.fn(),
+  initialise: jest.fn(),
+  builderSocket: {
+    emitTableUpdate: jest.fn(),
+    emitTableDeletion: jest.fn(),
+    emitDatasourceUpdate: jest.fn(),
+    emitDatasourceDeletion: jest.fn(),
+    emitScreenUpdate: jest.fn(),
+    emitAppMetadataUpdate: jest.fn(),
+    emitAppPublish: jest.fn(),
+  },
+}))
 
 describe("mysql integrations", () => {
   let makeRequest: MakeRequestResponse,
@@ -1182,6 +1198,92 @@ describe("mysql integrations", () => {
       const schema =
         response.body.datasource.entities[repeated_table_name].schema
       expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
+    })
+  })
+
+  describe("POST /api/tables/", () => {
+    let client: mysql.Connection
+    const emitDatasourceUpdateMock = jest.fn()
+
+    beforeEach(async () => {
+      client = await mysql.createConnection(
+        (
+          await databaseTestProviders.mysql.datasource()
+        ).config!
+      )
+    })
+
+    afterEach(async () => {
+      await client.end()
+    })
+
+    it("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
+      mysqlDatasource = (
+        await makeRequest(
+          "post",
+          `/api/datasources/${mysqlDatasource._id}/schema`
+        )
+      ).body.datasource
+
+      const addColumnToTable: TableRequest = {
+        type: "table",
+        sourceType: TableSourceType.EXTERNAL,
+        name: "table",
+        sourceId: mysqlDatasource._id!,
+        primary: ["id"],
+        schema: {
+          id: {
+            type: FieldType.AUTO,
+            name: "id",
+            autocolumn: true,
+          },
+          new_column: {
+            type: FieldType.NUMBER,
+            name: "new_column",
+          },
+        },
+        _add: {
+          name: "new_column",
+        },
+      }
+
+      jest
+        .spyOn(builderSocket!, "emitDatasourceUpdate")
+        .mockImplementation(emitDatasourceUpdateMock)
+
+      await makeRequest("post", "/api/tables/", addColumnToTable)
+
+      const expectedTable: TableRequest = {
+        ...addColumnToTable,
+        schema: {
+          id: {
+            type: FieldType.NUMBER,
+            name: "id",
+            autocolumn: true,
+            constraints: {
+              presence: false,
+            },
+            externalType: "int unsigned",
+          },
+          new_column: {
+            type: FieldType.NUMBER,
+            name: "new_column",
+            autocolumn: false,
+            constraints: {
+              presence: false,
+            },
+            externalType: "float(8,2)",
+          },
+        },
+        created: true,
+        _id: `${mysqlDatasource._id}__table`,
+      }
+      delete expectedTable._add
+
+      expect(emitDatasourceUpdateMock).toBeCalledTimes(1)
+      const emittedDatasource: Datasource =
+        emitDatasourceUpdateMock.mock.calls[0][1]
+      expect(emittedDatasource.entities!["table"]).toEqual(expectedTable)
     })
   })
 })
