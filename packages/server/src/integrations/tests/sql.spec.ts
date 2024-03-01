@@ -1,3 +1,5 @@
+import { SqlClient } from "../utils"
+import Sql from "../base/sql"
 import {
   Operation,
   QueryJson,
@@ -5,9 +7,6 @@ import {
   Table,
   FieldType,
 } from "@budibase/types"
-
-const Sql = require("../base/sql").default
-const { SqlClient } = require("../utils")
 
 const TABLE_NAME = "test"
 
@@ -42,7 +41,7 @@ function generateReadJson({
         schema: {},
         name: table || TABLE_NAME,
         primary: ["id"],
-      },
+      } as any,
     },
   }
 }
@@ -519,7 +518,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson({ schema: "production" }))
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "production"."brands" limit $1) as "brands" left join "production"."products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
     })
   })
 
@@ -527,7 +526,7 @@ describe("SQL query builder", () => {
     const query = sql._query(generateRelationshipJson())
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
+      sql: `select "brands"."brand_id" as "brands.brand_id", "brands"."brand_name" as "brands.brand_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name", "products"."brand_id" as "products.brand_id" from (select * from "brands" limit $1) as "brands" left join "products" as "products" on "brands"."brand_id" = "products"."brand_id" limit $2`,
     })
   })
 
@@ -537,7 +536,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [500, 5000],
-      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" on "products"."product_id" = "stocks"."product_id" limit $2`,
+      sql: `select "stores"."store_id" as "stores.store_id", "stores"."store_name" as "stores.store_name", "products"."product_id" as "products.product_id", "products"."product_name" as "products.product_name" from (select * from "production"."stores" limit $1) as "stores" left join "production"."stocks" as "stocks" on "stores"."store_id" = "stocks"."store_id" left join "production"."products" as "products" on "products"."product_id" = "stocks"."product_id" limit $2`,
     })
   })
 
@@ -733,7 +732,7 @@ describe("SQL query builder", () => {
       },
       meta: {
         table: oldTable,
-        tables: [oldTable],
+        tables: { [oldTable.name]: oldTable },
         renamed: {
           old: "name",
           updated: "first_name",

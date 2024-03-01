@@ -12,6 +12,7 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -268,7 +269,9 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       }
     }
     try {
-      return await client.query(query.sql, query.bindings || [])
+      const bindings = query.bindings || []
+      this.log(query.sql, bindings)
+      return await client.query(query.sql, bindings)
     } catch (err: any) {
       await this.closeConnection()
       let readableMessage = getReadableErrorMessage(
@@ -417,7 +420,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     return response.rows.length ? response.rows : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const operation = this._operation(json).toLowerCase()
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
