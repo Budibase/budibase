@@ -392,7 +392,7 @@ describe.each([
         const createdRow = await config.createRow(row)
         const id = createdRow._id!
 
-        const saved = await config.api.row.get(id, table._id!)
+        const saved = await config.api.row.get(table._id!, id)
 
         expect(saved.stringUndefined).toBe(undefined)
         expect(saved.stringNull).toBe(null)
@@ -521,7 +521,7 @@ describe.each([
       expect(row.name).toEqual("Updated Name")
       expect(row.description).toEqual(existing.description)
 
-      const savedRow = await config.api.row.get(row._id!, table._id!)
+      const savedRow = await config.api.row.get(table._id!, row._id!)
 
       expect(savedRow.description).toEqual(existing.description)
       expect(savedRow.name).toEqual("Updated Name")
@@ -682,7 +682,7 @@ describe.each([
       const res = await config.api.row.delete(table._id!, [row1, row2])
 
       expect(res.body.length).toEqual(2)
-      await config.api.row.get(row1._id!, table._id!, { status: 404 })
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 2)
     })
 
@@ -701,7 +701,7 @@ describe.each([
       ])
 
       expect(res.body.length).toEqual(3)
-      await config.api.row.get(row1._id!, table._id!, { status: 404 })
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 3)
     })
 
@@ -712,7 +712,7 @@ describe.each([
       const res = await config.api.row.delete(table._id!, row1)
 
       expect(res.body.id).toEqual(row1._id)
-      await config.api.row.get(row1._id!, table._id!, { status: 404 })
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 1)
     })
 
