@@ -4,7 +4,7 @@ import { SearchFilters } from "./search"
 export interface SearchParams {
   tableId: string
   paginate?: boolean
-  query?: SearchFilters
+  query: SearchFilters
   bookmark?: string
   limit?: number
   sort?: string
