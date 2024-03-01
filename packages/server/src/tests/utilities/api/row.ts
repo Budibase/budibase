@@ -60,21 +60,12 @@ export class RowAPI extends TestAPI {
   patch = async (
     sourceId: string,
     row: PatchRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Row> => {
-    let resp = await this.request
-      .patch(`/api/${sourceId}/rows`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-    if (resp.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          resp.status
-        }, body: ${JSON.stringify(resp.body)}`
-      )
-    }
-    return resp.body as Row
+    return await this._patch<Row>(`/api/${sourceId}/rows`, {
+      body: row,
+      expectations,
+    })
   }
 
   delete = async (
