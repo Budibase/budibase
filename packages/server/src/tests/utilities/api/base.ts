@@ -3,9 +3,6 @@ import { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
 
 type Headers = Record<string, string | string[] | undefined>
-type SuccessStatus = 200 | 201 | 204
-type ErrorStatus = 400 | 401 | 403 | 404 | 500 | 502 | 503 | 504
-type Status = SuccessStatus | ErrorStatus
 type Method = "get" | "post" | "put" | "patch" | "delete"
 
 export interface AttachedFile {
@@ -25,7 +22,7 @@ function isAttachedFile(file: any): file is AttachedFile {
 }
 
 export interface Expectations {
-  status?: Status
+  status?: number
   headers?: Record<string, string | RegExp>
   headersNotPresent?: string[]
   body?: Record<string, any>

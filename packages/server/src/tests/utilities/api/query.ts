@@ -16,9 +16,12 @@ export class QueryAPI extends TestAPI {
     queryId: string,
     body?: ExecuteQueryRequest
   ): Promise<ExecuteQueryResponse> => {
-    return await this._post<ExecuteQueryResponse>(`/api/queries/${queryId}`, {
-      body,
-    })
+    return await this._post<ExecuteQueryResponse>(
+      `/api/v2/queries/${queryId}`,
+      {
+        body,
+      }
+    )
   }
 
   previewQuery = async (queryPreview: PreviewQueryRequest) => {
