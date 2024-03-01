@@ -20,6 +20,7 @@ import {
   AutomationActionStepId,
   AutomationResults,
   UserCtx,
+  DeleteAutomationResponse,
 } from "@budibase/types"
 import { getActionDefinitions as actionDefs } from "../../automations/actions"
 import sdk from "../../sdk"
@@ -72,7 +73,9 @@ function cleanAutomationInputs(automation: Automation) {
   return automation
 }
 
-export async function create(ctx: UserCtx) {
+export async function create(
+  ctx: UserCtx<Automation, { message: string; automation: Automation }>
+) {
   const db = context.getAppDB()
   let automation = ctx.request.body
   automation.appId = ctx.appId
@@ -207,7 +210,7 @@ export async function find(ctx: UserCtx) {
   ctx.body = await db.get(ctx.params.id)
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DeleteAutomationResponse>) {
   const db = context.getAppDB()
   const automationId = ctx.params.id
   const oldAutomation = await db.get<Automation>(automationId)
