@@ -344,7 +344,7 @@ describe("mysql integrations", () => {
     const createRow = (tableId: string | undefined, body: object) =>
       makeRequest("post", `/api/${tableId}/rows`, body)
 
-    describe("given than no row exists", () => {
+    describe("given that no row exists", () => {
       it("adding a new one persists it", async () => {
         const newRow = generateRandomPrimaryRowData()
 
