@@ -44,7 +44,7 @@ describe("/backups", () => {
 
       expect(headers["content-disposition"]).toEqual(
         `attachment; filename="${
-          config.getApp()!.name
+          config.getApp().name
         }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`
       )
     })
