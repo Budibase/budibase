@@ -151,5 +151,26 @@ describe.skip("external", () => {
         )
       })
     })
+
+    it("will decode _id in oneOf query", async () => {
+      await config.doInContext(config.appId, async () => {
+        const tableId = config.table!._id!
+
+        const searchParams: SearchParams = {
+          tableId,
+          query: {
+            oneOf: {
+              _id: ["%5B1%5D", "%5B4%5D", "%5B8%5D"],
+            },
+          },
+        }
+        const result = await search(searchParams)
+
+        expect(result.rows).toHaveLength(3)
+        expect(result.rows).toEqual(
+          expect.arrayContaining(rows.map(row => [1, 4, 8].includes(row.id)))
+        )
+      })
+    })
   })
 })

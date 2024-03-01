@@ -59,7 +59,7 @@ export async function search(options: SearchParams) {
   if (query.oneOf?._id) {
     const rowIds = query.oneOf._id
     query.oneOf._id = rowIds.map((row: string) => {
-      const ids = breakRowIdField(row) //TODO - TEST ME
+      const ids = breakRowIdField(row)
       return ids[0]
     })
   }
