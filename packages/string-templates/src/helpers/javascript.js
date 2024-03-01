@@ -3,7 +3,7 @@ const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
 const { getJsHelperList } = require("./list")
 const { iifeWrapper } = require("../iife")
-import { CrazyLongSnippet } from "./snippet"
+const { CrazyLongSnippet } = require("./snippet")
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
