@@ -1156,8 +1156,8 @@ describe.each([
         const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(10)
-        expect(response.body).toEqual({
+        expect(response.rows).toHaveLength(10)
+        expect(response).toEqual({
           rows: expect.arrayContaining(
             rows.map(r => ({
               _viewId: createViewResponse.id,
@@ -1208,8 +1208,8 @@ describe.each([
 
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(5)
-        expect(response.body).toEqual({
+        expect(response.rows).toHaveLength(5)
+        expect(response).toEqual({
           rows: expect.arrayContaining(
             expectedRows.map(r => ({
               _viewId: createViewResponse.id,
@@ -1330,8 +1330,8 @@ describe.each([
               createViewResponse.id
             )
 
-            expect(response.body.rows).toHaveLength(4)
-            expect(response.body.rows).toEqual(
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
               expected.map(name => expect.objectContaining({ name }))
             )
           }
@@ -1359,8 +1359,8 @@ describe.each([
               }
             )
 
-            expect(response.body.rows).toHaveLength(4)
-            expect(response.body.rows).toEqual(
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
               expected.map(name => expect.objectContaining({ name }))
             )
           }
@@ -1384,8 +1384,8 @@ describe.each([
         })
         const response = await config.api.viewV2.search(view.id)
 
-        expect(response.body.rows).toHaveLength(10)
-        expect(response.body.rows).toEqual(
+        expect(response.rows).toHaveLength(10)
+        expect(response.rows).toEqual(
           expect.arrayContaining(
             rows.map(r => ({
               ...(isInternal
@@ -1404,7 +1404,7 @@ describe.each([
         const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(0)
+        expect(response.rows).toHaveLength(0)
       })
 
       it("respects the limit parameter", async () => {
@@ -1419,7 +1419,7 @@ describe.each([
           query: {},
         })
 
-        expect(response.body.rows).toHaveLength(limit)
+        expect(response.rows).toHaveLength(limit)
       })
 
       it("can handle pagination", async () => {
@@ -1428,7 +1428,7 @@ describe.each([
 
         const createViewResponse = await config.createView()
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
-          .body.rows
+          .rows
 
         const firstPageResponse = await config.api.viewV2.search(
           createViewResponse.id,
@@ -1438,7 +1438,7 @@ describe.each([
             query: {},
           }
         )
-        expect(firstPageResponse.body).toEqual({
+        expect(firstPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(0, 4)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
@@ -1450,12 +1450,12 @@ describe.each([
           {
             paginate: true,
             limit: 4,
-            bookmark: firstPageResponse.body.bookmark,
+            bookmark: firstPageResponse.bookmark,
 
             query: {},
           }
         )
-        expect(secondPageResponse.body).toEqual({
+        expect(secondPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(4, 8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
@@ -1467,11 +1467,11 @@ describe.each([
           {
             paginate: true,
             limit: 4,
-            bookmark: secondPageResponse.body.bookmark,
+            bookmark: secondPageResponse.bookmark,
             query: {},
           }
         )
-        expect(lastPageResponse.body).toEqual({
+        expect(lastPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: false,
@@ -1518,9 +1518,8 @@ describe.each([
 
         it("does not allow public users to fetch by default", async () => {
           await config.publish()
-          await config.api.viewV2.search(viewId, undefined, {
-            expectStatus: 403,
-            usePublicUser: true,
+          await config.api.viewV2.publicSearch(viewId, undefined, {
+            status: 403,
           })
         })
 
@@ -1532,11 +1531,9 @@ describe.each([
           })
           await config.publish()
 
-          const response = await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-          })
+          const response = await config.api.viewV2.publicSearch(viewId)
 
-          expect(response.body.rows).toHaveLength(10)
+          expect(response.rows).toHaveLength(10)
         })
 
         it("allow public users to fetch when permissions are inherited", async () => {
@@ -1547,11 +1544,9 @@ describe.each([
           })
           await config.publish()
 
-          const response = await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-          })
+          const response = await config.api.viewV2.publicSearch(viewId)
 
-          expect(response.body.rows).toHaveLength(10)
+          expect(response.rows).toHaveLength(10)
         })
 
         it("respects inherited permissions, not allowing not public views from public tables", async () => {
@@ -1567,9 +1562,8 @@ describe.each([
           })
           await config.publish()
 
-          await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-            expectStatus: 403,
+          await config.api.viewV2.publicSearch(viewId, undefined, {
+            status: 403,
           })
         })
       })

@@ -187,9 +187,7 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      const res = await config.api.viewV2.search(view.id, undefined, {
-        usePublicUser: true,
-      })
+      const res = await config.api.viewV2.publicSearch(view.id)
       expect(res.body.rows[0]._id).toEqual(row._id)
     })
 
@@ -202,10 +200,7 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      await config.api.viewV2.search(view.id, undefined, {
-        expectStatus: 403,
-        usePublicUser: true,
-      })
+      await config.api.viewV2.publicSearch(view.id, undefined, { status: 403 })
     })
 
     it("should ignore the view permissions if the flag is not on", async () => {
@@ -222,9 +217,8 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      await config.api.viewV2.search(view.id, undefined, {
-        expectStatus: 403,
-        usePublicUser: true,
+      await config.api.viewV2.publicSearch(view.id, undefined, {
+        status: 403,
       })
     })
 
@@ -243,9 +237,7 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      const res = await config.api.viewV2.search(view.id, undefined, {
-        usePublicUser: true,
-      })
+      const res = await config.api.viewV2.publicSearch(view.id)
       expect(res.body.rows[0]._id).toEqual(row._id)
     })
 
