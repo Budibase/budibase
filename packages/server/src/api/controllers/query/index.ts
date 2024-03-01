@@ -17,10 +17,12 @@ import {
   QueryPreview,
   QuerySchema,
   FieldType,
-  type ExecuteQueryRequest,
-  type ExecuteQueryResponse,
-  type Row,
+  ExecuteQueryRequest,
+  ExecuteQueryResponse,
+  Row,
   QueryParameter,
+  PreviewQueryRequest,
+  PreviewQueryResponse,
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
 
@@ -134,14 +136,16 @@ function enrichParameters(
   return requestParameters
 }
 
-export async function preview(ctx: UserCtx) {
+export async function preview(
+  ctx: UserCtx<PreviewQueryRequest, PreviewQueryResponse>
+) {
   const { datasource, envVars } = await sdk.datasources.getWithEnvVars(
     ctx.request.body.datasourceId
   )
-  const query: QueryPreview = ctx.request.body
   // preview may not have a queryId as it hasn't been saved, but if it does
   // this stops dynamic variables from calling the same query
-  const { fields, parameters, queryVerb, transformer, queryId, schema } = query
+  const { fields, parameters, queryVerb, transformer, queryId, schema } =
+    ctx.request.body
 
   let existingSchema = schema
   if (queryId && !existingSchema) {
@@ -266,9 +270,7 @@ export async function preview(ctx: UserCtx) {
       },
     }
 
-    const { rows, keys, info, extra } = (await Runner.run(
-      inputs
-    )) as QueryResponse
+    const { rows, keys, info, extra } = await Runner.run<QueryResponse>(inputs)
     const { previewSchema, nestedSchemaFields } = getSchemaFields(rows, keys)
 
     // if existing schema, update to include any previous schema keys
@@ -281,7 +283,7 @@ export async function preview(ctx: UserCtx) {
     }
     // remove configuration before sending event
     delete datasource.config
-    await events.query.previewed(datasource, query)
+    await events.query.previewed(datasource, ctx.request.body)
     ctx.body = {
       rows,
       nestedSchemaFields,
@@ -295,7 +297,7 @@ export async function preview(ctx: UserCtx) {
 }
 
 async function execute(
-  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | Row[]>,
+  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | any[]>,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
