@@ -46,15 +46,15 @@ export class RowAPI extends TestAPI {
   validate = async (
     sourceId: string,
     row: SaveRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<ValidateResponse> => {
-    const resp = await this.request
-      .post(`/api/${sourceId}/rows/validate`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return resp.body as ValidateResponse
+    return await this._post<ValidateResponse>(
+      `/api/${sourceId}/rows/validate`,
+      {
+        body: row,
+        expectations,
+      }
+    )
   }
 
   patch = async (
