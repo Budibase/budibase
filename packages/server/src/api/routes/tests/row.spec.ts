@@ -905,7 +905,7 @@ describe.each([
       const res = await config.api.row.exportRows(table._id!, {
         rows: [existing._id!],
       })
-      const results = JSON.parse(res.text)
+      const results = JSON.parse(res)
       expect(results.length).toEqual(1)
       const row = results[0]
 
@@ -924,7 +924,7 @@ describe.each([
         rows: [existing._id!],
         columns: ["_id"],
       })
-      const results = JSON.parse(res.text)
+      const results = JSON.parse(res)
       expect(results.length).toEqual(1)
       const row = results[0]
 

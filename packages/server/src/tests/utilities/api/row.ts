@@ -11,6 +11,7 @@ import {
   DeleteRowRequest,
   DeleteRows,
   DeleteRow,
+  ExportRowsResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -105,15 +106,18 @@ export class RowAPI extends TestAPI {
   exportRows = async (
     tableId: string,
     body: ExportRowsRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .post(`/api/${tableId}/rows/exportRows?format=json`)
-      .set(this.config.defaultHeaders())
-      .send(body)
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return request
+    const response = await this._requestRaw(
+      "post",
+      `/api/${tableId}/rows/exportRows`,
+      {
+        body,
+        query: { format: "json" },
+        expectations,
+      }
+    )
+    return response.text
   }
 
   bulkImport = async (
