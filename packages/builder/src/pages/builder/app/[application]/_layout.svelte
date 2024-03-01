@@ -69,11 +69,12 @@
   // brought back to the same screen.
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
-    if (!activeTopNav) return
-    builderStore.setPreviousTopNavPath(
-      activeTopNav.path,
-      window.location.pathname
-    )
+    if (activeTopNav) {
+      builderStore.setPreviousTopNavPath(
+        activeTopNav.path,
+        window.location.pathname
+      )
+    }
     $goto($builderStore.previousTopNavPath[path] || path)
   }
 
