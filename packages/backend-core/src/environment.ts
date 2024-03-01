@@ -186,6 +186,7 @@ const environment = {
     environment[key] = value
   },
   ROLLING_LOG_MAX_SIZE: process.env.ROLLING_LOG_MAX_SIZE || "10M",
+  DISABLE_SCIM_CALLS: process.env.DISABLE_SCIM_CALLS,
 }
 
 // clean up any environment variable edge cases
