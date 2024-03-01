@@ -26,9 +26,14 @@ export class ViewV2API extends TestAPI {
       ...viewData,
     }
 
+    const exp: Expectations = {
+      status: 201,
+      ...expectations,
+    }
+
     const resp = await this._post<{ data: ViewV2 }>("/api/v2/views", {
       body: view,
-      expectations,
+      expectations: exp,
     })
     return resp.data
   }
