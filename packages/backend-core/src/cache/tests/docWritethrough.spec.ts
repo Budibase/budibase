@@ -35,7 +35,7 @@ describe("docWritethrough", () => {
 
     beforeEach(() => {
       resetTime()
-      documentId = structures.db.id()
+      documentId = structures.uuid()
       docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
     })
 
@@ -47,7 +47,7 @@ describe("docWritethrough", () => {
         travelForward(WRITE_RATE_MS - 1)
         await docWritethrough.patch(generatePatchObject(2))
 
-        expect(await db.docExists(documentId)).toBe(false)
+        expect(await db.exists(documentId)).toBe(false)
       })
     })
 
@@ -136,7 +136,7 @@ describe("docWritethrough", () => {
 
         travelForward(WRITE_RATE_MS)
 
-        expect(await db.docExists(documentId)).toBe(false)
+        expect(await db.exists(documentId)).toBe(false)
       })
     })
 
