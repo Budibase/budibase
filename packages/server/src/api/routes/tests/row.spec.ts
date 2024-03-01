@@ -1486,7 +1486,7 @@ describe.each([
               email: "joe@joe.com",
               roles: {},
             },
-            { expectStatus: 400 }
+            { status: 400 }
           )
           expect(response.message).toBe("Cannot create new user entry.")
         })

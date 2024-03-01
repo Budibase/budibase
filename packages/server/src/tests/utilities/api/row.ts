@@ -35,21 +35,12 @@ export class RowAPI extends TestAPI {
   save = async (
     tableId: string,
     row: SaveRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Row> => {
-    const resp = await this.request
-      .post(`/api/${tableId}/rows`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-    if (resp.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          resp.status
-        }, body: ${JSON.stringify(resp.body)}`
-      )
-    }
-    return resp.body as Row
+    return await this._post<Row>(`/api/${tableId}/rows`, {
+      body: row,
+      expectations,
+    })
   }
 
   validate = async (
