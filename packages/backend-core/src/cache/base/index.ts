@@ -58,12 +58,12 @@ export default class BaseCache {
   /**
    * Read from the cache. Write to the cache if not exists.
    */
-  async withCache(
+  async withCache<T>(
     key: string,
     ttl: number | null = null,
-    fetchFn: any,
+    fetchFn: () => Promise<T> | T,
     opts = { useTenancy: true }
-  ) {
+  ): Promise<T> {
     const cachedValue = await this.get(key, opts)
     if (cachedValue) {
       return cachedValue
