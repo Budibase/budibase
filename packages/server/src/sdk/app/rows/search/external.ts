@@ -56,7 +56,7 @@ export async function search(options: SearchParams) {
   }
 
   // Make sure oneOf _id queries decode the Row IDs
-  if (query.oneOf?._id) {
+  if (query?.oneOf?._id) {
     const rowIds = query.oneOf._id
     query.oneOf._id = rowIds.map((row: string) => {
       const ids = breakRowIdField(row)
