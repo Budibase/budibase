@@ -33,7 +33,7 @@ export class DocWritethrough {
     this.db = db
     this._docId = docId
     this.writeRateMs = writeRateMs
-    this.docInfoCacheKey = `${this.docId}:info`
+    this.docInfoCacheKey = `${this.db.name}:${this.docId}:info`
   }
 
   get docId() {
