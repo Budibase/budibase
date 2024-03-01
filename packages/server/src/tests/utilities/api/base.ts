@@ -38,6 +38,7 @@ export interface RequestOpts {
     Buffer | ReadStream | string | AttachedFile | undefined
   >
   expectations?: Expectations
+  publicUser?: boolean
 }
 
 export abstract class TestAPI {
@@ -84,6 +85,7 @@ export abstract class TestAPI {
       fields = {},
       files = {},
       expectations,
+      publicUser = false,
     } = opts || {}
     const { status = 200 } = expectations || {}
     const expectHeaders = expectations?.headers || {}
@@ -102,8 +104,11 @@ export abstract class TestAPI {
       url += `?${queryParams.join("&")}`
     }
 
+    const headersFn = publicUser
+      ? this.config.publicHeaders.bind(this.config)
+      : this.config.defaultHeaders.bind(this.config)
     let request = this.request[method](url).set(
-      this.config.defaultHeaders({
+      headersFn({
         "x-budibase-include-stacktrace": "true",
       })
     )
