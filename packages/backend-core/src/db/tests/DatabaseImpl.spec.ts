@@ -17,16 +17,16 @@ describe("DatabaseImpl", () => {
     documents.push(...createdDocs.map((x: any) => ({ _id: x.id, _rev: x.rev })))
   })
 
-  describe("docExists", () => {
+  describe("document exists", () => {
     it("can check existing docs by id", async () => {
       const existingDoc = _.sample(documents)
-      const result = await database.docExists(existingDoc!._id!)
+      const result = await database.exists(existingDoc!._id!)
 
       expect(result).toBe(true)
     })
 
     it("can check non existing docs by id", async () => {
-      const result = await database.docExists(newid())
+      const result = await database.exists(newid())
 
       expect(result).toBe(false)
     })
@@ -36,9 +36,9 @@ describe("DatabaseImpl", () => {
       const id = existingDoc!._id!
 
       const results = []
-      results.push(await database.docExists(id))
-      results.push(await database.docExists(id))
-      results.push(await database.docExists(id))
+      results.push(await database.exists(id))
+      results.push(await database.exists(id))
+      results.push(await database.exists(id))
 
       expect(results).toEqual([true, true, true])
     })
@@ -46,10 +46,10 @@ describe("DatabaseImpl", () => {
     it("returns false after the doc is deleted", async () => {
       const existingDoc = _.sample(documents)
       const id = existingDoc!._id!
-      expect(await database.docExists(id)).toBe(true)
+      expect(await database.exists(id)).toBe(true)
 
       await database.remove(existingDoc!)
-      expect(await database.docExists(id)).toBe(false)
+      expect(await database.exists(id)).toBe(false)
     })
   })
 })
