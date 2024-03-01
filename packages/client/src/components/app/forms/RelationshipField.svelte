@@ -127,9 +127,13 @@
     if (allRowsFetched || !primaryDisplay) {
       return
     }
-    if (defaultVal && !optionsObj[defaultVal]) {
+    // must be an array
+    if (defaultVal && !Array.isArray(defaultVal)) {
+      defaultVal = defaultVal.split(",")
+    }
+    if (defaultVal && defaultVal.some(val => !optionsObj[val])) {
       await fetch.update({
-        query: { equal: { _id: defaultVal } },
+        query: { oneOf: { _id: defaultVal } },
       })
     }
 
