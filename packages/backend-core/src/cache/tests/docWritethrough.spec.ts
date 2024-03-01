@@ -1,11 +1,9 @@
 import tk from "timekeeper"
-import { env } from "../.."
+
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { getDB } from "../../db"
 import { DocWritethrough } from "../docWritethrough"
 import _ from "lodash"
-
-env._set("MOCK_REDIS", null)
 
 const WRITE_RATE_MS = 500
 
@@ -236,6 +234,43 @@ describe("docWritethrough", () => {
         expect(await db.get(documentId)).not.toEqual(
           expect.objectContaining(initialPatch)
         )
+      })
+    })
+
+    it("concurrent calls will not cause multiple saves", async () => {
+      async function parallelPatch(count: number) {
+        await Promise.all(
+          Array.from({ length: count }).map(() =>
+            docWritethrough.patch(generatePatchObject(1))
+          )
+        )
+      }
+
+      const persistToDbSpy = jest.spyOn(docWritethrough as any, "persistToDb")
+      const storeToCacheSpy = jest.spyOn(docWritethrough as any, "storeToCache")
+
+      await config.doInTenant(async () => {
+        await parallelPatch(5)
+        expect(persistToDbSpy).not.toBeCalled()
+        expect(storeToCacheSpy).toBeCalledTimes(5)
+
+        travelForward(WRITE_RATE_MS)
+
+        await parallelPatch(40)
+
+        expect(persistToDbSpy).toBeCalledTimes(1)
+        expect(storeToCacheSpy).toBeCalledTimes(45)
+
+        await parallelPatch(10)
+
+        expect(persistToDbSpy).toBeCalledTimes(1)
+        expect(storeToCacheSpy).toBeCalledTimes(55)
+
+        travelForward(WRITE_RATE_MS)
+
+        await parallelPatch(5)
+        expect(persistToDbSpy).toBeCalledTimes(2)
+        expect(storeToCacheSpy).toBeCalledTimes(60)
       })
     })
   })

@@ -23,6 +23,8 @@ export class DocWritethrough {
   private _docId: string
   private writeRateMs: number
 
+  private docInfoCacheKey: string
+
   constructor(
     db: Database,
     docId: string,
@@ -31,6 +33,7 @@ export class DocWritethrough {
     this.db = db
     this._docId = docId
     this.writeRateMs = writeRateMs
+    this.docInfoCacheKey = `${this.docId}:info`
   }
 
   get docId() {
@@ -44,24 +47,37 @@ export class DocWritethrough {
   async patch(data: Record<string, any>) {
     const cache = await getCache()
 
-    const key = `${this.docId}:info`
-    const cacheItem = await cache.withCache(
-      key,
-      null,
-      () => this.makeCacheItem(),
-      {
-        useTenancy: false,
-      }
-    )
-
     await this.storeToCache(cache, data)
 
-    const updateDb =
-      !cacheItem || cacheItem.lastWrite <= Date.now() - this.writeRateMs
-    // let output = this.doc
+    const updateDb = await this.shouldUpdateDb(cache)
+
     if (updateDb) {
-      await this.persistToDb(cache)
+      const lockResponse = await locks.doWithLock(
+        {
+          type: LockType.TRY_ONCE,
+          name: LockName.PERSIST_WRITETHROUGH,
+          resource: this.docInfoCacheKey,
+          ttl: 15000,
+        },
+        async () => {
+          if (await this.shouldUpdateDb(cache)) {
+            await this.persistToDb(cache)
+            await cache.store(this.docInfoCacheKey, this.makeCacheItem())
+          }
+        }
+      )
+
+      if (!lockResponse.executed) {
+        console.log(`Ignoring redlock conflict in write-through cache`)
+      }
     }
+  }
+
+  private async shouldUpdateDb(cache: BaseCache) {
+    const cacheItem = await cache.withCache(this.docInfoCacheKey, null, () =>
+      this.makeCacheItem()
+    )
+    return cacheItem.lastWrite <= Date.now() - this.writeRateMs
   }
 
   private async storeToCache(cache: BaseCache, data: Record<string, any>) {
@@ -72,39 +88,23 @@ export class DocWritethrough {
   }
 
   private async persistToDb(cache: BaseCache) {
-    const key = `${this.db.name}_${this.docId}`
+    let doc: AnyDocument | undefined
+    try {
+      doc = await this.db.get(this.docId)
+    } catch {
+      doc = { _id: this.docId }
+    }
 
-    const lockResponse = await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.PERSIST_WRITETHROUGH,
-        resource: key,
-        ttl: 15000,
-      },
-      async () => {
-        let doc: AnyDocument | undefined
-        try {
-          doc = await this.db.get(this.docId)
-        } catch {
-          doc = { _id: this.docId }
-        }
+    const keysToPersist = await cache.keys(`${this.docId}:data:*`)
+    for (const key of keysToPersist) {
+      const data = await cache.get(key, { useTenancy: false })
+      doc[data.key] = data.value
+    }
 
-        const keysToPersist = await cache.keys(`${this.docId}:data:*`)
-        for (const key of keysToPersist) {
-          const data = await cache.get(key, { useTenancy: false })
-          doc[data.key] = data.value
-        }
+    await this.db.put(doc)
 
-        await this.db.put(doc)
-
-        for (const key of keysToPersist) {
-          await cache.delete(key, { useTenancy: false })
-        }
-      }
-    )
-
-    if (!lockResponse.executed) {
-      throw `DocWriteThrough could not be persisted to db for ${key}`
+    for (const key of keysToPersist) {
+      await cache.delete(key, { useTenancy: false })
     }
   }
 }
