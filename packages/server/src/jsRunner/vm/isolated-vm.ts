@@ -7,7 +7,7 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
-import { iifeWrapper } from "../utilities"
+import { iifeWrapper } from "@budibase/string-templates"
 import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
@@ -95,6 +95,18 @@ export class IsolatedVM implements VM {
       script.release()
     })
 
+    return this
+  }
+
+  withSnippets() {
+    const snippetsSource = loadBundle(BundleType.SNIPPETS)
+    const script = this.isolate.compileScriptSync(
+      `${snippetsSource};snippets=snippets.default;`
+    )
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
     return this
   }
 

@@ -8,7 +8,7 @@ import {
   QueryResponse,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
-import { iifeWrapper } from "../jsRunner/utilities"
+import { iifeWrapper } from "@budibase/string-templates"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
