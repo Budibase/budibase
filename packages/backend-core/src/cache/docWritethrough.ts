@@ -23,6 +23,7 @@ export class DocWritethrough {
   private _docId: string
   private writeRateMs: number
 
+  private cacheKeyPrefix: string
   private docInfoCacheKey: string
 
   constructor(
@@ -33,7 +34,8 @@ export class DocWritethrough {
     this.db = db
     this._docId = docId
     this.writeRateMs = writeRateMs
-    this.docInfoCacheKey = `${this.db.name}:${this.docId}:info`
+    this.cacheKeyPrefix = `${this.db.name}:${this.docId}`
+    this.docInfoCacheKey = `${this.cacheKeyPrefix}:info`
   }
 
   get docId() {
@@ -85,7 +87,7 @@ export class DocWritethrough {
 
   private async storeToCache(cache: BaseCache, data: Record<string, any>) {
     for (const [key, value] of Object.entries(data)) {
-      const cacheKey = this.docId + ":data:" + key
+      const cacheKey = this.cacheKeyPrefix + ":data:" + key
       await cache.store(cacheKey, { key, value }, undefined)
     }
   }
@@ -98,7 +100,7 @@ export class DocWritethrough {
       doc = { _id: this.docId }
     }
 
-    const keysToPersist = await cache.keys(`${this.docId}:data:*`)
+    const keysToPersist = await cache.keys(`${this.cacheKeyPrefix}:data:*`)
     for (const key of keysToPersist) {
       const data = await cache.get(key, { useTenancy: false })
       doc[data.key] = data.value
