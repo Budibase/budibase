@@ -123,14 +123,12 @@ export class RowAPI extends TestAPI {
   bulkImport = async (
     tableId: string,
     body: BulkImportRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<BulkImportResponse> => {
-    let request = this.request
-      .post(`/api/tables/${tableId}/import`)
-      .send(body)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    return (await request).body
+    return await this._post<BulkImportResponse>(`/api/${tableId}/rows/import`, {
+      body,
+      expectations,
+    })
   }
 
   search = async (
