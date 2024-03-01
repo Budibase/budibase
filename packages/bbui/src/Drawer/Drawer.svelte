@@ -61,7 +61,6 @@
   import Button from "../Button/Button.svelte"
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
-  import { fade } from "svelte/transition"
 
   export let title
   export let forceModal = false
@@ -130,7 +129,7 @@
 
   // Use a custom svelte transition here because the built-in slide
   // transition has a horrible overshoot
-  const slide = () => {
+  const drawerSlide = () => {
     return {
       duration: 260,
       css: t => {
@@ -138,8 +137,19 @@
         const yOffset = (1 - f) * 200
         return `
           transform: translateY(calc(${yOffset}px - 800px * (1 - var(--scale-factor))));
-          opacity:${f};
+          opacity: ${f};
         `
+      },
+    }
+  }
+
+  // Custom fade transition because the default svelte one doesn't work any more
+  // with svelte 4
+  const drawerFade = () => {
+    return {
+      duration: 260,
+      css: t => {
+        return `opacity: ${easeInOutQuad(t)};`
       },
     }
   }
@@ -161,14 +171,16 @@
 {#if visible}
   <Portal target=".modal-container">
     <div class="drawer-container">
-      {#if $modal}
-        <div transition:fade={{ duration: 260 }} class="underlay" />
-      {/if}
+      <div
+        class="underlay"
+        class:hidden={!$modal}
+        transition:drawerFade|local
+      />
       <div
         class="drawer"
         class:stacked={depth > 0}
         class:modal={$modal}
-        transition:slide|local
+        transition:drawerSlide|local
         {style}
       >
         <header>
@@ -179,9 +191,7 @@
           </div>
         </header>
         <slot name="body" />
-        {#if !$modal && depth > 0}
-          <div class="overlay" transition:fade|local={{ duration: 260 }} />
-        {/if}
+        <div class="overlay" class:hidden={$modal || depth === 0} />
       </div>
     </div>
   </Portal>
@@ -223,17 +233,23 @@
     left: 0;
     width: 100%;
     height: 100%;
-    transition: opacity 360ms ease-out;
     z-index: 999;
-    opacity: 0.5;
+    display: block;
+    transition: opacity 260ms ease-out;
   }
   .overlay {
     position: absolute;
     background: var(--background);
+    opacity: 0.5;
   }
   .underlay {
     position: fixed;
-    background: var(--modal-background, rgba(0, 0, 0, 0.75));
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .underlay.hidden,
+  .overlay.hidden {
+    opacity: 0 !important;
+    pointer-events: none;
   }
 
   header {
