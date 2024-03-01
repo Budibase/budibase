@@ -26,7 +26,8 @@ export const store = (...args: Parameters<typeof GENERIC.store>) =>
   GENERIC.store(...args)
 export const destroy = (...args: Parameters<typeof GENERIC.delete>) =>
   GENERIC.delete(...args)
-export const withCache = (...args: Parameters<typeof GENERIC.withCache>) =>
-  GENERIC.withCache(...args)
+export const withCache = <T>(
+  ...args: Parameters<typeof GENERIC.withCache<T>>
+) => GENERIC.withCache(...args)
 export const bustCache = (...args: Parameters<typeof GENERIC.bustCache>) =>
   GENERIC.bustCache(...args)
