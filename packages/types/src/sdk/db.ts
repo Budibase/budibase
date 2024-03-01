@@ -128,7 +128,7 @@ export interface Database {
 
   exists(): Promise<boolean>
   get<T extends Document>(id?: string): Promise<T>
-  docExists(id: string): Promise<boolean>
+  exists(docId: string): Promise<boolean>
   getMultiple<T extends Document>(
     ids: string[],
     opts?: { allowMissing?: boolean }

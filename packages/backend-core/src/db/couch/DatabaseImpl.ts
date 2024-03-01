@@ -70,13 +70,30 @@ export class DatabaseImpl implements Database {
     DatabaseImpl.nano = buildNano(couchInfo)
   }
 
-  async exists() {
+  exists(docId?: string) {
+    if (docId === undefined) {
+      return this.dbExists()
+    }
+
+    return this.docExists(docId)
+  }
+
+  private async dbExists() {
     const response = await directCouchUrlCall({
       url: `${this.couchInfo.url}/${this.name}`,
       method: "HEAD",
       cookie: this.couchInfo.cookie,
     })
     return response.status === 200
+  }
+
+  private async docExists(id: string): Promise<boolean> {
+    try {
+      await this.performCall(db => () => db.head(id))
+      return true
+    } catch {
+      return false
+    }
   }
 
   private nano() {
@@ -133,15 +150,6 @@ export class DatabaseImpl implements Database {
       }
       return () => db.get(id)
     })
-  }
-
-  async docExists(id: string): Promise<boolean> {
-    try {
-      await this.performCall(db => () => db.head(id))
-      return true
-    } catch {
-      return false
-    }
   }
 
   async getMultiple<T extends Document>(
