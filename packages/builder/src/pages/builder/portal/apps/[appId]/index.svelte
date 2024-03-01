@@ -1,22 +1,16 @@
 <script>
-  import { onMount, onDestroy } from "svelte"
   import { params, goto } from "@roxi/routify"
-  import { licensing, apps, auth, sideBarCollapsed } from "stores/portal"
+  import { apps, auth, sideBarCollapsed } from "stores/portal"
   import { Link, Body, ActionButton } from "@budibase/bbui"
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import { ClientAppSkeleton } from "@budibase/frontend-core"
 
   $: app = $apps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
-  let loading = true
-
   const getIframeURL = app => {
-    loading = true
-
     if (app.status === "published") {
       return `/app${app.url}`
     }
@@ -34,20 +28,6 @@
   }
 
   $: fetchScreens(app?.devId)
-
-  const receiveMessage = async message => {
-    if (message.data.type === "docLoaded") {
-      loading = false
-    }
-  }
-
-  onMount(() => {
-    window.addEventListener("message", receiveMessage)
-  })
-
-  onDestroy(() => {
-    window.removeEventListener("message", receiveMessage)
-  })
 </script>
 
 <div class="container">
@@ -98,17 +78,7 @@
       </Body>
     </div>
   {:else}
-    <div class:hide={!loading} class="loading">
-      <div class={`loadingThemeWrapper ${app.theme}`}>
-        <ClientAppSkeleton
-          noAnimation
-          hideDevTools={app?.status === "published"}
-          sideNav={app?.navigation.navigation === "Left"}
-          hideFooter={$licensing.brandingEnabled}
-        />
-      </div>
-    </div>
-    <iframe class:hide={loading} src={iframeUrl} title={app.name} />
+    <iframe src={iframeUrl} title={app.name} />
   {/if}
 </div>
 
@@ -128,23 +98,6 @@
     align-items: center;
     gap: var(--spacing-xs);
     flex: 0 0 50px;
-  }
-
-  .loading {
-    height: 100%;
-    border: 1px solid var(--spectrum-global-color-gray-300);
-    border-radius: var(--spacing-s);
-    overflow: hidden;
-  }
-  .loadingThemeWrapper {
-    height: 100%;
-    container-type: inline-size;
-  }
-
-  .hide {
-    visibility: hidden;
-    height: 0;
-    border: none;
   }
 
   iframe {

@@ -37,6 +37,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
 }
 
 const INTEGRATIONS: Record<SourceName, any> = {
@@ -56,6 +57,7 @@ const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.REDIS]: redis.integration,
   [SourceName.SNOWFLAKE]: snowflake.integration,
   [SourceName.ORACLE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
 }
 
 // optionally add oracle integration if the oracle binary can be installed
