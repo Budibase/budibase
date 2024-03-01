@@ -8,6 +8,9 @@ import {
   BulkImportResponse,
   SearchRowResponse,
   SearchParams,
+  DeleteRowRequest,
+  DeleteRows,
+  DeleteRow,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -70,15 +73,24 @@ export class RowAPI extends TestAPI {
 
   delete = async (
     sourceId: string,
-    rows: Row | string | (Row | string)[],
-    { expectStatus } = { expectStatus: 200 }
+    row: DeleteRow,
+    expectations?: Expectations
   ) => {
-    return this.request
-      .delete(`/api/${sourceId}/rows`)
-      .send(Array.isArray(rows) ? { rows } : rows)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    return await this._delete<Row>(`/api/${sourceId}/rows`, {
+      body: row,
+      expectations,
+    })
+  }
+
+  deleteMany = async (
+    sourceId: string,
+    body: DeleteRows,
+    expectations?: Expectations
+  ) => {
+    return await this._delete<Row[]>(`/api/${sourceId}/rows`, {
+      body,
+      expectations,
+    })
   }
 
   fetch = async (

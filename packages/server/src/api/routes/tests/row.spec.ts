@@ -7,6 +7,7 @@ import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AutoFieldSubType,
+  DeleteRow,
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
@@ -540,7 +541,7 @@ describe.each([
           tableId: table._id!,
           name: 1,
         },
-        { expectStatus: 400 }
+        { status: 400 }
       )
 
       await assertRowUsage(rowUsage)
@@ -629,8 +630,10 @@ describe.each([
       const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [createdRow])
-      expect(res.body[0]._id).toEqual(createdRow._id)
+      const res = await config.api.row.deleteMany(table._id!, {
+        rows: [createdRow],
+      })
+      expect(res[0]._id).toEqual(createdRow._id)
       await assertRowUsage(rowUsage - 1)
     })
   })
@@ -679,9 +682,11 @@ describe.each([
       const row2 = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [row1, row2])
+      const res = await config.api.row.deleteMany(table._id!, {
+        rows: [row1, row2],
+      })
 
-      expect(res.body.length).toEqual(2)
+      expect(res.length).toEqual(2)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 2)
     })
@@ -694,13 +699,11 @@ describe.each([
       ])
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [
-        row1,
-        row2._id,
-        { _id: row3._id },
-      ])
+      const res = await config.api.row.deleteMany(table._id!, {
+        rows: [row1, row2._id!, { _id: row3._id }],
+      })
 
-      expect(res.body.length).toEqual(3)
+      expect(res.length).toEqual(3)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 3)
     })
@@ -709,9 +712,9 @@ describe.each([
       const row1 = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, row1)
+      const res = await config.api.row.delete(table._id!, row1 as DeleteRow)
 
-      expect(res.body.id).toEqual(row1._id)
+      expect(res.id).toEqual(row1._id)
       await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 1)
     })
@@ -719,24 +722,26 @@ describe.each([
     it("Should ignore malformed/invalid delete requests", async () => {
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(
-        table._id!,
-        { not: "valid" },
-        { expectStatus: 400 }
-      )
-      expect(res.body.message).toEqual("Invalid delete rows request")
-
-      const res2 = await config.api.row.delete(
-        table._id!,
-        { rows: 123 },
-        { expectStatus: 400 }
-      )
-      expect(res2.body.message).toEqual("Invalid delete rows request")
-
-      const res3 = await config.api.row.delete(table._id!, "invalid", {
-        expectStatus: 400,
+      await config.api.row.delete(table._id!, { not: "valid" } as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
       })
-      expect(res3.body.message).toEqual("Invalid delete rows request")
+
+      await config.api.row.delete(table._id!, { rows: 123 } as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
+      })
+
+      await config.api.row.delete(table._id!, "invalid" as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
+      })
 
       await assertRowUsage(rowUsage)
     })
@@ -1068,7 +1073,7 @@ describe.each([
         const createdRow = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        await config.api.row.delete(view.id, [createdRow])
+        await config.api.row.deleteMany(view.id, { rows: [createdRow] })
 
         await assertRowUsage(rowUsage - 1)
 
@@ -1094,7 +1099,7 @@ describe.each([
         ])
         const rowUsage = await getRowUsage()
 
-        await config.api.row.delete(view.id, [rows[0], rows[2]])
+        await config.api.row.deleteMany(view.id, { rows: [rows[0], rows[2]] })
 
         await assertRowUsage(rowUsage - 2)
 
