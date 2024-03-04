@@ -67,7 +67,7 @@
     if (!component?._children?.length) {
       return false
     }
-    return openNodes[`nodeOpen-${component._id}`] !== false
+    return openNodes[`nodeOpen-${component._id}`]
   }
 
   const isChildOfSelectedComponent = component => {
