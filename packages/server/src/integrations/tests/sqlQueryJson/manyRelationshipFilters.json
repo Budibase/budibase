@@ -1,0 +1,202 @@
+{
+  "endpoint": {
+    "datasourceId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81",
+    "entityId": "tasks",
+    "operation": "READ"
+  },
+  "resource": {
+    "fields": [
+      "a.executorid",
+      "a.taskname",
+      "a.taskid",
+      "a.completed",
+      "a.qaid",
+      "b.productname",
+      "b.productid",
+      "c.year",
+      "c.firstname",
+      "c.personid",
+      "c.address",
+      "c.age",
+      "c.type",
+      "c.city",
+      "c.lastname",
+      "c.year",
+      "c.firstname",
+      "c.personid",
+      "c.address",
+      "c.age",
+      "c.type",
+      "c.city",
+      "c.lastname"
+    ]
+  },
+  "filters": {
+    "string": {},
+    "fuzzy": {},
+    "range": {
+      "1:persons.year": {
+        "low": 1990,
+        "high": 2147483647
+      }
+    },
+    "equal": {
+      "2:products.productname": "Computers"
+    },
+    "notEqual": {
+      "3:completed": true
+    },
+    "empty": {},
+    "notEmpty": {},
+    "contains": {},
+    "notContains": {},
+    "oneOf": {},
+    "containsAny": {},
+    "onEmptyFilter": "all"
+  },
+  "sort": {
+    "taskname": {
+      "direction": "ASCENDING"
+    }
+  },
+  "paginate": {
+    "limit": 100,
+    "page": 1
+  },
+  "relationships": [
+    {
+      "tableName": "products",
+      "column": "products",
+      "through": "products_tasks",
+      "from": "taskid",
+      "to": "productid",
+      "fromPrimary": "taskid",
+      "toPrimary": "productid",
+      "aliases": {
+        "products_tasks": "d",
+        "products": "b",
+        "tasks": "a"
+      }
+    },
+    {
+      "tableName": "persons",
+      "column": "tasksToExecute",
+      "from": "executorid",
+      "to": "personid",
+      "aliases": {
+        "persons": "c",
+        "tasks": "a"
+      }
+    },
+    {
+      "tableName": "persons",
+      "column": "tasksToQA",
+      "from": "qaid",
+      "to": "personid",
+      "aliases": {
+        "persons": "c",
+        "tasks": "a"
+      }
+    }
+  ],
+  "extra": {
+    "idFilter": {}
+  },
+  "meta": {
+    "table": {
+      "type": "table",
+      "_id": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__tasks",
+      "primary": [
+        "taskid"
+      ],
+      "name": "a",
+      "schema": {
+        "executorid": {
+          "type": "number",
+          "externalType": "integer",
+          "name": "executorid",
+          "constraints": {
+            "presence": false
+          },
+          "autocolumn": true,
+          "autoReason": "foreign_key"
+        },
+        "taskname": {
+          "type": "string",
+          "externalType": "character varying",
+          "autocolumn": false,
+          "name": "taskname",
+          "constraints": {
+            "presence": false
+          }
+        },
+        "taskid": {
+          "type": "number",
+          "externalType": "integer",
+          "autocolumn": true,
+          "name": "taskid",
+          "constraints": {
+            "presence": false
+          }
+        },
+        "completed": {
+          "type": "boolean",
+          "externalType": "boolean",
+          "autocolumn": false,
+          "name": "completed",
+          "constraints": {
+            "presence": false
+          }
+        },
+        "qaid": {
+          "type": "number",
+          "externalType": "integer",
+          "name": "qaid",
+          "constraints": {
+            "presence": false
+          }
+        },
+        "products": {
+          "tableId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products",
+          "name": "products",
+          "relationshipType": "many-to-many",
+          "through": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__products_tasks",
+          "type": "link",
+          "_id": "c3b91d00cd36c4cc1a347794725b9adbd",
+          "fieldName": "productid",
+          "throughFrom": "productid",
+          "throughTo": "taskid"
+        },
+        "tasksToExecute": {
+          "tableId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__persons",
+          "name": "tasksToExecute",
+          "relationshipType": "one-to-many",
+          "type": "link",
+          "_id": "c0f440590bda04f28846242156c1dd60b",
+          "foreignKey": "executorid",
+          "fieldName": "personid"
+        },
+        "tasksToQA": {
+          "tableId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81__persons",
+          "name": "tasksToQA",
+          "relationshipType": "one-to-many",
+          "type": "link",
+          "_id": "c5fdf453a0ba743d58e29491d174c974b",
+          "foreignKey": "qaid",
+          "fieldName": "personid"
+        }
+      },
+      "sourceId": "datasource_plus_44a967caf37a435f84fe01cd6dfe8f81",
+      "sourceType": "external",
+      "primaryDisplay": "taskname",
+      "sql": true,
+      "views": {}
+    }
+  },
+  "tableAliases": {
+    "tasks": "a",
+    "products": "b",
+    "persons": "c",
+    "products_tasks": "d"
+  }
+}

@@ -394,7 +394,7 @@ describe("/automations", () => {
     it("deletes a automation by its ID", async () => {
       const automation = await config.createAutomation()
       const res = await request
-        .delete(`/api/automations/${automation.id}/${automation.rev}`)
+        .delete(`/api/automations/${automation._id}/${automation._rev}`)
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -408,7 +408,7 @@ describe("/automations", () => {
       await checkBuilderEndpoint({
         config,
         method: "DELETE",
-        url: `/api/automations/${automation.id}/${automation._rev}`,
+        url: `/api/automations/${automation._id}/${automation._rev}`,
       })
     })
   })

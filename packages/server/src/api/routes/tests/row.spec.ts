@@ -110,7 +110,7 @@ describe.each([
     config.api.row.get(tbl_Id, id, { expectStatus: status })
 
   const getRowUsage = async () => {
-    const { total } = await config.doInContext(null, () =>
+    const { total } = await config.doInContext(undefined, () =>
       quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
     )
     return total

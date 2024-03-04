@@ -116,7 +116,6 @@
   $: pagerText = `Page ${currentPage} of ${totalPages}`
 </script>
 
-a11y-click-events-have-key-events
 <div bind:this={buttonAnchor}>
   <ActionButton on:click={dropdown.show}>
     {displayValue}

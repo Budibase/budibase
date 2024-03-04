@@ -73,7 +73,7 @@ const _import = async (ctx: UserCtx) => {
 }
 export { _import as import }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: UserCtx<Query, Query>) {
   const db = context.getAppDB()
   const query: Query = ctx.request.body
 
