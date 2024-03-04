@@ -6,6 +6,9 @@ export interface Datasource extends Document {
   type: string
   name?: string
   source: SourceName
+  // this is a googlesheets specific property which
+  // can be found in the GSheets schema - pertains to SSO creds
+  auth?: { type: string }
   // the config is defined by the schema
   config?: Record<string, any>
   plus?: boolean
@@ -36,6 +39,12 @@ export interface RestAuthConfig {
   config: RestBasicAuthConfig | RestBearerAuthConfig
 }
 
+export interface DynamicVariable {
+  name: string
+  queryId: string
+  value: string
+}
+
 export interface RestConfig {
   url: string
   rejectUnauthorized: boolean
@@ -47,11 +56,5 @@ export interface RestConfig {
   staticVariables: {
     [key: string]: string
   }
-  dynamicVariables: [
-    {
-      name: string
-      queryId: string
-      value: string
-    }
-  ]
+  dynamicVariables: DynamicVariable[]
 }
