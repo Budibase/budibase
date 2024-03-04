@@ -2,42 +2,38 @@ import {
   CreateAppBackupResponse,
   ImportAppBackupResponse,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class BackupAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
-  exportBasicBackup = async (appId: string) => {
-    const result = await this.request
-      .post(`/api/backups/export?appId=${appId}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /application\/gzip/)
-      .expect(200)
-    return {
-      body: result.body as Buffer,
-      headers: result.headers,
+  exportBasicBackup = async (appId: string, expectations?: Expectations) => {
+    const exp = {
+      ...expectations,
+      headers: {
+        ...expectations?.headers,
+        "Content-Type": "application/gzip",
+      },
     }
+    return await this._post<Buffer>(`/api/backups/export`, {
+      query: { appId },
+      expectations: exp,
+    })
   }
 
-  createBackup = async (appId: string) => {
-    const result = await this.request
-      .post(`/api/apps/${appId}/backups`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body as CreateAppBackupResponse
+  createBackup = async (appId: string, expectations?: Expectations) => {
+    return await this._post<CreateAppBackupResponse>(
+      `/api/apps/${appId}/backups`,
+      { expectations }
+    )
   }
 
   waitForBackupToComplete = async (appId: string, backupId: string) => {
     for (let i = 0; i < 10; i++) {
       await new Promise(resolve => setTimeout(resolve, 1000))
-      const result = await this.request
-        .get(`/api/apps/${appId}/backups/${backupId}/file`)
-        .set(this.config.defaultHeaders())
-      if (result.status === 200) {
+      const response = await this._requestRaw(
+        "get",
+        `/api/apps/${appId}/backups/${backupId}/file`
+      )
+      if (response.status === 200) {
         return
       }
     }
@@ -46,13 +42,12 @@ export class BackupAPI extends TestAPI {
 
   importBackup = async (
     appId: string,
-    backupId: string
+    backupId: string,
+    expectations?: Expectations
   ): Promise<ImportAppBackupResponse> => {
-    const result = await this.request
-      .post(`/api/apps/${appId}/backups/${backupId}/import`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-    return result.body as ImportAppBackupResponse
+    return await this._post<ImportAppBackupResponse>(
+      `/api/apps/${appId}/backups/${backupId}/import`,
+      { expectations }
+    )
   }
 }
