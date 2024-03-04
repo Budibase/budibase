@@ -211,7 +211,7 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: any) {
+export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
