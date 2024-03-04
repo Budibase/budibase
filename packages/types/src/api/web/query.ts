@@ -16,5 +16,5 @@ export interface ExecuteQueryRequest {
 }
 
 export interface ExecuteQueryResponse {
-  data: any[]
+  data: Record<string, any>[]
 }

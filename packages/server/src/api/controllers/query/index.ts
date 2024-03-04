@@ -297,7 +297,10 @@ export async function preview(
 }
 
 async function execute(
-  ctx: UserCtx<ExecuteQueryRequest, ExecuteQueryResponse | any[]>,
+  ctx: UserCtx<
+    ExecuteQueryRequest,
+    ExecuteQueryResponse | Record<string, any>[]
+  >,
   opts: any = { rowsOnly: false, isAutomation: false }
 ) {
   const db = context.getAppDB()
@@ -352,18 +355,23 @@ async function execute(
   }
 }
 
-export async function executeV1(ctx: UserCtx) {
+export async function executeV1(
+  ctx: UserCtx<ExecuteQueryRequest, Record<string, any>[]>
+) {
   return execute(ctx, { rowsOnly: true, isAutomation: false })
 }
 
 export async function executeV2(
-  ctx: UserCtx,
+  ctx: UserCtx<
+    ExecuteQueryRequest,
+    ExecuteQueryResponse | Record<string, any>[]
+  >,
   { isAutomation }: { isAutomation?: boolean } = {}
 ) {
   return execute(ctx, { rowsOnly: false, isAutomation })
 }
 
-const removeDynamicVariables = async (queryId: any) => {
+const removeDynamicVariables = async (queryId: string) => {
   const db = context.getAppDB()
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
@@ -386,7 +394,7 @@ const removeDynamicVariables = async (queryId: any) => {
 
 export async function destroy(ctx: UserCtx) {
   const db = context.getAppDB()
-  const queryId = ctx.params.queryId
+  const queryId = ctx.params.queryId as string
   await removeDynamicVariables(queryId)
   const query = await db.get<Query>(queryId)
   const datasource = await sdk.datasources.get(query.datasourceId)
