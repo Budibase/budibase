@@ -4,7 +4,7 @@
     selectedScreen,
     componentStore,
     selectedComponent,
-    componentTreeNodesStore
+    componentTreeNodesStore,
   } from "stores/builder"
   import { findComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
