@@ -12,11 +12,12 @@ import {
 } from "@budibase/types"
 import sdk from "../../../sdk"
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+export async function save(
+  ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
+  renaming?: RenameColumn
+) {
   const { rows, ...rest } = ctx.request.body
-  let tableToSave: Table & {
-    _rename?: RenameColumn
-  } = {
+  let tableToSave: Table = {
     _id: generateTableID(),
     ...rest,
     // Ensure these fields are populated, even if not sent in the request
@@ -28,15 +29,12 @@ export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
     tableToSave.views = {}
   }
 
-  const renaming = tableToSave._rename
-  delete tableToSave._rename
-
   try {
     const { table } = await sdk.tables.internal.save(tableToSave, {
       user: ctx.user,
       rowsToImport: rows,
       tableId: ctx.request.body._id,
-      renaming: renaming,
+      renaming,
     })
 
     return table
