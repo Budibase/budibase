@@ -20,7 +20,7 @@ import {
 import { removeFromArray } from "../../utilities"
 import sdk from "../../sdk"
 
-enum PermissionUpdateType {
+const enum PermissionUpdateType {
   REMOVE = "remove",
   ADD = "add",
 }
