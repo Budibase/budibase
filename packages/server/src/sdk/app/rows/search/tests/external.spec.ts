@@ -21,10 +21,11 @@ jest.unmock("mysql2/promise")
 
 jest.setTimeout(30000)
 
-describe.skip("external", () => {
+describe("external search", () => {
   const config = new TestConfiguration()
 
   let externalDatasource: Datasource, tableData: Table
+  const rows: Row[] = []
 
   beforeAll(async () => {
     const container = await new GenericContainer("mysql")
@@ -89,88 +90,81 @@ describe.skip("external", () => {
         },
       },
     }
+
+    const table = await config.createExternalTable({
+      ...tableData,
+      sourceId: externalDatasource._id,
+    })
+    for (let i = 0; i < 10; i++) {
+      rows.push(
+        await config.createRow({
+          tableId: table._id,
+          name: generator.first(),
+          surname: generator.last(),
+          age: generator.age(),
+          address: generator.address(),
+        })
+      )
+    }
   })
 
-  describe("search", () => {
-    const rows: Row[] = []
-    beforeAll(async () => {
-      const table = await config.createExternalTable({
-        ...tableData,
-        sourceId: externalDatasource._id,
-      })
-      for (let i = 0; i < 10; i++) {
-        rows.push(
-          await config.createRow({
-            tableId: table._id,
-            name: generator.first(),
-            surname: generator.last(),
-            age: generator.age(),
-            address: generator.address(),
-          })
-        )
+  it("default search returns all the data", async () => {
+    await config.doInContext(config.appId, async () => {
+      const tableId = config.table!._id!
+
+      const searchParams: SearchParams = {
+        tableId,
+        query: {},
       }
+      const result = await search(searchParams)
+
+      expect(result.rows).toHaveLength(10)
+      expect(result.rows).toEqual(
+        expect.arrayContaining(rows.map(r => expect.objectContaining(r)))
+      )
     })
+  })
 
-    it("default search returns all the data", async () => {
-      await config.doInContext(config.appId, async () => {
-        const tableId = config.table!._id!
+  it("querying by fields will always return data attribute columns", async () => {
+    await config.doInContext(config.appId, async () => {
+      const tableId = config.table!._id!
 
-        const searchParams: SearchParams = {
-          tableId,
-          query: {},
-        }
-        const result = await search(searchParams)
+      const searchParams: SearchParams = {
+        tableId,
+        query: {},
+        fields: ["name", "age"],
+      }
+      const result = await search(searchParams)
 
-        expect(result.rows).toHaveLength(10)
-        expect(result.rows).toEqual(
-          expect.arrayContaining(rows.map(r => expect.objectContaining(r)))
+      expect(result.rows).toHaveLength(10)
+      expect(result.rows).toEqual(
+        expect.arrayContaining(
+          rows.map(r => ({
+            ...expectAnyExternalColsAttributes,
+            name: r.name,
+            age: r.age,
+          }))
         )
-      })
+      )
     })
+  })
 
-    it("querying by fields will always return data attribute columns", async () => {
-      await config.doInContext(config.appId, async () => {
-        const tableId = config.table!._id!
+  it("will decode _id in oneOf query", async () => {
+    await config.doInContext(config.appId, async () => {
+      const tableId = config.table!._id!
 
-        const searchParams: SearchParams = {
-          tableId,
-          query: {},
-          fields: ["name", "age"],
-        }
-        const result = await search(searchParams)
-
-        expect(result.rows).toHaveLength(10)
-        expect(result.rows).toEqual(
-          expect.arrayContaining(
-            rows.map(r => ({
-              ...expectAnyExternalColsAttributes,
-              name: r.name,
-              age: r.age,
-            }))
-          )
-        )
-      })
-    })
-
-    it("will decode _id in oneOf query", async () => {
-      await config.doInContext(config.appId, async () => {
-        const tableId = config.table!._id!
-
-        const searchParams: SearchParams = {
-          tableId,
-          query: {
-            oneOf: {
-              _id: ["%5B1%5D", "%5B4%5D", "%5B8%5D"],
-            },
+      const searchParams: SearchParams = {
+        tableId,
+        query: {
+          oneOf: {
+            _id: ["%5B1%5D", "%5B4%5D", "%5B8%5D"],
           },
-        }
-        const result = await search(searchParams)
+        },
+      }
+      const result = await search(searchParams)
 
-        expect(result.rows).toHaveLength(3)
-        expect(result.rows).toEqual(
-          expect.arrayContaining(rows.map(row => [1, 4, 8].includes(row.id)))
-        )
-      })
+      expect(result.rows).toHaveLength(3)
+      expect(result.rows.map(row => row.id)).toEqual([1, 4, 8])
     })
   })
 })
