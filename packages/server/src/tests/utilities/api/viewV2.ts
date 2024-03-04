@@ -50,7 +50,11 @@ export class ViewV2API extends TestAPI {
   }
 
   delete = async (viewId: string, expectations?: Expectations) => {
-    return await this._delete(`/api/v2/views/${viewId}`, { expectations })
+    const exp = {
+      status: 204,
+      ...expectations,
+    }
+    return await this._delete(`/api/v2/views/${viewId}`, { expectations: exp })
   }
 
   get = async (viewId: string) => {
