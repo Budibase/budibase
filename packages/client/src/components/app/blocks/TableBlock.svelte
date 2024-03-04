@@ -32,7 +32,7 @@
   export let sidePanelSaveLabel
   export let sidePanelDeleteLabel
   export let notificationOverride
-  export let repeat
+  export let autoRefresh
 
   const { fetchDatasourceSchema, API } = getContext("sdk")
   const component = getContext("component")
@@ -231,7 +231,7 @@
           sortOrder,
           paginate,
           limit: rowCount,
-          repeat,
+          autoRefresh,
         }}
         context="provider"
         order={1}

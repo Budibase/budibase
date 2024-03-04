@@ -30,7 +30,7 @@
   export let cardButtonOnClick
   export let linkColumn
   export let noRowsMessage
-  export let repeat
+  export let autoRefresh
 
   const { fetchDatasourceSchema } = getContext("sdk")
 
@@ -172,7 +172,7 @@
           sortOrder,
           paginate,
           limit,
-          repeat,
+          autoRefresh,
         }}
         order={1}
       >

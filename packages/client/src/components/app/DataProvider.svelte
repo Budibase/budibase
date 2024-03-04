@@ -9,7 +9,7 @@
   export let sortOrder
   export let limit
   export let paginate
-  export let refresh
+  export let autoRefresh
 
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
@@ -30,7 +30,7 @@
     paginate,
   })
   $: schema = sanitizeSchema($fetch.schema)
-  $: setUpAutoRefresh(refresh)
+  $: setUpAutoRefresh(autoRefresh)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -137,10 +137,10 @@
     return extendedQuery
   }
 
-  const setUpAutoRefresh = refresh => {
+  const setUpAutoRefresh = autoRefresh => {
     clearInterval(interval)
-    if (refresh) {
-      interval = setInterval(fetch.refresh, Math.max(10000, refresh * 1000))
+    if (autoRefresh) {
+      interval = setInterval(fetch.refresh, Math.max(10000, autoRefresh * 1000))
     }
   }
 </script>
