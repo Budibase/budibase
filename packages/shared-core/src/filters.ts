@@ -391,43 +391,32 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   )
 
   const docMatch = (doc: any) => {
-    // Determine active filters based on query object
-    const activeFilterKeys = Object.entries(query || {})
+    const filterFunctions = {
+      string: stringMatch,
+      fuzzy: fuzzyMatch,
+      range: rangeMatch,
+      equal: equalMatch,
+      notEqual: notEqualMatch,
+      empty: emptyMatch,
+      notEmpty: notEmptyMatch,
+      oneOf: oneOf,
+      contains: contains,
+      containsAny: containsAny,
+      notContains: notContains,
+    }
+    const activeFilterKeys: (keyof typeof filterFunctions)[] = Object.entries(
+      query
+    )
       .filter(
-        ([key, value]) =>
+        ([key, value]: [string, any]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
-          Object.keys(value).length > 0
+          Object.keys(value as Record<string, any>).length > 0
       )
-      .map(([key]) => key)
+      .map(([key]) => key as keyof typeof filterFunctions)
 
-    // Apply filters dynamically based on activeFilterKeys
-    const results = activeFilterKeys.map(filterKey => {
-      switch (filterKey) {
-        case "string":
-          return stringMatch(doc)
-        case "fuzzy":
-          return fuzzyMatch(doc)
-        case "range":
-          return rangeMatch(doc)
-        case "equal":
-          return equalMatch(doc)
-        case "notEqual":
-          return notEqualMatch(doc)
-        case "empty":
-          return emptyMatch(doc)
-        case "notEmpty":
-          return notEmptyMatch(doc)
-        case "oneOf":
-          return oneOf(doc)
-        case "contains":
-          return contains(doc)
-        case "containsAny":
-          return containsAny(doc)
-        case "notContains":
-          return notContains(doc)
-        default:
-          return true // If the filter type is not recognized, default to true (assuming pass)
-      }
+    const results: boolean[] = activeFilterKeys.map(filterKey => {
+      const filterFunction = filterFunctions[filterKey]
+      return filterFunction ? filterFunction(doc) : true
     })
 
     if (query!.allOr) {
@@ -436,7 +425,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
       return results.every(result => result === true)
     }
   }
-  // Process all docs
+
   return docs.filter(docMatch)
 }
 

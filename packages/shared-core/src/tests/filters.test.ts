@@ -47,10 +47,7 @@ describe("runLuceneQuery", () => {
     },
   ]
 
-  function buildQuery(
-    filterKey: string,
-    value: { [key: string]: any }
-  ): SearchQuery {
+  function buildQuery(filters: { [filterKey: string]: any }): SearchQuery {
     const query: SearchQuery = {
       string: {},
       fuzzy: {},
@@ -63,8 +60,13 @@ describe("runLuceneQuery", () => {
       notContains: {},
       oneOf: {},
       containsAny: {},
+      allOr: false,
     }
-    query[filterKey as SearchQueryOperators] = value
+
+    for (const filterKey in filters) {
+      query[filterKey as SearchQueryOperators] = filters[filterKey]
+    }
+
     return query
   }
 
@@ -73,16 +75,17 @@ describe("runLuceneQuery", () => {
   })
 
   it("should return matching rows for equal filter", () => {
-    const query = buildQuery("equal", {
-      order_status: 4,
+    const query = buildQuery({
+      equal: { order_status: 4 },
     })
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
   })
 
   it("should return matching row for notEqual filter", () => {
-    const query = buildQuery("notEqual", {
-      order_status: 4,
+    const query = buildQuery({
+      notEqual: { order_status: 4 },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
@@ -90,48 +93,56 @@ describe("runLuceneQuery", () => {
     expect(
       runLuceneQuery(
         docs,
-        buildQuery("fuzzy", {
-          description: "sm",
+        buildQuery({
+          fuzzy: { description: "sm" },
         })
       ).map(row => row.description)
     ).toEqual(["Small box"])
     expect(
       runLuceneQuery(
         docs,
-        buildQuery("string", {
-          description: "SM",
+        buildQuery({
+          string: { description: "SM" },
         })
       ).map(row => row.description)
     ).toEqual(["Small box"])
   })
 
   it("should return rows within a range filter", () => {
-    const query = buildQuery("range", {
-      customer_id: {
-        low: 500,
-        high: 1000,
+    const query = buildQuery({
+      range: {
+        customer_id: {
+          low: 500,
+          high: 1000,
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with numeric strings within a range filter", () => {
-    const query = buildQuery("range", {
-      customer_id: {
-        low: "500",
-        high: "1000",
+    const query = buildQuery({
+      range: {
+        customer_id: {
+          low: "500",
+          high: "1000",
+        },
       },
     })
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([3])
   })
 
   it("should return rows with ISO date strings within a range filter", () => {
-    const query = buildQuery("range", {
-      order_date: {
-        low: "2016-01-04T00:00:00.000Z",
-        high: "2016-01-11T00:00:00.000Z",
+    const query = buildQuery({
+      range: {
+        order_date: {
+          low: "2016-01-04T00:00:00.000Z",
+          high: "2016-01-11T00:00:00.000Z",
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
   })
 
@@ -150,40 +161,87 @@ describe("runLuceneQuery", () => {
         label: "",
       },
     ]
-    const query = buildQuery("range", {
-      order_date: {
-        low: "2016-01-04T00:00:00.000Z",
-        high: "2016-01-11T00:00:00.000Z",
+
+    const query = buildQuery({
+      range: {
+        order_date: {
+          low: "2016-01-04T00:00:00.000Z",
+          high: "2016-01-11T00:00:00.000Z",
+        },
       },
     })
+
     expect(runLuceneQuery(docs, query)).toEqual(docs)
   })
 
   it("should return rows with matches on empty filter", () => {
-    const query = buildQuery("empty", {
-      label: null,
+    const query = buildQuery({
+      empty: {
+        label: null,
+      },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1])
   })
 
   it("should return rows with matches on notEmpty filter", () => {
-    const query = buildQuery("notEmpty", {
-      label: null,
+    const query = buildQuery({
+      notEmpty: {
+        label: null,
+      },
     })
+
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
   })
 
   test.each([[523, 259], "523,259"])(
     "should return rows with matches on numeric oneOf filter",
     input => {
-      let query = buildQuery("oneOf", {
-        customer_id: input,
+      const query = buildQuery({
+        oneOf: {
+          customer_id: input,
+        },
       })
+
       expect(runLuceneQuery(docs, query).map(row => row.customer_id)).toEqual([
         259, 523,
       ])
     }
   )
+
+  it("should return matching results if allOr is true and only one filter matches", () => {
+    const query = buildQuery({
+      allOr: true,
+      oneOf: { staff_id: [10] },
+      contains: { description: ["box"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([
+      1, 2, 3,
+    ])
+  })
+
+  // what should the name of this test be if it's the same test as above but with different operands
+
+  it("should return matching results if allOr is true and only one filter matches with different operands", () => {
+    const query = buildQuery({
+      allOr: true,
+      equal: { order_status: 4 },
+      oneOf: { label: ["FRAGILE"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
+  })
+
+  it("should return nothing if allOr is false and only one filter matches", () => {
+    const query = buildQuery({
+      allOr: false,
+      oneOf: { staff_id: [10] },
+      contains: { description: ["box"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([])
+  })
 })
 
 describe("buildLuceneQuery", () => {
