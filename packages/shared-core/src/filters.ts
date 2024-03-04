@@ -391,28 +391,28 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   )
 
   const docMatch = (doc: any) => {
-    const filterFunctions = {
-      string: stringMatch,
-      fuzzy: fuzzyMatch,
-      range: rangeMatch,
-      equal: equalMatch,
-      notEqual: notEqualMatch,
-      empty: emptyMatch,
-      notEmpty: notEmptyMatch,
-      oneOf: oneOf,
-      contains: contains,
-      containsAny: containsAny,
-      notContains: notContains,
-    }
-    const activeFilterKeys: (keyof typeof filterFunctions)[] = Object.entries(
-      query
-    )
+    const filterFunctions: Record<SearchQueryOperators, (doc: any) => boolean> =
+      {
+        string: stringMatch,
+        fuzzy: fuzzyMatch,
+        range: rangeMatch,
+        equal: equalMatch,
+        notEqual: notEqualMatch,
+        empty: emptyMatch,
+        notEmpty: notEmptyMatch,
+        oneOf: oneOf,
+        contains: contains,
+        containsAny: containsAny,
+        notContains: notContains,
+      }
+
+    const activeFilterKeys: SearchQueryOperators[] = Object.entries(query)
       .filter(
         ([key, value]: [string, any]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
           Object.keys(value as Record<string, any>).length > 0
       )
-      .map(([key]) => key as keyof typeof filterFunctions)
+      .map(([key]) => key as any)
 
     const results: boolean[] = activeFilterKeys.map(filterKey => {
       const filterFunction = filterFunctions[filterKey]
