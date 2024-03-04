@@ -116,28 +116,38 @@ describe("mysql integrations", () => {
 
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
-      const response = await config.api.datasource.verify({
-        datasource: await databaseTestProviders.mysql.datasource(),
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(true)
+      await config.api.datasource.verify(
+        {
+          datasource: await databaseTestProviders.mysql.datasource(),
+        },
+        {
+          body: {
+            connected: true,
+          },
+        }
+      )
     })
 
     it("should state an invalid datasource cannot connect", async () => {
       const dbConfig = await databaseTestProviders.mysql.datasource()
-      const response = await config.api.datasource.verify({
-        datasource: {
-          ...dbConfig,
-          config: {
-            ...dbConfig.config,
-            password: "wrongpassword",
+      await config.api.datasource.verify(
+        {
+          datasource: {
+            ...dbConfig,
+            config: {
+              ...dbConfig.config,
+              password: "wrongpassword",
+            },
           },
         },
-      })
-
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(false)
-      expect(response.body.error).toBeDefined()
+        {
+          body: {
+            connected: false,
+            error:
+              "Access denied for the specified user. User does not have the necessary privileges or the provided credentials are incorrect. Please verify the credentials, and ensure that the user has appropriate permissions.",
+          },
+        }
+      )
     })
   })
 
