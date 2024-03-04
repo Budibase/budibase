@@ -14,7 +14,7 @@
   export let detailFields
   export let detailTitle
   export let noRowsMessage
-  export let repeat
+  export let autoRefresh
 
   const stateKey = generate()
 
@@ -54,7 +54,7 @@
             noValue: false,
           },
         ],
-        repeat,
+        autoRefresh,
       }}
       styles={{
         custom: `
