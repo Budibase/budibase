@@ -3,18 +3,16 @@ import {
   generateMakeRequest,
   MakeRequestResponse,
 } from "../api/routes/public/tests/utils"
-
+import { v4 as uuidv4 } from "uuid"
 import * as setup from "../api/routes/tests/utilities"
 import {
   Datasource,
   FieldType,
-  RelationshipType,
   Table,
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
 import _ from "lodash"
-import { generator } from "@budibase/backend-core/tests"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"
@@ -42,10 +40,7 @@ jest.mock("../websockets", () => ({
 describe("mysql integrations", () => {
   let makeRequest: MakeRequestResponse,
     mysqlDatasource: Datasource,
-    primaryMySqlTable: Table,
-    oneToManyRelationshipInfo: ForeignTableInfo,
-    manyToOneRelationshipInfo: ForeignTableInfo,
-    manyToManyRelationshipInfo: ForeignTableInfo
+    primaryMySqlTable: Table
 
   beforeAll(async () => {
     await config.init()
@@ -63,46 +58,8 @@ describe("mysql integrations", () => {
   })
 
   beforeEach(async () => {
-    async function createAuxTable(prefix: string) {
-      return await config.createTable({
-        name: `${prefix}_${generator.word({ length: 5 })}`,
-        type: "table",
-        primary: ["id"],
-        primaryDisplay: "title",
-        schema: {
-          id: {
-            name: "id",
-            type: FieldType.AUTO,
-            autocolumn: true,
-          },
-          title: {
-            name: "title",
-            type: FieldType.STRING,
-          },
-        },
-        sourceId: mysqlDatasource._id,
-        sourceType: TableSourceType.EXTERNAL,
-      })
-    }
-
-    oneToManyRelationshipInfo = {
-      table: await createAuxTable("o2m"),
-      fieldName: "oneToMany",
-      relationshipType: RelationshipType.ONE_TO_MANY,
-    }
-    manyToOneRelationshipInfo = {
-      table: await createAuxTable("m2o"),
-      fieldName: "manyToOne",
-      relationshipType: RelationshipType.MANY_TO_ONE,
-    }
-    manyToManyRelationshipInfo = {
-      table: await createAuxTable("m2m"),
-      fieldName: "manyToMany",
-      relationshipType: RelationshipType.MANY_TO_MANY,
-    }
-
     primaryMySqlTable = await config.createTable({
-      name: `p_${generator.word({ length: 5 })}`,
+      name: uuidv4(),
       type: "table",
       primary: ["id"],
       schema: {
@@ -123,39 +80,6 @@ describe("mysql integrations", () => {
           name: "value",
           type: FieldType.NUMBER,
         },
-        oneToMany: {
-          type: FieldType.LINK,
-          constraints: {
-            type: "array",
-          },
-          fieldName: oneToManyRelationshipInfo.fieldName,
-          name: "oneToMany",
-          relationshipType: RelationshipType.ONE_TO_MANY,
-          tableId: oneToManyRelationshipInfo.table._id!,
-          main: true,
-        },
-        manyToOne: {
-          type: FieldType.LINK,
-          constraints: {
-            type: "array",
-          },
-          fieldName: manyToOneRelationshipInfo.fieldName,
-          name: "manyToOne",
-          relationshipType: RelationshipType.MANY_TO_ONE,
-          tableId: manyToOneRelationshipInfo.table._id!,
-          main: true,
-        },
-        manyToMany: {
-          type: FieldType.LINK,
-          constraints: {
-            type: "array",
-          },
-          fieldName: manyToManyRelationshipInfo.fieldName,
-          name: "manyToMany",
-          relationshipType: RelationshipType.MANY_TO_MANY,
-          tableId: manyToManyRelationshipInfo.table._id!,
-          main: true,
-        },
       },
       sourceId: mysqlDatasource._id,
       sourceType: TableSourceType.EXTERNAL,
@@ -163,12 +87,6 @@ describe("mysql integrations", () => {
   })
 
   afterAll(config.end)
-
-  type ForeignTableInfo = {
-    table: Table
-    fieldName: string
-    relationshipType: RelationshipType
-  }
 
   it("validate table schema", async () => {
     const res = await makeRequest(
