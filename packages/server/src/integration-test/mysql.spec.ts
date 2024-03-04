@@ -231,6 +231,9 @@ describe("mysql integrations", () => {
           await databaseTestProviders.mysql.datasource()
         ).config!
       )
+      mysqlDatasource = await config.api.datasource.create(
+        await databaseTestProviders.mysql.datasource()
+      )
     })
 
     afterEach(async () => {
@@ -238,13 +241,6 @@ describe("mysql integrations", () => {
     })
 
     it("will emit the datasource entity schema with externalType to the front-end when adding a new column", async () => {
-      mysqlDatasource = (
-        await makeRequest(
-          "post",
-          `/api/datasources/${mysqlDatasource._id}/schema`
-        )
-      ).body.datasource
-
       const addColumnToTable: TableRequest = {
         type: "table",
         sourceType: TableSourceType.EXTERNAL,
@@ -304,6 +300,54 @@ describe("mysql integrations", () => {
       const emittedDatasource: Datasource =
         emitDatasourceUpdateMock.mock.calls[0][1]
       expect(emittedDatasource.entities!["table"]).toEqual(expectedTable)
+    })
+
+    it("will rename a column", async () => {
+      await makeRequest("post", "/api/tables/", primaryMySqlTable)
+
+      let renameColumnOnTable: TableRequest = {
+        ...primaryMySqlTable,
+        schema: {
+          id: {
+            name: "id",
+            type: FieldType.AUTO,
+            autocolumn: true,
+            externalType: "unsigned integer",
+          },
+          name: {
+            name: "name",
+            type: FieldType.STRING,
+            externalType: "text",
+          },
+          description: {
+            name: "description",
+            type: FieldType.STRING,
+            externalType: "text",
+          },
+          age: {
+            name: "age",
+            type: FieldType.NUMBER,
+            externalType: "float(8,2)",
+          },
+        },
+      }
+
+      const response = await makeRequest(
+        "post",
+        "/api/tables/",
+        renameColumnOnTable
+      )
+      mysqlDatasource = (
+        await makeRequest(
+          "post",
+          `/api/datasources/${mysqlDatasource._id}/schema`
+        )
+      ).body.datasource
+
+      expect(response.status).toEqual(200)
+      expect(
+        Object.keys(mysqlDatasource.entities![primaryMySqlTable.name].schema)
+      ).toEqual(["id", "name", "description", "age"])
     })
   })
 })
