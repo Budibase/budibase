@@ -48,6 +48,9 @@ import {
   PlanType,
   Screen,
   UserCtx,
+  CreateAppRequest,
+  FetchAppDefinitionResponse,
+  FetchAppPackageResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -59,23 +62,23 @@ import * as appMigrations from "../../appMigrations"
 async function getLayouts() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Layout>(
       getLayoutParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 async function getScreens() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Screen>(
       getScreenParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 function getUserRoleId(ctx: UserCtx) {
@@ -117,8 +120,8 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  templateString: string
-  useTemplate: string
+  templateString?: string
+  useTemplate?: string
   file?: {
     type?: string
     path: string
@@ -175,14 +178,16 @@ export const addSampleData = async (ctx: UserCtx) => {
   ctx.status = 200
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, App[]>) {
   ctx.body = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
 }
 
-export async function fetchAppDefinition(ctx: UserCtx) {
+export async function fetchAppDefinition(
+  ctx: UserCtx<void, FetchAppDefinitionResponse>
+) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
@@ -197,10 +202,12 @@ export async function fetchAppDefinition(ctx: UserCtx) {
   }
 }
 
-export async function fetchAppPackage(ctx: UserCtx) {
+export async function fetchAppPackage(
+  ctx: UserCtx<void, FetchAppPackageResponse>
+) {
   const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<any>(DocumentType.APP_METADATA)
+  let application = await db.get<App>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
@@ -232,17 +239,21 @@ export async function fetchAppPackage(ctx: UserCtx) {
   }
 }
 
-async function performAppCreate(ctx: UserCtx) {
+async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url,
-    encryptionPassword = ctx.request.body.encryptionPassword
+  const {
+    name,
+    url,
+    encryptionPassword,
+    useTemplate,
+    templateKey,
+    templateString,
+  } = ctx.request.body
 
   checkAppName(ctx, apps, name)
-  const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
-  checkAppUrl(ctx, apps, url)
+  const appUrl = sdk.applications.getAppUrl({ name, url })
+  checkAppUrl(ctx, apps, appUrl)
 
-  const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
@@ -273,7 +284,7 @@ async function performAppCreate(ctx: UserCtx) {
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
       name: name,
-      url: url,
+      url: appUrl,
       template: templateKey,
       instance,
       tenantId: tenancy.getTenantId(),
@@ -435,7 +446,9 @@ export async function create(ctx: UserCtx) {
 
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
-export async function update(ctx: UserCtx) {
+export async function update(
+  ctx: UserCtx<{ name?: string; url?: string }, App>
+) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
   const name = ctx.request.body.name,
@@ -508,7 +521,7 @@ export async function revertClient(ctx: UserCtx) {
   const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
     version: revertedToVersion,
-    revertableVersion: null,
+    revertableVersion: undefined,
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
@@ -683,12 +696,15 @@ export async function duplicateApp(ctx: UserCtx) {
   ctx.status = 200
 }
 
-export async function updateAppPackage(appPackage: any, appId: any) {
+export async function updateAppPackage(
+  appPackage: Partial<App>,
+  appId: string
+) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get<App>(DocumentType.APP_METADATA)
 
-    const newAppPackage = { ...application, ...appPackage }
+    const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
     }

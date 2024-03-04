@@ -229,7 +229,7 @@ export async function removeSecretSingle(datasource: Datasource) {
 }
 
 export function mergeConfigs(update: Datasource, old: Datasource) {
-  if (!update.config) {
+  if (!update.config || !old.config) {
     return update
   }
   // specific to REST datasources, fix the auth configs again if required
