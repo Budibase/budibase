@@ -9,8 +9,11 @@ import {
   RelationshipsJson,
   SearchFilters,
   SortDirection,
+  Table,
 } from "@budibase/types"
 import environment from "../../environment"
+
+type QueryFunction = (query: Knex.SqlNative, operation: Operation) => any
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -115,6 +118,29 @@ function generateSelectStatement(
     }
     return `${field} as ${field}`
   })
+}
+
+function disableAliasing(json: QueryJson) {
+  if (json.tableAliases) {
+    json.tableAliases = undefined
+  }
+  const removeTableAlias = (table: Table) => {
+    if (table.originalName) {
+      table.name = table.originalName
+    }
+    return table
+  }
+  if (json.meta?.table) {
+    json.meta.table = removeTableAlias(json.meta.table)
+  }
+  if (json.meta?.tables) {
+    for (let tableName of Object.keys(json.meta.tables)) {
+      json.meta.tables[tableName] = removeTableAlias(
+        json.meta.tables[tableName]
+      )
+    }
+  }
+  return json
 }
 
 class InternalBuilder {
@@ -605,10 +631,12 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return query.toSQL().toNative()
   }
 
-  async getReturningRow(queryFn: Function, json: QueryJson) {
+  async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
+    // disable aliasing if it is enabled
+    json = disableAliasing(json)
     const input = this._query({
       endpoint: {
         ...json.endpoint,
@@ -617,7 +645,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       resource: {
         fields: [],
       },
-      filters: json.extra.idFilter,
+      filters: json.extra?.idFilter,
       paginate: {
         limit: 1,
       },
@@ -646,7 +674,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   // this function recreates the returning functionality of postgres
   async queryWithReturning(
     json: QueryJson,
-    queryFn: Function,
+    queryFn: QueryFunction,
     processFn: Function = (result: any) => result
   ) {
     const sqlClient = this.getSqlClient()
