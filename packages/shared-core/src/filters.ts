@@ -406,7 +406,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
         notContains: notContains,
       }
 
-    const activeFilterKeys: SearchQueryOperators[] = Object.entries(query)
+    const activeFilterKeys: SearchQueryOperators[] = Object.entries(query || {})
       .filter(
         ([key, value]: [string, any]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
