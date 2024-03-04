@@ -397,15 +397,16 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      const response = await config.api.datasource.create(
-        {
-          ...basicDatasource().datasource,
-          source: "INVALID_INTEGRATION" as SourceName,
+      const datasource: Datasource = {
+        ...basicDatasource().datasource,
+        source: "INVALID_INTEGRATION" as SourceName,
+      }
+      await config.api.datasource.create(datasource, {
+        status: 500,
+        body: {
+          message: "No datasource implementation found.",
         },
-        { expectStatus: 500, rawResponse: true }
-      )
-
-      expect(response.body.message).toBe("No datasource implementation found.")
+      })
     })
   })
 

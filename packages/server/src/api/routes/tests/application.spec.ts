@@ -222,7 +222,7 @@ describe("/applications", () => {
     it("app should not sync if production", async () => {
       const { message } = await config.api.application.sync(
         app.appId.replace("_dev", ""),
-        { statusCode: 400 }
+        { status: 400 }
       )
 
       expect(message).toEqual(
