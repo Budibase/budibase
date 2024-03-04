@@ -157,7 +157,7 @@ describe("/queries", () => {
     })
 
     it("should find a query in cloud", async () => {
-      await setup.switchToSelfHosted(async () => {
+      await config.withEnv({ SELF_HOSTED: "true" }, async () => {
         const query = await config.createQuery()
         const res = await request
           .get(`/api/queries/${query._id}`)
