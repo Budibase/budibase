@@ -6,17 +6,15 @@
 
   export let dataSource
   export let height
-
   export let cardTitle
   export let cardSubtitle
   export let cardDescription
   export let cardImageURL
   export let cardSearchField
-
   export let detailFields
   export let detailTitle
-
   export let noRowsMessage
+  export let repeat
 
   const stateKey = generate()
 
@@ -56,6 +54,7 @@
             noValue: false,
           },
         ],
+        repeat,
       }}
       styles={{
         custom: `

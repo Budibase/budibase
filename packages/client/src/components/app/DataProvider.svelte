@@ -1,5 +1,5 @@
 <script>
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
@@ -9,17 +9,18 @@
   export let sortOrder
   export let limit
   export let paginate
+  export let refresh
 
   const { styleable, Provider, ActionTypes, API } = getContext("sdk")
   const component = getContext("component")
 
+  let interval
+  let queryExtensions = {}
+
   // We need to manage our lucene query manually as we want to allow components
   // to extend it
-  let queryExtensions = {}
   $: defaultQuery = LuceneUtils.buildLuceneQuery(filter)
   $: query = extendQuery(defaultQuery, queryExtensions)
-
-  // Fetch data and refresh when needed
   $: fetch = createFetch(dataSource)
   $: fetch.update({
     query,
@@ -28,11 +29,8 @@
     limit,
     paginate,
   })
-
-  // Sanitize schema to remove hidden fields
   $: schema = sanitizeSchema($fetch.schema)
-
-  // Build our action context
+  $: setUpAutoRefresh(refresh)
   $: actions = [
     {
       type: ActionTypes.RefreshDatasource,
@@ -63,8 +61,6 @@
       },
     },
   ]
-
-  // Build our data context
   $: dataContext = {
     rows: $fetch.rows,
     info: $fetch.info,
@@ -139,6 +135,13 @@
       })
     })
     return extendedQuery
+  }
+
+  const setUpAutoRefresh = refresh => {
+    clearInterval(interval)
+    if (refresh) {
+      interval = setInterval(fetch.refresh, Math.max(10000, refresh * 1000))
+    }
   }
 </script>
 
