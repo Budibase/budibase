@@ -271,13 +271,12 @@ describe("/applications", () => {
       await config.createApp("to-dupe")
       const sourceAppId = config.getProdAppId()
 
-      const resp = await request
-        .post(`/api/applications/${sourceAppId}/duplicate`)
-        .field("name", "to-dupe copy")
-        .field("url", "/to-dupe-copy")
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
+      const resp = await config.api.application.duplicateApp(sourceAppId, {
+        name: "to-dupe copy",
+        url: "/to-dupe-copy",
+      })
+
+      expect(resp.status).toEqual("200")
 
       expect(events.app.duplicated).toBeCalled()
       expect(resp.body.duplicateAppId).toBeDefined()
@@ -286,39 +285,38 @@ describe("/applications", () => {
     })
 
     it("should reject an unknown app id with a 404", async () => {
-      await request
-        .post(`/api/applications/app_1234_not_real/duplicate`)
-        .field("name", "to-dupe copy")
-        .field("url", "/to-dupe-copy")
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(404)
+      const resp = await config.api.application.duplicateApp(
+        "app_1234_not_real",
+        {
+          name: "to-dupe copy",
+          url: "/to-dupe-copy",
+        }
+      )
+
+      expect(resp.status).toEqual("404")
     })
 
     it("should reject with a known name", async () => {
       await config.createApp("known name")
       const sourceAppId = config.getProdAppId()
-      const resp = await request
-        .post(`/api/applications/${sourceAppId}/duplicate`)
-        .field("name", "known name")
-        .field("url", "/known-name")
-        .set(config.defaultHeaders())
-        .expect(400)
+      const resp = await config.api.application.duplicateApp(sourceAppId, {
+        name: "known name",
+        url: "/known-name",
+      })
 
+      expect(resp.status).toEqual("400")
       expect(resp.body.message).toEqual("App name is already in use.")
     })
 
     it("should reject with a known url", async () => {
       await config.createApp("known-url")
       const sourceAppId = config.getProdAppId()
+      const resp = await config.api.application.duplicateApp(sourceAppId, {
+        name: "this is fine",
+        url: "/known-url",
+      })
 
-      const resp = await request
-        .post(`/api/applications/${sourceAppId}/duplicate`)
-        .field("name", "this is fine")
-        .field("url", "/known-url")
-        .set(config.defaultHeaders())
-        .expect(400)
-
+      expect(resp.status).toEqual("400")
       expect(resp.body.message).toEqual("App URL is already in use.")
     })
   })
