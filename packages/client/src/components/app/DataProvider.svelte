@@ -1,5 +1,5 @@
 <script>
-  import { getContext, onMount } from "svelte"
+  import { getContext } from "svelte"
   import { Pagination, ProgressCircle } from "@budibase/bbui"
   import { fetchData, LuceneUtils } from "@budibase/frontend-core"
 
