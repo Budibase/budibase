@@ -125,10 +125,13 @@ export class RowAPI extends TestAPI {
     body: BulkImportRequest,
     expectations?: Expectations
   ): Promise<BulkImportResponse> => {
-    return await this._post<BulkImportResponse>(`/api/${tableId}/rows/import`, {
-      body,
-      expectations,
-    })
+    return await this._post<BulkImportResponse>(
+      `/api/tables/${tableId}/import`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   search = async (
