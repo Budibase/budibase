@@ -11,6 +11,7 @@ export interface CreateAppRequest {
   includeSampleData?: boolean
   encryptionPassword?: string
   templateString?: string
+  file?: any
 }
 
 export interface FetchAppDefinitionResponse {
