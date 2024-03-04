@@ -16,7 +16,7 @@ export interface GetDependantResourcesResponse {
 }
 
 export interface AddedPermission {
-  _id: string
+  _id?: string
   rev?: string
   error?: string
   reason?: string
