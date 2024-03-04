@@ -1,4 +1,5 @@
-import { Table } from "../documents"
+import { Table, Row } from "../documents"
+import { QueryJson } from "./search"
 
 export const PASSWORD_REPLACEMENT = "--secret-value--"
 
@@ -181,11 +182,24 @@ export interface Schema {
   errors: Record<string, string>
 }
 
+// return these when an operation occurred but we got no response
+enum DSPlusOperation {
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
+}
+
+export type DatasourcePlusQueryResponse = Promise<
+  Row[] | Record<DSPlusOperation, boolean>[] | void
+>
+
 export interface DatasourcePlus extends IntegrationBase {
   // if the datasource supports the use of bindings directly (to protect against SQL injection)
   // this returns the format of the identifier
   getBindingIdentifier(): string
   getStringConcat(parts: string[]): string
+  query(json: QueryJson): DatasourcePlusQueryResponse
   buildSchema(
     datasourceId: string,
     entities: Record<string, Table>
