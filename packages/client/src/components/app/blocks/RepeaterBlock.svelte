@@ -16,6 +16,7 @@
   export let hAlign
   export let vAlign
   export let gap
+  export let repeat
 
   const component = getContext("component")
 
@@ -34,6 +35,7 @@
       sortOrder,
       limit,
       paginate,
+      repeat,
     }}
   >
     {#if $component.empty}
