@@ -168,7 +168,7 @@ describe("Captures of real examples", () => {
       let query = SQL._query(queryJson, { disableReturning: true })
       expect(query).toEqual({
         sql: "insert into [people] ([age], [name]) values (@p0, @p1)",
-        bindings: [222, "awfawf"],
+        bindings: [22, "Test"],
       })
 
       // now check returning
@@ -178,7 +178,7 @@ describe("Captures of real examples", () => {
       }, queryJson)
       expect(returningQuery).toEqual({
         sql: "select * from (select top (@p0) * from [people] where [people].[name] = @p1 and [people].[age] = @p2 order by [people].[name] asc) as [people]",
-        bindings: [1, "awfawf", 222],
+        bindings: [1, "Test", 22],
       })
     })
   })
