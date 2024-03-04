@@ -6,6 +6,7 @@ import {
   BulkImportRequest,
   BulkImportResponse,
   Operation,
+  RenameColumn,
   SaveTableRequest,
   SaveTableResponse,
   Table,
@@ -25,9 +26,11 @@ function getDatasourceId(table: Table) {
   return breakExternalTableId(table._id).datasourceId
 }
 
-export async function save(ctx: UserCtx<SaveTableRequest, SaveTableResponse>) {
+export async function save(
+  ctx: UserCtx<SaveTableRequest, SaveTableResponse>,
+  renaming?: RenameColumn
+) {
   const inputs = ctx.request.body
-  const renaming = inputs?._rename
   const adding = inputs?._add
   // can't do this right now
   delete inputs.rows
