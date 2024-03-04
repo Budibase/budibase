@@ -27,3 +27,9 @@ export interface FetchAppPackageResponse {
   clientLibPath: string
   hasLock: boolean
 }
+
+export interface PublishResponse {
+  _id: string
+  status: string
+  appUrl: string
+}

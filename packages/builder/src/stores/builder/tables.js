@@ -147,12 +147,6 @@ export function createTablesStore() {
     if (indexes) {
       draft.indexes = indexes
     }
-    // Add object to indicate if column is being added
-    if (draft.schema[field.name] === undefined) {
-      draft._add = {
-        name: field.name,
-      }
-    }
     draft.schema = {
       ...draft.schema,
       [field.name]: cloneDeep(field),
