@@ -120,29 +120,6 @@ function generateSelectStatement(
   })
 }
 
-function disableAliasing(json: QueryJson) {
-  if (json.tableAliases) {
-    json.tableAliases = undefined
-  }
-  const removeTableAlias = (table: Table) => {
-    if (table.originalName) {
-      table.name = table.originalName
-    }
-    return table
-  }
-  if (json.meta?.table) {
-    json.meta.table = removeTableAlias(json.meta.table)
-  }
-  if (json.meta?.tables) {
-    for (let tableName of Object.keys(json.meta.tables)) {
-      json.meta.tables[tableName] = removeTableAlias(
-        json.meta.tables[tableName]
-      )
-    }
-  }
-  return json
-}
-
 class InternalBuilder {
   private readonly client: string
 
@@ -348,15 +325,18 @@ class InternalBuilder {
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
+    const aliases = json.tableAliases
+    const aliased =
+      table?.name && aliases?.[table.name] ? aliases[table.name] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(`${table?.name}.${key}`, direction)
+        query = query.orderBy(`${aliased}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
-      query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
+      query = query.orderBy(`${aliased}.${table?.primary[0]}`)
     }
     return query
   }
@@ -635,8 +615,6 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
-    // disable aliasing if it is enabled
-    json = disableAliasing(json)
     const input = this._query({
       endpoint: {
         ...json.endpoint,
