@@ -15,7 +15,6 @@ export interface Table extends Document {
   sourceType: TableSourceType
   views?: { [key: string]: View | ViewV2 }
   name: string
-  originalName?: string
   sourceId: string
   primary?: string[]
   schema: TableSchema

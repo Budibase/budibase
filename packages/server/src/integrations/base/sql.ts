@@ -9,7 +9,6 @@ import {
   RelationshipsJson,
   SearchFilters,
   SortDirection,
-  Table,
 } from "@budibase/types"
 import environment from "../../environment"
 
