@@ -13,14 +13,14 @@
   "filters": {},
   "relationships": [],
   "body": {
-    "name": "awfawf",
-    "age": 222
+    "name": "Test",
+    "age": 22
   },
   "extra": {
     "idFilter": {
       "equal": {
-        "name": "awfawf",
-        "age": 222
+        "name": "Test",
+        "age": 22
       }
     }
   },
