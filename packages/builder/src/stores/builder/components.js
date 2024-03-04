@@ -696,12 +696,12 @@ export class ComponentStore extends BudiStore {
       const previousSibling = parent._children[index - 1]
       if (
         previousSibling._children?.length &&
-        componentTreeNodes[`nodeOpen-${previousSibling._id}`] !== false
+        componentTreeNodes[`nodeOpen-${previousSibling._id}`]
       ) {
         let target = previousSibling
         while (
           target._children?.length &&
-          componentTreeNodes[`nodeOpen-${target._id}`] !== false
+          componentTreeNodes[`nodeOpen-${target._id}`]
         ) {
           target = target._children[target._children.length - 1]
         }
@@ -736,7 +736,7 @@ export class ComponentStore extends BudiStore {
     if (
       component._children?.length &&
       (state.selectedComponentId === navComponentId ||
-        componentTreeNodes[`nodeOpen-${component._id}`] !== false)
+        componentTreeNodes[`nodeOpen-${component._id}`])
     ) {
       return component._children[0]._id
     } else if (!parent) {
@@ -818,7 +818,7 @@ export class ComponentStore extends BudiStore {
         const definition = this.getDefinition(previousSibling._component)
         if (
           definition.hasChildren &&
-          componentTreeNodes[`nodeOpen-${previousSibling._id}`] !== false
+          componentTreeNodes[`nodeOpen-${previousSibling._id}`]
         ) {
           previousSibling._children.push(originalComponent)
         }
@@ -874,7 +874,7 @@ export class ComponentStore extends BudiStore {
         const definition = this.getDefinition(nextSibling._component)
         if (
           definition.hasChildren &&
-          componentTreeNodes[`nodeOpen-${nextSibling._id}`] !== false
+          componentTreeNodes[`nodeOpen-${nextSibling._id}`]
         ) {
           nextSibling._children.splice(0, 0, originalComponent)
         }
