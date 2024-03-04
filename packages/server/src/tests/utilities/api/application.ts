@@ -160,25 +160,6 @@ export class ApplicationAPI extends TestAPI {
     }
   }
 
-  duplicateApp = async (appId: string, fields: object): Promise<Response> => {
-    let headers = {
-      ...this.config.defaultHeaders(),
-      [constants.Header.APP_ID]: appId,
-    }
-    const req = this.request
-      .post(`/api/applications/${appId}/duplicate`)
-      .set(headers)
-      .expect("Content-Type", /json/)
-
-    for (const [key, value] of Object.entries(fields)) {
-      req.field(key, value)
-    }
-
-    const response = await req
-
-    return response
-  }
-
   revertClient = async (appId: string): Promise<void> => {
     // While the revertClient endpoint does take an :appId parameter, it doesn't
     // use it. It uses the appId from the context.

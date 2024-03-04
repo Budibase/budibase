@@ -575,6 +575,7 @@ export default class TestConfiguration {
       async () =>
         (await this._req(appController.create, {
           name: appName,
+          url,
         })) as App
     )
     this.appId = this.app.appId
@@ -587,6 +588,16 @@ export default class TestConfiguration {
 
       return this.app!
     })
+  }
+
+  async duplicateApp(appId: string, fields: object) {
+    return context.doInTenant(
+      this.tenantId!,
+      async () =>
+        await this._req(appController.duplicateApp, fields, {
+          appId,
+        })
+    )
   }
 
   async publish() {
