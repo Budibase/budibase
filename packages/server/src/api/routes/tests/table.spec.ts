@@ -693,8 +693,7 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const resp = await config.api.row.get(table._id!, testRow._id!)
-      const migratedRow = resp.body as Row
+      const migratedRow = await config.api.row.get(table._id!, testRow._id!)
 
       expect(migratedRow["user column"]).toBeDefined()
       expect(migratedRow["user relationship"]).not.toBeDefined()
@@ -746,15 +745,13 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
-        .body as Row
+      const row1Migrated = await config.api.row.get(table._id!, row1._id!)
       expect(row1Migrated["user relationship"]).not.toBeDefined()
       expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[0]._id, users[1]._id])
       )
 
-      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
-        .body as Row
+      const row2Migrated = await config.api.row.get(table._id!, row2._id!)
       expect(row2Migrated["user relationship"]).not.toBeDefined()
       expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[1]._id, users[2]._id])
@@ -803,15 +800,13 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
-        .body as Row
+      const row1Migrated = await config.api.row.get(table._id!, row1._id!)
       expect(row1Migrated["user relationship"]).not.toBeDefined()
       expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[0]._id, users[1]._id])
       )
 
-      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
-        .body as Row
+      const row2Migrated = await config.api.row.get(table._id!, row2._id!)
       expect(row2Migrated["user relationship"]).not.toBeDefined()
       expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual([
         users[2]._id,
@@ -861,7 +856,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -876,7 +871,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -891,7 +886,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -910,7 +905,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
     })

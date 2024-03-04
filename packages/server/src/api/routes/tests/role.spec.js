@@ -93,7 +93,7 @@ describe("/roles", () => {
 
     it("should be able to get the role with a permission added", async () => {
       const table = await config.createTable()
-      await config.api.permission.set({
+      await config.api.permission.add({
         roleId: BUILTIN_ROLE_IDS.POWER,
         resourceId: table._id,
         level: PermissionLevel.READ,
