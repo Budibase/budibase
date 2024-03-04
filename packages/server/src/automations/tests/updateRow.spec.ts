@@ -36,7 +36,7 @@ describe("test the update row action", () => {
   it("should be able to run the action", async () => {
     const res = await setup.runStep(setup.actions.UPDATE_ROW.stepId, inputs)
     expect(res.success).toEqual(true)
-    const updatedRow = await config.getRow(table._id!, res.id)
+    const updatedRow = await config.api.row.get(table._id!, res.id)
     expect(updatedRow.name).toEqual("Updated name")
     expect(updatedRow.description).not.toEqual("")
   })
@@ -87,8 +87,8 @@ describe("test the update row action", () => {
     })
 
     let getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.body.user1[0]._id).toEqual(user1._id)
-    expect(getResp.body.user2[0]._id).toEqual(user2._id)
+    expect(getResp.user1[0]._id).toEqual(user1._id)
+    expect(getResp.user2[0]._id).toEqual(user2._id)
 
     let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
       rowId: row._id,
@@ -103,8 +103,8 @@ describe("test the update row action", () => {
     expect(stepResp.success).toEqual(true)
 
     getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.body.user1[0]._id).toEqual(user2._id)
-    expect(getResp.body.user2[0]._id).toEqual(user2._id)
+    expect(getResp.user1[0]._id).toEqual(user2._id)
+    expect(getResp.user2[0]._id).toEqual(user2._id)
   })
 
   it("should overwrite links if those links are not set and we ask it do", async () => {
@@ -140,8 +140,8 @@ describe("test the update row action", () => {
     })
 
     let getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.body.user1[0]._id).toEqual(user1._id)
-    expect(getResp.body.user2[0]._id).toEqual(user2._id)
+    expect(getResp.user1[0]._id).toEqual(user1._id)
+    expect(getResp.user2[0]._id).toEqual(user2._id)
 
     let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
       rowId: row._id,
@@ -163,7 +163,7 @@ describe("test the update row action", () => {
     expect(stepResp.success).toEqual(true)
 
     getResp = await config.api.row.get(table._id!, row._id!)
-    expect(getResp.body.user1[0]._id).toEqual(user2._id)
-    expect(getResp.body.user2).toBeUndefined()
+    expect(getResp.user1[0]._id).toEqual(user2._id)
+    expect(getResp.user2).toBeUndefined()
   })
 })
