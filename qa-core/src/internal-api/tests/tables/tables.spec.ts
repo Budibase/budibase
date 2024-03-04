@@ -13,17 +13,6 @@ describe("Internal API - Table Operations", () => {
     await config.afterAll()
   })
 
-  async function createAppFromTemplate() {
-    return config.api.apps.create({
-      name: generator.word(),
-      url: `/${generator.word()}`,
-      useTemplate: "true",
-      templateName: "Near Miss Register",
-      templateKey: "app/near-miss-register",
-      templateFile: undefined,
-    })
-  }
-
   it("Create and delete table, columns and rows", async () => {
     // create the app
     await config.createApp(fixtures.apps.appFromTemplate())
