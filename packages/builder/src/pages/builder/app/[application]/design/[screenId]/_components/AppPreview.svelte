@@ -10,6 +10,7 @@
     navigationStore,
     selectedScreen,
     hoverStore,
+    componentTreeNodesStore,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -130,6 +131,13 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       componentStore.select(data.id)
+
+      const componentPath = findComponentPath(
+        $selectedScreen?.props,
+        data.id
+      ).map(component => component._id)
+
+      componentTreeNodesStore.expandNodes(componentPath)
     } else if (type === "hover-component") {
       hoverStore.hover(data.id, false)
     } else if (type === "update-prop") {

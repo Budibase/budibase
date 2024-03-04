@@ -4,12 +4,12 @@
     selectedScreen,
     componentStore,
     selectedComponent,
+    componentTreeNodesStore
   } from "stores/builder"
   import { findComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   let confirmDeleteDialog
   let confirmEjectDialog
@@ -66,6 +66,7 @@
       componentTreeNodesStore.expandNode(component._id)
     },
     ["ArrowLeft"]: component => {
+      componentStore.select(component._id)
       componentTreeNodesStore.collapseNode(component._id)
     },
     ["Ctrl+ArrowRight"]: component => {
@@ -83,6 +84,7 @@
       expandChildren(component)
     },
     ["Ctrl+ArrowLeft"]: component => {
+      componentStore.select(component._id)
       componentTreeNodesStore.collapseNode(component._id)
 
       const collapseChildren = component => {

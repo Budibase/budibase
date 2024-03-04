@@ -18,6 +18,14 @@ const expandNode = componentId => {
   })
 }
 
+const expandNodes = componentIds => {
+  baseStore.update(openNodes => {
+    const newNodes = Object.fromEntries(componentIds.map(id => ([`nodeOpen-${id}`, true])))
+
+    return { ...openNodes, ...newNodes };
+  })
+}
+
 const collapseNode = componentId => {
   baseStore.update(openNodes => {
     openNodes[`nodeOpen-${componentId}`] = false
@@ -30,6 +38,7 @@ const store = {
   subscribe: baseStore.subscribe,
   toggleNode,
   expandNode,
+  expandNodes,
   collapseNode,
 }
 
