@@ -34,7 +34,7 @@
         "name",
         "age"
       ],
-      "name": "a",
+      "name": "people",
       "schema": {
         "name": {
           "type": "string",
@@ -55,8 +55,7 @@
           }
         }
       },
-      "primaryDisplay": "name",
-      "originalName": "people"
+      "primaryDisplay": "name"
     }
   },
   "tableAliases": {
