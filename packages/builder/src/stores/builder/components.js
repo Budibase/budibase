@@ -19,7 +19,7 @@ import {
   appStore,
   previewStore,
   tables,
-  componentTreeNodesStore
+  componentTreeNodesStore,
 } from "stores/builder/index"
 import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
@@ -654,7 +654,9 @@ export class ComponentStore extends BudiStore {
       state.selectedScreenId = targetScreenId
       state.selectedComponentId = newComponentId
 
-      const targetScreen = get(screenStore).screens.find(screen => screen.id === targetScreenId)
+      const targetScreen = get(screenStore).screens.find(
+        screen => screen.id === targetScreenId
+      )
 
       const componentPathIds = findComponentPath(
         targetScreen?.props,
@@ -814,7 +816,10 @@ export class ComponentStore extends BudiStore {
         // sibling
         const previousSibling = parent._children[index - 1]
         const definition = this.getDefinition(previousSibling._component)
-        if (definition.hasChildren && componentTreeNodes[`nodeOpen-${previousSibling._id}`] !== false) {
+        if (
+          definition.hasChildren &&
+          componentTreeNodes[`nodeOpen-${previousSibling._id}`] !== false
+        ) {
           previousSibling._children.push(originalComponent)
         }
 
@@ -842,7 +847,6 @@ export class ComponentStore extends BudiStore {
       const parent = findComponentParent(screen.props, componentId)
       const componentTreeNodes = get(componentTreeNodesStore)
 
-
       // Sanity check parent is found
       if (!parent?._children?.length) {
         return false
@@ -868,7 +872,10 @@ export class ComponentStore extends BudiStore {
         // If the next sibling has children, and is not collapsed, become the first child
         const nextSibling = parent._children[index]
         const definition = this.getDefinition(nextSibling._component)
-        if (definition.hasChildren && componentTreeNodes[`nodeOpen-${nextSibling._id}`] !== false) {
+        if (
+          definition.hasChildren &&
+          componentTreeNodes[`nodeOpen-${nextSibling._id}`] !== false
+        ) {
           nextSibling._children.splice(0, 0, originalComponent)
         }
 

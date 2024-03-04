@@ -8,7 +8,7 @@
     userSelectedResourceMap,
     selectedComponent,
     hoverStore,
-    componentTreeNodesStore
+    componentTreeNodesStore,
   } from "stores/builder"
   import {
     findComponentPath,

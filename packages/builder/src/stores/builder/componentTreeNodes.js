@@ -20,9 +20,11 @@ const expandNode = componentId => {
 
 const expandNodes = componentIds => {
   baseStore.update(openNodes => {
-    const newNodes = Object.fromEntries(componentIds.map(id => ([`nodeOpen-${id}`, true])))
+    const newNodes = Object.fromEntries(
+      componentIds.map(id => [`nodeOpen-${id}`, true])
+    )
 
-    return { ...openNodes, ...newNodes };
+    return { ...openNodes, ...newNodes }
   })
 }
 
