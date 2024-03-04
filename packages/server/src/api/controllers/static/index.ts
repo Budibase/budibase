@@ -1,12 +1,11 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-
 import AppComponent from "./templates/BudibaseApp.svelte"
-
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
 import { ObjectStoreBuckets } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
+  getComponentLibraryManifest,
   loadHandlebarsFile,
   NODE_MODULES_PATH,
   TOP_LEVEL_PATH,
@@ -24,13 +23,74 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
+import {
+  UserCtx,
+  App,
+  Ctx,
+  ProcessAttachmentResponse,
+  Feature,
+} from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
+
+const getThemeVariables = (theme: string) => {
+  if (theme === "spectrum--lightest") {
+    return `
+      --spectrum-global-color-gray-50: rgb(255, 255, 255);
+      --spectrum-global-color-gray-200: rgb(244, 244, 244);
+      --spectrum-global-color-gray-300: rgb(234, 234, 234);
+      --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
+    `
+  }
+  if (theme === "spectrum--light") {
+    return `
+    --spectrum-global-color-gray-50: rgb(255, 255, 255);
+    --spectrum-global-color-gray-200: rgb(234, 234, 234);
+    --spectrum-global-color-gray-300: rgb(225, 225, 225);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-50);
+
+    `
+  }
+  if (theme === "spectrum--dark") {
+    return `
+    --spectrum-global-color-gray-100: rgb(50, 50, 50);
+    --spectrum-global-color-gray-200: rgb(62, 62, 62);
+    --spectrum-global-color-gray-300: rgb(74, 74, 74);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--darkest") {
+    return `
+  --spectrum-global-color-gray-100: rgb(30, 30, 30);
+  --spectrum-global-color-gray-200: rgb(44, 44, 44);
+  --spectrum-global-color-gray-300: rgb(57, 57, 57);
+  --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--nord") {
+    return `
+    --spectrum-global-color-gray-100: #3b4252;
+
+  --spectrum-global-color-gray-200: #424a5c;
+  --spectrum-global-color-gray-300: #4c566a;
+  --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+  if (theme === "spectrum--midnight") {
+    return `
+    --hue: 220;
+    --sat: 10%;
+    --spectrum-global-color-gray-100: hsl(var(--hue), var(--sat), 17%);
+    --spectrum-global-color-gray-200: hsl(var(--hue), var(--sat), 20%);
+    --spectrum-global-color-gray-300: hsl(var(--hue), var(--sat), 24%);
+    --spectrum-alias-background-color-primary: var(--spectrum-global-color-gray-100);
+    `
+  }
+}
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -146,7 +206,7 @@ const requiresMigration = async (ctx: Ctx) => {
   return requiresMigrations
 }
 
-export const serveApp = async function (ctx: Ctx) {
+export const serveApp = async function (ctx: UserCtx) {
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
@@ -165,12 +225,27 @@ export const serveApp = async function (ctx: Ctx) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+
     let appId = context.getAppId()
+    const manifest = await getComponentLibraryManifest(
+      appInfo.componentLibraries[0]
+    )
+
+    const hideDevTools = !!ctx.params.appUrl
+    const sideNav = appInfo.navigation.navigation === "Left"
+    const hideFooter =
+      ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
+    const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+
       const { head, html, css } = AppComponent.render({
         title: branding?.platformTitle || `${appInfo.name}`,
+        showSkeletonLoader: manifest.features.skeletonLoader ?? false,
+        hideDevTools,
+        sideNav,
+        hideFooter,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -195,7 +270,7 @@ export const serveApp = async function (ctx: Ctx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
       })

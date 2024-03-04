@@ -10,7 +10,8 @@
     "rowSelection": true,
     "continueIfAction": true,
     "showNotificationAction": true,
-    "sidePanel": true
+    "sidePanel": true,
+    "skeletonLoader": true
   },
   "layout": {
     "name": "Layout",
