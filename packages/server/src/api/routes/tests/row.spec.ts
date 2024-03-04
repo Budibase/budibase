@@ -882,8 +882,7 @@ describe.each([
           ],
           tableId: table._id,
         })
-        // the environment needs configured for this
-        await setup.switchToSelfHosted(async () => {
+        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
             expect((enriched as Row[])[0].attachment[0].url).toBe(
