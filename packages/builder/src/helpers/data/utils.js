@@ -17,6 +17,10 @@ export function breakQueryString(qs) {
   return paramObj
 }
 
+function isEncoded(str) {
+  return typeof str == "string" && decodeURIComponent(str) !== str
+}
+
 export function buildQueryString(obj) {
   let str = ""
   if (obj) {
@@ -35,7 +39,7 @@ export function buildQueryString(obj) {
         value = value.replace(binding, marker)
         bindingMarkers[marker] = binding
       })
-      let encoded = encodeURIComponent(value || "")
+      let encoded = isEncoded(value) ? value : encodeURIComponent(value || "")
       Object.entries(bindingMarkers).forEach(([marker, binding]) => {
         encoded = encoded.replace(marker, binding)
       })

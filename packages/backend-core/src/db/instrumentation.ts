@@ -1,5 +1,4 @@
 import {
-  DocumentScope,
   DocumentDestroyResponse,
   DocumentInsertResponse,
   DocumentBulkResponse,
@@ -13,6 +12,7 @@ import {
   DatabasePutOpts,
   DatabaseQueryOpts,
   Document,
+  RowValue,
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Writable } from "stream"
@@ -79,7 +79,7 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  allDocs<T extends Document>(
+  allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return tracer.trace("db.allDocs", span => {
