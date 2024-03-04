@@ -7,8 +7,8 @@
     componentStore,
     userSelectedResourceMap,
     selectedComponent,
-    selectedComponentPath,
     hoverStore,
+    componentTreeNodesStore
   } from "stores/builder"
   import {
     findComponentPath,
@@ -17,7 +17,6 @@
   } from "helpers/components"
   import { get } from "svelte/store"
   import { dndStore } from "./dndStore"
-  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   export let components = []
   export let level = 0
@@ -64,14 +63,11 @@
     }
   }
 
-  const isOpen = (component, selectedComponentPath, openNodes) => {
+  const isOpen = (component, openNodes) => {
     if (!component?._children?.length) {
       return false
     }
-    if (selectedComponentPath.slice(0, -1).includes(component._id)) {
-      return true
-    }
-    return openNodes[`nodeOpen-${component._id}`]
+    return openNodes[`nodeOpen-${component._id}`] !== false
   }
 
   const isChildOfSelectedComponent = component => {
@@ -90,7 +86,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul>
   {#each filteredComponents || [] as component, index (component._id)}
-    {@const opened = isOpen(component, $selectedComponentPath, openNodes)}
+    {@const opened = isOpen(component, openNodes)}
     <li
       on:click|stopPropagation={() => {
         componentStore.select(component._id)
