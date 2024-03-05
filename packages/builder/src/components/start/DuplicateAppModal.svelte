@@ -15,6 +15,7 @@
 
   export let appId
   export let appName
+  export let onDuplicateSuccess = () => {}
 
   const validation = createValidationStore()
   const values = writable({ name: appName + " copy", url: null })
@@ -68,6 +69,7 @@
     try {
       await API.duplicateApp(data, appId)
       apps.load()
+      onDuplicateSuccess()
       notifications.success("App duplicated successfully")
     } catch (err) {
       notifications.error("Error duplicating app")

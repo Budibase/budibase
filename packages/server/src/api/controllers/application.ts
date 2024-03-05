@@ -51,6 +51,8 @@ import {
   CreateAppRequest,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
+  DuplicateAppRequest,
+  DuplicateAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -378,7 +380,7 @@ async function creationEvents(request: any, app: App) {
       creationFns.push(a => events.app.fileImported(a))
     }
     // from server file path
-    else if (request.body.file && request.duplicate) {
+    else if (request.body.file) {
       // explicitly pass in the newly created app id
       creationFns.push(a => events.app.duplicated(a, app.appId))
     }
@@ -407,7 +409,7 @@ async function appPostCreate(ctx: UserCtx, app: App) {
 
   await creationEvents(ctx.request, app)
 
-  // app import & template creation
+  // app import, template creation and duplication
   if (ctx.request.body.useTemplate === "true") {
     const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
@@ -436,7 +438,7 @@ async function appPostCreate(ctx: UserCtx, app: App) {
   }
 }
 
-export async function create(ctx: UserCtx) {
+export async function create(ctx: UserCtx<CreateAppRequest, App>) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
@@ -645,7 +647,9 @@ export async function importToApp(ctx: UserCtx) {
  * Create a copy of the latest dev application.
  * Performs an export of the app, then imports from the export dir path
  */
-export async function duplicateApp(ctx: UserCtx) {
+export async function duplicateApp(
+  ctx: UserCtx<DuplicateAppRequest, DuplicateAppResponse>
+) {
   const { name: appName, url: possibleUrl } = ctx.request.body
   const { appId: sourceAppId } = ctx.params
   const [app] = await dbCore.getAppsByIDs([sourceAppId])
@@ -665,24 +669,28 @@ export async function duplicateApp(ctx: UserCtx) {
     tar: false,
   })
 
-  // Build a create request that triggers an import from the export path above.
-  const createReq: any = {
-    request: {
-      body: {
-        name: appName,
-        url: possibleUrl,
-        useTemplate: "true",
-        file: {
-          path: tmpPath,
-        },
-      },
-      // Mark the create as a duplicate to kick off the correct event.
-      duplicate: true,
+  const createRequestBody: CreateAppRequest = {
+    name: appName,
+    url: possibleUrl,
+    useTemplate: "true",
+    // The app export path
+    file: {
+      path: tmpPath,
     },
   }
 
-  await create(createReq)
-  const { body: newApplication } = createReq
+  // Build a new request
+  const createRequest = {
+    roleId: ctx.roleId,
+    user: ctx.user,
+    request: {
+      body: createRequestBody,
+    },
+  } as UserCtx<CreateAppRequest, App>
+
+  // Build the new application
+  await create(createRequest)
+  const { body: newApplication } = createRequest
 
   if (!newApplication) {
     ctx.throw(500, "There was a problem duplicating the application")

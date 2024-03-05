@@ -1,8 +1,10 @@
 <script>
   import { ActionMenu, MenuItem, Icon, Modal } from "@budibase/bbui"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
+  import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import ExportAppModal from "./ExportAppModal.svelte"
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
+  import { auth, licensing } from "stores/portal"
 
   export let app
   export let align = "right"
@@ -11,21 +13,32 @@
   let exportModal
   let duplicateModal
   let exportPublishedVersion = false
+  let appLimitModal
 </script>
 
 <DeleteModal
   bind:this={deleteModal}
   appId={app.devId}
   appName={app.name}
-  onDeleteSuccess={() => {}}
+  onDeleteSuccess={async () => {
+    await licensing.init()
+  }}
 />
+
+<AppLimitModal bind:this={appLimitModal} />
 
 <Modal bind:this={exportModal} padding={false}>
   <ExportAppModal {app} published={exportPublishedVersion} />
 </Modal>
 
 <Modal bind:this={duplicateModal} padding={false}>
-  <DuplicateAppModal appId={app.devId} appName={app.name} />
+  <DuplicateAppModal
+    appId={app.devId}
+    appName={app.name}
+    onDuplicateSuccess={async () => {
+      await licensing.init()
+    }}
+  />
 </Modal>
 
 <ActionMenu {align} on:open on:close>
@@ -35,7 +48,11 @@
   <MenuItem
     icon="Copy"
     on:click={() => {
-      duplicateModal.show()
+      if ($licensing?.usageMetrics?.apps < 100) {
+        duplicateModal.show()
+      } else {
+        appLimitModal.show()
+      }
     }}
   >
     Duplicate
