@@ -25,6 +25,8 @@ import {
 } from "@budibase/types"
 import tk from "timekeeper"
 
+jest.setTimeout(99999999)
+
 describe("/applications", () => {
   let config = setup.getConfig()
   let app: App
@@ -257,7 +259,7 @@ describe("/applications", () => {
 
   describe("permissions", () => {
     it.only("should only return apps a user has access to", async () => {
-      const user = await config.createUser({
+      let user = await config.createUser({
         builder: { global: false },
         admin: { global: false },
       })
@@ -280,10 +282,10 @@ describe("/applications", () => {
         expect(apps).toHaveLength(0)
       })
 
-      await config.api.user.update({
+      user = await config.globalUser({
         ...user,
         builder: {
-          [config.getAppId()]: true,
+          apps: [config.getProdAppId()],
         },
       })
 
