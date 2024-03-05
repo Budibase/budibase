@@ -44,6 +44,15 @@ docWritethroughProcessorQueue.process(async message => {
     )
 
     if (!lockResponse.executed) {
+      if (
+        lockResponse.reason !==
+        locks.UnsuccessfulRedlockExecutionReason.LockTakenWithTryOnce
+      ) {
+        console.error("Error persisting docWritethrough", {
+          data: message.data,
+        })
+        throw "Error persisting docWritethrough"
+      }
       console.log(`Ignoring redlock conflict in write-through cache`)
     }
   })
