@@ -107,4 +107,44 @@ describe("redis", () => {
       expect(await redis.keys("*")).toHaveLength(0)
     })
   })
+
+  describe("increment", () => {
+    it("can increment on a new key", async () => {
+      const key = structures.uuid()
+      const result = await redis.increment(key)
+      expect(result).toBe(1)
+    })
+
+    it("can increment multiple times", async () => {
+      const key = structures.uuid()
+      const results = [
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+      ]
+      expect(results).toEqual([1, 2, 3, 4, 5])
+    })
+
+    it("can increment on a new key", async () => {
+      const key1 = structures.uuid()
+      const key2 = structures.uuid()
+
+      const result1 = await redis.increment(key1)
+      expect(result1).toBe(1)
+
+      const result2 = await redis.increment(key2)
+      expect(result2).toBe(1)
+    })
+
+    it("can increment multiple times in parallel", async () => {
+      const key = structures.uuid()
+      const results = await Promise.all(
+        Array.from({ length: 100 }).map(() => redis.increment(key))
+      )
+      expect(results).toHaveLength(100)
+      expect(results).toEqual(Array.from({ length: 100 }).map((_, i) => i + 1))
+    })
+  })
 })
