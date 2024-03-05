@@ -107,6 +107,8 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   role._rev = result.rev
   ctx.body = role
 
+  // TODO: need to check that the prod DB actually exists, I think it won't
+  // if the app has never been published.
   const replication = new dbCore.Replication({
     source: context.getDevAppDB().name,
     target: context.getProdAppDB().name,
