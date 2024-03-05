@@ -2,6 +2,29 @@ apiVersion: v1
 entries:
   budibase:
   - apiVersion: v2
+    appVersion: 2.21.3
+    created: "2024-03-05T18:38:15.277993428Z"
+    dependencies:
+    - condition: services.couchdb.enabled
+      name: couchdb
+      repository: https://apache.github.io/couchdb-helm
+      version: 4.3.0
+    description: Budibase is an open source low-code platform, helping thousands of
+      teams build apps for their workplace in minutes.
+    digest: 8f9dd96ebda27a531f980fb16aabd90d13b7ece0f2331b3a5317c4748ca44a41
+    keywords:
+    - low-code
+    - database
+    - cluster
+    name: budibase
+    sources:
+    - https://github.com/Budibase/budibase
+    - https://budibase.com
+    type: application
+    urls:
+    - budibase-3.0.83.tgz
+    version: 3.0.83
+  - apiVersion: v2
     appVersion: 2.21.2
     created: "2024-03-05T09:13:32.016491703Z"
     dependencies:
@@ -4825,8 +4848,8 @@ entries:
     - budibase-0.1.0.tgz
     version: 0.1.0
   - apiVersion: v2
-    appVersion: 2.21.2
-    created: "2024-03-05T09:13:32.176481858Z"
+    appVersion: 2.21.3
+    created: "2024-03-05T18:38:15.451391505Z"
     dependencies:
     - condition: services.couchdb.enabled
       name: couchdb
@@ -4834,7 +4857,7 @@ entries:
       version: 4.3.0
     description: Budibase is an open source low-code platform, helping thousands of
       teams build apps for their workplace in minutes.
-    digest: bc73896f4008e23aed91691f292ad577eca1ef2694af3a5a4efd38ecc73fa71d
+    digest: 768b717340fbcb170fee6e0b7d05f662b0391a9c2b7da7cd9322e603ff59459d
     keywords:
     - low-code
     - database
@@ -4870,4 +4893,4 @@ entries:
     urls:
     - budibase-0.0.0-develop.tgz
     version: 0.0.0-develop
-generated: "2024-03-05T18:28:31.647280291Z"
+generated: "2024-03-05T18:38:15.448218367Z"
