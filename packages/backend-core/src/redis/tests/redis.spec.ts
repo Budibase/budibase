@@ -147,6 +147,15 @@ describe("redis", () => {
       expect(results).toEqual(Array.from({ length: 100 }).map((_, i) => i + 1))
     })
 
+    it("can increment existing set keys", async () => {
+      const key = structures.uuid()
+      await redis.store(key, 70)
+      await redis.increment(key)
+
+      const result = await redis.increment(key)
+      expect(result).toBe(72)
+    })
+
     it.each([
       generator.word(),
       generator.bool(),
@@ -155,7 +164,9 @@ describe("redis", () => {
       const key = structures.uuid()
       await redis.store(key, value)
 
-      await expect(redis.increment(key)).rejects.toThrowError("")
+      await expect(redis.increment(key)).rejects.toThrowError(
+        `Redis ${key} does not contains a number`
+      )
     })
   })
 })
