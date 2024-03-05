@@ -301,7 +301,7 @@ class RedisWrapper {
         end
         `
     const keys = Object.keys(dataToStore)
-    let values = Object.values(dataToStore)
+    const values = Object.values(dataToStore)
     if (expirySeconds !== null) {
       values.push(expirySeconds)
     }
