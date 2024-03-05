@@ -47,9 +47,7 @@ describe("docWritethrough", () => {
     beforeEach(async () => {
       resetTime()
       documentId = structures.uuid()
-      await config.doInTenant(async () => {
-        docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
-      })
+      docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
     })
 
     it("patching will not persist if timeout does not hit", async () => {
