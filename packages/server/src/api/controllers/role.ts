@@ -35,20 +35,21 @@ async function updateRolesOnUserTable(
 ) {
   const table = await sdk.tables.getTable(InternalTables.USER_METADATA)
   const constraints = table.schema.roleId?.constraints
-  if (constraints) {
-    const updatedRoleId =
-      roleVersion === roles.RoleIDVersion.NAME
-        ? roles.getExternalRoleID(roleId, roleVersion)
-        : roleId
-    const indexOfRoleId = constraints.inclusion!.indexOf(updatedRoleId)
-    const remove = updateOption === UpdateRolesOptions.REMOVED
-    if (remove && indexOfRoleId !== -1) {
-      constraints.inclusion!.splice(indexOfRoleId, 1)
-    } else if (!remove && indexOfRoleId === -1) {
-      constraints.inclusion!.push(updatedRoleId)
-    }
-    await db.put(table)
+  if (!constraints) {
+    return
   }
+  const updatedRoleId =
+    roleVersion === roles.RoleIDVersion.NAME
+      ? roles.getExternalRoleID(roleId, roleVersion)
+      : roleId
+  const indexOfRoleId = constraints.inclusion!.indexOf(updatedRoleId)
+  const remove = updateOption === UpdateRolesOptions.REMOVED
+  if (remove && indexOfRoleId !== -1) {
+    constraints.inclusion!.splice(indexOfRoleId, 1)
+  } else if (!remove && indexOfRoleId === -1) {
+    constraints.inclusion!.push(updatedRoleId)
+  }
+  await db.put(table)
 }
 
 export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
