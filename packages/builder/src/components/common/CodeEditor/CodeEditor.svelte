@@ -174,7 +174,7 @@
       complete.push(
         autocompletion({
           override: [...completions],
-          closeOnBlur: false,
+          closeOnBlur: true,
           icons: false,
           optionClass: () => "autocomplete-option",
         })
@@ -462,7 +462,7 @@
     overflow: hidden;
     max-height: 480px;
   }
-  .code-editor :global(.binding__example.helper) {
+  .code-editor :global(.binding__example) {
     color: var(--spectrum-global-color-blue-700);
   }
   .code-editor :global(.binding__example span) {
