@@ -256,7 +256,44 @@ describe("/applications", () => {
   })
 
   describe("permissions", () => {
-    it("should only return apps a user has access to", async () => {
+    it.only("should only return apps a user has access to", async () => {
+      const user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      const table = await config.api.table.save({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      await config.api.user.update({
+        ...user,
+        builder: {
+          [config.getAppId()]: true,
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role on a group", async () => {
       const user = await config.createUser({
         builder: { global: false },
         admin: { global: false },

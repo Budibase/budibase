@@ -1,6 +1,6 @@
 import { generateUserFlagID, InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
-import { context } from "@budibase/backend-core"
+import { cache, context } from "@budibase/backend-core"
 import {
   ContextUserMetadata,
   Ctx,
@@ -42,6 +42,7 @@ export async function updateMetadata(
   // this isn't applicable to the user
   delete metadata.roles
   ctx.body = await db.put(metadata)
+  await cache.user.invalidateUser(user._id!)
 }
 
 export async function destroyMetadata(ctx: UserCtx<void, { message: string }>) {
