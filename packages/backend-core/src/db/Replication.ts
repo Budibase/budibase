@@ -1,17 +1,18 @@
+import PouchDB from "pouchdb"
 import { getPouchDB, closePouchDB } from "./couch"
 import { DocumentType } from "../constants"
 
 class Replication {
-  source: any
-  target: any
-  replication: any
+  source: PouchDB.Database
+  target: PouchDB.Database
+  replication?: Promise<any>
 
   /**
    *
    * @param source - the DB you want to replicate or rollback to
    * @param target - the DB you want to replicate to, or rollback from
    */
-  constructor({ source, target }: any) {
+  constructor({ source, target }: { source: string; target: string }) {
     this.source = getPouchDB(source)
     this.target = getPouchDB(target)
   }
@@ -40,7 +41,7 @@ class Replication {
    * Two way replication operation, intended to be promise based.
    * @param opts - PouchDB replication options
    */
-  sync(opts = {}) {
+  sync(opts: PouchDB.Replication.SyncOptions = {}) {
     this.replication = this.promisify(this.source.sync, opts)
     return this.replication
   }
@@ -49,18 +50,31 @@ class Replication {
    * One way replication operation, intended to be promise based.
    * @param opts - PouchDB replication options
    */
-  replicate(opts = {}) {
+  replicate(opts: PouchDB.Replication.ReplicateOptions = {}) {
     this.replication = this.promisify(this.source.replicate.to, opts)
     return this.replication
   }
 
-  appReplicateOpts() {
+  appReplicateOpts(
+    opts: PouchDB.Replication.ReplicateOptions = {}
+  ): PouchDB.Replication.ReplicateOptions {
+    if (typeof opts.filter === "string") {
+      return opts
+    }
+
+    const filter = opts.filter
+    delete opts.filter
+
     return {
-      filter: (doc: any) => {
+      ...opts,
+      filter: (doc: any, params: any) => {
         if (doc._id && doc._id.startsWith(DocumentType.AUTOMATION_LOG)) {
           return false
         }
-        return doc._id !== DocumentType.APP_METADATA
+        if (doc._id === DocumentType.APP_METADATA) {
+          return false
+        }
+        return filter ? filter(doc, params) : true
       },
     }
   }
@@ -74,10 +88,6 @@ class Replication {
     this.target = getPouchDB(this.target.name)
     // take the opportunity to remove deleted tombstones
     await this.replicate()
-  }
-
-  cancel() {
-    this.replication.cancel()
   }
 }
 
