@@ -1,16 +1,16 @@
-import {
-  Datasource,
-  DatasourcePlusQueryResponse,
-  Operation,
-  QueryJson,
-  Row,
-  SearchFilters,
-} from "@budibase/types"
+import { Datasource, DatasourcePlusQueryResponse, Operation, QueryJson, Row, SearchFilters } from "@budibase/types"
 import { getSQLClient } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
 import sdk from "../../../sdk"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { SqlClient } from "../../../integrations/utils"
+
+const WRITE_OPERATIONS: Operation[] = [
+  Operation.CREATE,
+  Operation.UPDATE,
+  Operation.DELETE,
+]
+const DISABLED_WRITE_CLIENTS: SqlClient[] = [SqlClient.MY_SQL, SqlClient.MS_SQL, SqlClient.ORACLE]
 
 class CharSequence {
   static alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -52,18 +52,11 @@ export default class AliasTables {
     if (!fieldLength || fieldLength <= 0) {
       return false
     }
-    const writeOperations = [
-      Operation.CREATE,
-      Operation.UPDATE,
-      Operation.DELETE,
-    ]
     try {
       const sqlClient = getSQLClient(datasource)
-      const isWrite = writeOperations.includes(json.endpoint.operation)
-      if (
-        isWrite &&
-        (sqlClient === SqlClient.MY_SQL || sqlClient === SqlClient.MS_SQL)
-      ) {
+      const isWrite = WRITE_OPERATIONS.includes(json.endpoint.operation)
+      const isDisabledClient = DISABLED_WRITE_CLIENTS.includes(sqlClient)
+      if (isWrite && isDisabledClient) {
         return false
       }
     } catch (err) {
