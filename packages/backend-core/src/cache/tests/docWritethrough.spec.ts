@@ -5,7 +5,6 @@ import _ from "lodash"
 import {
   DocWritethrough,
   docWritethroughProcessorQueue,
-  init,
 } from "../docWritethrough"
 import InMemoryQueue from "../../queue/inMemoryQueue"
 
@@ -44,8 +43,6 @@ describe("docWritethrough", () => {
         return acc
       }, {} as Record<string, any>)
     }
-
-    beforeAll(() => init())
 
     beforeEach(async () => {
       resetTime()
