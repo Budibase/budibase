@@ -435,10 +435,12 @@ class InternalBuilder {
     aliases?: QueryJson["tableAliases"]
   ): Knex.QueryBuilder {
     const tableName = endpoint.entityId
-    const tableAliased = aliases?.[tableName]
-      ? `${tableName} as ${aliases?.[tableName]}`
-      : tableName
-    let query = knex(tableAliased)
+    const tableAlias = aliases?.[tableName]
+    let table: string | Record<string, string> = tableName
+    if (tableAlias) {
+      table = { [tableAlias]: tableName }
+    }
+    let query = knex(table)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }

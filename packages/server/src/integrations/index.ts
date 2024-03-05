@@ -14,13 +14,18 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
-import { SourceName, Integration, PluginType } from "@budibase/types"
+import {
+  SourceName,
+  Integration,
+  PluginType,
+  IntegrationBase,
+} from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
 import sdk from "../sdk"
 
-const DEFINITIONS: Record<SourceName, Integration | undefined> = {
+const DEFINITIONS: { [key: SourceName]: Integration | undefined } = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -40,7 +45,7 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.BUDIBASE]: undefined,
 }
 
-const INTEGRATIONS: Record<SourceName, any> = {
+const INTEGRATIONS: { [key: SourceName]: IntegrationBase | undefined } = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,

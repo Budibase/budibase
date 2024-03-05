@@ -1,12 +1,16 @@
 import {
-  QueryJson,
-  SearchFilters,
-  Table,
-  Row,
+  Datasource,
   DatasourcePlusQueryResponse,
+  Operation,
+  QueryJson,
+  Row,
+  SearchFilters,
 } from "@budibase/types"
-import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
+import { getSQLClient } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
+import sdk from "../../../sdk"
+import { makeExternalQuery } from "../../../integrations/base/query"
+import { SqlClient } from "../../../integrations/utils"
 
 class CharSequence {
   static alphabet = "abcdefghijklmnopqrstuvwxyz"
@@ -41,6 +45,32 @@ export default class AliasTables {
     this.aliases = {}
     this.tableAliases = {}
     this.charSeq = new CharSequence()
+  }
+
+  isAliasingEnabled(json: QueryJson, datasource: Datasource) {
+    const fieldLength = json.resource?.fields?.length
+    if (!fieldLength || fieldLength <= 0) {
+      return false
+    }
+    const writeOperations = [
+      Operation.CREATE,
+      Operation.UPDATE,
+      Operation.DELETE,
+    ]
+    try {
+      const sqlClient = getSQLClient(datasource)
+      const isWrite = writeOperations.includes(json.endpoint.operation)
+      if (
+        isWrite &&
+        (sqlClient === SqlClient.MY_SQL || sqlClient === SqlClient.MS_SQL)
+      ) {
+        return false
+      }
+    } catch (err) {
+      // if we can't get an SQL client, we can't alias
+      return false
+    }
+    return true
   }
 
   getAlias(tableName: string) {
@@ -111,8 +141,10 @@ export default class AliasTables {
   }
 
   async queryWithAliasing(json: QueryJson): DatasourcePlusQueryResponse {
-    const fieldLength = json.resource?.fields?.length
-    const aliasingEnabled = fieldLength && fieldLength > 0
+    const datasourceId = json.endpoint.datasourceId
+    const datasource = await sdk.datasources.get(datasourceId)
+
+    const aliasingEnabled = this.isAliasingEnabled(json, datasource)
     if (aliasingEnabled) {
       json = cloneDeep(json)
       // run through the query json to update anywhere a table may be used
@@ -158,7 +190,7 @@ export default class AliasTables {
       }
       json.tableAliases = invertedTableAliases
     }
-    const response = await getDatasourceAndQuery(json)
+    const response = await makeExternalQuery(datasource, json)
     if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {
