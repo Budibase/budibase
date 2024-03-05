@@ -1,20 +1,32 @@
-import tk from "timekeeper"
-
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { getDB } from "../../db"
-import { DocWritethrough } from "../docWritethrough"
 import _ from "lodash"
 
-const WRITE_RATE_MS = 500
+import {
+  DocWritethrough,
+  docWritethroughProcessorQueue,
+  init,
+} from "../docWritethrough"
+import InMemoryQueue from "../../queue/inMemoryQueue"
+
+const WRITE_RATE_MS = 1000
 
 const initialTime = Date.now()
 
+jest.useFakeTimers({
+  now: initialTime,
+})
+
 function resetTime() {
-  tk.travel(initialTime)
+  jest.setSystemTime(initialTime)
 }
-function travelForward(ms: number) {
-  const updatedTime = Date.now() + ms
-  tk.travel(updatedTime)
+async function travelForward(ms: number) {
+  await jest.advanceTimersByTimeAsync(ms)
+
+  const queue: InMemoryQueue = docWritethroughProcessorQueue as never
+  while (queue.hasRunningJobs()) {
+    await jest.runOnlyPendingTimersAsync()
+  }
 }
 
 describe("docWritethrough", () => {
@@ -33,33 +45,37 @@ describe("docWritethrough", () => {
       }, {} as Record<string, any>)
     }
 
-    beforeEach(() => {
+    beforeAll(() => init())
+
+    beforeEach(async () => {
       resetTime()
       documentId = structures.uuid()
-      docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
+      await config.doInTenant(async () => {
+        docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
+      })
     })
 
-    it("patching will not persist if timeout from the creation does not hit", async () => {
+    it("patching will not persist if timeout does not hit", async () => {
       await config.doInTenant(async () => {
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
         await docWritethrough.patch(generatePatchObject(2))
         await docWritethrough.patch(generatePatchObject(2))
-        travelForward(WRITE_RATE_MS - 1)
-        await docWritethrough.patch(generatePatchObject(2))
+        await travelForward(WRITE_RATE_MS - 1)
 
         expect(await db.exists(documentId)).toBe(false)
       })
     })
 
-    it("patching will persist if timeout hits and next patch is called", async () => {
+    it("patching will persist if timeout hits", async () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
         const patch2 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
         await docWritethrough.patch(patch2)
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
+        // This will not be persisted
         const patch3 = generatePatchObject(3)
         await docWritethrough.patch(patch3)
 
@@ -67,7 +83,6 @@ describe("docWritethrough", () => {
           _id: documentId,
           ...patch1,
           ...patch2,
-          ...patch3,
           _rev: expect.stringMatching(/1-.+/),
           createdAt: new Date(initialTime + WRITE_RATE_MS).toISOString(),
           updatedAt: new Date(initialTime + WRITE_RATE_MS).toISOString(),
@@ -82,15 +97,12 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(patch1)
         await docWritethrough.patch(patch2)
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         const patch3 = generatePatchObject(3)
         await docWritethrough.patch(patch3)
 
-        travelForward(WRITE_RATE_MS)
-
-        const patch4 = generatePatchObject(3)
-        await docWritethrough.patch(patch4)
+        await travelForward(WRITE_RATE_MS)
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining({
@@ -98,7 +110,6 @@ describe("docWritethrough", () => {
             ...patch1,
             ...patch2,
             ...patch3,
-            ...patch4,
           })
         )
       })
@@ -109,15 +120,12 @@ describe("docWritethrough", () => {
         const patch1 = generatePatchObject(2)
         const patch2 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
         const date1 = new Date()
         await docWritethrough.patch(patch2)
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
         const date2 = new Date()
-
-        const patch3 = generatePatchObject(3)
-        await docWritethrough.patch(patch3)
 
         expect(date1).not.toEqual(date2)
         expect(await db.get(documentId)).toEqual(
@@ -129,22 +137,11 @@ describe("docWritethrough", () => {
       })
     })
 
-    it("patching will not persist even if timeout hits but next patch is not callec", async () => {
-      await config.doInTenant(async () => {
-        await docWritethrough.patch(generatePatchObject(2))
-        await docWritethrough.patch(generatePatchObject(2))
-
-        travelForward(WRITE_RATE_MS)
-
-        expect(await db.exists(documentId)).toBe(false)
-      })
-    })
-
     it("concurrent patches will override keys", async () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
         const patch2 = generatePatchObject(1)
         await docWritethrough.patch(patch2)
 
@@ -155,13 +152,14 @@ describe("docWritethrough", () => {
           })
         )
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         const patch3 = {
           ...generatePatchObject(3),
           [keyToOverride]: generator.word(),
         }
         await docWritethrough.patch(patch3)
+        await travelForward(WRITE_RATE_MS)
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining({
@@ -173,7 +171,7 @@ describe("docWritethrough", () => {
       })
     })
 
-    it("concurrent patches to multiple DocWritethrough will not contaminate each other", async () => {
+    it("concurrent patches to different docWritethrough will not pollute each other", async () => {
       await config.doInTenant(async () => {
         const secondDocWritethrough = new DocWritethrough(
           db,
@@ -186,12 +184,13 @@ describe("docWritethrough", () => {
         const doc2Patch = generatePatchObject(1)
         await secondDocWritethrough.patch(doc2Patch)
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         const doc1Patch2 = generatePatchObject(3)
         await docWritethrough.patch(doc1Patch2)
         const doc2Patch2 = generatePatchObject(3)
         await secondDocWritethrough.patch(doc2Patch2)
+        await travelForward(WRITE_RATE_MS)
 
         expect(await db.get(docWritethrough.docId)).toEqual(
           expect.objectContaining({
@@ -214,7 +213,7 @@ describe("docWritethrough", () => {
         const initialPatch = generatePatchObject(5)
 
         await docWritethrough.patch(initialPatch)
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         await docWritethrough.patch({})
 
@@ -224,9 +223,10 @@ describe("docWritethrough", () => {
 
         await db.remove(await db.get(documentId))
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
         const extraPatch = generatePatchObject(5)
         await docWritethrough.patch(extraPatch)
+        await travelForward(WRITE_RATE_MS)
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining(extraPatch)
@@ -246,30 +246,46 @@ describe("docWritethrough", () => {
         )
       }
 
-      const persistToDbSpy = jest.spyOn(docWritethrough as any, "persistToDb")
       const storeToCacheSpy = jest.spyOn(docWritethrough as any, "storeToCache")
 
       await config.doInTenant(async () => {
         await parallelPatch(5)
-        expect(persistToDbSpy).not.toBeCalled()
         expect(storeToCacheSpy).toBeCalledTimes(5)
+        expect(await db.exists(documentId)).toBe(false)
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         await parallelPatch(40)
 
-        expect(persistToDbSpy).toBeCalledTimes(1)
         expect(storeToCacheSpy).toBeCalledTimes(45)
+
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({
+            _id: documentId,
+            _rev: expect.stringMatching(/1-.+/),
+          })
+        )
 
         await parallelPatch(10)
 
-        expect(persistToDbSpy).toBeCalledTimes(1)
         expect(storeToCacheSpy).toBeCalledTimes(55)
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({
+            _id: documentId,
+            _rev: expect.stringMatching(/1-.+/),
+          })
+        )
 
-        travelForward(WRITE_RATE_MS)
+        await travelForward(WRITE_RATE_MS)
 
         await parallelPatch(5)
-        expect(persistToDbSpy).toBeCalledTimes(2)
+        await travelForward(WRITE_RATE_MS)
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({
+            _id: documentId,
+            _rev: expect.stringMatching(/3-.+/),
+          })
+        )
         expect(storeToCacheSpy).toBeCalledTimes(60)
       })
     })

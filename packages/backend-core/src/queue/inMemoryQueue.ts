@@ -2,6 +2,13 @@ import events from "events"
 import { timeout } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 
+interface JobMessage {
+  timestamp: number
+  queue: string
+  data: any
+  opts?: JobOptions
+}
+
 /**
  * Bull works with a Job wrapper around all messages that contains a lot more information about
  * the state of the message, this object constructor implements the same schema of Bull jobs
@@ -11,12 +18,12 @@ import { Queue, QueueOptions, JobOptions } from "./queue"
  * @returns A new job which can now be put onto the queue, this is mostly an
  * internal structure so that an in memory queue can be easily swapped for a Bull queue.
  */
-function newJob(queue: string, message: any) {
+function newJob(queue: string, message: any, opts?: JobOptions): JobMessage {
   return {
     timestamp: Date.now(),
     queue: queue,
     data: message,
-    opts: {},
+    opts,
   }
 }
 
@@ -28,10 +35,12 @@ function newJob(queue: string, message: any) {
 class InMemoryQueue implements Partial<Queue> {
   _name: string
   _opts?: QueueOptions
-  _messages: any[]
+  _messages: JobMessage[]
+  _queuedJobIds: Set<string>
   _emitter: EventEmitter
   _runCount: number
   _addCount: number
+
   /**
    * The constructor the queue, exactly the same as that of Bulls.
    * @param name The name of the queue which is being configured.
@@ -45,6 +54,7 @@ class InMemoryQueue implements Partial<Queue> {
     this._emitter = new events.EventEmitter()
     this._runCount = 0
     this._addCount = 0
+    this._queuedJobIds = new Set<string>()
   }
 
   /**
@@ -58,19 +68,24 @@ class InMemoryQueue implements Partial<Queue> {
    */
   async process(func: any) {
     this._emitter.on("message", async () => {
-      const delay = this._opts?.defaultJobOptions?.delay
-      if (delay) {
-        await new Promise<void>(r => setTimeout(() => r(), delay))
+      try {
+        if (this._messages.length <= 0) {
+          return
+        }
+        let msg = this._messages.shift()
+
+        let resp = func(msg)
+        if (resp.then != null) {
+          await resp
+        }
+        this._runCount++
+        const jobId = msg?.opts?.jobId?.toString()
+        if (jobId && msg?.opts?.removeOnComplete) {
+          this._queuedJobIds.delete(jobId)
+        }
+      } catch (e: any) {
+        throw e
       }
-      if (this._messages.length <= 0) {
-        return
-      }
-      let msg = this._messages.shift()
-      let resp = func(msg)
-      if (resp.then != null) {
-        await resp
-      }
-      this._runCount++
     })
   }
 
@@ -89,12 +104,31 @@ class InMemoryQueue implements Partial<Queue> {
    */
   // eslint-disable-next-line no-unused-vars
   async add(data: any, opts?: JobOptions) {
+    const jobId = opts?.jobId?.toString()
+    if (jobId && this._queuedJobIds.has(jobId)) {
+      console.log(`Ignoring already queued job ${jobId}`)
+      return
+    }
+
     if (typeof data !== "object") {
       throw "Queue only supports carrying JSON."
     }
-    this._messages.push(newJob(this._name, data))
-    this._addCount++
-    this._emitter.emit("message")
+    if (jobId) {
+      this._queuedJobIds.add(jobId)
+    }
+
+    const pushMessage = () => {
+      this._messages.push(newJob(this._name, data, opts))
+      this._addCount++
+      this._emitter.emit("message")
+    }
+
+    const delay = opts?.delay
+    if (delay) {
+      setTimeout(pushMessage, delay)
+    } else {
+      pushMessage()
+    }
     return {} as any
   }
 
@@ -143,7 +177,11 @@ class InMemoryQueue implements Partial<Queue> {
   async waitForCompletion() {
     do {
       await timeout(50)
-    } while (this._addCount < this._runCount)
+    } while (this.hasRunningJobs)
+  }
+
+  hasRunningJobs() {
+    return this._addCount > this._runCount
   }
 }
 
