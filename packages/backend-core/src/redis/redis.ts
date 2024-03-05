@@ -28,7 +28,7 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-const CLIENTS: Record<number, Redis | Cluster> = {}
+const CLIENTS: Record<number, Redis> = {}
 let CONNECTED = false
 
 // mock redis always connected
@@ -201,7 +201,7 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = (this.getClient() as Cluster).nodes("master")
+      let node = (this.getClient() as never as Cluster).nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
       stream = (this.getClient() as Redis).scanStream({
