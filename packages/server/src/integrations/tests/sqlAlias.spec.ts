@@ -4,6 +4,7 @@ import Sql from "../base/sql"
 import { SqlClient } from "../utils"
 import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
+import { Knex } from "knex"
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -156,6 +157,28 @@ describe("Captures of real examples", () => {
         bindings: ["ddd", ""],
         sql: multiline(`delete from "compositetable" as "a" where "a"."keypartone" = $1 and "a"."keyparttwo" = $2 
              returning "a"."keyparttwo" as "a.keyparttwo", "a"."keypartone" as "a.keypartone", "a"."name" as "a.name"`),
+      })
+    })
+  })
+
+  describe("returning (everything bar Postgres)", () => {
+    it("should be able to handle row returning", () => {
+      const queryJson = getJson("createSimple.json")
+      const SQL = new Sql(SqlClient.MS_SQL, limit)
+      let query = SQL._query(queryJson, { disableReturning: true })
+      expect(query).toEqual({
+        sql: "insert into [people] ([age], [name]) values (@p0, @p1)",
+        bindings: [22, "Test"],
+      })
+
+      // now check returning
+      let returningQuery: Knex.SqlNative = { sql: "", bindings: [] }
+      SQL.getReturningRow((input: Knex.SqlNative) => {
+        returningQuery = input
+      }, queryJson)
+      expect(returningQuery).toEqual({
+        sql: "select * from (select top (@p0) * from [people] where [people].[name] = @p1 and [people].[age] = @p2 order by [people].[name] asc) as [people]",
+        bindings: [1, "Test", 22],
       })
     })
   })
