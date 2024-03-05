@@ -45,7 +45,9 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.BUDIBASE]: undefined,
 }
 
-const INTEGRATIONS: Record<SourceName, any> = {
+type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
+
+const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
