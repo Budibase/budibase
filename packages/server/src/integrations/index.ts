@@ -47,25 +47,26 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
 
 type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
 
-const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> = {
-  [SourceName.POSTGRES]: postgres.integration,
-  [SourceName.DYNAMODB]: dynamodb.integration,
-  [SourceName.MONGODB]: mongodb.integration,
-  [SourceName.ELASTICSEARCH]: elasticsearch.integration,
-  [SourceName.COUCHDB]: couchdb.integration,
-  [SourceName.SQL_SERVER]: sqlServer.integration,
-  [SourceName.S3]: s3.integration,
-  [SourceName.AIRTABLE]: airtable.integration,
-  [SourceName.MYSQL]: mysql.integration,
-  [SourceName.ARANGODB]: arangodb.integration,
-  [SourceName.REST]: rest.integration,
-  [SourceName.FIRESTORE]: firebase.integration,
-  [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
-  [SourceName.REDIS]: redis.integration,
-  [SourceName.SNOWFLAKE]: snowflake.integration,
-  [SourceName.ORACLE]: undefined,
-  [SourceName.BUDIBASE]: undefined,
-}
+const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
+  {
+    [SourceName.POSTGRES]: postgres.integration,
+    [SourceName.DYNAMODB]: dynamodb.integration,
+    [SourceName.MONGODB]: mongodb.integration,
+    [SourceName.ELASTICSEARCH]: elasticsearch.integration,
+    [SourceName.COUCHDB]: couchdb.integration,
+    [SourceName.SQL_SERVER]: sqlServer.integration,
+    [SourceName.S3]: s3.integration,
+    [SourceName.AIRTABLE]: airtable.integration,
+    [SourceName.MYSQL]: mysql.integration,
+    [SourceName.ARANGODB]: arangodb.integration,
+    [SourceName.REST]: rest.integration,
+    [SourceName.FIRESTORE]: firebase.integration,
+    [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
+    [SourceName.REDIS]: redis.integration,
+    [SourceName.SNOWFLAKE]: snowflake.integration,
+    [SourceName.ORACLE]: undefined,
+    [SourceName.BUDIBASE]: undefined,
+  }
 
 // optionally add oracle integration if the oracle binary can be installed
 if (
