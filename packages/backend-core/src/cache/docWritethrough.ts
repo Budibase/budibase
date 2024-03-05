@@ -24,7 +24,16 @@ interface ProcessDocMessage {
 }
 
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
-  JobQueue.DOC_WRITETHROUGH_QUEUE
+  JobQueue.DOC_WRITETHROUGH_QUEUE,
+  {
+    jobOptions: {
+      attempts: 5,
+      backoff: {
+        type: "fixed",
+        delay: 1000,
+      },
+    },
+  }
 )
 
 docWritethroughProcessorQueue.process(async message => {
@@ -41,7 +50,7 @@ docWritethroughProcessorQueue.process(async message => {
 
   const lockResponse = await locks.doWithLock(
     {
-      type: LockType.TRY_ONCE,
+      type: LockType.TRY_TWICE,
       name: LockName.PERSIST_WRITETHROUGH,
       resource: cacheKeyPrefix,
       ttl: Duration.fromSeconds(60).toMs(),
@@ -61,7 +70,7 @@ docWritethroughProcessorQueue.process(async message => {
   )
 
   if (!lockResponse.executed) {
-    console.log(`Ignoring redlock conflict in write-through cache`)
+    throw new Error(`Ignoring redlock conflict in write-through cache`)
   }
 })
 
