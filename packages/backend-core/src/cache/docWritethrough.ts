@@ -1,10 +1,8 @@
 import BaseCache from "./base"
 import { getDocWritethroughClient } from "../redis/init"
-import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
-import * as locks from "../redis/redlockImpl"
+import { AnyDocument, Database } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
-import * as context from "../context"
 import * as dbUtils from "../db"
 
 let CACHE: BaseCache | null = null
@@ -17,7 +15,6 @@ async function getCache() {
 }
 
 interface ProcessDocMessage {
-  tenantId: string
   dbName: string
   docId: string
   cacheKeyPrefix: string
@@ -28,25 +25,8 @@ export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
 )
 
 docWritethroughProcessorQueue.process(async message => {
-  const { tenantId, cacheKeyPrefix } = message.data
-  await context.doInTenant(tenantId, async () => {
-    const lockResponse = await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.PERSIST_WRITETHROUGH,
-        resource: cacheKeyPrefix,
-        ttl: 15000,
-      },
-      async () => {
-        await persistToDb(message.data)
-        console.log("DocWritethrough persisted", { data: message.data })
-      }
-    )
-
-    if (!lockResponse.executed) {
-      console.log(`Ignoring redlock conflict in write-through cache`)
-    }
-  })
+  await persistToDb(message.data)
+  console.log("DocWritethrough persisted", { data: message.data })
 })
 
 export async function persistToDb({
@@ -85,7 +65,6 @@ export class DocWritethrough {
   private db: Database
   private _docId: string
   private writeRateMs: number
-  private tenantId: string
 
   private cacheKeyPrefix: string
 
@@ -94,7 +73,6 @@ export class DocWritethrough {
     this._docId = docId
     this.writeRateMs = writeRateMs
     this.cacheKeyPrefix = `${this.db.name}:${this.docId}`
-    this.tenantId = context.getTenantId()
   }
 
   get docId() {
@@ -108,7 +86,6 @@ export class DocWritethrough {
 
     docWritethroughProcessorQueue.add(
       {
-        tenantId: this.tenantId,
         dbName: this.db.name,
         docId: this.docId,
         cacheKeyPrefix: this.cacheKeyPrefix,
@@ -123,9 +100,10 @@ export class DocWritethrough {
   }
 
   private async storeToCache(cache: BaseCache, data: Record<string, any>) {
-    for (const [key, value] of Object.entries(data)) {
-      const cacheKey = this.cacheKeyPrefix + ":data:" + key
-      await cache.store(cacheKey, { key, value }, undefined)
-    }
+    data = Object.entries(data).reduce((acc, [key, value]) => {
+      acc[this.cacheKeyPrefix + ":data:" + key] = { key, value }
+      return acc
+    }, {} as Record<string, any>)
+    await cache.bulkStore(data, null)
   }
 }

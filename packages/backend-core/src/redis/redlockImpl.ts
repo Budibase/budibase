@@ -72,7 +72,7 @@ const OPTIONS: Record<keyof typeof LockType, Redlock.Options> = {
 export async function newRedlock(opts: Redlock.Options = {}) {
   const options = { ...OPTIONS.DEFAULT, ...opts }
   const redisWrapper = await getLockClient()
-  const client = redisWrapper.getClient()
+  const client = redisWrapper.getClient() as any
   return new Redlock([client], options)
 }
 
@@ -82,6 +82,11 @@ type SuccessfulRedlockExecution<T> = {
 }
 type UnsuccessfulRedlockExecution = {
   executed: false
+  reason: UnsuccessfulRedlockExecutionReason
+}
+
+export const enum UnsuccessfulRedlockExecutionReason {
+  LockTakenWithTryOnce = "LOCK_TAKEN_WITH_TRY_ONCE",
 }
 
 type RedlockExecution<T> =
@@ -141,7 +146,10 @@ export async function doWithLock<T>(
       if (opts.type === LockType.TRY_ONCE) {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
-        return { executed: false }
+        return {
+          executed: false,
+          reason: UnsuccessfulRedlockExecutionReason.LockTakenWithTryOnce,
+        }
       } else {
         throw e
       }
