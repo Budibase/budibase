@@ -18,20 +18,47 @@ describe("redis", () => {
 
       expect(await redis.get(key)).toEqual(value)
     })
+
+    it("objects can be persisted", async () => {
+      const key = structures.uuid()
+      const value = { [generator.word()]: generator.word() }
+
+      await redis.store(key, value)
+
+      expect(await redis.get(key)).toEqual(value)
+    })
   })
 
   describe("bulkStore", () => {
-    function createRandomObject(keyLength: number) {
+    function createRandomObject(
+      keyLength: number,
+      valueGenerator: () => any = () => generator.word()
+    ) {
       return generator
         .unique(() => generator.word(), keyLength)
         .reduce((acc, key) => {
-          acc[key] = generator.word()
+          acc[key] = valueGenerator()
           return acc
         }, {} as Record<string, string>)
     }
 
     it("a basic object can be persisted", async () => {
       const data = createRandomObject(10)
+
+      await redis.bulkStore(data)
+
+      for (const [key, value] of Object.entries(data)) {
+        expect(await redis.get(key)).toEqual(value)
+      }
+
+      expect(await redis.keys("*")).toHaveLength(10)
+    })
+
+    it("a complex object can be persisted", async () => {
+      const data = {
+        ...createRandomObject(10, () => createRandomObject(5)),
+        ...createRandomObject(5),
+      }
 
       await redis.bulkStore(data)
 
