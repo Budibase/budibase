@@ -1,5 +1,13 @@
 import events from "events"
 import { timeout } from "../utils"
+import { Queue, QueueOptions, JobOptions } from "./queue"
+
+interface JobMessage {
+  timestamp: number
+  queue: string
+  data: any
+  opts?: JobOptions
+}
 
 /**
  * Bull works with a Job wrapper around all messages that contains a lot more information about
@@ -10,12 +18,12 @@ import { timeout } from "../utils"
  * @returns A new job which can now be put onto the queue, this is mostly an
  * internal structure so that an in memory queue can be easily swapped for a Bull queue.
  */
-function newJob(queue: string, message: any) {
+function newJob(queue: string, message: any, opts?: JobOptions): JobMessage {
   return {
     timestamp: Date.now(),
     queue: queue,
     data: message,
-    opts: {},
+    opts,
   }
 }
 
@@ -24,26 +32,29 @@ function newJob(queue: string, message: any) {
  * It is relatively simple, using an event emitter internally to register when messages are available
  * to the consumers - in can support many inputs and many consumers.
  */
-class InMemoryQueue {
+class InMemoryQueue implements Partial<Queue> {
   _name: string
-  _opts?: any
-  _messages: any[]
+  _opts?: QueueOptions
+  _messages: JobMessage[]
+  _queuedJobIds: Set<string>
   _emitter: EventEmitter
   _runCount: number
   _addCount: number
+
   /**
    * The constructor the queue, exactly the same as that of Bulls.
    * @param name The name of the queue which is being configured.
    * @param opts This is not used by the in memory queue as there is no real use
    * case when in memory, but is the same API as Bull
    */
-  constructor(name: string, opts?: any) {
+  constructor(name: string, opts?: QueueOptions) {
     this._name = name
     this._opts = opts
     this._messages = []
     this._emitter = new events.EventEmitter()
     this._runCount = 0
     this._addCount = 0
+    this._queuedJobIds = new Set<string>()
   }
 
   /**
@@ -55,22 +66,27 @@ class InMemoryQueue {
    * note this is incredibly limited compared to Bull as in reality the Job would contain
    * a lot more information about the queue and current status of Bull cluster.
    */
-  process(func: any) {
+  async process(func: any) {
     this._emitter.on("message", async () => {
       if (this._messages.length <= 0) {
         return
       }
       let msg = this._messages.shift()
+
       let resp = func(msg)
       if (resp.then != null) {
         await resp
       }
       this._runCount++
+      const jobId = msg?.opts?.jobId?.toString()
+      if (jobId && msg?.opts?.removeOnComplete) {
+        this._queuedJobIds.delete(jobId)
+      }
     })
   }
 
   async isReady() {
-    return true
+    return this as any
   }
 
   // simply puts a message to the queue and emits to the queue for processing
@@ -83,27 +99,45 @@ class InMemoryQueue {
    * @param repeat serves no purpose for the import queue.
    */
   // eslint-disable-next-line no-unused-vars
-  add(msg: any, repeat: boolean) {
-    if (typeof msg !== "object") {
+  async add(data: any, opts?: JobOptions) {
+    const jobId = opts?.jobId?.toString()
+    if (jobId && this._queuedJobIds.has(jobId)) {
+      console.log(`Ignoring already queued job ${jobId}`)
+      return
+    }
+
+    if (typeof data !== "object") {
       throw "Queue only supports carrying JSON."
     }
-    this._messages.push(newJob(this._name, msg))
-    this._addCount++
-    this._emitter.emit("message")
+    if (jobId) {
+      this._queuedJobIds.add(jobId)
+    }
+
+    const pushMessage = () => {
+      this._messages.push(newJob(this._name, data, opts))
+      this._addCount++
+      this._emitter.emit("message")
+    }
+
+    const delay = opts?.delay
+    if (delay) {
+      setTimeout(pushMessage, delay)
+    } else {
+      pushMessage()
+    }
+    return {} as any
   }
 
   /**
    * replicating the close function from bull, which waits for jobs to finish.
    */
-  async close() {
-    return []
-  }
+  async close() {}
 
   /**
    * This removes a cron which has been implemented, this is part of Bull API.
    * @param cronJobId The cron which is to be removed.
    */
-  removeRepeatableByKey(cronJobId: string) {
+  async removeRepeatableByKey(cronJobId: string) {
     // TODO: implement for testing
     console.log(cronJobId)
   }
@@ -111,12 +145,12 @@ class InMemoryQueue {
   /**
    * Implemented for tests
    */
-  getRepeatableJobs() {
+  async getRepeatableJobs() {
     return []
   }
 
   // eslint-disable-next-line no-unused-vars
-  removeJobs(pattern: string) {
+  async removeJobs(pattern: string) {
     // no-op
   }
 
@@ -128,18 +162,22 @@ class InMemoryQueue {
   }
 
   async getJob() {
-    return {}
+    return null
   }
 
   on() {
     // do nothing
-    return this
+    return this as any
   }
 
   async waitForCompletion() {
     do {
       await timeout(50)
-    } while (this._addCount < this._runCount)
+    } while (this.hasRunningJobs)
+  }
+
+  hasRunningJobs() {
+    return this._addCount > this._runCount
   }
 }
 
