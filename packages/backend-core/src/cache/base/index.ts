@@ -47,6 +47,25 @@ export default class BaseCache {
   }
 
   /**
+   * Bulk write to the cache.
+   */
+  async bulkStore(
+    data: Record<string, any>,
+    ttl: number | null = null,
+    opts = { useTenancy: true }
+  ) {
+    if (opts.useTenancy) {
+      data = Object.entries(data).reduce((acc, [key, value]) => {
+        acc[generateTenantKey(key)] = value
+        return acc
+      }, {} as Record<string, any>)
+    }
+
+    const client = await this.getClient()
+    await client.bulkStore(data, ttl)
+  }
+
+  /**
    * Remove from cache.
    */
   async delete(key: string, opts = { useTenancy: true }) {
