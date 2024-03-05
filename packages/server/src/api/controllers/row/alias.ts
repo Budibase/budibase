@@ -1,4 +1,11 @@
-import { Datasource, DatasourcePlusQueryResponse, Operation, QueryJson, Row, SearchFilters } from "@budibase/types"
+import {
+  Datasource,
+  DatasourcePlusQueryResponse,
+  Operation,
+  QueryJson,
+  Row,
+  SearchFilters,
+} from "@budibase/types"
 import { getSQLClient } from "../../../sdk/app/rows/utils"
 import { cloneDeep } from "lodash"
 import sdk from "../../../sdk"
@@ -10,7 +17,11 @@ const WRITE_OPERATIONS: Operation[] = [
   Operation.UPDATE,
   Operation.DELETE,
 ]
-const DISABLED_WRITE_CLIENTS: SqlClient[] = [SqlClient.MY_SQL, SqlClient.MS_SQL, SqlClient.ORACLE]
+const DISABLED_WRITE_CLIENTS: SqlClient[] = [
+  SqlClient.MY_SQL,
+  SqlClient.MS_SQL,
+  SqlClient.ORACLE,
+]
 
 class CharSequence {
   static alphabet = "abcdefghijklmnopqrstuvwxyz"
