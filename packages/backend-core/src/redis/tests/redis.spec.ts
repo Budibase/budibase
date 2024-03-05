@@ -37,5 +37,24 @@ describe("redis", () => {
 
       expect(await redis.keys("*")).toHaveLength(10)
     })
+
+    it("a bulk store can be persisted with TTL", async () => {
+      const ttl = 500
+      const data = generator
+        .unique(() => generator.word(), 10)
+        .reduce((acc, key) => {
+          acc[key] = generator.word()
+          return acc
+        }, {} as Record<string, string>)
+
+      await redis.bulkStore(data, ttl)
+
+      for (const [key, value] of Object.entries(data)) {
+        expect(await redis.get(key)).toEqual(value)
+        expect(await redis.getTTL(key)).toEqual(ttl)
+      }
+
+      expect(await redis.keys("*")).toHaveLength(10)
+    })
   })
 })
