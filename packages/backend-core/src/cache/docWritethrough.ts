@@ -3,7 +3,6 @@ import { getDocWritethroughClient } from "../redis/init"
 import { AnyDocument, Database } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
-import * as context from "../context"
 import * as dbUtils from "../db"
 
 let CACHE: BaseCache | null = null
@@ -101,9 +100,10 @@ export class DocWritethrough {
   }
 
   private async storeToCache(cache: BaseCache, data: Record<string, any>) {
-    for (const [key, value] of Object.entries(data)) {
-      const cacheKey = this.cacheKeyPrefix + ":data:" + key
-      await cache.store(cacheKey, { key, value }, undefined)
-    }
+    data = Object.entries(data).reduce((acc, [key, value]) => {
+      acc[this.cacheKeyPrefix + ":data:" + key] = { key, value }
+      return acc
+    }, {} as Record<string, any>)
+    await cache.bulkStore(data, null)
   }
 }
