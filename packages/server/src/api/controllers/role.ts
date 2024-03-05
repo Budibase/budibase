@@ -7,8 +7,14 @@ import {
 } from "@budibase/backend-core"
 import { getUserMetadataParams, InternalTables } from "../../db/utils"
 import {
+  AccessibleRolesResponse,
   Database,
+  DestroyRoleResponse,
+  FetchRolesResponse,
+  FindRoleResponse,
   Role,
+  SaveRoleRequest,
+  SaveRoleResponse,
   UserCtx,
   UserMetadata,
   UserRoles,
@@ -25,43 +31,36 @@ async function updateRolesOnUserTable(
   db: Database,
   roleId: string,
   updateOption: string,
-  roleVersion: string | undefined
+  roleVersion?: string
 ) {
   const table = await sdk.tables.getTable(InternalTables.USER_METADATA)
-  const schema = table.schema
+  const constraints = table.schema.roleId?.constraints
+  if (!constraints) {
+    return
+  }
+  const updatedRoleId =
+    roleVersion === roles.RoleIDVersion.NAME
+      ? roles.getExternalRoleID(roleId, roleVersion)
+      : roleId
+  const indexOfRoleId = constraints.inclusion!.indexOf(updatedRoleId)
   const remove = updateOption === UpdateRolesOptions.REMOVED
-  let updated = false
-  for (let prop of Object.keys(schema)) {
-    if (prop === "roleId") {
-      updated = true
-      const constraints = schema[prop].constraints!
-      const updatedRoleId =
-        roleVersion === roles.RoleIDVersion.NAME
-          ? roles.getExternalRoleID(roleId, roleVersion)
-          : roleId
-      const indexOfRoleId = constraints.inclusion!.indexOf(updatedRoleId)
-      if (remove && indexOfRoleId !== -1) {
-        constraints.inclusion!.splice(indexOfRoleId, 1)
-      } else if (!remove && indexOfRoleId === -1) {
-        constraints.inclusion!.push(updatedRoleId)
-      }
-      break
-    }
+  if (remove && indexOfRoleId !== -1) {
+    constraints.inclusion!.splice(indexOfRoleId, 1)
+  } else if (!remove && indexOfRoleId === -1) {
+    constraints.inclusion!.push(updatedRoleId)
   }
-  if (updated) {
-    await db.put(table)
-  }
+  await db.put(table)
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, FetchRolesResponse>) {
   ctx.body = await roles.getAllRoles()
 }
 
-export async function find(ctx: UserCtx) {
+export async function find(ctx: UserCtx<void, FindRoleResponse>) {
   ctx.body = await roles.getRole(ctx.params.roleId)
 }
 
-export async function save(ctx: UserCtx) {
+export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   const db = context.getAppDB()
   let { _id, name, inherits, permissionId, version } = ctx.request.body
   let isCreate = false
@@ -109,9 +108,9 @@ export async function save(ctx: UserCtx) {
   ctx.body = role
 }
 
-export async function destroy(ctx: UserCtx) {
+export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
   const db = context.getAppDB()
-  let roleId = ctx.params.roleId
+  let roleId = ctx.params.roleId as string
   if (roles.isBuiltin(roleId)) {
     ctx.throw(400, "Cannot delete builtin role.")
   } else {
@@ -144,14 +143,18 @@ export async function destroy(ctx: UserCtx) {
   ctx.status = 200
 }
 
-export async function accessible(ctx: UserCtx) {
+export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
   let roleId = ctx.user?.roleId
   if (!roleId) {
     roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
   }
   if (ctx.user && sharedSdk.users.isAdminOrBuilder(ctx.user)) {
     const appId = context.getAppId()
-    ctx.body = await roles.getAllRoleIds(appId)
+    if (!appId) {
+      ctx.body = []
+    } else {
+      ctx.body = await roles.getAllRoleIds(appId)
+    }
   } else {
     ctx.body = await roles.getUserRoleIdHierarchy(roleId!)
   }
