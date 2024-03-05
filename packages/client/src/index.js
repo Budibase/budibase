@@ -87,8 +87,14 @@ const loadBudibase = async () => {
     } else if (type === "request-context") {
       const { selectedComponentInstance } = get(componentStore)
       const context = selectedComponentInstance?.getDataContext()
+      let stringifiedContext = null
+      try {
+        stringifiedContext = JSON.stringify(context)
+      } catch (error) {
+        // Ignore - invalid context
+      }
       eventStore.actions.dispatchEvent("provide-context", {
-        context: JSON.stringify(context),
+        context: stringifiedContext,
       })
     } else if (type === "hover-component") {
       hoverStore.actions.hoverComponent(data)
