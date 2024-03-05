@@ -21,13 +21,17 @@ describe("redis", () => {
   })
 
   describe("bulkStore", () => {
-    it("a basic object can be persisted", async () => {
-      const data = generator
-        .unique(() => generator.word(), 10)
+    function createRandomObject(keyLength: number) {
+      return generator
+        .unique(() => generator.word(), keyLength)
         .reduce((acc, key) => {
           acc[key] = generator.word()
           return acc
         }, {} as Record<string, string>)
+    }
+
+    it("a basic object can be persisted", async () => {
+      const data = createRandomObject(10)
 
       await redis.bulkStore(data)
 
@@ -38,14 +42,20 @@ describe("redis", () => {
       expect(await redis.keys("*")).toHaveLength(10)
     })
 
+    it("no TTL is set by default", async () => {
+      const data = createRandomObject(10)
+
+      await redis.bulkStore(data)
+
+      for (const [key, value] of Object.entries(data)) {
+        expect(await redis.get(key)).toEqual(value)
+        expect(await redis.getTTL(key)).toEqual(-1)
+      }
+    })
+
     it("a bulk store can be persisted with TTL", async () => {
       const ttl = 500
-      const data = generator
-        .unique(() => generator.word(), 10)
-        .reduce((acc, key) => {
-          acc[key] = generator.word()
-          return acc
-        }, {} as Record<string, string>)
+      const data = createRandomObject(8)
 
       await redis.bulkStore(data, ttl)
 
@@ -54,7 +64,20 @@ describe("redis", () => {
         expect(await redis.getTTL(key)).toEqual(ttl)
       }
 
-      expect(await redis.keys("*")).toHaveLength(10)
+      expect(await redis.keys("*")).toHaveLength(8)
+    })
+
+    it("setting a TTL of -1 will not persist the key", async () => {
+      const ttl = -1
+      const data = createRandomObject(5)
+
+      await redis.bulkStore(data, ttl)
+
+      for (const [key, value] of Object.entries(data)) {
+        expect(await redis.get(key)).toBe(null)
+      }
+
+      expect(await redis.keys("*")).toHaveLength(0)
     })
   })
 })
