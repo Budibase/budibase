@@ -256,6 +256,8 @@ describe("docWritethrough", () => {
 
         expect(storeToCacheSpy).toBeCalledTimes(45)
 
+        // Ideally we want to spy on persistToDb from ./docWritethrough, but due our barrel files configuration required quite of a complex setup.
+        // We are relying on the document being stored only once (otherwise we would have _rev updated)
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining({
             _id: documentId,
