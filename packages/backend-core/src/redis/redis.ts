@@ -286,7 +286,8 @@ class RedisWrapper {
     const client = this.getClient()
 
     const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
-      acc[addDbPrefix(this._db, key)] = value
+      acc[addDbPrefix(this._db, key)] =
+        typeof value === "object" ? JSON.stringify(value) : value
       return acc
     }, {} as Record<string, any>)
 
