@@ -67,7 +67,7 @@
     "@types/lodash": "4.14.200",
     "@types/node-fetch": "2.6.4",
     "@types/pouchdb": "6.4.0",
-    "@types/redlock": "4.0.3",
+    "@types/redlock": "4.0.7",
     "@types/semver": "7.3.7",
     "@types/tar-fs": "2.0.1",
     "@types/uuid": "8.3.4",
