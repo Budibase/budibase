@@ -279,6 +279,19 @@ class RedisWrapper {
     }
   }
 
+  async bulkStore(
+    data: Record<string, any>,
+    expirySeconds: number | null = null
+  ) {
+    const client = this.getClient()
+
+    const dataToStore = Object.entries(data).reduce((acc, [key, value]) => {
+      acc[addDbPrefix(this._db, key)] = value
+      return acc
+    }, {} as Record<string, any>)
+    await client.mset(dataToStore)
+  }
+
   async getTTL(key: string) {
     const db = this._db
     const prefixedKey = addDbPrefix(db, key)
