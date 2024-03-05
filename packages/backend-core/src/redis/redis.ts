@@ -331,6 +331,11 @@ class RedisWrapper {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
   }
+
+  async increment(key: string) {
+    const result = await this.getClient().incr(addDbPrefix(this._db, key))
+    return result
+  }
 }
 
 export default RedisWrapper
