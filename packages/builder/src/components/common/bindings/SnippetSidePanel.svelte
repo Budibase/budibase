@@ -13,43 +13,6 @@
   let hoveredSnippet
   let hideTimeout
 
-  snippets = [
-    {
-      name: "Square",
-      code: `
-        return function(num) {
-          return num * num
-        }
-      `,
-    },
-    {
-      name: "HelloWorld",
-      code: `
-        return "Hello, world!"
-      `,
-    },
-    {
-      name: "Colorful",
-      code: `
-        let a = null
-        let b = "asdasd"
-        let c = 123123
-        let d = undefined
-        let e = [1, 2, 3]
-        let f = { foo: "bar" }
-        let g = Math.round(1.234)
-        if (a === b) {
-          return c ?? e
-        }
-        return d || f
-        // comment
-        let h = 1 + 2 + 3 * 3
-        let i = true
-        let j = false
-      `,
-    },
-  ]
-
   $: filteredSnippets = getFilteredSnippets(snippets, search)
 
   const getFilteredSnippets = (snippets, search) => {
