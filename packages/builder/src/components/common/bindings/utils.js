@@ -40,11 +40,9 @@ export class BindingHelpers {
   }
 
   // Adds a JS/HBS helper to the expression
-  onSelectSnippet(value, snippet) {
+  onSelectSnippet(snippet) {
     const pos = this.getCaretPosition()
     const { start, end } = pos
-    const jsVal = decodeJSBinding(value)
-    const insertVal = jsInsert(jsVal, start, end, `snippets.${snippet.name}`)
-    this.insertAtPos({ start, end, value: insertVal })
+    this.insertAtPos({ start, end, value: `snippets.${snippet.name}` })
   }
 }

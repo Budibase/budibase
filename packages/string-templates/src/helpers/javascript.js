@@ -63,7 +63,9 @@ module.exports.processJS = (handlebars, context) => {
         {},
         {
           get: function (_, name) {
-            return eval(iifeWrapper(context.snippets[name]))
+            // This will error if the snippet doesn't exist, but that's intended
+            const snippet = (context.snippets || []).find(x => x.name === name)
+            return eval(iifeWrapper(snippet.code))
           },
         }
       ),
