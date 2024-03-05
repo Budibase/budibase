@@ -184,7 +184,7 @@ export async function getRole(
       return cloneDeep(BUILTIN_ROLES.PUBLIC)
     }
     // only throw an error if there is no role at all
-    if (!role || Object.keys(role).length === 0) {
+    if (Object.keys(role || {}).length === 0) {
       throw err
     }
   }

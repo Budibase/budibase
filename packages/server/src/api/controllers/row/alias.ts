@@ -62,7 +62,11 @@ export default class AliasTables {
         if (idx === -1 || idx > 1) {
           return
         }
-        return Math.abs(tableName.length - name.length) <= 2
+        // this might look a bit mad, but the idea is if the field is wrapped, say in "", `` or []
+        // then the idx of the table name will be 1, and we should allow for it ending in a closing
+        // character - otherwise it should be the full length if the index is zero
+        const allowedCharacterDiff = idx * 2
+        return Math.abs(tableName.length - name.length) <= allowedCharacterDiff
       })
       if (foundTableName) {
         const aliasedTableName = tableName.replace(
@@ -107,57 +111,55 @@ export default class AliasTables {
   }
 
   async queryWithAliasing(json: QueryJson): DatasourcePlusQueryResponse {
-    json = cloneDeep(json)
-    const aliasTable = (table: Table) => ({
-      ...table,
-      name: this.getAlias(table.name),
-    })
-    // run through the query json to update anywhere a table may be used
-    if (json.resource?.fields) {
-      json.resource.fields = json.resource.fields.map(field =>
-        this.aliasField(field)
-      )
-    }
-    if (json.filters) {
-      for (let [filterKey, filter] of Object.entries(json.filters)) {
-        if (typeof filter !== "object") {
-          continue
-        }
-        const aliasedFilters: typeof filter = {}
-        for (let key of Object.keys(filter)) {
-          aliasedFilters[this.aliasField(key)] = filter[key]
-        }
-        json.filters[filterKey as keyof SearchFilters] = aliasedFilters
+    const fieldLength = json.resource?.fields?.length
+    const aliasingEnabled = fieldLength && fieldLength > 0
+    if (aliasingEnabled) {
+      json = cloneDeep(json)
+      // run through the query json to update anywhere a table may be used
+      if (json.resource?.fields) {
+        json.resource.fields = json.resource.fields.map(field =>
+          this.aliasField(field)
+        )
       }
-    }
-    if (json.relationships) {
-      json.relationships = json.relationships.map(relationship => ({
-        ...relationship,
-        aliases: this.aliasMap([
-          relationship.through,
-          relationship.tableName,
-          json.endpoint.entityId,
-        ]),
-      }))
-    }
-    if (json.meta?.table) {
-      json.meta.table = aliasTable(json.meta.table)
-    }
-    if (json.meta?.tables) {
-      const aliasedTables: Record<string, Table> = {}
-      for (let [tableName, table] of Object.entries(json.meta.tables)) {
-        aliasedTables[this.getAlias(tableName)] = aliasTable(table)
+      if (json.filters) {
+        for (let [filterKey, filter] of Object.entries(json.filters)) {
+          if (typeof filter !== "object") {
+            continue
+          }
+          const aliasedFilters: typeof filter = {}
+          for (let key of Object.keys(filter)) {
+            aliasedFilters[this.aliasField(key)] = filter[key]
+          }
+          json.filters[filterKey as keyof SearchFilters] = aliasedFilters
+        }
       }
-      json.meta.tables = aliasedTables
+      if (json.meta?.table) {
+        this.getAlias(json.meta.table.name)
+      }
+      if (json.meta?.tables) {
+        Object.keys(json.meta.tables).forEach(tableName =>
+          this.getAlias(tableName)
+        )
+      }
+      if (json.relationships) {
+        json.relationships = json.relationships.map(relationship => ({
+          ...relationship,
+          aliases: this.aliasMap([
+            relationship.through,
+            relationship.tableName,
+            json.endpoint.entityId,
+          ]),
+        }))
+      }
+      // invert and return
+      const invertedTableAliases: Record<string, string> = {}
+      for (let [key, value] of Object.entries(this.tableAliases)) {
+        invertedTableAliases[value] = key
+      }
+      json.tableAliases = invertedTableAliases
     }
-    // invert and return
-    const invertedTableAliases: Record<string, string> = {}
-    for (let [key, value] of Object.entries(this.tableAliases)) {
-      invertedTableAliases[value] = key
-    }
-    json.tableAliases = invertedTableAliases
     const response = await getDatasourceAndQuery(json)
-    if (Array.isArray(response)) {
+    if (Array.isArray(response) && aliasingEnabled) {
       return this.reverse(response)
     } else {
       return response
