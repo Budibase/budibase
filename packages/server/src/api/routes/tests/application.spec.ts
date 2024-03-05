@@ -251,10 +251,15 @@ describe("/applications", () => {
 
   describe("permissions", () => {
     it("should only return apps a user has access to", async () => {
-      const user = await config.createUser()
+      const user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
 
-      const apps = await config.api.application.fetch()
-      expect(apps.length).toBeGreaterThan(0)
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
     })
   })
 })
