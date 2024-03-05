@@ -35,7 +35,7 @@ const handleClick = event => {
     handler.callback?.(event)
   })
 }
-document.documentElement.addEventListener("click", handleClick, true)
+document.documentElement.addEventListener("mousedown", handleClick, true)
 document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
