@@ -68,23 +68,19 @@ class InMemoryQueue implements Partial<Queue> {
    */
   async process(func: any) {
     this._emitter.on("message", async () => {
-      try {
-        if (this._messages.length <= 0) {
-          return
-        }
-        let msg = this._messages.shift()
+      if (this._messages.length <= 0) {
+        return
+      }
+      let msg = this._messages.shift()
 
-        let resp = func(msg)
-        if (resp.then != null) {
-          await resp
-        }
-        this._runCount++
-        const jobId = msg?.opts?.jobId?.toString()
-        if (jobId && msg?.opts?.removeOnComplete) {
-          this._queuedJobIds.delete(jobId)
-        }
-      } catch (e: any) {
-        throw e
+      let resp = func(msg)
+      if (resp.then != null) {
+        await resp
+      }
+      this._runCount++
+      const jobId = msg?.opts?.jobId?.toString()
+      if (jobId && msg?.opts?.removeOnComplete) {
+        this._queuedJobIds.delete(jobId)
       }
     })
   }
