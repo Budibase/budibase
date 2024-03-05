@@ -16,7 +16,13 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
-import type { App } from "@budibase/types"
+import {
+  PermissionLevel,
+  type App,
+  INTERNAL_TABLE_SOURCE_ID,
+  TableSourceType,
+  FieldType,
+} from "@budibase/types"
 import tk from "timekeeper"
 
 describe("/applications", () => {
@@ -256,9 +262,47 @@ describe("/applications", () => {
         admin: { global: false },
       })
 
+      const table = await config.api.table.save({
+        name: "table",
+        type: "table",
+        sourceId: INTERNAL_TABLE_SOURCE_ID,
+        sourceType: TableSourceType.INTERNAL,
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+          },
+        },
+      })
+
       await config.withUser(user, async () => {
         const apps = await config.api.application.fetch()
         expect(apps).toHaveLength(0)
+      })
+
+      const role = await config.api.roles.save({
+        name: "Test",
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      await config.api.user.update({
+        ...user,
+        roles: {
+          [config.getAppId()]: role._id!,
+        },
+      })
+
+      await config.api.permission.add({
+        resourceId: table._id!,
+        roleId: role._id!,
+        level: PermissionLevel.READ,
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
       })
     })
   })
