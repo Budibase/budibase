@@ -1,5 +1,7 @@
 <script>
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
+  import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
+  import { EditorModes } from "components/common/CodeEditor"
 
   export let addSnippet
   export let snippets
@@ -15,16 +17,36 @@
     {
       name: "Square",
       code: `
-      return function(num) {
-        return num * num
-      }
-    `,
+        return function(num) {
+          return num * num
+        }
+      `,
     },
     {
       name: "HelloWorld",
       code: `
-      return "Hello, world!"
-    `,
+        return "Hello, world!"
+      `,
+    },
+    {
+      name: "Colorful",
+      code: `
+        let a = null
+        let b = "asdasd"
+        let c = 123123
+        let d = undefined
+        let e = [1, 2, 3]
+        let f = { foo: "bar" }
+        let g = Math.round(1.234)
+        if (a === b) {
+          return c ?? e
+        }
+        return d || f
+        // comment
+        let h = 1 + 2 + 3 * 3
+        let i = true
+        let j = false
+      `,
     },
   ]
 
@@ -89,8 +111,15 @@
   on:mouseenter={stopHidingPopover}
   on:mouseleave={hidePopover}
 >
-  <!-- eslint-disable-next-line svelte/no-at-html-tags-->
-  <pre class="snippet-popover">{@html hoveredSnippet.code}</pre>
+  <div class="snippet-popover">
+    {#key hoveredSnippet}
+      <CodeEditor
+        value={hoveredSnippet.code.trim()}
+        mode={EditorModes.JS}
+        readonly
+      />
+    {/key}
+  </div>
 </Popover>
 
 <div class="snippet-side-panel">
@@ -114,15 +143,13 @@
 
     <div class="snippet-list">
       {#each filteredSnippets as snippet}
-        <div class="snippet">
-          <div
-            class="snippet-name"
-            on:mouseenter={e => showSnippet(snippet, e.target)}
-            on:mouseleave={hidePopover}
-            on:click={() => addSnippet(snippet)}
-          >
-            {snippet.name}
-          </div>
+        <div
+          class="snippet"
+          on:mouseenter={e => showSnippet(snippet, e.target)}
+          on:mouseleave={hidePopover}
+          on:click={() => addSnippet(snippet)}
+        >
+          {snippet.name}
         </div>
       {/each}
     </div>
@@ -155,14 +182,18 @@
     background: none;
     padding: 0;
   }
-  .search-input {
-    flex: 1;
+  .search-input,
+  .title {
+    flex: 1 1 auto;
   }
 
   /* List */
   .snippet-list {
     padding: 0 var(--spacing-l);
     padding-bottom: var(--spacing-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-s);
   }
   .snippet {
     font-size: var(--font-size-s);
@@ -173,14 +204,14 @@
       border-color 130ms ease-out;
     word-wrap: break-word;
   }
+  .snippet:hover {
+    color: var(--spectrum-global-color-gray-900);
+    background-color: var(--spectrum-global-color-gray-50);
+    cursor: pointer;
+  }
 
   /* Popover */
   .snippet-popover {
-    padding: 0;
-    margin: 0;
-    font-size: 12px;
-    white-space: pre;
-    text-overflow: ellipsis;
-    overflow: hidden;
+    width: 400px;
   }
 </style>

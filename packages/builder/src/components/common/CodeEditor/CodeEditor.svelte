@@ -40,20 +40,20 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
-  import { Compartment } from "@codemirror/state"
+  import { Compartment, EditorState } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "stores/portal"
 
   export let label
   export let completions = []
-  export let resize = "none"
   export let mode = EditorModes.Handlebars
   export let value = ""
   export let placeholder = null
   export let autocompleteEnabled = true
   export let autofocus = false
   export let jsBindingWrapping = true
+  export let readonly = false
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -143,32 +143,21 @@
   const buildBaseExtensions = () => {
     return [
       ...(mode.name === "handlebars" ? [plugin] : []),
-      history(),
       drawSelection(),
       dropCursor(),
       bracketMatching(),
       closeBrackets(),
-      highlightActiveLine(),
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
-      highlightActiveLineGutter(),
       highlightSpecialChars(),
-      lineNumbers(),
-      foldGutter(),
       EditorView.lineWrapping,
-      EditorView.updateListener.of(v => {
-        const docStr = v.state.doc?.toString()
-        if (docStr === value) {
-          return
-        }
-        dispatch("change", docStr)
-      }),
-      keymap.of(buildKeymap()),
       themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
   }
 
+  // None of this is reactive, but it never has been, so we just assume most
+  // config flags aren't changed at runtime
   const buildExtensions = base => {
-    const complete = [...base]
+    let complete = [...base]
 
     if (autocompleteEnabled) {
       complete.push(
@@ -210,12 +199,36 @@
 
     if (mode.name === "javascript") {
       complete.push(javascript())
-      complete.push(highlightWhitespace())
+      if (!readonly) {
+        complete.push(highlightWhitespace())
+      }
     }
 
     if (placeholder) {
       complete.push(placeholderFn(placeholder))
     }
+
+    if (readonly) {
+      complete.push(EditorState.readOnly.of(true))
+    } else {
+      complete = [
+        ...complete,
+        history(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        lineNumbers(),
+        foldGutter(),
+        keymap.of(buildKeymap()),
+        EditorView.updateListener.of(v => {
+          const docStr = v.state.doc?.toString()
+          if (docStr === value) {
+            return
+          }
+          dispatch("change", docStr)
+        }),
+      ]
+    }
+
     return complete
   }
 
@@ -301,7 +314,6 @@
 
   /* Active line */
   .code-editor :global(.cm-line) {
-    height: 16px;
     padding: 0 var(--spacing-s);
     color: var(--spectrum-alias-text-color);
   }
@@ -318,6 +330,9 @@
     width: 100%;
     background: var(--spectrum-global-color-gray-100) !important;
     z-index: -2;
+  }
+  .code-editor :global(.cm-highlightSpace:before) {
+    color: var(--spectrum-global-color-gray-500);
   }
 
   /* Code selection */
