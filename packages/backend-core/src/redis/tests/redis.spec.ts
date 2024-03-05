@@ -146,5 +146,16 @@ describe("redis", () => {
       expect(results).toHaveLength(100)
       expect(results).toEqual(Array.from({ length: 100 }).map((_, i) => i + 1))
     })
+
+    it.each([
+      generator.word(),
+      generator.bool(),
+      { [generator.word()]: generator.word() },
+    ])("cannot increment if the store value is not a number", async value => {
+      const key = structures.uuid()
+      await redis.store(key, value)
+
+      await expect(redis.increment(key)).rejects.toThrowError("")
+    })
   })
 })
