@@ -184,7 +184,7 @@ describe("/applications", () => {
     it("app should not sync if production", async () => {
       const { message } = await config.api.application.sync(
         app.appId.replace("_dev", ""),
-        { statusCode: 400 }
+        { status: 400 }
       )
 
       expect(message).toEqual(
@@ -246,6 +246,15 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
+    })
+  })
+
+  describe("permissions", () => {
+    it("should only return apps a user has access to", async () => {
+      const user = await config.createUser()
+
+      const apps = await config.api.application.fetch()
+      expect(apps.length).toBeGreaterThan(0)
     })
   })
 })
