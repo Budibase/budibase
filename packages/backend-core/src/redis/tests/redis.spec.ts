@@ -66,7 +66,7 @@ describe("redis", () => {
         expect(await redis.get(key)).toEqual(value)
       }
 
-      expect(await redis.keys("*")).toHaveLength(10)
+      expect(await redis.keys("*")).toHaveLength(15)
     })
 
     it("no TTL is set by default", async () => {
