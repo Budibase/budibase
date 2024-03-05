@@ -63,7 +63,7 @@ export async function fetch(ctx: UserCtx) {
 export async function clientFetch(ctx: UserCtx) {
   const routing = await getRoutingStructure()
   let roleId = ctx.user?.role?._id
-  const roleIds = await roles.getUserRoleIdHierarchy(roleId)
+  const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []
   for (let topLevel of Object.values(routing.routes) as any) {
     for (let subpathKey of Object.keys(topLevel.subpaths)) {
       let found = false

@@ -1,6 +1,6 @@
 import { Document } from "../../document"
 import { View, ViewV2 } from "../view"
-import { RenameColumn } from "../../../sdk"
+import { AddColumn, RenameColumn } from "../../../sdk"
 import { TableSchema } from "./schema"
 
 export const INTERNAL_TABLE_SOURCE_ID = "bb_internal"
@@ -29,5 +29,6 @@ export interface Table extends Document {
 
 export interface TableRequest extends Table {
   _rename?: RenameColumn
+  _add?: AddColumn
   created?: boolean
 }
