@@ -32,6 +32,7 @@
     "@spectrum-css/tag": "^3.1.4",
     "@spectrum-css/typography": "^3.0.2",
     "@spectrum-css/vars": "^3.0.1",
+    "@svelte-put/clickoutside": "^3.0.1",
     "apexcharts": "^3.22.1",
     "dayjs": "^1.10.8",
     "downloadjs": "1.4.7",

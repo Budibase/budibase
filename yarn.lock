@@ -4910,6 +4910,11 @@
   resolved "https://registry.yarnpkg.com/@spectrum-css/vars/-/vars-8.0.4.tgz#dcf115551f240b25ba629a3b6c4d3eb1429bee15"
   integrity sha512-3jYj5HYxbVfkR4jLV9l+L3g6jS4R09m0lV+gupqnXWpwcThlP0EOjkCkevu195imoS4pZ/i2iLpd98l4qcTc2Q==
 
+"@svelte-put/clickoutside@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@svelte-put/clickoutside/-/clickoutside-3.0.1.tgz#d40b565515d05328cfbb0b076009b32c11b5685e"
+  integrity sha512-RhuRmD2RpXF63Mb48DxKkgqIPQ458TnL8M1m6HqtnPh5/g5p+PKIn/L2SPs1s9us2Kn02Y1/txHhOSYbVi6Z2Q==
+
 "@sveltejs/vite-plugin-svelte@1.4.0":
   version "1.4.0"
   resolved "https://registry.yarnpkg.com/@sveltejs/vite-plugin-svelte/-/vite-plugin-svelte-1.4.0.tgz#412a735de489ca731d0c780c2b410f45dd95b392"
