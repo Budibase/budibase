@@ -1,14 +1,14 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
 import {
+  Datasource,
+  DatasourcePlusQueryResponse,
   FieldType,
   QueryJson,
   Row,
+  SourceName,
   Table,
   TableSchema,
-  DatasourcePlusQueryResponse,
-  Datasource,
-  SourceName,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
@@ -16,21 +16,35 @@ import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
 import { SqlClient } from "../../../integrations/utils"
 
+const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
+  [SourceName.POSTGRES]: SqlClient.POSTGRES,
+  [SourceName.MYSQL]: SqlClient.MY_SQL,
+  [SourceName.SQL_SERVER]: SqlClient.MS_SQL,
+  [SourceName.ORACLE]: SqlClient.ORACLE,
+  [SourceName.DYNAMODB]: undefined,
+  [SourceName.MONGODB]: undefined,
+  [SourceName.ELASTICSEARCH]: undefined,
+  [SourceName.COUCHDB]: undefined,
+  [SourceName.S3]: undefined,
+  [SourceName.AIRTABLE]: undefined,
+  [SourceName.ARANGODB]: undefined,
+  [SourceName.REST]: undefined,
+  [SourceName.FIRESTORE]: undefined,
+  [SourceName.GOOGLE_SHEETS]: undefined,
+  [SourceName.REDIS]: undefined,
+  [SourceName.SNOWFLAKE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
+}
+
 export function getSQLClient(datasource: Datasource): SqlClient {
   if (!datasource.isSQL) {
     throw new Error("Cannot get SQL Client for non-SQL datasource")
   }
-  switch (datasource.source) {
-    case SourceName.POSTGRES:
-      return SqlClient.POSTGRES
-    case SourceName.MYSQL:
-      return SqlClient.MY_SQL
-    case SourceName.ORACLE:
-      return SqlClient.ORACLE
-    case SourceName.SQL_SERVER:
-      return SqlClient.MS_SQL
+  const lookup = SQL_CLIENT_SOURCE_MAP[datasource.source]
+  if (lookup) {
+    return lookup
   }
-  throw new Error("Unable to find a valid SQL client")
+  throw new Error("Unable to determine client for SQL datasource")
 }
 
 export async function getDatasourceAndQuery(
