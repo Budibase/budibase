@@ -106,6 +106,16 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
   )
   role._rev = result.rev
   ctx.body = role
+
+  const replication = new dbCore.Replication({
+    source: context.getDevAppDB().name,
+    target: context.getProdAppDB().name,
+  })
+  await replication.replicate({
+    filter: (doc: any, params: any) => {
+      return doc._id === _id
+    },
+  })
 }
 
 export async function destroy(ctx: UserCtx<void, DestroyRoleResponse>) {
