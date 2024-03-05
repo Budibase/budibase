@@ -1,5 +1,5 @@
 import env from "../environment"
-import Redis from "ioredis"
+import Redis, { Cluster } from "ioredis"
 // mock-redis doesn't have any typing
 let MockRedis: any | undefined
 if (env.MOCK_REDIS) {
@@ -28,7 +28,7 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-const CLIENTS: Record<number, Redis> = {}
+const CLIENTS: Record<number, Redis | Cluster> = {}
 let CONNECTED = false
 
 // mock redis always connected
@@ -201,12 +201,15 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = this.getClient().nodes("master")
+      let node = (this.getClient() as Cluster).nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
-      stream = this.getClient().scanStream({ match: key + "*", count: 100 })
+      stream = (this.getClient() as Redis).scanStream({
+        match: key + "*",
+        count: 100,
+      })
     }
-    return promisifyStream(stream, this.getClient())
+    return promisifyStream(stream, this.getClient() as any)
   }
 
   async keys(pattern: string) {
@@ -221,14 +224,16 @@ class RedisWrapper {
 
   async get(key: string) {
     const db = this._db
-    let response = await this.getClient().get(addDbPrefix(db, key))
+    const response = await this.getClient().get(addDbPrefix(db, key))
     // overwrite the prefixed key
+    // @ts-ignore
     if (response != null && response.key) {
+      // @ts-ignore
       response.key = key
     }
     // if its not an object just return the response
     try {
-      return JSON.parse(response)
+      return JSON.parse(response!)
     } catch (err) {
       return response
     }
@@ -280,7 +285,7 @@ class RedisWrapper {
     return this.getClient().ttl(prefixedKey)
   }
 
-  async setExpiry(key: string, expirySeconds: number | null) {
+  async setExpiry(key: string, expirySeconds: number) {
     const db = this._db
     const prefixedKey = addDbPrefix(db, key)
     await this.getClient().expire(prefixedKey, expirySeconds)
