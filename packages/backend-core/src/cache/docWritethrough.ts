@@ -51,7 +51,7 @@ docWritethroughProcessorQueue.process(async message => {
   const lockResponse = await locks.doWithLock(
     {
       type: LockType.TRY_TWICE,
-      name: LockName.PERSIST_WRITETHROUGH,
+      name: LockName.PERSIST_DOC_WRITETHROUGH,
       resource: cacheKeyPrefix,
       ttl: Duration.fromSeconds(60).toMs(),
     },
