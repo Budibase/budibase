@@ -41,22 +41,8 @@ const getContextValue = (path, context) => {
   return data
 }
 
-const snippets = {
-  Square: `
-    return function(num) {
-      return num * num
-    }
-  `,
-  HelloWorld: `
-   return "Hello, world!"
-  `,
-}
-
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
-  // for testing
-  context.snippets = snippets
-
   if (!isJSAllowed() || (isBackendService() && !runJS)) {
     throw new Error("JS disabled in environment.")
   }

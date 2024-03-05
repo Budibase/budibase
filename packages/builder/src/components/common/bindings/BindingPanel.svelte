@@ -25,6 +25,7 @@
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
+  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
@@ -38,6 +39,7 @@
   export let valid
   export let allowJS = false
   export let allowHelpers = true
+  export let allowSnippets = true
   export let context = null
   export let autofocusEditor = false
 
@@ -49,6 +51,7 @@
   const SidePanels = {
     Bindings: "FlashOn",
     Evaluation: "Play",
+    Snippets: "Code",
   }
 
   let initialValueJS = value?.startsWith?.("{{ js ")
@@ -64,10 +67,8 @@
   let evaluating = false
 
   $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
-  $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
-  $: sideTabs = context
-    ? [SidePanels.Evaluation, SidePanels.Bindings]
-    : [SidePanels.Bindings]
+  $: editorModeOptions = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
+  $: sidePanelOptions = getSidePanelOptions(context, allowSnippets, mode)
   $: enrichedBindings = enrichBindings(bindings, context)
   $: usingJS = mode === Modes.JavaScript
   $: editorMode =
@@ -77,6 +78,22 @@
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestUpdateEvaluation(runtimeExpression, context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+  $: {
+    if (!sidePanelOptions.includes(sidePanel)) {
+      sidePanel = SidePanels.Bindings
+    }
+  }
+
+  const getSidePanelOptions = (context, allowSnippets, mode) => {
+    let options = [SidePanels.Bindings]
+    if (context) {
+      options.unshift(SidePanels.Evaluation)
+    }
+    if (allowSnippets && mode === Modes.JavaScript) {
+      options.push(SidePanels.Snippets)
+    }
+    return options
+  }
 
   const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
     expressionResult = processStringSync(expression || "", context)
@@ -135,11 +152,22 @@
     bindingHelpers.onSelectBinding(js ? jsValue : hbsValue, binding, { js })
   }
 
+  const onSelectSnippet = snippet => {
+    bindingHelpers.onSelectSnippet(jsValue, snippet)
+  }
+
   const changeMode = newMode => {
     if (targetMode || newMode === mode) {
       return
     }
-    if (editorValue) {
+
+    // Get the raw editor value to see if we are abandoning changes
+    let rawValue = editorValue
+    if (mode === Modes.JavaScript) {
+      rawValue = decodeJSBinding(rawValue)
+    }
+
+    if (rawValue?.length) {
       targetMode = newMode
     } else {
       mode = newMode
@@ -178,26 +206,26 @@
     <div class="main">
       <div class="tabs">
         <div class="editor-tabs">
-          {#each editorTabs as tab}
+          {#each editorModeOptions as editorMode}
             <ActionButton
               size="M"
               quiet
-              selected={mode === tab}
-              on:click={() => changeMode(tab)}
+              selected={mode === editorMode}
+              on:click={() => changeMode(editorMode)}
             >
-              {capitalise(tab)}
+              {capitalise(editorMode)}
             </ActionButton>
           {/each}
         </div>
         <div class="side-tabs">
-          {#each sideTabs as tab}
+          {#each sidePanelOptions as panel}
             <ActionButton
               size="M"
               quiet
-              selected={sidePanel === tab}
-              on:click={() => changeSidePanel(tab)}
+              selected={sidePanel === panel}
+              on:click={() => changeSidePanel(panel)}
             >
-              <Icon name={tab} size="S" />
+              <Icon name={panel} size="S" />
             </ActionButton>
           {/each}
           {#if drawerContext && get(drawerContext.resizable)}
@@ -287,6 +315,8 @@
           {evaluating}
           expression={editorValue}
         />
+      {:else if sidePanel === SidePanels.Snippets}
+        <SnippetSidePanel addSnippet={onSelectSnippet} />
       {/if}
     </div>
   </div>
