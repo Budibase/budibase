@@ -11,7 +11,18 @@ export interface CreateAppRequest {
   includeSampleData?: boolean
   encryptionPassword?: string
   templateString?: string
-  file?: any
+  file?: { path: string }
+}
+
+export interface DuplicateAppRequest {
+  name: string
+  url?: string
+}
+
+export interface DuplicateAppResponse {
+  duplicateAppId: string
+  sourceAppId: string
+  message: string
 }
 
 export interface FetchAppDefinitionResponse {

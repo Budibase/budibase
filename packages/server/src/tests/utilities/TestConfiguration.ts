@@ -590,16 +590,6 @@ export default class TestConfiguration {
     })
   }
 
-  async duplicateApp(appId: string, fields: object) {
-    return context.doInTenant(
-      this.tenantId!,
-      async () =>
-        await this._req(appController.duplicateApp, fields, {
-          appId,
-        })
-    )
-  }
-
   async publish() {
     await this._req(deployController.publishApp)
     // @ts-ignore
