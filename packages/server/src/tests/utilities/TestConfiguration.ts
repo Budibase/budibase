@@ -712,11 +712,6 @@ export default class TestConfiguration {
     return this.api.row.save(tableId, config)
   }
 
-  async getRow(tableId: string, rowId: string): Promise<Row> {
-    const res = await this.api.row.get(tableId, rowId)
-    return res.body
-  }
-
   async getRows(tableId: string) {
     if (!tableId && this.table) {
       tableId = this.table._id!
