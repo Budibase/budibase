@@ -4,7 +4,7 @@
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import ExportAppModal from "./ExportAppModal.svelte"
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
-  import { auth, licensing } from "stores/portal"
+  import { licensing } from "stores/portal"
 
   export let app
   export let align = "right"

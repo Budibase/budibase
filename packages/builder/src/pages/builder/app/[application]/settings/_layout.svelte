@@ -4,7 +4,6 @@
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
   import { isOnlyUser, appStore } from "stores/builder"
-  import { auth } from "stores/portal"
 
   let deleteModal
 </script>
