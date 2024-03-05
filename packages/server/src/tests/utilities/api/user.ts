@@ -4,154 +4,79 @@ import {
   Flags,
   UserMetadata,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 import { DocumentInsertResponse } from "@budibase/nano"
 
 export class UserAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   fetch = async (
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<FetchUserMetadataResponse> => {
-    const res = await this.request
-      .get(`/api/users/metadata`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body
+    return await this._get<FetchUserMetadataResponse>("/api/users/metadata", {
+      expectations,
+    })
   }
 
   find = async (
     id: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<FindUserMetadataResponse> => {
-    const res = await this.request
-      .get(`/api/users/metadata/${id}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body
+    return await this._get<FindUserMetadataResponse>(
+      `/api/users/metadata/${id}`,
+      {
+        expectations,
+      }
+    )
   }
 
   update = async (
     user: UserMetadata,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<DocumentInsertResponse> => {
-    const res = await this.request
-      .put(`/api/users/metadata`)
-      .set(this.config.defaultHeaders())
-      .send(user)
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body as DocumentInsertResponse
+    return await this._put<DocumentInsertResponse>("/api/users/metadata", {
+      body: user,
+      expectations,
+    })
   }
 
   updateSelf = async (
     user: UserMetadata,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<DocumentInsertResponse> => {
-    const res = await this.request
-      .post(`/api/users/metadata/self`)
-      .set(this.config.defaultHeaders())
-      .send(user)
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body as DocumentInsertResponse
+    return await this._post<DocumentInsertResponse>(
+      "/api/users/metadata/self",
+      {
+        body: user,
+        expectations,
+      }
+    )
   }
 
   destroy = async (
     id: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<{ message: string }> => {
-    const res = await this.request
-      .delete(`/api/users/metadata/${id}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body as { message: string }
+    return await this._delete<{ message: string }>(
+      `/api/users/metadata/${id}`,
+      {
+        expectations,
+      }
+    )
   }
 
   setFlag = async (
     flag: string,
     value: any,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<{ message: string }> => {
-    const res = await this.request
-      .post(`/api/users/flags`)
-      .set(this.config.defaultHeaders())
-      .send({ flag, value })
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body as { message: string }
+    return await this._post<{ message: string }>(`/api/users/flags`, {
+      body: { flag, value },
+      expectations,
+    })
   }
 
-  getFlags = async (
-    { expectStatus } = { expectStatus: 200 }
-  ): Promise<Flags> => {
-    const res = await this.request
-      .get(`/api/users/flags`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-
-    if (res.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          res.status
-        } with body ${JSON.stringify(res.body)}`
-      )
-    }
-
-    return res.body as Flags
+  getFlags = async (expectations?: Expectations): Promise<Flags> => {
+    return await this._get<Flags>(`/api/users/flags`, {
+      expectations,
+    })
   }
 }
