@@ -25,7 +25,7 @@ import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
 import sdk from "../sdk"
 
-const DEFINITIONS: { [key: SourceName]: Integration | undefined } = {
+const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.POSTGRES]: postgres.schema,
   [SourceName.DYNAMODB]: dynamodb.schema,
   [SourceName.MONGODB]: mongodb.schema,
@@ -45,7 +45,7 @@ const DEFINITIONS: { [key: SourceName]: Integration | undefined } = {
   [SourceName.BUDIBASE]: undefined,
 }
 
-const INTEGRATIONS: { [key: SourceName]: IntegrationBase | undefined } = {
+const INTEGRATIONS: Record<SourceName, any> = {
   [SourceName.POSTGRES]: postgres.integration,
   [SourceName.DYNAMODB]: dynamodb.integration,
   [SourceName.MONGODB]: mongodb.integration,
