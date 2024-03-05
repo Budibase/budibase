@@ -7,11 +7,31 @@ import {
   Table,
   TableSchema,
   DatasourcePlusQueryResponse,
+  Datasource,
+  SourceName,
 } from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
+import { SqlClient } from "../../../integrations/utils"
+
+export function getSQLClient(datasource: Datasource): SqlClient {
+  if (!datasource.isSQL) {
+    throw new Error("Cannot get SQL Client for non-SQL datasource")
+  }
+  switch (datasource.source) {
+    case SourceName.POSTGRES:
+      return SqlClient.POSTGRES
+    case SourceName.MYSQL:
+      return SqlClient.MY_SQL
+    case SourceName.ORACLE:
+      return SqlClient.ORACLE
+    case SourceName.SQL_SERVER:
+      return SqlClient.MS_SQL
+  }
+  throw new Error("Unable to find a valid SQL client")
+}
 
 export async function getDatasourceAndQuery(
   json: QueryJson
