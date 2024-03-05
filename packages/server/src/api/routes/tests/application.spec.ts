@@ -318,4 +318,18 @@ describe("/applications", () => {
       expect(devLogs.data.length).toBe(0)
     })
   })
+
+  describe("permissions", () => {
+    it("should only return apps a user has access to", async () => {
+      const user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+    })
+  })
 })
