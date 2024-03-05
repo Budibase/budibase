@@ -4,7 +4,8 @@ import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
 import * as locks from "../redis/redlockImpl"
 
 import { JobQueue, createQueue } from "../queue"
-import { context, db as dbUtils } from ".."
+import * as context from "../context"
+import * as dbUtils from "../db"
 
 const DEFAULT_WRITE_RATE_MS = 10000
 
@@ -28,50 +29,71 @@ export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
   JobQueue.DOC_WRITETHROUGH_QUEUE
 )
 
-docWritethroughProcessorQueue.process(async message => {
-  const { dbName, tenantId, docId, cacheKeyPrefix } = message.data
-  const cache = await getCache()
-  await context.doInTenant(tenantId, async () => {
-    const lockResponse = await locks.doWithLock(
-      {
-        type: LockType.TRY_ONCE,
-        name: LockName.PERSIST_WRITETHROUGH,
-        resource: cacheKeyPrefix,
-        ttl: 15000,
-      },
-      async () => {
-        const db = dbUtils.getDB(dbName)
-        let doc: AnyDocument | undefined
-        try {
-          doc = await db.get(docId)
-        } catch {
-          doc = { _id: docId }
+let _init = false
+export const init = () => {
+  if (_init) {
+    return
+  }
+  docWritethroughProcessorQueue.process(async message => {
+    const { tenantId, cacheKeyPrefix } = message.data
+    await context.doInTenant(tenantId, async () => {
+      const lockResponse = await locks.doWithLock(
+        {
+          type: LockType.TRY_ONCE,
+          name: LockName.PERSIST_WRITETHROUGH,
+          resource: cacheKeyPrefix,
+          ttl: 15000,
+        },
+        async () => {
+          await persistToDb(message.data)
         }
+      )
 
-        const keysToPersist = await cache.keys(`${cacheKeyPrefix}:data:*`)
-        for (const key of keysToPersist) {
-          const data = await cache.get(key, { useTenancy: false })
-          doc[data.key] = data.value
-        }
-
-        await db.put(doc)
-
-        for (const key of keysToPersist) {
-          await cache.delete(key, { useTenancy: false })
-        }
+      if (!lockResponse.executed) {
+        console.log(`Ignoring redlock conflict in write-through cache`)
       }
-    )
-
-    if (!lockResponse.executed) {
-      console.log(`Ignoring redlock conflict in write-through cache`)
-    }
+    })
   })
-})
+  _init = true
+}
+
+export async function persistToDb({
+  dbName,
+  docId,
+  cacheKeyPrefix,
+}: {
+  dbName: string
+  docId: string
+  cacheKeyPrefix: string
+}) {
+  const cache = await getCache()
+
+  const db = dbUtils.getDB(dbName)
+  let doc: AnyDocument | undefined
+  try {
+    doc = await db.get(docId)
+  } catch {
+    doc = { _id: docId }
+  }
+
+  const keysToPersist = await cache.keys(`${cacheKeyPrefix}:data:*`)
+  for (const key of keysToPersist) {
+    const data = await cache.get(key, { useTenancy: false })
+    doc[data.key] = data.value
+  }
+
+  await db.put(doc)
+
+  for (const key of keysToPersist) {
+    await cache.delete(key, { useTenancy: false })
+  }
+}
 
 export class DocWritethrough {
   private db: Database
   private _docId: string
   private writeRateMs: number
+  private tenantId: string
 
   private cacheKeyPrefix: string
 
@@ -84,6 +106,7 @@ export class DocWritethrough {
     this._docId = docId
     this.writeRateMs = writeRateMs
     this.cacheKeyPrefix = `${this.db.name}:${this.docId}`
+    this.tenantId = context.getTenantId()
   }
 
   get docId() {
@@ -97,13 +120,13 @@ export class DocWritethrough {
 
     docWritethroughProcessorQueue.add(
       {
-        tenantId: context.getTenantId(),
+        tenantId: this.tenantId,
         dbName: this.db.name,
         docId: this.docId,
         cacheKeyPrefix: this.cacheKeyPrefix,
       },
       {
-        delay: this.writeRateMs - 1,
+        delay: this.writeRateMs,
         jobId: this.cacheKeyPrefix,
         removeOnFail: true,
         removeOnComplete: true,
