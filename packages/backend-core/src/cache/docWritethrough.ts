@@ -66,6 +66,11 @@ docWritethroughProcessorQueue.process(async message => {
 
       await persistToDb(cache, message.data)
       console.log("DocWritethrough persisted", { data: message.data })
+
+      await cache.deleteIfValue(
+        REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID,
+        latestMessageId
+      )
     }
   )
 

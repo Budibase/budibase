@@ -108,4 +108,13 @@ export default class BaseCache {
       throw err
     }
   }
+
+  /**
+   * Delete the entry if the provided value matches the stored one.
+   */
+  async deleteIfValue(key: string, value: any, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    await client.deleteIfValue(key, value)
+  }
 }
