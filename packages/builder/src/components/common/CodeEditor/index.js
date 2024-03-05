@@ -166,7 +166,7 @@ export const buildBindingInfoNode = (completion, binding) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
-  if (binding.valueHTML) {
+  if (binding.value != null && binding.valueHTML) {
     ele.innerHTML = `<div class="binding__example">${binding.valueHTML}</div>`
     return ele
   }
