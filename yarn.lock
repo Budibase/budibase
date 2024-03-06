@@ -5408,7 +5408,7 @@
   resolved "https://registry.yarnpkg.com/@types/http-errors/-/http-errors-2.0.1.tgz#20172f9578b225f6c7da63446f56d4ce108d5a65"
   integrity sha512-/K3ds8TRAfBvi5vfjuz8y6+GiAYBZ0x4tXv1Av6CWBWn0IlADc+ZX9pMq7oU0fNQPnBwIZl3rmeLp6SBApbxSQ==
 
-"@types/ioredis@4.28.10":
+"@types/ioredis@4.28.10", "@types/ioredis@^4.28.10":
   version "4.28.10"
   resolved "https://registry.yarnpkg.com/@types/ioredis/-/ioredis-4.28.10.tgz#40ceb157a4141088d1394bb87c98ed09a75a06ff"
   integrity sha512-69LyhUgrXdgcNDv7ogs1qXZomnfOEnSmrmMFqKgt1XMJxmoOSG/u3wYy13yACIfKuMJ8IhKgHafDO3sx19zVQQ==
@@ -5896,12 +5896,13 @@
   dependencies:
     "@types/node" "*"
 
-"@types/redlock@4.0.3":
-  version "4.0.3"
-  resolved "https://registry.yarnpkg.com/@types/redlock/-/redlock-4.0.3.tgz#aeab5fe5f0d433a125f6dcf9a884372ac0cddd4b"
-  integrity sha512-mcvvrquwREbAqyZALNBIlf49AL9Aa324BG+J/Dv4TAP8g+nxQMBI4/APNqqS99QEY7VTNT9XvsaczCVGK8uNnQ==
+"@types/redlock@4.0.7":
+  version "4.0.7"
+  resolved "https://registry.yarnpkg.com/@types/redlock/-/redlock-4.0.7.tgz#33ed56f22a38d6b2f2e6ae5ed1b3fc1875a08e6b"
+  integrity sha512-5D6egBv0fCfdbmnCETjEynVuiwFMEFFc3YFjh9EwhaaVTAi0YmB6UI1swq1S1rjIu+n27ppmlTFDK3D3cadJqg==
   dependencies:
     "@types/bluebird" "*"
+    "@types/ioredis" "^4.28.10"
     "@types/redis" "^2.8.0"
 
 "@types/request@^2.48.7":
