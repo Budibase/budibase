@@ -1,12 +1,11 @@
+import _ from "lodash"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { getDB } from "../../db"
-import _ from "lodash"
 
-import {
-  DocWritethrough,
-  docWritethroughProcessorQueue,
-} from "../docWritethrough"
+import { DocWritethrough, processor } from "../docWritethrough"
+
 import InMemoryQueue from "../../queue/inMemoryQueue"
+import { docWritethroughProcessorQueue } from "../docWritethrough"
 
 const WRITE_RATE_MS = 1000
 
@@ -240,12 +239,13 @@ describe("docWritethrough", () => {
           )
         )
       }
-
+      const persistToDbSpy = jest.spyOn(processor as any, "persistToDb")
       const storeToCacheSpy = jest.spyOn(docWritethrough as any, "storeToCache")
 
       await config.doInTenant(async () => {
         await parallelPatch(5)
         expect(storeToCacheSpy).toBeCalledTimes(5)
+        expect(persistToDbSpy).not.toBeCalled()
         expect(await db.exists(documentId)).toBe(false)
 
         await travelForward(WRITE_RATE_MS)
@@ -253,7 +253,7 @@ describe("docWritethrough", () => {
         await parallelPatch(40)
 
         expect(storeToCacheSpy).toBeCalledTimes(45)
-
+        expect(persistToDbSpy).toBeCalledTimes(1)
         // Ideally we want to spy on persistToDb from ./docWritethrough, but due our barrel files configuration required quite of a complex setup.
         // We are relying on the document being stored only once (otherwise we would have _rev updated)
         expect(await db.get(documentId)).toEqual(

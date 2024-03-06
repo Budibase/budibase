@@ -1,11 +1,11 @@
+import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
 import BaseCache from "./base"
 import { getDocWritethroughClient } from "../redis/init"
-import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
 import { Duration, newid } from "../utils"
-import { context, locks } from ".."
+import { locks } from ".."
 
 let CACHE: BaseCache | null = null
 async function getCache() {
@@ -36,26 +36,12 @@ export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
   }
 )
 
-docWritethroughProcessorQueue.process(async message => {
-  const { cacheKeyPrefix, messageId } = message.data
+class DocWritethroughProcessor {
+  init() {
+    docWritethroughProcessorQueue.process(async message => {
+      const { cacheKeyPrefix, messageId } = message.data
 
-  const cache = await getCache()
-  const latestMessageId = await cache.get(
-    REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID
-  )
-  if (messageId !== latestMessageId) {
-    // Nothing to do, another message overrode it
-    return
-  }
-
-  const lockResponse = await locks.doWithLock(
-    {
-      type: LockType.TRY_TWICE,
-      name: LockName.PERSIST_DOC_WRITETHROUGH,
-      resource: cacheKeyPrefix,
-      ttl: Duration.fromSeconds(60).toMs(),
-    },
-    async () => {
+      const cache = await getCache()
       const latestMessageId = await cache.get(
         REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID
       )
@@ -64,55 +50,76 @@ docWritethroughProcessorQueue.process(async message => {
         return
       }
 
-      await persistToDb(cache, message.data)
-      console.log("DocWritethrough persisted", { data: message.data })
+      const lockResponse = await locks.doWithLock(
+        {
+          type: LockType.TRY_TWICE,
+          name: LockName.PERSIST_DOC_WRITETHROUGH,
+          resource: cacheKeyPrefix,
+          ttl: Duration.fromSeconds(60).toMs(),
+        },
+        async () => {
+          const latestMessageId = await cache.get(
+            REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID
+          )
+          if (messageId !== latestMessageId) {
+            // Nothing to do, another message overrode it
+            return
+          }
 
-      await cache.deleteIfValue(
-        REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID,
-        latestMessageId
+          await this.persistToDb(cache, message.data)
+          console.log("DocWritethrough persisted", { data: message.data })
+
+          await cache.deleteIfValue(
+            REDIS_KEYS(cacheKeyPrefix).LATEST_MESSAGE_ID,
+            latestMessageId
+          )
+        }
       )
+
+      if (!lockResponse.executed) {
+        throw new Error(`Ignoring redlock conflict in write-through cache`)
+      }
+    })
+    return this
+  }
+
+  private async persistToDb(
+    cache: BaseCache,
+    {
+      dbName,
+      docId,
+      cacheKeyPrefix,
+    }: {
+      dbName: string
+      docId: string
+      cacheKeyPrefix: string
     }
-  )
+  ) {
+    const db = dbUtils.getDB(dbName)
+    let doc: AnyDocument | undefined
+    try {
+      doc = await db.get(docId)
+    } catch {
+      doc = { _id: docId }
+    }
 
-  if (!lockResponse.executed) {
-    throw new Error(`Ignoring redlock conflict in write-through cache`)
-  }
-})
+    const keysToPersist = await cache.keys(
+      REDIS_KEYS(cacheKeyPrefix).DATA.GET_ALL
+    )
+    for (const key of keysToPersist) {
+      const data = await cache.get(key, { useTenancy: false })
+      doc[data.key] = data.value
+    }
 
-export async function persistToDb(
-  cache: BaseCache,
-  {
-    dbName,
-    docId,
-    cacheKeyPrefix,
-  }: {
-    dbName: string
-    docId: string
-    cacheKeyPrefix: string
-  }
-) {
-  const db = dbUtils.getDB(dbName)
-  let doc: AnyDocument | undefined
-  try {
-    doc = await db.get(docId)
-  } catch {
-    doc = { _id: docId }
-  }
+    await db.put(doc)
 
-  const keysToPersist = await cache.keys(
-    REDIS_KEYS(cacheKeyPrefix).DATA.GET_ALL
-  )
-  for (const key of keysToPersist) {
-    const data = await cache.get(key, { useTenancy: false })
-    doc[data.key] = data.value
-  }
-
-  await db.put(doc)
-
-  for (const key of keysToPersist) {
-    await cache.delete(key, { useTenancy: false })
+    for (const key of keysToPersist) {
+      await cache.delete(key, { useTenancy: false })
+    }
   }
 }
+
+export const processor = new DocWritethroughProcessor().init()
 
 export class DocWritethrough {
   private db: Database
