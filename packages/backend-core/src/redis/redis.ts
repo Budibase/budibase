@@ -324,6 +324,14 @@ class RedisWrapper {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
   }
+
+  async increment(key: string) {
+    const result = await this.getClient().incr(addDbPrefix(this._db, key))
+    if (isNaN(result)) {
+      throw new Error(`Redis ${key} does not contain a number`)
+    }
+    return result
+  }
 }
 
 export default RedisWrapper
