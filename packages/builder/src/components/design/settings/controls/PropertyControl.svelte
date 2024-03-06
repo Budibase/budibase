@@ -20,16 +20,22 @@
   export let bindings = []
   export let componentBindings = []
   export let nested = false
-  export let highlighted = false
   export let propertyFocus = false
   export let info = null
   export let disableBindings = false
   export let wide
 
-  $: nullishValue = value == null || value === ""
+  let highlightType
+
+  $: highlightedProp = $builderStore.highlightedSetting
   $: allBindings = getAllBindings(bindings, componentBindings, nested)
   $: safeValue = getSafeValue(value, defaultValue, allBindings)
   $: replaceBindings = val => readableToRuntimeBinding(allBindings, val)
+
+  $: if (!Array.isArray(value)) {
+    highlightType =
+      highlightedProp?.key === key ? `highlighted-${highlightedProp?.type}` : ""
+  }
 
   const getAllBindings = (bindings, componentBindings, nested) => {
     if (!nested) {
@@ -71,16 +77,17 @@
   }
 
   onDestroy(() => {
-    if (highlighted) {
+    if (highlightedProp) {
       builderStore.highlightSetting(null)
     }
   })
 </script>
 
 <div
-  class="property-control"
+  id={`${key}-prop-control-wrap`}
+  class={`property-control ${highlightType}`}
   class:wide={!label || labelHidden || wide === true}
-  class:highlighted={highlighted && nullishValue}
+  class:highlighted={highlightType}
   class:property-focus={propertyFocus}
 >
   {#if label && !labelHidden}
@@ -115,6 +122,16 @@
 </div>
 
 <style>
+  .property-control.highlighted.highlighted-info {
+    border-color: var(--spectrum-semantic-informative-color-background);
+  }
+  .property-control.highlighted.highlighted-error {
+    border-color: var(--spectrum-global-color-static-red-600);
+  }
+  .property-control.highlighted.highlighted-warning {
+    border-color: var(--spectrum-global-color-static-orange-700);
+  }
+
   .property-control {
     position: relative;
     display: grid;
@@ -132,6 +149,10 @@
   .property-control.highlighted {
     background: var(--spectrum-global-color-gray-300);
     border-color: var(--spectrum-global-color-static-red-600);
+    margin-top: -3.5px;
+    margin-bottom: -3.5px;
+    padding-bottom: 3.5px;
+    padding-top: 3.5px;
   }
 
   .property-control.property-focus :global(input) {
