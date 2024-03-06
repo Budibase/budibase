@@ -26,6 +26,7 @@ import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
 tk.freeze(mocks.date.MOCK_DATE)
 
 const { basicTable } = setup.structures
+const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 describe("/tables", () => {
   let request = setup.getRequest()
@@ -285,6 +286,35 @@ describe("/tables", () => {
         expect(res.body.schema.roleId).toBeDefined()
       })
     })
+
+    it("should add a new column for an internal DB table", async () => {
+      const saveTableRequest: SaveTableRequest = {
+        _add: {
+          name: "NEW_COLUMN",
+        },
+        ...basicTable(),
+      }
+
+      const response = await request
+        .post(`/api/tables`)
+        .send(saveTableRequest)
+        .set(config.defaultHeaders())
+        .expect("Content-Type", /json/)
+        .expect(200)
+
+      const expectedResponse = {
+        ...saveTableRequest,
+        _rev: expect.stringMatching(/^\d-.+/),
+        _id: expect.stringMatching(/^ta_.+/),
+        createdAt: expect.stringMatching(ISO_REGEX_PATTERN),
+        updatedAt: expect.stringMatching(ISO_REGEX_PATTERN),
+        views: {},
+      }
+      delete expectedResponse._add
+
+      expect(response.status).toBe(200)
+      expect(response.body).toEqual(expectedResponse)
+    })
   })
 
   describe("import", () => {
@@ -368,10 +398,12 @@ describe("/tables", () => {
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
-      const fetchedTable = res.body[0]
-      expect(fetchedTable.name).toEqual(testTable.name)
-      expect(fetchedTable.type).toEqual("table")
-      expect(fetchedTable.sourceType).toEqual("internal")
+
+      const table = res.body.find((t: Table) => t._id === testTable._id)
+      expect(table).toBeDefined()
+      expect(table.name).toEqual(testTable.name)
+      expect(table.type).toEqual("table")
+      expect(table.sourceType).toEqual("internal")
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -661,8 +693,7 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const resp = await config.api.row.get(table._id!, testRow._id!)
-      const migratedRow = resp.body as Row
+      const migratedRow = await config.api.row.get(table._id!, testRow._id!)
 
       expect(migratedRow["user column"]).toBeDefined()
       expect(migratedRow["user relationship"]).not.toBeDefined()
@@ -714,15 +745,13 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
-        .body as Row
+      const row1Migrated = await config.api.row.get(table._id!, row1._id!)
       expect(row1Migrated["user relationship"]).not.toBeDefined()
       expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[0]._id, users[1]._id])
       )
 
-      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
-        .body as Row
+      const row2Migrated = await config.api.row.get(table._id!, row2._id!)
       expect(row2Migrated["user relationship"]).not.toBeDefined()
       expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[1]._id, users[2]._id])
@@ -771,15 +800,13 @@ describe("/tables", () => {
       expect(migratedTable.schema["user column"]).toBeDefined()
       expect(migratedTable.schema["user relationship"]).not.toBeDefined()
 
-      const row1Migrated = (await config.api.row.get(table._id!, row1._id!))
-        .body as Row
+      const row1Migrated = await config.api.row.get(table._id!, row1._id!)
       expect(row1Migrated["user relationship"]).not.toBeDefined()
       expect(row1Migrated["user column"].map((r: Row) => r._id)).toEqual(
         expect.arrayContaining([users[0]._id, users[1]._id])
       )
 
-      const row2Migrated = (await config.api.row.get(table._id!, row2._id!))
-        .body as Row
+      const row2Migrated = await config.api.row.get(table._id!, row2._id!)
       expect(row2Migrated["user relationship"]).not.toBeDefined()
       expect(row2Migrated["user column"].map((r: Row) => r._id)).toEqual([
         users[2]._id,
@@ -829,7 +856,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -844,7 +871,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -859,7 +886,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
 
@@ -878,7 +905,7 @@ describe("/tables", () => {
               subtype: FieldSubtype.USERS,
             },
           },
-          { expectStatus: 400 }
+          { status: 400 }
         )
       })
     })

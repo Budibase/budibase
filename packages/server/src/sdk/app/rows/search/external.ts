@@ -11,7 +11,10 @@ import {
 import * as exporters from "../../../../api/controllers/view/exporters"
 import sdk from "../../../../sdk"
 import { handleRequest } from "../../../../api/controllers/row/external"
-import { breakExternalTableId } from "../../../../integrations/utils"
+import {
+  breakExternalTableId,
+  breakRowIdField,
+} from "../../../../integrations/utils"
 import { cleanExportRows } from "../utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "../search"
@@ -50,6 +53,15 @@ export async function search(options: SearchParams) {
     sort = {
       [params.sort]: { direction },
     }
+  }
+
+  // Make sure oneOf _id queries decode the Row IDs
+  if (query?.oneOf?._id) {
+    const rowIds = query.oneOf._id
+    query.oneOf._id = rowIds.map((row: string) => {
+      const ids = breakRowIdField(row)
+      return ids[0]
+    })
   }
 
   try {
@@ -101,7 +113,17 @@ export async function search(options: SearchParams) {
 export async function exportRows(
   options: ExportRowsParams
 ): Promise<ExportRowsResult> {
-  const { tableId, format, columns, rowIds, query, sort, sortOrder } = options
+  const {
+    tableId,
+    format,
+    columns,
+    rowIds,
+    query,
+    sort,
+    sortOrder,
+    delimiter,
+    customHeaders,
+  } = options
   const { datasourceId, tableName } = breakExternalTableId(tableId)
 
   let requestQuery: SearchFilters = {}
@@ -109,9 +131,7 @@ export async function exportRows(
     requestQuery = {
       oneOf: {
         _id: rowIds.map((row: string) => {
-          const ids = JSON.parse(
-            decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
-          )
+          const ids = breakRowIdField(row)
           if (ids.length > 1) {
             throw new HTTPError(
               "Export data does not support composite keys.",
@@ -153,12 +173,17 @@ export async function exportRows(
     rows = result.rows
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns)
+  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
 
   let content: string
   switch (format) {
     case exporters.Format.CSV:
-      content = exporters.csv(headers ?? Object.keys(schema), exportRows)
+      content = exporters.csv(
+        headers ?? Object.keys(schema),
+        exportRows,
+        delimiter,
+        customHeaders
+      )
       break
     case exporters.Format.JSON:
       content = exporters.json(exportRows)

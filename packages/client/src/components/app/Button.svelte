@@ -11,7 +11,7 @@
   export let text = ""
   export let onClick
   export let size = "M"
-  export let type = "primary"
+  export let type = "cta"
   export let quiet = false
 
   // For internal use only for now - not defined in the manifest
