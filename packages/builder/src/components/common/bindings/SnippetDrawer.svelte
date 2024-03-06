@@ -17,6 +17,7 @@
   export const hide = () => drawer.hide()
 
   const roughValidNameRegex = /^[_$A-Z\xA0-\uFFFF][_$A-Z0-9\xA0-\uFFFF]*$/i
+  const firstCharNumberRegex = /^[0-9].*$/
 
   let drawer
   let name = ""
@@ -26,7 +27,7 @@
   $: name = snippet?.name || "MySnippet"
   $: code = snippet?.code ? encodeJSBinding(snippet.code) : ""
   $: rawJS = decodeJSBinding(code)
-  $: nameValid = validateName(name)
+  $: nameError = validateName(name)
 
   const saveSnippet = async () => {
     await snippetStore.saveSnippet({
@@ -48,14 +49,20 @@
   // try executing it and see if it's valid JS. The initial regex prevents
   // against any potential XSS attacks here.
   const validateName = name => {
+    if (!name?.length) {
+      return "Name is required"
+    }
+    if (firstCharNumberRegex.test(name)) {
+      return "Can't start with a number"
+    }
     if (!roughValidNameRegex.test(name)) {
-      return false
+      return "No special characters or spaces"
     }
     const js = `(function ${name}(){return true})()`
     try {
-      return eval(js) === true
+      return eval(js) === true ? null : "Invalid name"
     } catch (error) {
-      return false
+      return "Invalid name"
     }
   }
 </script>
@@ -65,14 +72,11 @@
     {#if snippet}
       {snippet.name}
     {:else}
-      <div class="name" class:invalid={!nameValid}>
+      <div class="name" class:invalid={nameError != null}>
         <span>Name</span>
         <Input bind:value={name} />
-        {#if !nameValid}
-          <AbsTooltip
-            text="Alphanumeric characters only, with no spaces"
-            type={TooltipType.Negative}
-          >
+        {#if nameError}
+          <AbsTooltip text={nameError} type={TooltipType.Negative}>
             <Icon
               name="Help"
               size="S"
@@ -87,7 +91,7 @@
     {#if snippet}
       <Button warning on:click={deleteSnippet}>Delete</Button>
     {/if}
-    <Button cta on:click={saveSnippet} disabled={!rawJS?.length || !nameValid}>
+    <Button cta on:click={saveSnippet} disabled={nameError != null}>
       Save
     </Button>
   </svelte:fragment>
@@ -117,8 +121,11 @@
     align-items: center;
     position: relative;
   }
-  .name.invalid :global(input) {
+  .name :global(input) {
     width: 200px;
+  }
+  .name.invalid :global(input) {
+    padding-right: 32px;
   }
   .name :global(.icon) {
     position: absolute;
