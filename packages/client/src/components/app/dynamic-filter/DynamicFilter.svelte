@@ -92,9 +92,9 @@
 {#if schemaLoaded}
   <Button
     onClick={openEditor}
-    icon="Properties"
+    icon="ri-stackshare-line"
     text="Filter"
-    {size}
+    size="XL"
     type="secondary"
     quiet
     active={filters?.length > 0}
