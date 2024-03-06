@@ -140,7 +140,16 @@
       </div>
       <div class="search-input">
         <div class="input-wrapper" style={`width: ${value ? "425" : "510"}px`}>
-          <Input bind:value={searchTerm} thin placeholder="Search Icon" />
+          <Input
+            bind:value={searchTerm}
+            on:keyup={event => {
+              if (event.key === "Enter") {
+                searchForIcon()
+              }
+            }}
+            thin
+            placeholder="Search Icon"
+          />
         </div>
         <Button secondary on:click={searchForIcon}>Search</Button>
         {#if value}
