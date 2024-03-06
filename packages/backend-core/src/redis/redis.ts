@@ -332,6 +332,18 @@ class RedisWrapper {
     }
     return result
   }
+
+  async deleteIfValue(key: string, value: any) {
+    const client = this.getClient()
+
+    const luaScript = `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        redis.call('DEL', KEYS[1])
+      end
+      `
+
+    await client.eval(luaScript, 1, addDbPrefix(this._db, key), value)
+  }
 }
 
 export default RedisWrapper

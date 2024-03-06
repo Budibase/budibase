@@ -189,4 +189,26 @@ describe("redis", () => {
       )
     })
   })
+
+  describe("deleteIfValue", () => {
+    it("can delete if the value matches", async () => {
+      const key = structures.uuid()
+      const value = generator.word()
+      await redis.store(key, value)
+
+      await redis.deleteIfValue(key, value)
+
+      expect(await redis.get(key)).toBeNull()
+    })
+
+    it("will not delete if the value does not matches", async () => {
+      const key = structures.uuid()
+      const value = generator.word()
+      await redis.store(key, value)
+
+      await redis.deleteIfValue(key, generator.word())
+
+      expect(await redis.get(key)).toEqual(value)
+    })
+  })
 })
