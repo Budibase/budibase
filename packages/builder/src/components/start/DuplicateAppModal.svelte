@@ -9,7 +9,7 @@
   import { createValidationStore } from "helpers/validation/yup"
   import { writable, get } from "svelte/store"
   import * as appValidation from "helpers/validation/yup/app"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import { onMount } from "svelte"
   import { API } from "api"
 
@@ -67,7 +67,7 @@
 
     try {
       await API.duplicateApp(data, appId)
-      apps.load()
+      appsStore.load()
       notifications.success("App duplicated successfully")
     } catch (err) {
       notifications.error("Error duplicating app")
@@ -76,7 +76,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = get(apps)
+    const applications = get(appsStore).apps
     appValidation.name(validation, { apps: applications })
     appValidation.url(validation, { apps: applications })
 

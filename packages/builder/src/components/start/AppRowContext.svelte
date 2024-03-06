@@ -3,14 +3,68 @@
   import DeleteModal from "components/deploy/DeleteModal.svelte"
   import ExportAppModal from "./ExportAppModal.svelte"
   import DuplicateAppModal from "./DuplicateAppModal.svelte"
+  import { onMount } from "svelte"
 
   export let app
   export let align = "right"
+  export let options
 
   let deleteModal
   let exportModal
   let duplicateModal
   let exportPublishedVersion = false
+  let loaded = false
+
+  const getActions = app => {
+    if (!loaded) {
+      return []
+    }
+    return [
+      {
+        id: "duplicate",
+        icon: "Copy",
+        onClick: duplicateModal.show,
+        body: "Duplicate",
+      },
+      {
+        id: "exportDev",
+        icon: "Export",
+        onClick: () => {
+          exportPublishedVersion = false
+          exportModal.show()
+        },
+        body: "Export latest edited app",
+      },
+      {
+        id: "exportProd",
+        icon: "Export",
+        onClick: () => {
+          exportPublishedVersion = true
+          exportModal.show()
+        },
+        body: "Export latest published app",
+      },
+      {
+        id: "delete",
+        icon: "Delete",
+        onClick: deleteModal.show,
+        body: "Delete",
+      },
+    ].filter(action => {
+      if (action.id === "exportProd" && app.deployed !== true) {
+        return false
+      } else if (Array.isArray(options) && !options.includes(action.id)) {
+        return false
+      }
+      return true
+    })
+  }
+
+  $: actions = getActions(app, loaded)
+
+  onMount(() => {
+    loaded = true
+  })
 </script>
 
 <DeleteModal
@@ -32,40 +86,10 @@
   <div slot="control" class="icon">
     <Icon size="S" hoverable name="MoreSmallList" />
   </div>
-  <MenuItem
-    icon="Copy"
-    on:click={() => {
-      duplicateModal.show()
-    }}
-  >
-    Duplicate
-  </MenuItem>
-  <MenuItem
-    icon="Export"
-    on:click={() => {
-      exportPublishedVersion = false
-      exportModal.show()
-    }}
-  >
-    Export latest edited app
-  </MenuItem>
-  {#if app.deployed}
-    <MenuItem
-      icon="Export"
-      on:click={() => {
-        exportPublishedVersion = true
-        exportModal.show()
-      }}
-    >
-      Export latest published app
+
+  {#each actions as action}
+    <MenuItem icon={action.icon} on:click={action.onClick}>
+      {action.body}
     </MenuItem>
-  {/if}
-  <MenuItem
-    icon="Delete"
-    on:click={() => {
-      deleteModal.show()
-    }}
-  >
-    Delete
-  </MenuItem>
+  {/each}
 </ActionMenu>

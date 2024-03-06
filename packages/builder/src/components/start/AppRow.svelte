@@ -6,9 +6,12 @@
   import { UserAvatars } from "@budibase/frontend-core"
   import { sdk } from "@budibase/shared-core"
   import AppRowContext from "./AppRowContext.svelte"
+  import FavouriteAppButton from "pages/builder/portal/apps/FavouriteAppButton.svelte"
 
   export let app
   export let lockedAction
+
+  let actionsOpen = false
 
   $: editing = app.sessions?.length
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
@@ -43,8 +46,10 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="app-row"
-  on:click={lockedAction || handleDefaultClick}
   class:unclickable
+  class:actionsOpen
+  class:favourite={app.favourite}
+  on:click={lockedAction || handleDefaultClick}
 >
   <div class="title">
     <div class="app-icon">
@@ -76,11 +81,28 @@
   </div>
 
   {#if isBuilder}
-    <div class="app-row-actions">
-      <Button size="S" secondary on:click={lockedAction || goToBuilder}>
-        Edit
-      </Button>
-      <AppRowContext {app} />
+    <div class="actions-wrap">
+      <div class="app-row-actions">
+        <div class="row-action">
+          <Button size="S" secondary on:click={lockedAction || goToBuilder}>
+            Edit
+          </Button>
+        </div>
+        <div class="row-action">
+          <AppRowContext
+            {app}
+            on:open={() => {
+              actionsOpen = true
+            }}
+            on:close={() => {
+              actionsOpen = false
+            }}
+          />
+        </div>
+      </div>
+      <div class="favourite-icon">
+        <FavouriteAppButton {app} noWrap />
+      </div>
     </div>
   {:else if app.deployed}
     <!-- this can happen if an app builder has app user access to an app -->
@@ -105,6 +127,16 @@
   .app-row:not(.unclickable):hover {
     cursor: pointer;
     border-color: var(--spectrum-global-color-gray-300);
+  }
+
+  .app-row .favourite-icon {
+    display: none;
+  }
+
+  .app-row:hover .favourite-icon,
+  .app-row.favourite .favourite-icon,
+  .app-row.actionsOpen .favourite-icon {
+    display: flex;
   }
 
   .updated {
@@ -142,11 +174,23 @@
   }
 
   .app-row-actions {
+    display: none;
+  }
+
+  .app-row:hover .app-row-actions,
+  .app-row.actionsOpen .app-row-actions {
     gap: var(--spacing-m);
-    display: flex;
     flex-direction: row;
     justify-content: flex-end;
     align-items: center;
+    display: flex;
+  }
+
+  .actions-wrap {
+    gap: var(--spacing-m);
+    display: flex;
+    justify-content: flex-end;
+    min-height: var(--spectrum-alias-item-height-s);
   }
 
   .name {

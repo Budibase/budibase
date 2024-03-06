@@ -1,4 +1,6 @@
 .spectrum--nord {
+  --spectrum-global-color-yellow-1000: #d8b500;
+
   --spectrum-global-color-red-400: #bf616a;
   --spectrum-global-color-red-500: #c26971;
   --spectrum-global-color-red-600: #c57179;

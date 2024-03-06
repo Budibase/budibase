@@ -12,7 +12,14 @@
     notifications,
   } from "@budibase/bbui"
   import { onMount } from "svelte"
-  import { apps, organisation, auth, groups, licensing } from "stores/portal"
+  import {
+    appsStore,
+    organisation,
+    auth,
+    groups,
+    licensing,
+    enriched as enrichedApps,
+  } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
   import { gradient } from "actions"
@@ -31,7 +38,9 @@
   $: userGroups = $groups.filter(group =>
     group.users.find(user => user._id === $auth.user?._id)
   )
-  $: publishedApps = $apps.filter(app => app.status === AppStatus.DEPLOYED)
+  $: publishedApps = $enrichedApps.filter(
+    app => app.status === AppStatus.DEPLOYED
+  )
   $: userApps = getUserApps(publishedApps, userGroups, $auth.user)
 
   function getUserApps(publishedApps, userGroups, user) {
@@ -46,12 +55,12 @@
         return userGroups.find(group => {
           return groups.actions
             .getGroupAppIds(group)
-            .map(role => apps.extractAppId(role))
+            .map(role => appsStore.extractAppId(role))
             .includes(app.appId)
         })
       } else {
         return Object.keys($auth.user?.roles)
-          .map(x => apps.extractAppId(x))
+          .map(x => appsStore.extractAppId(x))
           .includes(app.appId)
       }
     })
@@ -76,7 +85,7 @@
   onMount(async () => {
     try {
       await organisation.init()
-      await apps.load()
+      await appsStore.load()
       await groups.actions.init()
     } catch (error) {
       notifications.error("Error loading apps")

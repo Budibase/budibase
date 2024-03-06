@@ -24,6 +24,7 @@
   export let text = ""
   export let fixed = false
   export let color = null
+  export let noWrap = false
 
   let wrapper
   let hovered = false
@@ -105,6 +106,7 @@
   <Portal target=".spectrum">
     <span
       class="spectrum-Tooltip spectrum-Tooltip--{type} spectrum-Tooltip--{position} is-open"
+      class:noWrap
       style={`left:${left}px;top:${top}px;${tooltipStyle}`}
       transition:fade|local={{ duration: 130 }}
     >
@@ -117,6 +119,9 @@
 <style>
   .abs-tooltip {
     display: contents;
+  }
+  .spectrum-Tooltip.noWrap .spectrum-Tooltip-label {
+    width: max-content;
   }
   .spectrum-Tooltip {
     position: absolute;

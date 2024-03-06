@@ -1,6 +1,6 @@
 import { get } from "svelte/store"
 import { previewStore } from "stores/builder"
-import BudiStore from "./BudiStore"
+import BudiStore from "../BudiStore"
 
 export const INITIAL_HOVER_STATE = {
   componentId: null,

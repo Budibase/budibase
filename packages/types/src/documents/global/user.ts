@@ -56,6 +56,7 @@ export interface User extends Document {
   userGroups?: string[]
   onboardedAt?: string
   scimInfo?: { isSync: true } & Record<string, any>
+  appFavourites?: string[]
   ssoId?: string
 }
 
