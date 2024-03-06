@@ -19,7 +19,8 @@
       "@budibase/shared-core": ["../shared-core/src"],
       "@budibase/pro": ["../pro/src"],
       "@budibase/string-templates": ["../string-templates/src"]
-    }
+    },
+    "allowArbitraryExtensions": true
   },
   "include": ["src/**/*"],
   "exclude": [

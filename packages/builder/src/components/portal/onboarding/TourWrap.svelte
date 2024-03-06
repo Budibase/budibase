@@ -1,39 +1,63 @@
 <script>
   import { tourHandler } from "./tourHandler"
-  import { TOURS } from "./tours"
+  import { TOURSBYSTEP, TOURS, getCurrentStepIdx } from "./tours"
   import { onMount, onDestroy } from "svelte"
   import { builderStore } from "stores/builder"
 
-  export let tourStepKey
+  export let stepKeys = []
 
-  let currentTourStep
   let ready = false
-  let registered = false
-  let handler
+  let registered = {}
 
   const registerTourNode = (tourKey, stepKey) => {
-    if (ready && !registered && tourKey) {
-      currentTourStep = TOURS[tourKey].steps.find(step => step.id === stepKey)
-      if (!currentTourStep) {
-        return
+    const step = TOURSBYSTEP[stepKey]
+    if (ready && step && !registered[stepKey] && step?.tour === tourKey) {
+      const elem = document.querySelector(step.query)
+      registered[stepKey] = tourHandler(elem, stepKey)
+    }
+  }
+
+  const scrollToStep = () => {
+    let tourStepIdx = getCurrentStepIdx(
+      TOURS[tourKeyWatch]?.steps,
+      tourStepKeyWatch
+    )
+    let currentStep = TOURS[tourKeyWatch]?.steps?.[tourStepIdx]
+    if (currentStep?.scrollIntoView) {
+      let currentNode = $builderStore.tourNodes?.[currentStep.id]
+      if (currentNode) {
+        currentNode.scrollIntoView({ behavior: "smooth", block: "center" })
       }
-      const elem = document.querySelector(currentTourStep.query)
-      handler = tourHandler(elem, stepKey)
-      registered = true
     }
   }
 
   $: tourKeyWatch = $builderStore.tourKey
-  $: registerTourNode(tourKeyWatch, tourStepKey, ready)
+  $: tourStepKeyWatch = $builderStore.tourStepKey
+  $: if (tourKeyWatch || stepKeys || ready) {
+    stepKeys.forEach(tourStepKey => {
+      registerTourNode(tourKeyWatch, tourStepKey)
+    })
+  }
+  $: scrollToStep(tourKeyWatch, tourStepKeyWatch)
 
   onMount(() => {
     ready = true
   })
 
   onDestroy(() => {
-    if (handler) {
+    Object.entries(registered).forEach(entry => {
+      const handler = entry[1]
+      const stepKey = entry[0]
+      // Run step destroy, de-register nodes in the builderStore and local cache
       handler.destroy()
-    }
+      delete registered[stepKey]
+
+      // Check if the step is part of an active tour. End the tour if that is the case
+      const step = TOURSBYSTEP[stepKey]
+      if (step.tour === tourKeyWatch) {
+        builderStore.setTour()
+      }
+    })
   })
 </script>
 
