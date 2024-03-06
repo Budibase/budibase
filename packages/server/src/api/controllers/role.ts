@@ -117,7 +117,7 @@ export async function save(ctx: UserCtx<SaveRoleRequest, SaveRoleResponse>) {
     })
     await replication.replicate({
       filter: (doc: any, params: any) => {
-        return doc._id === _id
+        return doc._id && doc._id.startsWith("role_")
       },
     })
   }
