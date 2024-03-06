@@ -1,8 +1,28 @@
+import { GenericContainer, StartedTestContainer } from "testcontainers"
 import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
+import { env } from "../.."
+
+jest.setTimeout(30000)
 
 describe("redis", () => {
   let redis: RedisWrapper
+  let container: StartedTestContainer
+
+  beforeAll(async () => {
+    const container = await new GenericContainer("redis")
+      .withExposedPorts(6379)
+      .start()
+
+    env._set(
+      "REDIS_URL",
+      `${container.getHost()}:${container.getMappedPort(6379)}`
+    )
+    env._set("MOCK_REDIS", 0)
+    env._set("REDIS_PASSWORD", 0)
+  })
+
+  afterAll(() => container?.stop())
 
   beforeEach(async () => {
     redis = new RedisWrapper(structures.db.id())
@@ -105,6 +125,68 @@ describe("redis", () => {
       }
 
       expect(await redis.keys("*")).toHaveLength(0)
+    })
+  })
+
+  describe("increment", () => {
+    it("can increment on a new key", async () => {
+      const key = structures.uuid()
+      const result = await redis.increment(key)
+      expect(result).toBe(1)
+    })
+
+    it("can increment multiple times", async () => {
+      const key = structures.uuid()
+      const results = [
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+        await redis.increment(key),
+      ]
+      expect(results).toEqual([1, 2, 3, 4, 5])
+    })
+
+    it("can increment on a new key", async () => {
+      const key1 = structures.uuid()
+      const key2 = structures.uuid()
+
+      const result1 = await redis.increment(key1)
+      expect(result1).toBe(1)
+
+      const result2 = await redis.increment(key2)
+      expect(result2).toBe(1)
+    })
+
+    it("can increment multiple times in parallel", async () => {
+      const key = structures.uuid()
+      const results = await Promise.all(
+        Array.from({ length: 100 }).map(() => redis.increment(key))
+      )
+      expect(results).toHaveLength(100)
+      expect(results).toEqual(Array.from({ length: 100 }).map((_, i) => i + 1))
+    })
+
+    it("can increment existing set keys", async () => {
+      const key = structures.uuid()
+      await redis.store(key, 70)
+      await redis.increment(key)
+
+      const result = await redis.increment(key)
+      expect(result).toBe(72)
+    })
+
+    it.each([
+      generator.word(),
+      generator.bool(),
+      { [generator.word()]: generator.word() },
+    ])("cannot increment if the store value is not a number", async value => {
+      const key = structures.uuid()
+      await redis.store(key, value)
+
+      await expect(redis.increment(key)).rejects.toThrowError(
+        "ERR value is not an integer or out of range"
+      )
     })
   })
 })
