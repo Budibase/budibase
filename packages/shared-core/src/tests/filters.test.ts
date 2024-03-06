@@ -240,6 +240,16 @@ describe("runLuceneQuery", () => {
 
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([])
   })
+
+  it("should handle when a value is null or undefined", () => {
+    const query = buildQuery({
+      allOr: true,
+      equal: { order_status: null },
+      oneOf: { label: ["FRAGILE"] },
+    })
+
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2])
+  })
 })
 
 describe("buildLuceneQuery", () => {

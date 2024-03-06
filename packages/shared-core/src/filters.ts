@@ -12,6 +12,7 @@ import {
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
+import test from "node:test"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -359,6 +360,7 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   const oneOf = match(
     SearchQueryOperators.ONE_OF,
     (docValue: any, testValue: any) => {
+      console.log(testValue)
       if (typeof testValue === "string") {
         testValue = testValue.split(",")
         if (typeof docValue === "number") {
@@ -410,13 +412,13 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
       .filter(
         ([key, value]: [string, any]) =>
           !["allOr", "onEmptyFilter"].includes(key) &&
+          value &&
           Object.keys(value as Record<string, any>).length > 0
       )
       .map(([key]) => key as any)
 
     const results: boolean[] = activeFilterKeys.map(filterKey => {
-      const filterFunction = filterFunctions[filterKey]
-      return filterFunction ? filterFunction(doc) : true
+      return filterFunctions[filterKey]?.(doc) ?? false
     })
 
     if (query!.allOr) {
@@ -425,7 +427,6 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
       return results.every(result => result === true)
     }
   }
-
   return docs.filter(docMatch)
 }
 
