@@ -7,6 +7,7 @@ import sdk from "../../../sdk"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
+import { QueryPreview } from "@budibase/types"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
@@ -63,14 +64,17 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(
-          request,
-          config,
-          datasource,
+        const queryPreview: QueryPreview = {
           fields,
-          undefined,
-          ""
-        )
+          datasourceId: datasource._id,
+          parameters: [],
+          transformer: null,
+          queryVerb: "read",
+          name: datasource.name,
+          schema: {},
+          readable: true,
+        }
+        return config.api.query.previewQuery(queryPreview)
       }
 
       it("should invalidate changed or removed variables", async () => {
@@ -82,7 +86,7 @@ describe("/datasources", () => {
         })
         // check variables in cache
         let contents = await checkCacheForDynamicVariable(
-          query._id,
+          query._id!,
           "variable3"
         )
         expect(contents.rows.length).toEqual(1)
@@ -98,7 +102,7 @@ describe("/datasources", () => {
         expect(res.body.errors).toBeUndefined()
 
         // check variables no longer in cache
-        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        contents = await checkCacheForDynamicVariable(query._id!, "variable3")
         expect(contents).toBe(null)
       })
     })

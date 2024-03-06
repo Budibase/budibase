@@ -29,6 +29,6 @@ start().catch(err => {
   throw err
 })
 
-export function getServer() {
+export function getServer(): Server {
   return server
 }
