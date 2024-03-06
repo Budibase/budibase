@@ -13,10 +13,10 @@
   export let size = "M"
   export let type = "cta"
   export let quiet = false
-
-  // For internal use only for now - not defined in the manifest
   export let icon = null
   export let gap = "M"
+
+  // For internal use only for now - not defined in the manifest
   export let active = false
 
   const handleOnClick = async () => {
