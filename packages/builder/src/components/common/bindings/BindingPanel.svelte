@@ -30,7 +30,6 @@
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
   import { Utils } from "@budibase/frontend-core"
-  import { get } from "svelte/store"
 
   const dispatch = createEventDispatcher()
 
@@ -46,7 +45,6 @@
   export let autofocusEditor = false
   export let placeholder = null
 
-  const drawerContext = getContext("drawer")
   const Modes = {
     Text: "Text",
     JavaScript: "JavaScript",
@@ -66,10 +64,8 @@
   let insertAtPos
   let targetMode = null
   let expressionResult
-  let drawerIsModal
   let evaluating = false
 
-  $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
   $: sidePanelOptions = getSidePanelOptions(
     bindings,
@@ -239,18 +235,22 @@
   <div class="binding-panel">
     <div class="main">
       <div class="tabs">
-        <div class="editor-tabs">
-          {#each editorModeOptions as editorMode}
-            <ActionButton
-              size="M"
-              quiet
-              selected={mode === editorMode}
-              on:click={() => changeMode(editorMode)}
-            >
-              {capitalise(editorMode)}
-            </ActionButton>
-          {/each}
-        </div>
+        {#if $$slots.tabs}
+          <slot name="tabs" />
+        {:else}
+          <div class="editor-tabs">
+            {#each editorModeOptions as editorMode}
+              <ActionButton
+                size="M"
+                quiet
+                selected={mode === editorMode}
+                on:click={() => changeMode(editorMode)}
+              >
+                {capitalise(editorMode)}
+              </ActionButton>
+            {/each}
+          </div>
+        {/if}
         <div class="side-tabs">
           {#each sidePanelOptions as panel}
             <ActionButton
@@ -262,16 +262,6 @@
               <Icon name={panel} size="S" />
             </ActionButton>
           {/each}
-          {#if drawerContext && get(drawerContext.resizable)}
-            <ActionButton
-              size="M"
-              quiet
-              selected={drawerIsModal}
-              on:click={() => drawerContext.modal.set(!drawerIsModal)}
-            >
-              <Icon name={drawerIsModal ? "Minimize" : "Maximize"} size="S" />
-            </ActionButton>
-          {/if}
         </div>
       </div>
       <div class="editor">
