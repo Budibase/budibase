@@ -7,6 +7,7 @@ import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AutoFieldSubType,
+  DeleteRow,
   FieldSchema,
   FieldType,
   FieldTypeSubtypes,
@@ -105,9 +106,6 @@ describe.each([
   beforeEach(async () => {
     mocks.licenses.useCloudFree()
   })
-
-  const loadRow = (id: string, tbl_Id: string, status = 200) =>
-    config.api.row.get(tbl_Id, id, { expectStatus: status })
 
   const getRowUsage = async () => {
     const { total } = await config.doInContext(undefined, () =>
@@ -235,7 +233,7 @@ describe.each([
 
       const res = await config.api.row.get(tableId, existing._id!)
 
-      expect(res.body).toEqual({
+      expect(res).toEqual({
         ...existing,
         ...defaultRowFields,
       })
@@ -265,7 +263,7 @@ describe.each([
       await config.createRow()
 
       await config.api.row.get(tableId, "1234567", {
-        expectStatus: 404,
+        status: 404,
       })
     })
 
@@ -395,7 +393,7 @@ describe.each([
         const createdRow = await config.createRow(row)
         const id = createdRow._id!
 
-        const saved = (await loadRow(id, table._id!)).body
+        const saved = await config.api.row.get(table._id!, id)
 
         expect(saved.stringUndefined).toBe(undefined)
         expect(saved.stringNull).toBe(null)
@@ -476,8 +474,8 @@ describe.each([
       )
 
       const row = await config.api.row.get(table._id!, createRowResponse._id!)
-      expect(row.body.Story).toBeUndefined()
-      expect(row.body).toEqual({
+      expect(row.Story).toBeUndefined()
+      expect(row).toEqual({
         ...defaultRowFields,
         OrderID: 1111,
         Country: "Aussy",
@@ -524,10 +522,10 @@ describe.each([
       expect(row.name).toEqual("Updated Name")
       expect(row.description).toEqual(existing.description)
 
-      const savedRow = await loadRow(row._id!, table._id!)
+      const savedRow = await config.api.row.get(table._id!, row._id!)
 
-      expect(savedRow.body.description).toEqual(existing.description)
-      expect(savedRow.body.name).toEqual("Updated Name")
+      expect(savedRow.description).toEqual(existing.description)
+      expect(savedRow.name).toEqual("Updated Name")
       await assertRowUsage(rowUsage)
     })
 
@@ -543,7 +541,7 @@ describe.each([
           tableId: table._id!,
           name: 1,
         },
-        { expectStatus: 400 }
+        { status: 400 }
       )
 
       await assertRowUsage(rowUsage)
@@ -582,8 +580,8 @@ describe.each([
       })
 
       let getResp = await config.api.row.get(table._id!, row._id!)
-      expect(getResp.body.user1[0]._id).toEqual(user1._id)
-      expect(getResp.body.user2[0]._id).toEqual(user2._id)
+      expect(getResp.user1[0]._id).toEqual(user1._id)
+      expect(getResp.user2[0]._id).toEqual(user2._id)
 
       let patchResp = await config.api.row.patch(table._id!, {
         _id: row._id!,
@@ -595,8 +593,8 @@ describe.each([
       expect(patchResp.user2[0]._id).toEqual(user2._id)
 
       getResp = await config.api.row.get(table._id!, row._id!)
-      expect(getResp.body.user1[0]._id).toEqual(user2._id)
-      expect(getResp.body.user2[0]._id).toEqual(user2._id)
+      expect(getResp.user1[0]._id).toEqual(user2._id)
+      expect(getResp.user2[0]._id).toEqual(user2._id)
     })
 
     it("should be able to update relationships when both columns are same name", async () => {
@@ -609,7 +607,7 @@ describe.each([
         description: "test",
         relationship: [row._id],
       })
-      row = (await config.api.row.get(table._id!, row._id!)).body
+      row = await config.api.row.get(table._id!, row._id!)
       expect(row.relationship.length).toBe(1)
       const resp = await config.api.row.patch(table._id!, {
         _id: row._id!,
@@ -632,8 +630,10 @@ describe.each([
       const createdRow = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [createdRow])
-      expect(res.body[0]._id).toEqual(createdRow._id)
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [createdRow],
+      })
+      expect(res[0]._id).toEqual(createdRow._id)
       await assertRowUsage(rowUsage - 1)
     })
   })
@@ -682,10 +682,12 @@ describe.each([
       const row2 = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [row1, row2])
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [row1, row2],
+      })
 
-      expect(res.body.length).toEqual(2)
-      await loadRow(row1._id!, table._id!, 404)
+      expect(res.length).toEqual(2)
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 2)
     })
 
@@ -697,14 +699,12 @@ describe.each([
       ])
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, [
-        row1,
-        row2._id,
-        { _id: row3._id },
-      ])
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [row1, row2._id!, { _id: row3._id }],
+      })
 
-      expect(res.body.length).toEqual(3)
-      await loadRow(row1._id!, table._id!, 404)
+      expect(res.length).toEqual(3)
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 3)
     })
 
@@ -712,34 +712,36 @@ describe.each([
       const row1 = await config.createRow()
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(table._id!, row1)
+      const res = await config.api.row.delete(table._id!, row1 as DeleteRow)
 
-      expect(res.body.id).toEqual(row1._id)
-      await loadRow(row1._id!, table._id!, 404)
+      expect(res.id).toEqual(row1._id)
+      await config.api.row.get(table._id!, row1._id!, { status: 404 })
       await assertRowUsage(rowUsage - 1)
     })
 
     it("Should ignore malformed/invalid delete requests", async () => {
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.delete(
-        table._id!,
-        { not: "valid" },
-        { expectStatus: 400 }
-      )
-      expect(res.body.message).toEqual("Invalid delete rows request")
-
-      const res2 = await config.api.row.delete(
-        table._id!,
-        { rows: 123 },
-        { expectStatus: 400 }
-      )
-      expect(res2.body.message).toEqual("Invalid delete rows request")
-
-      const res3 = await config.api.row.delete(table._id!, "invalid", {
-        expectStatus: 400,
+      await config.api.row.delete(table._id!, { not: "valid" } as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
       })
-      expect(res3.body.message).toEqual("Invalid delete rows request")
+
+      await config.api.row.delete(table._id!, { rows: 123 } as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
+      })
+
+      await config.api.row.delete(table._id!, "invalid" as any, {
+        status: 400,
+        body: {
+          message: "Invalid delete rows request",
+        },
+      })
 
       await assertRowUsage(rowUsage)
     })
@@ -757,16 +759,16 @@ describe.each([
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        const res = await config.api.legacyView.get(table._id!)
-        expect(res.body.length).toEqual(1)
-        expect(res.body[0]._id).toEqual(row._id)
+        const rows = await config.api.legacyView.get(table._id!)
+        expect(rows.length).toEqual(1)
+        expect(rows[0]._id).toEqual(row._id)
         await assertRowUsage(rowUsage)
       })
 
       it("should throw an error if view doesn't exist", async () => {
         const rowUsage = await getRowUsage()
 
-        await config.api.legacyView.get("derp", { expectStatus: 404 })
+        await config.api.legacyView.get("derp", { status: 404 })
 
         await assertRowUsage(rowUsage)
       })
@@ -781,9 +783,9 @@ describe.each([
         const row = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        const res = await config.api.legacyView.get(view.name)
-        expect(res.body.length).toEqual(1)
-        expect(res.body[0]._id).toEqual(row._id)
+        const rows = await config.api.legacyView.get(view.name)
+        expect(rows.length).toEqual(1)
+        expect(rows[0]._id).toEqual(row._id)
 
         await assertRowUsage(rowUsage)
       })
@@ -841,8 +843,8 @@ describe.each([
         linkedTable._id!,
         secondRow._id!
       )
-      expect(resBasic.body.link.length).toBe(1)
-      expect(resBasic.body.link[0]).toEqual({
+      expect(resBasic.link.length).toBe(1)
+      expect(resBasic.link[0]).toEqual({
         _id: firstRow._id,
         primaryDisplay: firstRow.name,
       })
@@ -852,10 +854,10 @@ describe.each([
         linkedTable._id!,
         secondRow._id!
       )
-      expect(resEnriched.body.link.length).toBe(1)
-      expect(resEnriched.body.link[0]._id).toBe(firstRow._id)
-      expect(resEnriched.body.link[0].name).toBe("Test Contact")
-      expect(resEnriched.body.link[0].description).toBe("original description")
+      expect(resEnriched.link.length).toBe(1)
+      expect(resEnriched.link[0]._id).toBe(firstRow._id)
+      expect(resEnriched.link[0].name).toBe("Test Contact")
+      expect(resEnriched.link[0].description).toBe("original description")
       await assertRowUsage(rowUsage)
     })
   })
@@ -880,8 +882,7 @@ describe.each([
           ],
           tableId: table._id,
         })
-        // the environment needs configured for this
-        await setup.switchToSelfHosted(async () => {
+        await config.withEnv({ SELF_HOSTED: "true" }, async () => {
           return context.doInAppContext(config.getAppId(), async () => {
             const enriched = await outputProcessing(table, [row])
             expect((enriched as Row[])[0].attachment[0].url).toBe(
@@ -903,7 +904,7 @@ describe.each([
       const res = await config.api.row.exportRows(table._id!, {
         rows: [existing._id!],
       })
-      const results = JSON.parse(res.text)
+      const results = JSON.parse(res)
       expect(results.length).toEqual(1)
       const row = results[0]
 
@@ -922,7 +923,7 @@ describe.each([
         rows: [existing._id!],
         columns: ["_id"],
       })
-      const results = JSON.parse(res.text)
+      const results = JSON.parse(res)
       expect(results.length).toEqual(1)
       const row = results[0]
 
@@ -1000,7 +1001,7 @@ describe.each([
         })
 
         const row = await config.api.row.get(table._id!, newRow._id!)
-        expect(row.body).toEqual({
+        expect(row).toEqual({
           name: data.name,
           surname: data.surname,
           address: data.address,
@@ -1010,9 +1011,9 @@ describe.each([
           id: newRow.id,
           ...defaultRowFields,
         })
-        expect(row.body._viewId).toBeUndefined()
-        expect(row.body.age).toBeUndefined()
-        expect(row.body.jobTitle).toBeUndefined()
+        expect(row._viewId).toBeUndefined()
+        expect(row.age).toBeUndefined()
+        expect(row.jobTitle).toBeUndefined()
       })
     })
 
@@ -1042,7 +1043,7 @@ describe.each([
         })
 
         const row = await config.api.row.get(tableId, newRow._id!)
-        expect(row.body).toEqual({
+        expect(row).toEqual({
           ...newRow,
           name: newData.name,
           address: newData.address,
@@ -1051,9 +1052,9 @@ describe.each([
           id: newRow.id,
           ...defaultRowFields,
         })
-        expect(row.body._viewId).toBeUndefined()
-        expect(row.body.age).toBeUndefined()
-        expect(row.body.jobTitle).toBeUndefined()
+        expect(row._viewId).toBeUndefined()
+        expect(row.age).toBeUndefined()
+        expect(row.jobTitle).toBeUndefined()
       })
     })
 
@@ -1071,12 +1072,12 @@ describe.each([
         const createdRow = await config.createRow()
         const rowUsage = await getRowUsage()
 
-        await config.api.row.delete(view.id, [createdRow])
+        await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
 
         await assertRowUsage(rowUsage - 1)
 
         await config.api.row.get(tableId, createdRow._id!, {
-          expectStatus: 404,
+          status: 404,
         })
       })
 
@@ -1097,17 +1098,17 @@ describe.each([
         ])
         const rowUsage = await getRowUsage()
 
-        await config.api.row.delete(view.id, [rows[0], rows[2]])
+        await config.api.row.bulkDelete(view.id, { rows: [rows[0], rows[2]] })
 
         await assertRowUsage(rowUsage - 2)
 
         await config.api.row.get(tableId, rows[0]._id!, {
-          expectStatus: 404,
+          status: 404,
         })
         await config.api.row.get(tableId, rows[2]._id!, {
-          expectStatus: 404,
+          status: 404,
         })
-        await config.api.row.get(tableId, rows[1]._id!, { expectStatus: 200 })
+        await config.api.row.get(tableId, rows[1]._id!, { status: 200 })
       })
     })
 
@@ -1154,8 +1155,8 @@ describe.each([
         const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(10)
-        expect(response.body).toEqual({
+        expect(response.rows).toHaveLength(10)
+        expect(response).toEqual({
           rows: expect.arrayContaining(
             rows.map(r => ({
               _viewId: createViewResponse.id,
@@ -1206,8 +1207,8 @@ describe.each([
 
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(5)
-        expect(response.body).toEqual({
+        expect(response.rows).toHaveLength(5)
+        expect(response).toEqual({
           rows: expect.arrayContaining(
             expectedRows.map(r => ({
               _viewId: createViewResponse.id,
@@ -1328,8 +1329,8 @@ describe.each([
               createViewResponse.id
             )
 
-            expect(response.body.rows).toHaveLength(4)
-            expect(response.body.rows).toEqual(
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
               expected.map(name => expect.objectContaining({ name }))
             )
           }
@@ -1357,8 +1358,8 @@ describe.each([
               }
             )
 
-            expect(response.body.rows).toHaveLength(4)
-            expect(response.body.rows).toEqual(
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
               expected.map(name => expect.objectContaining({ name }))
             )
           }
@@ -1382,8 +1383,8 @@ describe.each([
         })
         const response = await config.api.viewV2.search(view.id)
 
-        expect(response.body.rows).toHaveLength(10)
-        expect(response.body.rows).toEqual(
+        expect(response.rows).toHaveLength(10)
+        expect(response.rows).toEqual(
           expect.arrayContaining(
             rows.map(r => ({
               ...(isInternal
@@ -1402,7 +1403,7 @@ describe.each([
         const createViewResponse = await config.createView()
         const response = await config.api.viewV2.search(createViewResponse.id)
 
-        expect(response.body.rows).toHaveLength(0)
+        expect(response.rows).toHaveLength(0)
       })
 
       it("respects the limit parameter", async () => {
@@ -1417,7 +1418,7 @@ describe.each([
           query: {},
         })
 
-        expect(response.body.rows).toHaveLength(limit)
+        expect(response.rows).toHaveLength(limit)
       })
 
       it("can handle pagination", async () => {
@@ -1426,7 +1427,7 @@ describe.each([
 
         const createViewResponse = await config.createView()
         const allRows = (await config.api.viewV2.search(createViewResponse.id))
-          .body.rows
+          .rows
 
         const firstPageResponse = await config.api.viewV2.search(
           createViewResponse.id,
@@ -1436,7 +1437,7 @@ describe.each([
             query: {},
           }
         )
-        expect(firstPageResponse.body).toEqual({
+        expect(firstPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(0, 4)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
@@ -1448,12 +1449,12 @@ describe.each([
           {
             paginate: true,
             limit: 4,
-            bookmark: firstPageResponse.body.bookmark,
+            bookmark: firstPageResponse.bookmark,
 
             query: {},
           }
         )
-        expect(secondPageResponse.body).toEqual({
+        expect(secondPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(4, 8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
@@ -1465,11 +1466,11 @@ describe.each([
           {
             paginate: true,
             limit: 4,
-            bookmark: secondPageResponse.body.bookmark,
+            bookmark: secondPageResponse.bookmark,
             query: {},
           }
         )
-        expect(lastPageResponse.body).toEqual({
+        expect(lastPageResponse).toEqual({
           rows: expect.arrayContaining(allRows.slice(8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: false,
@@ -1489,7 +1490,7 @@ describe.each([
               email: "joe@joe.com",
               roles: {},
             },
-            { expectStatus: 400 }
+            { status: 400 }
           )
           expect(response.message).toBe("Cannot create new user entry.")
         })
@@ -1516,58 +1517,52 @@ describe.each([
 
         it("does not allow public users to fetch by default", async () => {
           await config.publish()
-          await config.api.viewV2.search(viewId, undefined, {
-            expectStatus: 403,
-            usePublicUser: true,
+          await config.api.viewV2.publicSearch(viewId, undefined, {
+            status: 403,
           })
         })
 
         it("allow public users to fetch when permissions are explicit", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: viewId,
           })
           await config.publish()
 
-          const response = await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-          })
+          const response = await config.api.viewV2.publicSearch(viewId)
 
-          expect(response.body.rows).toHaveLength(10)
+          expect(response.rows).toHaveLength(10)
         })
 
         it("allow public users to fetch when permissions are inherited", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: tableId,
           })
           await config.publish()
 
-          const response = await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-          })
+          const response = await config.api.viewV2.publicSearch(viewId)
 
-          expect(response.body.rows).toHaveLength(10)
+          expect(response.rows).toHaveLength(10)
         })
 
         it("respects inherited permissions, not allowing not public views from public tables", async () => {
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
             resourceId: tableId,
           })
-          await config.api.permission.set({
+          await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.POWER,
             level: PermissionLevel.READ,
             resourceId: viewId,
           })
           await config.publish()
 
-          await config.api.viewV2.search(viewId, undefined, {
-            usePublicUser: true,
-            expectStatus: 403,
+          await config.api.viewV2.publicSearch(viewId, undefined, {
+            status: 403,
           })
         })
       })
@@ -1754,7 +1749,7 @@ describe.each([
       }
       const row = await config.api.row.save(tableId, rowData)
 
-      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      const retrieved = await config.api.row.get(tableId, row._id!)
       expect(retrieved).toEqual({
         name: rowData.name,
         description: rowData.description,
@@ -1781,7 +1776,7 @@ describe.each([
       }
       const row = await config.api.row.save(tableId, rowData)
 
-      const { body: retrieved } = await config.api.row.get(tableId, row._id!)
+      const retrieved = await config.api.row.get(tableId, row._id!)
       expect(retrieved).toEqual({
         name: rowData.name,
         description: rowData.description,
