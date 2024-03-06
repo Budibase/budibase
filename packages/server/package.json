@@ -152,7 +152,7 @@
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",
-    "testcontainers": "10.6.0",
+    "testcontainers": "10.7.2",
     "timekeeper": "2.2.0",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",

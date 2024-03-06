@@ -299,6 +299,16 @@ export default class TestConfiguration {
     }
   }
 
+  async withUser(user: User, f: () => Promise<void>) {
+    const oldUser = this.user
+    this.user = user
+    try {
+      return await f()
+    } finally {
+      this.user = oldUser
+    }
+  }
+
   // UTILS
 
   _req<Req extends Record<string, any> | void, Res>(
@@ -353,6 +363,7 @@ export default class TestConfiguration {
       _id,
       ...existing,
       ...config,
+      _rev: existing._rev,
       email,
       roles,
       tenantId,
@@ -362,11 +373,12 @@ export default class TestConfiguration {
       admin,
     }
     await sessions.createASession(_id, {
-      sessionId: "sessionid",
+      sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
       csrfToken: this.csrfToken,
     })
     const resp = await db.put(user)
+    await cache.user.invalidateUser(_id)
     return {
       _rev: resp.rev,
       ...user,
@@ -374,9 +386,7 @@ export default class TestConfiguration {
   }
 
   async createUser(user: Partial<User> = {}): Promise<User> {
-    const resp = await this.globalUser(user)
-    await cache.user.invalidateUser(resp._id!)
-    return resp
+    return await this.globalUser(user)
   }
 
   async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
@@ -406,6 +416,10 @@ export default class TestConfiguration {
     })
   }
 
+  sessionIdForUser(userId: string): string {
+    return `sessionid-${userId}`
+  }
+
   async login({
     roleId,
     userId,
@@ -432,13 +446,13 @@ export default class TestConfiguration {
         })
       }
       await sessions.createASession(userId, {
-        sessionId: "sessionid",
+        sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       })
       // have to fake this
       const authObj = {
         userId,
-        sessionId: "sessionid",
+        sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       }
       const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
@@ -460,7 +474,7 @@ export default class TestConfiguration {
     const user = this.getUser()
     const authObj: AuthToken = {
       userId: user._id!,
-      sessionId: "sessionid",
+      sessionId: this.sessionIdForUser(user._id!),
       tenantId,
     }
     const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
@@ -710,11 +724,6 @@ export default class TestConfiguration {
     const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
     return this.api.row.save(tableId, config)
-  }
-
-  async getRow(tableId: string, rowId: string): Promise<Row> {
-    const res = await this.api.row.get(tableId, rowId)
-    return res.body
   }
 
   async getRows(tableId: string) {
