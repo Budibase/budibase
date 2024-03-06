@@ -256,5 +256,30 @@ describe("docWritethrough", () => {
         )
       })
     })
+
+    it("patches will execute in order", async () => {
+      let incrementalValue = 0
+      const keyToOverride = generator.word()
+      async function incrementalPatches(count: number) {
+        for (let i = 0; i < count; i++) {
+          await docWritethrough.patch({ [keyToOverride]: incrementalValue++ })
+        }
+      }
+
+      await config.doInTenant(async () => {
+        await incrementalPatches(5)
+
+        await waitForQueueCompletion()
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({ [keyToOverride]: 5 })
+        )
+
+        await incrementalPatches(40)
+        await waitForQueueCompletion()
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({ [keyToOverride]: 45 })
+        )
+      })
+    })
   })
 })
