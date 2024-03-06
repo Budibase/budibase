@@ -34,15 +34,17 @@
 
   const dispatch = createEventDispatcher()
 
-  export let bindings
+  export let bindings = []
   export let value = ""
-  export let valid
+  export let valid = true
+  export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
   export let allowSnippets = true
   export let context = null
   export let snippets = null
   export let autofocusEditor = false
+  export let placeholder = null
 
   const drawerContext = getContext("drawer")
   const Modes = {
@@ -55,21 +57,26 @@
     Snippets: "Code",
   }
 
+  let mode
+  let sidePanel
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let mode = initialValueJS ? Modes.JavaScript : Modes.Text
-  let sidePanel = SidePanels.Bindings
-  let getCaretPosition
-  let insertAtPos
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
+  let getCaretPosition
+  let insertAtPos
   let targetMode = null
   let expressionResult
   let drawerIsModal
   let evaluating = false
 
   $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
-  $: editorModeOptions = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
-  $: sidePanelOptions = getSidePanelOptions(context, allowSnippets, mode)
+  $: editorModeOptions = getModeOptions(allowHBS, allowJS)
+  $: sidePanelOptions = getSidePanelOptions(
+    bindings,
+    context,
+    allowSnippets,
+    mode
+  )
   $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === Modes.JavaScript
   $: editorMode =
@@ -80,15 +87,30 @@
   $: requestEval(runtimeExpression, context, snippets)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
   $: {
+    // Ensure a valid side panel option is always selected
     if (!sidePanelOptions.includes(sidePanel)) {
-      sidePanel = SidePanels.Bindings
+      sidePanel = sidePanelOptions[0]
     }
   }
 
-  const getSidePanelOptions = (context, allowSnippets, mode) => {
-    let options = [SidePanels.Bindings]
+  const getModeOptions = (allowHBS, allowJS) => {
+    let options = []
+    if (allowHBS) {
+      options.push(Modes.Text)
+    }
+    if (allowJS) {
+      options.push(Modes.JavaScript)
+    }
+    return options
+  }
+
+  const getSidePanelOptions = (bindings, context, allowSnippets, mode) => {
+    let options = []
+    if (bindings?.length) {
+      options.push(SidePanels.Bindings)
+    }
     if (context) {
-      options.unshift(SidePanels.Evaluation)
+      options.push(SidePanels.Evaluation)
     }
     if (allowSnippets && mode === Modes.JavaScript) {
       options.push(SidePanels.Snippets)
@@ -197,6 +219,18 @@
   }
 
   onMount(() => {
+    // Set the initial mode appropriately
+    const initialValueMode = initialValueJS ? Modes.JavaScript : Modes.Text
+    if (editorModeOptions.includes(initialValueMode)) {
+      mode = initialValueMode
+    } else {
+      mode = editorModeOptions[0]
+    }
+
+    // Set the initial side panel
+    sidePanel = sidePanelOptions[0]
+
+    // Determine if our initial value is valid
     valid = isValid(readableToRuntimeBinding(enrichedBindings, value))
   })
 </script>
@@ -254,7 +288,8 @@
               ]),
             ]}
             autofocus={autofocusEditor}
-            placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
+            placeholder={placeholder ||
+              "Add bindings by typing {{ or use the menu on the right"}
           />
         {:else if mode === Modes.JavaScript}
           <CodeEditor
@@ -270,7 +305,8 @@
             bind:getCaretPosition
             bind:insertAtPos
             autofocus={autofocusEditor}
-            placeholder="Add bindings by typing $ or use the menu on the right"
+            placeholder={placeholder ||
+              "Add bindings by typing $ or use the menu on the right"}
           />
         {/if}
         {#if targetMode}

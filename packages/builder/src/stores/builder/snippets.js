@@ -44,11 +44,7 @@ const createSnippetStore = () => {
     store.set(metadata?.snippets || EXAMPLE_SNIPPETS)
   }
 
-  const createSnippet = snippet => {
-    store.update(state => [...state, snippet])
-  }
-
-  const updateSnippet = updatedSnippet => {
+  const saveSnippet = updatedSnippet => {
     store.update(state => [
       ...state.filter(snippet => snippet.name !== updatedSnippet.name),
       updatedSnippet,
@@ -62,8 +58,7 @@ const createSnippetStore = () => {
   return {
     ...store,
     syncMetadata,
-    createSnippet,
-    updateSnippet,
+    saveSnippet,
     deleteSnippet,
   }
 }
