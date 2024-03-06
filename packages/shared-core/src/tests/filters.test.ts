@@ -209,16 +209,19 @@ describe("runLuceneQuery", () => {
     }
   )
 
-  it("should return matching results if allOr is true and only one filter matches", () => {
+  test.each([
+    [false, []],
+    [true, [1, 2, 3]],
+  ])("should return %s  if allOr is %s ", (allOr, expectedResult) => {
     const query = buildQuery({
-      allOr: true,
+      allOr,
       oneOf: { staff_id: [10] },
       contains: { description: ["box"] },
     })
 
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([
-      1, 2, 3,
-    ])
+    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual(
+      expectedResult
+    )
   })
 
   it("should return matching results if allOr is true and only one filter matches with different operands", () => {
@@ -229,16 +232,6 @@ describe("runLuceneQuery", () => {
     })
 
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([1, 2])
-  })
-
-  it("should return nothing if allOr is false and only one filter matches", () => {
-    const query = buildQuery({
-      allOr: false,
-      oneOf: { staff_id: [10] },
-      contains: { description: ["box"] },
-    })
-
-    expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([])
   })
 
   it("should handle when a value is null or undefined", () => {
