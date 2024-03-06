@@ -327,6 +327,11 @@ class RedisWrapper {
     await this.getClient().del(addDbPrefix(db, key))
   }
 
+  async bulkDelete(keys: string[]) {
+    const db = this._db
+    await this.getClient().del(keys.map(key => addDbPrefix(db, key)))
+  }
+
   async clear() {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
