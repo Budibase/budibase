@@ -1,6 +1,7 @@
 import { Operation, SortDirection } from "./datasources"
 import { Row, Table } from "../documents"
 import { SortType } from "../api"
+import { Knex } from "knex"
 
 export interface SearchFilters {
   allOr?: boolean
@@ -101,9 +102,11 @@ export interface QueryJson {
   tableAliases?: Record<string, string>
 }
 
+export type SqlQueryBinding = Knex.Value[]
+
 export interface SqlQuery {
   sql: string
-  bindings?: string[]
+  bindings?: SqlQueryBinding
 }
 
 export enum EmptyFilterOption {

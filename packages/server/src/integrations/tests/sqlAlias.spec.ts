@@ -1,10 +1,15 @@
-import { Datasource, Operation, QueryJson, SourceName } from "@budibase/types"
+import {
+  Datasource,
+  Operation,
+  QueryJson,
+  SourceName,
+  SqlQuery,
+} from "@budibase/types"
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
 import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
-import { Knex } from "knex"
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -172,8 +177,8 @@ describe("Captures of real examples", () => {
       })
 
       // now check returning
-      let returningQuery: Knex.SqlNative = { sql: "", bindings: [] }
-      SQL.getReturningRow((input: Knex.SqlNative) => {
+      let returningQuery: SqlQuery = { sql: "", bindings: [] }
+      SQL.getReturningRow((input: SqlQuery) => {
         returningQuery = input
       }, queryJson)
       expect(returningQuery).toEqual({

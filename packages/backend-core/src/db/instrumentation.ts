@@ -147,7 +147,7 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  sql<T extends Document>(sql: string): Promise<T> {
+  sql<T extends Document>(sql: string): Promise<T[]> {
     return tracer.trace("db.sql", span => {
       span?.addTags({ db_name: this.name })
       return this.db.sql(sql)

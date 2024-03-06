@@ -13,6 +13,7 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  SqlQueryBinding,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -112,7 +113,7 @@ const defaultTypeCasting = function (field: any, next: any) {
   return next()
 }
 
-export function bindingTypeCoerce(bindings: any[]) {
+export function bindingTypeCoerce(bindings: SqlQueryBinding) {
   for (let i = 0; i < bindings.length; i++) {
     const binding = bindings[i]
     if (typeof binding !== "string") {
