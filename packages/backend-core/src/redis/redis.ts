@@ -324,6 +324,26 @@ class RedisWrapper {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
   }
+
+  async increment(key: string) {
+    const result = await this.getClient().incr(addDbPrefix(this._db, key))
+    if (isNaN(result)) {
+      throw new Error(`Redis ${key} does not contain a number`)
+    }
+    return result
+  }
+
+  async deleteIfValue(key: string, value: any) {
+    const client = this.getClient()
+
+    const luaScript = `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        redis.call('DEL', KEYS[1])
+      end
+      `
+
+    await client.eval(luaScript, 1, addDbPrefix(this._db, key), value)
+  }
 }
 
 export default RedisWrapper
