@@ -7,7 +7,7 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import {
     isValid,
     decodeJSBinding,
@@ -44,6 +44,7 @@
   export let snippets = null
   export let autofocusEditor = false
   export let placeholder = null
+  export let showTabBar = true
 
   const Modes = {
     Text: "Text",
@@ -234,10 +235,8 @@
 <DrawerContent padding={false}>
   <div class="binding-panel">
     <div class="main">
-      <div class="tabs">
-        {#if $$slots.tabs}
-          <slot name="tabs" />
-        {:else}
+      {#if showTabBar}
+        <div class="tabs">
           <div class="editor-tabs">
             {#each editorModeOptions as editorMode}
               <ActionButton
@@ -250,20 +249,20 @@
               </ActionButton>
             {/each}
           </div>
-        {/if}
-        <div class="side-tabs">
-          {#each sidePanelOptions as panel}
-            <ActionButton
-              size="M"
-              quiet
-              selected={sidePanel === panel}
-              on:click={() => changeSidePanel(panel)}
-            >
-              <Icon name={panel} size="S" />
-            </ActionButton>
-          {/each}
+          <div class="side-tabs">
+            {#each sidePanelOptions as panel}
+              <ActionButton
+                size="M"
+                quiet
+                selected={sidePanel === panel}
+                on:click={() => changeSidePanel(panel)}
+              >
+                <Icon name={panel} size="S" />
+              </ActionButton>
+            {/each}
+          </div>
         </div>
-      </div>
+      {/if}
       <div class="editor">
         {#if mode === Modes.Text}
           <CodeEditor
