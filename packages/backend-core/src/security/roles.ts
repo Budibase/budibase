@@ -101,10 +101,7 @@ export function getBuiltinRole(roleId: string): Role | undefined {
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
-export function builtinRoleToNumber(id?: string) {
-  if (!id) {
-    return 0
-  }
+export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
