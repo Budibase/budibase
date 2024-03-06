@@ -92,7 +92,7 @@
 {#if schemaLoaded}
   <Button
     onClick={openEditor}
-    icon="ri-stackshare-line"
+    icon="ri-filter-3-line"
     text="Filter"
     size="XL"
     type="secondary"
