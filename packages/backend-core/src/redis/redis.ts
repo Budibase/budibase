@@ -291,23 +291,16 @@ class RedisWrapper {
       return acc
     }, {} as Record<string, any>)
 
-    const luaScript = `
-        for i, key in ipairs(KEYS) do
-            redis.call('MSET', key, ARGV[i])
-            ${
-              expirySeconds !== null
-                ? `redis.call('EXPIRE', key, ARGV[#ARGV])`
-                : ""
-            }
-        end
-        `
-    const keys = Object.keys(dataToStore)
-    const values = Object.values(dataToStore)
+    const pipeline = client.pipeline()
+    pipeline.mset(dataToStore)
+
     if (expirySeconds !== null) {
-      values.push(expirySeconds)
+      for (const key of Object.keys(dataToStore)) {
+        pipeline.expire(key, expirySeconds)
+      }
     }
 
-    await client.eval(luaScript, keys.length, ...keys, ...values)
+    await pipeline.exec()
   }
 
   async getTTL(key: string) {
