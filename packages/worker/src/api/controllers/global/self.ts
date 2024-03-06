@@ -9,7 +9,12 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
+import {
+  UpdateSelfRequest,
+  UpdateSelfResponse,
+  User,
+  UserCtx,
+} from "@budibase/types"
 
 const { newid } = utils
 
@@ -105,16 +110,79 @@ export async function getSelf(ctx: any) {
   addSessionAttributesToUser(ctx)
 }
 
+export const syncAppFavourites = async (processedAppIds: string[]) => {
+  const apps = await fetchAppsByIds(processedAppIds)
+  return apps?.reduce((acc: string[], app) => {
+    const id = app.appId.replace(dbCore.APP_DEV_PREFIX, "")
+    if (processedAppIds.includes(id)) {
+      acc.push(id)
+    }
+    return acc
+  }, [])
+}
+
+export const fetchAppsByIds = async (processedAppIds: string[]) => {
+  return await dbCore.getAppsByIDs(
+    processedAppIds.map(appId => `${dbCore.APP_DEV_PREFIX}${appId}`)
+  )
+}
+
+const processUserAppFavourites = (
+  user: User,
+  appIdRequest: string[] | undefined
+) => {
+  const userAppFavourites = user.appFavourites || []
+  const appFavouritesRequest = appIdRequest || []
+  const appFavouritesUpdated = [
+    ...new Set(userAppFavourites.concat(appFavouritesRequest)),
+  ]
+
+  // Process state
+  let processedAppIds: string[]
+  if (userAppFavourites.length) {
+    const req = new Set(appFavouritesRequest)
+    const updated = new Set(userAppFavourites)
+    for (const element of req) {
+      if (updated.has(element)) {
+        // Subtract/Toggle any existing ones
+        updated.delete(element)
+      } else {
+        // Add new appIds
+        updated.add(element)
+      }
+    }
+    processedAppIds = [...updated]
+  } else {
+    processedAppIds = [...appFavouritesUpdated]
+  }
+  return processedAppIds
+}
+
 export async function updateSelf(
   ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
 ) {
   const update = ctx.request.body
 
   let user = await userSdk.db.getUser(ctx.user._id!)
-  user = {
-    ...user,
-    ...update,
+
+  if ("appFavourites" in update) {
+    const appIds: string[] = processUserAppFavourites(
+      user,
+      update.appFavourites
+    )
+    const validAppIds: string[] = await syncAppFavourites(appIds)
+
+    user = {
+      ...user,
+      appFavourites: validAppIds,
+    }
+  } else {
+    user = {
+      ...user,
+      ...update,
+    }
   }
+
   user = await userSdk.db.save(user, { requirePassword: false })
 
   if (update.password) {
@@ -131,3 +199,12 @@ export async function updateSelf(
     _rev: user._rev!,
   }
 }
+
+// export default {
+//   generateAPIKey,
+//   fetchAPIKey,
+//   getSelf,
+//   syncAppFavourites,
+//   fetchAppsByIds,
+//   updateSelf,
+// }

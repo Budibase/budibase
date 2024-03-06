@@ -19,10 +19,16 @@
   import { automationStore, initialise } from "stores/builder"
   import { API } from "api"
   import { onMount } from "svelte"
-  import { apps, auth, admin, licensing, environment } from "stores/portal"
+  import {
+    appsStore,
+    auth,
+    admin,
+    licensing,
+    environment,
+    enriched as enrichedApps,
+  } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"
-  import { AppStatus } from "constants"
   import Logo from "assets/bb-space-man.svg"
 
   let sortBy = "name"
@@ -33,55 +39,26 @@
   let searchTerm = ""
   let creatingFromTemplate = false
   let automationErrors
-  let accessFilterList = null
 
   $: welcomeHeader = `Welcome ${$auth?.user?.firstName || "back"}`
-  $: enrichedApps = enrichApps($apps, $auth.user, sortBy)
-  $: filteredApps = enrichedApps.filter(
-    app =>
-      (searchTerm
-        ? app?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-        : true) &&
-      (accessFilterList !== null
-        ? accessFilterList?.includes(
-            `${app?.type}_${app?.tenantId}_${app?.appId}`
-          )
-        : true)
-  )
-  $: automationErrors = getAutomationErrors(enrichedApps)
+  $: filteredApps = filterApps($enrichedApps, searchTerm)
+  $: automationErrors = getAutomationErrors(filteredApps || [])
   $: isOwner = $auth.accountPortalAccess && $admin.cloud
+
+  const filterApps = (apps, searchTerm) => {
+    return apps?.filter(app => {
+      const query = searchTerm?.trim()?.replace(/\s/g, "")
+      if (query) {
+        return app?.name?.toLowerCase().includes(query.toLowerCase())
+      } else {
+        return true
+      }
+    })
+  }
 
   const usersLimitLockAction = $licensing?.errUserLimit
     ? () => accountLockedModal.show()
     : null
-
-  const enrichApps = (apps, user, sortBy) => {
-    const enrichedApps = apps.map(app => ({
-      ...app,
-      deployed: app.status === AppStatus.DEPLOYED,
-      lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
-      lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
-    }))
-
-    if (sortBy === "status") {
-      return enrichedApps.sort((a, b) => {
-        if (a.status === b.status) {
-          return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
-        }
-        return a.status === AppStatus.DEPLOYED ? -1 : 1
-      })
-    } else if (sortBy === "updated") {
-      return enrichedApps.sort((a, b) => {
-        const aUpdated = a.updatedAt || "9999"
-        const bUpdated = b.updatedAt || "9999"
-        return aUpdated < bUpdated ? 1 : -1
-      })
-    } else {
-      return enrichedApps.sort((a, b) => {
-        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
-      })
-    }
-  }
 
   const getAutomationErrors = apps => {
     const automationErrors = {}
@@ -117,7 +94,7 @@
   const initiateAppCreation = async () => {
     if ($licensing?.usageMetrics?.apps >= 100) {
       appLimitModal.show()
-    } else if ($apps?.length) {
+    } else if ($appsStore.apps?.length) {
       $goto("/builder/portal/apps/create")
     } else {
       template = null
@@ -136,7 +113,7 @@
       const templateKey = template.key.split("/")[1]
 
       let appName = templateKey.replace(/-/g, " ")
-      const appsWithSameName = $apps.filter(app =>
+      const appsWithSameName = $appsStore.apps.filter(app =>
         app.name?.startsWith(appName)
       )
       appName = `${appName} ${appsWithSameName.length + 1}`
@@ -217,7 +194,7 @@
           : "View error"}
         on:dismiss={async () => {
           await automationStore.actions.clearLogErrors({ appId })
-          await apps.load()
+          await appsStore.load()
         }}
         message={automationErrorMessage(appId)}
       />
@@ -233,7 +210,7 @@
       </div>
     </div>
 
-    {#if enrichedApps.length}
+    {#if $appsStore.apps.length}
       <Layout noPadding gap="L">
         <div class="title">
           {#if $auth.user && sdk.users.canCreateApps($auth.user)}
@@ -245,7 +222,7 @@
               >
                 Create new app
               </Button>
-              {#if $apps?.length > 0 && !$admin.offlineMode}
+              {#if $appsStore.apps?.length > 0 && !$admin.offlineMode}
                 <Button
                   size="M"
                   secondary
@@ -255,7 +232,7 @@
                   View templates
                 </Button>
               {/if}
-              {#if !$apps?.length}
+              {#if !$appsStore.apps?.length}
                 <Button
                   size="L"
                   quiet
@@ -267,11 +244,14 @@
               {/if}
             </div>
           {/if}
-          {#if enrichedApps.length > 1}
+          {#if $appsStore.apps.length > 1}
             <div class="app-actions">
               <Select
                 autoWidth
-                bind:value={sortBy}
+                value={$appsStore.sortBy}
+                on:change={e => {
+                  appsStore.updateSort(e.detail)
+                }}
                 placeholder={null}
                 options={[
                   { label: "Sort by name", value: "name" },
@@ -279,7 +259,17 @@
                   { label: "Sort by status", value: "status" },
                 ]}
               />
-              <Search placeholder="Search" bind:value={searchTerm} />
+              <Search
+                placeholder="Search"
+                on:input={e => {
+                  searchTerm = e.target.value
+                }}
+                on:change={e => {
+                  if (!e.detail) {
+                    searchTerm = null
+                  }
+                }}
+              />
             </div>
           {/if}
         </div>

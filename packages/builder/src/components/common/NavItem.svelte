@@ -8,6 +8,7 @@
   export let iconTooltip
   export let withArrow = false
   export let withActions = true
+  export let showActions = false
   export let indentLevel = 0
   export let text
   export let border = true
@@ -68,10 +69,11 @@
   class:border
   class:selected
   class:withActions
+  class:showActions
+  class:actionsOpen={highlighted && withActions}
   class:scrollable
   class:highlighted
   class:selectedBy
-  class:actionsOpen={highlighted && withActions}
   on:dragend
   on:dragstart
   on:dragover
@@ -170,7 +172,8 @@
   }
   .nav-item:hover .actions,
   .hovering .actions,
-  .nav-item.withActions.actionsOpen .actions {
+  .nav-item.withActions.actionsOpen .actions,
+  .nav-item.withActions.showActions .actions {
     opacity: 1;
   }
   .nav-item-content {

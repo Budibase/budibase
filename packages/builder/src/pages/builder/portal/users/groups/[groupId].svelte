@@ -13,7 +13,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { Breadcrumb, Breadcrumbs } from "components/portal/page"
   import { roles } from "stores/builder"
-  import { apps, auth, features, groups } from "stores/portal"
+  import { appsStore, auth, features, groups } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
@@ -50,17 +50,17 @@
   $: scimEnabled = $features.isScimEnabled
   $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
-  $: groupApps = $apps
+  $: groupApps = $appsStore.apps
     .filter(app =>
       groups.actions
         .getGroupAppIds(group)
-        .includes(apps.getProdAppID(app.devId))
+        .includes(appsStore.getProdAppID(app.devId))
     )
     .map(app => ({
       ...app,
-      role: group?.builder?.apps.includes(apps.getProdAppID(app.devId))
+      role: group?.builder?.apps.includes(appsStore.getProdAppID(app.devId))
         ? Constants.Roles.CREATOR
-        : group?.roles?.[apps.getProdAppID(app.devId)],
+        : group?.roles?.[appsStore.getProdAppID(app.devId)],
     }))
 
   $: {
@@ -92,7 +92,7 @@
   }
 
   const removeApp = async app => {
-    await groups.actions.removeApp(groupId, apps.getProdAppID(app.devId))
+    await groups.actions.removeApp(groupId, appsStore.getProdAppID(app.devId))
   }
   setContext("roles", {
     updateRole: () => {},

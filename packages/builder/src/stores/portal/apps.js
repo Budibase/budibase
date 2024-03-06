@@ -1,39 +1,61 @@
-import { writable } from "svelte/store"
+import { derived } from "svelte/store"
 import { AppStatus } from "constants"
 import { API } from "api"
+import { auth } from "./auth"
+import BudiStore from "../BudiStore" // move this
 
 // properties that should always come from the dev app, not the deployed
 const DEV_PROPS = ["updatedBy", "updatedAt"]
 
-const extractAppId = id => {
-  const split = id?.split("_") || []
-  return split.length ? split[split.length - 1] : null
+export const INITIAL_APPS_STATE = {
+  apps: [],
+  sortBy: "name",
 }
 
-const getProdAppID = appId => {
-  if (!appId) {
-    return appId
-  }
-  let rest,
-    separator = ""
-  if (appId.startsWith("app_dev")) {
-    // split to take off the app_dev element, then join it together incase any other app_ exist
-    const split = appId.split("app_dev")
-    split.shift()
-    rest = split.join("app_dev")
-  } else if (!appId.startsWith("app")) {
-    rest = appId
-    separator = "_"
-  } else {
-    return appId
-  }
-  return `app${separator}${rest}`
-}
+export class AppsStore extends BudiStore {
+  constructor() {
+    super({ ...INITIAL_APPS_STATE })
 
-export function createAppStore() {
-  const store = writable([])
+    this.extractAppId = this.extractAppId.bind(this)
+    this.getProdAppID = this.getProdAppID.bind(this)
+    this.updateSort = this.updateSort.bind(this)
+    this.load = this.load.bind(this)
+    this.save = this.save.bind(this)
+  }
 
-  async function load() {
+  extractAppId(id) {
+    const split = id?.split("_") || []
+    return split.length ? split[split.length - 1] : null
+  }
+
+  getProdAppID(appId) {
+    if (!appId) {
+      return appId
+    }
+    let rest,
+      separator = ""
+    if (appId.startsWith("app_dev")) {
+      // split to take off the app_dev element, then join it together incase any other app_ exist
+      const split = appId.split("app_dev")
+      split.shift()
+      rest = split.join("app_dev")
+    } else if (!appId.startsWith("app")) {
+      rest = appId
+      separator = "_"
+    } else {
+      return appId
+    }
+    return `app${separator}${rest}`
+  }
+
+  updateSort(sortBy) {
+    this.update(state => ({
+      ...state,
+      sortBy,
+    }))
+  }
+
+  async load() {
     const json = await API.getApps()
     if (Array.isArray(json)) {
       // Merge apps into one sensible list
@@ -43,7 +65,7 @@ export function createAppStore() {
 
       // First append all dev app version
       devApps.forEach(app => {
-        const id = extractAppId(app.appId)
+        const id = this.extractAppId(app.appId)
         appMap[id] = {
           ...app,
           devId: app.appId,
@@ -53,7 +75,7 @@ export function createAppStore() {
 
       // Then merge with all prod app versions
       deployedApps.forEach(app => {
-        const id = extractAppId(app.appId)
+        const id = this.extractAppId(app.appId)
 
         // Skip any deployed apps which don't have a dev counterpart
         if (!appMap[id]) {
@@ -81,39 +103,80 @@ export function createAppStore() {
       // Transform into an array and clean up
       const apps = Object.values(appMap)
       apps.forEach(app => {
-        app.appId = extractAppId(app.devId)
+        app.appId = this.extractAppId(app.devId)
         delete app._id
         delete app._rev
       })
-      store.set(apps)
+      this.update(state => ({
+        ...state,
+        apps,
+      }))
     } else {
-      store.set([])
+      this.update(state => ({
+        ...state,
+        apps: [],
+      }))
     }
   }
 
-  async function update(appId, value) {
+  async save(appId, value) {
     await API.saveAppMetadata({
       appId,
       metadata: value,
     })
-    store.update(state => {
-      const updatedAppIndex = state.findIndex(app => app.instance._id === appId)
+    this.update(state => {
+      const updatedAppIndex = state.apps.findIndex(
+        app => app.instance._id === appId
+      )
       if (updatedAppIndex !== -1) {
-        let updatedApp = state[updatedAppIndex]
+        let updatedApp = state.apps[updatedAppIndex]
         updatedApp = { ...updatedApp, ...value }
-        state.apps = state.splice(updatedAppIndex, 1, updatedApp)
+        state.apps = state.apps.splice(updatedAppIndex, 1, updatedApp)
       }
       return state
     })
   }
-
-  return {
-    subscribe: store.subscribe,
-    load,
-    update,
-    extractAppId,
-    getProdAppID,
-  }
 }
 
-export const apps = createAppStore()
+export const appsStore = new AppsStore()
+
+// Centralise any logic that enriches the apps list
+export const enriched = derived([appsStore, auth], ([$store, $auth]) => {
+  const enrichedApps = $store.apps
+    ? $store.apps.map(app => ({
+        ...app,
+        deployed: app.status === AppStatus.DEPLOYED,
+        lockedYou: app.lockedBy && app.lockedBy.email === user?.email,
+        lockedOther: app.lockedBy && app.lockedBy.email !== user?.email,
+        favourite: $auth?.user.appFavourites?.includes(app.appId),
+      }))
+    : []
+
+  if ($store.sortBy === "status") {
+    return enrichedApps.sort((a, b) => {
+      if (a.favourite === b.favourite) {
+        if (a.status === b.status) {
+          return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+        }
+        return a.status === AppStatus.DEPLOYED ? -1 : 1
+      }
+      return a.favourite ? -1 : 1
+    })
+  } else if ($store.sortBy === "updated") {
+    return enrichedApps?.sort((a, b) => {
+      if (a.favourite === b.favourite) {
+        const aUpdated = a.updatedAt || "9999"
+        const bUpdated = b.updatedAt || "9999"
+        return aUpdated < bUpdated ? 1 : -1
+      }
+      return a.favourite ? -1 : 1
+    })
+  } else {
+    return enrichedApps?.sort((a, b) => {
+      if (a.favourite === b.favourite) {
+        return a.name?.toLowerCase() < b.name?.toLowerCase() ? -1 : 1
+      }
+      return a.favourite ? -1 : 1
+    })
+  }
+})

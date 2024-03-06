@@ -1,58 +1,53 @@
-<script context="module">
-  export const directions = ["n", "ne", "e", "se", "s", "sw", "w", "nw"]
-</script>
-
 <script>
-  import Tooltip from "../Tooltip/Tooltip.svelte"
-  import { fade } from "svelte/transition"
+  import {
+    default as AbsTooltip,
+    TooltipPosition,
+    TooltipType,
+  } from "../Tooltip/AbsTooltip.svelte"
 
-  export let direction = "n"
   export let name = "Add"
   export let hidden = false
   export let size = "M"
   export let hoverable = false
   export let disabled = false
   export let color
+  export let hoverColor
   export let tooltip
-
-  $: rotation = getRotation(direction)
-
-  let showTooltip = false
-
-  const getRotation = direction => {
-    return directions.indexOf(direction) * 45
-  }
+  export let tooltipPosition = TooltipPosition.Bottom
+  export let tooltipType = TooltipType.Default
+  export let tooltipColor
+  export let tooltipWrap = true
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<div
-  class="icon"
-  on:mouseover={() => (showTooltip = true)}
-  on:focus={() => (showTooltip = true)}
-  on:mouseleave={() => (showTooltip = false)}
-  on:click={() => (showTooltip = false)}
+<AbsTooltip
+  text={tooltip}
+  type={tooltipType}
+  position={tooltipPosition}
+  color={tooltipColor}
+  noWrap={tooltipWrap}
 >
-  <svg
-    on:click
-    class:hoverable
-    class:disabled
-    class="spectrum-Icon spectrum-Icon--size{size}"
-    focusable="false"
-    aria-hidden={hidden}
-    aria-label={name}
-    style={`transform: rotate(${rotation}deg); ${
-      color ? `color: ${color};` : ""
-    }`}
-  >
-    <use style="pointer-events: none;" xlink:href="#spectrum-icon-18-{name}" />
-  </svg>
-  {#if tooltip && showTooltip}
-    <div class="tooltip" in:fade={{ duration: 130, delay: 250 }}>
-      <Tooltip textWrapping direction="top" text={tooltip} />
-    </div>
-  {/if}
-</div>
+  <div class="icon">
+    <svg
+      on:click
+      class:hoverable
+      class:disabled
+      class="spectrum-Icon spectrum-Icon--size{size}"
+      focusable="false"
+      aria-hidden={hidden}
+      aria-label={name}
+      style={`${color ? `color: ${color};` : ""} ${
+        hoverColor
+          ? `--hover-color: ${hoverColor}`
+          : "--hover-color: var(--spectrum-alias-icon-color-selected-hover)"
+      }`}
+    >
+      <use
+        style="pointer-events: none;"
+        xlink:href="#spectrum-icon-18-{name}"
+      />
+    </svg>
+  </div>
+</AbsTooltip>
 
 <style>
   .icon {
@@ -66,7 +61,7 @@
     transition: color var(--spectrum-global-animation-duration-100, 130ms);
   }
   svg.hoverable:hover {
-    color: var(--spectrum-alias-icon-color-selected-hover) !important;
+    color: var(--hover-color) !important;
     cursor: pointer;
   }
   svg.hoverable:active {

@@ -2,7 +2,7 @@
   import { notifications } from "@budibase/bbui"
   import {
     admin,
-    apps,
+    appsStore,
     templates,
     licensing,
     groups,
@@ -14,7 +14,7 @@
   import PortalSideBar from "./_components/PortalSideBar.svelte"
 
   // Don't block loading if we've already hydrated state
-  let loaded = !!$apps?.length
+  let loaded = !!$appsStore.apps?.length
 
   onMount(async () => {
     try {
@@ -34,7 +34,10 @@
       }
 
       // Go to new app page if no apps exists
-      if (!$apps.length && sdk.users.hasBuilderPermissions($auth.user)) {
+      if (
+        !$appsStore.apps.length &&
+        sdk.users.hasBuilderPermissions($auth.user)
+      ) {
         $redirect("./onboarding")
       }
     } catch (error) {
@@ -46,7 +49,7 @@
 
 {#if loaded}
   <div class="page">
-    {#if $apps.length > 0}
+    {#if $appsStore.apps.length > 0}
       <PortalSideBar />
     {/if}
     <slot />

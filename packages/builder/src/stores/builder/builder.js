@@ -1,7 +1,7 @@
 import { get } from "svelte/store"
 import { createBuilderWebsocket } from "./websocket.js"
 import { BuilderSocketEvent } from "@budibase/shared-core"
-import BudiStore from "./BudiStore"
+import BudiStore from "../BudiStore.js"
 import { previewStore } from "./preview.js"
 import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
 

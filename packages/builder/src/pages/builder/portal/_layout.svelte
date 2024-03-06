@@ -1,7 +1,7 @@
 <script>
   import { isActive, redirect, goto, url } from "@roxi/routify"
   import { Icon, notifications, Tabs, Tab } from "@budibase/bbui"
-  import { organisation, auth, menu, apps } from "stores/portal"
+  import { organisation, auth, menu, appsStore } from "stores/portal"
   import { onMount } from "svelte"
   import UpgradeButton from "./_components/UpgradeButton.svelte"
   import MobileMenu from "./_components/MobileMenu.svelte"
@@ -16,7 +16,8 @@
   let activeTab = "Apps"
 
   $: $url(), updateActiveTab($menu)
-  $: isOnboarding = !$apps.length && sdk.users.hasBuilderPermissions($auth.user)
+  $: isOnboarding =
+    !$appsStore.apps.length && sdk.users.hasBuilderPermissions($auth.user)
 
   const updateActiveTab = menu => {
     for (let entry of menu) {
@@ -40,7 +41,7 @@
       } else {
         try {
           // We need to load apps to know if we need to show onboarding fullscreen
-          await Promise.all([apps.load(), organisation.init()])
+          await Promise.all([appsStore.load(), organisation.init()])
         } catch (error) {
           notifications.error("Error getting org config")
         }

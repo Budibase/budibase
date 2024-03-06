@@ -18,6 +18,7 @@ export interface UpdateSelfRequest {
   password?: string
   forceResetPassword?: boolean
   onboardedAt?: string
+  appFavourites?: string[]
 }
 
 export interface UpdateSelfResponse {

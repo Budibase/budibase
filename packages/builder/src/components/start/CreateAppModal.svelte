@@ -9,7 +9,7 @@
   } from "@budibase/bbui"
   import { initialise } from "stores/builder"
   import { API } from "api"
-  import { apps, admin, auth } from "stores/portal"
+  import { appsStore, admin, auth } from "stores/portal"
   import { onMount } from "svelte"
   import { goto } from "@roxi/routify"
   import { createValidationStore } from "helpers/validation/yup"
@@ -92,7 +92,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = svelteGet(apps)
+    const applications = svelteGet(appsStore).apps
     appValidation.name(validation, { apps: applications })
     appValidation.url(validation, { apps: applications })
     appValidation.file(validation, { template })

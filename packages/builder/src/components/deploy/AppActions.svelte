@@ -19,7 +19,7 @@
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import analytics, { Events, EventSource } from "analytics"
   import { API } from "api"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import {
     previewStore,
     builderStore,
@@ -45,7 +45,7 @@
   let appActionPopoverAnchor
   let publishing = false
 
-  $: filteredApps = $apps.filter(app => app.devId === application)
+  $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
   $: latestDeployments = $deploymentStore
     .filter(deployment => deployment.status === "SUCCESS")
@@ -129,7 +129,7 @@
     }
     try {
       await API.unpublishApp(selectedApp.prodId)
-      await apps.load()
+      await appsStore.load()
       notifications.send("App unpublished", {
         type: "success",
         icon: "GlobeStrike",
@@ -141,7 +141,7 @@
 
   const completePublish = async () => {
     try {
-      await apps.load()
+      await appsStore.load()
       await deploymentStore.load()
     } catch (err) {
       notifications.error("Error refreshing app")

@@ -18,7 +18,14 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing, features } from "stores/portal"
+  import {
+    users,
+    auth,
+    groups,
+    appsStore,
+    licensing,
+    features,
+  } from "stores/portal"
   import { roles } from "stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
@@ -93,7 +100,7 @@
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups($groups, searchTerm)
-  $: availableApps = getAvailableApps($apps, privileged, user?.roles)
+  $: availableApps = getAvailableApps($appsStore.apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
       return y._id === userId
@@ -107,12 +114,12 @@
       availableApps = availableApps.filter(x => {
         let roleKeys = Object.keys(roles || {})
         return roleKeys.concat(user?.builder?.apps).find(y => {
-          return x.appId === apps.extractAppId(y)
+          return x.appId === appsStore.extractAppId(y)
         })
       })
     }
     return availableApps.map(app => {
-      const prodAppId = apps.getProdAppID(app.devId)
+      const prodAppId = appsStore.getProdAppID(app.devId)
       return {
         name: app.name,
         devId: app.devId,

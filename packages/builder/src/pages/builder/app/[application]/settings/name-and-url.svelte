@@ -11,13 +11,13 @@
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
   import { appStore, initialise } from "stores/builder"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import { API } from "api"
 
   let updatingModal
 
-  $: filteredApps = $apps.filter(app => app.devId == $appStore.appId)
+  $: filteredApps = $appsStore.apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 

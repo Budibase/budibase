@@ -1,12 +1,12 @@
 <script>
   import { keepOpen, Body, ModalContent, Select } from "@budibase/bbui"
-  import { apps, groups } from "stores/portal"
+  import { appsStore, groups } from "stores/portal"
   import { roles } from "stores/builder"
   import RoleSelect from "components/common/RoleSelect.svelte"
 
   export let group
 
-  $: appOptions = $apps.map(app => ({
+  $: appOptions = $appsStore.apps.map(app => ({
     label: app.name,
     value: app,
   }))
@@ -16,7 +16,7 @@
   let selectingRole = false
 
   async function appSelected() {
-    const prodAppId = apps.getProdAppID(selectedApp.devId)
+    const prodAppId = appsStore.getProdAppID(selectedApp.devId)
     if (!selectingRole) {
       selectingRole = true
       await roles.fetchByAppId(prodAppId)
