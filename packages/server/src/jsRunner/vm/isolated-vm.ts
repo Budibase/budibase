@@ -7,6 +7,7 @@ import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
 import { VM } from "@budibase/types"
+import { iifeWrapper } from "../utilities"
 import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
@@ -118,11 +119,11 @@ export class IsolatedVM implements VM {
     // 3. Process script
     // 4. Stringify the result in order to convert the result from BSON to json
     this.codeWrapper = code =>
-      `(function(){
-            const data = bson.deserialize(bsonData, { validation: { utf8: false } }).data;
-            const result = ${code}
-            return bson.toJson(result);
-        })();`
+      iifeWrapper(`
+        const data = bson.deserialize(bsonData, { validation: { utf8: false } }).data;
+        const result = ${code}
+        return bson.toJson(result);
+      `)
 
     const bsonSource = loadBundle(BundleType.BSON)
 

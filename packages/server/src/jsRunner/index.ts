@@ -7,7 +7,6 @@ import {
 } from "@budibase/string-templates"
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
-
 import { IsolatedVM } from "./vm"
 import type { VM } from "@budibase/types"
 

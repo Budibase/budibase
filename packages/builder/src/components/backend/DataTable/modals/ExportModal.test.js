@@ -32,6 +32,7 @@ vi.mock("svelte", async () => {
     },
     createEventDispatcher: vi.fn(),
     onDestroy: vi.fn(),
+    tick: vi.fn(),
   }
 })
 

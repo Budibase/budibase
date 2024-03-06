@@ -211,7 +211,7 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: any) {
+export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }
@@ -223,7 +223,8 @@ export const exportRows = async (
 
   const format = ctx.query.format
 
-  const { rows, columns, query, sort, sortOrder } = ctx.request.body
+  const { rows, columns, query, sort, sortOrder, delimiter, customHeaders } =
+    ctx.request.body
   if (typeof format !== "string" || !exporters.isFormat(format)) {
     ctx.throw(
       400,
@@ -241,6 +242,8 @@ export const exportRows = async (
     query,
     sort,
     sortOrder,
+    delimiter,
+    customHeaders,
   })
   ctx.attachment(fileName)
   ctx.body = apiFileReturn(content)

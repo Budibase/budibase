@@ -280,7 +280,7 @@ class TestConfiguration {
 
       const db = context.getGlobalDB()
 
-      const id = dbCore.generateDevInfoID(this.user!._id)
+      const id = dbCore.generateDevInfoID(this.user!._id!)
       // TODO: dry
       this.apiKey = encryption.encrypt(
         `${this.tenantId}${dbCore.SEPARATOR}${utils.newid()}`

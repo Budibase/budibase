@@ -149,6 +149,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="action-top-nav">
   <div class="action-buttons">
     {#if updateAvailable && $isOnlyUser}
@@ -162,9 +164,10 @@
       </div>
     {/if}
     <TourWrap
-      tourStepKey={$builderStore.onboarding
-        ? TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT
-        : TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT}
+      stepKeys={[
+        TOUR_STEP_KEYS.BUILDER_USER_MANAGEMENT,
+        TOUR_STEP_KEYS.FEATURE_USER_MANAGEMENT,
+      ]}
     >
       <div class="app-action-button users">
         <div class="app-action" id="builder-app-users-button">
@@ -207,7 +210,7 @@
       <div bind:this={appActionPopoverAnchor}>
         <div class="app-action">
           <Icon name={isPublished ? "GlobeCheck" : "GlobeStrike"} />
-          <TourWrap tourStepKey={TOUR_STEP_KEYS.BUILDER_APP_PUBLISH}>
+          <TourWrap stepKeys={[TOUR_STEP_KEYS.BUILDER_APP_PUBLISH]}>
             <span class="publish-open" id="builder-app-publish-button">
               Publish
               <Icon
