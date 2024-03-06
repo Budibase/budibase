@@ -42,7 +42,6 @@ export async function updateMetadata(
   // this isn't applicable to the user
   delete metadata.roles
   ctx.body = await db.put(metadata)
-  await cache.user.invalidateUser(user._id!)
 }
 
 export async function destroyMetadata(ctx: UserCtx<void, { message: string }>) {
