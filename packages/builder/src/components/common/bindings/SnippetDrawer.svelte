@@ -6,6 +6,7 @@
     Icon,
     AbsTooltip,
     TooltipType,
+    notifications,
   } from "@budibase/bbui"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
@@ -22,24 +23,38 @@
   let drawer
   let name = ""
   let code = ""
+  let loading = false
 
   $: key = snippet?.name
   $: name = snippet?.name || "MySnippet"
   $: code = snippet?.code ? encodeJSBinding(snippet.code) : ""
   $: rawJS = decodeJSBinding(code)
-  $: nameError = validateName(name)
+  $: nameError = validateName(name, $snippetStore)
 
   const saveSnippet = async () => {
-    await snippetStore.saveSnippet({
-      name,
-      code: rawJS,
-    })
-    drawer.hide()
+    loading = true
+    try {
+      await snippetStore.saveSnippet({
+        name,
+        code: rawJS,
+      })
+      drawer.hide()
+      notifications.success(`Snippet ${name} saved`)
+    } catch (error) {
+      notifications.error("Error saving snippet")
+    }
+    loading = false
   }
 
   const deleteSnippet = async () => {
-    await snippetStore.deleteSnippet(snippet.name)
-    drawer.hide()
+    loading = true
+    try {
+      await snippetStore.deleteSnippet(snippet.name)
+      drawer.hide()
+    } catch (error) {
+      notifications.error("Error deleting snippet")
+    }
+    loading = false
   }
 
   // Validating function names is not as easy as you think. A simple regex does
@@ -48,7 +63,7 @@
   // Instead, we can run a simple regex to roughly validate it, then basically
   // try executing it and see if it's valid JS. The initial regex prevents
   // against any potential XSS attacks here.
-  const validateName = name => {
+  const validateName = (name, snippets) => {
     if (!name?.length) {
       return "Name is required"
     }
@@ -57,6 +72,9 @@
     }
     if (!roughValidNameRegex.test(name)) {
       return "No special characters or spaces"
+    }
+    if (snippets.some(snippet => snippet.name === name)) {
+      return "That name is already in use"
     }
     const js = `(function ${name}(){return true})()`
     try {
@@ -89,9 +107,11 @@
   </svelte:fragment>
   <svelte:fragment slot="buttons">
     {#if snippet}
-      <Button warning on:click={deleteSnippet}>Delete</Button>
+      <Button warning on:click={deleteSnippet} disabled={loading}>
+        Delete
+      </Button>
     {/if}
-    <Button cta on:click={saveSnippet} disabled={nameError != null}>
+    <Button cta on:click={saveSnippet} disabled={loading || nameError != null}>
       Save
     </Button>
   </svelte:fragment>
