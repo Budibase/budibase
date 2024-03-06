@@ -26,6 +26,7 @@ export const buildSelfSaveValidation = () => {
     firstName: OPTIONAL_STRING,
     lastName: OPTIONAL_STRING,
     onboardedAt: Joi.string().optional(),
+    tours: Joi.object().optional(),
   }
   return auth.joiValidator.body(Joi.object(schema).required().unknown(false))
 }
