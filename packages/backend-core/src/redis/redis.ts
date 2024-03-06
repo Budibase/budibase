@@ -335,7 +335,7 @@ class RedisWrapper {
   async increment(key: string) {
     const result = await this.getClient().incr(addDbPrefix(this._db, key))
     if (isNaN(result)) {
-      throw new Error(`Redis ${key} does not contains a number`)
+      throw new Error(`Redis ${key} does not contain a number`)
     }
     return result
   }
