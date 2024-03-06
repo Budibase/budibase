@@ -2,7 +2,7 @@ import { writable, get } from "svelte/store"
 import { API } from "api"
 import { appStore } from "./app"
 
-const createSnippetStore = () => {
+const createsnippets = () => {
   const store = writable([])
 
   const syncMetadata = metadata => {
@@ -38,4 +38,4 @@ const createSnippetStore = () => {
   }
 }
 
-export const snippetStore = createSnippetStore()
+export const snippets = createsnippets()

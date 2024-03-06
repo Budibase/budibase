@@ -1,6 +1,6 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
-  import { previewStore, snippetStore } from "stores/builder"
+  import { previewStore, snippets } from "stores/builder"
   import { onMount } from "svelte"
 
   export let bindings = []
@@ -30,7 +30,7 @@
   bind:valid
   bindings={enrichedBindings}
   context={$previewStore.selectedComponentContext}
-  snippets={$snippetStore}
+  snippets={$snippets}
   {value}
   {allowJS}
   {allowHelpers}

@@ -18,7 +18,7 @@ import {
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
-import { snippetStore } from "./snippets"
+import { snippets } from "./snippets"
 
 // Backend
 import { tables } from "./tables"
@@ -63,7 +63,7 @@ export {
   queries,
   flags,
   hoverStore,
-  snippetStore,
+  snippets,
 }
 
 export const reset = () => {
@@ -103,7 +103,7 @@ export const initialise = async pkg => {
   builderStore.init(application)
   navigationStore.syncAppNavigation(application?.navigation)
   themeStore.syncAppTheme(application)
-  snippetStore.syncMetadata(application)
+  snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
   resetBuilderHistory()
