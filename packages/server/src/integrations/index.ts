@@ -14,7 +14,12 @@ import firebase from "./firebase"
 import redis from "./redis"
 import snowflake from "./snowflake"
 import oracle from "./oracle"
-import { SourceName, Integration, PluginType } from "@budibase/types"
+import {
+  SourceName,
+  Integration,
+  PluginType,
+  IntegrationBase,
+} from "@budibase/types"
 import { getDatasourcePlugin } from "../utilities/fileSystem"
 import env from "../environment"
 import cloneDeep from "lodash/cloneDeep"
@@ -37,26 +42,31 @@ const DEFINITIONS: Record<SourceName, Integration | undefined> = {
   [SourceName.REDIS]: redis.schema,
   [SourceName.SNOWFLAKE]: snowflake.schema,
   [SourceName.ORACLE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
 }
 
-const INTEGRATIONS: Record<SourceName, any> = {
-  [SourceName.POSTGRES]: postgres.integration,
-  [SourceName.DYNAMODB]: dynamodb.integration,
-  [SourceName.MONGODB]: mongodb.integration,
-  [SourceName.ELASTICSEARCH]: elasticsearch.integration,
-  [SourceName.COUCHDB]: couchdb.integration,
-  [SourceName.SQL_SERVER]: sqlServer.integration,
-  [SourceName.S3]: s3.integration,
-  [SourceName.AIRTABLE]: airtable.integration,
-  [SourceName.MYSQL]: mysql.integration,
-  [SourceName.ARANGODB]: arangodb.integration,
-  [SourceName.REST]: rest.integration,
-  [SourceName.FIRESTORE]: firebase.integration,
-  [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
-  [SourceName.REDIS]: redis.integration,
-  [SourceName.SNOWFLAKE]: snowflake.integration,
-  [SourceName.ORACLE]: undefined,
-}
+type IntegrationBaseConstructor = new (...args: any[]) => IntegrationBase
+
+const INTEGRATIONS: Record<SourceName, IntegrationBaseConstructor | undefined> =
+  {
+    [SourceName.POSTGRES]: postgres.integration,
+    [SourceName.DYNAMODB]: dynamodb.integration,
+    [SourceName.MONGODB]: mongodb.integration,
+    [SourceName.ELASTICSEARCH]: elasticsearch.integration,
+    [SourceName.COUCHDB]: couchdb.integration,
+    [SourceName.SQL_SERVER]: sqlServer.integration,
+    [SourceName.S3]: s3.integration,
+    [SourceName.AIRTABLE]: airtable.integration,
+    [SourceName.MYSQL]: mysql.integration,
+    [SourceName.ARANGODB]: arangodb.integration,
+    [SourceName.REST]: rest.integration,
+    [SourceName.FIRESTORE]: firebase.integration,
+    [SourceName.GOOGLE_SHEETS]: googlesheets.integration,
+    [SourceName.REDIS]: redis.integration,
+    [SourceName.SNOWFLAKE]: snowflake.integration,
+    [SourceName.ORACLE]: undefined,
+    [SourceName.BUDIBASE]: undefined,
+  }
 
 // optionally add oracle integration if the oracle binary can be installed
 if (

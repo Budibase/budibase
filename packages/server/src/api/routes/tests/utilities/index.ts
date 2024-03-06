@@ -1,5 +1,4 @@
-import TestConfig from "../../../../tests/utilities/TestConfiguration"
-import env from "../../../../environment"
+import TestConfiguration from "../../../../tests/utilities/TestConfiguration"
 import supertest from "supertest"
 
 export * as structures from "../../../../tests/utilities/structures"
@@ -47,10 +46,10 @@ export function delay(ms: number) {
 }
 
 let request: supertest.SuperTest<supertest.Test> | undefined | null,
-  config: TestConfig | null
+  config: TestConfiguration | null
 
 export function beforeAll() {
-  config = new TestConfig()
+  config = new TestConfiguration()
   request = config.getRequest()
 }
 
@@ -76,22 +75,4 @@ export function getConfig() {
     beforeAll()
   }
   return config!
-}
-
-export async function switchToSelfHosted(func: any) {
-  // self hosted stops any attempts to Dynamo
-  env._set("NODE_ENV", "production")
-  env._set("SELF_HOSTED", true)
-  let error
-  try {
-    await func()
-  } catch (err) {
-    error = err
-  }
-  env._set("NODE_ENV", "jest")
-  env._set("SELF_HOSTED", false)
-  // don't throw error until after reset
-  if (error) {
-    throw error
-  }
 }

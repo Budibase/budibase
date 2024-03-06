@@ -1,8 +1,8 @@
 import { BudibaseInternalAPI } from "../internal-api"
 import { AccountInternalAPI } from "../account-api"
-import { APIRequestOpts, CreateAppRequest, State } from "../types"
+import { APIRequestOpts, State } from "../types"
 import * as fixtures from "../internal-api/fixtures"
-import { CreateAccountRequest } from "@budibase/types"
+import { CreateAccountRequest, CreateAppRequest } from "@budibase/types"
 
 export default class BudibaseTestConfiguration {
   // apis
