@@ -1,6 +1,5 @@
 import {
   FieldType,
-  FieldTypeSubtypes,
   SearchParams,
   Table,
   DocumentType,
