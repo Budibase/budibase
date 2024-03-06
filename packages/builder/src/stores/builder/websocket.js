@@ -6,7 +6,7 @@ import {
   themeStore,
   navigationStore,
   deploymentStore,
-  snippetStore,
+  snippets,
   datasources,
   tables,
 } from "stores/builder"
@@ -65,7 +65,7 @@ export const createBuilderWebsocket = appId => {
     appStore.syncMetadata(metadata)
     themeStore.syncMetadata(metadata)
     navigationStore.syncMetadata(metadata)
-    snippetStore.syncMetadata(metadata)
+    snippets.syncMetadata(metadata)
   })
   socket.onOther(
     BuilderSocketEvent.AppPublishChange,

@@ -10,7 +10,8 @@
   } from "@budibase/bbui"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
-  import { snippetStore } from "stores/builder"
+  import { snippets } from "stores/builder"
+  import { getSequentialName } from "helpers/duplicate"
 
   export let snippet
 
@@ -25,16 +26,17 @@
   let code = ""
   let loading = false
 
+  $: defaultName = getSequentialName($snippets, "MySnippet", x => x.name)
   $: key = snippet?.name
-  $: name = snippet?.name || "MySnippet"
+  $: name = snippet?.name || defaultName
   $: code = snippet?.code ? encodeJSBinding(snippet.code) : ""
   $: rawJS = decodeJSBinding(code)
-  $: nameError = validateName(name, $snippetStore)
+  $: nameError = validateName(name, $snippets)
 
   const saveSnippet = async () => {
     loading = true
     try {
-      await snippetStore.saveSnippet({
+      await snippets.saveSnippet({
         name,
         code: rawJS,
       })
@@ -49,7 +51,7 @@
   const deleteSnippet = async () => {
     loading = true
     try {
-      await snippetStore.deleteSnippet(snippet.name)
+      await snippets.deleteSnippet(snippet.name)
       drawer.hide()
     } catch (error) {
       notifications.error("Error deleting snippet")

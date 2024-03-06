@@ -48,3 +48,53 @@ export const duplicateName = (name, allNames) => {
 
   return `${baseName} ${number}`
 }
+
+/**
+ * More flexible alternative to the above function, which handles getting the
+ * next sequential name from an array of existing items while accounting for
+ * any type of prefix, and being able to deeply retrieve that name from the
+ * existing item array.
+ *
+ * Examples with a prefix of "foo":
+ * [] => "foo"
+ * ["foo"] => "foo2"
+ * ["foo", "foo6"] => "foo7"
+ *
+ * Examples with a prefix of "foo " (space at the end):
+ * [] => "foo"
+ * ["foo"] => "foo 2"
+ * ["foo", "foo 6"] => "foo 7"
+ *
+ * @param items the array of existing items
+ * @param prefix the string prefix of each name, including any spaces desired
+ * @param getName optional function to extract the name for an item, if not a
+ *  flat array of strings
+ */
+export const getSequentialName = (items, prefix, getName = x => x) => {
+  if (!prefix?.length || !getName) {
+    return null
+  }
+  const trimmedPrefix = prefix.trim()
+  if (!items?.length) {
+    return trimmedPrefix
+  }
+  let max = 0
+  items.forEach(item => {
+    const name = getName(item)
+    if (typeof name !== "string" || !name.startsWith(trimmedPrefix)) {
+      return
+    }
+    const split = name.split(trimmedPrefix)
+    if (split.length !== 2) {
+      return
+    }
+    if (split[1].trim() === "") {
+      split[1] = "1"
+    }
+    const num = parseInt(split[1])
+    if (num > max) {
+      max = num
+    }
+  })
+  return max === 0 ? trimmedPrefix : `${prefix}${max + 1}`
+}

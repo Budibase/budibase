@@ -1,6 +1,6 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
-  import { snippetStore } from "stores/builder"
+  import { snippets } from "stores/builder"
 
   export let bindings = []
   export let valid
@@ -23,7 +23,7 @@
 <BindingPanel
   bind:valid
   bindings={enrichedBindings}
-  snippets={$snippetStore}
+  snippets={$snippets}
   {value}
   {allowJS}
   {context}
