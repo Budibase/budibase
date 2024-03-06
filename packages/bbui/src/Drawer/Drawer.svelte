@@ -61,6 +61,7 @@
   import Button from "../Button/Button.svelte"
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
+  import { Icon, ActionButton } from "@budibase/bbui"
 
   export let title
   export let forceModal = false
@@ -184,10 +185,24 @@
         {style}
       >
         <header>
-          <div class="text">{title || "Bindings"}</div>
+          {#if $$slots.title}
+            <slot name="title" />
+          {:else}
+            <div class="text">{title || "Bindings"}</div>
+          {/if}
           <div class="buttons">
             <Button secondary quiet on:click={hide}>Cancel</Button>
             <slot name="buttons" />
+            {#if $resizable}
+              <ActionButton
+                size="M"
+                quiet
+                selected={$modal}
+                on:click={() => modal.set(!$modal)}
+              >
+                <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
+              </ActionButton>
+            {/if}
           </div>
         </header>
         <slot name="body" />
@@ -273,5 +288,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .buttons :global(.icon) {
+    width: 16px;
+    display: flex;
   }
 </style>

@@ -1,5 +1,5 @@
 <script>
-  import { Button, Drawer } from "@budibase/bbui"
+  import { Button, Drawer, Input } from "@budibase/bbui"
   import BindingPanel from "components/common/bindings/BindingPanel.svelte"
   import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
   import { snippetStore } from "stores/builder"
@@ -47,7 +47,11 @@
         placeholder="return function(input) &#10100; ... &#10101;"
         value={code}
         on:change={e => (code = e.detail)}
-      />
+      >
+        <div slot="tabs">
+          <Input placeholder="Name" />
+        </div>
+      </BindingPanel>
     {/key}
   </svelte:fragment>
 </Drawer>
