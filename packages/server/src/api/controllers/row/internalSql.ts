@@ -142,17 +142,17 @@ export async function sqlSearch(ctx: UserCtx) {
     }
   }
   try {
-    let sql = builder._query(request, {
+    let { sql } = builder._query(request, {
       disableReturning: true,
-      disablePreparedStatements: true,
-    }) as string
+      disableBindings: true,
+    })
 
     // quick hack for docIds
     sql = sql.replace(/`doc1`.`rowId`/g, "`doc1.rowId`")
     sql = sql.replace(/`doc2`.`rowId`/g, "`doc2.rowId`")
 
     const db = context.getAppDB()
-    const rows = await db.sql<Row[]>(sql)
+    const rows = await db.sql<Row>(sql)
 
     return {
       rows: sqlOutputProcessing(rows, table!, allTablesMap, relationships, {

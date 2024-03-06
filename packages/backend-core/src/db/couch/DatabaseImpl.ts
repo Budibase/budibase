@@ -231,7 +231,7 @@ export class DatabaseImpl implements Database {
     })
   }
 
-  async sql<T extends Document>(sql: string): Promise<T> {
+  async sql<T extends Document>(sql: string): Promise<T[]> {
     const dbName = this.name
     const url = `/${dbName}/${SQLITE_DESIGN_DOC_ID}`
     const response = await directCouchUrlCall({
@@ -243,7 +243,7 @@ export class DatabaseImpl implements Database {
     if (response.status > 300) {
       throw new Error(await response.text())
     }
-    return (await response.json()) as T
+    return (await response.json()) as T[]
   }
 
   async query<T extends Document>(

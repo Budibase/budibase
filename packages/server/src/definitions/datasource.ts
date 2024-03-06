@@ -6,5 +6,5 @@
 
 export interface QueryOptions {
   disableReturning?: boolean
-  disablePreparedStatements?: boolean
+  disableBindings?: boolean
 }

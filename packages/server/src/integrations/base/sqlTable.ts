@@ -8,6 +8,7 @@ import {
   RenameColumn,
   Table,
   FieldType,
+  SqlQuery,
 } from "@budibase/types"
 import { breakExternalTableId, SqlClient } from "../utils"
 import SchemaBuilder = Knex.SchemaBuilder
@@ -198,7 +199,7 @@ class SqlTableQueryBuilder {
     return json.endpoint.operation
   }
 
-  _tableQuery(json: QueryJson): Knex.Sql | Knex.SqlNative {
+  _tableQuery(json: QueryJson): SqlQuery {
     let client = knex({ client: this.sqlClient }).schema
     let schemaName = json?.endpoint?.schema
     if (schemaName) {
@@ -243,7 +244,7 @@ class SqlTableQueryBuilder {
       default:
         throw "Table operation is of unknown type"
     }
-    return query.toSQL()
+    return query.toSQL().toNative() as SqlQuery
   }
 }
 

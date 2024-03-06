@@ -6,13 +6,15 @@ import SqlTableQueryBuilder from "./sqlTable"
 import {
   Operation,
   QueryJson,
+  SqlQuery,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
+  SqlQueryBinding,
 } from "@budibase/types"
 import environment from "../../environment"
 
-type QueryFunction = (query: Knex.SqlNative, operation: Operation) => any
+type QueryFunction = (query: SqlQuery, operation: Operation) => any
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -584,10 +586,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
    * which for the sake of mySQL stops adding the returning statement to inserts, updates and deletes.
    * @return the query ready to be passed to the driver.
    */
-  _query(
-    json: QueryJson,
-    opts: QueryOptions = {}
-  ): Knex.SqlNative | Knex.Sql | string {
+  _query(json: QueryJson, opts: QueryOptions = {}): SqlQuery {
     const sqlClient = this.getSqlClient()
     const config: { client: string; useNullAsDefault?: boolean } = {
       client: sqlClient,
@@ -622,10 +621,10 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         throw `Operation type is not supported by SQL query builder`
     }
 
-    if (opts?.disablePreparedStatements) {
-      return query.toString()
+    if (opts?.disableBindings) {
+      return { sql: query.toString() }
     } else {
-      return query.toSQL().toNative()
+      return query.toSQL().toNative() as SqlQuery
     }
   }
 
@@ -708,7 +707,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
   }
 
-  log(query: string, values?: any[]) {
+  log(query: string, values?: SqlQueryBinding) {
     if (!environment.SQL_LOGGING_ENABLE) {
       return
     }
