@@ -390,24 +390,41 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
     }
   )
 
-  // Match a document against all criteria
   const docMatch = (doc: any) => {
-    return (
-      stringMatch(doc) &&
-      fuzzyMatch(doc) &&
-      rangeMatch(doc) &&
-      equalMatch(doc) &&
-      notEqualMatch(doc) &&
-      emptyMatch(doc) &&
-      notEmptyMatch(doc) &&
-      oneOf(doc) &&
-      contains(doc) &&
-      containsAny(doc) &&
-      notContains(doc)
-    )
-  }
+    const filterFunctions: Record<SearchQueryOperators, (doc: any) => boolean> =
+      {
+        string: stringMatch,
+        fuzzy: fuzzyMatch,
+        range: rangeMatch,
+        equal: equalMatch,
+        notEqual: notEqualMatch,
+        empty: emptyMatch,
+        notEmpty: notEmptyMatch,
+        oneOf: oneOf,
+        contains: contains,
+        containsAny: containsAny,
+        notContains: notContains,
+      }
 
-  // Process all docs
+    const activeFilterKeys: SearchQueryOperators[] = Object.entries(query || {})
+      .filter(
+        ([key, value]: [string, any]) =>
+          !["allOr", "onEmptyFilter"].includes(key) &&
+          value &&
+          Object.keys(value as Record<string, any>).length > 0
+      )
+      .map(([key]) => key as any)
+
+    const results: boolean[] = activeFilterKeys.map(filterKey => {
+      return filterFunctions[filterKey]?.(doc) ?? false
+    })
+
+    if (query!.allOr) {
+      return results.some(result => result === true)
+    } else {
+      return results.every(result => result === true)
+    }
+  }
   return docs.filter(docMatch)
 }
 

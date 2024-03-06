@@ -78,6 +78,7 @@
     "jest-serial-runner": "1.2.1",
     "pino-pretty": "10.0.0",
     "pouchdb-adapter-memory": "7.2.2",
+    "testcontainers": "^10.7.2",
     "timekeeper": "2.2.0",
     "typescript": "5.2.2"
   },
