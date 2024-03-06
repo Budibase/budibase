@@ -5,4 +5,5 @@ export interface Role extends Document {
   inherits?: string
   permissions: { [key: string]: string[] }
   version?: string
+  name: string
 }
