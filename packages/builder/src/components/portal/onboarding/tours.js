@@ -7,6 +7,7 @@ import {
   OnboardingDesign,
   OnboardingPublish,
   NewViewUpdateFormRowId,
+  NewFormSteps,
 } from "./steps"
 import { API } from "api"
 import { customPositionHandler } from "components/design/settings/controls/EditComponentPopover"
@@ -176,9 +177,7 @@ const getTours = () => {
         {
           id: TOUR_STEP_KEYS.BUILDER_FORM_CREATE_STEPS,
           title: "Add multiple steps",
-          body: `When faced with a sizable form, consider implementing a multi-step 
-            approach to enhance user experience. Breaking the form into multiple steps 
-            can significantly improve usability by making the process more digestible for your users.`,
+          layout: NewFormSteps,
           query: "#steps-prop-control-wrap",
           onComplete: () => {
             builderStore.highlightSetting()
@@ -210,9 +209,7 @@ const getTours = () => {
         {
           id: TOUR_STEP_KEYS.BUILDER_FORM_VIEW_UPDATE_STEPS,
           title: "Add multiple steps",
-          body: `When faced with a sizable form, consider implementing a multi-step 
-            approach to enhance user experience. Breaking the form into multiple steps 
-            can significantly improve usability by making the process more digestible for your users.`,
+          layout: NewFormSteps,
           query: "#steps-prop-control-wrap",
           onComplete: () => {
             builderStore.highlightSetting()
