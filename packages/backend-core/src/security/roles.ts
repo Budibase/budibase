@@ -84,25 +84,24 @@ export function getBuiltinRoles(): { [key: string]: RoleDoc } {
   return cloneDeep(BUILTIN_ROLES)
 }
 
-export const BUILTIN_ROLE_ID_ARRAY = Object.values(BUILTIN_ROLES).map(
-  role => role._id
-)
+export function isBuiltin(role: string) {
+  return getBuiltinRole(role) !== undefined
+}
 
-export const BUILTIN_ROLE_NAME_ARRAY = Object.values(BUILTIN_ROLES).map(
-  role => role.name
-)
-
-export function isBuiltin(role?: string) {
-  return BUILTIN_ROLE_ID_ARRAY.some(builtin => role?.includes(builtin))
+export function getBuiltinRole(roleId: string): Role | undefined {
+  const role = Object.values(BUILTIN_ROLES).find(role =>
+    roleId.includes(role._id)
+  )
+  if (!role) {
+    return undefined
+  }
+  return cloneDeep(role)
 }
 
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
-export function builtinRoleToNumber(id?: string) {
-  if (!id) {
-    return 0
-  }
+export function builtinRoleToNumber(id: string) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
@@ -123,7 +122,7 @@ export function builtinRoleToNumber(id?: string) {
 /**
  * Converts any role to a number, but has to be async to get the roles from db.
  */
-export async function roleToNumber(id?: string) {
+export async function roleToNumber(id: string) {
   if (isBuiltin(id)) {
     return builtinRoleToNumber(id)
   }
@@ -131,7 +130,7 @@ export async function roleToNumber(id?: string) {
     defaultPublic: true,
   })) as RoleDoc[]
   for (let role of hierarchy) {
-    if (isBuiltin(role?.inherits)) {
+    if (role?.inherits && isBuiltin(role.inherits)) {
       return builtinRoleToNumber(role.inherits) + 1
     }
   }
@@ -161,35 +160,28 @@ export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
  * @returns The role object, which may contain an "inherits" property.
  */
 export async function getRole(
-  roleId?: string,
+  roleId: string,
   opts?: { defaultPublic?: boolean }
-): Promise<RoleDoc | undefined> {
-  if (!roleId) {
-    return undefined
-  }
-  let role: any = {}
+): Promise<RoleDoc> {
   // built in roles mostly come from the in-code implementation,
   // but can be extended by a doc stored about them (e.g. permissions)
-  if (isBuiltin(roleId)) {
-    role = cloneDeep(
-      Object.values(BUILTIN_ROLES).find(role => role._id === roleId)
-    )
-  } else {
+  let role: RoleDoc | undefined = getBuiltinRole(roleId)
+  if (!role) {
     // make sure has the prefix (if it has it then it won't be added)
     roleId = prefixRoleID(roleId)
   }
   try {
     const db = getAppDB()
-    const dbRole = await db.get(getDBRoleID(roleId))
-    role = Object.assign(role, dbRole)
+    const dbRole = await db.get<RoleDoc>(getDBRoleID(roleId))
+    role = Object.assign(role || {}, dbRole)
     // finalise the ID
-    role._id = getExternalRoleID(role._id, role.version)
+    role._id = getExternalRoleID(role._id!, role.version)
   } catch (err) {
     if (!isBuiltin(roleId) && opts?.defaultPublic) {
       return cloneDeep(BUILTIN_ROLES.PUBLIC)
     }
     // only throw an error if there is no role at all
-    if (Object.keys(role).length === 0) {
+    if (!role || Object.keys(role).length === 0) {
       throw err
     }
   }
@@ -200,7 +192,7 @@ export async function getRole(
  * Simple function to get all the roles based on the top level user role ID.
  */
 async function getAllUserRoles(
-  userRoleId?: string,
+  userRoleId: string,
   opts?: { defaultPublic?: boolean }
 ): Promise<RoleDoc[]> {
   // admins have access to all roles
@@ -226,7 +218,7 @@ async function getAllUserRoles(
 }
 
 export async function getUserRoleIdHierarchy(
-  userRoleId?: string
+  userRoleId: string
 ): Promise<string[]> {
   const roles = await getUserRoleHierarchy(userRoleId)
   return roles.map(role => role._id!)
@@ -241,7 +233,7 @@ export async function getUserRoleIdHierarchy(
  * highest level of access and the last being the lowest level.
  */
 export async function getUserRoleHierarchy(
-  userRoleId?: string,
+  userRoleId: string,
   opts?: { defaultPublic?: boolean }
 ) {
   // special case, if they don't have a role then they are a public user
@@ -265,9 +257,9 @@ export function checkForRoleResourceArray(
   return rolePerms
 }
 
-export async function getAllRoleIds(appId?: string) {
+export async function getAllRoleIds(appId: string): Promise<string[]> {
   const roles = await getAllRoles(appId)
-  return roles.map(role => role._id)
+  return roles.map(role => role._id!)
 }
 
 /**

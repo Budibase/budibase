@@ -10,14 +10,17 @@ import {
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
-import { breakExternalTableId } from "../../../../integrations/utils"
-import sdk from "../../../../sdk"
+import {
+  breakExternalTableId,
+  breakRowIdField,
+} from "../../../../integrations/utils"
 import { utils } from "@budibase/shared-core"
 import { ExportRowsParams, ExportRowsResult } from "../search"
 import { HTTPError, db } from "@budibase/backend-core"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
+import sdk from "../../../"
 
 export async function search(options: SearchParams) {
   const { tableId } = options
@@ -49,6 +52,15 @@ export async function search(options: SearchParams) {
     sort = {
       [params.sort]: { direction },
     }
+  }
+
+  // Make sure oneOf _id queries decode the Row IDs
+  if (query?.oneOf?._id) {
+    const rowIds = query.oneOf._id
+    query.oneOf._id = rowIds.map((row: string) => {
+      const ids = breakRowIdField(row)
+      return ids[0]
+    })
   }
 
   try {
@@ -118,9 +130,7 @@ export async function exportRows(
     requestQuery = {
       oneOf: {
         _id: rowIds.map((row: string) => {
-          const ids = JSON.parse(
-            decodeURI(row).replace(/'/g, `"`).replace(/%2C/g, ",")
-          )
+          const ids = breakRowIdField(row)
           if (ids.length > 1) {
             throw new HTTPError(
               "Export data does not support composite keys.",
