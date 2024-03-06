@@ -4,3 +4,4 @@
 export { currentRole } from "./currentRole.js"
 export { dndComponentPath } from "./dndComponentPath.js"
 export { devToolsEnabled } from "./devToolsEnabled.js"
+export { snippets } from "./snippets.js"

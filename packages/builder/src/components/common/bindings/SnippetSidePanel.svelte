@@ -2,6 +2,7 @@
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "components/common/CodeEditor"
+  import SnippetDrawer from "./SnippetDrawer.svelte"
 
   export let addSnippet
   export let snippets
@@ -12,6 +13,8 @@
   let popoverAnchor
   let hoveredSnippet
   let hideTimeout
+  let snippetDrawer
+  let editableSnippet
 
   $: filteredSnippets = getFilteredSnippets(snippets, search)
 
@@ -60,8 +63,60 @@
     search = ""
   }
 
-  const openSnippetModal = () => {}
+  const createSnippet = () => {
+    editableSnippet = null
+    snippetDrawer.show()
+  }
+
+  const editSnippet = (e, snippet) => {
+    e.preventDefault()
+    e.stopPropagation()
+    editableSnippet = snippet
+    snippetDrawer.show()
+  }
 </script>
+
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<div class="snippet-side-panel">
+  <Layout noPadding gap="S">
+    <div class="header">
+      {#if searching}
+        <div class="search-input">
+          <Input
+            placeholder="Search for snippets"
+            autocomplete="off"
+            bind:value={search}
+          />
+        </div>
+        <Icon size="S" name="Close" hoverable on:click={stopSearching} />
+      {:else}
+        <div class="title">Snippets</div>
+        <Icon size="S" name="Search" hoverable on:click={startSearching} />
+        <Icon size="S" name="Add" hoverable on:click={createSnippet} />
+      {/if}
+    </div>
+    <div class="snippet-list">
+      {#each filteredSnippets as snippet}
+        <div
+          class="snippet"
+          on:mouseenter={e => showSnippet(snippet, e.target)}
+          on:mouseleave={hidePopover}
+          on:click={() => addSnippet(snippet)}
+        >
+          {snippet.name}
+          <Icon
+            name="Edit"
+            hoverable
+            size="S"
+            on:click={e => editSnippet(e, snippet)}
+            color="var(--spectrum-global-color-gray-700)"
+          />
+        </div>
+      {/each}
+    </div>
+  </Layout>
+</div>
 
 <Popover
   align="left-outside"
@@ -85,39 +140,7 @@
   </div>
 </Popover>
 
-<div class="snippet-side-panel">
-  <Layout noPadding gap="S">
-    <div class="header">
-      {#if searching}
-        <div class="search-input">
-          <Input
-            placeholder="Search for snippets"
-            autocomplete="off"
-            bind:value={search}
-          />
-        </div>
-        <Icon size="S" name="Close" hoverable on:click={stopSearching} />
-      {:else}
-        <div class="title">Snippets</div>
-        <Icon size="S" name="Search" hoverable on:click={startSearching} />
-        <Icon size="S" name="Add" hoverable on:click={openSnippetModal} />
-      {/if}
-    </div>
-
-    <div class="snippet-list">
-      {#each filteredSnippets as snippet}
-        <div
-          class="snippet"
-          on:mouseenter={e => showSnippet(snippet, e.target)}
-          on:mouseleave={hidePopover}
-          on:click={() => addSnippet(snippet)}
-        >
-          {snippet.name}
-        </div>
-      {/each}
-    </div>
-  </Layout>
-</div>
+<SnippetDrawer bind:this={snippetDrawer} snippet={editableSnippet} />
 
 <style>
   .snippet-side-panel {
@@ -166,6 +189,8 @@
     transition: background-color 130ms ease-out, color 130ms ease-out,
       border-color 130ms ease-out;
     word-wrap: break-word;
+    display: flex;
+    justify-content: space-between;
   }
   .snippet:hover {
     color: var(--spectrum-global-color-gray-900);
