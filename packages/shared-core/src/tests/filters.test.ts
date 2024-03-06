@@ -221,8 +221,6 @@ describe("runLuceneQuery", () => {
     ])
   })
 
-  // what should the name of this test be if it's the same test as above but with different operands
-
   it("should return matching results if allOr is true and only one filter matches with different operands", () => {
     const query = buildQuery({
       allOr: true,
