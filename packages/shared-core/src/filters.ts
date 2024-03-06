@@ -12,7 +12,6 @@ import {
 import dayjs from "dayjs"
 import { OperatorOptions, SqlNumberTypeRangeMap } from "./constants"
 import { deepGet } from "./helpers"
-import test from "node:test"
 
 const HBS_REGEX = /{{([^{].*?)}}/g
 
@@ -360,7 +359,6 @@ export const runLuceneQuery = (docs: any[], query?: SearchQuery) => {
   const oneOf = match(
     SearchQueryOperators.ONE_OF,
     (docValue: any, testValue: any) => {
-      console.log(testValue)
       if (typeof testValue === "string") {
         testValue = testValue.split(",")
         if (typeof docValue === "number") {
