@@ -12,6 +12,8 @@ import {
 } from "@budibase/types"
 import environment from "../../environment"
 
+type QueryFunction = (query: Knex.SqlNative, operation: Operation) => any
+
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
   : null
@@ -322,15 +324,18 @@ class InternalBuilder {
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
+    const aliases = json.tableAliases
+    const aliased =
+      table?.name && aliases?.[table.name] ? aliases[table.name] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(`${table?.name}.${key}`, direction)
+        query = query.orderBy(`${aliased}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
-      query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
+      query = query.orderBy(`${aliased}.${table?.primary[0]}`)
     }
     return query
   }
@@ -430,10 +435,12 @@ class InternalBuilder {
     aliases?: QueryJson["tableAliases"]
   ): Knex.QueryBuilder {
     const tableName = endpoint.entityId
-    const tableAliased = aliases?.[tableName]
-      ? `${tableName} as ${aliases?.[tableName]}`
-      : tableName
-    let query = knex(tableAliased)
+    const tableAlias = aliases?.[tableName]
+    let table: string | Record<string, string> = tableName
+    if (tableAlias) {
+      table = { [tableAlias]: tableName }
+    }
+    let query = knex(table)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
@@ -605,7 +612,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return query.toSQL().toNative()
   }
 
-  async getReturningRow(queryFn: Function, json: QueryJson) {
+  async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
@@ -617,7 +624,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       resource: {
         fields: [],
       },
-      filters: json.extra.idFilter,
+      filters: json.extra?.idFilter,
       paginate: {
         limit: 1,
       },
@@ -646,7 +653,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   // this function recreates the returning functionality of postgres
   async queryWithReturning(
     json: QueryJson,
-    queryFn: Function,
+    queryFn: QueryFunction,
     processFn: Function = (result: any) => result
   ) {
     const sqlClient = this.getSqlClient()

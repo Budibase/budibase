@@ -49,7 +49,7 @@
       "primary": [
         "taskid"
       ],
-      "name": "a",
+      "name": "tasks",
       "schema": {
         "executorid": {
           "type": "number",
