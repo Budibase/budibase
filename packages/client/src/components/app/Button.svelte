@@ -16,6 +16,7 @@
 
   // For internal use only for now - not defined in the manifest
   export let icon = null
+  export let gap = "M"
   export let active = false
 
   const handleOnClick = async () => {
@@ -47,7 +48,7 @@
 
 {#key $component.editing}
   <button
-    class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type}`}
+    class={`spectrum-Button spectrum-Button--size${size} spectrum-Button--${type} gap-${gap}`}
     class:spectrum-Button--quiet={quiet}
     disabled={disabled || handlingOnClick}
     use:styleable={$component.styles}
@@ -83,5 +84,14 @@
   }
   .active {
     color: var(--spectrum-global-color-blue-600);
+  }
+  .gap-S {
+    gap: 8px;
+  }
+  .gap-M {
+    gap: 16px;
+  }
+  .gap-L {
+    gap: 32px;
   }
 </style>
