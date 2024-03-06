@@ -59,7 +59,7 @@
     class:active
   >
     {#if icon}
-      <i use:styleable={$component.styles} class="{icon} {size}" />
+      <i class="{icon} {size}" />
     {/if}
     {componentText}
   </button>
