@@ -32,19 +32,23 @@ const handleClick = event => {
       return
     }
 
+    if (event.type !== handler.allowedType) {
+      return
+    }
     handler.callback?.(event)
   })
 }
+document.documentElement.addEventListener("click", handleClick, true)
 document.documentElement.addEventListener("mousedown", handleClick, true)
 document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler
  */
-const updateHandler = (id, element, anchor, callback) => {
+const updateHandler = (id, element, anchor, callback, allowedType) => {
   let existingHandler = clickHandlers.find(x => x.id === id)
   if (!existingHandler) {
-    clickHandlers.push({ id, element, anchor, callback })
+    clickHandlers.push({ id, element, anchor, callback, allowedType })
   } else {
     existingHandler.callback = callback
   }
@@ -70,7 +74,8 @@ export default (element, opts) => {
   const update = newOpts => {
     const callback = newOpts?.callback || newOpts
     const anchor = newOpts?.anchor || element
-    updateHandler(id, element, anchor, callback)
+    const allowedType = newOpts?.allowedType || "click"
+    updateHandler(id, element, anchor, callback, allowedType)
   }
   update(opts)
   return {
