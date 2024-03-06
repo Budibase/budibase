@@ -45,7 +45,7 @@ describe("/permission", () => {
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
     view = await config.api.viewV2.create({ tableId: table._id })
-    perms = await config.api.permission.set({
+    perms = await config.api.permission.add({
       roleId: STD_ROLE_ID,
       resourceId: table._id,
       level: PermissionLevel.READ,
@@ -88,13 +88,13 @@ describe("/permission", () => {
     })
 
     it("should get resource permissions with multiple roles", async () => {
-      perms = await config.api.permission.set({
+      perms = await config.api.permission.add({
         roleId: HIGHER_ROLE_ID,
         resourceId: table._id,
         level: PermissionLevel.WRITE,
       })
       const res = await config.api.permission.get(table._id)
-      expect(res.body).toEqual({
+      expect(res).toEqual({
         permissions: {
           read: { permissionType: "EXPLICIT", role: STD_ROLE_ID },
           write: { permissionType: "EXPLICIT", role: HIGHER_ROLE_ID },
@@ -117,16 +117,19 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
 
-      const response = await config.api.permission.set(
+      await config.api.permission.add(
         {
           roleId: STD_ROLE_ID,
           resourceId: table._id,
           level: PermissionLevel.EXECUTE,
         },
-        { expectStatus: 403 }
-      )
-      expect(response.message).toEqual(
-        "You are not allowed to 'read' the resource type 'datasource'"
+        {
+          status: 403,
+          body: {
+            message:
+              "You are not allowed to 'read' the resource type 'datasource'",
+          },
+        }
       )
     })
   })
@@ -138,9 +141,9 @@ describe("/permission", () => {
         resourceId: table._id,
         level: PermissionLevel.READ,
       })
-      expect(res.body[0]._id).toEqual(STD_ROLE_ID)
+      expect(res[0]._id).toEqual(STD_ROLE_ID)
       const permsRes = await config.api.permission.get(table._id)
-      expect(permsRes.body[STD_ROLE_ID]).toBeUndefined()
+      expect(permsRes.permissions[STD_ROLE_ID]).toBeUndefined()
     })
 
     it("throw forbidden if the action is not allowed for the resource", async () => {
@@ -156,10 +159,13 @@ describe("/permission", () => {
           resourceId: table._id,
           level: PermissionLevel.EXECUTE,
         },
-        { expectStatus: 403 }
-      )
-      expect(response.body.message).toEqual(
-        "You are not allowed to 'read' the resource type 'datasource'"
+        {
+          status: 403,
+          body: {
+            message:
+              "You are not allowed to 'read' the resource type 'datasource'",
+          },
+        }
       )
     })
   })
@@ -181,10 +187,8 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      const res = await config.api.viewV2.search(view.id, undefined, {
-        usePublicUser: true,
-      })
-      expect(res.body.rows[0]._id).toEqual(row._id)
+      const res = await config.api.viewV2.publicSearch(view.id)
+      expect(res.rows[0]._id).toEqual(row._id)
     })
 
     it("should not be able to access the view data when the table is not public and there are no view permissions overrides", async () => {
@@ -196,14 +200,11 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      await config.api.viewV2.search(view.id, undefined, {
-        expectStatus: 403,
-        usePublicUser: true,
-      })
+      await config.api.viewV2.publicSearch(view.id, undefined, { status: 403 })
     })
 
     it("should ignore the view permissions if the flag is not on", async () => {
-      await config.api.permission.set({
+      await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: view.id,
         level: PermissionLevel.READ,
@@ -216,15 +217,14 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      await config.api.viewV2.search(view.id, undefined, {
-        expectStatus: 403,
-        usePublicUser: true,
+      await config.api.viewV2.publicSearch(view.id, undefined, {
+        status: 403,
       })
     })
 
     it("should use the view permissions if the flag is on", async () => {
       mocks.licenses.useViewPermissions()
-      await config.api.permission.set({
+      await config.api.permission.add({
         roleId: STD_ROLE_ID,
         resourceId: view.id,
         level: PermissionLevel.READ,
@@ -237,10 +237,8 @@ describe("/permission", () => {
       // replicate changes before checking permissions
       await config.publish()
 
-      const res = await config.api.viewV2.search(view.id, undefined, {
-        usePublicUser: true,
-      })
-      expect(res.body.rows[0]._id).toEqual(row._id)
+      const res = await config.api.viewV2.publicSearch(view.id)
+      expect(res.rows[0]._id).toEqual(row._id)
     })
 
     it("shouldn't allow writing from a public user", async () => {
@@ -277,7 +275,7 @@ describe("/permission", () => {
 
       const res = await config.api.permission.get(legacyView.name)
 
-      expect(res.body).toEqual({
+      expect(res).toEqual({
         permissions: {
           read: {
             permissionType: "BASE",

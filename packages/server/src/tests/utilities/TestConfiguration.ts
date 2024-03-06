@@ -299,6 +299,16 @@ export default class TestConfiguration {
     }
   }
 
+  withUser(user: User, f: () => Promise<void>) {
+    const oldUser = this.user
+    this.user = user
+    try {
+      return f()
+    } finally {
+      this.user = oldUser
+    }
+  }
+
   // UTILS
 
   _req<Req extends Record<string, any> | void, Res>(
@@ -710,11 +720,6 @@ export default class TestConfiguration {
     const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
     return this.api.row.save(tableId, config)
-  }
-
-  async getRow(tableId: string, rowId: string): Promise<Row> {
-    const res = await this.api.row.get(tableId, rowId)
-    return res.body
   }
 
   async getRows(tableId: string) {
