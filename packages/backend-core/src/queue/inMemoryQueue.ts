@@ -173,7 +173,7 @@ class InMemoryQueue implements Partial<Queue> {
   async waitForCompletion() {
     do {
       await timeout(50)
-    } while (this.hasRunningJobs)
+    } while (this.hasRunningJobs())
   }
 
   hasRunningJobs() {
