@@ -221,7 +221,7 @@
     height: 420px;
     background: var(--background);
     border: var(--border-light);
-    z-index: 999;
+    z-index: 100;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
@@ -248,7 +248,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 999;
+    z-index: 100;
     display: block;
     transition: opacity 260ms ease-out;
   }
