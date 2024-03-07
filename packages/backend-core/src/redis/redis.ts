@@ -291,23 +291,16 @@ class RedisWrapper {
       return acc
     }, {} as Record<string, any>)
 
-    const luaScript = `
-        for i, key in ipairs(KEYS) do
-            redis.call('MSET', key, ARGV[i])
-            ${
-              expirySeconds !== null
-                ? `redis.call('EXPIRE', key, ARGV[#ARGV])`
-                : ""
-            }
-        end
-        `
-    const keys = Object.keys(dataToStore)
-    const values = Object.values(dataToStore)
+    const pipeline = client.pipeline()
+    pipeline.mset(dataToStore)
+
     if (expirySeconds !== null) {
-      values.push(expirySeconds)
+      for (const key of Object.keys(dataToStore)) {
+        pipeline.expire(key, expirySeconds)
+      }
     }
 
-    await client.eval(luaScript, keys.length, ...keys, ...values)
+    await pipeline.exec()
   }
 
   async getTTL(key: string) {
@@ -327,9 +320,34 @@ class RedisWrapper {
     await this.getClient().del(addDbPrefix(db, key))
   }
 
+  async bulkDelete(keys: string[]) {
+    const db = this._db
+    await this.getClient().del(keys.map(key => addDbPrefix(db, key)))
+  }
+
   async clear() {
     let items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
+  }
+
+  async increment(key: string) {
+    const result = await this.getClient().incr(addDbPrefix(this._db, key))
+    if (isNaN(result)) {
+      throw new Error(`Redis ${key} does not contain a number`)
+    }
+    return result
+  }
+
+  async deleteIfValue(key: string, value: any) {
+    const client = this.getClient()
+
+    const luaScript = `
+      if redis.call('GET', KEYS[1]) == ARGV[1] then
+        redis.call('DEL', KEYS[1])
+      end
+      `
+
+    await client.eval(luaScript, 1, addDbPrefix(this._db, key), value)
   }
 }
 

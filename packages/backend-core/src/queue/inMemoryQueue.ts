@@ -1,8 +1,9 @@
 import events from "events"
-import { timeout } from "../utils"
+import { newid, timeout } from "../utils"
 import { Queue, QueueOptions, JobOptions } from "./queue"
 
 interface JobMessage {
+  id: string
   timestamp: number
   queue: string
   data: any
@@ -20,6 +21,7 @@ interface JobMessage {
  */
 function newJob(queue: string, message: any, opts?: JobOptions): JobMessage {
   return {
+    id: newid(),
     timestamp: Date.now(),
     queue: queue,
     data: message,
@@ -74,8 +76,23 @@ class InMemoryQueue implements Partial<Queue> {
       let msg = this._messages.shift()
 
       let resp = func(msg)
+
+      async function retryFunc(fnc: any) {
+        try {
+          await fnc
+        } catch (e: any) {
+          await new Promise<void>(r => setTimeout(() => r(), 50))
+
+          await retryFunc(func(msg))
+        }
+      }
+
       if (resp.then != null) {
-        await resp
+        try {
+          await retryFunc(resp)
+        } catch (e: any) {
+          console.error(e)
+        }
       }
       this._runCount++
       const jobId = msg?.opts?.jobId?.toString()
@@ -173,7 +190,7 @@ class InMemoryQueue implements Partial<Queue> {
   async waitForCompletion() {
     do {
       await timeout(50)
-    } while (this.hasRunningJobs)
+    } while (this.hasRunningJobs())
   }
 
   hasRunningJobs() {

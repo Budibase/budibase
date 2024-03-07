@@ -23,6 +23,7 @@ export enum LockName {
   APP_MIGRATION = "app_migrations",
   PROCESS_AUTO_COLUMNS = "process_auto_columns",
   PROCESS_USER_INVITE = "process_user_invite",
+  PERSIST_DOC_WRITETHROUGH = "persist_doc_writethrough",
 }
 
 export type LockOptions = {

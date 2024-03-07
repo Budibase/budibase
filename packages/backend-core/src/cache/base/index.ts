@@ -23,6 +23,18 @@ export default class BaseCache {
     return client.keys(pattern)
   }
 
+  async exists(key: string, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.exists(key)
+  }
+
+  async scan(key: string, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    return client.scan(key)
+  }
+
   /**
    * Read only from the cache.
    */
@@ -30,6 +42,15 @@ export default class BaseCache {
     key = opts.useTenancy ? generateTenantKey(key) : key
     const client = await this.getClient()
     return client.get(key)
+  }
+
+  /**
+   * Read only from the cache.
+   */
+  async bulkGet<T>(keys: string[], opts = { useTenancy: true }) {
+    keys = opts.useTenancy ? keys.map(key => generateTenantKey(key)) : keys
+    const client = await this.getClient()
+    return client.bulkGet<T>(keys)
   }
 
   /**
@@ -75,6 +96,15 @@ export default class BaseCache {
   }
 
   /**
+   * Remove from cache.
+   */
+  async bulkDelete(keys: string[], opts = { useTenancy: true }) {
+    keys = opts.useTenancy ? keys.map(key => generateTenantKey(key)) : keys
+    const client = await this.getClient()
+    return client.bulkDelete(keys)
+  }
+
+  /**
    * Read from the cache. Write to the cache if not exists.
    */
   async withCache<T>(
@@ -107,5 +137,14 @@ export default class BaseCache {
       console.error("Error busting cache - ", err)
       throw err
     }
+  }
+
+  /**
+   * Delete the entry if the provided value matches the stored one.
+   */
+  async deleteIfValue(key: string, value: any, opts = { useTenancy: true }) {
+    key = opts.useTenancy ? generateTenantKey(key) : key
+    const client = await this.getClient()
+    await client.deleteIfValue(key, value)
   }
 }
