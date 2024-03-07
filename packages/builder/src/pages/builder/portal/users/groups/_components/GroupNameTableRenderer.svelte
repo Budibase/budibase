@@ -1,6 +1,6 @@
 <script>
   import GroupIcon from "./GroupIcon.svelte"
-  import ScimInfo from "../../_components/SCIMInfo.svelte"
+  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
   export let value
   export let row
@@ -16,7 +16,7 @@
     <div class="text">-</div>
   {/if}
   {#if row.scimInfo?.isSync}
-    <ScimInfo iconSize="XS" />
+    <ActiveDirectoryInfo iconSize="XS" />
   {/if}
 </div>
 

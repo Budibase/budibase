@@ -31,7 +31,7 @@
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
   import { sdk } from "@budibase/shared-core"
-  import ScimInfo from "../_components/SCIMInfo.svelte"
+  import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
 
   export let userId
 
@@ -276,7 +276,7 @@
       <div class="details-title">
         <Heading size="S">Details</Heading>
         {#if user?.scimInfo?.isSync}
-          <ScimInfo text="User synced from your AD" />
+          <ActiveDirectoryInfo text="User synced from your AD" />
         {/if}
       </div>
       <div class="fields">
