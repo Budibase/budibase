@@ -2,7 +2,6 @@ import { AnyDocument, Database } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
-import { logWarn } from "../logging"
 
 interface ProcessDocMessage {
   dbName: string
@@ -27,9 +26,10 @@ class DocWritethroughProcessor {
         await this.persistToDb(message.data)
       } catch (err: any) {
         if (err.status === 409) {
-          logWarn(`409 conflict in doc-writethrough cache`)
           // If we get a 409, it means that another job updated it meanwhile. We want to retry it to persist it again.
-          throw new Error(`Conflict persisting message ${message.id}`)
+          throw new Error(
+            `Conflict persisting message ${message.id}. Attempt ${message.attemptsMade}`
+          )
         }
 
         throw err
