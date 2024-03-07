@@ -1,12 +1,13 @@
 import { execSync } from "child_process"
 
-let dockerPsResult: string | undefined
+function getMappedPort(serverName: string, port: number) {
+  const outputBuffer = execSync("docker ps")
+  const dockerPsResult = outputBuffer.toString("utf8")
 
-function formatDockerPsResult(serverName: string, port: number) {
   const lines = dockerPsResult?.split("\n")
   let first = true
   if (!lines) {
-    return null
+    return undefined
   }
   for (let line of lines) {
     if (first) {
@@ -14,16 +15,19 @@ function formatDockerPsResult(serverName: string, port: number) {
       continue
     }
     let toLookFor = serverName.split("-service")[0]
-    if (!line.includes(toLookFor)) {
+    if (toLookFor && !line.includes(toLookFor)) {
       continue
     }
     const regex = new RegExp(`0.0.0.0:([0-9]*)->${port}`, "g")
     const found = line.match(regex)
-    if (found) {
-      return found[0].split(":")[1].split("->")[0]
+    if (found && found[0]) {
+      const port = found[0].split(":")[1]
+      if (port) {
+        return port.split("->")[0]
+      }
     }
   }
-  return null
+  return undefined
 }
 
 function getTestContainerSettings(
@@ -46,15 +50,7 @@ function getContainerInfo(containerName: string, port: number) {
     containerName.toUpperCase(),
     `PORT_${port}`
   )
-  if (!dockerPsResult) {
-    try {
-      const outputBuffer = execSync("docker ps")
-      dockerPsResult = outputBuffer.toString("utf8")
-    } catch (err) {
-      //no-op
-    }
-  }
-  const possiblePort = formatDockerPsResult(containerName, port)
+  const possiblePort = getMappedPort(containerName, port)
   if (possiblePort) {
     assignedPort = possiblePort
   }

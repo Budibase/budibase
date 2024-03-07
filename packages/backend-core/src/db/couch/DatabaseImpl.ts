@@ -253,6 +253,9 @@ export class DatabaseImpl implements Database {
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {
       const [database, view] = viewName.split("/")
+      if (!database || !view) {
+        throw new Error(`Invalid view name: ${viewName}`)
+      }
       return () => db.view(database, view, params)
     })
   }

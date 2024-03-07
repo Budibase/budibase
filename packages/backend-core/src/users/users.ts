@@ -274,27 +274,22 @@ export async function paginatedUsers({
     opts.startkey = bookmark
   }
   // property specifies what to use for the page/anchor
-  let userList: User[],
-    property = "_id",
-    getKey
+  let userList: User[]
+  let getKey = (doc: User) => doc._id
   if (query?.equal?._id) {
     userList = [await getById(query.equal._id)]
   } else if (appId) {
     userList = await searchGlobalUsersByApp(appId, opts)
-    getKey = (doc: any) => getGlobalUserByAppPage(appId, doc)
+    getKey = doc => getGlobalUserByAppPage(appId, doc)
   } else if (query?.string?.email) {
     userList = await searchGlobalUsersByEmail(query?.string?.email, opts)
-    property = "email"
+    getKey = doc => doc.email
   } else {
     // no search, query allDocs
     const response = await db.allDocs(getGlobalUserParams(null, opts))
     userList = response.rows.map((row: any) => row.doc)
   }
-  return pagination(userList, pageSize, {
-    paginate: true,
-    property,
-    getKey,
-  })
+  return pagination(userList, pageSize, getKey)
 }
 
 export async function getUserCount() {

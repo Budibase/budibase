@@ -23,13 +23,6 @@ const BUILTIN_IDS = {
 }
 
 // exclude internal roles like builder
-const EXTERNAL_BUILTIN_ROLE_IDS = [
-  BUILTIN_IDS.ADMIN,
-  BUILTIN_IDS.POWER,
-  BUILTIN_IDS.BASIC,
-  BUILTIN_IDS.PUBLIC,
-]
-
 export const RoleIDVersion = {
   // original version, with a UUID based ID
   UUID: undefined,
@@ -80,11 +73,14 @@ const BUILTIN_ROLES = {
   BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
 }
 
-export function getBuiltinRoles(): { [key: string]: RoleDoc } {
+type BuiltinRoles = typeof BUILTIN_ROLES
+type BuiltinRoleName = keyof BuiltinRoles
+
+export function getBuiltinRoles(): BuiltinRoles {
   return cloneDeep(BUILTIN_ROLES)
 }
 
-export function isBuiltin(role: string) {
+export function isBuiltin(role: string): role is BuiltinRoleName {
   return getBuiltinRole(role) !== undefined
 }
 
@@ -101,7 +97,7 @@ export function getBuiltinRole(roleId: string): Role | undefined {
 /**
  * Works through the inheritance ranks to see how far up the builtin stack this ID is.
  */
-export function builtinRoleToNumber(id: string) {
+export function builtinRoleToNumber(id: BuiltinRoleName) {
   const builtins = getBuiltinRoles()
   const MAX = Object.values(builtins).length + 1
   if (id === BUILTIN_IDS.ADMIN || id === BUILTIN_IDS.BUILDER) {
@@ -113,7 +109,8 @@ export function builtinRoleToNumber(id: string) {
     if (!role) {
       break
     }
-    role = builtins[role.inherits!]
+    // Built-in roles always inherit from another built-in role.
+    role = builtins[role.inherits! as BuiltinRoleName]
     count++
   } while (role !== null)
   return count
@@ -140,12 +137,15 @@ export async function roleToNumber(id: string) {
 /**
  * Returns whichever builtin roleID is lower.
  */
-export function lowerBuiltinRoleID(roleId1?: string, roleId2?: string): string {
+export function lowerBuiltinRoleID(
+  roleId1?: BuiltinRoleName,
+  roleId2?: BuiltinRoleName
+) {
   if (!roleId1) {
-    return roleId2 as string
+    return roleId2
   }
   if (!roleId2) {
-    return roleId1 as string
+    return roleId1
   }
   return builtinRoleToNumber(roleId1) > builtinRoleToNumber(roleId2)
     ? roleId2
@@ -240,21 +240,8 @@ export async function getUserRoleHierarchy(
   return getAllUserRoles(userRoleId, opts)
 }
 
-// this function checks that the provided permissions are in an array format
-// some templates/older apps will use a simple string instead of array for roles
-// convert the string to an array using the theory that write is higher than read
-export function checkForRoleResourceArray(
-  rolePerms: { [key: string]: string[] },
-  resourceId: string
-) {
-  if (rolePerms && !Array.isArray(rolePerms[resourceId])) {
-    const permLevel = rolePerms[resourceId] as any
-    rolePerms[resourceId] = [permLevel]
-    if (permLevel === PermissionLevel.WRITE) {
-      rolePerms[resourceId].push(PermissionLevel.READ)
-    }
-  }
-  return rolePerms
+export function ensureArray<T>(value: T | T[]): T[] {
+  return Array.isArray(value) ? value : [value]
 }
 
 export async function getAllRoleIds(appId: string): Promise<string[]> {
@@ -294,8 +281,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     const builtinRoles = getBuiltinRoles()
 
     // need to combine builtin with any DB record of them (for sake of permissions)
-    for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
-      const builtinRole = builtinRoles[builtinRoleId]
+    for (let [builtinRoleId, builtinRole] of Object.entries(builtinRoles)) {
       const dbBuiltin = roles.filter(
         dbRole =>
           getExternalRoleID(dbRole._id!, dbRole.version) === builtinRoleId
@@ -314,11 +300,12 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
       if (!role.permissions) {
         continue
       }
-      for (let resourceId of Object.keys(role.permissions)) {
-        role.permissions = checkForRoleResourceArray(
-          role.permissions,
-          resourceId
-        )
+      for (let [key, value] of Object.entries(role.permissions)) {
+        value = ensureArray(value)
+        if (value.length === 1 && value[0] === PermissionLevel.WRITE) {
+          value = [PermissionLevel.READ, PermissionLevel.WRITE]
+        }
+        role.permissions[key] = value
       }
     }
     return roles

@@ -94,11 +94,8 @@ export const runMigration = async (
       // the migration has already been run
       if (doc[migrationName]) {
         // check for force
-        if (
-          options.force &&
-          options.force[migrationType] &&
-          options.force[migrationType].includes(migrationName)
-        ) {
+        const force = options?.force?.[migrationType]
+        if (force && force.includes(migrationName)) {
           log(`[Migration: ${migrationName}] [DB: ${dbName}] Forcing`)
         } else {
           // no force, exit

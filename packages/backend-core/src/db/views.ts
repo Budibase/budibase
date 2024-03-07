@@ -29,12 +29,13 @@ function DesignDoc(): DesignDocument {
 }
 
 async function removeDeprecated(db: Database, viewName: ViewName) {
-  if (!DeprecatedViews[viewName]) {
+  const view = DeprecatedViews[viewName]
+  if (!view) {
     return
   }
   try {
     const designDoc = await db.get<DesignDocument>(DESIGN_DB)
-    for (let deprecatedNames of DeprecatedViews[viewName]) {
+    for (let deprecatedNames of view) {
       delete designDoc.views?.[deprecatedNames]
     }
     await db.put(designDoc)

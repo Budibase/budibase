@@ -28,6 +28,7 @@ import {
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
 import { validatePassword } from "../security"
+import { users } from ".."
 
 type QuotaUpdateFn = (
   change: number,
@@ -446,15 +447,14 @@ export class UserDB {
 
     // Build Response
     // index users by id
-    const userIndex: { [key: string]: User } = {}
-    usersToDelete.reduce((prev, current) => {
-      prev[current._id!] = current
-      return prev
-    }, userIndex)
+    const usersToDeleteById: Record<string, User> = {}
+    for (const user of usersToDelete) {
+      usersToDeleteById[user._id!] = user
+    }
 
     // add the successful and unsuccessful users to response
     dbResponse.forEach(item => {
-      const email = userIndex[item.id].email
+      const email = usersToDeleteById[item.id]!.email
       if (item.ok) {
         response.successful.push({ _id: item.id, email })
       } else {

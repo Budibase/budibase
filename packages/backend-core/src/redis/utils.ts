@@ -62,27 +62,11 @@ export enum SelectableDatabase {
 }
 
 export function getRedisConnectionDetails() {
-  let password = env.REDIS_PASSWORD
-  let url: string[] | string = env.REDIS_URL.split("//")
-  // get rid of the protocol
-  url = url.length > 1 ? url[1] : url[0]
-  // check for a password etc
-  url = url.split("@")
-  if (url.length > 1) {
-    // get the password
-    password = url[0].split(":")[1]
-    url = url[1]
-  } else {
-    url = url[0]
-  }
-  const [host, port] = url.split(":")
-
-  const portNumber = parseInt(port)
+  const url = new URL(env.REDIS_URL)
   return {
-    host,
-    password,
-    // assume default port for redis if invalid found
-    port: isNaN(portNumber) ? 6379 : portNumber,
+    host: url.host,
+    password: url.password || env.REDIS_PASSWORD,
+    port: parseInt(url.port || "6379"),
   }
 }
 

@@ -17,12 +17,14 @@ export function buildFeatureFlags() {
 
   env.TENANT_FEATURE_FLAGS.split(",").forEach(tenantToFeatures => {
     const [tenantId, ...features] = tenantToFeatures.split(":")
+    if (!tenantId) {
+      return
+    }
 
     features.forEach(feature => {
-      if (!tenantFeatureFlags[tenantId]) {
-        tenantFeatureFlags[tenantId] = []
-      }
-      tenantFeatureFlags[tenantId].push(feature)
+      const flags = tenantFeatureFlags[tenantId] || []
+      flags.push(feature)
+      tenantFeatureFlags[tenantId] = flags
     })
   })
 

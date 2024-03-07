@@ -28,7 +28,7 @@ const DEFAULT_SELECT_DB = SelectableDatabase.DEFAULT
 
 // for testing just generate the client once
 let CLOSED = false
-const CLIENTS: Record<number, Redis> = {}
+const CLIENTS: Record<number, Redis | Cluster> = {}
 let CONNECTED = false
 
 // mock redis always connected
@@ -87,9 +87,9 @@ function init(selectDb = DEFAULT_SELECT_DB) {
   const opts = getRedisOptions()
 
   if (CLUSTERED) {
-    client = new RedisCore.Cluster([{ host, port }], opts)
+    client = new RedisCore.Cluster([{ host, port }], opts) as Cluster
   } else {
-    client = new RedisCore(opts)
+    client = new RedisCore(opts) as Redis
   }
   // attach handlers
   client.on("end", (err: Error) => {
@@ -172,13 +172,17 @@ class RedisWrapper {
   _db: string
   _select: number
 
-  constructor(db: string, selectDb: number | null = null) {
+  constructor(db: string, selectDb?: number) {
     this._db = db
     this._select = selectDb || DEFAULT_SELECT_DB
   }
 
   getClient() {
-    return pickClient(this._select)
+    const client = pickClient(this._select)
+    if (!client) {
+      throw new Error(`No client for db: ${this._db} select: ${this._select}`)
+    }
+    return client
   }
 
   async init() {
@@ -201,8 +205,11 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = (this.getClient() as never as Cluster).nodes("master")
-      stream = node[0].scanStream({ match: key + "*", count: 100 })
+      let node = (this.getClient() as never as Cluster).nodes("master")[0]
+      if (!node) {
+        throw new Error("No nodes available")
+      }
+      stream = node.scanStream({ match: key + "*", count: 100 })
     } else {
       stream = (this.getClient() as Redis).scanStream({
         match: key + "*",
@@ -246,25 +253,30 @@ class RedisWrapper {
     }
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
     let response = await this.getClient().mget(prefixedKeys)
-    if (Array.isArray(response)) {
-      let final: Record<string, T> = {}
-      let count = 0
-      for (let result of response) {
-        if (result) {
-          let parsed
-          try {
-            parsed = JSON.parse(result)
-          } catch (err) {
-            parsed = result
-          }
-          final[keys[count]] = parsed
-        }
-        count++
-      }
-      return final
-    } else {
-      throw new Error(`Invalid response: ${response}`)
+    if (!Array.isArray(response)) {
+      throw new Error(`expected response to be an array, got: ${response}`)
     }
+    let final: Record<string, T> = {}
+    let count = 0
+    for (const result of response) {
+      if (result) {
+        let parsed
+        try {
+          parsed = JSON.parse(result)
+        } catch (err) {
+          parsed = result
+        }
+        const key = keys[count]
+        if (!key) {
+          throw new Error(
+            `mismatch in keys and responses from mget, keys.length: ${keys.length}, response.length: ${response.length}`
+          )
+        }
+        final[key] = parsed
+      }
+      count++
+    }
+    return final
   }
 
   async store(key: string, value: any, expirySeconds: number | null = null) {

@@ -28,8 +28,11 @@ function confirmAppId(possibleAppId: string | undefined) {
 }
 
 export async function resolveAppUrl(ctx: Ctx) {
-  const appUrl = ctx.path.split("/")[2]
-  let possibleAppUrl = `/${appUrl.toLowerCase()}`
+  const segments = ctx.path.split("/")
+  if (!segments[2]) {
+    return undefined
+  }
+  let possibleAppUrl = `/${segments[2].toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
   if (!env.isDev() && env.MULTI_TENANCY) {
@@ -127,10 +130,11 @@ function parseAppIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
-  return url
-    .split("?")[0] // Remove any possible query string
-    .split("/")
-    .find(subPath => subPath.startsWith(APP_PREFIX))
+  const query = url.split("?")[0]
+  if (!query) {
+    return
+  }
+  return query.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**

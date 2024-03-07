@@ -306,14 +306,12 @@ export async function retrieveDirectory(bucketName: string, path: string) {
   let writePath = join(budibaseTempDir(), v4())
   fs.mkdirSync(writePath)
   const objects = await listAllObjects(bucketName, path)
-  let streams = await Promise.all(
-    objects.map(obj => getReadStream(bucketName, obj.Key!))
+  const streams: [AWS.S3.Object, Readable][] = await Promise.all(
+    objects.map(async obj => [obj, await getReadStream(bucketName, obj.Key!)])
   )
-  let count = 0
   const writePromises: Promise<Error>[] = []
-  for (let obj of objects) {
+  for (const [obj, stream] of streams) {
     const filename = obj.Key!
-    const stream = streams[count++]
     const possiblePath = filename.split("/")
     const dirs = possiblePath.slice(0, possiblePath.length - 1)
     const possibleDir = join(writePath, ...dirs)

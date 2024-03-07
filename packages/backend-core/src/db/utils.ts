@@ -4,7 +4,7 @@ import { getTenantId, getGlobalDBName } from "../context"
 import { doWithDB, directCouchAllDbs } from "./db"
 import { AppState, DeletedApp, getAppMetadata } from "../cache/appMetadata"
 import { isDevApp, isDevAppID, getProdAppID } from "../docIds/conversions"
-import { App, Database } from "@budibase/types"
+import { App, Database, Document } from "@budibase/types"
 import { getStartEndKeyURL } from "../docIds"
 
 export * from "../docIds"
@@ -173,36 +173,12 @@ export async function dbExists(dbName: any) {
   )
 }
 
-export function pagination<T>(
+export function pagination<T extends Document>(
   data: T[],
   pageSize: number,
-  {
-    paginate,
-    property,
-    getKey,
-  }: {
-    paginate: boolean
-    property: string
-    getKey?: (doc: T) => string | undefined
-  } = {
-    paginate: true,
-    property: "_id",
-  }
+  getKey: (doc: T) => string | undefined
 ) {
-  if (!paginate) {
-    return { data, hasNextPage: false }
-  }
   const hasNextPage = data.length > pageSize
-  let nextPage = undefined
-  if (!getKey) {
-    getKey = (doc: any) => (property ? doc?.[property] : doc?._id)
-  }
-  if (hasNextPage) {
-    nextPage = getKey(data[pageSize])
-  }
-  return {
-    data: data.slice(0, pageSize),
-    hasNextPage,
-    nextPage,
-  }
+  let nextPage = data.length > pageSize ? getKey(data[pageSize]!) : undefined
+  return { data: data.slice(0, pageSize), hasNextPage, nextPage }
 }
