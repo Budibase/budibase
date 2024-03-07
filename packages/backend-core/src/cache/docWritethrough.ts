@@ -1,78 +1,77 @@
-import BaseCache from "./base"
-import { getDocWritethroughClient } from "../redis/init"
-import { AnyDocument, Database } from "@budibase/types"
+import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
-
-let CACHE: BaseCache | null = null
-async function getCache() {
-  if (!CACHE) {
-    const client = await getDocWritethroughClient()
-    CACHE = new BaseCache(client)
-  }
-  return CACHE
-}
+import { string } from "yargs"
+import { db } from ".."
+import { locks } from "../redis"
+import { Duration } from "../utils"
 
 interface ProcessDocMessage {
   dbName: string
   docId: string
-  cacheKeyPrefix: string
+
+  data: Record<string, any>
 }
 
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
   JobQueue.DOC_WRITETHROUGH_QUEUE
 )
 
-docWritethroughProcessorQueue.process(async message => {
-  await persistToDb(message.data)
-  console.log("DocWritethrough persisted", { data: message.data })
-})
-
-export async function persistToDb({
-  dbName,
-  docId,
-  cacheKeyPrefix,
-}: {
-  dbName: string
-  docId: string
-  cacheKeyPrefix: string
-}) {
-  const cache = await getCache()
-
-  const db = dbUtils.getDB(dbName)
-  let doc: AnyDocument | undefined
-  try {
-    doc = await db.get(docId)
-  } catch {
-    doc = { _id: docId }
+class DocWritethroughProcessor {
+  init() {
+    docWritethroughProcessorQueue.process(async message => {
+      const result = await locks.doWithLock(
+        {
+          type: LockType.TRY_ONCE,
+          name: LockName.PERSIST_DOC_WRITETHROUGH,
+          resource: `${message.data.dbName}:${message.data.docId}`,
+          ttl: Duration.fromSeconds(60).toMs(),
+        },
+        async () => {
+          await this.persistToDb(message.data)
+        }
+      )
+      if (!result.executed) {
+        throw new Error(
+          `Error persisting docWritethrough message: ${message.id}`
+        )
+      }
+    })
+    return this
   }
 
-  const keysToPersist = await cache.keys(`${cacheKeyPrefix}:data:*`)
-  for (const key of keysToPersist) {
-    const data = await cache.get(key, { useTenancy: false })
-    doc[data.key] = data.value
-  }
+  private async persistToDb({
+    dbName,
+    docId,
+    data,
+  }: {
+    dbName: string
+    docId: string
+    data: Record<string, any>
+  }) {
+    const db = dbUtils.getDB(dbName)
+    let doc: AnyDocument | undefined
+    try {
+      doc = await db.get(docId)
+    } catch {
+      doc = { _id: docId }
+    }
 
-  await db.put(doc)
-
-  for (const key of keysToPersist) {
-    await cache.delete(key, { useTenancy: false })
+    doc = { ...doc, ...data }
+    await db.put(doc)
   }
 }
+
+export const processor = new DocWritethroughProcessor().init()
 
 export class DocWritethrough {
   private db: Database
   private _docId: string
-  private writeRateMs: number
 
-  private cacheKeyPrefix: string
-
-  constructor(db: Database, docId: string, writeRateMs: number) {
+  constructor(db: Database, docId: string) {
     this.db = db
     this._docId = docId
-    this.writeRateMs = writeRateMs
-    this.cacheKeyPrefix = `${this.db.name}:${this.docId}`
   }
 
   get docId() {
@@ -80,30 +79,10 @@ export class DocWritethrough {
   }
 
   async patch(data: Record<string, any>) {
-    const cache = await getCache()
-
-    await this.storeToCache(cache, data)
-
-    docWritethroughProcessorQueue.add(
-      {
-        dbName: this.db.name,
-        docId: this.docId,
-        cacheKeyPrefix: this.cacheKeyPrefix,
-      },
-      {
-        delay: this.writeRateMs,
-        jobId: this.cacheKeyPrefix,
-        removeOnFail: true,
-        removeOnComplete: true,
-      }
-    )
-  }
-
-  private async storeToCache(cache: BaseCache, data: Record<string, any>) {
-    data = Object.entries(data).reduce((acc, [key, value]) => {
-      acc[this.cacheKeyPrefix + ":data:" + key] = { key, value }
-      return acc
-    }, {} as Record<string, any>)
-    await cache.bulkStore(data, null)
+    await docWritethroughProcessorQueue.add({
+      dbName: this.db.name,
+      docId: this.docId,
+      data,
+    })
   }
 }

@@ -1,31 +1,21 @@
+import tk from "timekeeper"
+
+import _ from "lodash"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { getDB } from "../../db"
-import _ from "lodash"
 
 import {
   DocWritethrough,
   docWritethroughProcessorQueue,
 } from "../docWritethrough"
-import InMemoryQueue from "../../queue/inMemoryQueue"
 
-const WRITE_RATE_MS = 1000
+import InMemoryQueue from "../../queue/inMemoryQueue"
 
 const initialTime = Date.now()
 
-jest.useFakeTimers({
-  now: initialTime,
-})
-
-function resetTime() {
-  jest.setSystemTime(initialTime)
-}
-async function travelForward(ms: number) {
-  await jest.advanceTimersByTimeAsync(ms)
-
+async function waitForQueueCompletion() {
   const queue: InMemoryQueue = docWritethroughProcessorQueue as never
-  while (queue.hasRunningJobs()) {
-    await jest.runOnlyPendingTimersAsync()
-  }
+  await queue.waitForCompletion()
 }
 
 describe("docWritethrough", () => {
@@ -45,30 +35,28 @@ describe("docWritethrough", () => {
     }
 
     beforeEach(async () => {
-      resetTime()
+      jest.clearAllMocks()
       documentId = structures.uuid()
-      docWritethrough = new DocWritethrough(db, documentId, WRITE_RATE_MS)
+      docWritethrough = new DocWritethrough(db, documentId)
     })
 
-    it("patching will not persist if timeout does not hit", async () => {
+    it("patching will not persist until the messages are persisted", async () => {
       await config.doInTenant(async () => {
-        await travelForward(WRITE_RATE_MS)
         await docWritethrough.patch(generatePatchObject(2))
         await docWritethrough.patch(generatePatchObject(2))
-        await travelForward(WRITE_RATE_MS - 1)
 
         expect(await db.exists(documentId)).toBe(false)
       })
     })
 
-    it("patching will persist if timeout hits", async () => {
+    it("patching will persist when the messages are persisted", async () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
         const patch2 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
         await docWritethrough.patch(patch2)
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         // This will not be persisted
         const patch3 = generatePatchObject(3)
@@ -78,9 +66,9 @@ describe("docWritethrough", () => {
           _id: documentId,
           ...patch1,
           ...patch2,
-          _rev: expect.stringMatching(/1-.+/),
-          createdAt: new Date(initialTime + WRITE_RATE_MS).toISOString(),
-          updatedAt: new Date(initialTime + WRITE_RATE_MS).toISOString(),
+          _rev: expect.stringMatching(/2-.+/),
+          createdAt: new Date(initialTime).toISOString(),
+          updatedAt: new Date(initialTime).toISOString(),
         })
       })
     })
@@ -92,12 +80,12 @@ describe("docWritethrough", () => {
         await docWritethrough.patch(patch1)
         await docWritethrough.patch(patch2)
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         const patch3 = generatePatchObject(3)
         await docWritethrough.patch(patch3)
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining({
@@ -115,12 +103,13 @@ describe("docWritethrough", () => {
         const patch1 = generatePatchObject(2)
         const patch2 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
-        await travelForward(WRITE_RATE_MS)
         const date1 = new Date()
+        await waitForQueueCompletion()
         await docWritethrough.patch(patch2)
 
-        await travelForward(WRITE_RATE_MS)
+        tk.travel(Date.now() + 100)
         const date2 = new Date()
+        await waitForQueueCompletion()
 
         expect(date1).not.toEqual(date2)
         expect(await db.get(documentId)).toEqual(
@@ -136,7 +125,7 @@ describe("docWritethrough", () => {
       await config.doInTenant(async () => {
         const patch1 = generatePatchObject(2)
         await docWritethrough.patch(patch1)
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
         const patch2 = generatePatchObject(1)
         await docWritethrough.patch(patch2)
 
@@ -147,14 +136,14 @@ describe("docWritethrough", () => {
           })
         )
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         const patch3 = {
           ...generatePatchObject(3),
           [keyToOverride]: generator.word(),
         }
         await docWritethrough.patch(patch3)
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining({
@@ -170,8 +159,7 @@ describe("docWritethrough", () => {
       await config.doInTenant(async () => {
         const secondDocWritethrough = new DocWritethrough(
           db,
-          structures.db.id(),
-          WRITE_RATE_MS
+          structures.db.id()
         )
 
         const doc1Patch = generatePatchObject(2)
@@ -179,13 +167,13 @@ describe("docWritethrough", () => {
         const doc2Patch = generatePatchObject(1)
         await secondDocWritethrough.patch(doc2Patch)
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         const doc1Patch2 = generatePatchObject(3)
         await docWritethrough.patch(doc1Patch2)
         const doc2Patch2 = generatePatchObject(3)
         await secondDocWritethrough.patch(doc2Patch2)
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         expect(await db.get(docWritethrough.docId)).toEqual(
           expect.objectContaining({
@@ -208,9 +196,7 @@ describe("docWritethrough", () => {
         const initialPatch = generatePatchObject(5)
 
         await docWritethrough.patch(initialPatch)
-        await travelForward(WRITE_RATE_MS)
-
-        await docWritethrough.patch({})
+        await waitForQueueCompletion()
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining(initialPatch)
@@ -218,10 +204,10 @@ describe("docWritethrough", () => {
 
         await db.remove(await db.get(documentId))
 
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
         const extraPatch = generatePatchObject(5)
         await docWritethrough.patch(extraPatch)
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
 
         expect(await db.get(documentId)).toEqual(
           expect.objectContaining(extraPatch)
@@ -232,58 +218,70 @@ describe("docWritethrough", () => {
       })
     })
 
-    it("concurrent calls will not cause multiple saves", async () => {
+    it("concurrent calls will not cause conflicts", async () => {
       async function parallelPatch(count: number) {
-        await Promise.all(
-          Array.from({ length: count }).map(() =>
-            docWritethrough.patch(generatePatchObject(1))
-          )
+        const patches = Array.from({ length: count }).map(() =>
+          generatePatchObject(1)
         )
-      }
+        await Promise.all(patches.map(p => docWritethrough.patch(p)))
 
-      const storeToCacheSpy = jest.spyOn(docWritethrough as any, "storeToCache")
+        return patches.reduce((acc, c) => {
+          acc = { ...acc, ...c }
+          return acc
+        }, {})
+      }
+      const queueMessageSpy = jest.spyOn(docWritethroughProcessorQueue, "add")
 
       await config.doInTenant(async () => {
-        await parallelPatch(5)
-        expect(storeToCacheSpy).toBeCalledTimes(5)
-        expect(await db.exists(documentId)).toBe(false)
+        let patches = await parallelPatch(5)
+        expect(queueMessageSpy).toBeCalledTimes(5)
 
-        await travelForward(WRITE_RATE_MS)
-
-        await parallelPatch(40)
-
-        expect(storeToCacheSpy).toBeCalledTimes(45)
-
-        // Ideally we want to spy on persistToDb from ./docWritethrough, but due our barrel files configuration required quite of a complex setup.
-        // We are relying on the document being stored only once (otherwise we would have _rev updated)
+        await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
-          expect.objectContaining({
-            _id: documentId,
-            _rev: expect.stringMatching(/1-.+/),
-          })
+          expect.objectContaining(patches)
         )
 
-        await parallelPatch(10)
+        patches = { ...patches, ...(await parallelPatch(40)) }
+        expect(queueMessageSpy).toBeCalledTimes(45)
 
-        expect(storeToCacheSpy).toBeCalledTimes(55)
+        await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
-          expect.objectContaining({
-            _id: documentId,
-            _rev: expect.stringMatching(/1-.+/),
-          })
+          expect.objectContaining(patches)
         )
 
-        await travelForward(WRITE_RATE_MS)
+        patches = { ...patches, ...(await parallelPatch(10)) }
+        expect(queueMessageSpy).toBeCalledTimes(55)
 
-        await parallelPatch(5)
-        await travelForward(WRITE_RATE_MS)
+        await waitForQueueCompletion()
         expect(await db.get(documentId)).toEqual(
-          expect.objectContaining({
-            _id: documentId,
-            _rev: expect.stringMatching(/3-.+/),
-          })
+          expect.objectContaining(patches)
         )
-        expect(storeToCacheSpy).toBeCalledTimes(60)
+      })
+    })
+
+    // This is not yet supported
+    it.skip("patches will execute in order", async () => {
+      let incrementalValue = 0
+      const keyToOverride = generator.word()
+      async function incrementalPatches(count: number) {
+        for (let i = 0; i < count; i++) {
+          await docWritethrough.patch({ [keyToOverride]: incrementalValue++ })
+        }
+      }
+
+      await config.doInTenant(async () => {
+        await incrementalPatches(5)
+
+        await waitForQueueCompletion()
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({ [keyToOverride]: 5 })
+        )
+
+        await incrementalPatches(40)
+        await waitForQueueCompletion()
+        expect(await db.get(documentId)).toEqual(
+          expect.objectContaining({ [keyToOverride]: 45 })
+        )
       })
     })
   })
