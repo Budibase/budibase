@@ -4,10 +4,12 @@ import _ from "lodash"
 import { DBTestConfiguration, generator, structures } from "../../../tests"
 import { getDB } from "../../db"
 
-import { DocWritethrough, processor } from "../docWritethrough"
+import {
+  DocWritethrough,
+  docWritethroughProcessorQueue,
+} from "../docWritethrough"
 
 import InMemoryQueue from "../../queue/inMemoryQueue"
-import { docWritethroughProcessorQueue } from "../docWritethrough"
 
 const initialTime = Date.now()
 
