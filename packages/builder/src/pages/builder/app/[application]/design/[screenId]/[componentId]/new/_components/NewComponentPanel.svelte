@@ -3,6 +3,7 @@
   import { goto } from "@roxi/routify"
   import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
   import structure from "./componentStructure.json"
+  import { thesaurus } from "thesaurus-js"
   import {
     previewStore,
     selectedScreen,
@@ -12,11 +13,14 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "helpers/components"
+  import { capitalise } from "../../../../../../../../../helpers/helpers"
   import { Utils } from "@budibase/frontend-core"
 
   let searchString
   let searchRef
   let selectedIndex
+  let synonymSearch
+  let synonyms = []
   let componentList = []
 
   $: allowedComponents = getAllowedComponents(
@@ -34,7 +38,39 @@
     allowedComponents,
     searchString
   )
+
+  $: buildSynonymsList(synonymSearch).then(result => (synonyms = result))
   $: orderMap = createComponentOrderMap(componentList)
+
+  async function buildSynonymsList(input) {
+    function getUnique(array) {
+      const uniqueArray = []
+      for (const value of array) {
+        if (uniqueArray.indexOf(value) === -1) {
+          uniqueArray.push(value)
+        }
+      }
+      return uniqueArray
+    }
+    let list = []
+    for (const word of input.split(",")) {
+      const response = await thesaurus(word, "en", ["wordreference"])
+      list.push(
+        ...response[0].synonyms
+          .filter(
+            word =>
+              word !== "Collocations" &&
+              !word.includes(" ") &&
+              !word.endsWith("ion") &&
+              !word.endsWith("ing") &&
+              !word.endsWith("ize") &&
+              !word.endsWith("ise")
+          )
+          .concat(word)
+      )
+    }
+    return getUnique(list)
+  }
 
   const getAllowedComponents = (allComponents, screen, component) => {
     // Default to using the root screen container if no component specified
@@ -175,7 +211,6 @@
         $selectedComponent._component
       )
       function findNearestForm(componentId) {
-        let containerId
         const path = findComponentPath($selectedScreen?.props, componentId)
         if (!path?.length) {
           return
@@ -190,23 +225,37 @@
         definition.name === "Form"
           ? $selectedComponent
           : findNearestForm($selectedComponent._id)
-      if (form) {
-        if (search?.toLowerCase().startsWith("sa")) {
-          const magicSaveButtons = Utils.buildFormBlockButtonConfig({
-            explicitFormId: form._id,
-            showDeleteButton: false,
-            showSaveButton: true,
-            saveButtonLabel: "Save",
-            actionType: form.actionType,
-            dataSource: form.dataSource,
-          })
-          magicSaveButtons[0].name = "Save button"
-          magicSaveButtons[0].icon = "MagicWand"
-          magicSaveButtons[0]._instanceName = "Save button"
+      synonymSearch =
+        form?.actionType === "Update"
+          ? "edit,send,update,save,publish,apply,commit"
+          : "create,send,save,publish,apply,commit"
+      if (form && synonyms) {
+        let magicButtons = []
+        for (let i = 0; i < synonyms.length; i++) {
+          const word = synonyms[i]
+          if (
+            searchString?.length > 1 &&
+            word?.toLowerCase().startsWith(searchString?.toLowerCase())
+          ) {
+            const magicButton = Utils.buildFormBlockButtonConfig({
+              explicitFormId: form._id,
+              showDeleteButton: false,
+              showSaveButton: true,
+              saveButtonLabel: capitalise(word),
+              actionType: form.actionType,
+              dataSource: form.dataSource,
+            })?.[0]
+            magicButton.name = `${capitalise(word)} button`
+            magicButton.icon = "MagicWand"
+            magicButton._instanceName = `${capitalise(word)} button`
+            magicButtons.push(magicButton)
+          }
+        }
+        if (magicButtons.length > 0) {
           filteredStructure.push({
             name: "“AI” generated",
             isCategory: true,
-            children: magicSaveButtons,
+            children: magicButtons,
           })
         }
       }
