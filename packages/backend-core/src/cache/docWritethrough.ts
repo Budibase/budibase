@@ -1,9 +1,7 @@
-import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
+import { AnyDocument, Database } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
-import { locks } from "../redis"
-import { Duration } from "../utils"
 
 interface ProcessDocMessage {
   dbName: string
@@ -24,21 +22,15 @@ export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
 class DocWritethroughProcessor {
   init() {
     docWritethroughProcessorQueue.process(async message => {
-      const result = await locks.doWithLock(
-        {
-          type: LockType.TRY_ONCE,
-          name: LockName.PERSIST_DOC_WRITETHROUGH,
-          resource: `${message.data.dbName}:${message.data.docId}`,
-          ttl: Duration.fromSeconds(60).toMs(),
-        },
-        async () => {
-          await this.persistToDb(message.data)
+      try {
+        await this.persistToDb(message.data)
+      } catch (err: any) {
+        if (err.status === 409) {
+          // If we get a 409, it means that another job updated it meanwhile. We want to retry it to persist it again.
+          throw new Error(`Conflict persisting message ${message.id}`)
         }
-      )
-      if (!result.executed) {
-        throw new Error(
-          `Error persisting docWritethrough message: ${message.id}`
-        )
+
+        throw err
       }
     })
     return this
