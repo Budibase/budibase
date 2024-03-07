@@ -72,9 +72,23 @@
         },
       ],
     },
+    "Refresh Data Provider": {
+      _label: "Refresh",
+      componentId: [
+        {
+          componentType: "@budibase/standard-components/dataprovider",
+          key: "_id",
+          transform: value => value,
+          updateDependency: () => {},
+        },
+      ],
+    },
   }
 
   async function buildSynonymsList(input) {
+    if (!input) {
+      return []
+    }
     function getUnique(array) {
       const uniqueArray = []
       for (const value of array) {
@@ -101,6 +115,14 @@
           .concat(word)
       )
     }
+    list = list.concat([
+      "update",
+      "publish",
+      "save",
+      "submit",
+      "commit",
+      "apply",
+    ])
     return getUnique(list)
   }
 
@@ -239,10 +261,11 @@
     })
     // suggest some auto-config options
     let magicButtons = []
+    let definition
     if ($selectedComponent) {
-      const definition = componentStore.getDefinition(
-        $selectedComponent._component
-      )
+      definition = componentStore.getDefinition($selectedComponent._component)
+    }
+    if (definition?.name !== "Table") {
       function findNearestForm(componentId) {
         const path = findComponentPath($selectedScreen?.props, componentId)
         if (!path?.length) {
@@ -259,9 +282,7 @@
           ? $selectedComponent
           : findNearestForm($selectedComponent._id)
       synonymSearch =
-        form?.actionType === "Update"
-          ? "edit,send,update,save,publish,apply,commit"
-          : "create,send,save,publish,apply,commit"
+        form?.actionType === "Update" ? "edit,send" : "create,send"
       if (form && synonyms) {
         for (let i = 0; i < synonyms.length; i++) {
           const word = synonyms[i]
@@ -296,7 +317,7 @@
       }
       const parameterNames = Object.keys(
         actionParameterMappings[searchedActions[0].name] || {}
-      )
+      ).filter(key => !key.startsWith("_"))
 
       // For navigate, suggest all screen options
       if (searchedActions[0].name === "Navigate To") {
@@ -347,15 +368,18 @@
           }
         }
         if (!noMatch) {
+          const label =
+            actionParameterMappings[searchedActions[0].name]?._label ||
+            searchedActions[0].name
           action.parameters = parameters
           const actionButton = {
-            text: capitalise(searchedActions[0].name),
+            text: capitalise(label),
             _id: Helpers.uuid(),
             _component: "@budibase/standard-components/button",
             onClick: [action],
-            name: `${capitalise(searchedActions[0].name)}`,
+            name: searchedActions[0].name,
             icon: "Events",
-            _instanceName: `${capitalise(searchedActions[0].name)}`,
+            _instanceName: searchedActions[0].name,
             type: "cta",
           }
           magicButtons.push(actionButton)
