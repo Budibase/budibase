@@ -48,7 +48,8 @@
   let editModal, deleteModal
 
   $: group = $groups.find(x => x._id === groupId)
-  $: readonly = !sdk.users.isAdmin($auth.user) || group?.scimInfo?.isSync
+  $: isScimGroup = group?.scimInfo?.isSync
+  $: readonly = !sdk.users.isAdmin($auth.user) || isScimGroup
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -125,11 +126,11 @@
         <MenuItem icon="Refresh" on:click={() => editModal.show()}>
           Edit
         </MenuItem>
-        <div title={group?.scimInfo?.isSync && "Group synced from your AD"}>
+        <div title={isScimGroup && "Group synced from your AD"}>
           <MenuItem
             icon="Delete"
             on:click={() => deleteModal.show()}
-            disabled={group?.scimInfo?.isSync}
+            disabled={isScimGroup}
           >
             Delete
           </MenuItem>
