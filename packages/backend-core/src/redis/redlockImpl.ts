@@ -82,11 +82,6 @@ type SuccessfulRedlockExecution<T> = {
 }
 type UnsuccessfulRedlockExecution = {
   executed: false
-  reason: UnsuccessfulRedlockExecutionReason
-}
-
-export const enum UnsuccessfulRedlockExecutionReason {
-  LockTakenWithTryOnce = "LOCK_TAKEN_WITH_TRY_ONCE",
 }
 
 type RedlockExecution<T> =
@@ -146,10 +141,7 @@ export async function doWithLock<T>(
       if (opts.type === LockType.TRY_ONCE) {
         // don't throw for try-once locks, they will always error
         // due to retry count (0) exceeded
-        return {
-          executed: false,
-          reason: UnsuccessfulRedlockExecutionReason.LockTakenWithTryOnce,
-        }
+        return { executed: false }
       } else {
         throw e
       }

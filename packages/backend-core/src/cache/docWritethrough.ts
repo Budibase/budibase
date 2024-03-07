@@ -1,41 +1,38 @@
-import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
+import { AnyDocument, Database } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
-import { string } from "yargs"
-import { db } from ".."
-import { locks } from "../redis"
-import { Duration } from "../utils"
+import { logWarn } from "../logging"
 
 interface ProcessDocMessage {
   dbName: string
   docId: string
-
   data: Record<string, any>
 }
 
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
-  JobQueue.DOC_WRITETHROUGH_QUEUE
+  JobQueue.DOC_WRITETHROUGH_QUEUE,
+  {
+    jobOptions: {
+      // We might have plenty of 409, we want to allow running almost infinitely
+      attempts: Number.MAX_SAFE_INTEGER,
+    },
+  }
 )
 
 class DocWritethroughProcessor {
   init() {
     docWritethroughProcessorQueue.process(async message => {
-      const result = await locks.doWithLock(
-        {
-          type: LockType.TRY_ONCE,
-          name: LockName.PERSIST_DOC_WRITETHROUGH,
-          resource: `${message.data.dbName}:${message.data.docId}`,
-          ttl: Duration.fromSeconds(60).toMs(),
-        },
-        async () => {
-          await this.persistToDb(message.data)
+      try {
+        await this.persistToDb(message.data)
+      } catch (err: any) {
+        if (err.status === 409) {
+          logWarn(`409 conflict in doc-writethrough cache`)
+          // If we get a 409, it means that another job updated it meanwhile. We want to retry it to persist it again.
+          throw new Error(`Conflict persisting message ${message.id}`)
         }
-      )
-      if (!result.executed) {
-        throw new Error(
-          `Error persisting docWritethrough message: ${message.id}`
-        )
+
+        throw err
       }
     })
     return this
