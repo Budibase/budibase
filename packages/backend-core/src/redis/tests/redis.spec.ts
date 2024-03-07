@@ -3,6 +3,8 @@ import { generator, structures } from "../../../tests"
 import RedisWrapper from "../redis"
 import { env } from "../.."
 
+jest.setTimeout(30000)
+
 describe("redis", () => {
   let redis: RedisWrapper
   let container: StartedTestContainer
