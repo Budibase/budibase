@@ -20,8 +20,9 @@
   style="background: {background || `transparent`};"
   class:filled={!!background}
   on:mouseover={() => (showTooltip = true)}
-  on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
+  on:focus={() => (showTooltip = true)}
+  on:blur={() => (showTooltip = false)}
   on:click={() => (showTooltip = false)}
 >
   <Icon name={icon} color={background ? "white" : color} />
