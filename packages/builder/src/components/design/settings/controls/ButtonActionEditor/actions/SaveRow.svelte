@@ -72,6 +72,9 @@
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
+      <Label small>Confirm title</Label>
+      <Input placeholder="Save Row" bind:value={parameters.customTitleText} />
+
       <Label small>Confirm text</Label>
       <Input
         placeholder="Are you sure you want to save this row?"
