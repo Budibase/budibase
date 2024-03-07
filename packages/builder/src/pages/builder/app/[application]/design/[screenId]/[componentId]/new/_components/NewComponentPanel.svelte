@@ -1,7 +1,14 @@
 <script>
   import Panel from "components/design/Panel.svelte"
   import { goto } from "@roxi/routify"
-  import { Layout, Search, Icon, Body, notifications } from "@budibase/bbui"
+  import {
+    Layout,
+    Search,
+    Icon,
+    Body,
+    notifications,
+    Helpers,
+  } from "@budibase/bbui"
   import structure from "./componentStructure.json"
   import { thesaurus } from "thesaurus-js"
   import {
@@ -12,9 +19,13 @@
   } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
-  import { findComponentPath } from "helpers/components"
+  import {
+    findComponentPath,
+    findAllMatchingComponents,
+  } from "helpers/components"
   import { capitalise } from "../../../../../../../../../helpers/helpers"
   import { Utils } from "@budibase/frontend-core"
+  import { getAvailableActions } from "../../../../../../../../../components/design/settings/controls/ButtonActionEditor/index"
 
   let searchString
   let searchRef
@@ -41,6 +52,17 @@
 
   $: buildSynonymsList(synonymSearch).then(result => (synonyms = result))
   $: orderMap = createComponentOrderMap(componentList)
+  $: availableActions = getAvailableActions()
+
+  const actionParameterMappings = {
+    "Export Data": {
+      tableComponentId: {
+        componentType: "@budibase/standard-components/tableblock",
+        key: "_id",
+        transform: value => `${value}-table`,
+      },
+    },
+  }
 
   async function buildSynonymsList(input) {
     function getUnique(array) {
@@ -206,6 +228,7 @@
       }
     })
     // suggest some auto-config options
+    let magicButtons = []
     if ($selectedComponent) {
       const definition = componentStore.getDefinition(
         $selectedComponent._component
@@ -230,7 +253,6 @@
           ? "edit,send,update,save,publish,apply,commit"
           : "create,send,save,publish,apply,commit"
       if (form && synonyms) {
-        let magicButtons = []
         for (let i = 0; i < synonyms.length; i++) {
           const word = synonyms[i]
           if (
@@ -251,15 +273,59 @@
             magicButtons.push(magicButton)
           }
         }
-        if (magicButtons.length > 0) {
-          filteredStructure.push({
-            name: "“AI” generated",
-            isCategory: true,
-            children: magicButtons,
-          })
-        }
       }
     }
+
+    // suggest button based on actions
+    const searchedActions = availableActions.filter(action =>
+      action.name.toLowerCase().includes(searchString?.toLowerCase())
+    )
+    if (searchString?.length > 2 && searchedActions.length > 0) {
+      const action = {
+        "##eventHandlerType": searchedActions[0].name,
+      }
+      const parameterNames = Object.keys(
+        actionParameterMappings[searchedActions[0].name] || {}
+      )
+      let parameters = {}
+      for (const name of parameterNames) {
+        const targetComponentType =
+          actionParameterMappings[searchedActions[0].name][name].componentType
+        const targetComponentKey =
+          actionParameterMappings[searchedActions[0].name][name].key
+
+        const matchingComponents = findAllMatchingComponents(
+          $selectedScreen?.props,
+          component => component._component === targetComponentType
+        )
+        if (matchingComponents?.length) {
+          parameters[name] = actionParameterMappings[searchedActions[0].name][
+            name
+          ].transform(matchingComponents[0][targetComponentKey])
+        }
+      }
+      action.parameters = parameters
+      const actionButton = {
+        text: capitalise(searchedActions[0].name),
+        _id: Helpers.uuid(),
+        _component: "@budibase/standard-components/button",
+        onClick: [action],
+        name: `${capitalise(searchedActions[0].name)}`,
+        icon: "Events",
+        _instanceName: `${capitalise(searchedActions[0].name)}`,
+        type: "cta",
+      }
+      magicButtons.push(actionButton)
+    }
+
+    if (magicButtons.length > 0) {
+      filteredStructure.push({
+        name: "“AI” generated",
+        isCategory: true,
+        children: magicButtons,
+      })
+    }
+
     structure = filteredStructure
     return structure
   }
