@@ -1,5 +1,5 @@
 <script>
-  import ScimInfo from "../../_components/SCIMInfo.svelte"
+  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
   export let value
   export let row
@@ -7,5 +7,5 @@
 
 {value}
 {#if row.scimInfo?.isSync}
-  <ScimInfo iconSize="XS" />
+  <ActiveDirectoryInfo iconSize="XS" />
 {/if}

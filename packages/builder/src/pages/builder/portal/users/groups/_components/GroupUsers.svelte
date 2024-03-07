@@ -9,7 +9,7 @@
   import { setContext } from "svelte"
 
   import RemoveUserTableRenderer from "../_components/RemoveUserTableRenderer.svelte"
-  import ScimInfo from "../../_components/SCIMInfo.svelte"
+  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
   export let groupId
   export let readonly
@@ -64,7 +64,7 @@
   {#if !readonly}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
-    <ScimInfo text="User synced externally" />
+    <ActiveDirectoryInfo text="User synced externally" />
   {/if}
 
   <div class="controls-right">
