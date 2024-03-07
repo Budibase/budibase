@@ -1,14 +1,68 @@
-export const Actions = {
-  SUMMARIZE_TEXT: "SUMMARIZE_TEXT",
-  GENERATE_SQL: "GENERATE_SQL",
-  GENERATE_CODE: "GENERATE_CODE",
-  GENERATE_TABLE_SCHEMA: "GENERATE_TABLE_SCHEMA",
-  GENERATE_SCREEN: "GENERATE_SCREEN",
-}
+export const ActionsList = [
+  { label: "Summarize Text", value: "SUMMARIZE_TEXT"},
+  { label: "Generate SQL", value: "GENERATE_SQL"},
+  { label: "Generate Code", value: "GENERATE_CODE"},
+  { label: "Generate Table Schema", value: "GENERATE_TABLE_SCHEMA"},
+  { label: "Generate Screen", value: "GENERATE_SCREEN"},
+]
 
-export const Models = {
-  ChatGPT: "ChatGPT",
-  GPT4All: "GPT4All",
-  TogetherAI: "TogetherAI",
-  LlamaCPP: "LlamaCPP"
-}
+export const Models = [
+  { label: "GPT4 Turbo (OpenAI)", value: "gpt-4-0125-preview" },
+  { label: "GPT4 (OpenAI)", value: "gpt-4" },
+  { label: "GPT3.5 Turbo (OpenAI)", value: "gpt-3.5-turbo-0125" },
+  { label: "Mistral OpenOrca 7B (GPT4All)", value: "GPT4All" },
+  { label: "Meta Llama 7B (Llama CPP Local)", value: "LlamaCPP" },
+  { label: "01-ai Yi Chat (34B) (TogetherAI)", value: "zero-one-ai/Yi-34B-Chat" },
+  { label: "Allen AI OLMo Instruct (7B) (TogetherAI)", value: "allenai/OLMo-7B-Instruct" },
+  { label: "Allen AI OLMo Twin-2T (7B) (TogetherAI)", value: "allenai/OLMo-7B-Twin-2T" },
+  { label: "Allen AI OLMo (7B) (TogetherAI)", value: "allenai/OLMo-7B" },
+  { label: "Austism Chronos Hermes (13B) (TogetherAI)", value: "Austism/chronos-hermes-13b" },
+  { label: "DeepSeek Deepseek Coder Instruct (33B) (TogetherAI)", value: "deepseek-ai/deepseek-coder-33b-instruct" },
+  { label: "garage-bAInd Platypus2 Instruct (70B) (TogetherAI)", value: "garage-bAInd/Platypus2-70B-instruct" },
+  { label: "Google Gemma Instruct (2B) (TogetherAI)", value: "google/gemma-2b-it" },
+  { label: "Google Gemma Instruct (7B) (TogetherAI)", value: "google/gemma-7b-it" },
+  { label: "Gryphe MythoMax-L2 (13B) (TogetherAI)", value: "Gryphe/MythoMax-L2-13b" },
+  { label: "LM Sys Vicuna v1.5 (13B) (TogetherAI)", value: "lmsys/vicuna-13b-v1.5" },
+  { label: "LM Sys Vicuna v1.5 (7B) (TogetherAI)", value: "lmsys/vicuna-7b-v1.5" },
+  { label: "Meta Code Llama Instruct (13B) (TogetherAI)", value: "codellama/CodeLlama-13b-Instruct-hf" },
+  { label: "Meta Code Llama Instruct (34B) (TogetherAI)", value: "codellama/CodeLlama-34b-Instruct-hf" },
+  { label: "Meta Code Llama Instruct (70B) (TogetherAI)", value: "codellama/CodeLlama-70b-Instruct-hf" },
+  { label: "Meta Code Llama Instruct (7B) (TogetherAI)", value: "codellama/CodeLlama-7b-Instruct-hf" },
+  { label: "Meta LLaMA-2 Chat (70B) (TogetherAI)", value: "meta-llama/Llama-2-70b-chat-hf" },
+  { label: "Meta LLaMA-2 Chat (13B) (TogetherAI)", value: "meta-llama/Llama-2-13b-chat-hf" },
+  { label: "Meta LLaMA-2 Chat (7B) (TogetherAI)", value: "meta-llama/Llama-2-7b-chat-hf" },
+  { label: "mistralai Mistral (7B) Instruct (TogetherAI)", value: "mistralai/Mistral-7B-Instruct-v0.1" },
+  { label: "mistralai Mistral (7B) Instruct v0.2 (TogetherAI)", value: "mistralai/Mistral-7B-Instruct-v0.2" },
+  { label: "mistralai Mixtral-8x7B Instruct (46.7B) (TogetherAI)", value: "mistralai/Mixtral-8x7B-Instruct-v0.1" },
+  { label: "NousResearch Nous Capybara v1.9 (7B) (TogetherAI)", value: "NousResearch/Nous-Capybara-7B-V1p9" },
+  { label: "NousResearch Nous Hermes 2 - Mixtral 8x7B-DPO (46.7B) (TogetherAI)", value: "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO" },
+  { label: "NousResearch Nous Hermes 2 - Mixtral 8x7B-SFT (46.7B) (TogetherAI)", value: "NousResearch/Nous-Hermes-2-Mixtral-8x7B-SFT" },
+  { label: "NousResearch Nous Hermes LLaMA-2 (7B) (TogetherAI)", value: "NousResearch/Nous-Hermes-llama-2-7b" },
+  { label: "NousResearch Nous Hermes Llama-2 (13B) (TogetherAI)", value: "NousResearch/Nous-Hermes-Llama2-13b" },
+  { label: "NousResearch Nous Hermes-2 Yi (34B) (TogetherAI)", value: "NousResearch/Nous-Hermes-2-Yi-34B" },
+  { label: "OpenChat OpenChat 3.5 (7B) (TogetherAI)", value: "openchat/openchat-3.5-1210" },
+  { label: "OpenOrca OpenOrca Mistral (7B) 8K (TogetherAI)", value: "Open-Orca/Mistral-7B-OpenOrca" },
+  { label: "Qwen Qwen 1.5 Chat (0.5B) (TogetherAI)", value: "Qwen/Qwen1.5-0.5B-Chat" },
+  { label: "Qwen Qwen 1.5 Chat (1.8B) (TogetherAI)", value: "Qwen/Qwen1.5-1.8B-Chat" },
+  { label: "Qwen Qwen 1.5 Chat (4B) (TogetherAI)", value: "Qwen/Qwen1.5-4B-Chat" },
+  { label: "Qwen Qwen 1.5 Chat (7B) (TogetherAI)", value: "Qwen/Qwen1.5-7B-Chat" },
+  { label: "Qwen Qwen 1.5 Chat (14B) (TogetherAI)", value: "Qwen/Qwen1.5-14B-Chat" },
+  { label: "Qwen Qwen 1.5 Chat (72B) (TogetherAI)", value: "Qwen/Qwen1.5-72B-Chat" },
+  { label: "Snorkel AI Snorkel Mistral PairRM DPO (7B) (TogetherAI)", value: "snorkelai/Snorkel-Mistral-PairRM-DPO" },
+  { label: "Stanford Alpaca (7B) (TogetherAI)", value: "togethercomputer/alpaca-7b" },
+  { label: "Teknium OpenHermes-2-Mistral (7B) (TogetherAI)", value: "teknium/OpenHermes-2-Mistral-7B" },
+  { label: "Teknium OpenHermes-2.5-Mistral (7B) (TogetherAI)", value: "teknium/OpenHermes-2p5-Mistral-7B" },
+  { label: "Together LLaMA-2-7B-32K-Instruct (7B) (TogetherAI)", value: "togethercomputer/Llama-2-7B-32K-Instruct" }
+]
+
+// export const Models = {
+//   ChatGPT: "ChatGPT",
+//   GPT4All: "GPT4All",
+//   TogetherAI: "TogetherAI",
+//   LlamaCPP: "LlamaCPP"
+//   // New models
+//   ChatGPT: "GPT-4",
+//   GPT4All: "GPT4All",
+//   TogetherAI: "TogetherAI",
+//   LlamaCPP: "LlamaCPP"
+// }

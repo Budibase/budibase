@@ -1,5 +1,6 @@
 <script>
   import { Button, TextArea, MenuItem, Body } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
   import store from "./aiStore"
   import { tables } from "stores/builder"
   import TableSelect from "components/design/settings/controls/TableSelect.svelte"
@@ -10,6 +11,7 @@
   export let tableName
 
   let mappedSchema
+  let loading
 
   $: {
     if (tableName) {
@@ -35,8 +37,10 @@
   }
 
   async function generateSQL() {
+    loading = true
     const sql = await API.aiGenerateSQL({ prompt, model: $store.model, datasourceId, tableName })
     query = sql.response
+    loading = false
   }
 </script>
 
@@ -45,5 +49,10 @@
 {#if mappedSchema}
   <KeyValueBuilder object={mappedSchema} name="field" headings noAddButton />
 {/if}
-<code>{query}</code>
+
+{#if loading}
+  <Spinner size="10" />
+{:else}
+  <code>{query}</code>
+{/if}
 <Button cta on:click={generateSQL}>Generate</Button>

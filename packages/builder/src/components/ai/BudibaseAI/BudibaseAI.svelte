@@ -6,13 +6,22 @@
   import GenerateCode from "./GenerateCode.svelte"
   import SummarizeText from "./SummarizeText.svelte"
   import store from "./aiStore"
-  import { Actions, Models } from "./constants"
+  import { ActionsList, Models } from "./constants"
+
+  const Actions = {
+    SUMMARIZE_TEXT: "SUMMARIZE_TEXT",
+    GENERATE_SQL: "GENERATE_SQL",
+    GENERATE_CODE: "GENERATE_CODE",
+    GENERATE_TABLE_SCHEMA: "GENERATE_TABLE_SCHEMA",
+    GENERATE_SCREEN: "GENERATE_SCREEN",
+  }
+
 </script>
 
 <Layout>
   <Icon name="MagicWand"/>
-  <Select label="Model" options={Object.keys(Models)} bind:value={$store.model} />
-  <Select label="Action" options={Object.keys(Actions)} bind:value={$store.action} />
+  <Select label="Model" options={Models} bind:value={$store.model} />
+  <Select label="Action" options={ActionsList} bind:value={$store.action} />
   {#if $store.action === Actions.SUMMARIZE_TEXT}
     <SummarizeText />
   {:else if $store.action === Actions.GENERATE_SQL}

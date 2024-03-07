@@ -1,30 +1,37 @@
 import { Configuration, CreateChatCompletionRequest, OpenAIApi } from "openai"
 import environment from "../../environment"
-import { IDiscriminativeModel, ILargeLanguageModel } from "./index";
-import { TableSchema, Screen, Automation } from "@budibase/types";
+import { ILargeLanguageModel } from "./index";
+import { TableSchema, Screen } from "@budibase/types";
 import * as Prompts from "../prompts"
 
-enum Model {
-  LLAMA_7B = "meta-llama/Llama-2-7b-chat-hf",
-  GEMMA_2B = "google/gemma-2b-it",
-  GEMMA_7B = "google/gemma-7b-it",
+interface OpenAIOptions {
+  togetherai?: boolean
 }
 
-export class TogetherAI implements ILargeLanguageModel {
+export class OpenAI implements ILargeLanguageModel {
   private client: OpenAIApi
+  private model: string
 
-  constructor() {
-    const configuration = new Configuration({
-      apiKey: environment.TOGETHER_AI_API_KEY,
-      basePath: "https://api.together.xyz/v1"
-    })
+  constructor(model: string, opts: OpenAIOptions = {}) {
+    this.model = model
+    let configuration
+    if (opts.togetherai) {
+      configuration = new Configuration({
+        apiKey: environment.TOGETHER_AI_API_KEY,
+        basePath: "https://api.together.xyz/v1"
+      })
+    } else {
+      configuration = new Configuration({
+        apiKey: environment.OPENAI_API_KEY,
+      })
+    }
     this.client = new OpenAIApi(configuration)
   }
 
   async chatCompletion(prompt: string, promptOptions: Partial<CreateChatCompletionRequest> = {}) {
     try {
       const completion = await this.client.createChatCompletion({
-        model: Model.GEMMA_7B,
+        model: this.model,
         messages: [{ role: "user", content: prompt }],
         ...promptOptions
       })
@@ -83,7 +90,6 @@ export class TogetherAI implements ILargeLanguageModel {
           presence_penalty: 0.0,
         }
       )
-      console.log(completion)
       return <TableSchema>JSON.parse(completion!)
     } catch (err) {
       console.error("Error generating budibase schema", err)
@@ -109,11 +115,6 @@ export class TogetherAI implements ILargeLanguageModel {
       return <Screen>{}
     }
   }
-  //
-  //
-  //
-  // generateBudibaseAutomation(prompt: string): Promise<Automation> {
-  //   return Promise.resolve({})
-  // }
 }
+
 

@@ -22,7 +22,6 @@ export interface IOpenSourceModel {
 export interface ILargeLanguageModel {
   prompt(prompt: string): Promise<string | undefined>
   summarizeText(prompt: string): Promise<string | undefined>
-  // TODO: Provide dialect support if required
   generateSQL(prompt: string, tableSchema: string, dialect?: SQLDialect): Promise<string | undefined>
   generateCode(prompt: string): Promise<string | undefined>
   generateBudibaseTableSchema(prompt: string): Promise<TableSchema | undefined>
@@ -60,8 +59,7 @@ export interface IDiscriminativeModel {
 // inspo: https://github.com/dzhng/llm-api?tab=readme-ov-file#-anthropic
 
 // Cloud Models
-export { ChatGPT } from "./chatgpt"
-export { TogetherAI } from "./togetherai"
+export { OpenAI } from "./openai"
 // Self hosted models
 export { GPT4All } from "./gpt4all"
 export { LlamaCPP } from "./llamacpp"

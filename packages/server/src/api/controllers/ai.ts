@@ -1,16 +1,22 @@
-import { db as dbCore, tenancy, context } from "@budibase/backend-core"
 import * as ai from "../../ai/models"
 import sdk from "../../sdk"
 import { Ctx } from "@budibase/types"
 import { ILargeLanguageModel } from "../../ai/models"
 
+function initLLM(model: string): ILargeLanguageModel {
+  if (model === "GPT4All") {
+    return new ai.GPT4All()
+  } else if (model === "LlamaCPP") {
+    return new ai.LlamaCPP()
+  } else {
+    return new ai.OpenAI(model, { togetherai: !model.includes("gpt-") })
+  }
+}
+
 export async function prompt(ctx: Ctx) {
-  // const db = tenancy.getGlobalDB()
   try {
     const { model, prompt } = ctx.request.body
-    // TODO: possibly split out at a higher level on the controller
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     const response = await client.prompt(prompt)
     ctx.body = { response }
   } catch (err) {
@@ -19,11 +25,9 @@ export async function prompt(ctx: Ctx) {
 }
 
 export async function summariseText(ctx: Ctx) {
-  const db = tenancy.getGlobalDB()
   try {
     const { model, prompt } = ctx.request.body
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     const response = await client.summarizeText(prompt)
     ctx.body = { response }
   } catch (err) {
@@ -37,8 +41,7 @@ export async function generateJS(ctx: Ctx) {
   const { model, prompt } = ctx.request.body
 
   try {
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     const response = await client.generateCode(prompt)
     ctx.body = { response }
   } catch (err) {
@@ -63,8 +66,7 @@ export async function generateSQL(ctx: Ctx) {
   }
 
   try {
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     const response = await client.generateSQL(prompt, tableSchemaPrompt.join("\n"))
     ctx.body = { response }
   } catch (err) {
@@ -75,9 +77,7 @@ export async function generateSQL(ctx: Ctx) {
 export async function generateBudibaseTableSchema(ctx: Ctx) {
   try {
     const { model, prompt } = ctx.request.body
-    // TODO: possibly split out at a higher level on the controller
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     // @ts-ignore
     const response = await client.generateBudibaseTableSchema(prompt)
     ctx.body = response
@@ -89,9 +89,7 @@ export async function generateBudibaseTableSchema(ctx: Ctx) {
 export async function generateBudibaseScreen(ctx: Ctx) {
   try {
     const { model, prompt } = ctx.request.body
-    // TODO: possibly split out at a higher level on the controller
-    const LLM = ai[model as keyof typeof ai]
-    const client: ILargeLanguageModel = new LLM()
+    const client = initLLM(model)
     // @ts-ignore
     const response = await client.generateBudibaseScreen(prompt)
     ctx.body = response

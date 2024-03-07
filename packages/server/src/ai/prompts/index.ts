@@ -43,7 +43,7 @@ export function generateBudibaseTable(prompt: string) {
   //   system: `Your sole purpose is to genenerate JSON schemas based off prompts, with a structure like the following: \n ${JSON.stringify(exampleTable, undefined, 2)}. Only return the JSON`,
   //   user:
   // }
-  return `Given this custom schema as an example:\n ${JSON.stringify(exampleTable, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only return the parseable output JSON, and nothing else.`
+  return `Given this custom schema as an example:\n ${JSON.stringify(exampleTable, undefined, 2)} \ngenerate me a similar structure (of any length) based on the following prompt:\n ${prompt}\n Only return the parseable output JSON, and nothing else.`
 }
 
 export function generateForm(prompt: string) {
@@ -97,5 +97,5 @@ export function generateForm(prompt: string) {
       "field": "field3"
     }
   ]
-  return `Given this array as an example:\n ${JSON.stringify(formFields, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only generate the JSON array.`
+  return `Given this array as an example:\n ${JSON.stringify(formFields, undefined, 2)} \ngenerate me a similar structure (of any length) based on the following prompt:\n ${prompt}\n Only generate the JSON array.`
 }

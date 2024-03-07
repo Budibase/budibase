@@ -70,12 +70,6 @@ export class GPT4All implements ILargeLanguageModel {
       return <Screen>{}
     }
   }
-  //
-  //
-  //
-  // generateBudibaseAutomation(prompt: string): Promise<Automation> {
-  //   return Promise.resolve({})
-  // }
 }
 
 

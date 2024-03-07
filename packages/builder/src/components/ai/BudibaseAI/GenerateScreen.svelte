@@ -1,5 +1,6 @@
 <script>
   import { Button, TextArea, Helpers, notifications } from "@budibase/bbui"
+  import Spinner from "components/common/Spinner.svelte"
   import { goto } from "@roxi/routify"
   import { Screen } from "templates/Screen"
   import { Component } from "templates/Component"
@@ -8,9 +9,11 @@
   import { API } from "api"
 
   let prompt = ""
+  let loading
 
   async function generateScreen() {
     notifications.info("Generating screen")
+    loading = true
     const formFields = await API.aiGenerateScreen({ prompt, model: $store.model })
 
     const form = new Component("@budibase/standard-components/form")
@@ -25,9 +28,14 @@
     notifications.success("Screen saved")
     // navigate to that screen?
     $goto(`./design/${savedScreen._id}`)
+    loading = false
 
   }
 </script>
 
-<TextArea label="Prompt" bind:value={prompt} />
+{#if loading}
+  <Spinner size="10" />
+{:else}
+  <TextArea label="Prompt" bind:value={prompt} />
+{/if}
 <Button cta on:click={generateScreen}>Generate</Button>

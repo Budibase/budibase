@@ -6,14 +6,12 @@ import authorized from "../../middleware/authorized"
 
 const router: Router = new Router()
 
-const MODELS = ["ChatGPT", "GPT4All", "TogetherAI", "LlamaCPP"]
-
 function aiPromptValidator() {
   return auth.joiValidator.body(
     Joi.object({
       prompt: Joi.string().required(),
       // TODO: fix these models here and use an enum
-      model: Joi.string().required().valid(...MODELS),
+      model: Joi.string().required(),
     }).unknown(false)
   )
 }
@@ -24,7 +22,7 @@ function sqlPromptValidator() {
       prompt: Joi.string().required(),
       datasourceId: Joi.string().required(),
       tableName: Joi.string().required(),
-      model: Joi.string().required().valid(...MODELS),
+      model: Joi.string().required(),
     }).unknown(false)
   )
 }
