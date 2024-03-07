@@ -2,20 +2,23 @@ import { AnyDocument, Database, LockName, LockType } from "@budibase/types"
 
 import { JobQueue, createQueue } from "../queue"
 import * as dbUtils from "../db"
-import { string } from "yargs"
-import { db } from ".."
 import { locks } from "../redis"
 import { Duration } from "../utils"
 
 interface ProcessDocMessage {
   dbName: string
   docId: string
-
   data: Record<string, any>
 }
 
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
-  JobQueue.DOC_WRITETHROUGH_QUEUE
+  JobQueue.DOC_WRITETHROUGH_QUEUE,
+  {
+    jobOptions: {
+      // We might have plenty of 409, we want to allow running almost infinitely
+      attempts: Number.MAX_SAFE_INTEGER,
+    },
+  }
 )
 
 class DocWritethroughProcessor {
