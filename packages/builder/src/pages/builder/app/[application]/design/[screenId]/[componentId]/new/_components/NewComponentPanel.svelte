@@ -174,15 +174,31 @@
       const definition = componentStore.getDefinition(
         $selectedComponent._component
       )
-      if (definition.name === "Form") {
+      function findNearestForm(componentId) {
+        let containerId
+        const path = findComponentPath($selectedScreen?.props, componentId)
+        if (!path?.length) {
+          return
+        }
+        for (let i = path.length - 1; i > 0; i--) {
+          if (path[i]._component === "@budibase/standard-components/form") {
+            return path[i]
+          }
+        }
+      }
+      const form =
+        definition.name === "Form"
+          ? $selectedComponent
+          : findNearestForm($selectedComponent._id)
+      if (form) {
         if (search?.toLowerCase().startsWith("sa")) {
           const magicSaveButtons = Utils.buildFormBlockButtonConfig({
-            explicitFormId: $selectedComponent._id,
+            explicitFormId: form._id,
             showDeleteButton: false,
             showSaveButton: true,
             saveButtonLabel: "Save",
-            actionType: $selectedComponent.actionType,
-            dataSource: $selectedComponent.dataSource,
+            actionType: form.actionType,
+            dataSource: form.dataSource,
           })
           magicSaveButtons[0].name = "Save button"
           magicSaveButtons[0].icon = "MagicWand"
