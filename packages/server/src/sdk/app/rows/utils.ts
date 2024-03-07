@@ -1,12 +1,55 @@
 import cloneDeep from "lodash/cloneDeep"
 import validateJs from "validate.js"
-import { FieldType, Row, Table, TableSchema } from "@budibase/types"
+import {
+  Datasource,
+  DatasourcePlusQueryResponse,
+  FieldType,
+  QueryJson,
+  Row,
+  SourceName,
+  Table,
+  TableSchema,
+} from "@budibase/types"
 import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
+import { SqlClient } from "../../../integrations/utils"
 
-export async function getDatasourceAndQuery(json: any) {
+const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
+  [SourceName.POSTGRES]: SqlClient.POSTGRES,
+  [SourceName.MYSQL]: SqlClient.MY_SQL,
+  [SourceName.SQL_SERVER]: SqlClient.MS_SQL,
+  [SourceName.ORACLE]: SqlClient.ORACLE,
+  [SourceName.DYNAMODB]: undefined,
+  [SourceName.MONGODB]: undefined,
+  [SourceName.ELASTICSEARCH]: undefined,
+  [SourceName.COUCHDB]: undefined,
+  [SourceName.S3]: undefined,
+  [SourceName.AIRTABLE]: undefined,
+  [SourceName.ARANGODB]: undefined,
+  [SourceName.REST]: undefined,
+  [SourceName.FIRESTORE]: undefined,
+  [SourceName.GOOGLE_SHEETS]: undefined,
+  [SourceName.REDIS]: undefined,
+  [SourceName.SNOWFLAKE]: undefined,
+  [SourceName.BUDIBASE]: undefined,
+}
+
+export function getSQLClient(datasource: Datasource): SqlClient {
+  if (!datasource.isSQL) {
+    throw new Error("Cannot get SQL Client for non-SQL datasource")
+  }
+  const lookup = SQL_CLIENT_SOURCE_MAP[datasource.source]
+  if (lookup) {
+    return lookup
+  }
+  throw new Error("Unable to determine client for SQL datasource")
+}
+
+export async function getDatasourceAndQuery(
+  json: QueryJson
+): DatasourcePlusQueryResponse {
   const datasourceId = json.endpoint.datasourceId
   const datasource = await sdk.datasources.get(datasourceId)
   return makeExternalQuery(datasource, json)

@@ -8,6 +8,7 @@ module FetchMock {
   let mockSearch = false
 
   const func = async (url: any, opts: any) => {
+    const { host, pathname } = new URL(url)
     function json(body: any, status = 200) {
       return {
         status,
@@ -34,7 +35,7 @@ module FetchMock {
       }
     }
 
-    if (url.includes("/api/global")) {
+    if (pathname.includes("/api/global")) {
       const user = {
         email: "test@example.com",
         _id: "us_test@example.com",
@@ -47,31 +48,31 @@ module FetchMock {
           global: false,
         },
       }
-      return url.endsWith("/users") && opts.method === "GET"
+      return pathname.endsWith("/users") && opts.method === "GET"
         ? json([user])
         : json(user)
     }
     // mocked data based on url
-    else if (url.includes("api/apps")) {
+    else if (pathname.includes("api/apps")) {
       return json({
         app1: {
           url: "/app1",
         },
       })
-    } else if (url.includes("example.com")) {
+    } else if (host.includes("example.com")) {
       return json({
         body: opts.body,
         url,
         method: opts.method,
       })
-    } else if (url.includes("invalid.com")) {
+    } else if (host.includes("invalid.com")) {
       return json(
         {
           invalid: true,
         },
         404
       )
-    } else if (mockSearch && url.includes("_search")) {
+    } else if (mockSearch && pathname.includes("_search")) {
       const body = opts.body
       const parts = body.split("tableId:")
       let tableId
@@ -90,7 +91,7 @@ module FetchMock {
         ],
         bookmark: "test",
       })
-    } else if (url.includes("google.com")) {
+    } else if (host.includes("google.com")) {
       return json({
         url,
         opts,
@@ -177,7 +178,7 @@ module FetchMock {
     } else if (url === "https://www.googleapis.com/oauth2/v4/token") {
       // any valid response
       return json({})
-    } else if (url.includes("failonce.com")) {
+    } else if (host.includes("failonce.com")) {
       failCount++
       if (failCount === 1) {
         return json({ message: "error" }, 500)

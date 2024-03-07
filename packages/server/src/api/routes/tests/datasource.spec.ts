@@ -86,7 +86,7 @@ describe("/datasources", () => {
         })
         // check variables in cache
         let contents = await checkCacheForDynamicVariable(
-          query._id,
+          query._id!,
           "variable3"
         )
         expect(contents.rows.length).toEqual(1)
@@ -102,7 +102,7 @@ describe("/datasources", () => {
         expect(res.body.errors).toBeUndefined()
 
         // check variables no longer in cache
-        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        contents = await checkCacheForDynamicVariable(query._id!, "variable3")
         expect(contents).toBe(null)
       })
     })
