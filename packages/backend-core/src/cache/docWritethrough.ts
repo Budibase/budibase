@@ -9,12 +9,13 @@ interface ProcessDocMessage {
   data: Record<string, any>
 }
 
+const PERSIST_MAX_ATTEMPTS = 100
+
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
   JobQueue.DOC_WRITETHROUGH_QUEUE,
   {
     jobOptions: {
-      // We might have plenty of 409, we want to allow running almost infinitely
-      attempts: Number.MAX_SAFE_INTEGER,
+      attempts: PERSIST_MAX_ATTEMPTS,
     },
   }
 )
