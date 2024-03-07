@@ -147,7 +147,7 @@ describe("/api/global/groups", () => {
 
         await Promise.all(
           Array.from({ length: 30 }).map(async (_, i) => {
-            const email = `user${i}@${generator.domain()}`
+            const email = `user${i}@example.com`
             const user = await config.api.users.saveUser({
               ...structures.users.user(),
               email,
