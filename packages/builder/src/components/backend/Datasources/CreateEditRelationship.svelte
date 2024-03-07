@@ -40,8 +40,15 @@
       part2: PrettyRelationshipDefinitions.MANY,
     },
   }
-  let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
-  let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
+  $: relationshipOpts1 =
+    relationshipPart2 === PrettyRelationshipDefinitions.ONE
+      ? [PrettyRelationshipDefinitions.MANY]
+      : Object.values(PrettyRelationshipDefinitions)
+
+  $: relationshipOpts2 =
+    relationshipPart1 === PrettyRelationshipDefinitions.ONE
+      ? [PrettyRelationshipDefinitions.MANY]
+      : Object.values(PrettyRelationshipDefinitions)
 
   let relationshipPart1 = PrettyRelationshipDefinitions.ONE
   let relationshipPart2 = PrettyRelationshipDefinitions.MANY
