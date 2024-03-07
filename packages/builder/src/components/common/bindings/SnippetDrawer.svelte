@@ -12,6 +12,7 @@
   import { decodeJSBinding, encodeJSBinding } from "@budibase/string-templates"
   import { snippets } from "stores/builder"
   import { getSequentialName } from "helpers/duplicate"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
 
   export let snippet
 
@@ -25,6 +26,7 @@
   let name = ""
   let code = ""
   let loading = false
+  let deleteConfirmationDialog
 
   $: defaultName = getSequentialName($snippets, "MySnippet", x => x.name)
   $: key = snippet?.name
@@ -36,12 +38,10 @@
   const saveSnippet = async () => {
     loading = true
     try {
-      await snippets.saveSnippet({
-        name,
-        code: rawJS,
-      })
+      const newSnippet = { name, code: rawJS }
+      await snippets.saveSnippet(newSnippet)
       drawer.hide()
-      notifications.success(`Snippet ${name} saved`)
+      notifications.success(`Snippet ${newSnippet.name} saved`)
     } catch (error) {
       notifications.error("Error saving snippet")
     }
@@ -109,7 +109,11 @@
   </svelte:fragment>
   <svelte:fragment slot="buttons">
     {#if snippet}
-      <Button warning on:click={deleteSnippet} disabled={loading}>
+      <Button
+        warning
+        on:click={deleteConfirmationDialog.show}
+        disabled={loading}
+      >
         Delete
       </Button>
     {/if}
@@ -135,6 +139,13 @@
     {/key}
   </svelte:fragment>
 </Drawer>
+
+<ConfirmDialog
+  bind:this={deleteConfirmationDialog}
+  title="Delete snippet"
+  body={`Are you sure you want to delete ${snippet?.name}?`}
+  onOk={deleteSnippet}
+/>
 
 <style>
   .name {
