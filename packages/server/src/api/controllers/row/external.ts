@@ -128,7 +128,10 @@ export async function bulkDestroy(ctx: UserCtx) {
     )
   }
   const responses = await Promise.all(promises)
-  return { response: { ok: true }, rows: responses.map(resp => resp.row) }
+  const finalRows = responses
+    .map(resp => resp.row)
+    .filter(row => row && row._id)
+  return { response: { ok: true }, rows: finalRows }
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
