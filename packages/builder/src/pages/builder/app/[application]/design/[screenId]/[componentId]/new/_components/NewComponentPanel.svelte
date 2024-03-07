@@ -12,6 +12,7 @@
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
   import { findComponentPath } from "helpers/components"
+  import { Utils } from "@budibase/frontend-core"
 
   let searchString
   let searchRef
@@ -131,7 +132,6 @@
     let tmp = enrichedStructure[1]
     enrichedStructure[1] = enrichedStructure[0]
     enrichedStructure[0] = tmp
-
     return enrichedStructure
   }
 
@@ -169,6 +169,32 @@
         )
       }
     })
+    // suggest some auto-config options
+    if ($selectedComponent) {
+      const definition = componentStore.getDefinition(
+        $selectedComponent._component
+      )
+      if (definition.name === "Form") {
+        if (search?.toLowerCase().startsWith("sa")) {
+          const magicSaveButtons = Utils.buildFormBlockButtonConfig({
+            explicitFormId: $selectedComponent._id,
+            showDeleteButton: false,
+            showSaveButton: true,
+            saveButtonLabel: "Save",
+            actionType: $selectedComponent.actionType,
+            dataSource: $selectedComponent.dataSource,
+          })
+          magicSaveButtons[0].name = "Save button"
+          magicSaveButtons[0].icon = "MagicWand"
+          magicSaveButtons[0]._instanceName = "Save button"
+          filteredStructure.push({
+            name: "“AI” generated",
+            isCategory: true,
+            children: magicSaveButtons,
+          })
+        }
+      }
+    }
     structure = filteredStructure
     return structure
   }
@@ -178,6 +204,21 @@
       await componentStore.create(component)
     } catch (error) {
       notifications.error(error || "Error creating component")
+    }
+  }
+
+  const addComponentWithConfig = async component => {
+    if (component.component) {
+      await addComponent(component.component)
+    } else {
+      await componentStore.create(
+        component._component,
+        {
+          ...component,
+          icon: null,
+        },
+        $selectedComponent
+      )
     }
   }
 
@@ -247,7 +288,7 @@
                 on:dragend={onDragEnd}
                 class="component"
                 class:selected={selectedIndex === orderMap[component.component]}
-                on:click={() => addComponent(component.component)}
+                on:click={() => addComponentWithConfig(component)}
                 on:mouseover={() => (selectedIndex = null)}
                 on:focus
               >

@@ -127,14 +127,16 @@ export const buildFormBlockButtonConfig = props => {
     deleteButtonLabel,
     showSaveButton,
     saveButtonLabel,
+    explicitFormId,
+    explicitRepeaterId,
   } = props || {}
 
-  if (!_id) {
+  if (!_id && !explicitFormId) {
     return
   }
-  const formId = `${_id}-form`
-  const repeaterId = `${_id}-repeater`
-  const resourceId = dataSource?.resourceId
+  const formId = explicitFormId || `${_id}-form`
+  const repeaterId = explicitRepeaterId || `${_id}-repeater`
+  const resourceId = dataSource?.resourceId || dataSource?.tableId
 
   // Accommodate old config to ensure delete button does not reappear
   const deleteText = showDeleteButton === false ? "" : deleteButtonLabel?.trim()
