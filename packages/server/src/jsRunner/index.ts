@@ -16,16 +16,13 @@ export function init() {
       try {
         const bbCtx = context.getCurrentContext()
 
-        let vm: VM
-        if (bbCtx && bbCtx.vm) {
-          vm = bbCtx.vm
-        } else {
-          vm = new IsolatedVM({
+        const vm =
+          bbCtx?.vm ||
+          new IsolatedVM({
             memoryLimit: env.JS_RUNNER_MEMORY_LIMIT,
             invocationTimeout: env.JS_PER_INVOCATION_TIMEOUT_MS,
             isolateAccumulatedTimeout: env.JS_PER_REQUEST_TIMEOUT_MS,
           }).withHelpers()
-        }
 
         if (bbCtx && !bbCtx.vm) {
           bbCtx.vm = vm
