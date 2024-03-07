@@ -1,25 +1,29 @@
-// import { LlamaModel, LlamaContext, LlamaChatSession } from "node-llama-cpp"
-import { ILargeLanguageModel } from "./";
+import { CompletionOptions, createCompletion, InferenceModel, loadModel } from "gpt4all"
 import environment from "../../environment"
-import { TableSchema, Screen } from "@budibase/types";
+import { ILargeLanguageModel } from "./index";
+import { TableSchema, Screen, Automation } from "@budibase/types";
 import * as Prompts from "../prompts"
 
-export class LlamaCPP implements ILargeLanguageModel {
-  private client: any
+enum Model {
+  MISTRAL_OPENORCA_7B = "mistral-7b-openorca.Q4_0.gguf",
+}
+
+export class GPT4All implements ILargeLanguageModel {
+  private client: InferenceModel | undefined
 
   constructor() {
   }
 
   async chatCompletion(prompt: string) {
-    const {LlamaModel, LlamaContext, LlamaChatSession} = await import("node-llama-cpp")
-    const model = new LlamaModel({
-      // @ts-ignore
-      modelPath: environment.LLAMA_CPP_MODEL_PATH,
+    this.client = await loadModel("mistral-7b-openorca.Q4_0.gguf", {
+      verbose: true,
+      modelPath: environment.GPT4ALL_MODEL_PATH
     })
-    const context = new LlamaContext({ model })
-    this.client = new LlamaChatSession({ context })
     try {
-      return this.client.prompt(prompt)
+      const completion = await createCompletion(this.client,
+        [{ role: "user", content: prompt }]
+      )
+      return completion?.choices[0]?.message?.content
     } catch (err) {
       console.error(err)
     }
@@ -66,6 +70,12 @@ export class LlamaCPP implements ILargeLanguageModel {
       return <Screen>{}
     }
   }
+  //
+  //
+  //
+  // generateBudibaseAutomation(prompt: string): Promise<Automation> {
+  //   return Promise.resolve({})
+  // }
 }
 
 

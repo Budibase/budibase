@@ -6,12 +6,14 @@ import authorized from "../../middleware/authorized"
 
 const router: Router = new Router()
 
+const MODELS = ["ChatGPT", "GPT4All", "TogetherAI", "LlamaCPP"]
+
 function aiPromptValidator() {
   return auth.joiValidator.body(
     Joi.object({
       prompt: Joi.string().required(),
       // TODO: fix these models here and use an enum
-      model: Joi.string().required().valid("ChatGPT"),
+      model: Joi.string().required().valid(...MODELS),
     }).unknown(false)
   )
 }
@@ -22,7 +24,7 @@ function sqlPromptValidator() {
       prompt: Joi.string().required(),
       datasourceId: Joi.string().required(),
       tableName: Joi.string().required(),
-      model: Joi.string().required().valid("ChatGPT"),
+      model: Joi.string().required().valid(...MODELS),
     }).unknown(false)
   )
 }
@@ -49,7 +51,7 @@ router
   .post(
     "/api/ai/generate/js",
     // authorized(permissions.BUILDER),
-    sqlPromptValidator(),
+    aiPromptValidator(),
     controller.generateJS
   )
   .post(
@@ -58,17 +60,11 @@ router
     aiPromptValidator(),
     controller.generateBudibaseTableSchema
   )
-  // .post(
-  //   "/api/ai/code/refactor",
-  //   // authorized(permissions.BUILDER),
-  //   aiPromptValidator(),
-  //   controller.summariseText
-  // )
-  // .post(
-  //   "/api/ai/code/debug",
-  //   // authorized(permissions.BUILDER),
-  //   aiPromptValidator(),
-  //   controller.summariseText
-  // )
+  .post(
+    "/api/ai/generate/screen",
+    // authorized(permissions.BUILDER),
+    aiPromptValidator(),
+    controller.generateBudibaseScreen
+  )
 
 export default router

@@ -115,6 +115,10 @@ const environment = {
     environment[key] = value
     cleanVariables()
   },
+  // Budibase AI Env Vars
+  GPT4ALL_MODEL_PATH: process.env.GPT4ALL_MODEL_PATH,
+  LLAMA_CPP_MODEL_PATH: process.env.LLAMA_CPP_MODEL_PATH,
+  TOGETHER_AI_API_KEY: process.env.TOGETHER_AI_API_KEY,
   isTest: coreEnv.isTest,
   isJest: coreEnv.isJest,
   isDev: coreEnv.isDev,

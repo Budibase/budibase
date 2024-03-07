@@ -26,4 +26,31 @@ export const buildAIEndpoints = API => ({
       body: { prompt, model, tableName, datasourceId },
     })
   },
+  /**
+   * Generate JS code.
+   */
+  aiGenerateCode: async ({ prompt, model, datasourceId, tableName }) => {
+    return await API.post({
+      url: "/api/ai/generate/js",
+      body: { prompt, model },
+    })
+  },
+  /**
+   * Generate a Budibase table schema.
+   */
+  aiGenerateTableSchema: async ({ prompt, model }) => {
+    return await API.post({
+      url: "/api/ai/generate/table",
+      body: { prompt, model },
+    })
+  },
+  /**
+   * Generate a Budibase screen.
+   */
+  aiGenerateScreen: async ({ prompt, model }) => {
+    return await API.post({
+      url: "/api/ai/generate/screen",
+      body: { prompt, model },
+    })
+  },
 })

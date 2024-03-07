@@ -3,12 +3,11 @@ export function generateSQL(prompt: string, tableSchema: string) {
 }
 
 export function generateCode(prompt: string) {
-
+  return `Generate JavaScript code for the following request:\n${prompt}.\n Only provide the JS and nothing else.`
 }
 
 export function generateBudibaseTable(prompt: string) {
   const exampleTable = {
-    "_id": "ta_40ccfc10f02f46d9be53551bd121d4c2",
     "name": "test",
     "schema": {
       "name": {
@@ -36,13 +35,67 @@ export function generateBudibaseTable(prompt: string) {
       }
     },
     "type": "table",
-    "sourceId": "bb_internal",
-    "sourceType": "internal",
     "views": {},
-    "createdAt": "2024-01-02T13:29:24.592Z",
-    "updatedAt": "2024-01-02T13:29:44.862Z",
     "indexes": [],
     "primaryDisplay": "name"
   }
-  return `Given this custom schema as an example:\n ${JSON.stringify(exampleTable, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only generate the JSON.`
+  // return {
+  //   system: `Your sole purpose is to genenerate JSON schemas based off prompts, with a structure like the following: \n ${JSON.stringify(exampleTable, undefined, 2)}. Only return the JSON`,
+  //   user:
+  // }
+  return `Given this custom schema as an example:\n ${JSON.stringify(exampleTable, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only return the parseable output JSON, and nothing else.`
+}
+
+export function generateForm(prompt: string) {
+  const formFields = [
+    {
+      "_id": "c7a746dd9e23642e193a03bb7a5f23f78",
+      "_component": "@budibase/standard-components/stringfield",
+      "_styles": {
+        "normal": {},
+        "hover": {},
+        "active": {}
+      },
+      "_instanceName": "New Text Field",
+      "disabled": false,
+      "readonly": false,
+      "align": "left",
+      "span": 6,
+      "field": "field1",
+      "label": "Field1 Label"
+    },
+    {
+      "_id": "cfcb1aebcaa21413f9fd11e20e9cc6f37",
+      "_component": "@budibase/standard-components/stringfield",
+      "_styles": {
+        "normal": {},
+        "hover": {},
+        "active": {}
+      },
+      "_instanceName": "New Text Field",
+      "disabled": false,
+      "readonly": false,
+      "align": "left",
+      "span": 6,
+      "field": "field2",
+      "label": "Field2 Label"
+    },
+    {
+      "_id": "c107659967b1d4ef4a6ae58e874f3c6b5",
+      "_component": "@budibase/standard-components/numberfield",
+      "_styles": {
+        "normal": {},
+        "hover": {},
+        "active": {}
+      },
+      "_instanceName": "New Number Field",
+      "disabled": false,
+      "readonly": false,
+      "span": 6,
+      "label": "Field3",
+      "placeholder": "",
+      "field": "field3"
+    }
+  ]
+  return `Given this array as an example:\n ${JSON.stringify(formFields, undefined, 2)} \ngenerate me a similar structure based on the following prompt:\n ${prompt}\n Only generate the JSON array.`
 }

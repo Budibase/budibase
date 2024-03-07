@@ -1,7 +1,8 @@
 import {
   Automation,
   TableSchema,
-  Screen
+  Screen,
+  QueryJson
 } from "@budibase/types"
 
 
@@ -10,11 +11,9 @@ enum SQLDialect {
   MYSQL
 }
 
-enum ScreenTemplateType {
-  FORM,
-  PORTAL,
-  APPROVAL
-}
+// enum ScreenTemplateType {
+//   FORM,
+// }
 
 export interface IOpenSourceModel {
   verifyConfigured(): Promise<boolean>
@@ -27,8 +26,9 @@ export interface ILargeLanguageModel {
   generateSQL(prompt: string, tableSchema: string, dialect?: SQLDialect): Promise<string | undefined>
   generateCode(prompt: string): Promise<string | undefined>
   generateBudibaseTableSchema(prompt: string): Promise<TableSchema | undefined>
-  generateBudibaseScreen?(prompt: string, type: ScreenTemplateType): Promise<Screen>
-  generateBudibaseAutomation?(prompt: string): Promise<Automation>
+  generateBudibaseScreen?(prompt: string): Promise<Screen>
+  generateBudibaseAutomation?(prompt: string): Promise<Automation | undefined>
+  generateSearch?(prompt: string, tableSchema: string): Promise<QueryJson | undefined>
 }
 
 type ClassificationLabel = {
@@ -58,5 +58,10 @@ export interface IDiscriminativeModel {
 // the frontend or with environment variables
 
 // inspo: https://github.com/dzhng/llm-api?tab=readme-ov-file#-anthropic
+
+// Cloud Models
 export { ChatGPT } from "./chatgpt"
-// export { PrivateGPT } from "./privategpt"
+export { TogetherAI } from "./togetherai"
+// Self hosted models
+export { GPT4All } from "./gpt4all"
+export { LlamaCPP } from "./llamacpp"

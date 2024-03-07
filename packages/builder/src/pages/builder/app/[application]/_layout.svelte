@@ -16,6 +16,7 @@
     Tab,
     Heading,
     Modal,
+    ModalContent,
     notifications,
     TooltipPosition,
   } from "@budibase/bbui"
@@ -26,6 +27,7 @@
   import { onMount, onDestroy } from "svelte"
   import VerificationPromptBanner from "components/common/VerificationPromptBanner.svelte"
   import CommandPalette from "components/commandPalette/CommandPalette.svelte"
+  import BudibaseAI from "components/ai/BudibaseAI/BudibaseAI.svelte"
   import TourWrap from "components/portal/onboarding/TourWrap.svelte"
   import TourPopover from "components/portal/onboarding/TourPopover.svelte"
   import BuilderSidePanel from "./_components/BuilderSidePanel.svelte"
@@ -38,6 +40,7 @@
   let promise = getPackage()
   let hasSynced = false
   let commandPaletteModal
+  let budibaseAiModal
   let loaded = false
 
   $: loaded && initTour()
@@ -82,6 +85,10 @@
     if (e.key === "k" && (e.ctrlKey || e.metaKey)) {
       e.preventDefault()
       commandPaletteModal.toggle()
+    }
+    if (e.key === "`" && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault()
+      budibaseAiModal.toggle()
     }
   }
 
@@ -189,6 +196,17 @@
 <svelte:window on:keydown={handleKeyDown} />
 <Modal bind:this={commandPaletteModal}>
   <CommandPalette />
+</Modal>
+
+<Modal bind:this={budibaseAiModal}>
+  <ModalContent
+      size="L"
+      showCancelButton={false}
+      showConfirmButton={false}
+      showCloseIcon={false}
+  >
+    <BudibaseAI />
+  </ModalContent>
 </Modal>
 
 <style>

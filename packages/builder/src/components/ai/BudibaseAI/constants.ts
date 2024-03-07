@@ -4,19 +4,11 @@ export const Actions = {
   GENERATE_CODE: "GENERATE_CODE",
   GENERATE_TABLE_SCHEMA: "GENERATE_TABLE_SCHEMA",
   GENERATE_SCREEN: "GENERATE_SCREEN",
-  GENERATE_AUTOMATION: "GENERATE_AUTOMATION",
-}
-
-export const Schemas = {
-  SUMMARIZE_TEXT: {},
-  GENERATE_SQL: {},
-  GENERATE_CODE: {},
-  GENERATE_TABLE_SCHEMA: {},
-  GENERATE_SCREEN: {},
-  GENERATE_AUTOMATION: {},
 }
 
 export const Models = {
-  OPENAI: "OpenAI",
-  LLAMA_CPP: "Llama.cpp"
+  ChatGPT: "ChatGPT",
+  GPT4All: "GPT4All",
+  TogetherAI: "TogetherAI",
+  LlamaCPP: "LlamaCPP"
 }

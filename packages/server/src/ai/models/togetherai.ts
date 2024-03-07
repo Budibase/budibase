@@ -5,17 +5,18 @@ import { TableSchema, Screen, Automation } from "@budibase/types";
 import * as Prompts from "../prompts"
 
 enum Model {
-  GPT_35_TURBO = "gpt-3.5-turbo",
-  // will only work with api keys that have access to the GPT4 API
-  GPT_4 = "gpt-4",
+  LLAMA_7B = "meta-llama/Llama-2-7b-chat-hf",
+  GEMMA_2B = "google/gemma-2b-it",
+  GEMMA_7B = "google/gemma-7b-it",
 }
 
-export class ChatGPT implements ILargeLanguageModel {
+export class TogetherAI implements ILargeLanguageModel {
   private client: OpenAIApi
 
   constructor() {
     const configuration = new Configuration({
-      apiKey: environment.OPENAI_API_KEY,
+      apiKey: environment.TOGETHER_AI_API_KEY,
+      basePath: "https://api.together.xyz/v1"
     })
     this.client = new OpenAIApi(configuration)
   }
@@ -23,7 +24,7 @@ export class ChatGPT implements ILargeLanguageModel {
   async chatCompletion(prompt: string, promptOptions: Partial<CreateChatCompletionRequest> = {}) {
     try {
       const completion = await this.client.createChatCompletion({
-        model: Model.GPT_4,
+        model: Model.GEMMA_7B,
         messages: [{ role: "user", content: prompt }],
         ...promptOptions
       })
@@ -82,6 +83,7 @@ export class ChatGPT implements ILargeLanguageModel {
           presence_penalty: 0.0,
         }
       )
+      console.log(completion)
       return <TableSchema>JSON.parse(completion!)
     } catch (err) {
       console.error("Error generating budibase schema", err)
@@ -114,5 +116,4 @@ export class ChatGPT implements ILargeLanguageModel {
   //   return Promise.resolve({})
   // }
 }
-
 

@@ -1,13 +1,35 @@
 <script>
-  import { Button, TextArea } from "@budibase/bbui"
+  import { Button, TextArea, notifications } from "@budibase/bbui"
+  import { goto } from "@roxi/routify"
+  import store from "./aiStore"
+  import { datasources, tables } from "stores/builder"
+  import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
   import { API } from "api"
-  import Editor from "components/integration/QueryEditor.svelte"
+
+  export let datasourceId
+  export let tableName
 
   let prompt = ""
-  let response = ""
+  let schema
+
+  async function generateTableSchema() {
+    notifications.info("Generating table schema..")
+    const table = await API.aiGenerateTableSchema({ prompt, model: $store.model })
+    const mappedSchema = {}
+    for (let key in table.schema) {
+      mappedSchema[key] = table.schema[key].type
+    }
+    schema = mappedSchema
+    await tables.save(table)
+    await datasources.fetch()
+    await tables.fetch()
+    notifications.success(`${table.name} Table generated and saved`)
+    $goto(`./data/table/${table._id}`)
+  }
 </script>
 
-<!--    editorHeight={height}-->
-<!--    label={noLabel ? null : "Query"}-->
-<TextArea bind:value={prompt} />
-<Button type="cta">Generate</Button>
+<TextArea label="Prompt" bind:value={prompt} />
+{#if schema}
+  <KeyValueBuilder object={schema} name="field" headings noAddButton />
+{/if}
+<Button cta on:click={generateTableSchema}>Generate</Button>

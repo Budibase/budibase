@@ -39,8 +39,7 @@
 
 
   <div class="content">
-<!--    <slot />-->
-    <BudibaseAI />
+    <slot />
   </div>
 </div>
 

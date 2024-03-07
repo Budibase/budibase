@@ -1,14 +1,16 @@
 <script>
-  import { Button, TextArea, Body } from "@budibase/bbui"
+  import { Button, TextArea, Body, notifications, Helpers } from "@budibase/bbui"
+  import store from "./aiStore"
   import { API } from "api"
-  import Editor from "components/integration/QueryEditor.svelte"
 
   let prompt = ""
   let summary = ""
 
   async function summarizeText() {
-    const aiResponse = await API.aiSummarizeText({ prompt, model: "ChatGPT" })
+    const aiResponse = await API.aiSummarizeText({ prompt, model: $store.model })
     summary = aiResponse.response
+    await Helpers.copyToClipboard(summary)
+    notifications.success("Copied summary to clipboard")
   }
 </script>
 
