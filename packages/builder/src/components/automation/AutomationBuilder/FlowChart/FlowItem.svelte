@@ -17,31 +17,26 @@
   } from "@budibase/bbui"
   import AutomationBlockSetup from "../../SetupPanel/AutomationBlockSetup.svelte"
   import CreateWebhookModal from "components/automation/Shared/CreateWebhookModal.svelte"
-  import ActionModal from "./ActionModal.svelte"
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
+  import { Handle, Position } from "@xyflow/svelte"
+  import AddStepControl from "./AddStepControl.svelte"
 
-  export let block
-  export let testDataModal
-  export let idx
+  export let data
+  const { block, testDataModal } = data
 
   let selected
   let webhookModal
-  let actionModal
   let open = true
   let showLooping = false
   let role
 
-  $: collectBlockExists = $selectedAutomation.definition.steps.some(
-    step => step.stepId === ActionStepID.COLLECT
-  )
   $: automationId = $selectedAutomation?._id
   $: isTrigger = block.type === "TRIGGER"
   $: steps = $selectedAutomation?.definition?.steps ?? []
   $: blockIdx = steps.findIndex(step => step.id === block.id)
   $: lastStep = !isTrigger && blockIdx + 1 === steps.length
-  $: totalBlocks = $selectedAutomation?.definition?.steps.length + 1
   $: loopBlock = $selectedAutomation?.definition.steps.find(
     x => x.blockToLoop === block.id
   )
@@ -163,7 +158,7 @@
     {open}
     {block}
     {testDataModal}
-    {idx}
+    idx={blockIdx}
     {addLooping}
     {deleteStep}
     on:toggle={() => (open = !open)}
@@ -191,23 +186,19 @@
       </Layout>
     </div>
   {/if}
-</div>
-{#if !collectBlockExists || !lastStep}
-  <div class="separator" />
-  <Icon
-    on:click={() => actionModal.show()}
-    hoverable
-    name="AddCircle"
-    size="S"
-  />
-  {#if isTrigger ? totalBlocks > 1 : blockIdx !== totalBlocks - 2}
-    <div class="separator" />
+  {#if blockIdx === steps.length - 1}
+    <div class="add-step">
+      <AddStepControl {lastStep} {blockIdx} />
+    </div>
   {/if}
-{/if}
+</div>
 
-<Modal bind:this={actionModal} width="30%">
-  <ActionModal {lastStep} {blockIdx} />
-</Modal>
+{#if !isTrigger}
+  <Handle type="target" position={Position.Top} />
+{/if}
+{#if blockIdx < steps.length - 1}
+  <Handle type="source" position={Position.Bottom} />
+{/if}
 
 <Modal bind:this={webhookModal} width="30%">
   <CreateWebhookModal />
@@ -261,5 +252,12 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-s);
+  }
+
+  .add-step {
+    position: absolute;
+    bottom: 0;
+    transform: translateY(50%) translateX(-50%);
+    left: 50%;
   }
 </style>
