@@ -12,8 +12,8 @@ describe("syncCreators", () => {
   afterAll(config.end)
 
   it("syncs creators", async () => {
-    return config.doInContext(null, async () => {
-      await config.createUser({ admin: true })
+    return config.doInContext(undefined, async () => {
+      await config.createUser({ admin: { global: true } })
 
       await syncCreators.run()
 

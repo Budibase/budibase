@@ -157,7 +157,7 @@ describe("/queries", () => {
     })
 
     it("should find a query in cloud", async () => {
-      await setup.switchToSelfHosted(async () => {
+      await config.withEnv({ SELF_HOSTED: "true" }, async () => {
         const query = await config.createQuery()
         const res = await request
           .get(`/api/queries/${query._id}`)
@@ -397,15 +397,16 @@ describe("/queries", () => {
     })
 
     it("should fail with invalid integration type", async () => {
-      const response = await config.api.datasource.create(
-        {
-          ...basicDatasource().datasource,
-          source: "INVALID_INTEGRATION" as SourceName,
+      const datasource: Datasource = {
+        ...basicDatasource().datasource,
+        source: "INVALID_INTEGRATION" as SourceName,
+      }
+      await config.api.datasource.create(datasource, {
+        status: 500,
+        body: {
+          message: "No datasource implementation found.",
         },
-        { expectStatus: 500, rawResponse: true }
-      )
-
-      expect(response.body.message).toBe("No datasource implementation found.")
+      })
     })
   })
 
@@ -467,7 +468,10 @@ describe("/queries", () => {
         queryString: "test={{ variable3 }}",
       })
       // check its in cache
-      const contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      const contents = await checkCacheForDynamicVariable(
+        base._id!,
+        "variable3"
+      )
       expect(contents.rows.length).toEqual(1)
       const responseBody = await preview(datasource, {
         path: "www.failonce.com",
@@ -490,7 +494,7 @@ describe("/queries", () => {
         queryString: "test={{ variable3 }}",
       })
       // check its in cache
-      let contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      let contents = await checkCacheForDynamicVariable(base._id!, "variable3")
       expect(contents.rows.length).toEqual(1)
 
       // delete the query
@@ -500,7 +504,7 @@ describe("/queries", () => {
         .expect(200)
 
       // check variables no longer in cache
-      contents = await checkCacheForDynamicVariable(base._id, "variable3")
+      contents = await checkCacheForDynamicVariable(base._id!, "variable3")
       expect(contents).toBe(null)
     })
   })

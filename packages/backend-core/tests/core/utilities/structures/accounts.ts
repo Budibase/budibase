@@ -18,7 +18,7 @@ export const account = (partial: Partial<Account> = {}): Account => {
   return {
     accountId: uuid(),
     tenantId: generator.word(),
-    email: generator.email(),
+    email: generator.email({ domain: "example.com" }),
     tenantName: generator.word(),
     hosting: Hosting.SELF,
     createdAt: Date.now(),
