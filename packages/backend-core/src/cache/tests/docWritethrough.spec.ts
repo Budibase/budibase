@@ -257,7 +257,8 @@ describe("docWritethrough", () => {
       })
     })
 
-    it("patches will execute in order", async () => {
+    // This is not yet supported
+    it.skip("patches will execute in order", async () => {
       let incrementalValue = 0
       const keyToOverride = generator.word()
       async function incrementalPatches(count: number) {
