@@ -23,7 +23,7 @@ class DocWritethroughProcessor {
     docWritethroughProcessorQueue.process(async message => {
       const result = await locks.doWithLock(
         {
-          type: LockType.DEFAULT,
+          type: LockType.TRY_ONCE,
           name: LockName.PERSIST_DOC_WRITETHROUGH,
           resource: `${message.data.dbName}:${message.data.docId}`,
           ttl: Duration.fromSeconds(60).toMs(),
