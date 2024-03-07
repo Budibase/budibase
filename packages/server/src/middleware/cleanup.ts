@@ -1,5 +1,6 @@
 import { Ctx } from "@budibase/types"
 import { context } from "@budibase/backend-core"
+import { tracer } from "dd-trace"
 
 export default async (ctx: Ctx, next: any) => {
   const resp = await next()
@@ -12,7 +13,9 @@ export default async (ctx: Ctx, next: any) => {
   let errors = []
   for (let fn of current.cleanup) {
     try {
-      await fn()
+      await tracer.trace("cleanup", async span => {
+        await fn()
+      })
     } catch (e) {
       // We catch errors here to ensure we at least attempt to run all cleanup
       // functions. We'll throw the first error we encounter after all cleanup
