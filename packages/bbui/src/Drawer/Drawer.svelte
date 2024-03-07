@@ -57,11 +57,12 @@
 </script>
 
 <script>
-  import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
+  import Icon from "../Icon/Icon.svelte"
+  import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Portal from "svelte-portal"
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
-  import { Icon, ActionButton } from "@budibase/bbui"
 
   export let title
   export let forceModal = false
