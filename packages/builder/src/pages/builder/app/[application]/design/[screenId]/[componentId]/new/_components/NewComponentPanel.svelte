@@ -56,11 +56,14 @@
 
   const actionParameterMappings = {
     "Export Data": {
-      tableComponentId: {
-        componentType: "@budibase/standard-components/tableblock",
-        key: "_id",
-        transform: value => `${value}-table`,
-      },
+      tableComponentId: [
+        {
+          componentType: "@budibase/standard-components/tableblock",
+          key: "_id",
+          transform: value => `${value}-table`,
+          updateDependency: component => (component.allowSelectRows = true),
+        },
+      ],
     },
   }
 
@@ -288,11 +291,13 @@
         actionParameterMappings[searchedActions[0].name] || {}
       )
       let parameters = {}
+      let noMatch = false
       for (const name of parameterNames) {
         const targetComponentType =
-          actionParameterMappings[searchedActions[0].name][name].componentType
+          actionParameterMappings[searchedActions[0].name][name][0]
+            .componentType
         const targetComponentKey =
-          actionParameterMappings[searchedActions[0].name][name].key
+          actionParameterMappings[searchedActions[0].name][name][0].key
 
         const matchingComponents = findAllMatchingComponents(
           $selectedScreen?.props,
@@ -301,21 +306,29 @@
         if (matchingComponents?.length) {
           parameters[name] = actionParameterMappings[searchedActions[0].name][
             name
-          ].transform(matchingComponents[0][targetComponentKey])
+          ][0].transform(matchingComponents[0][targetComponentKey])
+          actionParameterMappings[searchedActions[0].name][
+            name
+          ][0].updateDependency(matchingComponents[0])
+        } else {
+          noMatch = true
+          break
         }
       }
-      action.parameters = parameters
-      const actionButton = {
-        text: capitalise(searchedActions[0].name),
-        _id: Helpers.uuid(),
-        _component: "@budibase/standard-components/button",
-        onClick: [action],
-        name: `${capitalise(searchedActions[0].name)}`,
-        icon: "Events",
-        _instanceName: `${capitalise(searchedActions[0].name)}`,
-        type: "cta",
+      if (!noMatch) {
+        action.parameters = parameterNames
+        const actionButton = {
+          text: capitalise(searchedActions[0].name),
+          _id: Helpers.uuid(),
+          _component: "@budibase/standard-components/button",
+          onClick: [action],
+          name: `${capitalise(searchedActions[0].name)}`,
+          icon: "Events",
+          _instanceName: `${capitalise(searchedActions[0].name)}`,
+          type: "cta",
+        }
+        magicButtons.push(actionButton)
       }
-      magicButtons.push(actionButton)
     }
 
     if (magicButtons.length > 0) {
