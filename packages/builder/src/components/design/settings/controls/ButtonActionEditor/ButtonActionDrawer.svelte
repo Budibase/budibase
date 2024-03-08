@@ -9,7 +9,7 @@
     ActionButton,
     Search,
   } from "@budibase/bbui"
-  import { getAvailableActions } from "./index"
+  import { getAvailableActions } from "helpers/actions"
   import { generate } from "shortid"
   import {
     getEventContextBindings,

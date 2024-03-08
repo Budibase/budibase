@@ -22,8 +22,7 @@
     findComponentPath,
     findAllMatchingComponents,
   } from "helpers/components"
-  import { capitalise } from "../../../../../../../../../helpers/helpers"
-  import { getAvailableActions } from "../../../../../../../../../components/design/settings/controls/ButtonActionEditor/index"
+  import { getAvailableActions } from "helpers/actions"
 
   let searchString
   let searchRef
@@ -252,7 +251,7 @@
       if (parameterNames.length === matchingComponentsForParameters?.length) {
         action.parameters = parameters
         const actionButton = {
-          text: capitalise(label),
+          text: label,
           _id: Helpers.uuid(),
           _component: "@budibase/standard-components/button",
           onClick: [action],

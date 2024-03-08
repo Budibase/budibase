@@ -1,8 +1,8 @@
-import * as ActionComponents from "./actions"
+import * as ActionComponents from "../components/design/settings/controls/ButtonActionEditor/actions/index"
 import { get } from "svelte/store"
 import { appStore } from "stores/builder"
-// @ts-ignore
-import ActionDefinitions from "./manifest.json"
+//@ts-ignore
+import ActionDefinitions from "../components/design/settings/controls/ButtonActionEditor/manifest.json"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
