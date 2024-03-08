@@ -289,8 +289,10 @@
   }
 
   const addComponentWithConfig = async component => {
-    if (component.component) {
-      await addComponent(component.component)
+    const componentType =
+      typeof component === "string" ? component : component.component
+    if (componentType) {
+      await addComponent(componentType)
     } else {
       await componentStore.create(
         component._component,
