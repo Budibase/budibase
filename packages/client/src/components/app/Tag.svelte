@@ -6,6 +6,7 @@
   export let onClick
   export let text = ""
   export let color
+  export let textColor
   export let closable = false
   export let size = "M"
 
@@ -14,7 +15,7 @@
 
   // Add color styles to main styles object, otherwise the styleable helper
   // overrides the color when it's passed as inline style.
-  $: styles = enrichStyles($component.styles, color)
+  $: styles = enrichStyles($component.styles, color, textColor)
   $: componentText = getComponentText(text, $builderStore, $component)
 
   const getComponentText = (text, builderState, componentState) => {
@@ -24,7 +25,7 @@
     return text || componentState.name || "Placeholder text"
   }
 
-  const enrichStyles = (styles, color) => {
+  const enrichStyles = (styles, color, textColor) => {
     if (!color) {
       return styles
     }
@@ -34,7 +35,7 @@
         ...styles?.normal,
         "background-color": color,
         "border-color": color,
-        color: "white",
+        color: textColor ? textColor : "black",
         "--spectrum-clearbutton-medium-icon-color": "white",
       },
     }
