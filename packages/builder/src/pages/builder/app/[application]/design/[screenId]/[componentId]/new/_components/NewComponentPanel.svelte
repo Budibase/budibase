@@ -18,12 +18,12 @@
   } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
+  import { findComponentPath, findNearestComponent } from "helpers/components"
   import {
-    findComponentPath,
-    findAllMatchingComponents,
-    findNearestComponent,
-  } from "helpers/components"
-  import { getAvailableActions, ActionParameterMappings } from "helpers/actions"
+    getAvailableActions,
+    ActionParameterMappings,
+    hasExistingAction,
+  } from "helpers/actions"
 
   let searchString
   let searchRef
@@ -186,25 +186,9 @@
         )
       }
     })
-    // suggest some auto-config options
-    let magicButtons = []
-    function hasExistingActionButton(actionName, parameters) {
-      return findAllMatchingComponents(
-        $selectedScreen?.props,
-        component =>
-          component._component === "@budibase/standard-components/button"
-      )
-        .flatMap(button => button.onClick || [])
-        .some(
-          action =>
-            action["##eventHandlerType"] === actionName &&
-            Object.entries(action.parameters || {}).some(
-              ([key, value]) => parameters[key] === value
-            )
-        )
-    }
 
-    // suggest button based on actions
+    // suggest auto-button based on actions
+    let magicButtons = []
     const searchedActions = availableActions.filter(action =>
       ActionParameterMappings[action.name]._searchLabels.some(label =>
         label.toLowerCase().includes(searchString?.toLowerCase())
@@ -246,7 +230,13 @@
       }
       if (
         matchingComponentForParameters &&
-        !hasExistingActionButton(label, parameters)
+        !hasExistingAction(
+          $selectedScreen?.props,
+          label,
+          parameters,
+          "onClick",
+          "@budibase/standard-components/button"
+        )
       ) {
         action.parameters = parameters
         const actionButton = {

@@ -3,6 +3,7 @@ import { get } from "svelte/store"
 import { appStore } from "stores/builder"
 //@ts-ignore
 import ActionDefinitions from "../components/design/settings/controls/ButtonActionEditor/manifest.json"
+import { findAllMatchingComponents } from "./components"
 
 // Defines which actions are available to configure in the front end.
 // Unfortunately the "name" property is used as the identifier so please don't
@@ -45,4 +46,27 @@ export const ActionParameterMappings = {
       },
     ],
   },
+}
+
+// Returns true if a component in the tree has an action that
+// matches the provided actionName and parameter values
+export const hasExistingAction = (
+  rootComponent,
+  actionName,
+  parameters,
+  event,
+  componentType
+) => {
+  return findAllMatchingComponents(
+    rootComponent,
+    component => component._component === componentType
+  )
+    .flatMap(button => button[event] || [])
+    .some(
+      action =>
+        action["##eventHandlerType"] === actionName &&
+        Object.entries(action.parameters || {}).some(
+          ([key, value]) => parameters[key] === value
+        )
+    )
 }
