@@ -129,7 +129,7 @@ export const buildFormBlockButtonConfig = props => {
     saveButtonLabel,
   } = props || {}
 
-  if (!_id && !explicitFormId) {
+  if (!_id) {
     return
   }
   const formId = `${_id}-form`
