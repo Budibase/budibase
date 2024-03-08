@@ -13,17 +13,11 @@ import { events } from "@budibase/backend-core"
 jest.setTimeout(30000)
 
 describe("scim", () => {
-  beforeAll(async () => {
-    tk.freeze(mocks.date.MOCK_DATE)
-    mocks.licenses.useScimIntegration()
-
-    await config.setSCIMConfig(true)
-  })
-
   beforeEach(async () => {
     jest.resetAllMocks()
     tk.freeze(mocks.date.MOCK_DATE)
     mocks.licenses.useScimIntegration()
+    mocks.licenses.useGroups()
 
     await config.setSCIMConfig(true)
   })
@@ -718,7 +712,6 @@ describe("scim", () => {
         })
 
         it("can fetch groups even if internal groups exist", async () => {
-          mocks.licenses.useGroups()
           await config.api.groups.saveGroup(structures.userGroups.userGroup())
           await config.api.groups.saveGroup(structures.userGroups.userGroup())
 
