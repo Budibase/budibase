@@ -265,7 +265,7 @@
     if ($selectedComponent) {
       definition = componentStore.getDefinition($selectedComponent._component)
     }
-    if (definition?.name !== "Table") {
+    if (definition && definition.name !== "Table") {
       function findNearestForm(componentId) {
         const path = findComponentPath($selectedScreen?.props, componentId)
         if (!path?.length) {
