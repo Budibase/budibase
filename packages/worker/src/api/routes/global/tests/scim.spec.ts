@@ -782,8 +782,6 @@ describe("scim", () => {
       })
 
       it("creating an external group that conflicts an internal one syncs the existing group", async () => {
-        mocks.licenses.useGroups()
-
         const groupToSave = structures.userGroups.userGroup()
         const { body: internalGroup } = await config.api.groups.saveGroup(
           groupToSave
@@ -809,12 +807,8 @@ describe("scim", () => {
       })
 
       it("a group cannot be SCIM synchronised with another SCIM group", async () => {
-        mocks.licenses.useGroups()
-
         const groupToSave = structures.userGroups.userGroup()
-        const { body: internalGroup } = await config.api.groups.saveGroup(
-          groupToSave
-        )
+        await config.api.groups.saveGroup(groupToSave)
 
         const createGroupRequest = structures.scim.createGroupRequest({
           displayName: groupToSave.name,
