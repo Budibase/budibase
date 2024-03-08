@@ -7,6 +7,7 @@ import {
   logging,
   tenancy,
   users,
+  cache,
 } from "@budibase/backend-core"
 import fs from "fs"
 import { watch } from "./watch"
@@ -74,6 +75,7 @@ export async function startup(app?: Koa, server?: Server) {
   eventEmitter.emitPort(env.PORT)
   fileSystem.init()
   await redis.init()
+  cache.docWritethrough.init()
   eventInit()
   if (app && server) {
     initialiseWebsockets(app, server)
