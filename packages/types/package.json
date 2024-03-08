@@ -23,6 +23,6 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "scim-patch": "^0.7.0"
+    "scim-patch": "^0.8.1"
   }
 }
