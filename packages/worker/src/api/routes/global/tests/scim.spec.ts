@@ -780,6 +780,43 @@ describe("scim", () => {
           )
         })
       })
+
+      it("creating an external group that conflicts an internal one syncs the existing group", async () => {
+        const groupToSave = structures.userGroups.userGroup()
+        const { body: internalGroup } = await config.api.groups.saveGroup(
+          groupToSave
+        )
+
+        const scimGroupData = {
+          externalId: structures.uuid(),
+          displayName: groupToSave.name,
+        }
+
+        const res = await postScimGroup(
+          { body: structures.scim.createGroupRequest(scimGroupData) },
+          { expect: 200 }
+        )
+
+        expect(res).toEqual(
+          expect.objectContaining({
+            id: internalGroup._id!,
+            externalId: scimGroupData.externalId,
+            displayName: scimGroupData.displayName,
+          })
+        )
+      })
+
+      it("a group cannot be SCIM synchronised with another SCIM group", async () => {
+        const groupToSave = structures.userGroups.userGroup()
+        await config.api.groups.saveGroup(groupToSave)
+
+        const createGroupRequest = structures.scim.createGroupRequest({
+          displayName: groupToSave.name,
+        })
+        await postScimGroup({ body: createGroupRequest }, { expect: 200 })
+
+        await postScimGroup({ body: createGroupRequest }, { expect: 409 })
+      })
     })
 
     describe("GET /api/global/scim/v2/groups/:id", () => {
