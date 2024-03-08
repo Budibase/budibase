@@ -1,4 +1,4 @@
-import { User, Document } from "../"
+import { User, Document, Plugin } from "../"
 import { SocketSession } from "../../sdk"
 
 export type AppMetadataErrors = { [key: string]: string[] }
@@ -24,6 +24,8 @@ export interface App extends Document {
   icon?: AppIcon
   features?: AppFeatures
   automations?: AutomationSettings
+  usedPlugins?: Plugin[]
+  upgradableVersion?: string
 }
 
 export interface AppInstance {

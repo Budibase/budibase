@@ -30,6 +30,7 @@ export enum Databases {
   LOCKS = "locks",
   SOCKET_IO = "socket_io",
   BPM_EVENTS = "bpmEvents",
+  DOC_WRITE_THROUGH = "docWriteThrough",
 }
 
 /**

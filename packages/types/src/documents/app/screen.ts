@@ -22,4 +22,5 @@ export interface Screen extends Document {
   routing: ScreenRouting
   props: ScreenProps
   name?: string
+  pluginAdded?: boolean
 }

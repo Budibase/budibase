@@ -56,9 +56,10 @@
   disabled={deletionConfirmationAppName !== appName || deleting}
 >
   Are you sure you want to delete
-  <b class="app-name" role="button" tabindex={-1} on:click={copyName}>
+  <span class="app-name" role="button" tabindex={-1} on:click={copyName}>
     {appName}
-  </b>?
+  </span>?
+
   <br />
   Please enter the app name below to confirm.
   <br /><br />
@@ -68,5 +69,7 @@
 <style>
   .app-name {
     cursor: pointer;
+    font-weight: bold;
+    display: inline-block;
   }
 </style>

@@ -1,5 +1,5 @@
 import { generator } from "../../shared"
-import { CreateAppRequest } from "../../types"
+import { CreateAppRequest } from "@budibase/types"
 
 function uniqueWord() {
   return generator.word() + generator.hash()

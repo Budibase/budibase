@@ -1,63 +1,48 @@
 import {
-  CreateDatasourceRequest,
   Datasource,
   VerifyDatasourceRequest,
+  CreateDatasourceResponse,
+  UpdateDatasourceResponse,
+  UpdateDatasourceRequest,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
-import supertest from "supertest"
+import { Expectations, TestAPI } from "./base"
 
 export class DatasourceAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
-  create = async <B extends boolean = false>(
+  create = async (
     config: Datasource,
-    {
-      expectStatus,
-      rawResponse,
-    }: { expectStatus?: number; rawResponse?: B } = {}
-  ): Promise<B extends false ? Datasource : supertest.Response> => {
-    const body: CreateDatasourceRequest = {
-      datasource: config,
-      tablesFilter: [],
-    }
-    const result = await this.request
-      .post(`/api/datasources`)
-      .send(body)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus || 200)
-    if (rawResponse) {
-      return result as any
-    }
-    return result.body.datasource
+    expectations?: Expectations
+  ): Promise<Datasource> => {
+    const response = await this._post<CreateDatasourceResponse>(
+      `/api/datasources`,
+      {
+        body: {
+          datasource: config,
+          tablesFilter: [],
+        },
+        expectations,
+      }
+    )
+    return response.datasource
   }
 
   update = async (
-    datasource: Datasource,
-    { expectStatus } = { expectStatus: 200 }
+    datasource: UpdateDatasourceRequest,
+    expectations?: Expectations
   ): Promise<Datasource> => {
-    const result = await this.request
-      .put(`/api/datasources/${datasource._id}`)
-      .send(datasource)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return result.body.datasource as Datasource
+    const response = await this._put<UpdateDatasourceResponse>(
+      `/api/datasources/${datasource._id}`,
+      { body: datasource, expectations }
+    )
+    return response.datasource
   }
 
   verify = async (
     data: VerifyDatasourceRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const result = await this.request
-      .post(`/api/datasources/verify`)
-      .send(data)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return result
+    return await this._post(`/api/datasources/verify`, {
+      body: data,
+      expectations,
+    })
   }
 }

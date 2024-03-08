@@ -22,6 +22,8 @@ import {
   INTERNAL_TABLE_SOURCE_ID,
   TableSourceType,
   Query,
+  Webhook,
+  WebhookActionType,
 } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
 
@@ -407,12 +409,12 @@ export function basicLayout() {
   return cloneDeep(EMPTY_LAYOUT)
 }
 
-export function basicWebhook(automationId: string) {
+export function basicWebhook(automationId: string): Webhook {
   return {
     live: true,
     name: "webhook",
     action: {
-      type: "automation",
+      type: WebhookActionType.AUTOMATION,
       target: automationId,
     },
   }

@@ -36,11 +36,13 @@ export async function search(options: SearchParams): Promise<{
 export interface ExportRowsParams {
   tableId: string
   format: Format
+  delimiter?: string
   rowIds?: string[]
   columns?: string[]
   query?: SearchFilters
   sort?: string
   sortOrder?: SortOrder
+  customHeaders?: { [key: string]: string }
 }
 
 export interface ExportRowsResult {

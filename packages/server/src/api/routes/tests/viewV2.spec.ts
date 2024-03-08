@@ -177,7 +177,7 @@ describe.each([
       }
 
       await config.api.viewV2.create(newView, {
-        expectStatus: 201,
+        status: 201,
       })
     })
   })
@@ -275,7 +275,7 @@ describe.each([
       const tableId = table._id!
       await config.api.viewV2.update(
         { ...view, id: generator.guid() },
-        { expectStatus: 404 }
+        { status: 404 }
       )
 
       expect(await config.api.table.get(tableId)).toEqual(
@@ -304,7 +304,7 @@ describe.each([
             },
           ],
         },
-        { expectStatus: 404 }
+        { status: 404 }
       )
 
       expect(await config.api.table.get(tableId)).toEqual(
@@ -326,12 +326,10 @@ describe.each([
           ...viewV1,
         },
         {
-          expectStatus: 400,
-          handleResponse: r => {
-            expect(r.body).toEqual({
-              message: "Only views V2 can be updated",
-              status: 400,
-            })
+          status: 400,
+          body: {
+            message: "Only views V2 can be updated",
+            status: 400,
           },
         }
       )
@@ -403,7 +401,7 @@ describe.each([
           } as Record<string, FieldSchema>,
         },
         {
-          expectStatus: 200,
+          status: 200,
         }
       )
     })

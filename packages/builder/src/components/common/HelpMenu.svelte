@@ -1,11 +1,11 @@
 <script>
   import FontAwesomeIcon from "./FontAwesomeIcon.svelte"
   import { Popover, Heading, Body } from "@budibase/bbui"
-  import { licensing } from "stores/portal"
   import { isEnabled, TENANT_FEATURE_FLAGS } from "helpers/featureFlags"
+  import { licensing } from "stores/portal"
+  import { isPremiumOrAbove } from "helpers/planTitle"
 
-  $: isBusinessAndAbove =
-    $licensing.isBusinessPlan || $licensing.isEnterprisePlan
+  $: premiumOrAboveLicense = isPremiumOrAbove($licensing?.license.plan.type)
 
   let show
   let hide
@@ -56,22 +56,25 @@
       <div class="divider" />
       {#if isEnabled(TENANT_FEATURE_FLAGS.LICENSING)}
         <a
-          href={isBusinessAndAbove
+          href={premiumOrAboveLicense
             ? "mailto:support@budibase.com"
             : "/builder/portal/account/usage"}
         >
-          <div class="premiumLinkContent" class:disabled={!isBusinessAndAbove}>
+          <div
+            class="premiumLinkContent"
+            class:disabled={!premiumOrAboveLicense}
+          >
             <div class="icon">
               <FontAwesomeIcon name="fa-solid fa-envelope" />
             </div>
             <Body size="S">Email support</Body>
           </div>
-          {#if !isBusinessAndAbove}
+          {#if !premiumOrAboveLicense}
             <div class="premiumBadge">
               <div class="icon">
                 <FontAwesomeIcon name="fa-solid fa-lock" />
               </div>
-              <Body size="XS">Business</Body>
+              <Body size="XS">Premium</Body>
             </div>
           {/if}
         </a>

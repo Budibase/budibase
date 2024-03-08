@@ -19,6 +19,7 @@ export interface UpdateSelfRequest {
   forceResetPassword?: boolean
   onboardedAt?: string
   appFavourites?: string[]
+  tours?: Record<string, Date>
 }
 
 export interface UpdateSelfResponse {

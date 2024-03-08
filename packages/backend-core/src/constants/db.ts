@@ -57,6 +57,9 @@ export const StaticDatabases = {
   AUDIT_LOGS: {
     name: "audit-logs",
   },
+  SCIM_LOGS: {
+    name: "scim-logs",
+  },
 }
 
 export const APP_PREFIX = prefixed(DocumentType.APP)
