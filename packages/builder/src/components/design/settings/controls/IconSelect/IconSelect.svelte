@@ -139,10 +139,22 @@
         {/each}
       </div>
       <div class="search-input">
-        <div class="input-wrapper">
-          <Input bind:value={searchTerm} thin placeholder="Search Icon" />
+        <div class="input-wrapper" style={`width: ${value ? "425" : "510"}px`}>
+          <Input
+            bind:value={searchTerm}
+            on:keyup={event => {
+              if (event.key === "Enter") {
+                searchForIcon()
+              }
+            }}
+            thin
+            placeholder="Search Icon"
+          />
         </div>
         <Button secondary on:click={searchForIcon}>Search</Button>
+        {#if value}
+          <Button primary on:click={() => (value = null)}>Clear</Button>
+        {/if}
       </div>
       <div class="page-area">
         <div class="pager">
@@ -239,6 +251,7 @@
     flex-flow: row nowrap;
     width: 100%;
     padding-right: 15px;
+    gap: 10px;
   }
   .input-wrapper {
     width: 510px;

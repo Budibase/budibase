@@ -11,6 +11,7 @@ import { BackupAPI } from "./backup"
 import { AttachmentAPI } from "./attachment"
 import { UserAPI } from "./user"
 import { QueryAPI } from "./query"
+import { RoleAPI } from "./role"
 
 export default class API {
   table: TableAPI
@@ -25,6 +26,7 @@ export default class API {
   attachment: AttachmentAPI
   user: UserAPI
   query: QueryAPI
+  roles: RoleAPI
 
   constructor(config: TestConfiguration) {
     this.table = new TableAPI(config)
@@ -39,5 +41,6 @@ export default class API {
     this.attachment = new AttachmentAPI(config)
     this.user = new UserAPI(config)
     this.query = new QueryAPI(config)
+    this.roles = new RoleAPI(config)
   }
 }
