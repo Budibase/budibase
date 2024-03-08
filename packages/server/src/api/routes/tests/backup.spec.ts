@@ -19,11 +19,8 @@ describe("/backups", () => {
 
   describe("/api/backups/export", () => {
     it("should be able to export app", async () => {
-      const { body, headers } = await config.api.backup.exportBasicBackup(
-        config.getAppId()!
-      )
+      const body = await config.api.backup.exportBasicBackup(config.getAppId()!)
       expect(body instanceof Buffer).toBe(true)
-      expect(headers["content-type"]).toEqual("application/gzip")
       expect(events.app.exported).toBeCalledTimes(1)
     })
 
@@ -38,15 +35,13 @@ describe("/backups", () => {
     it("should infer the app name from the app", async () => {
       tk.freeze(mocks.date.MOCK_DATE)
 
-      const { headers } = await config.api.backup.exportBasicBackup(
-        config.getAppId()!
-      )
-
-      expect(headers["content-disposition"]).toEqual(
-        `attachment; filename="${
-          config.getApp()!.name
-        }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`
-      )
+      await config.api.backup.exportBasicBackup(config.getAppId()!, {
+        headers: {
+          "content-disposition": `attachment; filename="${
+            config.getApp().name
+          }-export-${mocks.date.MOCK_DATE.getTime()}.tar.gz"`,
+        },
+      })
     })
   })
 

@@ -16,6 +16,7 @@ import {
   Table,
   TableRequest,
   TableSourceType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import { OAuth2Client } from "google-auth-library"
 import {
@@ -334,7 +335,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return { tables: externalTables, errors }
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const sheet = json.endpoint.entityId
     switch (json.endpoint.operation) {
       case Operation.CREATE:
@@ -384,7 +385,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     }
     try {
       await this.connect()
-      return await this.client.addSheet({ title: name, headerValues: [name] })
+      await this.client.addSheet({ title: name, headerValues: [name] })
     } catch (err) {
       console.error("Error creating new table in google sheets", err)
       throw err
@@ -450,7 +451,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     try {
       await this.connect()
       const sheetToDelete = this.client.sheetsByTitle[sheet]
-      return await sheetToDelete.delete()
+      await sheetToDelete.delete()
     } catch (err) {
       console.error("Error deleting table in google sheets", err)
       throw err

@@ -36,7 +36,7 @@ describe("/webhooks", () => {
       const automation = await config.createAutomation()
       const res = await request
         .put(`/api/webhooks`)
-        .send(basicWebhook(automation._id))
+        .send(basicWebhook(automation._id!))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
@@ -145,7 +145,7 @@ describe("/webhooks", () => {
     let automation = collectAutomation()
     let newAutomation = await config.createAutomation(automation)
     let syncWebhook = await config.createWebhook(
-      basicWebhook(newAutomation._id)
+      basicWebhook(newAutomation._id!)
     )
 
     // replicate changes before checking webhook

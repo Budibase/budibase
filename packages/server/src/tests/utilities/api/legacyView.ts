@@ -1,16 +1,8 @@
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
+import { Row } from "@budibase/types"
 
 export class LegacyViewAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
-  get = async (id: string, { expectStatus } = { expectStatus: 200 }) => {
-    return await this.request
-      .get(`/api/views/${id}`)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
+  get = async (id: string, expectations?: Expectations) => {
+    return await this._get<Row[]>(`/api/views/${id}`, { expectations })
   }
 }

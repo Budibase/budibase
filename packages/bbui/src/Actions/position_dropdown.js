@@ -35,7 +35,10 @@ export default function positionDropdown(element, opts) {
     }
 
     if (typeof customUpdate === "function") {
-      styles = customUpdate(anchorBounds, elementBounds, styles)
+      styles = customUpdate(anchorBounds, elementBounds, {
+        ...styles,
+        offset: opts.offset,
+      })
     } else {
       // Determine vertical styles
       if (align === "right-outside") {

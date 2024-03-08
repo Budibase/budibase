@@ -170,6 +170,7 @@ export const serveApp = async function (ctx: Ctx) {
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
       const { head, html, css } = AppComponent.render({
+        title: branding?.platformTitle || `${appInfo.name}`,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",

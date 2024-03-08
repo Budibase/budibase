@@ -1,10 +1,15 @@
 <script>
-  import { sideBarCollapsed, enriched as enrichedApps } from "stores/portal"
+  import {
+    sideBarCollapsed,
+    enriched as enrichedApps,
+    auth,
+  } from "stores/portal"
   import { params, goto } from "@roxi/routify"
   import NavItem from "components/common/NavItem.svelte"
   import NavHeader from "components/common/NavHeader.svelte"
   import AppRowContext from "components/start/AppRowContext.svelte"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
+  import { sdk } from "@budibase/shared-core"
 
   let searchString
   let opened
@@ -50,16 +55,18 @@
           showActions
         >
           <div class="app-entry-actions">
-            <AppRowContext
-              {app}
-              align="left"
-              on:open={() => {
-                opened = app.appId
-              }}
-              on:close={() => {
-                opened = null
-              }}
-            />
+            {#if sdk.users.isBuilder($auth.user, app?.devId)}
+              <AppRowContext
+                {app}
+                align="left"
+                on:open={() => {
+                  opened = app.appId
+                }}
+                on:close={() => {
+                  opened = null
+                }}
+              />
+            {/if}
           </div>
           <div class="favourite-icon">
             <FavouriteAppButton {app} size="XS" />
