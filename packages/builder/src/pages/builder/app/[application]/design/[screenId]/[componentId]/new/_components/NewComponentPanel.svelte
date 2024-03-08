@@ -10,13 +10,11 @@
     Helpers,
   } from "@budibase/bbui"
   import structure from "./componentStructure.json"
-  import { thesaurus } from "thesaurus-js"
   import {
     previewStore,
     selectedScreen,
     componentStore,
     selectedComponent,
-    screenStore,
   } from "stores/builder"
   import { onMount } from "svelte"
   import { fly } from "svelte/transition"
@@ -25,14 +23,11 @@
     findAllMatchingComponents,
   } from "helpers/components"
   import { capitalise } from "../../../../../../../../../helpers/helpers"
-  import { Utils } from "@budibase/frontend-core"
   import { getAvailableActions } from "../../../../../../../../../components/design/settings/controls/ButtonActionEditor/index"
 
   let searchString
   let searchRef
   let selectedIndex
-  let synonymSearch
-  let synonyms = []
   let componentList = []
 
   $: allowedComponents = getAllowedComponents(
@@ -51,18 +46,14 @@
     searchString
   )
 
-  $: navigateToOptions = $screenStore.screens
-    .map(screen => screen.routing?.route)
-    .filter(x => x != null)
-
-  $: buildSynonymsList(synonymSearch).then(result => (synonyms = result))
   $: orderMap = createComponentOrderMap(componentList)
   $: availableActions = getAvailableActions().filter(
-    action => !action.name.includes("Row")
+    action => action.name === "Export Data"
   )
 
   const actionParameterMappings = {
     "Export Data": {
+      _searchLabels: ["Button: Export Data"],
       tableComponentId: [
         {
           componentType: "@budibase/standard-components/tableblock",
@@ -72,58 +63,6 @@
         },
       ],
     },
-    "Refresh Data Provider": {
-      _label: "Refresh",
-      componentId: [
-        {
-          componentType: "@budibase/standard-components/dataprovider",
-          key: "_id",
-          transform: value => value,
-          updateDependency: () => {},
-        },
-      ],
-    },
-  }
-
-  async function buildSynonymsList(input) {
-    if (!input) {
-      return []
-    }
-    function getUnique(array) {
-      const uniqueArray = []
-      for (const value of array) {
-        if (uniqueArray.indexOf(value) === -1) {
-          uniqueArray.push(value)
-        }
-      }
-      return uniqueArray
-    }
-    let list = []
-    for (const word of input.split(",")) {
-      const response = await thesaurus(word, "en", ["wordreference"])
-      list.push(
-        ...response[0].synonyms
-          .filter(
-            word =>
-              word !== "Collocations" &&
-              !word.includes(" ") &&
-              !word.endsWith("ion") &&
-              !word.endsWith("ing") &&
-              !word.endsWith("ize") &&
-              !word.endsWith("ise")
-          )
-          .concat(word)
-      )
-    }
-    list = list.concat([
-      "update",
-      "publish",
-      "save",
-      "submit",
-      "commit",
-      "apply",
-    ])
-    return getUnique(list)
   }
 
   const getAllowedComponents = (allComponents, screen, component) => {
@@ -174,7 +113,7 @@
   const createComponentOrderMap = list => {
     let map = {}
     list.forEach((component, idx) => {
-      map[component] = idx
+      map[component.name || component] = idx
     })
     return map
   }
@@ -261,138 +200,80 @@
     })
     // suggest some auto-config options
     let magicButtons = []
-    let definition
-    if ($selectedComponent) {
-      definition = componentStore.getDefinition($selectedComponent._component)
-    }
-    if (definition && definition.name !== "Table") {
-      function findNearestForm(componentId) {
-        const path = findComponentPath($selectedScreen?.props, componentId)
-        if (!path?.length) {
-          return
-        }
-        for (let i = path.length - 1; i > 0; i--) {
-          if (path[i]._component === "@budibase/standard-components/form") {
-            return path[i]
-          }
-        }
-      }
-      const form =
-        definition.name === "Form"
-          ? $selectedComponent
-          : findNearestForm($selectedComponent._id)
-      synonymSearch =
-        form?.actionType === "Update" ? "edit,send" : "create,send"
-      if (form && synonyms) {
-        for (let i = 0; i < synonyms.length; i++) {
-          const word = synonyms[i]
-          if (
-            searchString?.length > 1 &&
-            word?.toLowerCase().startsWith(searchString?.toLowerCase())
-          ) {
-            const magicButton = Utils.buildFormBlockButtonConfig({
-              explicitFormId: form._id,
-              showDeleteButton: false,
-              showSaveButton: true,
-              saveButtonLabel: capitalise(word),
-              actionType: form.actionType,
-              dataSource: form.dataSource,
-            })?.[0]
-            magicButton.name = `${capitalise(word)} button`
-            magicButton.icon = "MagicWand"
-            magicButton._instanceName = `${capitalise(word)} button`
-            magicButtons.push(magicButton)
-          }
-        }
-      }
-    }
+    // function findNearestForm(componentId) {
+    //     const path = findComponentPath($selectedScreen?.props, componentId)
+    //     if (!path?.length) {
+    //       return
+    //     }
+    //     for (let i = path.length - 1; i > 0; i--) {
+    //       if (path[i]._component === "@budibase/standard-components/form") {
+    //         return path[i]
+    //       }
+    //     }
+    //   }
 
     // suggest button based on actions
     const searchedActions = availableActions.filter(action =>
-      action.name.toLowerCase().includes(searchString?.toLowerCase())
+      actionParameterMappings[action.name]._searchLabels.some(label =>
+        label.toLowerCase().includes(searchString?.toLowerCase())
+      )
     )
     if (searchString?.length > 2 && searchedActions.length > 0) {
+      const label = searchedActions[0].name
       const action = {
-        "##eventHandlerType": searchedActions[0].name,
+        "##eventHandlerType": label,
       }
       const parameterNames = Object.keys(
-        actionParameterMappings[searchedActions[0].name] || {}
+        actionParameterMappings[label] || {}
       ).filter(key => !key.startsWith("_"))
+      let parameters = {}
+      let matchingComponentsForParameters = []
+      for (const paramName of parameterNames) {
+        const targetComponentType =
+          actionParameterMappings[label][paramName][0].componentType
+        const targetComponentKey =
+          actionParameterMappings[label][paramName][0].key
 
-      // For navigate, suggest all screen options
-      if (searchedActions[0].name === "Navigate To") {
-        for (const url of navigateToOptions) {
-          const navigateToAction = {
-            "##eventHandlerType": searchedActions[0].name,
-            parameters: {
-              type: "screen",
-              url,
-            },
-          }
-          const actionButton = {
-            text: `Go to ${url.replace("/", "")}`,
-            _id: Helpers.uuid(),
-            _component: "@budibase/standard-components/button",
-            onClick: [navigateToAction],
-            name: `${capitalise(searchedActions[0].name)} ${url}`,
-            icon: "Events",
-            _instanceName: `${capitalise(searchedActions[0].name)} ${url}`,
-            type: "primary",
-          }
-          magicButtons.push(actionButton)
-        }
-      } else {
-        let noMatch = false
-        let parameters = {}
-        for (const name of parameterNames) {
-          const targetComponentType =
-            actionParameterMappings[searchedActions[0].name][name][0]
-              .componentType
-          const targetComponentKey =
-            actionParameterMappings[searchedActions[0].name][name][0].key
-
-          const matchingComponents = findAllMatchingComponents(
-            $selectedScreen?.props,
-            component => component._component === targetComponentType
+        matchingComponentsForParameters = findAllMatchingComponents(
+          $selectedScreen?.props,
+          component => component._component === targetComponentType
+        )
+        if (matchingComponentsForParameters?.length) {
+          parameters[paramName] = actionParameterMappings[label][
+            paramName
+          ][0].transform(matchingComponentsForParameters[0][targetComponentKey])
+          actionParameterMappings[label][paramName][0].updateDependency(
+            matchingComponentsForParameters[0]
           )
-          if (matchingComponents?.length) {
-            parameters[name] = actionParameterMappings[searchedActions[0].name][
-              name
-            ][0].transform(matchingComponents[0][targetComponentKey])
-            actionParameterMappings[searchedActions[0].name][
-              name
-            ][0].updateDependency(matchingComponents[0])
-          } else {
-            noMatch = true
-            break
-          }
+        } else {
+          break
         }
-        if (!noMatch) {
-          const label =
-            actionParameterMappings[searchedActions[0].name]?._label ||
-            searchedActions[0].name
-          action.parameters = parameters
-          const actionButton = {
-            text: capitalise(label),
-            _id: Helpers.uuid(),
-            _component: "@budibase/standard-components/button",
-            onClick: [action],
-            name: searchedActions[0].name,
-            icon: "Events",
-            _instanceName: searchedActions[0].name,
-            type: "cta",
-          }
-          magicButtons.push(actionButton)
+      }
+      if (parameterNames.length === matchingComponentsForParameters?.length) {
+        action.parameters = parameters
+        const actionButton = {
+          text: capitalise(label),
+          _id: Helpers.uuid(),
+          _component: "@budibase/standard-components/button",
+          onClick: [action],
+          name: `Button: ${label}`,
+          icon: "MagicWand",
+          _instanceName: label,
+          type: "cta",
         }
+        magicButtons.push(actionButton)
       }
     }
 
     if (magicButtons.length > 0) {
       filteredStructure.push({
-        name: "“AI” generated",
+        name: "Auto-generated",
         isCategory: true,
         children: magicButtons,
       })
+      // Create a flat list of all components so that we can reference them by
+      // order later
+      componentList = componentList.concat(magicButtons)
     }
 
     structure = filteredStructure
@@ -437,7 +318,7 @@
     } else if (e.key === "Enter") {
       // Add selected component on enter press
       if (componentList[selectedIndex]) {
-        addComponent(componentList[selectedIndex])
+        addComponentWithConfig(componentList[selectedIndex])
       }
     }
   }
@@ -487,7 +368,8 @@
                 on:dragstart={() => onDragStart(component.component)}
                 on:dragend={onDragEnd}
                 class="component"
-                class:selected={selectedIndex === orderMap[component.component]}
+                class:selected={selectedIndex ===
+                  orderMap[component.component || component.name]}
                 on:click={() => addComponentWithConfig(component)}
                 on:mouseover={() => (selectedIndex = null)}
                 on:focus

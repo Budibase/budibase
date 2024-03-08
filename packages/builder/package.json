@@ -78,7 +78,6 @@
     "svelte-dnd-action": "^0.9.8",
     "svelte-loading-spinners": "^0.1.1",
     "svelte-portal": "1.0.0",
-    "thesaurus-js": "^1.0.5",
     "yup": "^0.32.11"
   },
   "devDependencies": {
