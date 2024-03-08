@@ -7,6 +7,7 @@ import { getDB } from "../../db"
 import {
   DocWritethrough,
   docWritethroughProcessorQueue,
+  init,
 } from "../docWritethrough"
 
 import InMemoryQueue from "../../queue/inMemoryQueue"
@@ -19,6 +20,10 @@ async function waitForQueueCompletion() {
 }
 
 describe("docWritethrough", () => {
+  beforeAll(() => {
+    init()
+  })
+
   const config = new DBTestConfiguration()
 
   const db = getDB(structures.db.id())

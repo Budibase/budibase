@@ -10,6 +10,7 @@ interface ProcessDocMessage {
 }
 
 const PERSIST_MAX_ATTEMPTS = 100
+let processor: DocWritethroughProcessor | undefined
 
 export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
   JobQueue.DOC_WRITETHROUGH_QUEUE,
@@ -61,8 +62,6 @@ class DocWritethroughProcessor {
   }
 }
 
-export const processor = new DocWritethroughProcessor().init()
-
 export class DocWritethrough {
   private db: Database
   private _docId: string
@@ -83,4 +82,16 @@ export class DocWritethrough {
       data,
     })
   }
+}
+
+export function init(): DocWritethroughProcessor {
+  processor = new DocWritethroughProcessor().init()
+  return processor
+}
+
+export function getProcessor(): DocWritethroughProcessor {
+  if (!processor) {
+    return init()
+  }
+  return processor
 }
