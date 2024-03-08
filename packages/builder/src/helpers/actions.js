@@ -32,3 +32,17 @@ export const getAvailableActions = (getAllActions = false) => {
       return action.component != null
     })
 }
+
+export const ActionParameterMappings = {
+  "Export Data": {
+    _searchLabels: ["Button: Export Data"],
+    tableComponentId: [
+      {
+        componentType: "@budibase/standard-components/tableblock",
+        key: "_id",
+        transform: value => `${value}-table`,
+        updateDependency: component => (component.allowSelectRows = true),
+      },
+    ],
+  },
+}

@@ -21,9 +21,9 @@
   import {
     findComponentPath,
     findAllMatchingComponents,
-    findAllComponents,
+    findNearestComponent,
   } from "helpers/components"
-  import { getAvailableActions } from "helpers/actions"
+  import { getAvailableActions, ActionParameterMappings } from "helpers/actions"
 
   let searchString
   let searchRef
@@ -52,20 +52,6 @@
     action => action.name === "Export Data"
   )
   $: containerSelected = $selectedComponent?._component?.endsWith("/container")
-
-  const actionParameterMappings = {
-    "Export Data": {
-      _searchLabels: ["Button: Export Data"],
-      tableComponentId: [
-        {
-          componentType: "@budibase/standard-components/tableblock",
-          key: "_id",
-          transform: value => `${value}-table`,
-          updateDependency: component => (component.allowSelectRows = true),
-        },
-      ],
-    },
-  }
 
   const getAllowedComponents = (allComponents, screen, component) => {
     // Default to using the root screen container if no component specified
@@ -217,37 +203,10 @@
             )
         )
     }
-    function findNearest(targetComponentType) {
-      let allComponents = findAllComponents($selectedScreen?.props)
-      allComponents = [allComponents.shift(), ...allComponents.reverse()]
-      let currentMatch
-      let selectedFound = false
-      let topLevelIndex = 0
-      for (const component of allComponents) {
-        if (component._component === targetComponentType) {
-          currentMatch = component
-        }
-        if ($selectedComponent?._id === component._id) {
-          selectedFound = true
-        }
-        if (
-          $selectedScreen?.props?._children?.some(
-            child => child._id === component._id
-          )
-        ) {
-          topLevelIndex++
-        }
-        if (selectedFound && currentMatch) {
-          break
-        }
-      }
-      indexOfNearestTopLevel = topLevelIndex
-      return currentMatch
-    }
 
     // suggest button based on actions
     const searchedActions = availableActions.filter(action =>
-      actionParameterMappings[action.name]._searchLabels.some(label =>
+      ActionParameterMappings[action.name]._searchLabels.some(label =>
         label.toLowerCase().includes(searchString?.toLowerCase())
       )
     )
@@ -257,22 +216,28 @@
         "##eventHandlerType": label,
       }
       const parameterNames = Object.keys(
-        actionParameterMappings[label] || {}
+        ActionParameterMappings[label] || {}
       ).filter(key => !key.startsWith("_"))
       let parameters = {}
       let matchingComponentForParameters
       for (const paramName of parameterNames) {
         const targetComponentType =
-          actionParameterMappings[label][paramName][0].componentType
+          ActionParameterMappings[label][paramName][0].componentType
         const targetComponentKey =
-          actionParameterMappings[label][paramName][0].key
+          ActionParameterMappings[label][paramName][0].key
 
-        matchingComponentForParameters = findNearest(targetComponentType)
+        const { component, index } = findNearestComponent(
+          $selectedScreen?.props,
+          $selectedComponent?._id,
+          targetComponentType
+        )
+        matchingComponentForParameters = component
+        indexOfNearestTopLevel = index
         if (matchingComponentForParameters) {
-          parameters[paramName] = actionParameterMappings[label][
+          parameters[paramName] = ActionParameterMappings[label][
             paramName
           ][0].transform(matchingComponentForParameters[targetComponentKey])
-          actionParameterMappings[label][paramName][0].updateDependency(
+          ActionParameterMappings[label][paramName][0].updateDependency(
             matchingComponentForParameters
           )
         } else {

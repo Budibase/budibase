@@ -122,6 +122,40 @@ export const findClosestMatchingComponent = (
 }
 
 /**
+ * Finds the nearest component in the entire component tree,
+ * and returns that component with the root-level index
+ */
+export const findNearestComponent = (
+  rootComponent,
+  componentId,
+  componentType
+) => {
+  let allComponents = findAllComponents(rootComponent)
+  allComponents = [allComponents.shift(), ...allComponents.reverse()]
+  let currentMatch
+  let selectedFound = false
+  let topLevelIndex = 0
+  for (const component of allComponents) {
+    if (component._component === componentType) {
+      currentMatch = component
+    }
+    if (componentId === component._id) {
+      selectedFound = true
+    }
+    if (rootComponent?._children?.some(child => child._id === component._id)) {
+      topLevelIndex++
+    }
+    if (selectedFound && currentMatch) {
+      break
+    }
+  }
+  return {
+    component: currentMatch,
+    index: topLevelIndex,
+  }
+}
+
+/**
  * Recurses through a component tree evaluating a matching function against
  * components until a match is found
  */
