@@ -20,7 +20,6 @@ async function waitForQueueCompletion() {
 }
 
 describe("docWritethrough", () => {
-
   beforeAll(() => {
     init()
   })
