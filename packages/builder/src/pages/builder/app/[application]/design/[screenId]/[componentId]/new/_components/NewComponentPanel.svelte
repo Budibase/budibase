@@ -21,6 +21,7 @@
   import {
     findComponentPath,
     findAllMatchingComponents,
+    findAllComponents,
   } from "helpers/components"
   import { getAvailableActions } from "helpers/actions"
 
@@ -28,6 +29,7 @@
   let searchRef
   let selectedIndex
   let componentList = []
+  let indexOfNearestTopLevel
 
   $: allowedComponents = getAllowedComponents(
     $componentStore.components,
@@ -49,6 +51,7 @@
   $: availableActions = getAvailableActions().filter(
     action => action.name === "Export Data"
   )
+  $: containerSelected = $selectedComponent?._component?.endsWith("/container")
 
   const actionParameterMappings = {
     "Export Data": {
@@ -199,17 +202,6 @@
     })
     // suggest some auto-config options
     let magicButtons = []
-    // function findNearestForm(componentId) {
-    //     const path = findComponentPath($selectedScreen?.props, componentId)
-    //     if (!path?.length) {
-    //       return
-    //     }
-    //     for (let i = path.length - 1; i > 0; i--) {
-    //       if (path[i]._component === "@budibase/standard-components/form") {
-    //         return path[i]
-    //       }
-    //     }
-    //   }
     function hasExistingActionButton(actionName, parameters) {
       return findAllMatchingComponents(
         $selectedScreen?.props,
@@ -224,6 +216,33 @@
               ([key, value]) => parameters[key] === value
             )
         )
+    }
+    function findNearest(targetComponentType) {
+      let allComponents = findAllComponents($selectedScreen?.props)
+      allComponents = [allComponents.shift(), ...allComponents.reverse()]
+      let currentMatch
+      let selectedFound = false
+      let topLevelIndex = 0
+      for (const component of allComponents) {
+        if (component._component === targetComponentType) {
+          currentMatch = component
+        }
+        if ($selectedComponent?._id === component._id) {
+          selectedFound = true
+        }
+        if (
+          $selectedScreen?.props?._children?.some(
+            child => child._id === component._id
+          )
+        ) {
+          topLevelIndex++
+        }
+        if (selectedFound && currentMatch) {
+          break
+        }
+      }
+      indexOfNearestTopLevel = topLevelIndex
+      return currentMatch
     }
 
     // suggest button based on actions
@@ -241,30 +260,27 @@
         actionParameterMappings[label] || {}
       ).filter(key => !key.startsWith("_"))
       let parameters = {}
-      let matchingComponentsForParameters = []
+      let matchingComponentForParameters
       for (const paramName of parameterNames) {
         const targetComponentType =
           actionParameterMappings[label][paramName][0].componentType
         const targetComponentKey =
           actionParameterMappings[label][paramName][0].key
 
-        matchingComponentsForParameters = findAllMatchingComponents(
-          $selectedScreen?.props,
-          component => component._component === targetComponentType
-        )
-        if (matchingComponentsForParameters?.length) {
+        matchingComponentForParameters = findNearest(targetComponentType)
+        if (matchingComponentForParameters) {
           parameters[paramName] = actionParameterMappings[label][
             paramName
-          ][0].transform(matchingComponentsForParameters[0][targetComponentKey])
+          ][0].transform(matchingComponentForParameters[targetComponentKey])
           actionParameterMappings[label][paramName][0].updateDependency(
-            matchingComponentsForParameters[0]
+            matchingComponentForParameters
           )
         } else {
           break
         }
       }
       if (
-        parameterNames.length === matchingComponentsForParameters?.length &&
+        parameterNames.length === Object.keys(parameters).length &&
         !hasExistingActionButton(label, parameters)
       ) {
         action.parameters = parameters
@@ -317,7 +333,10 @@
           ...component,
           icon: null,
         },
-        $selectedComponent
+        containerSelected
+          ? $selectedComponent?._id
+          : $selectedScreen?.props?._id,
+        indexOfNearestTopLevel
       )
     }
   }
