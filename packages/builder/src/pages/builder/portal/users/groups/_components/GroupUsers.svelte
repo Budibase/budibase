@@ -64,7 +64,7 @@
   {#if !readonly}
     <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {:else}
-    <ActiveDirectoryInfo text="User synced externally" />
+    <ActiveDirectoryInfo text="Users synced from your AD" />
   {/if}
 
   <div class="controls-right">
