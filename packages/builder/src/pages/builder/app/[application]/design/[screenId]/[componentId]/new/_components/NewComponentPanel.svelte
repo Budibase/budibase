@@ -208,7 +208,7 @@
         component =>
           component._component === "@budibase/standard-components/button"
       )
-        .flatMap(button => button.onClick)
+        .flatMap(button => button.onClick || [])
         .some(
           action =>
             action["##eventHandlerType"] === actionName &&
@@ -280,7 +280,7 @@
         }
       }
       if (
-        parameterNames.length === Object.keys(parameters).length &&
+        matchingComponentForParameters &&
         !hasExistingActionButton(label, parameters)
       ) {
         action.parameters = parameters
