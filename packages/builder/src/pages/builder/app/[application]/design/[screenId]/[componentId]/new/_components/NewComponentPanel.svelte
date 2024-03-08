@@ -210,6 +210,21 @@
     //       }
     //     }
     //   }
+    function hasExistingActionButton(actionName, parameters) {
+      return findAllMatchingComponents(
+        $selectedScreen?.props,
+        component =>
+          component._component === "@budibase/standard-components/button"
+      )
+        .flatMap(button => button.onClick)
+        .some(
+          action =>
+            action["##eventHandlerType"] === actionName &&
+            Object.entries(action.parameters || {}).some(
+              ([key, value]) => parameters[key] === value
+            )
+        )
+    }
 
     // suggest button based on actions
     const searchedActions = availableActions.filter(action =>
@@ -248,7 +263,10 @@
           break
         }
       }
-      if (parameterNames.length === matchingComponentsForParameters?.length) {
+      if (
+        parameterNames.length === matchingComponentsForParameters?.length &&
+        !hasExistingActionButton(label, parameters)
+      ) {
         action.parameters = parameters
         const actionButton = {
           text: label,
