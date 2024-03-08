@@ -35,7 +35,7 @@
         ...styles?.normal,
         "background-color": color,
         "border-color": color,
-        color: textColor ? textColor : "black",
+        color: textColor ? textColor : "white",
         "--spectrum-clearbutton-medium-icon-color": "white",
       },
     }
