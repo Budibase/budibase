@@ -31,7 +31,6 @@
   import AppRow from "components/start/AppRow.svelte"
   import Logo from "assets/bb-space-man.svg"
 
-  let sortBy = "name"
   let template
   let creationModal
   let appLimitModal
