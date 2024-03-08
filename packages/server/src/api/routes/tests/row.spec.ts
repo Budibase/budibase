@@ -636,6 +636,17 @@ describe.each([
       expect(res[0]._id).toEqual(createdRow._id)
       await assertRowUsage(rowUsage - 1)
     })
+
+    it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
+      const createdRow = await config.createRow()
+
+      const res = await config.api.row.bulkDelete(table._id!, {
+        rows: [createdRow, { _id: "2" }],
+      })
+
+      expect(res[0]._id).toEqual(createdRow._id)
+      expect(res.length).toEqual(1)
+    })
   })
 
   describe("validate", () => {
