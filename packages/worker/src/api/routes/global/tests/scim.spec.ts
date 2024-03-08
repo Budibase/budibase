@@ -13,14 +13,17 @@ import { events } from "@budibase/backend-core"
 jest.setTimeout(30000)
 
 describe("scim", () => {
-  beforeEach(async () => {
+  async function setup() {
     jest.resetAllMocks()
     tk.freeze(mocks.date.MOCK_DATE)
     mocks.licenses.useScimIntegration()
     mocks.licenses.useGroups()
 
     await config.setSCIMConfig(true)
-  })
+  }
+
+  beforeAll(setup)
+  beforeEach(setup)
 
   const config = new TestConfiguration()
 
