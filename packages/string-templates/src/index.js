@@ -253,6 +253,26 @@ module.exports.isValid = (string, opts) => {
   }
 }
 
+// Purely doc syntax
+module.exports.hbsValidation = string => {
+  try {
+    // Will parse but is incorrect
+    //handlebars.compile(' \n  {{#if}}\n{{/def}}')();
+
+    // Throws an Exception - no columns
+    // handlebars.compile(' \n  {{#if}}\n{{/def}')();
+    // handlebars.compile(string)();
+    //const ast = handlebars.parse(' \n  {{#if}}\n{{/if}}');
+
+    const ast = handlebars.parse(string)
+    return ast
+  } catch (err) {
+    const { lineNumber, endLineNumber, column, endColumn } = err
+    console.log(lineNumber, endLineNumber, column, endColumn)
+    return err
+  }
+}
+
 /**
  * We have generated a static manifest file from the helpers that this string templating package makes use of.
  * This manifest provides information about each of the helpers and how it can be used.

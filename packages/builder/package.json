@@ -56,6 +56,7 @@
     "@codemirror/commands": "^6.2.4",
     "@codemirror/lang-javascript": "^6.1.8",
     "@codemirror/language": "^6.6.0",
+    "@codemirror/lint": "^6.5.0",
     "@codemirror/state": "^6.2.0",
     "@codemirror/theme-one-dark": "^6.1.2",
     "@codemirror/view": "^6.11.2",

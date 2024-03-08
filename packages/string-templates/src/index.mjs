@@ -5,6 +5,7 @@ import templates from "./index.js"
  */
 export const isValid = templates.isValid
 export const makePropSafe = templates.makePropSafe
+export const hbsValidation = templates.hbsValidation
 export const getManifest = templates.getManifest
 export const isJSBinding = templates.isJSBinding
 export const encodeJSBinding = templates.encodeJSBinding

@@ -1,8 +1,8 @@
 <script>
-  import { Label } from "@budibase/bbui"
+  import { Label, Icon } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
-  import { FIND_ANY_HBS_REGEX } from "@budibase/string-templates"
-
+  import { FIND_ANY_HBS_REGEX, hbsValidation } from "@budibase/string-templates"
+  import { linter, lintGutter, setDiagnostics } from "@codemirror/lint"
   import {
     autocompletion,
     closeBrackets,
@@ -44,6 +44,7 @@
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "stores/portal"
+  import { API } from "api"
 
   export let label
   export let completions = []
@@ -259,6 +260,65 @@
     }
   }
 
+  // LABDAY Linting - check the setDiagnostics Behaviour
+  let lintResponse = null
+
+  const lintToDiagnostics = lintResp => {
+    const results = lintResp?.results
+    if (!results || !results[0]?.messages) return []
+
+    console.log(lintResp)
+    return lintResp.results[0].messages.map(message => {
+      const doc = editor.viewState.state.doc
+      const fromLine = doc.line(message.line)
+      const toLine = message.endLine ? doc.line(message.endLine) : fromLine
+
+      const rangeStart = fromLine.from + message.column
+      const endColumn = message.endColumn || message.column
+      const rangeEnd = toLine.from + endColumn
+
+      return {
+        from: rangeStart - 1,
+        to: rangeEnd - 1,
+        severity: "warning", // map to severity
+        message: message.message,
+        actions: [],
+      }
+    })
+  }
+
+  const lintCheck = async () => {
+    // Needs to be wrapped to enforce return value
+
+    if (mode.name === "javascript") {
+      const testCode = `() => {
+        ${value}
+      }`
+      lintResponse = null
+      try {
+        const lintResults = await API.eslint(value)
+        console.log("Results Lint", lintResults)
+        lintResponse = lintResults
+      } catch (error) {
+        console.error(error)
+      }
+    } else {
+      // const processed = isValid(value)
+      // console.log("processed string ", processed)
+
+      const results = hbsValidation(value)
+      console.log("Val check string ", results)
+    }
+  }
+  $: lintDiags = lintToDiagnostics(lintResponse)
+  $: console.log("Lint Output", lintDiags)
+  $: lintDiags, updateLintState()
+
+  const updateLintState = () => {
+    if (!editor || !lintDiags?.length) return
+    editor.dispatch(setDiagnostics(editor.state, lintDiags))
+  }
+
   onMount(async () => {
     mounted = true
     return () => {
@@ -276,14 +336,53 @@
 {/if}
 
 <div class={`code-editor ${mode?.name || ""}`}>
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <span
+    class="test"
+    on:click={async () => {
+      await lintCheck()
+    }}
+  >
+    <Icon hoverable name="Beaker" />
+  </span>
   <div tabindex="-1" bind:this={textarea} />
 </div>
 
 <style>
+  @keyframes tilt-n-move-shaking {
+    0% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    25% {
+      transform: translate(1px, 1px) rotate(5deg);
+    }
+    50% {
+      transform: translate(0, 0) rotate(0eg);
+    }
+    75% {
+      transform: translate(-1px, 1px) rotate(-5deg);
+    }
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+  }
+
+  .test {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    z-index: 2;
+  }
+  .test:hover {
+    animation: tilt-n-move-shaking 0.25s linear infinite;
+  }
+
   /* Editor */
   .code-editor {
     font-size: 12px;
     height: 100%;
+    /* position: relative; */
   }
   .code-editor :global(.cm-editor) {
     height: 100%;

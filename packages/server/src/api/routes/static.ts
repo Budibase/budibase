@@ -58,5 +58,6 @@ router
     authorized(PermissionType.TABLE, PermissionLevel.READ),
     controller.getSignedUploadURL
   )
+  .post("/api/js/lint", authorized(BUILDER), controller.builderLint)
 
 export default router

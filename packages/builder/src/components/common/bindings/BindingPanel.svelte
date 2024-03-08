@@ -79,6 +79,7 @@
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
 
   const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
+    console.log(expressionResult)
     expressionResult = processStringSync(expression || "", context)
     evaluating = false
   }, 260)

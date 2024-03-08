@@ -55,4 +55,14 @@ export const buildOtherEndpoints = API => ({
       external: true,
     })
   },
+
+  /**
+   * Remote lint
+   */
+  eslint: async code => {
+    return await API.post({
+      url: `/api/js/lint`,
+      body: { code },
+    })
+  },
 })

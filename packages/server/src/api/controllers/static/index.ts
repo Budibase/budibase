@@ -29,8 +29,10 @@ import {
   getAppMigrationVersion,
   getLatestMigrationId,
 } from "../../../appMigrations"
-
+import { globalReturn } from "./eslint-return-rule"
 import send from "koa-send"
+
+const { ESLint, RuleTester } = require("eslint")
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -313,4 +315,98 @@ export const getSignedUploadURL = async function (ctx: Ctx) {
   }
 
   ctx.body = { signedUrl, publicUrl }
+}
+
+export const builderLint = async function (ctx: any) {
+  if (!ctx.request.body?.code) {
+    ctx.body = { error: "No Code" }
+    return
+  }
+
+  const eslint = new ESLint({
+    useEslintrc: false,
+    overrideConfig: {
+      extends: ["eslint:recommended"],
+      parserOptions: {
+        ecmaVersion: "latest",
+        sourceType: "script",
+        ecmaFeatures: {
+          globalReturn: true,
+        },
+      },
+      rules: {
+        // Specific to our JS areas where a value is computed.
+        // You MUST return a value;
+        "consistent-return": ["error", { treatUndefinedAsUnspecified: true }],
+        "no-console": ["error", {}],
+        "no-unmodified-loop-condition": "error",
+        complexity: ["warn", 10],
+        //"global-return": "error",
+      },
+      globals: {
+        $: "readonly",
+        console: "readonly",
+      },
+      //plugins: [test], //{ budi: { rules: { "global-return": test } } },
+      noInlineConfig: true,
+      env: {
+        es2019: true,
+        node: false,
+      },
+    },
+  })
+
+  const ruleTester = new RuleTester({
+    parserOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      ecmaFeatures: {
+        globalReturn: true,
+      },
+    },
+    extends: ["eslint:recommended"],
+    env: {
+      es2019: true,
+      node: false,
+    },
+  })
+
+  try {
+    ruleTester.run("no-snippet-return", globalReturn, {
+      // not correct
+
+      valid: [
+        {
+          // This should be valid as it contains a return statement.
+          code: "return 'bar'",
+        },
+      ],
+      invalid: [
+        {
+          // Fail case without a return
+          code: "let foo = 'bar';",
+          errors: [{ messageId: "noReturn", type: "Literal" }], // Ensure this matches the messageId in the rule definition.
+        },
+      ],
+    })
+  } catch (e) {
+    console.log(e)
+  }
+
+  const testx = `(function(){${ctx.request.body?.code}})()`
+  const codeCheck = `
+  const $ = () => { return true };
+  const js_main = () => {
+  ${ctx.request.body?.code}
+  }`
+  const results = await eslint.lintText(ctx.request.body?.code)
+  // const results = await eslint.lintText(codeCheck)
+
+  // Optional formatting.
+  const formatter = await eslint.loadFormatter("stylish")
+  const resultText = formatter.format(results)
+
+  console.log(resultText)
+
+  ctx.body = { results }
 }
