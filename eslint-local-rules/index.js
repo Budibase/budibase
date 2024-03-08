@@ -51,4 +51,41 @@ module.exports = {
       }
     },
   },
+  "email-domain-example-com": {
+    meta: {
+      type: "problem",
+      docs: {
+        description:
+          "enforce using the example.com domain for generator.email calls",
+        category: "Possible Errors",
+        recommended: false,
+      },
+      fixable: "code",
+      schema: [],
+    },
+    create: function (context) {
+      return {
+        CallExpression(node) {
+          if (
+            node.callee.type === "MemberExpression" &&
+            node.callee.object.name === "generator" &&
+            node.callee.property.name === "email" &&
+            node.arguments.length === 0
+          ) {
+            context.report({
+              node,
+              message:
+                "Prefer using generator.email with the domain \"{ domain: 'example.com' }\".",
+              fix: function (fixer) {
+                return fixer.replaceText(
+                  node,
+                  'generator.email({ domain: "example.com" })'
+                )
+              },
+            })
+          }
+        },
+      }
+    },
+  },
 }

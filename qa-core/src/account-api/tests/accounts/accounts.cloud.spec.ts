@@ -84,7 +84,7 @@ describe("Accounts", () => {
     })
 
     it("searches by email", async () => {
-      const email = generator.email()
+      const email = generator.email({ domain: "example.com" })
 
       // Empty result
       const [_, emptyBody] = await config.api.accounts.search(email, "email")
