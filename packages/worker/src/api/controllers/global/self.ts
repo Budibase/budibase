@@ -164,23 +164,21 @@ export async function updateSelf(
   const update = ctx.request.body
 
   let user = await userSdk.db.getUser(ctx.user._id!)
+  let requestAppFavourites: string[] = [...(update.appFavourites || [])]
+  let updatedAppFavourites: string[] | undefined
 
   if ("appFavourites" in update) {
     const appIds: string[] = processUserAppFavourites(
       user,
-      update.appFavourites
+      requestAppFavourites
     )
-    const validAppIds: string[] = await syncAppFavourites(appIds)
+    updatedAppFavourites = await syncAppFavourites(appIds)
+  }
 
-    user = {
-      ...user,
-      appFavourites: validAppIds,
-    }
-  } else {
-    user = {
-      ...user,
-      ...update,
-    }
+  user = {
+    ...user,
+    ...update,
+    ...(updatedAppFavourites ? { appFavourites: updatedAppFavourites } : {}),
   }
 
   user = await userSdk.db.save(user, { requirePassword: false })
