@@ -470,6 +470,7 @@
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
     overflow: auto;
+    display: contents;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);
