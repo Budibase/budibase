@@ -77,6 +77,12 @@
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestUpdateEvaluation(runtimeExpression, context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+  $: {
+    // Ensure a valid side panel option is always selected
+    if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
+      sidePanel = sidePanelOptions[0]
+    }
+  }
 
   const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
     expressionResult = processStringSync(expression || "", context)
