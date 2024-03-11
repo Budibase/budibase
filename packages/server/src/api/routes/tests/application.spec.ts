@@ -34,6 +34,96 @@ describe("/applications", () => {
     jest.clearAllMocks()
   })
 
+  // These need to go first for the app totals to make sense
+  describe("permissions", () => {
+    it("should only return apps a user has access to", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      user = await config.globalUser({
+        ...user,
+        builder: {
+          apps: [config.getProdAppId()],
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const role = await config.api.roles.save({
+        name: "Test",
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      user = await config.globalUser({
+        ...user,
+        roles: {
+          [config.getProdAppId()]: role.name,
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role on a group", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const roleName = uuid.v4().replace(/-/g, "")
+      const role = await config.api.roles.save({
+        name: roleName,
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      const group = await config.createGroup(role._id!)
+
+      user = await config.globalUser({
+        ...user,
+        userGroups: [group._id!],
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+  })
+
   describe("create", () => {
     it("creates empty app", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
@@ -96,13 +186,16 @@ describe("/applications", () => {
     })
 
     it("should reject with a known name", async () => {
-      await config.api.application.create({ name: app.name }, { status: 400 })
+      await config.api.application.create(
+        { name: app.name },
+        { body: { message: "App name is already in use." }, status: 400 }
+      )
     })
 
     it("should reject with a known url", async () => {
       await config.api.application.create(
         { name: "made up", url: app?.url! },
-        { status: 400 }
+        { body: { message: "App URL is already in use." }, status: 400 }
       )
     })
   })
@@ -279,10 +372,9 @@ describe("/applications", () => {
           name: app.name,
           url: "/known-name",
         },
-        { status: 400 }
+        { body: { message: "App name is already in use." }, status: 400 }
       )
-
-      expect(resp.message).toEqual("App name is already in use.")
+      expect(events.app.duplicated).not.toBeCalled()
     })
 
     it("should reject with a known url", async () => {
@@ -292,10 +384,9 @@ describe("/applications", () => {
           name: "this is fine",
           url: app.url,
         },
-        { status: 400 }
+        { body: { message: "App URL is already in use." }, status: 400 }
       )
-
-      expect(resp.message).toEqual("App URL is already in use.")
+      expect(events.app.duplicated).not.toBeCalled()
     })
   })
 
@@ -317,95 +408,6 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
-    })
-  })
-
-  describe("permissions", () => {
-    it("should only return apps a user has access to", async () => {
-      let user = await config.createUser({
-        builder: { global: false },
-        admin: { global: false },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(0)
-      })
-
-      user = await config.globalUser({
-        ...user,
-        builder: {
-          apps: [config.getProdAppId()],
-        },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(1)
-      })
-    })
-
-    it("should only return apps a user has access to through a custom role", async () => {
-      let user = await config.createUser({
-        builder: { global: false },
-        admin: { global: false },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(0)
-      })
-
-      const role = await config.api.roles.save({
-        name: "Test",
-        inherits: "PUBLIC",
-        permissionId: "read_only",
-        version: "name",
-      })
-
-      user = await config.globalUser({
-        ...user,
-        roles: {
-          [config.getProdAppId()]: role.name,
-        },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(1)
-      })
-    })
-
-    it.only("should only return apps a user has access to through a custom role on a group", async () => {
-      let user = await config.createUser({
-        builder: { global: false },
-        admin: { global: false },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(0)
-      })
-
-      const roleName = uuid.v4().replace(/-/g, "")
-      const role = await config.api.roles.save({
-        name: roleName,
-        inherits: "PUBLIC",
-        permissionId: "read_only",
-        version: "name",
-      })
-
-      const group = await config.createGroup(role._id!)
-
-      user = await config.globalUser({
-        ...user,
-        userGroups: [group._id!],
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(1)
-      })
     })
   })
 })

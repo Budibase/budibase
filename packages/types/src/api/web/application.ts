@@ -22,7 +22,6 @@ export interface DuplicateAppRequest {
 export interface DuplicateAppResponse {
   duplicateAppId: string
   sourceAppId: string
-  message: string
 }
 
 export interface FetchAppDefinitionResponse {
