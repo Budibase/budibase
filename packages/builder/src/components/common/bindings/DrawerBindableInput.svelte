@@ -28,7 +28,6 @@
   const dispatch = createEventDispatcher()
 
   let bindingDrawer
-  let valid = true
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -93,13 +92,10 @@
   title={title ?? placeholder ?? "Bindings"}
   {forceModal}
 >
-  <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    Save
-  </Button>
+  <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component
     this={panel}
     slot="body"
-    bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
     {bindings}
