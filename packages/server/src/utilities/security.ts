@@ -1,6 +1,5 @@
 import { permissions, roles } from "@budibase/backend-core"
 import { DocumentType, VirtualDocumentType } from "../db/utils"
-import { BuiltinRoleName } from "@budibase/backend-core/src/security/roles"
 
 export const CURRENTLY_SUPPORTED_LEVELS: string[] = [
   permissions.PermissionLevel.WRITE,
@@ -35,7 +34,7 @@ export function getPermissionType(resourceId: string) {
  */
 export function getBasePermissions(resourceId: string) {
   const type = getPermissionType(resourceId)
-  const basePermissions: { [key: string]: BuiltinRoleName } = {}
+  const basePermissions: { [key: string]: roles.BuiltinRoleName } = {}
   for (const [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
     if (!role.permissionId) {
       continue
