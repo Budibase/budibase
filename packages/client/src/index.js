@@ -1,5 +1,6 @@
 import ClientApp from "./components/ClientApp.svelte"
 import UpdatingApp from "./components/UpdatingApp.svelte"
+import MaintenanceScreen from "./components/MaintenanceScreen.svelte"
 import {
   builderStore,
   appStore,
@@ -63,6 +64,15 @@ const loadBudibase = async () => {
   // Fetch environment info
   if (!get(environmentStore)?.loaded) {
     await environmentStore.actions.fetchEnvironment()
+  }
+
+  const maintenanceList = get(environmentStore)?.maintenance
+  if (maintenanceList?.length > 0) {
+    new MaintenanceScreen({
+      target: window.document.body,
+      props: { maintenanceList },
+    })
+    return
   }
 
   // Register handler for runtime events from the builder
