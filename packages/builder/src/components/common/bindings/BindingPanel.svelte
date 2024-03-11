@@ -77,6 +77,18 @@
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestUpdateEvaluation(runtimeExpression, context)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+  $: hbsCompletions = [
+    hbAutocomplete([
+      ...bindingCompletions,
+      ...getHelperCompletions(EditorModes.Handlebars),
+    ]),
+  ]
+  $: jsCompletions = [
+    jsAutocomplete([
+      ...bindingCompletions,
+      ...getHelperCompletions(EditorModes.JS),
+    ]),
+  ]
 
   const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
     expressionResult = processStringSync(expression || "", context)
@@ -217,38 +229,32 @@
       </div>
       <div class="editor">
         {#if mode === Modes.Text}
-          <CodeEditor
-            value={hbsValue}
-            on:change={onChangeHBSValue}
-            bind:getCaretPosition
-            bind:insertAtPos
-            completions={[
-              hbAutocomplete([
-                ...bindingCompletions,
-                ...getHelperCompletions(editorMode),
-              ]),
-            ]}
-            autofocus={autofocusEditor}
-            placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
-            jsBindingWrapping={false}
-          />
+          {#key hbsCompletions}
+            <CodeEditor
+              value={hbsValue}
+              on:change={onChangeHBSValue}
+              bind:getCaretPosition
+              bind:insertAtPos
+              completions={hbsCompletions}
+              autofocus={autofocusEditor}
+              placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
+              jsBindingWrapping={false}
+            />
+          {/key}
         {:else if mode === Modes.JavaScript}
-          <CodeEditor
-            value={decodeJSBinding(jsValue)}
-            on:change={onChangeJSValue}
-            completions={[
-              jsAutocomplete([
-                ...bindingCompletions,
-                ...getHelperCompletions(editorMode),
-              ]),
-            ]}
-            mode={EditorModes.JS}
-            bind:getCaretPosition
-            bind:insertAtPos
-            autofocus={autofocusEditor}
-            placeholder="Add bindings by typing $ or use the menu on the right"
-            jsBindingWrapping
-          />
+          {#key jsCompletions}
+            <CodeEditor
+              value={decodeJSBinding(jsValue)}
+              on:change={onChangeJSValue}
+              completions={jsCompletions}
+              mode={EditorModes.JS}
+              bind:getCaretPosition
+              bind:insertAtPos
+              autofocus={autofocusEditor}
+              placeholder="Add bindings by typing $ or use the menu on the right"
+              jsBindingWrapping
+            />
+          {/key}
         {/if}
         {#if targetMode}
           <div class="mode-overlay">

@@ -22,7 +22,6 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  let valid = true
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
   $: tempValue = readableValue
@@ -80,15 +79,12 @@
 </div>
 
 <Drawer bind:this={bindingDrawer} title={title ?? placeholder ?? "Bindings"}>
-  <Button cta slot="buttons" on:click={handleClose} disabled={!valid}>
-    Save
-  </Button>
+  <Button cta slot="buttons" on:click={handleClose}>Save</Button>
   <svelte:component
     this={panel}
     slot="body"
     value={readableValue}
     close={handleClose}
-    bind:valid
     on:change={event => (tempValue = event.detail)}
     {bindings}
     {allowJS}
