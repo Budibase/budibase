@@ -1138,6 +1138,12 @@
         "showInBar": true
       },
       {
+        "type": "color",
+        "label": "Text Color",
+        "key": "textColor",
+        "showInBar": true
+      },
+      {
         "type": "boolean",
         "label": "Allow delete",
         "key": "closable"

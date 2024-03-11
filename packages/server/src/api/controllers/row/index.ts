@@ -131,7 +131,10 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
       : fixRow(processedRow, ctx.params)
   })
 
-  return await Promise.all(processedRows)
+  const responses = await Promise.allSettled(processedRows)
+  return responses
+    .filter(resp => resp.status === "fulfilled")
+    .map(resp => (resp as PromiseFulfilledResult<Row>).value)
 }
 
 async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
