@@ -2,8 +2,7 @@
   import { Button, Popover, notifications } from "@budibase/bbui"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import { createPaginationStore } from "helpers/pagination"
-  import { auth, groups, users } from "stores/portal"
-  import { sdk } from "@budibase/shared-core"
+  import { groups, users } from "stores/portal"
 
   export let groupId
   export let onUsersUpdated
@@ -14,7 +13,6 @@
   let prevSearch = undefined
   let pageInfo = createPaginationStore()
 
-  $: readonly = !sdk.users.isAdmin($auth.user)
   $: page = $pageInfo.page
   $: searchUsers(page, searchTerm)
   $: group = $groups.find(x => x._id === groupId)
@@ -43,7 +41,7 @@
 </script>
 
 <div bind:this={popoverAnchor}>
-  <Button disabled={readonly} on:click={popover.show()} cta>Add user</Button>
+  <Button on:click={popover.show()} cta>Add user</Button>
 </div>
 <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
   <UserGroupPicker
