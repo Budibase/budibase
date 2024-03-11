@@ -47,13 +47,14 @@
 
   export let label
   export let completions = []
-  export let resize = "none"
   export let mode = EditorModes.Handlebars
   export let value = ""
   export let placeholder = null
   export let autocompleteEnabled = true
   export let autofocus = false
   export let jsBindingWrapping = true
+
+  const dispatch = createEventDispatcher()
 
   // Export a function to expose caret position
   export const getCaretPosition = () => {
@@ -105,8 +106,6 @@
       decorations: v => v.decorations,
     }
   )
-
-  const dispatch = createEventDispatcher()
 
   // Theming!
   let currentTheme = $themeStore?.theme

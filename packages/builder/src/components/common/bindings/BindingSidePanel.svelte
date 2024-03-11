@@ -7,7 +7,7 @@
   export let addHelper
   export let addBinding
   export let bindings
-  export let js
+  export let mode
   export let allowHelpers
   export let context = null
 
@@ -47,7 +47,7 @@
       (!search ||
         helper.label.match(searchRgx) ||
         helper.description.match(searchRgx)) &&
-      (!js || helper.allowsJs)
+      (mode.name !== "javascript" || helper.allowsJs)
     )
   })
 
@@ -71,16 +71,14 @@
   }
 
   const showBindingPopover = (binding, target) => {
-    let code = binding.valueHTML
     if (!context || !binding.value || binding.value === "") {
-      code = null
+      return
     }
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
       helper: false,
-      code,
-      binding: binding.readableBinding,
+      code: binding.valueHTML,
     }
     popover.show()
   }
@@ -94,7 +92,7 @@
     hoverTarget = {
       helper: true,
       description: helper.description,
-      code: getHelperExample(helper, js),
+      code: getHelperExample(helper, mode.name === "javascript"),
     }
     popover.show()
   }
@@ -114,15 +112,6 @@
       hideTimeout = null
     }
   }
-
-  const getReadableBindingLabel = readableBinding => {
-    console.log(js)
-    if (js) {
-      return `$("${readableBinding}")`
-    } else {
-      return `{{ ${readableBinding} }}`
-    }
-  }
 </script>
 
 <Popover
@@ -137,9 +126,6 @@
   on:mouseleave={hidePopover}
 >
   <div class="binding-popover" class:helper={hoverTarget.helper}>
-    {#if hoverTarget.binding}
-      <pre class="binding">{getReadableBindingLabel(hoverTarget.binding)}</pre>
-    {/if}
     {#if hoverTarget.description}
       <div>
         <!-- eslint-disable-next-line svelte/no-at-html-tags-->
@@ -260,7 +246,7 @@
                   class="binding"
                   on:mouseenter={e => showHelperPopover(helper, e.target)}
                   on:mouseleave={hidePopover}
-                  on:click={() => addHelper(helper, js)}
+                  on:click={() => addHelper(helper, mode.name === "javascript")}
                 >
                   <span class="binding__label">{helper.displayText}</span>
                   <span class="binding__typeWrap">
@@ -418,8 +404,7 @@
     text-overflow: ellipsis;
     overflow: hidden;
   }
-  .binding-popover.helper pre,
-  .binding-popover pre.binding {
+  .binding-popover.helper pre {
     color: var(--spectrum-global-color-blue-700);
   }
   .binding-popover pre :global(span) {

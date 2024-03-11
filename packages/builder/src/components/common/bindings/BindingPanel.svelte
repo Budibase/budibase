@@ -108,6 +108,9 @@
 
   const enrichBindings = (bindings, context) => {
     return bindings.map(binding => {
+      if (!context) {
+        return binding
+      }
       const value = getBindingValue(binding, context)
       return {
         ...binding,
@@ -227,6 +230,7 @@
             ]}
             autofocus={autofocusEditor}
             placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
+            jsBindingWrapping={false}
           />
         {:else if mode === Modes.JavaScript}
           <CodeEditor
@@ -243,6 +247,7 @@
             bind:insertAtPos
             autofocus={autofocusEditor}
             placeholder="Add bindings by typing $ or use the menu on the right"
+            jsBindingWrapping
           />
         {/if}
         {#if targetMode}
@@ -279,7 +284,7 @@
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
-          js={editorMode === EditorModes.JS}
+          {mode}
         />
       {:else if sidePanel === SidePanels.Evaluation}
         <EvaluationSidePanel
