@@ -11,7 +11,8 @@
     "build": {
       "inputs": [
         "{workspaceRoot}/scripts/build.js",
-        "{workspaceRoot}/lerna.json"
+        "{workspaceRoot}/lerna.json",
+        "{workspaceRoot}/tsconfig.base.json"
       ]
     }
   }
