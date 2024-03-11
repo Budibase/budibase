@@ -592,7 +592,7 @@
           component: instance._component,
           getSettings: () => cachedSettings,
           getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-          getDataContext: getDataContext,
+          getDataContext,
           reload: () => initialise(instance, true),
           setEphemeralStyles: styles => (ephemeralStyles = styles),
           state: store,
