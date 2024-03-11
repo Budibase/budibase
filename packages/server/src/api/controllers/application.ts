@@ -697,7 +697,6 @@ export async function duplicateApp(
   }
 
   ctx.body = {
-    message: "app duplicated",
     duplicateAppId: newApplication?.appId,
     sourceAppId,
   }
