@@ -268,8 +268,8 @@ export function fixOldPermissions(rolePerms: {
   [key: string]: string | string[]
 }): { [key: string]: string[] } {
   const fixedPerms: { [key: string]: string[] } = {}
-  for (const key in rolePerms) {
-    const perms = ensureArray(rolePerms[key])
+  for (const [key, value] of Object.entries(rolePerms)) {
+    const perms = ensureArray(value)
     if (perms.length === 1 && perms[0] === PermissionLevel.WRITE) {
       perms.push(PermissionLevel.READ)
     }
