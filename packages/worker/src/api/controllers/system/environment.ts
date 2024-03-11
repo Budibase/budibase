@@ -45,6 +45,9 @@ export const fetch = async (ctx: Ctx) => {
     maintenance: [],
   }
 
+  // TODO: remove
+  ctx.body.maintenance.push({ type: MaintenanceType.SQS_MISSING })
+
   if (env.SELF_HOSTED) {
     if (await isSqsMissing()) {
       ctx.body.maintenance.push({ type: MaintenanceType.SQS_MISSING })
