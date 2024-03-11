@@ -80,9 +80,9 @@
     <Body size="S">{app.deployed ? "Published" : "Unpublished"}</Body>
   </div>
 
-  {#if isBuilder}
-    <div class="actions-wrap">
-      <div class="app-row-actions">
+  <div class="actions-wrap">
+    <div class="app-row-actions">
+      {#if isBuilder}
         <div class="row-action">
           <Button size="S" secondary on:click={lockedAction || goToBuilder}>
             Edit
@@ -99,17 +99,16 @@
             }}
           />
         </div>
-      </div>
-      <div class="favourite-icon">
-        <FavouriteAppButton {app} noWrap />
-      </div>
+      {:else}
+        <!-- this can happen if an app builder has app user access to an app -->
+        <Button size="S" secondary>View</Button>
+      {/if}
     </div>
-  {:else if app.deployed}
-    <!-- this can happen if an app builder has app user access to an app -->
-    <div class="app-row-actions">
-      <Button size="S" secondary>View</Button>
+
+    <div class="favourite-icon">
+      <FavouriteAppButton {app} noWrap />
     </div>
-  {/if}
+  </div>
 </div>
 
 <style>

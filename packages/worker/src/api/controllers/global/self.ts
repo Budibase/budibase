@@ -199,12 +199,3 @@ export async function updateSelf(
     _rev: user._rev!,
   }
 }
-
-// export default {
-//   generateAPIKey,
-//   fetchAPIKey,
-//   getSelf,
-//   syncAppFavourites,
-//   fetchAppsByIds,
-//   updateSelf,
-// }

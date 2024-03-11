@@ -59,6 +59,7 @@ import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
 import { sdk as sharedCoreSDK } from "@budibase/shared-core"
 import * as appMigrations from "../../appMigrations"
+import { cloneDeep } from "lodash"
 
 // utility function, need to do away with this
 async function getLayouts() {
@@ -682,7 +683,10 @@ export async function duplicateApp(
   // Build a new request
   const createRequest = {
     roleId: ctx.roleId,
-    user: ctx.user,
+    user: {
+      ...cloneDeep(ctx.user),
+      _id: dbCore.getGlobalIDFromUserMetadataID(ctx.user._id || ""),
+    },
     request: {
       body: createRequestBody,
     },
