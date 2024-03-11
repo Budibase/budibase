@@ -73,8 +73,8 @@ const BUILTIN_ROLES = {
   BUILDER: new Role(BUILTIN_IDS.BUILDER, "Builder", BuiltinPermissionID.ADMIN),
 }
 
-type BuiltinRoles = typeof BUILTIN_ROLES
-type BuiltinRoleName = keyof BuiltinRoles
+export type BuiltinRoles = typeof BUILTIN_ROLES
+export type BuiltinRoleName = keyof BuiltinRoles
 
 export function getBuiltinRoles(): BuiltinRoles {
   return cloneDeep(BUILTIN_ROLES)
@@ -138,9 +138,29 @@ export async function roleToNumber(id: string) {
  * Returns whichever builtin roleID is lower.
  */
 export function lowerBuiltinRoleID(
+  roleId1: BuiltinRoleName,
+  roleId2: BuiltinRoleName
+): BuiltinRoleName
+// eslint-disable-next-line no-redeclare
+export function lowerBuiltinRoleID(
+  roleId1: BuiltinRoleName | undefined,
+  roleId2: BuiltinRoleName
+): BuiltinRoleName
+// eslint-disable-next-line no-redeclare
+export function lowerBuiltinRoleID(
+  roleId1: BuiltinRoleName,
+  roleId2: BuiltinRoleName | undefined
+): BuiltinRoleName
+// eslint-disable-next-line no-redeclare
+export function lowerBuiltinRoleID(
   roleId1?: BuiltinRoleName,
   roleId2?: BuiltinRoleName
-) {
+): BuiltinRoleName | undefined
+// eslint-disable-next-line no-redeclare
+export function lowerBuiltinRoleID(
+  roleId1?: BuiltinRoleName,
+  roleId2?: BuiltinRoleName
+): BuiltinRoleName | undefined {
   if (!roleId1) {
     return roleId2
   }
@@ -244,6 +264,20 @@ export function ensureArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value]
 }
 
+export function fixOldPermissions(rolePerms: {
+  [key: string]: string | string[]
+}): { [key: string]: string[] } {
+  const fixedPerms: { [key: string]: string[] } = {}
+  for (const key in rolePerms) {
+    const perms = ensureArray(rolePerms[key])
+    if (perms.length === 1 && perms[0] === PermissionLevel.WRITE) {
+      perms.push(PermissionLevel.READ)
+    }
+    fixedPerms[key] = perms
+  }
+  return fixedPerms
+}
+
 export async function getAllRoleIds(appId: string): Promise<string[]> {
   const roles = await getAllRoles(appId)
   return roles.map(role => role._id!)
@@ -300,13 +334,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
       if (!role.permissions) {
         continue
       }
-      for (let [key, value] of Object.entries(role.permissions)) {
-        value = ensureArray(value)
-        if (value.length === 1 && value[0] === PermissionLevel.WRITE) {
-          value = [PermissionLevel.READ, PermissionLevel.WRITE]
-        }
-        role.permissions[key] = value
-      }
+      role.permissions = fixOldPermissions(role.permissions)
     }
     return roles
   }

@@ -1,4 +1,4 @@
-import { db, env, roles } from "@budibase/backend-core"
+import { db, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   DocumentType,
@@ -88,7 +88,7 @@ export async function getResourcePerms(
     // update the various roleIds in the resource permissions
     for (let role of rolesList) {
       const rolePerms = allowsExplicitPerm
-        ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
+        ? roles.fixOldPermissions(role.permissions || {})
         : {}
       if (rolePerms[resourceId]?.indexOf(level) > -1) {
         permissions[level] = {
