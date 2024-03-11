@@ -51,13 +51,13 @@ export function getBasePermissions(resourceId: string) {
       const level = typedPermission.level
       basePermissions[level] = roles.lowerBuiltinRoleID(
         basePermissions[level],
-        roleId as BuiltinRoleName
+        roleId as roles.BuiltinRoleName
       )
       if (permissions.isPermissionLevelHigherThanRead(level)) {
         basePermissions[permissions.PermissionLevel.READ] =
           roles.lowerBuiltinRoleID(
             basePermissions[permissions.PermissionLevel.READ],
-            roleId as BuiltinRoleName
+            roleId as roles.BuiltinRoleName
           )
       }
     }
