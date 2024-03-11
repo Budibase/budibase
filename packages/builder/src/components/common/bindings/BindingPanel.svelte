@@ -9,7 +9,6 @@
   } from "@budibase/bbui"
   import { createEventDispatcher, getContext, onMount } from "svelte"
   import {
-    isValid,
     decodeJSBinding,
     encodeJSBinding,
     processStringSync,
@@ -35,7 +34,6 @@
 
   export let bindings
   export let value = ""
-  export let valid
   export let allowJS = false
   export let allowHelpers = true
   export let context = null
@@ -134,11 +132,8 @@
 
   const updateValue = val => {
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
-    valid = isValid(runtimeExpression)
-    if (valid) {
-      dispatch("change", val)
-      requestUpdateEvaluation(runtimeExpression, context)
-    }
+    dispatch("change", val)
+    requestUpdateEvaluation(runtimeExpression, context)
   }
 
   const onSelectHelper = (helper, js) => {
@@ -182,10 +177,6 @@
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
   }
-
-  onMount(() => {
-    valid = isValid(readableToRuntimeBinding(enrichedBindings, value))
-  })
 </script>
 
 <DrawerContent padding={false}>
