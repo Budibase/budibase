@@ -102,6 +102,29 @@ export const getHelperCompletions = mode => {
   }, [])
 }
 
+export const snippetAutoComplete = snippets => {
+  return function myCompletions(context) {
+    if (!snippets?.length) {
+      return null
+    }
+    const word = context.matchBefore(/\w*/)
+    if (word.from == word.to && !context.explicit) {
+      return null
+    }
+    return {
+      from: word.from,
+      options: snippets.map(snippet => ({
+        label: `snippets.${snippet.name}`,
+        type: "text",
+        simple: true,
+        apply: (view, completion, from, to) => {
+          insertSnippet(view, from, to, completion.label)
+        },
+      })),
+    }
+  }
+}
+
 const bindingFilter = (options, query) => {
   return options.filter(completion => {
     const section_parsed = completion.section.name.toLowerCase()
@@ -235,6 +258,21 @@ export const insertBinding = (view, from, to, text, mode) => {
     cursorPos = from + parsedInsert.length + rightBrace[0].length
   }
 
+  view.dispatch({
+    changes: {
+      from,
+      to,
+      insert: parsedInsert,
+    },
+    selection: {
+      anchor: cursorPos,
+    },
+  })
+}
+
+export const insertSnippet = (view, from, to, text, mode) => {
+  const parsedInsert = `${text}()`
+  let cursorPos = from + parsedInsert.length - 1
   view.dispatch({
     changes: {
       from,
