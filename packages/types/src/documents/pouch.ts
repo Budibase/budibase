@@ -5,15 +5,15 @@ export interface RowValue {
   deleted: boolean
 }
 
-export interface RowResponse<T extends Document> {
+export interface RowResponse<T extends Document | RowValue> {
   id: string
   key: string
   error: string
-  value: T | RowValue
+  value: T
   doc?: T
 }
 
-export interface AllDocsResponse<T extends Document> {
+export interface AllDocsResponse<T extends Document | RowValue> {
   offset: number
   total_rows: number
   rows: RowResponse<T>[]

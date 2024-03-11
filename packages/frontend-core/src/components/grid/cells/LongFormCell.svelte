@@ -64,6 +64,8 @@
     use:clickOutside={close}
   />
 {:else}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="long-form-cell" on:click={editable ? open : null} class:editable>
     <div class="value">
       {value || ""}

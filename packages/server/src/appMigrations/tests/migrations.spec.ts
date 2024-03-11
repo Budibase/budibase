@@ -30,9 +30,9 @@ describe("migrations", () => {
 
     const appId = config.getAppId()
 
-    const response = await config.api.application.getRaw(appId)
-
-    expect(response.headers[Header.MIGRATING_APP]).toBeUndefined()
+    await config.api.application.get(appId, {
+      headersNotPresent: [Header.MIGRATING_APP],
+    })
   })
 
   it("accessing an app that has pending migrations will attach the migrating header", async () => {
@@ -46,8 +46,10 @@ describe("migrations", () => {
       func: async () => {},
     })
 
-    const response = await config.api.application.getRaw(appId)
-
-    expect(response.headers[Header.MIGRATING_APP]).toEqual(appId)
+    await config.api.application.get(appId, {
+      headers: {
+        [Header.MIGRATING_APP]: appId,
+      },
+    })
   })
 })

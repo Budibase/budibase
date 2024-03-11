@@ -174,7 +174,7 @@
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {
-      builderStore.highlightSetting(data.setting)
+      builderStore.highlightSetting(data.setting, "error")
 
       // Also scroll setting into view
       const selector = `#${data.setting}-prop-control`
@@ -236,6 +236,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
   {#if loading}
     <div class="center">

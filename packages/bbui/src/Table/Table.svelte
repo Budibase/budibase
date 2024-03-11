@@ -303,6 +303,8 @@
 </script>
 
 {#key fields?.length}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class="wrapper"
     class:wrapper--quiet={quiet}
@@ -468,6 +470,7 @@
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
     overflow: auto;
+    display: contents;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);

@@ -58,6 +58,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ModalContent title="Edit Icon" confirmText="Save" onConfirm={save}>
   <div class="scrollable-icons">
     <div class="title-spacing">

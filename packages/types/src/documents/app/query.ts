@@ -19,7 +19,7 @@ export interface Query extends Document {
 }
 
 export interface QueryPreview extends Omit<Query, "_id"> {
-  queryId: string
+  queryId?: string
 }
 
 export interface QueryParameter {
@@ -60,22 +60,6 @@ export interface PaginationConfig {
 export interface PaginationValues {
   page: string | number | null
   limit: number | null
-}
-
-export interface PreviewQueryRequest extends Omit<Query, "parameters"> {
-  parameters: {}
-  flags?: {
-    urlName?: boolean
-  }
-}
-
-export interface ExecuteQueryRequest {
-  parameters?: { [key: string]: string }
-  pagination?: any
-}
-
-export interface ExecuteQueryResponse {
-  data: Row[]
 }
 
 export enum HttpMethod {

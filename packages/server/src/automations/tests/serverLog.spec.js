@@ -2,6 +2,7 @@ const setup = require("./utilities")
 
 describe("test the server log action", () => {
   let config = setup.getConfig()
+  let inputs
 
   beforeAll(async () => {
     await config.init()

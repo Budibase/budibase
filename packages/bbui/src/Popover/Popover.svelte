@@ -78,6 +78,7 @@
 </script>
 
 {#if open}
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <Portal {target}>
     <div
       tabindex="0"

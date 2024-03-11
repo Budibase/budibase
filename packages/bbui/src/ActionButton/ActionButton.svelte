@@ -41,6 +41,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <span
   class="btn-wrap"
   on:mouseover={() => (showTooltip = true)}

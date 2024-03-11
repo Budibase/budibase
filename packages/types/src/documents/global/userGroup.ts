@@ -24,7 +24,7 @@ export interface GroupUser {
 }
 
 export interface UserGroupRoles {
-  [key: string]: string
+  [key: string]: string | undefined
 }
 
 export interface SearchGroupRequest {}

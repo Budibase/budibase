@@ -1,5 +1,6 @@
 import { APIError } from "@budibase/types"
 import * as errors from "../errors"
+import environment from "../environment"
 
 export async function errorHandling(ctx: any, next: any) {
   try {
@@ -14,15 +15,19 @@ export async function errorHandling(ctx: any, next: any) {
       console.error(err)
     }
 
-    const error = errors.getPublicError(err)
-    const body: APIError = {
+    let error: APIError = {
       message: err.message,
       status: status,
       validationErrors: err.validation,
-      error,
+      error: errors.getPublicError(err),
     }
 
-    ctx.body = body
+    if (environment.isTest() && ctx.headers["x-budibase-include-stacktrace"]) {
+      // @ts-ignore
+      error.stack = err.stack
+    }
+
+    ctx.body = error
   }
 }
 

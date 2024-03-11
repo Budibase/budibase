@@ -8,162 +8,140 @@ import {
   BulkImportResponse,
   SearchRowResponse,
   SearchParams,
+  DeleteRowRequest,
+  DeleteRows,
+  DeleteRow,
+  ExportRowsResponse,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class RowAPI extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   get = async (
     sourceId: string,
     rowId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .get(`/api/${sourceId}/rows/${rowId}`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    if (expectStatus !== 404) {
-      request.expect("Content-Type", /json/)
-    }
-    return request
+    return await this._get<Row>(`/api/${sourceId}/rows/${rowId}`, {
+      expectations,
+    })
   }
 
   getEnriched = async (
     sourceId: string,
     rowId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .get(`/api/${sourceId}/${rowId}/enrich`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    if (expectStatus !== 404) {
-      request.expect("Content-Type", /json/)
-    }
-    return request
+    return await this._get<Row>(`/api/${sourceId}/${rowId}/enrich`, {
+      expectations,
+    })
   }
 
   save = async (
     tableId: string,
     row: SaveRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Row> => {
-    const resp = await this.request
-      .post(`/api/${tableId}/rows`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-    if (resp.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          resp.status
-        }, body: ${JSON.stringify(resp.body)}`
-      )
-    }
-    return resp.body as Row
+    return await this._post<Row>(`/api/${tableId}/rows`, {
+      body: row,
+      expectations,
+    })
   }
 
   validate = async (
     sourceId: string,
     row: SaveRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<ValidateResponse> => {
-    const resp = await this.request
-      .post(`/api/${sourceId}/rows/validate`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return resp.body as ValidateResponse
+    return await this._post<ValidateResponse>(
+      `/api/${sourceId}/rows/validate`,
+      {
+        body: row,
+        expectations,
+      }
+    )
   }
 
   patch = async (
     sourceId: string,
     row: PatchRowRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Row> => {
-    let resp = await this.request
-      .patch(`/api/${sourceId}/rows`)
-      .send(row)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-    if (resp.status !== expectStatus) {
-      throw new Error(
-        `Expected status ${expectStatus} but got ${
-          resp.status
-        }, body: ${JSON.stringify(resp.body)}`
-      )
-    }
-    return resp.body as Row
+    return await this._patch<Row>(`/api/${sourceId}/rows`, {
+      body: row,
+      expectations,
+    })
   }
 
   delete = async (
     sourceId: string,
-    rows: Row | string | (Row | string)[],
-    { expectStatus } = { expectStatus: 200 }
+    row: DeleteRow,
+    expectations?: Expectations
   ) => {
-    return this.request
-      .delete(`/api/${sourceId}/rows`)
-      .send(Array.isArray(rows) ? { rows } : rows)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    return await this._delete<Row>(`/api/${sourceId}/rows`, {
+      body: row,
+      expectations,
+    })
+  }
+
+  bulkDelete = async (
+    sourceId: string,
+    body: DeleteRows,
+    expectations?: Expectations
+  ) => {
+    return await this._delete<Row[]>(`/api/${sourceId}/rows`, {
+      body,
+      expectations,
+    })
   }
 
   fetch = async (
     sourceId: string,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<Row[]> => {
-    const request = this.request
-      .get(`/api/${sourceId}/rows`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-
-    return (await request).body
+    return await this._get<Row[]>(`/api/${sourceId}/rows`, {
+      expectations,
+    })
   }
 
   exportRows = async (
     tableId: string,
     body: ExportRowsRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ) => {
-    const request = this.request
-      .post(`/api/${tableId}/rows/exportRows?format=json`)
-      .set(this.config.defaultHeaders())
-      .send(body)
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return request
+    const response = await this._requestRaw(
+      "post",
+      `/api/${tableId}/rows/exportRows`,
+      {
+        body,
+        query: { format: "json" },
+        expectations,
+      }
+    )
+    return response.text
   }
 
   bulkImport = async (
     tableId: string,
     body: BulkImportRequest,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<BulkImportResponse> => {
-    let request = this.request
-      .post(`/api/tables/${tableId}/import`)
-      .send(body)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-    return (await request).body
+    return await this._post<BulkImportResponse>(
+      `/api/tables/${tableId}/import`,
+      {
+        body,
+        expectations,
+      }
+    )
   }
 
   search = async (
     sourceId: string,
     params?: SearchParams,
-    { expectStatus } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<SearchRowResponse> => {
-    const request = this.request
-      .post(`/api/${sourceId}/search`)
-      .send(params)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
-
-    return (await request).body
+    return await this._post<SearchRowResponse>(`/api/${sourceId}/search`, {
+      body: params,
+      expectations,
+    })
   }
 }

@@ -8,6 +8,7 @@ import {
   QueryResponse,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
+import { iifeWrapper } from "../jsRunner/utilities"
 import { getIntegration } from "../integrations"
 import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
@@ -43,7 +44,7 @@ class QueryRunner {
     this.parameters = input.parameters
     this.pagination = input.pagination
     this.transformer = input.transformer
-    this.queryId = input.queryId
+    this.queryId = input.queryId!
     this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
@@ -127,7 +128,7 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      transformer = `(function(){\n${transformer}\n})();`
+      transformer = iifeWrapper(transformer)
       let vm = new IsolatedVM()
       if (datasource.source === SourceName.MONGODB) {
         vm = vm.withParsingBson(rows)

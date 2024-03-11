@@ -539,6 +539,8 @@
 
 <svelte:window on:keydown={handleKeyDown} />
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"
