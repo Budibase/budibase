@@ -11,6 +11,8 @@
   export let group
   export let saveGroup
 
+  let readonlyTitle = group?.scimInfo?.isSync
+
   let nameError
 </script>
 
@@ -26,7 +28,12 @@
   title={group?._rev ? "Edit group" : "Create group"}
   confirmText="Save"
 >
-  <Input bind:value={group.name} label="Name" error={nameError} />
+  <Input
+    bind:value={group.name}
+    label="Name"
+    error={nameError}
+    disabled={readonlyTitle}
+  />
   <div class="modal-format">
     <div class="modal-inner">
       <Body size="XS">Icon</Body>
