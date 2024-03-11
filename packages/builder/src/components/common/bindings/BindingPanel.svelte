@@ -172,16 +172,8 @@
 
   const updateValue = val => {
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
-<<<<<<< HEAD
-    valid = isValid(runtimeExpression)
-    if (valid) {
-      dispatch("change", val)
-      requestEval(runtimeExpression, context, snippets)
-    }
-=======
     dispatch("change", val)
-    requestUpdateEvaluation(runtimeExpression, context)
->>>>>>> fe12a8606438d41437e21729068b91038ba6df37
+    requestEval(runtimeExpression, context, snippets)
   }
 
   const onSelectHelper = (helper, js) => {
@@ -232,7 +224,6 @@
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
   }
-<<<<<<< HEAD
 
   onMount(() => {
     // Set the initial mode appropriately
@@ -245,12 +236,7 @@
 
     // Set the initial side panel
     sidePanel = sidePanelOptions[0]
-
-    // Determine if our initial value is valid
-    valid = isValid(readableToRuntimeBinding(enrichedBindings, value))
   })
-=======
->>>>>>> fe12a8606438d41437e21729068b91038ba6df37
 </script>
 
 <DrawerContent padding={false}>
