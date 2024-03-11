@@ -16,6 +16,7 @@
   import * as appValidation from "helpers/validation/yup/app"
   import TemplateCard from "components/common/TemplateCard.svelte"
   import { lowercase } from "helpers"
+  import { sdk } from "@budibase/shared-core"
 
   export let template
 
@@ -140,6 +141,11 @@
 
       // Create user
       await auth.setInitInfo({})
+
+      if (sdk.users.isCreator($auth.user, app?.devId)) {
+        // Refresh for access to created applications
+        await auth.getSelf()
+      }
 
       $goto(`/builder/app/${createdApp.instance._id}`)
     } catch (error) {
