@@ -15,6 +15,8 @@
   $: initials = avatar ? title?.[0] : null
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="list-item" class:hoverable on:click>
   <div class="left">
     {#if icon}

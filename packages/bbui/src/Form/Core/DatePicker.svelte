@@ -193,6 +193,8 @@
       aria-required="false"
       aria-haspopup="true"
     >
+      <!-- svelte-ignore a11y-no-static-element-interactions -->
+      <!-- svelte-ignore a11y-click-events-have-key-events -->
       <div
         on:click={flatpickr?.open}
         class="spectrum-Textfield spectrum-InputGroup-textfield"
@@ -230,6 +232,7 @@
   </Flatpickr>
 {/key}
 {#if open}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div class="overlay" on:mousedown|self={flatpickr?.close} />
 {/if}
 

@@ -8,6 +8,8 @@
   $: useIcon = !!icon
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="flatbutton" class:selected on:click={() => onClick(value || text)}>
   {#if useIcon}
     <i class={icon} />

@@ -341,7 +341,11 @@ const exportDataHandler = async action => {
         tableId: selection.tableId,
         rows: selection.selectedRows,
         format: action.parameters.type,
-        columns: action.parameters.columns,
+        columns: action.parameters.columns?.map(
+          column => column.name || column
+        ),
+        delimiter: action.parameters.delimiter,
+        customHeaders: action.parameters.customHeaders,
       })
       download(
         new Blob([data], { type: "text/plain" }),

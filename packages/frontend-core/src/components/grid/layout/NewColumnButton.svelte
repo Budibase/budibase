@@ -21,6 +21,8 @@
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   id="add-column-button"
   bind:this={anchor}

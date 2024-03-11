@@ -3,21 +3,16 @@ import {
   UpdateViewRequest,
   ViewV2,
   SearchViewRowRequest,
+  PaginatedSearchRowResponse,
 } from "@budibase/types"
-import TestConfiguration from "../TestConfiguration"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 import { generator } from "@budibase/backend-core/tests"
-import { Response } from "superagent"
 import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {
-  constructor(config: TestConfiguration) {
-    super(config)
-  }
-
   create = async (
     viewData?: Partial<CreateViewRequest>,
-    { expectStatus } = { expectStatus: 201 }
+    expectations?: Expectations
   ): Promise<ViewV2> => {
     let tableId = viewData?.tableId
     if (!tableId && !this.config.table) {
@@ -30,43 +25,36 @@ export class ViewV2API extends TestAPI {
       name: generator.guid(),
       ...viewData,
     }
-    const result = await this.request
-      .post(`/api/v2/views`)
-      .send(view)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-    return result.body.data as ViewV2
+
+    const exp: Expectations = {
+      status: 201,
+      ...expectations,
+    }
+
+    const resp = await this._post<{ data: ViewV2 }>("/api/v2/views", {
+      body: view,
+      expectations: exp,
+    })
+    return resp.data
   }
 
   update = async (
     view: UpdateViewRequest,
-    {
-      expectStatus,
-      handleResponse,
-    }: {
-      expectStatus: number
-      handleResponse?: (response: Response) => void
-    } = { expectStatus: 200 }
+    expectations?: Expectations
   ): Promise<ViewV2> => {
-    const result = await this.request
-      .put(`/api/v2/views/${view.id}`)
-      .send(view)
-      .set(this.config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
-
-    if (handleResponse) {
-      handleResponse(result)
-    }
-    return result.body.data as ViewV2
+    const resp = await this._put<{ data: ViewV2 }>(`/api/v2/views/${view.id}`, {
+      body: view,
+      expectations,
+    })
+    return resp.data
   }
 
-  delete = async (viewId: string, { expectStatus } = { expectStatus: 204 }) => {
-    return this.request
-      .delete(`/api/v2/views/${viewId}`)
-      .set(this.config.defaultHeaders())
-      .expect(expectStatus)
+  delete = async (viewId: string, expectations?: Expectations) => {
+    const exp = {
+      status: 204,
+      ...expectations,
+    }
+    return await this._delete(`/api/v2/views/${viewId}`, { expectations: exp })
   }
 
   get = async (viewId: string) => {
@@ -78,17 +66,29 @@ export class ViewV2API extends TestAPI {
   search = async (
     viewId: string,
     params?: SearchViewRowRequest,
-    { expectStatus = 200, usePublicUser = false } = {}
+    expectations?: Expectations
   ) => {
-    return this.request
-      .post(`/api/v2/views/${viewId}/search`)
-      .send(params)
-      .set(
-        usePublicUser
-          ? this.config.publicHeaders()
-          : this.config.defaultHeaders()
-      )
-      .expect("Content-Type", /json/)
-      .expect(expectStatus)
+    return await this._post<PaginatedSearchRowResponse>(
+      `/api/v2/views/${viewId}/search`,
+      {
+        body: params,
+        expectations,
+      }
+    )
+  }
+
+  publicSearch = async (
+    viewId: string,
+    params?: SearchViewRowRequest,
+    expectations?: Expectations
+  ) => {
+    return await this._post<PaginatedSearchRowResponse>(
+      `/api/v2/views/${viewId}/search`,
+      {
+        body: params,
+        expectations,
+        publicUser: true,
+      }
+    )
   }
 }

@@ -11,6 +11,7 @@ import {
   Document,
   isDocument,
   RowResponse,
+  RowValue,
 } from "@budibase/types"
 import { getCouchInfo } from "./connections"
 import { directCouchUrlCall } from "./utils"
@@ -69,13 +70,30 @@ export class DatabaseImpl implements Database {
     DatabaseImpl.nano = buildNano(couchInfo)
   }
 
-  async exists() {
+  exists(docId?: string) {
+    if (docId === undefined) {
+      return this.dbExists()
+    }
+
+    return this.docExists(docId)
+  }
+
+  private async dbExists() {
     const response = await directCouchUrlCall({
       url: `${this.couchInfo.url}/${this.name}`,
       method: "HEAD",
       cookie: this.couchInfo.cookie,
     })
     return response.status === 200
+  }
+
+  private async docExists(id: string): Promise<boolean> {
+    try {
+      await this.performCall(db => () => db.head(id))
+      return true
+    } catch {
+      return false
+    }
   }
 
   private nano() {
@@ -221,7 +239,7 @@ export class DatabaseImpl implements Database {
     })
   }
 
-  async allDocs<T extends Document>(
+  async allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return this.performCall(db => {

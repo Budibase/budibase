@@ -52,8 +52,8 @@
     _id: Helpers.uuid(),
     _component: componentType,
     _instanceName: `Step ${currentStep + 1}`,
-    title: stepSettings.title ?? defaults.title,
-    buttons: stepSettings.buttons || defaults.buttons,
+    title: stepSettings.title ?? defaults?.title,
+    buttons: stepSettings.buttons || defaults?.buttons,
     fields: stepSettings.fields,
     desc: stepSettings.desc,
 

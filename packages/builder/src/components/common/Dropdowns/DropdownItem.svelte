@@ -5,6 +5,7 @@
   export let disabled = false
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="dropdown-item" class:disabled on:click {...$$restProps}>
   {#if icon}<i class={icon} />{/if}
   <div class="content">

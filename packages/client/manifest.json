@@ -89,13 +89,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -298,13 +298,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],
@@ -461,16 +461,16 @@
         "key": "type",
         "options": [
           {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
             "label": "Primary",
             "value": "primary"
           },
           {
             "label": "Secondary",
             "value": "secondary"
-          },
-          {
-            "label": "Action",
-            "value": "cta"
           },
           {
             "label": "Warning",
@@ -481,7 +481,7 @@
             "value": "overBackground"
           }
         ],
-        "defaultValue": "primary"
+        "defaultValue": "cta"
       },
       {
         "type": "select",
@@ -524,6 +524,38 @@
         "barIcon": "NoEdit",
         "barTitle": "Disable button",
         "key": "disabled"
+      },
+      {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "dependsOn": "icon",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
       },
       {
         "type": "event",
@@ -602,13 +634,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -1103,6 +1135,12 @@
         "type": "color",
         "label": "Color",
         "key": "color",
+        "showInBar": true
+      },
+      {
+        "type": "color",
+        "label": "Text Color",
+        "key": "textColor",
         "showInBar": true
       },
       {
@@ -5917,13 +5955,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],

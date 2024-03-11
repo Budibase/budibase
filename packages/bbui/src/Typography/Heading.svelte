@@ -21,4 +21,8 @@
   h1 {
     font-family: var(--font-accent);
   }
+
+  h1 {
+    text-wrap: balance;
+  }
 </style>
