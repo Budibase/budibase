@@ -19,6 +19,7 @@
     getHelperCompletions,
     jsAutocomplete,
     hbAutocomplete,
+    snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
   } from "../CodeEditor"
@@ -98,6 +99,7 @@
       ...bindingCompletions,
       ...getHelperCompletions(EditorModes.JS),
     ]),
+    snippetAutoComplete(snippets),
   ]
 
   const getModeOptions = (allowHBS, allowJS) => {

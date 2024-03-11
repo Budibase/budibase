@@ -83,8 +83,8 @@
     })
   }
 
-  // For handlebars only.
-  const bindStyle = new MatchDecorator({
+  // Match decoration for HBS bindings
+  const hbsMatchDeco = new MatchDecorator({
     regexp: FIND_ANY_HBS_REGEX,
     decoration: () => {
       return Decoration.mark({
@@ -95,12 +95,35 @@
       })
     },
   })
-
-  let plugin = ViewPlugin.define(
+  const hbsMatchDecoPlugin = ViewPlugin.define(
     view => ({
-      decorations: bindStyle.createDeco(view),
+      decorations: hbsMatchDeco.createDeco(view),
       update(u) {
-        this.decorations = bindStyle.updateDeco(u, this.decorations)
+        this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
+      },
+    }),
+    {
+      decorations: v => v.decorations,
+    }
+  )
+
+  // Match decoration for snippets
+  const snippetMatchDeco = new MatchDecorator({
+    regexp: /snippets.[^\s(]+/g,
+    decoration: () => {
+      return Decoration.mark({
+        tag: "span",
+        attributes: {
+          class: "snippet-wrap",
+        },
+      })
+    },
+  })
+  const snippetMatchDecoPlugin = ViewPlugin.define(
+    view => ({
+      decorations: snippetMatchDeco.createDeco(view),
+      update(u) {
+        this.decorations = snippetMatchDeco.updateDeco(u, this.decorations)
       },
     }),
     {
@@ -142,7 +165,6 @@
 
   const buildBaseExtensions = () => {
     return [
-      ...(mode.name === "handlebars" ? [plugin] : []),
       drawSelection(),
       dropCursor(),
       bracketMatching(),
@@ -165,7 +187,10 @@
           override: [...completions],
           closeOnBlur: true,
           icons: false,
-          optionClass: () => "autocomplete-option",
+          optionClass: completion =>
+            completion.simple
+              ? "autocomplete-option-simple"
+              : "autocomplete-option",
         })
       )
       complete.push(
@@ -191,17 +216,22 @@
             view.dispatch(tr)
             return true
           }
-
           return false
         })
       )
     }
 
+    // JS only plugins
     if (mode.name === "javascript") {
+      complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
       if (!readonly) {
         complete.push(highlightWhitespace())
       }
+    }
+    // HBS only plugins
+    else {
+      complete.push(hbsMatchDecoPlugin)
     }
 
     if (placeholder) {
@@ -376,9 +406,12 @@
     font-style: italic;
   }
 
-  /* Highlight bindings */
+  /* Highlight bindings and snippets */
   .code-editor :global(.binding-wrap) {
-    color: var(--spectrum-global-color-blue-700);
+    color: var(--spectrum-global-color-blue-700) !important;
+  }
+  .code-editor :global(.snippet-wrap *) {
+    color: #61afef !important;
   }
 
   /* Completion popover */
@@ -407,7 +440,8 @@
   }
 
   /* Completion item container */
-  .code-editor :global(.autocomplete-option) {
+  .code-editor :global(.autocomplete-option),
+  .code-editor :global(.autocomplete-option-simple) {
     padding: var(--spacing-s) var(--spacing-m) !important;
     padding-left: calc(16px + 2 * var(--spacing-m)) !important;
     display: flex;
@@ -415,9 +449,13 @@
     align-items: center;
     color: var(--spectrum-alias-text-color);
   }
+  .code-editor :global(.autocomplete-option-simple) {
+    padding-left: var(--spacing-s) !important;
+  }
 
   /* Highlighted completion item */
-  .code-editor :global(.autocomplete-option[aria-selected]) {
+  .code-editor :global(.autocomplete-option[aria-selected]),
+  .code-editor :global(.autocomplete-option-simple[aria-selected]) {
     background: var(--spectrum-global-color-blue-400);
     color: white;
   }
@@ -432,6 +470,9 @@
     font-size: var(--font-size-s);
     font-family: var(--font-sans);
     text-transform: capitalize;
+  }
+  .code-editor :global(.autocomplete-option-simple .cm-completionLabel) {
+    text-transform: none;
   }
 
   /* Completion item type */
