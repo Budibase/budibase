@@ -5,4 +5,12 @@
   export let size = "M"
 </script>
 
-<IconAvatar icon={group?.icon} background={group?.color} {size} />
+<div class="icon-group">
+  <IconAvatar icon={group?.icon} background={group?.color} {size} />
+</div>
+
+<style>
+  .icon-group {
+    position: relative;
+  }
+</style>
