@@ -5666,6 +5666,13 @@
   dependencies:
     undici-types "~5.26.4"
 
+"@types/node@^20.4.5":
+  version "20.11.25"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-20.11.25.tgz#0f50d62f274e54dd7a49f7704cc16bfbcccaf49f"
+  integrity sha512-TBHyJxk2b7HceLVGFcpAUjsa5zIdsPWlR6XHfyGzd0SFu+/NFgQgMAl96MSDZgQDvJAvV6BKsFOrt6zIL09JDw==
+  dependencies:
+    undici-types "~5.26.4"
+
 "@types/nodemailer@^6.4.4":
   version "6.4.14"
   resolved "https://registry.yarnpkg.com/@types/nodemailer/-/nodemailer-6.4.14.tgz#5c81a5e856db7f8ede80013e6dbad7c5fb2283e2"
@@ -19491,11 +19498,12 @@ schema-utils@^3.1.1, schema-utils@^3.1.2:
     ajv "^6.12.5"
     ajv-keywords "^3.5.2"
 
-scim-patch@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/scim-patch/-/scim-patch-0.7.0.tgz#3f6d94256c07be415a74a49c0ff48dc91e4e0219"
-  integrity sha512-wXKcsZl+aLfE0yId7MjiOd91v8as6dEYLFvm1gGu3yJxSPhl1Fl3vWiNN4V3D68UKpqO/umK5rwWc8wGpBaOHw==
+scim-patch@^0.8.1:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/scim-patch/-/scim-patch-0.8.1.tgz#611bfdb5538f6d8b97aba0ab0f8bd01055b70c1c"
+  integrity sha512-JRYTA+mJZ8Z5DJGO7kkFc0lGCDs100rNs7iN77mld7gQajTp1R1xjUzMfZTOMAkBDA75GSdbMmfdfMqMJCn/Yg==
   dependencies:
+    "@types/node" "^20.4.5"
     fast-deep-equal "3.1.3"
     scim2-parse-filter "0.2.8"
 
