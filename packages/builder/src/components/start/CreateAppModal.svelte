@@ -142,7 +142,7 @@
       // Create user
       await auth.setInitInfo({})
 
-      if (sdk.users.isCreator($auth.user, app?.devId)) {
+      if (!sdk.users.isBuilder($auth.user, createdApp?.appId)) {
         // Refresh for access to created applications
         await auth.getSelf()
       }
