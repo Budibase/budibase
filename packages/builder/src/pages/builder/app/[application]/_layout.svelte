@@ -96,7 +96,7 @@
         const release_date = new Date("2023-03-01T00:00:00.000Z")
         const onboarded = new Date($auth.user?.onboardedAt)
         if (onboarded < release_date) {
-          builderStore.startTour(TOUR_KEYS.FEATURE_ONBOARDING)
+          builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
         }
       }
     }
@@ -144,7 +144,7 @@
         </span>
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <TourWrap tourStepKey={`builder-${title}-section`}>
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
               <Tab
                 quiet
                 selected={$isActive(path)}

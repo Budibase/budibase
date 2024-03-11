@@ -29,6 +29,7 @@ export const INITIAL_APP_META_STATE = {
   initialised: false,
   hasAppPackage: false,
   usedPlugins: null,
+  automations: {},
   routes: {},
 }
 
@@ -63,6 +64,7 @@ export class AppMetaStore extends BudiStore {
         ...app.features,
       },
       initialised: true,
+      automations: app.automations || {},
       hasAppPackage: true,
     }))
   }
