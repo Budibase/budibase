@@ -39,7 +39,7 @@
   let integration
   let schemaType
 
-  let autoSchema = {}
+  let schema = {}
   let nestedSchemaFields = {}
   let rows = []
   let keys = {}
@@ -52,6 +52,8 @@
     schemaType = integration.query[query.queryVerb].type
 
     newQuery = cloneDeep(query)
+    // init schema from the query if one already exists
+    schema = newQuery.schema
     // Set the location where the query code will be written to an empty string so that it doesn't
     // get changed from undefined -> "" by the input, breaking our unsaved changes checks
     newQuery.fields[schemaType] ??= ""
@@ -86,12 +88,7 @@
 
       nestedSchemaFields = response.nestedSchemaFields
 
-      if (Object.keys(newQuery.schema).length === 0) {
-        // Assign this to a variable instead of directly to the newQuery.schema so that a user
-        // can change the table they're querying and have the schema update until they first
-        // edit it
-        autoSchema = response.schema
-      }
+      schema = response.schema
       rows = response.rows
 
       notifications.success("Query executed successfully")
@@ -118,10 +115,7 @@
       loading = true
       const response = await queries.save(newQuery.datasourceId, {
         ...newQuery,
-        schema:
-          Object.keys(newQuery.schema).length === 0
-            ? autoSchema
-            : newQuery.schema,
+        schema,
         nestedSchemaFields,
       })
 
@@ -320,12 +314,10 @@
     <QueryViewerSidePanel
       onClose={() => (showSidePanel = false)}
       onSchemaChange={newSchema => {
-        newQuery.schema = newSchema
+        schema = newSchema
       }}
       {rows}
-      schema={Object.keys(newQuery.schema).length === 0
-        ? autoSchema
-        : newQuery.schema}
+      {schema}
     />
   </div>
 </div>
