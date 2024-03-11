@@ -68,9 +68,9 @@
     }
 
     try {
-      await API.duplicateApp(data, appId)
+      const app = await API.duplicateApp(data, appId)
       appsStore.load()
-      if (sdk.users.isCreator($auth.user, app?.devId)) {
+      if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
         // Refresh for access to created applications
         await auth.getSelf()
       }
