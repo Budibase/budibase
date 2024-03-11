@@ -299,6 +299,16 @@ export default class TestConfiguration {
     }
   }
 
+  withUser(user: User, f: () => Promise<void>) {
+    const oldUser = this.user
+    this.user = user
+    try {
+      return f()
+    } finally {
+      this.user = oldUser
+    }
+  }
+
   // UTILS
 
   _req<Req extends Record<string, any> | void, Res>(
