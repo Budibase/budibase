@@ -89,6 +89,18 @@
       sidePanel = sidePanelOptions[0]
     }
   }
+  $: hbsCompletions = [
+    hbAutocomplete([
+      ...bindingCompletions,
+      ...getHelperCompletions(EditorModes.Handlebars),
+    ]),
+  ]
+  $: jsCompletions = [
+    jsAutocomplete([
+      ...bindingCompletions,
+      ...getHelperCompletions(EditorModes.JS),
+    ]),
+  ]
 
   const getModeOptions = (allowHBS, allowJS) => {
     let options = []
@@ -148,6 +160,9 @@
 
   const enrichBindings = (bindings, context, snippets) => {
     return bindings.map(binding => {
+      if (!context) {
+        return binding
+      }
       const value = getBindingValue(binding, context, snippets)
       return {
         ...binding,
@@ -265,38 +280,34 @@
       {/if}
       <div class="editor">
         {#if mode === Modes.Text}
-          <CodeEditor
-            value={hbsValue}
-            on:change={onChangeHBSValue}
-            bind:getCaretPosition
-            bind:insertAtPos
-            completions={[
-              hbAutocomplete([
-                ...bindingCompletions,
-                ...getHelperCompletions(editorMode),
-              ]),
-            ]}
-            autofocus={autofocusEditor}
-            placeholder={placeholder ||
-              "Add bindings by typing {{ or use the menu on the right"}
-          />
+          {#key hbsCompletions}
+            <CodeEditor
+              value={hbsValue}
+              on:change={onChangeHBSValue}
+              bind:getCaretPosition
+              bind:insertAtPos
+              completions={hbsCompletions}
+              autofocus={autofocusEditor}
+              placeholder={placeholder ||
+                "Add bindings by typing {{ or use the menu on the right"}
+              jsBindingWrapping={false}
+            />
+          {/key}
         {:else if mode === Modes.JavaScript}
-          <CodeEditor
-            value={decodeJSBinding(jsValue)}
-            on:change={onChangeJSValue}
-            completions={[
-              jsAutocomplete([
-                ...bindingCompletions,
-                ...getHelperCompletions(editorMode),
-              ]),
-            ]}
-            mode={EditorModes.JS}
-            bind:getCaretPosition
-            bind:insertAtPos
-            autofocus={autofocusEditor}
-            placeholder={placeholder ||
-              "Add bindings by typing $ or use the menu on the right"}
-          />
+          {#key jsCompletions}
+            <CodeEditor
+              value={decodeJSBinding(jsValue)}
+              on:change={onChangeJSValue}
+              completions={jsCompletions}
+              mode={EditorModes.JS}
+              bind:getCaretPosition
+              bind:insertAtPos
+              autofocus={autofocusEditor}
+              placeholder={placeholder ||
+                "Add bindings by typing $ or use the menu on the right"}
+              jsBindingWrapping
+            />
+          {/key}
         {/if}
         {#if targetMode}
           <div class="mode-overlay">
@@ -332,7 +343,7 @@
           {context}
           addHelper={onSelectHelper}
           addBinding={onSelectBinding}
-          mode={editorMode}
+          {mode}
         />
       {:else if sidePanel === SidePanels.Evaluation}
         <EvaluationSidePanel

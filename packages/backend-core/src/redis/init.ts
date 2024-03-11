@@ -9,7 +9,8 @@ let userClient: Client,
   lockClient: Client,
   socketClient: Client,
   inviteClient: Client,
-  passwordResetClient: Client
+  passwordResetClient: Client,
+  docWritethroughClient: Client
 
 export async function init() {
   userClient = await new Client(utils.Databases.USER_CACHE).init()
@@ -23,6 +24,9 @@ export async function init() {
   socketClient = await new Client(
     utils.Databases.SOCKET_IO,
     utils.SelectableDatabase.SOCKET_IO
+  ).init()
+  docWritethroughClient = await new Client(
+    utils.Databases.DOC_WRITE_THROUGH
   ).init()
 }
 
@@ -103,4 +107,11 @@ export async function getPasswordResetClient() {
     await init()
   }
   return passwordResetClient
+}
+
+export async function getDocWritethroughClient() {
+  if (!writethroughClient) {
+    await init()
+  }
+  return writethroughClient
 }

@@ -1,5 +1,6 @@
 <script>
   import GroupIcon from "./GroupIcon.svelte"
+  import ActiveDirectoryInfo from "../../_components/ActiveDirectoryInfo.svelte"
 
   export let value
   export let row
@@ -14,13 +15,16 @@
   {:else}
     <div class="text">-</div>
   {/if}
+  {#if row.scimInfo?.isSync}
+    <ActiveDirectoryInfo iconSize="XS" />
+  {/if}
 </div>
 
 <style>
   .align {
     display: flex;
     align-items: center;
-    overflow: hidden;
+    overflow: visible;
     gap: var(--spacing-m);
     max-width: var(--max-cell-width);
     flex: 1 1 auto;

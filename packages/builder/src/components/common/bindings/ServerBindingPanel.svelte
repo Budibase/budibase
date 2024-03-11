@@ -3,7 +3,6 @@
   import { snippets } from "stores/builder"
 
   export let bindings = []
-  export let valid
   export let value = ""
   export let allowJS = false
   export let context = null
@@ -21,7 +20,6 @@
 </script>
 
 <BindingPanel
-  bind:valid
   bindings={enrichedBindings}
   snippets={$snippets}
   {value}

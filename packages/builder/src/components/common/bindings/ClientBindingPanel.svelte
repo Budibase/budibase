@@ -4,7 +4,6 @@
   import { onMount } from "svelte"
 
   export let bindings = []
-  export let valid
   export let value = ""
   export let allowJS = false
   export let allowHelpers = true
@@ -27,7 +26,6 @@
 </script>
 
 <BindingPanel
-  bind:valid
   bindings={enrichedBindings}
   context={$previewStore.selectedComponentContext}
   snippets={$snippets}

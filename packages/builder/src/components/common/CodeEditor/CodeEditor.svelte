@@ -55,6 +55,8 @@
   export let jsBindingWrapping = true
   export let readonly = false
 
+  const dispatch = createEventDispatcher()
+
   // Export a function to expose caret position
   export const getCaretPosition = () => {
     const selection_range = editor.state.selection.ranges[0]
@@ -105,8 +107,6 @@
       decorations: v => v.decorations,
     }
   )
-
-  const dispatch = createEventDispatcher()
 
   // Theming!
   let currentTheme = $themeStore?.theme

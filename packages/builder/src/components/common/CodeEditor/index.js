@@ -163,26 +163,12 @@ export const jsAutocomplete = baseCompletions => {
 }
 
 export const buildBindingInfoNode = (completion, binding) => {
+  if (!binding.valueHTML || binding.value == null) {
+    return null
+  }
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
-
-  if (binding.value != null && binding.valueHTML) {
-    ele.innerHTML = `<div class="binding__example">${binding.valueHTML}</div>`
-    return ele
-  }
-
-  const exampleNodeHtml = binding.readableBinding
-    ? `<div class="binding__example">{{ ${binding.readableBinding} }}</div>`
-    : ""
-
-  const descriptionNodeHtml = binding.description
-    ? `<div class="binding__description">${binding.description}</div>`
-    : ""
-
-  ele.innerHTML = `
-    ${exampleNodeHtml}
-    ${descriptionNodeHtml}
-  `
+  ele.innerHTML = `<div class="binding__example">${binding.valueHTML}</div>`
   return ele
 }
 
