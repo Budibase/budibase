@@ -16,8 +16,9 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
-import type { App } from "@budibase/types"
+import { type App } from "@budibase/types"
 import tk from "timekeeper"
+import * as uuid from "uuid"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -251,7 +252,7 @@ describe("/applications", () => {
 
   describe("permissions", () => {
     it("should only return apps a user has access to", async () => {
-      const user = await config.createUser({
+      let user = await config.createUser({
         builder: { global: false },
         admin: { global: false },
       })
@@ -259,6 +260,81 @@ describe("/applications", () => {
       await config.withUser(user, async () => {
         const apps = await config.api.application.fetch()
         expect(apps).toHaveLength(0)
+      })
+
+      user = await config.globalUser({
+        ...user,
+        builder: {
+          apps: [config.getProdAppId()],
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const role = await config.api.roles.save({
+        name: "Test",
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      user = await config.globalUser({
+        ...user,
+        roles: {
+          [config.getProdAppId()]: role.name,
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it.only("should only return apps a user has access to through a custom role on a group", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const roleName = uuid.v4().replace(/-/g, "")
+      const role = await config.api.roles.save({
+        name: roleName,
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      const group = await config.createGroup(role._id!)
+
+      user = await config.globalUser({
+        ...user,
+        userGroups: [group._id!],
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
       })
     })
   })

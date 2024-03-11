@@ -35,6 +35,17 @@ export function getAuditLogDBName(tenantId?: string) {
   }
 }
 
+export function getScimDBName(tenantId?: string) {
+  if (!tenantId) {
+    tenantId = getTenantId()
+  }
+  if (tenantId === DEFAULT_TENANT_ID) {
+    return StaticDatabases.SCIM_LOGS.name
+  } else {
+    return `${tenantId}${SEPARATOR}${StaticDatabases.SCIM_LOGS.name}`
+  }
+}
+
 export function baseGlobalDBName(tenantId: string | undefined | null) {
   if (!tenantId || tenantId === DEFAULT_TENANT_ID) {
     return StaticDatabases.GLOBAL.name
