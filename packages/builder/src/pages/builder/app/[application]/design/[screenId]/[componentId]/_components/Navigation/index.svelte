@@ -133,6 +133,16 @@
             on:change={e => update("title", e.detail)}
             updateOnChange={false}
           />
+
+          <div class="label">
+            <Label size="M">Text align</Label>
+          </div>
+          <Select
+            options={["Left", "Center", "Right"]}
+            plaveholder={null}
+            value={$navigationStore.textAlign}
+            on:change={e => update("textAlign", e.detail)}
+          />
         {/if}
         <div class="label">
           <Label>Background</Label>
