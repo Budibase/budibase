@@ -20,7 +20,8 @@ import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
-import { blacklist } from "@budibase/backend-core"
+import { blacklist, context, objectStore } from "@budibase/backend-core"
+import * as uuid from "uuid"
 
 const BodyTypes = {
   NONE: "none",
@@ -156,7 +157,22 @@ class RestIntegration implements IntegrationBase {
         }
         raw = rawXml
       } else if (contentType.includes("application/pdf")) {
-        data = await response.arrayBuffer() // Save PDF as ArrayBuffer
+        data = await response.arrayBuffer()
+        raw = Buffer.from(data)
+      } else if (contentType.includes("image/")) {
+        const data = await response.arrayBuffer()
+        let bucketName = `tmp-bucket-${Date.now()}`
+
+        // filenames converted to UUIDs so they are unique
+        const processedFileName = `${uuid.v4()}.svg`
+        const key = `${context.getProdAppId()}/attachments/${processedFileName}`
+
+        await objectStore.upload({
+          bucket: bucketName,
+          filename: key,
+          type: contentType,
+          body: Buffer.from(data),
+        })
         raw = Buffer.from(data)
       } else {
         data = await response.text()

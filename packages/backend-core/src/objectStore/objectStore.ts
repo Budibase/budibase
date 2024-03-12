@@ -26,12 +26,13 @@ type ListParams = {
 type UploadParams = {
   bucket: string
   filename: string
-  path: string
+  path?: string
   type?: string | null
   // can be undefined, we will remove it
   metadata?: {
     [key: string]: string | undefined
   }
+  body?: Buffer
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -41,6 +42,7 @@ const CONTENT_TYPE_MAP: any = {
   js: "application/javascript",
   json: "application/json",
   gz: "application/gzip",
+  svg: "image/svg+xml",
 }
 
 const STRING_CONTENT_TYPES = [
@@ -105,8 +107,13 @@ export function ObjectStore(
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export async function makeSureBucketExists(client: any, bucketName: string) {
+export async function makeSureBucketExists(
+  client: any,
+  bucketName: string,
+  addLifecycleConfig: boolean = false
+) {
   bucketName = sanitizeBucket(bucketName)
+
   try {
     await client
       .headBucket({
@@ -146,10 +153,10 @@ export async function upload({
   path,
   type,
   metadata,
+  body,
 }: UploadParams) {
   const extension = filename.split(".").pop()
-  const fileBytes = fs.readFileSync(path)
-
+  const fileBytes = path ? fs.readFileSync(path) : body
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
 
