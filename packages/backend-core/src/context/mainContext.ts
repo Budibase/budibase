@@ -129,7 +129,10 @@ export async function doInAutomationContext<T>(params: {
       appId: params.appId,
       automationId: params.automationId,
     },
-    params.task
+    async () => {
+      await ensureSnippetContext()
+      return await params.task()
+    }
   )
 }
 
