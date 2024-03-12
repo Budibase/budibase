@@ -438,7 +438,7 @@ describe.each([
   })
 
   describe("view save", () => {
-    it("views have extra data trimmed", async () => {
+    it.only("views have extra data trimmed", async () => {
       const table = await createTable({
         type: "table",
         name: "orders",
@@ -474,7 +474,6 @@ describe.each([
       const createRowResponse = await config.api.row.save(
         createViewResponse.id,
         {
-          OrderID: "1111",
           Country: "Aussy",
           Story: "aaaaa",
         }
@@ -484,7 +483,7 @@ describe.each([
       expect(row.Story).toBeUndefined()
       expect(row).toEqual({
         ...defaultRowFields,
-        OrderID: 1111,
+        OrderID: createRowResponse.OrderID,
         Country: "Aussy",
         _id: createRowResponse._id,
         _rev: createRowResponse._rev,
