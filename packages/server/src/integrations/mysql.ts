@@ -400,28 +400,6 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     }
   }
 
-  _postProcessJson(json: QueryJson, results: any) {
-    const table = json.meta?.table
-    if (!table) {
-      return results
-    }
-    for (const [name, field] of Object.entries(table.schema)) {
-      if (
-        field.type === FieldType.JSON ||
-        (field.type === FieldType.BB_REFERENCE &&
-          field.subtype === FieldSubtype.USERS)
-      ) {
-        const fullName = `${table.name}.${name}`
-        for (let row of results) {
-          if (typeof row[fullName] === "string") {
-            row[fullName] = JSON.parse(row[fullName])
-          }
-        }
-      }
-    }
-    return results
-  }
-
   async getExternalSchema() {
     try {
       const [databaseResult] = await this.internalQuery({
