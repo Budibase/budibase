@@ -46,9 +46,9 @@ jest.unmock("mssql")
 const { basicRow } = setup.structures
 
 describe.each([
-  // ["internal", undefined],
-  // ["postgres", databaseTestProviders.postgres],
-  // ["mysql", databaseTestProviders.mysql],
+  ["internal", undefined],
+  ["postgres", databaseTestProviders.postgres],
+  ["mysql", databaseTestProviders.mysql],
   ["mssql", databaseTestProviders.mssql],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
@@ -1604,35 +1604,35 @@ describe.each([
   })
 
   describe.each([
-    // [
-    //   "relationship fields",
-    //   (): Record<string, FieldSchema> => ({
-    //     user: {
-    //       name: "user",
-    //       relationshipType: RelationshipType.ONE_TO_MANY,
-    //       type: FieldType.LINK,
-    //       tableId: o2mTable._id!,
-    //       fieldName: "fk_o2m",
-    //     },
-    //     users: {
-    //       name: "users",
-    //       relationshipType: RelationshipType.MANY_TO_MANY,
-    //       type: FieldType.LINK,
-    //       tableId: m2mTable._id!,
-    //       fieldName: "fk_m2m",
-    //     },
-    //   }),
-    //   (tableId: string) =>
-    //     config.api.row.save(tableId, {
-    //       name: uuid.v4(),
-    //       description: generator.paragraph(),
-    //       tableId,
-    //     }),
-    //   (row: Row) => ({
-    //     _id: row._id,
-    //     primaryDisplay: row.name,
-    //   }),
-    // ],
+    [
+      "relationship fields",
+      (): Record<string, FieldSchema> => ({
+        user: {
+          name: "user",
+          relationshipType: RelationshipType.ONE_TO_MANY,
+          type: FieldType.LINK,
+          tableId: o2mTable._id!,
+          fieldName: "fk_o2m",
+        },
+        users: {
+          name: "users",
+          relationshipType: RelationshipType.MANY_TO_MANY,
+          type: FieldType.LINK,
+          tableId: m2mTable._id!,
+          fieldName: "fk_m2m",
+        },
+      }),
+      (tableId: string) =>
+        config.api.row.save(tableId, {
+          name: uuid.v4(),
+          description: generator.paragraph(),
+          tableId,
+        }),
+      (row: Row) => ({
+        _id: row._id,
+        primaryDisplay: row.name,
+      }),
+    ],
     [
       "bb reference fields",
       (): Record<string, FieldSchema> => ({
@@ -1960,8 +1960,8 @@ describe.each([
       ]
 
       await config.api.row.save(tableId, rows[0])
-      // await config.api.row.save(tableId, rows[1])
-      // await config.api.row.save(tableId, rows[2])
+      await config.api.row.save(tableId, rows[1])
+      await config.api.row.save(tableId, rows[2])
 
       const res = await config.api.row.search(tableId)
 
