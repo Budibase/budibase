@@ -14,6 +14,8 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  FieldType,
+  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -26,7 +28,7 @@ import {
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
-import sqlServer from "mssql"
+import sqlServer, { IRecordSet, IResult } from "mssql"
 
 const DEFAULT_SCHEMA = "dbo"
 
@@ -503,8 +505,32 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
     const processFn = (result: any) =>
-      result.recordset ? result.recordset : [{ [operation]: true }]
+      result.recordset
+        ? this._postProcessJson(json, result.recordset)
+        : [{ [operation]: true }]
     return this.queryWithReturning(json, queryFn, processFn)
+  }
+
+  _postProcessJson(json: QueryJson, results: IRecordSet<any>) {
+    const table = json.meta?.table
+    if (!table) {
+      return results
+    }
+    for (const [name, field] of Object.entries(table.schema)) {
+      if (
+        field.type === FieldType.JSON ||
+        (field.type === FieldType.BB_REFERENCE &&
+          field.subtype === FieldSubtype.USERS)
+      ) {
+        const fullName = `${table.name}.${name}`
+        for (let row of results) {
+          if (typeof row[fullName] === "string") {
+            row[fullName] = JSON.parse(row[fullName])
+          }
+        }
+      }
+    }
+    return results
   }
 
   async getExternalSchema() {
