@@ -50,6 +50,7 @@ describe.each([
   ["postgres", databaseTestProviders.postgres],
   ["mysql", databaseTestProviders.mysql],
   ["mssql", databaseTestProviders.mssql],
+  ["mariadb", databaseTestProviders.mariadb],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
 

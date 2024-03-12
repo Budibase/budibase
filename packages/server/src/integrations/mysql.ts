@@ -13,6 +13,8 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  FieldType,
+  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -386,10 +388,38 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
-      return await this.queryWithReturning(json, queryFn)
+      const processFn = (result: any) => {
+        if (json?.meta?.table && Array.isArray(result)) {
+          return this.convertJsonStringColumns(json.meta.table, result)
+        }
+        return result
+      }
+      return await this.queryWithReturning(json, queryFn, processFn)
     } finally {
       await this.disconnect()
     }
+  }
+
+  _postProcessJson(json: QueryJson, results: any) {
+    const table = json.meta?.table
+    if (!table) {
+      return results
+    }
+    for (const [name, field] of Object.entries(table.schema)) {
+      if (
+        field.type === FieldType.JSON ||
+        (field.type === FieldType.BB_REFERENCE &&
+          field.subtype === FieldSubtype.USERS)
+      ) {
+        const fullName = `${table.name}.${name}`
+        for (let row of results) {
+          if (typeof row[fullName] === "string") {
+            row[fullName] = JSON.parse(row[fullName])
+          }
+        }
+      }
+    }
+    return results
   }
 
   async getExternalSchema() {
