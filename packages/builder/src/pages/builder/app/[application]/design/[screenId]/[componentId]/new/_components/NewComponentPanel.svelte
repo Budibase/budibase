@@ -154,6 +154,7 @@
         }
 
         // Check if the component is allowed as a child
+        console.log(child.component);
         return allowedComponents.includes(child.component)
       })
       if (matchedChildren.length) {

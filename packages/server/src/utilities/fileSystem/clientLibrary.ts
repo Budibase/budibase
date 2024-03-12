@@ -120,7 +120,12 @@ export async function updateClientLibrary(appId: string) {
       ContentType: "application/javascript",
     }
   )
-  await Promise.all([manifestUpload, clientUpload])
+
+  const manifestSrc = fs.promises.readFile(manifest, 'utf8')
+
+  await Promise.all([manifestUpload, clientUpload, manifestSrc])
+
+  return JSON.parse(await manifestSrc);
 }
 
 /**
@@ -130,30 +135,41 @@ export async function updateClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  // Copy backups manifest to tmp directory
-  const tmpManifestPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "manifest.json.bak")
-  )
+  console.log("doing revert");
+  let manifestPath, clientPath;
 
-  // Copy backup client lib to tmp
-  const tmpClientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js.bak")
-  )
+  if (env.isDev()) {
+    console.log("dev mode");
+    clientPath = join(__dirname, "/oldClientVersions/1.3.2/app.js")
+    manifestPath = join(__dirname, "/oldClientVersions/1.3.2/manifest.json")
+  } else {
+    console.log("not dev mode");
+    // Copy backups manifest to tmp directory
+    manifestPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      join(appId, "manifest.json.bak")
+    )
+
+    // Copy backup client lib to tmp
+    clientPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      join(appId, "budibase-client.js.bak")
+    )
+  }
 
   // Upload backups as new versions
   const manifestUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
-    path: tmpManifestPath,
+    path: manifestPath,
     type: "application/json",
   })
   const clientUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
-    path: tmpClientPath,
+    path: clientPath,
     type: "application/javascript",
   })
   await Promise.all([manifestUpload, clientUpload])
+    console.log("uploads done");
 }

@@ -271,6 +271,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
+
     let newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
@@ -301,6 +302,10 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
         componentValidation: true,
         disableUserMetadata: true,
       },
+    }
+
+    if (env.isDev()) {
+      newApplication.revertableVersion = "1.3.2"
     }
 
     // If we used a template or imported an app there will be an existing doc.
@@ -470,10 +475,11 @@ export async function updateClient(ctx: UserCtx) {
   const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
+  let manifest;
   // Update client library and manifest
   if (!env.isTest()) {
     await backupClientLibrary(ctx.params.appId)
-    await updateClientLibrary(ctx.params.appId)
+    manifest = await updateClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -481,6 +487,10 @@ export async function updateClient(ctx: UserCtx) {
   const appPackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
+    features: {
+      ...application.features ?? {},
+      skeletonLoader: manifest.features.skeletonLoader ?? false
+    }
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)

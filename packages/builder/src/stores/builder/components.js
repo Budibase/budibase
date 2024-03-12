@@ -123,6 +123,7 @@ export class ComponentStore extends BudiStore {
     if (!componentType) {
       return null
     }
+
     return get(this.store).components[componentType]
   }
 

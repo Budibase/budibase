@@ -322,18 +322,25 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 }
 
 export const serveClientLibrary = async function (ctx: Ctx) {
+  const version = ctx.request.query.version;
+
+  console.log("before");
+  console.log(version)
+  console.log("after");
+
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd()) {
+  if (env.isProd() || (env.isDev() && version !== "0.0.0")) {
+    console.log("in other one");
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev()) {
+  } else if (env.isDev() && version === "0.0.0") {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {

@@ -41,14 +41,18 @@
 
   const update = async () => {
     try {
+      console.log(1);
       await API.updateAppClientVersion(appId)
 
+      console.log(2);
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
         `App updated successfully to version ${$appStore.upgradableVersion}`
       )
+      console.log(3);
       onComplete()
+      console.log(4);
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }
@@ -69,6 +73,10 @@
     }
     updateModal.hide()
   }
+
+  $: {
+    console.log("am i ever here");
+  }
 </script>
 
 {#if !hideIcon && updateAvailable}
@@ -80,32 +88,21 @@
     confirmText="Update"
     cancelText={updateAvailable ? "Cancel" : "Close"}
     onConfirm={update}
-    showConfirmButton={updateAvailable}
+    showConfirmButton={true}
   >
     <div slot="footer">
-      {#if revertAvailable}
         <Button quiet secondary on:click={revert}>Revert</Button>
-      {/if}
     </div>
-    {#if updateAvailable}
       <Body size="S">
         This app is currently using version <b>{$appStore.version}</b>, but
         version
         <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
         features, performance improvements and bug fixes.
       </Body>
-    {:else}
-      <Body size="S">
-        This app is currently using version <b>{$appStore.version}</b> which is the
-        latest version available.
-      </Body>
-    {/if}
-    {#if revertAvailable}
       <Body size="S">
         You can revert this app to version
         <b>{$appStore.revertableVersion}</b>
         if you're experiencing issues with the current version.
       </Body>
-    {/if}
   </ModalContent>
 </Modal>

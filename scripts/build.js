@@ -103,13 +103,29 @@ async function runBuild(entry, outfile) {
     await Promise.all(fileCopyPromises)
   })()
 
+  const oldClientVersions = (async () => {
+    try {
+      const rootDir = await readdir('./build/oldClientVersions/', { recursive: true, withFileTypes: true });
+      const files = rootDir.filter(entry => entry.isFile())
+      const dirs = rootDir.filter(entry => entry.isDirectory())
+
+      const mkdirPromises = dirs.map(dir => mkdir(`dist/oldClientVersions/${dir.name}`, { recursive: true }))
+      await Promise.all(mkdirPromises)
+
+      const fileCopyPromises = files.map(file => copyFile(`${file.path}/${file.name}`, `dist/${file.path.slice(5)}/${file.name}`))
+      await Promise.all(fileCopyPromises)
+    } catch (e) {
+      console.log(e);
+    }
+  })()
+
   const mainBuild = build({
     ...sharedConfig,
     platform: "node",
     outfile,
   })
 
-  await Promise.all([hbsFiles, mainBuild])
+  await Promise.all([hbsFiles, mainBuild, oldClientVersions])
 
   fs.writeFileSync(
     `dist/${path.basename(outfile)}.meta.json`,
