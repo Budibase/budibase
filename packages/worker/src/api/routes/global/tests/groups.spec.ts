@@ -319,12 +319,16 @@ describe("/api/global/groups", () => {
       })
     })
 
-    it("update should return 200", async () => {
+    it("update should return forbidden", async () => {
       await config.withUser(builder, async () => {
-        await config.api.groups.updateGroupUsers(group._id!, {
-          add: [builder._id!],
-          remove: [],
-        })
+        await config.api.groups.updateGroupUsers(
+          group._id!,
+          {
+            add: [builder._id!],
+            remove: [],
+          },
+          { expect: 403 }
+        )
       })
     })
   })
