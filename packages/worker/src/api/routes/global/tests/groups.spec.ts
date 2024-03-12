@@ -103,18 +103,15 @@ describe("/api/global/groups", () => {
       expect(events.group.updated).toBeCalledTimes(1)
       expect(events.group.permissionsEdited).not.toBeCalled()
     })
+  })
 
-    describe("destroy", () => {
-      it("should be able to delete a basic group", async () => {
-        const group = structures.groups.UserGroup()
-        let oldGroup = await config.api.groups.saveGroup(group)
-        await config.api.groups.deleteGroup(
-          oldGroup.body._id,
-          oldGroup.body._rev
-        )
+  describe("destroy", () => {
+    it("should be able to delete a basic group", async () => {
+      const group = structures.groups.UserGroup()
+      let oldGroup = await config.api.groups.saveGroup(group)
+      await config.api.groups.deleteGroup(oldGroup.body._id, oldGroup.body._rev)
 
-        expect(events.group.deleted).toBeCalledTimes(1)
-      })
+      expect(events.group.deleted).toBeCalledTimes(1)
     })
   })
 
