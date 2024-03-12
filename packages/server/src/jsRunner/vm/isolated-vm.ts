@@ -6,7 +6,7 @@ import crypto from "crypto"
 import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
-import { VM } from "@budibase/types"
+import { Snippet, VM } from "@budibase/types"
 import { iifeWrapper } from "@budibase/string-templates"
 import environment from "../../environment"
 
@@ -98,11 +98,13 @@ export class IsolatedVM implements VM {
     return this
   }
 
-  withSnippets() {
+  withSnippets(snippets?: Snippet[]) {
     const snippetsSource = loadBundle(BundleType.SNIPPETS)
-    const script = this.isolate.compileScriptSync(
-      `${snippetsSource};snippets=snippets.default;`
-    )
+    const script = this.isolate.compileScriptSync(`
+      const snippetDefinitions = ${JSON.stringify(snippets || [])};
+      ${snippetsSource};
+      snippets = snippets.default;
+    `)
     script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
     new Promise(() => {
       script.release()
