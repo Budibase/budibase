@@ -504,33 +504,15 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
-    const processFn = (result: any) =>
-      result.recordset
-        ? this._postProcessJson(json, result.recordset)
-        : [{ [operation]: true }]
-    return this.queryWithReturning(json, queryFn, processFn)
-  }
-
-  _postProcessJson(json: QueryJson, results: IRecordSet<any>) {
-    const table = json.meta?.table
-    if (!table) {
-      return results
-    }
-    for (const [name, field] of Object.entries(table.schema)) {
-      if (
-        field.type === FieldType.JSON ||
-        (field.type === FieldType.BB_REFERENCE &&
-          field.subtype === FieldSubtype.USERS)
-      ) {
-        const fullName = `${table.name}.${name}`
-        for (let row of results) {
-          if (typeof row[fullName] === "string") {
-            row[fullName] = JSON.parse(row[fullName])
-          }
-        }
+    const processFn = (result: any) => {
+      if (json?.meta?.table && result.recordset) {
+        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+      } else if (result.recordset) {
+        return result.recordset
       }
+      return [{ [operation]: true }]
     }
-    return results
+    return this.queryWithReturning(json, queryFn, processFn)
   }
 
   async getExternalSchema() {
