@@ -47,14 +47,15 @@ export class GroupsAPI extends TestAPI {
 
   updateGroupUsers = (
     id: string,
-    body: { add: string[]; remove: string[] }
+    body: { add: string[]; remove: string[] },
+    { expect } = { expect: 200 }
   ) => {
     return this.request
       .post(`/api/global/groups/${id}/users`)
       .send(body)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
-      .expect(200)
+      .expect(expect)
   }
 
   fetch = ({ expect } = { expect: 200 }) => {
