@@ -11,7 +11,6 @@ import {
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { context } from "@budibase/backend-core"
-import { getCurrentContext } from "@budibase/backend-core/src/context"
 
 interface FormulaOpts {
   dynamic?: boolean
