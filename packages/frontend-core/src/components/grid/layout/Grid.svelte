@@ -27,6 +27,7 @@
     GutterWidth,
     DefaultRowHeight,
   } from "../lib/constants"
+  import EnvironmentToggle from "../controls/EnvironmentToggle.svelte"
 
   export let API = null
   export let datasource = null
@@ -131,6 +132,7 @@
   {#if showControls}
     <div class="controls">
       <div class="controls-left">
+        <EnvironmentToggle />
         <slot name="filter" />
         <SortButton />
         <HideColumnsButton />
