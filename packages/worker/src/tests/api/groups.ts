@@ -7,7 +7,10 @@ export class GroupsAPI extends TestAPI {
     super(config)
   }
 
-  saveGroup = (group: UserGroup, { expect } = { expect: 200 }) => {
+  saveGroup = (
+    group: UserGroup,
+    { expect }: { expect: number | object } = { expect: 200 }
+  ) => {
     return this.request
       .post(`/api/global/groups`)
       .send(group)
@@ -57,6 +60,14 @@ export class GroupsAPI extends TestAPI {
   fetch = ({ expect } = { expect: 200 }) => {
     return this.request
       .get(`/api/global/groups`)
+      .set(this.config.defaultHeaders())
+      .expect("Content-Type", /json/)
+      .expect(expect)
+  }
+
+  find = (id: string, { expect } = { expect: 200 }) => {
+    return this.request
+      .get(`/api/global/groups/${id}`)
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(expect)
