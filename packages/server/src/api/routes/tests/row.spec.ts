@@ -41,13 +41,15 @@ tk.freeze(timestamp)
 jest.setTimeout(99999999)
 jest.unmock("mysql2")
 jest.unmock("mysql2/promise")
+jest.unmock("mssql")
 
 const { basicRow } = setup.structures
 
 describe.each([
   // ["internal", undefined],
   // ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
+  // ["mysql", databaseTestProviders.mysql],
+  ["mssql", databaseTestProviders.mssql],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
 
