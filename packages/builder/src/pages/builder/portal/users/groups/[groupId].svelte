@@ -139,7 +139,7 @@
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} {readonly} />
+      <GroupUsers {groupId} {readonly} {isScimGroup} />
     </Layout>
 
     <Layout noPadding gap="S">
