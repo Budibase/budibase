@@ -270,7 +270,7 @@ export const insertBinding = (view, from, to, text, mode) => {
   })
 }
 
-export const insertSnippet = (view, from, to, text, mode) => {
+export const insertSnippet = (view, from, to, text) => {
   const parsedInsert = `${text}()`
   let cursorPos = from + parsedInsert.length - 1
   view.dispatch({
