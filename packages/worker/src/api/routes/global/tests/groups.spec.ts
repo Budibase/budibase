@@ -103,6 +103,71 @@ describe("/api/global/groups", () => {
       expect(events.group.updated).toBeCalledTimes(1)
       expect(events.group.permissionsEdited).not.toBeCalled()
     })
+
+    describe("scim", () => {
+      async function createScimGroup() {
+        mocks.licenses.useScimIntegration()
+        await config.setSCIMConfig(true)
+
+        const scimGroup = await config.api.scimGroupsAPI.post({
+          body: structures.scim.createGroupRequest({
+            displayName: generator.word(),
+          }),
+        })
+
+        const { body: group } = await config.api.groups.find(scimGroup.id)
+
+        expect(group).toBeDefined()
+        return group
+      }
+
+      it("update will not allow sending SCIM fields", async () => {
+        const group = await createScimGroup()
+
+        const updatedGroup: UserGroup = {
+          ...group,
+          name: generator.word(),
+        }
+        await config.api.groups.saveGroup(updatedGroup, {
+          expect: {
+            message: 'Invalid body - "scimInfo" is not allowed',
+            status: 400,
+          },
+        })
+
+        expect(events.group.updated).not.toBeCalled()
+      })
+
+      it("update will not amend the SCIM fields", async () => {
+        const group: UserGroup = await createScimGroup()
+
+        const updatedGroup: UserGroup = {
+          ...group,
+          name: generator.word(),
+          scimInfo: undefined,
+        }
+
+        await config.api.groups.saveGroup(updatedGroup, {
+          expect: 200,
+        })
+
+        expect(events.group.updated).toBeCalledTimes(1)
+        expect(
+          (
+            await config.api.groups.find(group._id!, {
+              expect: 200,
+            })
+          ).body
+        ).toEqual(
+          expect.objectContaining({
+            ...group,
+            name: updatedGroup.name,
+            scimInfo: group.scimInfo,
+            _rev: expect.any(String),
+          })
+        )
+      })
+    })
   })
 
   describe("destroy", () => {
