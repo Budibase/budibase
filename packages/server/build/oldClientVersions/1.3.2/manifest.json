@@ -12,7 +12,7 @@
     "showNotificationAction": true
   },
   "layout": {
-    "component": "layout",
+    "component": "@budibase/standard-components/layout",
     "name": "Layout",
     "description": "This component is specific only to layouts",
     "icon": "Sandbox",
@@ -81,7 +81,7 @@
     ]
   },
   "container": {
-    "component": "container",
+    "component": "@budibase/standard-components/container",
     "name": "Container",
     "description": "This component contains things within itself",
     "icon": "Selection",
@@ -249,7 +249,7 @@
     ]
   },
   "section": {
-    "component": "section",
+    "component": "@budibase/standard-components/section",
     "name": "Section",
     "description": "Add a section to your application",
     "icon": "ColumnTwoB",
@@ -268,14 +268,14 @@
     ]
   },
   "screenslot": {
-    "component": "screenslot",
+    "component": "@budibase/standard-components/screenslot",
     "name": "Screenslot",
     "icon": "WebPage",
     "description": "Contains your app screens",
     "static": true
   },
   "button": {
-    "component": "button",
+    "component": "@budibase/standard-components/button",
     "name": "Button",
     "description": "A basic html button that is ready for styling",
     "icon": "Button",
@@ -367,7 +367,7 @@
     ]
   },
   "divider": {
-    "component": "divider",
+    "component": "@budibase/standard-components/divider",
     "name": "Divider",
     "description": "A basic divider",
     "icon": "Separator",
@@ -403,7 +403,7 @@
     ]
   },
   "repeater": {
-    "component": "repeater",
+    "component": "@budibase/standard-components/repeater",
     "name": "Repeater",
     "description": "A configurable data list that attaches to your backend tables.",
     "icon": "JourneyData",
@@ -558,7 +558,7 @@
     ]
   },
   "stackedlist": {
-    "component": "stackedlist",
+    "component": "@budibase/standard-components/stackedlist",
     "deprecated": true,
     "name": "Stacked List",
     "icon": "TaskList",
@@ -591,7 +591,7 @@
     ]
   },
   "card": {
-    "component": "card",
+    "component": "@budibase/standard-components/card",
     "name": "Vertical Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewColumn",
@@ -664,7 +664,7 @@
     ]
   },
   "text": {
-    "component": "text",
+    "component": "@budibase/standard-components/text",
     "name": "Paragraph",
     "description": "A component for displaying paragraph text.",
     "icon": "TextParagraph",
@@ -787,7 +787,7 @@
     ]
   },
   "heading": {
-    "component": "heading",
+    "component": "@budibase/standard-components/heading",
     "name": "Headline",
     "icon": "TextBold",
     "description": "A component for displaying heading text",
@@ -910,7 +910,7 @@
     ]
   },
   "tag": {
-    "component": "tag",
+    "component": "@budibase/standard-components/tag",
     "name": "Tag",
     "icon": "Label",
     "showSettingsBar": true,
@@ -962,7 +962,7 @@
     ]
   },
   "image": {
-    "component": "image",
+    "component": "@budibase/standard-components/image",
     "name": "Image",
     "description": "A basic component for displaying images",
     "icon": "Image",
@@ -982,7 +982,7 @@
     ]
   },
   "backgroundimage": {
-    "component": "backgroundimage",
+    "component": "@budibase/standard-components/backgroundimage",
     "name": "Background Image",
     "description": "A background image",
     "icon": "Images",
@@ -1046,7 +1046,7 @@
     ]
   },
   "icon": {
-    "component": "icon",
+    "component": "@budibase/standard-components/icon",
     "name": "Icon",
     "description": "A basic component for displaying icons",
     "icon": "Shapes",
@@ -1141,7 +1141,7 @@
     ]
   },
   "navigation": {
-    "component": "navigation",
+    "component": "@budibase/standard-components/navigation",
     "deprecated": true,
     "name": "Nav Bar",
     "description": "A component for handling the navigation within your app.",
@@ -1165,7 +1165,7 @@
     ]
   },
   "link": {
-    "component": "link",
+    "component": "@budibase/standard-components/link",
     "name": "Link",
     "description": "A basic link component for internal and external links",
     "icon": "Link",
@@ -1283,7 +1283,7 @@
     ]
   },
   "cardhorizontal": {
-    "component": "cardhorizontal",
+    "component": "@budibase/standard-components/cardhorizontal",
     "name": "Horizontal Card",
     "description": "A basic card component that can contain content and actions.",
     "icon": "ViewRow",
@@ -1377,7 +1377,7 @@
     ]
   },
   "cardstat": {
-    "component": "cardstat",
+    "component": "@budibase/standard-components/cardstat",
     "name": "Stat Card",
     "description": "A card component for displaying numbers.",
     "icon": "Card",
@@ -1406,7 +1406,7 @@
     ]
   },
   "embed": {
-    "component": "embed",
+    "component": "@budibase/standard-components/embed",
     "name": "Embed",
     "icon": "Code",
     "description": "Embed content from 3rd party sources",
@@ -1426,7 +1426,7 @@
     ]
   },
   "bar": {
-    "component": "bar",
+    "component": "@budibase/standard-components/bar",
     "name": "Bar Chart",
     "description": "Bar chart",
     "icon": "GraphBarVertical",
@@ -1588,7 +1588,7 @@
     ]
   },
   "line": {
-    "component": "line",
+    "component": "@budibase/standard-components/line",
     "name": "Line Chart",
     "description": "Line chart",
     "icon": "GraphTrend",
@@ -1749,7 +1749,7 @@
     ]
   },
   "area": {
-    "component": "area",
+    "component": "@budibase/standard-components/area",
     "name": "Area Chart",
     "description": "Line chart",
     "icon": "GraphAreaStacked",
@@ -1922,7 +1922,7 @@
     ]
   },
   "pie": {
-    "component": "pie",
+    "component": "@budibase/standard-components/pie",
     "name": "Pie Chart",
     "description": "Pie chart",
     "icon": "GraphPie",
@@ -2051,7 +2051,7 @@
     ]
   },
   "donut": {
-    "component": "donut",
+    "component": "@budibase/standard-components/donut",
     "name": "Donut Chart",
     "description": "Donut chart",
     "icon": "GraphDonut",
@@ -2180,7 +2180,7 @@
     ]
   },
   "candlestick": {
-    "component": "candlestick",
+    "component": "@budibase/standard-components/candlestick",
     "name": "Candlestick Chart",
     "description": "Candlestick chart",
     "icon": "GraphBarVerticalStacked",
@@ -2275,7 +2275,7 @@
     ]
   },
   "form": {
-    "component": "form",
+    "component": "@budibase/standard-components/form",
     "name": "Form",
     "icon": "Form",
     "hasChildren": true,
@@ -2363,7 +2363,7 @@
     ]
   },
   "formstep": {
-    "component": "formstep",
+    "component": "@budibase/standard-components/formstep",
     "name": "Form Step",
     "icon": "AssetsAdded",
     "hasChildren": true,
@@ -2386,7 +2386,7 @@
     ]
   },
   "fieldgroup": {
-    "component": "fieldgroup",
+    "component": "@budibase/standard-components/fieldgroup",
     "name": "Field Group",
     "icon": "Group",
     "illegalChildren": [
@@ -2420,7 +2420,7 @@
     ]
   },
   "stringfield": {
-    "component": "stringfield",
+    "component": "@budibase/standard-components/stringfield",
     "name": "Text Field",
     "icon": "Text",
     "illegalChildren": [
@@ -2511,7 +2511,7 @@
     ]
   },
   "numberfield": {
-    "component": "numberfield",
+    "component": "@budibase/standard-components/numberfield",
     "name": "Number Field",
     "icon": "123",
     "styles": [
@@ -2568,7 +2568,7 @@
     ]
   },
   "passwordfield": {
-    "component": "passwordfield",
+    "component": "@budibase/standard-components/passwordfield",
     "name": "Password Field",
     "icon": "LockClosed",
     "styles": [
@@ -2625,7 +2625,7 @@
     ]
   },
   "optionsfield": {
-    "component": "optionsfield",
+    "component": "@budibase/standard-components/optionsfield",
     "name": "Options Picker",
     "icon": "Menu",
     "styles": [
@@ -2793,7 +2793,7 @@
     ]
   },
   "multifieldselect": {
-    "component": "multifieldselect",
+    "component": "@budibase/standard-components/multifieldselect",
     "name": "Multi-select Picker",
     "icon": "ViewList",
     "styles": [
@@ -2955,7 +2955,7 @@
     ]
   },
   "booleanfield": {
-    "component": "booleanfield",
+    "component": "@budibase/standard-components/booleanfield",
     "name": "Checkbox",
     "icon": "SelectBox",
     "editable": true,
@@ -3033,7 +3033,7 @@
     ]
   },
   "longformfield": {
-    "component": "longformfield",
+    "component": "@budibase/standard-components/longformfield",
     "name": "Long Form Field",
     "icon": "TextAlignLeft",
     "styles": [
@@ -3109,7 +3109,7 @@
     ]
   },
   "datetimefield": {
-    "component": "datetimefield",
+    "component": "@budibase/standard-components/datetimefield",
     "name": "Date Picker",
     "icon": "Date",
     "styles": [
@@ -3190,7 +3190,7 @@
     ]
   },
   "embeddedmap": {
-    "component": "embeddedmap",
+    "component": "@budibase/standard-components/embeddedmap",
     "name": "Embedded Map",
     "icon": "Location",
     "styles": [
@@ -3307,7 +3307,7 @@
     ]
   },
   "attachmentfield": {
-    "component": "attachmentfield",
+    "component": "@budibase/standard-components/attachmentfield",
     "name": "Attachment",
     "icon": "Attach",
     "styles": [
@@ -3365,7 +3365,7 @@
     ]
   },
   "relationshipfield": {
-    "component": "relationshipfield",
+    "component": "@budibase/standard-components/relationshipfield",
     "name": "Relationship Picker",
     "icon": "TaskList",
     "styles": [
@@ -3428,7 +3428,7 @@
     ]
   },
   "jsonfield": {
-    "component": "jsonfield",
+    "component": "@budibase/standard-components/jsonfield",
     "name": "JSON Field",
     "icon": "Brackets",
     "styles": [
@@ -3477,7 +3477,7 @@
     ]
   },
   "s3upload": {
-    "component": "s3upload",
+    "component": "@budibase/standard-components/s3upload",
     "name": "S3 File Upload",
     "info": "This component can't be used with S3 datasources that use custom endpoints.",
     "icon": "UploadToCloud",
@@ -3537,7 +3537,7 @@
     ]
   },
   "dataprovider": {
-    "component": "dataprovider",
+    "component": "@budibase/standard-components/dataprovider",
     "name": "Data Provider",
     "info": "Pagination is only available for data stored in tables.",
     "icon": "Data",
@@ -3615,7 +3615,7 @@
     }
   },
   "table": {
-    "component": "table",
+    "component": "@budibase/standard-components/table",
     "name": "Table",
     "icon": "Table",
     "illegalChildren": [
@@ -3715,7 +3715,7 @@
     }
   },
   "daterangepicker": {
-    "component": "daterangepicker",
+    "component": "@budibase/standard-components/daterangepicker",
     "name": "Date Range",
     "icon": "Calendar",
     "styles": [
@@ -3753,7 +3753,7 @@
     ]
   },
   "spectrumcard": {
-    "component": "spectrumcard",
+    "component": "@budibase/standard-components/spectrumcard",
     "name": "Card",
     "icon": "PersonalizationField",
     "styles": [
@@ -3814,7 +3814,7 @@
     ]
   },
   "dynamicfilter": {
-    "component": "dynamicfilter",
+    "component": "@budibase/standard-components/dynamicfilter",
     "name": "Dynamic Filter",
     "icon": "Filter",
     "showSettingsBar": true,
@@ -3859,7 +3859,7 @@
     ]
   },
   "tableblock": {
-    "component": "tableblock",
+    "component": "@budibase/standard-components/tableblock",
     "block": true,
     "name": "Table block",
     "icon": "Table",
@@ -4025,7 +4025,7 @@
     ]
   },
   "cardsblock": {
-    "component": "cardsblock",
+    "component": "@budibase/standard-components/cardsblock",
     "block": true,
     "name": "Cards block",
     "icon": "PersonalizationField",
@@ -4196,7 +4196,7 @@
     }
   },
   "repeaterblock": {
-    "component": "repeaterblock",
+    "component": "@budibase/standard-components/repeaterblock",
     "name": "Repeater block",
     "icon": "ViewList",
     "illegalChildren": [
@@ -4415,7 +4415,7 @@
     ]
   },
   "markdownviewer": {
-    "component": "markdownviewer",
+    "component": "@budibase/standard-components/markdownviewer",
     "name": "Markdown Viewer",
     "icon": "Preview",
     "styles": [

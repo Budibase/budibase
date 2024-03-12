@@ -1,10 +1,11 @@
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
-import { objectStore } from "@budibase/backend-core"
+import { context, objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
+import {DocumentType} from "../../db/utils"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
@@ -135,15 +136,14 @@ export async function updateClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  console.log("doing revert");
   let manifestPath, clientPath;
 
   if (env.isDev()) {
-    console.log("dev mode");
-    clientPath = join(__dirname, "/oldClientVersions/1.3.2/app.js")
-    manifestPath = join(__dirname, "/oldClientVersions/1.3.2/manifest.json")
+    const db = context.getAppDB()
+    const app = await db.get<App>(DocumentType.APP_METADATA)
+    clientPath = join(__dirname, `/oldClientVersions/${app.revertableVersion}/app.js`)
+    manifestPath = join(__dirname, `/oldClientVersions/${app.revertableVersion}/manifest.json`)
   } else {
-    console.log("not dev mode");
     // Copy backups manifest to tmp directory
     manifestPath = await objectStore.retrieveToTmp(
       ObjectStoreBuckets.APPS,
@@ -171,5 +171,4 @@ export async function revertClientLibrary(appId: string) {
     type: "application/javascript",
   })
   await Promise.all([manifestUpload, clientUpload])
-    console.log("uploads done");
 }
