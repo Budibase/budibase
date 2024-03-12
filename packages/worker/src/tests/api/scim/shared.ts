@@ -1,13 +1,17 @@
 import TestConfiguration from "../../TestConfiguration"
 import { TestAPI } from "../base"
 
-const defaultConfig = {
+const defaultConfig: RequestSettings = {
   expect: 200,
   setHeaders: true,
   skipContentTypeCheck: false,
 }
 
-export type RequestSettings = typeof defaultConfig
+export type RequestSettings = {
+  expect: number | object
+  setHeaders: boolean
+  skipContentTypeCheck: boolean
+}
 
 export abstract class ScimTestAPI extends TestAPI {
   constructor(config: TestConfiguration) {
