@@ -23,7 +23,6 @@ export const account = (partial: Partial<Account> = {}): Account => {
     hosting: Hosting.SELF,
     createdAt: Date.now(),
     verified: true,
-    verificationSent: true,
     tier: "FREE", // DEPRECATED
     authType: AuthType.PASSWORD,
     name: generator.name(),

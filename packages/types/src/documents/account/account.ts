@@ -40,7 +40,6 @@ export interface Account extends CreateAccount {
   createdAt: number
   // registration
   verified: boolean
-  verificationSent: boolean
   // licensing
   tier: string // deprecated
   planType?: PlanType
