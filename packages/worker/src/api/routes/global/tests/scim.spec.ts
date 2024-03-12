@@ -2,6 +2,7 @@ import tk from "timekeeper"
 import _ from "lodash"
 import { generator, mocks, structures } from "@budibase/backend-core/tests"
 import {
+  CloudAccount,
   ScimCreateUserRequest,
   ScimGroupResponse,
   ScimUpdateRequest,
@@ -603,6 +604,25 @@ describe("scim", () => {
         await deleteScimUser(user.id, { expect: 204 })
 
         expect(events.user.deleted).toBeCalledTimes(1)
+      })
+
+      it("an account holder cannot be removed even when synched", async () => {
+        const account: CloudAccount = {
+          ...structures.accounts.account(),
+          budibaseUserId: user.id,
+          email: user.emails![0].value,
+        }
+        mocks.accounts.getAccount.mockResolvedValue(account)
+
+        await deleteScimUser(user.id, {
+          expect: {
+            message: "Account holder cannot be deleted",
+            status: 400,
+            error: { code: "http" },
+          },
+        })
+
+        await config.api.scimUsersAPI.find(user.id, { expect: 200 })
       })
     })
   })
