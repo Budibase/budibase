@@ -21,8 +21,9 @@ import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist, context, objectStore } from "@budibase/backend-core"
-import * as uuid from "uuid"
-
+const multipart = require("parse-multipart-data")
+import path from "path"
+import { v4 } from "uuid"
 const BodyTypes = {
   NONE: "none",
   FORM_DATA: "form",
@@ -130,68 +131,86 @@ class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(response: any, pagination: PaginationConfig | null) {
-    let data, raw, headers, presignedUrl, fileExtension
+    let data, raw, headers, presignedUrl, fileExtension, filename
 
     const contentType = response.headers.get("content-type") || ""
     const contentDisposition = response.headers.get("content-disposition") || ""
+    const matches =
+      /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition) || []
+    filename = matches[1]?.replace(/['"]/g, "") || ""
 
-    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i)
-    if (filenameMatch) {
-      const filename = filenameMatch[1]
-      const lastDotIndex = filename.lastIndexOf(".")
-      if (lastDotIndex !== -1) {
-        fileExtension = filename.slice(lastDotIndex + 1)
-      }
-    }
     try {
-      if (response.status === 204) {
-        data = []
-        raw = []
-      } else if (contentType.includes("application/json")) {
-        data = await response.json()
-        raw = JSON.stringify(data)
-      } else if (
-        contentType.includes("text/xml") ||
-        contentType.includes("application/xml")
-      ) {
-        const rawXml = await response.text()
-        data =
-          (await xmlParser(rawXml, {
-            explicitArray: false,
-            trim: true,
-            explicitRoot: false,
-          })) || {}
-        // there is only one structure, its an array, return the array so it appears as rows
-        const keys = Object.keys(data)
-        if (keys.length === 1 && Array.isArray(data[keys[0]])) {
-          data = data[keys[0]]
-        }
-        raw = rawXml
-      } else if (/^(image|video|audio|application|text)\//.test(contentType)) {
-        const data = await response.arrayBuffer()
-        let bucketName = `tmp-bucket-attachments-${context.getTenantId()}`
+      if (filename) {
+        const responseBuffer = await response.arrayBuffer()
+        fileExtension = path.extname(filename).slice(1)
 
-        const processedFileName = `${uuid.v4()}.${
-          fileExtension || contentType.split("/")[1]
-        }`
+        const processedFileName = `${v4()}.${fileExtension}`
         const key = `${context.getProdAppId()}/attachments/${processedFileName}`
 
         await objectStore.upload({
-          bucket: bucketName,
+          bucket: objectStore.ObjectStoreBuckets.APPS,
           filename: key,
-          type: contentType,
-          body: Buffer.from(data),
+          body: Buffer.from(responseBuffer),
+          ttl: 1800,
         })
 
-        presignedUrl = await objectStore.getPresignedUrl(bucketName, key, 600)
-        raw = Buffer.from(data)
+        presignedUrl = await objectStore.getPresignedUrl("test", key, 600)
+        raw = Buffer.from(responseBuffer).toString()
+
+        return {
+          data: {
+            size: responseBuffer.byteLength,
+            name: processedFileName,
+            url: presignedUrl,
+            extension: fileExtension,
+            key: key,
+          },
+          info: {
+            code: response.status,
+            size: formatBytes(responseBuffer.byteLength),
+            time: `${Math.round(performance.now() - this.startTimeMs)}ms`,
+          },
+          extra: {
+            headers: response.headers.raw(),
+          },
+          pagination: {
+            cursor: null,
+          },
+        }
       } else {
-        data = await response.text()
-        raw = data
+        if (response.status === 204) {
+          data = []
+          raw = []
+        } else if (contentType.includes("application/json")) {
+          data = await response.json()
+          raw = JSON.stringify(data)
+        } else if (
+          contentType.includes("text/xml") ||
+          contentType.includes("application/xml")
+        ) {
+          const rawXml = await response.text()
+          data =
+            (await xmlParser(rawXml, {
+              explicitArray: false,
+              trim: true,
+              explicitRoot: false,
+            })) || {}
+          // there is only one structure, its an array, return the array so it appears as rows
+          const keys = Object.keys(data)
+          if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+            data = data[keys[0]]
+          }
+          raw = rawXml
+        } else {
+          data = await response.text()
+          raw = data
+        }
       }
     } catch (err) {
+      console.log(err)
       throw "Failed to parse response body."
     }
+
     const size = formatBytes(
       response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
     )
@@ -206,6 +225,7 @@ class RestIntegration implements IntegrationBase {
     if (pagination?.responseParam) {
       nextCursor = get(data, pagination.responseParam)
     }
+
     return {
       data,
       info: {
@@ -216,7 +236,6 @@ class RestIntegration implements IntegrationBase {
       extra: {
         raw,
         headers,
-        presignedUrl,
       },
       pagination: {
         cursor: nextCursor,

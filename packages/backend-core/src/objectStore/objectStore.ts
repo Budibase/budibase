@@ -32,7 +32,7 @@ type UploadParams = {
   metadata?: {
     [key: string]: string | undefined
   }
-  body?: Buffer
+  body?: ReadableStream | Buffer
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -43,6 +43,7 @@ const CONTENT_TYPE_MAP: any = {
   json: "application/json",
   gz: "application/gzip",
   svg: "image/svg+xml",
+  form: "multipart/form-data",
 }
 
 const STRING_CONTENT_TYPES = [
@@ -107,11 +108,8 @@ export function ObjectStore(
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export async function makeSureBucketExists(
-  client: any,
-  bucketName: string,
-  addLifecycleConfig: boolean = true
-) {
+
+export async function makeSureBucketExists(client: any, bucketName: string) {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -127,38 +125,12 @@ export async function makeSureBucketExists(
       await promises[bucketName]
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        // bucket doesn't exist, create it
+        // bucket doesn't exist create it
         promises[bucketName] = client
           .createBucket({
             Bucket: bucketName,
           })
           .promise()
-          .then(() => {
-            if (addLifecycleConfig) {
-              return client
-                .putBucketLifecycleConfiguration({
-                  Bucket: bucketName,
-                  LifecycleConfiguration: {
-                    Rules: [
-                      {
-                        ID: "TTL Rule",
-                        Status: "Enabled",
-                        NoncurrentVersionExpiration: {
-                          NoncurrentDays: 1,
-                        },
-                        Filter: {
-                          Prefix: "",
-                        },
-                        AbortIncompleteMultipartUpload: {
-                          DaysAfterInitiation: 1,
-                        },
-                      },
-                    ],
-                  },
-                })
-                .promise()
-            }
-          })
         await promises[bucketName]
         delete promises[bucketName]
       }
@@ -178,7 +150,8 @@ export async function upload({
   type,
   metadata,
   body,
-}: UploadParams) {
+  ttl,
+}: UploadParams & { ttl?: number }) {
   const extension = filename.split(".").pop()
   const fileBytes = path ? fs.readFileSync(path) : body
   const objectStore = ObjectStore(bucketName)
@@ -205,7 +178,20 @@ export async function upload({
     }
     config.Metadata = metadata
   }
-  return objectStore.upload(config).promise()
+
+  /* Playing around here trying to get TTL working */
+  const currentDate = new Date()
+  currentDate.setMinutes(currentDate.getMinutes() + 30)
+
+  return objectStore
+    .upload(config, {
+      params: {
+        Expires: currentDate,
+        Bucket: bucketName,
+        Key: sanitizeKey(filename),
+      },
+    })
+    .promise()
 }
 
 /**
@@ -233,7 +219,6 @@ export async function streamUpload(
       ContentType: "image",
     }
   }
-
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
