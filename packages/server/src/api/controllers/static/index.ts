@@ -227,10 +227,6 @@ export const serveApp = async function (ctx: UserCtx) {
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
 
     let appId = context.getAppId()
-    const manifest = await getComponentLibraryManifest(
-      appInfo.componentLibraries[0]
-    )
-
     const hideDevTools = !!ctx.params.appUrl
     const sideNav = appInfo.navigation.navigation === "Left"
     const hideFooter =
@@ -242,7 +238,7 @@ export const serveApp = async function (ctx: UserCtx) {
 
       const { head, html, css } = AppComponent.render({
         title: branding?.platformTitle || `${appInfo.name}`,
-        showSkeletonLoader: manifest.features.skeletonLoader ?? false,
+        showSkeletonLoader: appInfo.features.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
         hideFooter,
@@ -323,10 +319,6 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 
 export const serveClientLibrary = async function (ctx: Ctx) {
   const version = ctx.request.query.version;
-
-  console.log("before");
-  console.log(version)
-  console.log("after");
 
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")

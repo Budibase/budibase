@@ -301,11 +301,8 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       features: {
         componentValidation: true,
         disableUserMetadata: true,
+        skeletonLoader: true
       },
-    }
-
-    if (env.isDev()) {
-      newApplication.revertableVersion = "1.3.2"
     }
 
     // If we used a template or imported an app there will be an existing doc.
@@ -489,7 +486,7 @@ export async function updateClient(ctx: UserCtx) {
     revertableVersion: currentVersion,
     features: {
       ...application.features ?? {},
-      skeletonLoader: manifest.features.skeletonLoader ?? false
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false
     }
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
@@ -506,9 +503,10 @@ export async function revertClient(ctx: UserCtx) {
     ctx.throw(400, "There is no version to revert to")
   }
 
+  let manifest;
   // Update client library and manifest
   if (!env.isTest()) {
-    await revertClientLibrary(ctx.params.appId)
+    manifest = await revertClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -517,6 +515,10 @@ export async function revertClient(ctx: UserCtx) {
   const appPackageUpdates = {
     version: revertedToVersion,
     revertableVersion: undefined,
+    features: {
+      ...application.features ?? {},
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false
+    }
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)

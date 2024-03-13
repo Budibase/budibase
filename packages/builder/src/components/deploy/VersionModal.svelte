@@ -43,18 +43,14 @@
 
   const update = async () => {
     try {
-      console.log(1);
       await API.updateAppClientVersion(appId)
 
-      console.log(2);
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
         `App updated successfully to version ${$appStore.upgradableVersion}`
       )
-      console.log(3);
       onComplete()
-      console.log(4);
     } catch (err) {
       notifications.error(`Error updating app: ${err}`)
     }
@@ -75,7 +71,6 @@
     }
     updateModal.hide()
   }
-
 
 </script>
 

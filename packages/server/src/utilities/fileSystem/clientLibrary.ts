@@ -157,6 +157,8 @@ export async function revertClientLibrary(appId: string) {
     )
   }
 
+  const manifestSrc = fs.promises.readFile(manifestPath, 'utf8')
+
   // Upload backups as new versions
   const manifestUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
@@ -170,5 +172,7 @@ export async function revertClientLibrary(appId: string) {
     path: clientPath,
     type: "application/javascript",
   })
-  await Promise.all([manifestUpload, clientUpload])
+  await Promise.all([manifestSrc, manifestUpload, clientUpload])
+
+  return JSON.parse(await manifestSrc);
 }

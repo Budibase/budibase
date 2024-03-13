@@ -187,21 +187,27 @@ export async function streamUpload(
   stream: ReadStream | ReadableStream,
   extra = {}
 ) {
+  console.log("1");
+
   const objectStore = ObjectStore(bucketName)
   await makeSureBucketExists(objectStore, bucketName)
+  console.log("2");
 
   // Set content type for certain known extensions
   if (filename?.endsWith(".js")) {
+  console.log("3");
     extra = {
       ...extra,
       ContentType: "application/javascript",
     }
   } else if (filename?.endsWith(".svg")) {
+  console.log("4");
     extra = {
       ...extra,
       ContentType: "image",
     }
   }
+  console.log("5");
 
   const params = {
     Bucket: sanitizeBucket(bucketName),
@@ -209,6 +215,7 @@ export async function streamUpload(
     Body: stream,
     ...extra,
   }
+  console.log("6");
   return objectStore.upload(params).promise()
 }
 
