@@ -89,11 +89,29 @@
             bind:value={search}
           />
         </div>
-        <Icon size="S" name="Close" hoverable on:click={stopSearching} />
+        <Icon
+          size="S"
+          name="Close"
+          hoverable
+          newStyles
+          on:click={stopSearching}
+        />
       {:else}
         <div class="title">Snippets</div>
-        <Icon size="S" name="Search" hoverable on:click={startSearching} />
-        <Icon size="S" name="Add" hoverable on:click={createSnippet} />
+        <Icon
+          size="S"
+          name="Search"
+          hoverable
+          newStyles
+          on:click={startSearching}
+        />
+        <Icon
+          size="S"
+          name="Add"
+          hoverable
+          newStyles
+          on:click={createSnippet}
+        />
       {/if}
     </div>
     <div class="snippet-list">
@@ -108,9 +126,9 @@
           <Icon
             name="Edit"
             hoverable
+            newStyles
             size="S"
             on:click={e => editSnippet(e, snippet)}
-            color="var(--spectrum-global-color-gray-700)"
           />
         </div>
       {/each}
