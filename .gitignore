@@ -4,6 +4,8 @@ packages/server/runtime_apps/
 .idea/
 bb-airgapped.tar.gz
 *.iml
+packages/builder/src/components/deploy/clientVersions.json
+packages/server/build/oldClientVersions/**/*
 
 # Logs
 logs

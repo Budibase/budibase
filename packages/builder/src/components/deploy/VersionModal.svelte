@@ -1,4 +1,5 @@
 <script>
+  import { admin } from "stores/portal"
   import {
     Modal,
     notifications,
@@ -9,6 +10,7 @@
   } from "@budibase/bbui"
   import { appStore, initialise } from "stores/builder"
   import { API } from "api"
+  import RevertModalVersionSelect from "./RevertModalVersionSelect.svelte"
 
   export function show() {
     updateModal.show()
@@ -28,7 +30,7 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable = $appStore.revertableVersion != null
+  $: revertAvailable = $appStore.revertableVersion != null || ($admin.isDev && $appStore.version === "0.0.0")
 
   const refreshAppPackage = async () => {
     try {
@@ -74,9 +76,7 @@
     updateModal.hide()
   }
 
-  $: {
-    console.log("am i ever here");
-  }
+
 </script>
 
 {#if !hideIcon && updateAvailable}
@@ -88,21 +88,37 @@
     confirmText="Update"
     cancelText={updateAvailable ? "Cancel" : "Close"}
     onConfirm={update}
-    showConfirmButton={true}
+    showConfirmButton={updateAvailable}
   >
+
     <div slot="footer">
+      {#if revertAvailable}
         <Button quiet secondary on:click={revert}>Revert</Button>
+      {/if}
     </div>
+    {#if updateAvailable}
       <Body size="S">
         This app is currently using version <b>{$appStore.version}</b>, but
         version
         <b>{$appStore.upgradableVersion}</b> is available. Updates can contain new
         features, performance improvements and bug fixes.
       </Body>
+    {:else}
+      <Body size="S">
+        This app is currently using version <b>{$appStore.version}</b> which is the
+        latest version available.
+      </Body>
+    {/if}
+    {#if revertAvailable}
       <Body size="S">
         You can revert this app to version
-        <b>{$appStore.revertableVersion}</b>
+        {#if $admin.isDev}
+          <RevertModalVersionSelect revertableVersion={$appStore.revertableVersion}/>
+        {:else}
+          <b>{$appStore.revertableVersion}</b>
+        {/if}
         if you're experiencing issues with the current version.
       </Body>
+    {/if}
   </ModalContent>
 </Modal>

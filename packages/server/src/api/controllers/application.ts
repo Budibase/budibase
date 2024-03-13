@@ -660,6 +660,17 @@ export async function updateAppPackage(
   })
 }
 
+export async function setRevertableVersion(
+  ctx: UserCtx
+) {
+  const db = context.getAppDB()
+  const app = await db.get(DocumentType.APP_METADATA)
+  app.revertableVersion = ctx.request.body.revertableVersion
+  const response = await db.put(app)
+
+  ctx.status = 200
+}
+
 async function migrateAppNavigation() {
   const db = context.getAppDB()
   const existing: App = await db.get(DocumentType.APP_METADATA)
