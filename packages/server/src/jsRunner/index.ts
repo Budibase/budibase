@@ -8,6 +8,7 @@ import {
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { IsolatedVM } from "./vm"
+import type { VM } from "@budibase/types"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
@@ -26,12 +27,15 @@ export function init() {
             .withSnippets(bbCtx?.snippets)
 
         // Persist isolate in context so we can reuse it
-        if (bbCtx) {
+        if (bbCtx && !bbCtx.vm) {
           bbCtx.vm = vm
+          bbCtx.cleanup = bbCtx.cleanup || []
+          bbCtx.cleanup.push(() => vm.close())
         }
 
-        // Strip helpers (an array) and snippets (a proxy isntance) as these
-        // will not survive the isolated-vm barrier
+        // Because we can't pass functions into an Isolate, we remove them from
+        // the passed context and rely on the withHelpers() method to add them
+        // back in.
         const { helpers, snippets, ...rest } = ctx
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {
