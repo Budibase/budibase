@@ -110,10 +110,9 @@ export function ObjectStore(
 export async function makeSureBucketExists(
   client: any,
   bucketName: string,
-  addLifecycleConfig: boolean = false
+  addLifecycleConfig: boolean = true
 ) {
   bucketName = sanitizeBucket(bucketName)
-
   try {
     await client
       .headBucket({
@@ -128,12 +127,38 @@ export async function makeSureBucketExists(
       await promises[bucketName]
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        // bucket doesn't exist create it
+        // bucket doesn't exist, create it
         promises[bucketName] = client
           .createBucket({
             Bucket: bucketName,
           })
           .promise()
+          .then(() => {
+            if (addLifecycleConfig) {
+              return client
+                .putBucketLifecycleConfiguration({
+                  Bucket: bucketName,
+                  LifecycleConfiguration: {
+                    Rules: [
+                      {
+                        ID: "TTL Rule",
+                        Status: "Enabled",
+                        NoncurrentVersionExpiration: {
+                          NoncurrentDays: 1,
+                        },
+                        Filter: {
+                          Prefix: "",
+                        },
+                        AbortIncompleteMultipartUpload: {
+                          DaysAfterInitiation: 1,
+                        },
+                      },
+                    ],
+                  },
+                })
+                .promise()
+            }
+          })
         await promises[bucketName]
         delete promises[bucketName]
       }
@@ -142,7 +167,6 @@ export async function makeSureBucketExists(
     }
   }
 }
-
 /**
  * Uploads the contents of a file given the required parameters, useful when
  * temp files in use (for example file uploaded as an attachment).

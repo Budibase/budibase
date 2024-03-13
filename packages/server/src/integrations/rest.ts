@@ -130,8 +130,19 @@ class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(response: any, pagination: PaginationConfig | null) {
-    let data, raw, headers
+    let data, raw, headers, presignedUrl, fileExtension
+
     const contentType = response.headers.get("content-type") || ""
+    const contentDisposition = response.headers.get("content-disposition") || ""
+
+    const filenameMatch = contentDisposition.match(/filename="?(.+)"?/i)
+    if (filenameMatch) {
+      const filename = filenameMatch[1]
+      const lastDotIndex = filename.lastIndexOf(".")
+      if (lastDotIndex !== -1) {
+        fileExtension = filename.slice(lastDotIndex + 1)
+      }
+    }
     try {
       if (response.status === 204) {
         data = []
@@ -156,15 +167,13 @@ class RestIntegration implements IntegrationBase {
           data = data[keys[0]]
         }
         raw = rawXml
-      } else if (contentType.includes("application/pdf")) {
-        data = await response.arrayBuffer()
-        raw = Buffer.from(data)
-      } else if (contentType.includes("image/")) {
+      } else if (/^(image|video|audio|application|text)\//.test(contentType)) {
         const data = await response.arrayBuffer()
-        let bucketName = `tmp-bucket-${Date.now()}`
+        let bucketName = `tmp-bucket-attachments-${context.getTenantId()}`
 
-        // filenames converted to UUIDs so they are unique
-        const processedFileName = `${uuid.v4()}.svg`
+        const processedFileName = `${uuid.v4()}.${
+          fileExtension || contentType.split("/")[1]
+        }`
         const key = `${context.getProdAppId()}/attachments/${processedFileName}`
 
         await objectStore.upload({
@@ -173,6 +182,8 @@ class RestIntegration implements IntegrationBase {
           type: contentType,
           body: Buffer.from(data),
         })
+
+        presignedUrl = await objectStore.getPresignedUrl(bucketName, key, 600)
         raw = Buffer.from(data)
       } else {
         data = await response.text()
@@ -195,7 +206,6 @@ class RestIntegration implements IntegrationBase {
     if (pagination?.responseParam) {
       nextCursor = get(data, pagination.responseParam)
     }
-
     return {
       data,
       info: {
@@ -206,6 +216,7 @@ class RestIntegration implements IntegrationBase {
       extra: {
         raw,
         headers,
+        presignedUrl,
       },
       pagination: {
         cursor: nextCursor,
