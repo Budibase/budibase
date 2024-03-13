@@ -109,7 +109,7 @@
 
   // Match decoration for snippets
   const snippetMatchDeco = new MatchDecorator({
-    regexp: /snippets.[^\s(]+/g,
+    regexp: /snippets\.[^\s(]+/g,
     decoration: () => {
       return Decoration.mark({
         tag: "span",
