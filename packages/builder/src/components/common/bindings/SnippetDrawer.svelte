@@ -13,13 +13,13 @@
   import { snippets } from "stores/builder"
   import { getSequentialName } from "helpers/duplicate"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { ValidSnippetNameRegex } from "@budibase/shared-core"
 
   export let snippet
 
   export const show = () => drawer.show()
   export const hide = () => drawer.hide()
 
-  const roughValidNameRegex = /^[_$A-Z\xA0-\uFFFF][_$A-Z0-9\xA0-\uFFFF]*$/i
   const firstCharNumberRegex = /^[0-9].*$/
 
   let drawer
@@ -43,7 +43,7 @@
       drawer.hide()
       notifications.success(`Snippet ${newSnippet.name} saved`)
     } catch (error) {
-      notifications.error("Error saving snippet")
+      notifications.error(error.message || "Error saving snippet")
     }
     loading = false
   }
@@ -69,21 +69,16 @@
     if (!name?.length) {
       return "Name is required"
     }
-    if (firstCharNumberRegex.test(name)) {
-      return "Can't start with a number"
-    }
-    if (!roughValidNameRegex.test(name)) {
-      return "No special characters or spaces"
-    }
     if (snippets.some(snippet => snippet.name === name)) {
       return "That name is already in use"
     }
-    const js = `(function ${name}(){return true})()`
-    try {
-      return eval(js) === true ? null : "Invalid name"
-    } catch (error) {
-      return "Invalid name"
+    if (firstCharNumberRegex.test(name)) {
+      return "Can't start with a number"
     }
+    if (!ValidSnippetNameRegex.test(name)) {
+      return "No special characters or spaces"
+    }
+    return null
   }
 </script>
 

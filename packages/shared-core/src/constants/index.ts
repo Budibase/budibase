@@ -98,6 +98,7 @@ export enum BuilderSocketEvent {
 export const SocketSessionTTL = 60
 export const ValidQueryNameRegex = /^[^()]*$/
 export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g
+export const ValidSnippetNameRegex = /^[a-z-_][a-z0-9-_]*$/i
 
 export const REBOOT_CRON = "@reboot"
 
