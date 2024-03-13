@@ -3,7 +3,6 @@
   import { convertToJS } from "@budibase/string-templates"
   import { Input, Layout, Icon, Popover } from "@budibase/bbui"
   import { handlebarsCompletions } from "constants/completions"
-  import { tick } from "svelte"
 
   export let addHelper
   export let addBinding
@@ -154,7 +153,6 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="binding-side-panel">
   <Layout noPadding gap="S">
     {#if selectedCategory}
