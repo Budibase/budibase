@@ -44,8 +44,6 @@ jest.unmock("mysql2")
 jest.unmock("mysql2/promise")
 jest.unmock("mssql")
 
-const { basicRow } = setup.structures
-
 describe.each([
   ["internal", undefined],
   ["postgres", databaseTestProviders.postgres],
@@ -54,7 +52,6 @@ describe.each([
   ["mariadb", databaseTestProviders.mariadb],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = dsProvider === undefined
-  const request = setup.getRequest()
   const config = setup.getConfig()
 
   let table: Table
@@ -172,18 +169,11 @@ describe.each([
   describe("save, load, update", () => {
     it("returns a success message when the row is created", async () => {
       const rowUsage = await getRowUsage()
-
-      const res = await request
-        .post(`/api/${table._id!}/rows`)
-        .send(basicRow(table._id!))
-        .set(config.defaultHeaders())
-        .expect("Content-Type", /json/)
-        .expect(200)
-      expect((res as any).res.statusMessage).toEqual(
-        `${table.name} saved successfully`
-      )
-      expect(res.body.name).toEqual("Test Contact")
-      expect(res.body._rev).toBeDefined()
+      const row = await config.api.row.save(table._id!, {
+        name: "Test Contact",
+      })
+      expect(row.name).toEqual("Test Contact")
+      expect(row._rev).toBeDefined()
       await assertRowUsage(rowUsage + 1)
     })
 
@@ -1638,37 +1628,33 @@ describe.each([
     })
 
     it("can save a row when relationship fields are empty", async () => {
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
+      })
 
       expect(row).toEqual({
-        name: rowData.name,
-        description: rowData.description,
-        tableId,
         _id: expect.any(String),
         _rev: expect.any(String),
         id: isInternal ? undefined : expect.any(Number),
         type: isInternal ? "row" : undefined,
+        name: "foo",
+        description: "bar",
+        tableId,
       })
     })
 
     it("can save a row with a single relationship field", async () => {
       const user = _.sample(o2mData)!
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
         user: [user],
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      })
 
       expect(row).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         user: [user].map(u => resultMapper(u)),
         _id: expect.any(String),
@@ -1681,17 +1667,15 @@ describe.each([
 
     it("can save a row with a multiple relationship field", async () => {
       const selectedUsers = _.sampleSize(m2mData, 2)
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
         users: selectedUsers,
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      })
 
       expect(row).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         users: expect.arrayContaining(selectedUsers.map(u => resultMapper(u))),
         _id: expect.any(String),
@@ -1702,17 +1686,15 @@ describe.each([
     })
 
     it("can retrieve rows with no populated relationships", async () => {
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
+      })
 
       const retrieved = await config.api.row.get(tableId, row._id!)
       expect(retrieved).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         user: undefined,
         users: undefined,
@@ -1727,19 +1709,17 @@ describe.each([
       const user1 = _.sample(o2mData)!
       const [user2, user3] = _.sampleSize(m2mData, 2)
 
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
         users: [user2, user3],
         user: [user1],
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      })
 
       const retrieved = await config.api.row.get(tableId, row._id!)
       expect(retrieved).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         user: expect.arrayContaining([user1].map(u => resultMapper(u))),
         users: expect.arrayContaining([user2, user3].map(u => resultMapper(u))),
@@ -1755,13 +1735,11 @@ describe.each([
       const user = _.sample(o2mData)!
       const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
         users: [users1, users2],
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      })
 
       const updatedRow = await config.api.row.save(tableId, {
         ...row,
@@ -1769,8 +1747,8 @@ describe.each([
         users: [users3, users1],
       })
       expect(updatedRow).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         user: expect.arrayContaining([user].map(u => resultMapper(u))),
         users: expect.arrayContaining(
@@ -1786,14 +1764,11 @@ describe.each([
 
     it("can wipe an existing populated relationships in row", async () => {
       const [user1, user2] = _.sampleSize(m2mData, 2)
-
-      const rowData = {
-        ...basicRow(tableId),
-        name: generator.name(),
-        description: generator.name(),
+      const row = await config.api.row.save(tableId, {
+        name: "foo",
+        description: "bar",
         users: [user1, user2],
-      }
-      const row = await config.api.row.save(tableId, rowData)
+      })
 
       const updatedRow = await config.api.row.save(tableId, {
         ...row,
@@ -1801,8 +1776,8 @@ describe.each([
         users: null,
       })
       expect(updatedRow).toEqual({
-        name: rowData.name,
-        description: rowData.description,
+        name: "foo",
+        description: "bar",
         tableId,
         _id: row._id,
         _rev: expect.any(String),
@@ -1815,28 +1790,19 @@ describe.each([
       const [user1] = _.sampleSize(o2mData, 1)
       const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
-      const rows: {
-        name: string
-        description: string
-        user?: Row[]
-        users?: Row[]
-        tableId: string
-      }[] = [
+      const rows = [
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           users: [users1, users2],
         },
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           user: [user1],
           users: [users1, users3],
         },
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           users: [users3],
@@ -1874,28 +1840,19 @@ describe.each([
       const [user1] = _.sampleSize(o2mData, 1)
       const [users1, users2, users3] = _.sampleSize(m2mData, 3)
 
-      const rows: {
-        name: string
-        description: string
-        user?: Row[]
-        users?: Row[]
-        tableId: string
-      }[] = [
+      const rows = [
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           users: [users1, users2],
         },
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           user: [user1],
           users: [users1, users3],
         },
         {
-          ...basicRow(tableId),
           name: generator.name(),
           description: generator.name(),
           users: [users3],
