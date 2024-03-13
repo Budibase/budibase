@@ -172,43 +172,37 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div class="drawer-container">
-      <div
-        class="underlay"
-        class:hidden={!$modal}
-        transition:drawerFade|local
-      />
-      <div
-        class="drawer"
-        class:stacked={depth > 0}
-        class:modal={$modal}
-        transition:drawerSlide|local
-        {style}
-      >
-        <header>
-          {#if $$slots.title}
-            <slot name="title" />
-          {:else}
-            <div class="text">{title || "Bindings"}</div>
+    <div class="underlay" class:hidden={!$modal} transition:drawerFade|local />
+    <div
+      class="drawer"
+      class:stacked={depth > 0}
+      class:modal={$modal}
+      transition:drawerSlide|local
+      {style}
+    >
+      <header>
+        {#if $$slots.title}
+          <slot name="title" />
+        {:else}
+          <div class="text">{title || "Bindings"}</div>
+        {/if}
+        <div class="buttons">
+          <Button secondary quiet on:click={hide}>Cancel</Button>
+          <slot name="buttons" />
+          {#if $resizable}
+            <ActionButton
+              size="M"
+              quiet
+              selected={$modal}
+              on:click={() => modal.set(!$modal)}
+            >
+              <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
+            </ActionButton>
           {/if}
-          <div class="buttons">
-            <Button secondary quiet on:click={hide}>Cancel</Button>
-            <slot name="buttons" />
-            {#if $resizable}
-              <ActionButton
-                size="M"
-                quiet
-                selected={$modal}
-                on:click={() => modal.set(!$modal)}
-              >
-                <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
-              </ActionButton>
-            {/if}
-          </div>
-        </header>
-        <slot name="body" />
-        <div class="overlay" class:hidden={$modal || depth === 0} />
-      </div>
+        </div>
+      </header>
+      <slot name="body" />
+      <div class="overlay" class:hidden={$modal || depth === 0} />
     </div>
   </Portal>
 {/if}
