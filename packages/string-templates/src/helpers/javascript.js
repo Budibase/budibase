@@ -51,8 +51,10 @@ module.exports.processJS = (handlebars, context) => {
     // This is required to allow the final `return` statement to be valid.
     const js = iifeWrapper(atob(handlebars))
 
-    // Transform snippets into an object for faster access
+    // Transform snippets into an object for faster access, and cache previously
+    // evaluated snippets
     let snippetMap = {}
+    let snippetCache = {}
     for (let snippet of context.snippets || []) {
       snippetMap[snippet.name] = snippet.code
     }
@@ -70,7 +72,10 @@ module.exports.processJS = (handlebars, context) => {
         {},
         {
           get: function (_, name) {
-            return eval(iifeWrapper(snippetMap[name]))
+            if (!(name in snippetCache)) {
+              snippetCache[name] = eval(iifeWrapper(snippetMap[name]))
+            }
+            return snippetCache[name]
           },
         }
       ),
