@@ -3,7 +3,7 @@
 const start = Date.now()
 
 const fs = require("fs")
-const { readdir, copyFile, mkdir } = require('node:fs/promises');
+const { cp, readdir, copyFile, mkdir } = require('node:fs/promises');
 const path = require("path")
 
 const { build } = require("esbuild")
@@ -105,17 +105,11 @@ async function runBuild(entry, outfile) {
 
   const oldClientVersions = (async () => {
     try {
-      const rootDir = await readdir('./build/oldClientVersions/', { recursive: true, withFileTypes: true });
-      const files = rootDir.filter(entry => entry.isFile())
-      const dirs = rootDir.filter(entry => entry.isDirectory())
-
-      const mkdirPromises = dirs.map(dir => mkdir(`dist/oldClientVersions/${dir.name}`, { recursive: true }))
-      await Promise.all(mkdirPromises)
-
-      const fileCopyPromises = files.map(file => copyFile(`${file.path}/${file.name}`, `dist/${file.path.slice(5)}/${file.name}`))
-      await Promise.all(fileCopyPromises)
+      await cp('./build/oldClientVersions', './dist/oldClientVersions', { recursive: true });
     } catch (e) {
-      console.log(e);
+      if (e.code !== "EEXIST" && e.code !== "ENOENT") {
+        throw e;
+      }
     }
   })()
 
