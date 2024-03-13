@@ -59,12 +59,6 @@
     loading = false
   }
 
-  // Validating function names is not as easy as you think. A simple regex does
-  // not work, as there are a bunch of reserved words. The correct regex for
-  // this is about 12K characters long.
-  // Instead, we can run a simple regex to roughly validate it, then basically
-  // try executing it and see if it's valid JS. The initial regex prevents
-  // against any potential XSS attacks here.
   const validateName = (name, snippets) => {
     if (!name?.length) {
       return "Name is required"
