@@ -32,7 +32,6 @@ import {
   expectAnyInternalColsAttributes,
   generator,
   mocks,
-  structures,
 } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
@@ -148,19 +147,6 @@ describe.each([
         updatedAt: timestamp,
       }
     : undefined
-
-  async function createTable(
-    cfg: Omit<SaveTableRequest, "sourceId" | "sourceType">,
-    opts?: { skipReassigning: boolean }
-  ) {
-    let table
-    if (dsProvider) {
-      table = await config.createExternalTable(cfg, opts)
-    } else {
-      table = await config.createTable(cfg, opts)
-    }
-    return table
-  }
 
   beforeAll(async () => {
     table = await config.api.table.save(defaultTable())
@@ -308,45 +294,49 @@ describe.each([
             inclusion: ["Alpha", "Beta", "Gamma"],
           },
         }
-        const table = await createTable({
-          name: "TestTable2",
-          type: "table",
-          schema: {
-            name: str,
-            stringUndefined: str,
-            stringNull: str,
-            stringString: str,
-            numberEmptyString: number,
-            numberNull: number,
-            numberUndefined: number,
-            numberString: number,
-            numberNumber: number,
-            datetimeEmptyString: datetime,
-            datetimeNull: datetime,
-            datetimeUndefined: datetime,
-            datetimeString: datetime,
-            datetimeDate: datetime,
-            boolNull: bool,
-            boolEmpty: bool,
-            boolUndefined: bool,
-            boolString: bool,
-            boolBool: bool,
-            attachmentNull: attachment,
-            attachmentUndefined: attachment,
-            attachmentEmpty: attachment,
-            attachmentEmptyArrayStr: attachment,
-            arrayFieldEmptyArrayStr: arrayField,
-            arrayFieldArrayStrKnown: arrayField,
-            arrayFieldNull: arrayField,
-            arrayFieldUndefined: arrayField,
-            optsFieldEmptyStr: optsField,
-            optsFieldUndefined: optsField,
-            optsFieldNull: optsField,
-            optsFieldStrKnown: optsField,
-          },
-        })
+        const table = await config.api.table.save(
+          saveTableRequest({
+            name: "TestTable2",
+            type: "table",
+            schema: {
+              name: str,
+              stringUndefined: str,
+              stringNull: str,
+              stringString: str,
+              numberEmptyString: number,
+              numberNull: number,
+              numberUndefined: number,
+              numberString: number,
+              numberNumber: number,
+              datetimeEmptyString: datetime,
+              datetimeNull: datetime,
+              datetimeUndefined: datetime,
+              datetimeString: datetime,
+              datetimeDate: datetime,
+              boolNull: bool,
+              boolEmpty: bool,
+              boolUndefined: bool,
+              boolString: bool,
+              boolBool: bool,
+              attachmentNull: attachment,
+              attachmentUndefined: attachment,
+              attachmentEmpty: attachment,
+              attachmentEmptyArrayStr: attachment,
+              arrayFieldEmptyArrayStr: arrayField,
+              arrayFieldArrayStrKnown: arrayField,
+              arrayFieldNull: arrayField,
+              arrayFieldUndefined: arrayField,
+              optsFieldEmptyStr: optsField,
+              optsFieldUndefined: optsField,
+              optsFieldNull: optsField,
+              optsFieldStrKnown: optsField,
+            },
+          })
+        )
 
-        const row = {
+        const datetimeStr = "1984-04-20T00:00:00.000Z"
+
+        const row = await config.api.row.save(table._id!, {
           name: "Test Row",
           stringUndefined: undefined,
           stringNull: null,
@@ -359,8 +349,8 @@ describe.each([
           datetimeEmptyString: "",
           datetimeNull: null,
           datetimeUndefined: undefined,
-          datetimeString: "1984-04-20T00:00:00.000Z",
-          datetimeDate: new Date("1984-04-20"),
+          datetimeString: datetimeStr,
+          datetimeDate: new Date(datetimeStr),
           boolNull: null,
           boolEmpty: "",
           boolUndefined: undefined,
@@ -379,78 +369,64 @@ describe.each([
           optsFieldUndefined: undefined,
           optsFieldNull: null,
           optsFieldStrKnown: "Alpha",
-        }
+        })
 
-        const createdRow = await config.createRow(row)
-        const id = createdRow._id!
-
-        const saved = await config.api.row.get(table._id!, id)
-
-        expect(saved.stringUndefined).toBe(undefined)
-        expect(saved.stringNull).toBe(null)
-        expect(saved.stringString).toBe("i am a string")
-        expect(saved.numberEmptyString).toBe(null)
-        expect(saved.numberNull).toBe(null)
-        expect(saved.numberUndefined).toBe(undefined)
-        expect(saved.numberString).toBe(123)
-        expect(saved.numberNumber).toBe(123)
-        expect(saved.datetimeEmptyString).toBe(null)
-        expect(saved.datetimeNull).toBe(null)
-        expect(saved.datetimeUndefined).toBe(undefined)
-        expect(saved.datetimeString).toBe(
-          new Date(row.datetimeString).toISOString()
-        )
-        expect(saved.datetimeDate).toBe(row.datetimeDate.toISOString())
-        expect(saved.boolNull).toBe(null)
-        expect(saved.boolEmpty).toBe(null)
-        expect(saved.boolUndefined).toBe(undefined)
-        expect(saved.boolString).toBe(true)
-        expect(saved.boolBool).toBe(true)
-        expect(saved.attachmentNull).toEqual([])
-        expect(saved.attachmentUndefined).toBe(undefined)
-        expect(saved.attachmentEmpty).toEqual([])
-        expect(saved.attachmentEmptyArrayStr).toEqual([])
-        expect(saved.arrayFieldEmptyArrayStr).toEqual([])
-        expect(saved.arrayFieldNull).toEqual([])
-        expect(saved.arrayFieldUndefined).toEqual(undefined)
-        expect(saved.optsFieldEmptyStr).toEqual(null)
-        expect(saved.optsFieldUndefined).toEqual(undefined)
-        expect(saved.optsFieldNull).toEqual(null)
-        expect(saved.arrayFieldArrayStrKnown).toEqual(["One"])
-        expect(saved.optsFieldStrKnown).toEqual("Alpha")
+        expect(row.stringUndefined).toBe(undefined)
+        expect(row.stringNull).toBe(null)
+        expect(row.stringString).toBe("i am a string")
+        expect(row.numberEmptyString).toBe(null)
+        expect(row.numberNull).toBe(null)
+        expect(row.numberUndefined).toBe(undefined)
+        expect(row.numberString).toBe(123)
+        expect(row.numberNumber).toBe(123)
+        expect(row.datetimeEmptyString).toBe(null)
+        expect(row.datetimeNull).toBe(null)
+        expect(row.datetimeUndefined).toBe(undefined)
+        expect(row.datetimeString).toBe(new Date(datetimeStr).toISOString())
+        expect(row.datetimeDate).toBe(new Date(datetimeStr).toISOString())
+        expect(row.boolNull).toBe(null)
+        expect(row.boolEmpty).toBe(null)
+        expect(row.boolUndefined).toBe(undefined)
+        expect(row.boolString).toBe(true)
+        expect(row.boolBool).toBe(true)
+        expect(row.attachmentNull).toEqual([])
+        expect(row.attachmentUndefined).toBe(undefined)
+        expect(row.attachmentEmpty).toEqual([])
+        expect(row.attachmentEmptyArrayStr).toEqual([])
+        expect(row.arrayFieldEmptyArrayStr).toEqual([])
+        expect(row.arrayFieldNull).toEqual([])
+        expect(row.arrayFieldUndefined).toEqual(undefined)
+        expect(row.optsFieldEmptyStr).toEqual(null)
+        expect(row.optsFieldUndefined).toEqual(undefined)
+        expect(row.optsFieldNull).toEqual(null)
+        expect(row.arrayFieldArrayStrKnown).toEqual(["One"])
+        expect(row.optsFieldStrKnown).toEqual("Alpha")
       })
   })
 
   describe("view save", () => {
     it("views have extra data trimmed", async () => {
-      const table = await createTable({
-        type: "table",
-        name: "orders",
-        primary: ["OrderID"],
-        schema: {
-          Country: {
-            type: FieldType.STRING,
-            name: "Country",
+      const table = await config.api.table.save(
+        saveTableRequest({
+          name: "orders",
+          schema: {
+            Country: {
+              type: FieldType.STRING,
+              name: "Country",
+            },
+            Story: {
+              type: FieldType.STRING,
+              name: "Story",
+            },
           },
-          OrderID: {
-            type: FieldType.NUMBER,
-            name: "OrderID",
-          },
-          Story: {
-            type: FieldType.STRING,
-            name: "Story",
-          },
-        },
-      })
+        })
+      )
 
       const createViewResponse = await config.api.viewV2.create({
         tableId: table._id!,
         name: uuid.v4(),
         schema: {
           Country: {
-            visible: true,
-          },
-          OrderID: {
             visible: true,
           },
         },
@@ -468,8 +444,8 @@ describe.each([
       expect(row.Story).toBeUndefined()
       expect(row).toEqual({
         ...defaultRowFields,
-        OrderID: createRowResponse.OrderID,
         Country: "Aussy",
+        id: createRowResponse.id,
         _id: createRowResponse._id,
         _rev: createRowResponse._rev,
         tableId: table._id,
@@ -857,7 +833,7 @@ describe.each([
 
       it("should allow enriching attachment rows", async () => {
         const table = await config.createAttachmentTable()
-        const attachmentId = `${structures.uuid()}.csv`
+        const attachmentId = `${uuid.v4()}.csv`
         const row = await config.createRow({
           name: "test",
           description: "test",
@@ -1998,22 +1974,23 @@ describe.each([
             `
           ).toString("base64")
 
-          const table = await config.createTable({
-            name: "table",
-            type: "table",
-            schema: {
-              text: {
-                name: "text",
-                type: FieldType.STRING,
+          const table = await config.api.table.save(
+            saveTableRequest({
+              name: "table",
+              schema: {
+                text: {
+                  name: "text",
+                  type: FieldType.STRING,
+                },
+                formula: {
+                  name: "formula",
+                  type: FieldType.FORMULA,
+                  formula: `{{ js "${js}"}}`,
+                  formulaType: FormulaType.DYNAMIC,
+                },
               },
-              formula: {
-                name: "formula",
-                type: FieldType.FORMULA,
-                formula: `{{ js "${js}"}}`,
-                formulaType: FormulaType.DYNAMIC,
-              },
-            },
-          })
+            })
+          )
 
           for (let i = 0; i < 10; i++) {
             await config.api.row.save(table._id!, { text: "foo" })
@@ -2051,22 +2028,22 @@ describe.each([
 
     it("should not carry over context between formulas", async () => {
       const js = Buffer.from(`return $("[text]");`).toString("base64")
-      const table = await config.createTable({
-        name: "table",
-        type: "table",
-        schema: {
-          text: {
-            name: "text",
-            type: FieldType.STRING,
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            text: {
+              name: "text",
+              type: FieldType.STRING,
+            },
+            formula: {
+              name: "formula",
+              type: FieldType.FORMULA,
+              formula: `{{ js "${js}"}}`,
+              formulaType: FormulaType.DYNAMIC,
+            },
           },
-          formula: {
-            name: "formula",
-            type: FieldType.FORMULA,
-            formula: `{{ js "${js}"}}`,
-            formulaType: FormulaType.DYNAMIC,
-          },
-        },
-      })
+        })
+      )
 
       for (let i = 0; i < 10; i++) {
         await config.api.row.save(table._id!, { text: `foo${i}` })
