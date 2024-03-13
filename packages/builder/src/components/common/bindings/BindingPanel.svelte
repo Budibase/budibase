@@ -84,7 +84,7 @@
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
   $: {
     // Ensure a valid side panel option is always selected
-    if (!sidePanelOptions.includes(sidePanel)) {
+    if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
   }
