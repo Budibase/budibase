@@ -195,6 +195,11 @@ export class IsolatedVM implements VM {
     return result[this.runResultKey]
   }
 
+  close(): void {
+    this.vm.release()
+    this.isolate.dispose()
+  }
+
   private registerCallbacks(functions: Record<string, any>) {
     const libId = crypto.randomUUID().replace(/-/g, "")
 
