@@ -5,7 +5,7 @@ import { context, objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
-import {DocumentType} from "../../db/utils"
+import { DocumentType } from "../../db/utils"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
@@ -122,11 +122,11 @@ export async function updateClientLibrary(appId: string) {
     }
   )
 
-  const manifestSrc = fs.promises.readFile(manifest, 'utf8')
+  const manifestSrc = fs.promises.readFile(manifest, "utf8")
 
   await Promise.all([manifestUpload, clientUpload, manifestSrc])
 
-  return JSON.parse(await manifestSrc);
+  return JSON.parse(await manifestSrc)
 }
 
 /**
@@ -136,13 +136,19 @@ export async function updateClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  let manifestPath, clientPath;
+  let manifestPath, clientPath
 
   if (env.isDev()) {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
-    clientPath = join(__dirname, `/oldClientVersions/${app.revertableVersion}/app.js`)
-    manifestPath = join(__dirname, `/oldClientVersions/${app.revertableVersion}/manifest.json`)
+    clientPath = join(
+      __dirname,
+      `/oldClientVersions/${app.revertableVersion}/app.js`
+    )
+    manifestPath = join(
+      __dirname,
+      `/oldClientVersions/${app.revertableVersion}/manifest.json`
+    )
   } else {
     // Copy backups manifest to tmp directory
     manifestPath = await objectStore.retrieveToTmp(
@@ -157,7 +163,7 @@ export async function revertClientLibrary(appId: string) {
     )
   }
 
-  const manifestSrc = fs.promises.readFile(manifestPath, 'utf8')
+  const manifestSrc = fs.promises.readFile(manifestPath, "utf8")
 
   // Upload backups as new versions
   const manifestUpload = objectStore.upload({
@@ -174,5 +180,5 @@ export async function revertClientLibrary(appId: string) {
   })
   await Promise.all([manifestSrc, manifestUpload, clientUpload])
 
-  return JSON.parse(await manifestSrc);
+  return JSON.parse(await manifestSrc)
 }

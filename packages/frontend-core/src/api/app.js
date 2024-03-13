@@ -191,7 +191,7 @@ export const buildAppEndpoints = API => ({
       url: `/api/applications/${appId}/setRevertableVersion`,
       body: {
         revertableVersion,
-      }
+      },
     })
   },
 })

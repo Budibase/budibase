@@ -300,7 +300,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       features: {
         componentValidation: true,
         disableUserMetadata: true,
-        skeletonLoader: true
+        skeletonLoader: true,
       },
     }
 
@@ -471,7 +471,7 @@ export async function updateClient(ctx: UserCtx) {
   const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
-  let manifest;
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
     await backupClientLibrary(ctx.params.appId)
@@ -484,9 +484,9 @@ export async function updateClient(ctx: UserCtx) {
     version: updatedToVersion,
     revertableVersion: currentVersion,
     features: {
-      ...application.features ?? {},
-      skeletonLoader: manifest?.features?.skeletonLoader ?? false
-    }
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)
@@ -502,7 +502,7 @@ export async function revertClient(ctx: UserCtx) {
     ctx.throw(400, "There is no version to revert to")
   }
 
-  let manifest;
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
     manifest = await revertClientLibrary(ctx.params.appId)
@@ -515,9 +515,9 @@ export async function revertClient(ctx: UserCtx) {
     version: revertedToVersion,
     revertableVersion: undefined,
     features: {
-      ...application.features ?? {},
-      skeletonLoader: manifest?.features?.skeletonLoader ?? false
-    }
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
@@ -661,12 +661,10 @@ export async function updateAppPackage(
   })
 }
 
-export async function setRevertableVersion(
-  ctx: UserCtx
-) {
+export async function setRevertableVersion(ctx: UserCtx) {
   if (!env.isDev()) {
-    ctx.status = 403;
-    return;
+    ctx.status = 403
+    return
   }
   const db = context.getAppDB()
   const app = await db.get(DocumentType.APP_METADATA)

@@ -98,7 +98,10 @@
       </Body>
     </div>
   {:else}
-    <div class:hide={!loading || !app?.features?.skeletonLoader} class="loading">
+    <div
+      class:hide={!loading || !app?.features?.skeletonLoader}
+      class="loading"
+    >
       <div class={`loadingThemeWrapper ${app.theme}`}>
         <ClientAppSkeleton
           noAnimation
@@ -108,7 +111,11 @@
         />
       </div>
     </div>
-    <iframe class:hide={loading && app?.features?.skeletonLoader} src={iframeUrl} title={app.name} />
+    <iframe
+      class:hide={loading && app?.features?.skeletonLoader}
+      src={iframeUrl}
+      title={app.name}
+    />
   {/if}
 </div>
 

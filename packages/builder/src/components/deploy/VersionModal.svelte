@@ -30,7 +30,9 @@
     $appStore.upgradableVersion &&
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
-  $: revertAvailable = $appStore.revertableVersion != null || ($admin.isDev && $appStore.version === "0.0.0")
+  $: revertAvailable =
+    $appStore.revertableVersion != null ||
+    ($admin.isDev && $appStore.version === "0.0.0")
 
   const refreshAppPackage = async () => {
     try {
@@ -71,7 +73,6 @@
     }
     updateModal.hide()
   }
-
 </script>
 
 {#if !hideIcon && updateAvailable}
@@ -85,7 +86,6 @@
     onConfirm={update}
     showConfirmButton={updateAvailable}
   >
-
     <div slot="footer">
       {#if revertAvailable}
         <Button quiet secondary on:click={revert}>Revert</Button>
@@ -108,7 +108,9 @@
       <Body size="S">
         You can revert this app to version
         {#if $admin.isDev}
-          <RevertModalVersionSelect revertableVersion={$appStore.revertableVersion}/>
+          <RevertModalVersionSelect
+            revertableVersion={$appStore.revertableVersion}
+          />
         {:else}
           <b>{$appStore.revertableVersion}</b>
         {/if}
