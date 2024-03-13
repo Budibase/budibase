@@ -21,8 +21,6 @@ import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist, context, objectStore } from "@budibase/backend-core"
-const multipart = require("parse-multipart-data")
-import path from "path"
 import { v4 } from "uuid"
 const BodyTypes = {
   NONE: "none",
@@ -142,7 +140,9 @@ class RestIntegration implements IntegrationBase {
     try {
       if (filename) {
         const responseBuffer = await response.arrayBuffer()
-        fileExtension = path.extname(filename).slice(1)
+        const fileExtension = filename.includes(".")
+          ? filename.split(".").slice(1).join(".")
+          : ""
 
         const processedFileName = `${v4()}.${fileExtension}`
         const key = `${context.getProdAppId()}/attachments/${processedFileName}`

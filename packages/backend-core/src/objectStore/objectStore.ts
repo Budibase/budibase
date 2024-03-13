@@ -108,7 +108,6 @@ export function ObjectStore(
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-
 export async function makeSureBucketExists(client: any, bucketName: string) {
   bucketName = sanitizeBucket(bucketName)
   try {
