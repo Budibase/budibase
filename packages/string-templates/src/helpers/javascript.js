@@ -54,8 +54,9 @@ module.exports.processJS = (handlebars, context) => {
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
+    const clonedContext = cloneDeep(context)
     const sandboxContext = {
-      $: path => getContextValue(path, cloneDeep(context)),
+      $: path => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
 
       // Proxy to evaluate snippets when running in the browser
