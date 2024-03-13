@@ -170,6 +170,10 @@
           relationshipPart1 = part1
           relationshipPart2 = part2
         }
+      } else if (editableColumn.type === FieldType.ATTACHMENT) {
+        editableColumn.constraints ??= { length: {} }
+        editableColumn.constraints.length ??= {}
+        editableColumn.constraints.length.maximum = 1
       }
     }
 
@@ -709,6 +713,21 @@
       disabled={!isCreating}
       thin
       text="Allow multiple users"
+    />
+  {:else if editableColumn.type === FieldType.ATTACHMENT}
+    <Toggle
+      value={editableColumn.constraints?.length?.maximum !== 1}
+      on:change={e => {
+        if (!e.detail) {
+          editableColumn.constraints ??= { length: {} }
+          editableColumn.constraints.length ??= {}
+          editableColumn.constraints.length.maximum = 1
+        } else {
+          delete editableColumn.constraints?.length?.maximum
+        }
+      }}
+      thin
+      text="Multiple attachments"
     />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
