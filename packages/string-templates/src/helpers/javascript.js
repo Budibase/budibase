@@ -51,10 +51,16 @@ module.exports.processJS = (handlebars, context) => {
     // This is required to allow the final `return` statement to be valid.
     const js = iifeWrapper(atob(handlebars))
 
+    // Transform snippets into an object for faster access
+    let snippetMap = {}
+    for (let snippet of context.snippets || []) {
+      snippetMap[snippet.name] = snippet.code
+    }
+
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
-    const clonedContext = cloneDeep(context)
+    const clonedContext = cloneDeep({ ...context, snippets: null })
     const sandboxContext = {
       $: path => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
@@ -64,9 +70,7 @@ module.exports.processJS = (handlebars, context) => {
         {},
         {
           get: function (_, name) {
-            // This will error if the snippet doesn't exist, but that's intended
-            const snippet = (context.snippets || []).find(x => x.name === name)
-            return eval(iifeWrapper(snippet.code))
+            return eval(iifeWrapper(snippetMap[name]))
           },
         }
       ),
