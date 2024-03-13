@@ -6,14 +6,19 @@ export default new Proxy(
   {},
   {
     get: function (_, name) {
-      // Snippet definitions are injected to the isolate global scope before
-      // this bundle is loaded, so we can access it from there.
-      // https://esbuild.github.io/content-types/#direct-eval for info on why
-      // eval is being called this way.
+      // Both snippetDefinitions and snippetCache are injected to the isolate
+      // global scope before this bundle is loaded, so we can access it from
+      // there.
+      // See https://esbuild.github.io/content-types/#direct-eval for info on
+      // why eval is being called this way.
+      // Snippets are cached and reused once they have been evaluated.
       // @ts-ignore
-      // eslint-disable-next-line no-undef
-      const snippet = (snippetDefinitions || []).find(x => x.name === name)
-      return [eval][0](iifeWrapper(snippet.code))
+      if (!(name in snippetCache)) {
+        // @ts-ignore
+        snippetCache[name] = [eval][0](iifeWrapper(snippetDefinitions[name]))
+      }
+      // @ts-ignore
+      return snippetCache[name]
     },
   }
 )
