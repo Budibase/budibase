@@ -99,9 +99,15 @@ export class IsolatedVM implements VM {
   }
 
   withSnippets(snippets?: Snippet[]) {
+    // Transform snippets into a map for faster access
+    let snippetMap: Record<string, string> = {}
+    for (let snippet of snippets || []) {
+      snippetMap[snippet.name] = snippet.code
+    }
     const snippetsSource = loadBundle(BundleType.SNIPPETS)
     const script = this.isolate.compileScriptSync(`
-      const snippetDefinitions = ${JSON.stringify(snippets || [])};
+      const snippetDefinitions = ${JSON.stringify(snippetMap)};
+      const snippetCache = {};
       ${snippetsSource};
       snippets = snippets.default;
     `)
