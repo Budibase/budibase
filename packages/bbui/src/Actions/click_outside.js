@@ -33,8 +33,8 @@ const handleClick = event => {
     }
 
     // Ignore clicks for drawers, unless the handler is registered from a drawer
-    const sourceInDrawer = handler.anchor.closest(".drawer-container") != null
-    const clickInDrawer = event.target.closest(".drawer-container") != null
+    const sourceInDrawer = handler.anchor.closest(".drawer-wrapper") != null
+    const clickInDrawer = event.target.closest(".drawer-wrapper") != null
     if (clickInDrawer && !sourceInDrawer) {
       return
     }
