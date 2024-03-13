@@ -112,7 +112,6 @@ export async function externalTrigger(
 
   const data: AutomationData = { automation, event: params as any }
   if (getResponses) {
-    await context.ensureSnippetContext()
     data.event = {
       ...data.event,
       appId: context.getAppId(),
