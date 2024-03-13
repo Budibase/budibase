@@ -115,4 +115,17 @@ describe("attachment cleanup", () => {
     await AttachmentCleanup.rowUpdate(table(), { row: row(), oldRow: row() })
     expect(mockedDeleteFiles).not.toBeCalled()
   })
+
+  it("should be able to cleanup a column and not throw when attachments are undefined", async () => {
+    const originalTable = table()
+    delete originalTable.schema["attach"]
+    await AttachmentCleanup.tableUpdate(
+      originalTable,
+      [{ attach: undefined }],
+      {
+        oldTable: table(),
+      }
+    )
+    expect(mockedDeleteFiles).not.toBeCalled()
+  })
 })
