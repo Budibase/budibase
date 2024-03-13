@@ -122,17 +122,14 @@ export async function doInAutomationContext<T>(params: {
   automationId: string
   task: () => T
 }): Promise<T> {
-  const tenantId = getTenantIDFromAppID(params.appId)
+  await ensureSnippetContext()
   return newContext(
     {
-      tenantId,
+      tenantId: getTenantIDFromAppID(params.appId),
       appId: params.appId,
       automationId: params.automationId,
     },
-    async () => {
-      await ensureSnippetContext()
-      return await params.task()
-    }
+    params.task
   )
 }
 
