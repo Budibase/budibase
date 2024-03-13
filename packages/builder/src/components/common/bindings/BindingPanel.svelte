@@ -7,7 +7,7 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext, onMount } from "svelte"
+  import { createEventDispatcher, getContext } from "svelte"
   import {
     decodeJSBinding,
     encodeJSBinding,
