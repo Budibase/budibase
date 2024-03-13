@@ -87,6 +87,7 @@
             placeholder="Search for snippets"
             autocomplete="off"
             bind:value={search}
+            autofocus
           />
         </div>
         <Icon
