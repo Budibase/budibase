@@ -84,7 +84,7 @@
 
   // Fetches the form schema from this form's dataSource
   const fetchSchema = async dataSource => {
-    if (dataSource?.tableId && dataSource?.type !== "query") {
+    if (dataSource?.tableId && !dataSource?.type?.startsWith("query")) {
       try {
         table = await API.fetchTableDefinition(dataSource.tableId)
       } catch (error) {

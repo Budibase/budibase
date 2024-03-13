@@ -1,8 +1,12 @@
 <script>
   import { Select, Label, Body, Checkbox, Input } from "@budibase/bbui"
-  import { store, currentAsset } from "builderStore"
-  import { tables, viewsV2 } from "stores/backend"
-  import { getSchemaForDatasourcePlus } from "builderStore/dataBinding"
+  import {
+    selectedScreen,
+    componentStore,
+    tables,
+    viewsV2,
+  } from "stores/builder"
+  import { getSchemaForDatasourcePlus } from "dataBinding"
   import SaveFields from "./SaveFields.svelte"
   import { getDatasourceLikeProviders } from "components/design/settings/controls/ButtonActionEditor/actions/utils"
 
@@ -11,8 +15,8 @@
   export let nested
 
   $: providerOptions = getDatasourceLikeProviders({
-    asset: $currentAsset,
-    componentId: $store.selectedComponentId,
+    asset: $selectedScreen,
+    componentId: $componentStore.selectedComponentId,
     nested,
   })
   $: schemaFields = getSchemaFields(parameters?.tableId)
@@ -68,7 +72,10 @@
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small>Title</Label>
+      <Input placeholder="Save Row" bind:value={parameters.customTitleText} />
+
+      <Label small>Text</Label>
       <Input
         placeholder="Are you sure you want to save this row?"
         bind:value={parameters.confirmText}

@@ -32,26 +32,6 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.JSON,
           title: "Payload",
         },
-        value1: {
-          type: AutomationIOType.STRING,
-          title: "Payload Value 1",
-        },
-        value2: {
-          type: AutomationIOType.STRING,
-          title: "Payload Value 2",
-        },
-        value3: {
-          type: AutomationIOType.STRING,
-          title: "Payload Value 3",
-        },
-        value4: {
-          type: AutomationIOType.STRING,
-          title: "Payload Value 4",
-        },
-        value5: {
-          type: AutomationIOType.STRING,
-          title: "Payload Value 5",
-        },
       },
       required: ["url"],
     },

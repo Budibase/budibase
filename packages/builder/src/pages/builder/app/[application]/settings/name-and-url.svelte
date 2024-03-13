@@ -10,20 +10,20 @@
     Icon,
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
-  import { store } from "builderStore"
+  import { appStore, initialise } from "stores/builder"
   import { apps } from "stores/portal"
   import UpdateAppModal from "components/start/UpdateAppModal.svelte"
   import { API } from "api"
 
   let updatingModal
 
-  $: filteredApps = $apps.filter(app => app.devId == $store.appId)
+  $: filteredApps = $apps.filter(app => app.devId == $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 
   const initialiseApp = async () => {
-    const applicationPkg = await API.fetchAppPackage($store.appId)
-    await store.actions.initialise(applicationPkg)
+    const applicationPkg = await API.fetchAppPackage($appStore.appId)
+    await initialise(applicationPkg)
   }
 </script>
 
@@ -36,7 +36,7 @@
 
   <Layout noPadding gap="XXS">
     <Label size="L">Name</Label>
-    <Body>{$store?.name}</Body>
+    <Body>{$appStore?.name}</Body>
   </Layout>
 
   <Layout noPadding gap="XS">
@@ -44,15 +44,15 @@
     <div class="icon">
       <Icon
         size="L"
-        name={$store?.icon?.name || "Apps"}
-        color={$store?.icon?.color}
+        name={$appStore?.icon?.name || "Apps"}
+        color={$appStore?.icon?.color}
       />
     </div>
   </Layout>
 
   <Layout noPadding gap="XXS">
     <Label size="L">URL</Label>
-    <Body>{$store.url}</Body>
+    <Body>{$appStore.url}</Body>
   </Layout>
 
   <div>
@@ -74,10 +74,10 @@
 <Modal bind:this={updatingModal} padding={false} width="600px">
   <UpdateAppModal
     app={{
-      name: $store.name,
-      url: $store.url,
-      icon: $store.icon,
-      appId: $store.appId,
+      name: $appStore.name,
+      url: $appStore.url,
+      icon: $appStore.icon,
+      appId: $appStore.appId,
     }}
     onUpdateComplete={async () => {
       await initialiseApp()

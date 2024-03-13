@@ -14,6 +14,7 @@ import {
   dndIsDragging,
   confirmationStore,
   roleStore,
+  appStore,
   stateStore,
   createContextStore,
 } from "stores"
@@ -35,6 +36,7 @@ export default {
 
   // Stores
   authStore,
+  appStore,
   notificationStore,
   routeStore,
   rowSelectionStore,

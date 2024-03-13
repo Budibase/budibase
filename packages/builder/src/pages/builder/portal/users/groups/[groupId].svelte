@@ -12,8 +12,8 @@
   import { goto, url } from "@roxi/routify"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { Breadcrumb, Breadcrumbs } from "components/portal/page"
-  import { roles } from "stores/backend"
-  import { apps, auth, features, groups } from "stores/portal"
+  import { roles } from "stores/builder"
+  import { apps, auth, groups } from "stores/portal"
   import { onMount, setContext } from "svelte"
   import AppNameTableRenderer from "../users/_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "../users/_components/AppRoleTableRenderer.svelte"
@@ -47,9 +47,10 @@
   let loaded = false
   let editModal, deleteModal
 
-  $: scimEnabled = $features.isScimEnabled
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
   $: group = $groups.find(x => x._id === groupId)
+  $: isScimGroup = group?.scimInfo?.isSync
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: readonly = !isAdmin || isScimGroup
   $: groupApps = $apps
     .filter(app =>
       groups.actions
@@ -119,23 +120,31 @@
     <div class="header">
       <GroupIcon {group} size="L" />
       <Heading>{group?.name}</Heading>
-      {#if !readonly}
-        <ActionMenu align="right">
-          <span slot="control">
-            <Icon hoverable name="More" />
-          </span>
-          <MenuItem icon="Refresh" on:click={() => editModal.show()}>
-            Edit
-          </MenuItem>
-          <MenuItem icon="Delete" on:click={() => deleteModal.show()}>
+      <ActionMenu align="right">
+        <span slot="control">
+          <Icon hoverable name="More" />
+        </span>
+        <MenuItem
+          icon="Refresh"
+          on:click={() => editModal.show()}
+          disabled={!isAdmin}
+        >
+          Edit
+        </MenuItem>
+        <div title={isScimGroup && "Group synced from your AD"}>
+          <MenuItem
+            icon="Delete"
+            on:click={() => deleteModal.show()}
+            disabled={readonly}
+          >
             Delete
           </MenuItem>
-        </ActionMenu>
-      {/if}
+        </div>
+      </ActionMenu>
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} />
+      <GroupUsers {groupId} {readonly} {isScimGroup} />
     </Layout>
 
     <Layout noPadding gap="S">

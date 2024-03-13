@@ -89,13 +89,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -270,6 +270,7 @@
           {
             "type": "buttonConfiguration",
             "key": "buttons",
+            "nested": true,
             "defaultValue": [
               {
                 "type": "cta",
@@ -297,13 +298,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],
@@ -460,16 +461,16 @@
         "key": "type",
         "options": [
           {
+            "label": "Action",
+            "value": "cta"
+          },
+          {
             "label": "Primary",
             "value": "primary"
           },
           {
             "label": "Secondary",
             "value": "secondary"
-          },
-          {
-            "label": "Action",
-            "value": "cta"
           },
           {
             "label": "Warning",
@@ -480,7 +481,7 @@
             "value": "overBackground"
           }
         ],
-        "defaultValue": "primary"
+        "defaultValue": "cta"
       },
       {
         "type": "select",
@@ -523,6 +524,38 @@
         "barIcon": "NoEdit",
         "barTitle": "Disable button",
         "key": "disabled"
+      },
+      {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "dependsOn": "icon",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
       },
       {
         "type": "event",
@@ -601,13 +634,13 @@
           {
             "label": "Column",
             "value": "column",
-            "barIcon": "ViewColumn",
+            "barIcon": "TableSelectColumn",
             "barTitle": "Column layout"
           },
           {
             "label": "Row",
             "value": "row",
-            "barIcon": "ViewRow",
+            "barIcon": "TableSelectRow",
             "barTitle": "Row layout"
           }
         ],
@@ -1102,6 +1135,12 @@
         "type": "color",
         "label": "Color",
         "key": "color",
+        "showInBar": true
+      },
+      {
+        "type": "color",
+        "label": "Text Color",
+        "key": "textColor",
         "showInBar": true
       },
       {
@@ -4699,6 +4738,7 @@
     "illegalChildren": ["section"],
     "hasChildren": true,
     "showEmptyState": false,
+    "actions": ["ClearRowSelection"],
     "size": {
       "width": 600,
       "height": 400
@@ -4779,10 +4819,22 @@
         ]
       }
     ],
-    "context": {
-      "type": "schema",
-      "scope": "local"
-    }
+    "context": [
+      {
+        "type": "schema",
+        "scope": "local"
+      },
+      {
+        "type": "static",
+        "values": [
+          {
+            "label": "Selected Rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ]
   },
   "daterangepicker": {
     "name": "Date Range",
@@ -5670,37 +5722,50 @@
         ]
       }
     ],
-    "context": {
-      "type": "static",
-      "suffix": "provider",
-      "values": [
-        {
-          "label": "Rows",
-          "key": "rows",
-          "type": "array"
-        },
-        {
-          "label": "Extra Info",
-          "key": "info",
-          "type": "string"
-        },
-        {
-          "label": "Rows Length",
-          "key": "rowsLength",
-          "type": "number"
-        },
-        {
-          "label": "Schema",
-          "key": "schema",
-          "type": "object"
-        },
-        {
-          "label": "Page Number",
-          "key": "pageNumber",
-          "type": "number"
-        }
-      ]
-    }
+    "context": [
+      {
+        "type": "static",
+        "suffix": "provider",
+        "values": [
+          {
+            "label": "Rows",
+            "key": "rows",
+            "type": "array"
+          },
+          {
+            "label": "Extra Info",
+            "key": "info",
+            "type": "string"
+          },
+          {
+            "label": "Rows Length",
+            "key": "rowsLength",
+            "type": "number"
+          },
+          {
+            "label": "Schema",
+            "key": "schema",
+            "type": "object"
+          },
+          {
+            "label": "Page Number",
+            "key": "pageNumber",
+            "type": "number"
+          }
+        ]
+      },
+      {
+        "type": "static",
+        "suffix": "table",
+        "values": [
+          {
+            "label": "Selected Rows",
+            "key": "selectedRows",
+            "type": "array"
+          }
+        ]
+      }
+    ]
   },
   "cardsblock": {
     "block": true,
@@ -5950,13 +6015,13 @@
               {
                 "label": "Column",
                 "value": "column",
-                "barIcon": "ViewRow",
+                "barIcon": "TableSelectColumn",
                 "barTitle": "Column layout"
               },
               {
                 "label": "Row",
                 "value": "row",
-                "barIcon": "ViewColumn",
+                "barIcon": "TableSelectRow",
                 "barTitle": "Row layout"
               }
             ],

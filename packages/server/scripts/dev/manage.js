@@ -38,7 +38,6 @@ async function init() {
     SELF_HOSTED: "1",
     DISABLE_ACCOUNT_PORTAL: "1",
     MULTI_TENANCY: "",
-    DISABLE_THREADING: "1",
     SERVICE: "app-service",
     DEPLOYMENT_ENVIRONMENT: "development",
     BB_ADMIN_USER_EMAIL: "",

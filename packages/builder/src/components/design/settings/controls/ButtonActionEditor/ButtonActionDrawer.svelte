@@ -16,7 +16,7 @@
     getActionBindings,
     makeStateBinding,
     updateReferencesInObject,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
   import { cloneDeep } from "lodash/fp"
 
   const flipDurationMs = 150
@@ -249,6 +249,9 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
 <DrawerContent>
   <Layout noPadding gap="S" slot="sidebar">
     {#if showAvailableActions || !actions?.length}

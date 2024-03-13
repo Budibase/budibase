@@ -1,9 +1,9 @@
 <script>
   import { Input, notifications } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { store } from "builderStore"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import { apps } from "stores/portal"
+  import { appStore } from "stores/builder"
   import { API } from "api"
 
   export const show = () => {
@@ -19,7 +19,7 @@
 
   const deleteApp = async () => {
     try {
-      await API.deleteApp($store.appId)
+      await API.deleteApp($appStore.appId)
       apps.load()
       notifications.success("App deleted successfully")
       $goto("/builder")
@@ -35,11 +35,14 @@
   okText="Delete"
   onOk={deleteApp}
   onCancel={() => (deletionConfirmationAppName = null)}
-  disabled={deletionConfirmationAppName !== $store.name}
+  disabled={deletionConfirmationAppName !== $appStore.name}
 >
-  Are you sure you want to delete <b>{$store.name}</b>?
+  Are you sure you want to delete <b>{$appStore.name}</b>?
   <br />
   Please enter the app name below to confirm.
   <br /><br />
-  <Input bind:value={deletionConfirmationAppName} placeholder={$store.name} />
+  <Input
+    bind:value={deletionConfirmationAppName}
+    placeholder={$appStore.name}
+  />
 </ConfirmDialog>

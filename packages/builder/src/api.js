@@ -3,14 +3,14 @@ import {
   CookieUtils,
   Constants,
 } from "@budibase/frontend-core"
-import { store } from "./builderStore"
+import { appStore } from "stores/builder"
 import { get } from "svelte/store"
 import { auth, navigation } from "./stores/portal"
 
 export const API = createAPIClient({
   attachHeaders: headers => {
     // Attach app ID header from store
-    let appId = get(store).appId
+    let appId = get(appStore).appId
     if (appId) {
       headers["x-budibase-app-id"] = appId
     }

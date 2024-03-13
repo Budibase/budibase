@@ -10,12 +10,9 @@
     Input,
     DatePicker,
   } from "@budibase/bbui"
-  import { currentAsset, selectedComponent } from "builderStore"
-  import { findClosestMatchingComponent } from "builderStore/componentUtils"
-  import {
-    getSchemaForDatasource,
-    getDatasourceForProvider,
-  } from "builderStore/dataBinding"
+  import { selectedScreen, selectedComponent } from "stores/builder"
+  import { findClosestMatchingComponent } from "helpers/components"
+  import { getSchemaForDatasource, getDatasourceForProvider } from "dataBinding"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { generate } from "shortid"
 
@@ -127,13 +124,14 @@
     ],
   }
 
-  const resolveDatasource = (currentAsset, componentInstance, parent) => {
+  const resolveDatasource = (selectedScreen, componentInstance, parent) => {
     return (
-      getDatasourceForProvider(currentAsset, parent || componentInstance) || {}
+      getDatasourceForProvider(selectedScreen, parent || componentInstance) ||
+      {}
     )
   }
 
-  $: dataSourceSchema = getDataSourceSchema($currentAsset, $selectedComponent)
+  $: dataSourceSchema = getDataSourceSchema($selectedScreen, $selectedComponent)
   $: field = fieldName || $selectedComponent?.field
   $: schemaRules = parseRulesFromSchema(field, dataSourceSchema || {})
   $: fieldType = type?.split("/")[1] || "string"

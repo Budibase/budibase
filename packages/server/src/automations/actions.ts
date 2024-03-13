@@ -9,6 +9,7 @@ import * as serverLog from "./steps/serverLog"
 import * as discord from "./steps/discord"
 import * as slack from "./steps/slack"
 import * as zapier from "./steps/zapier"
+import * as n8n from "./steps/n8n"
 import * as make from "./steps/make"
 import * as filter from "./steps/filter"
 import * as delay from "./steps/delay"
@@ -48,6 +49,7 @@ const ACTION_IMPLS: Record<
   slack: slack.run,
   zapier: zapier.run,
   integromat: make.run,
+  n8n: n8n.run,
 }
 export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
   {
@@ -70,6 +72,7 @@ export const BUILTIN_ACTION_DEFINITIONS: Record<string, AutomationStepSchema> =
     slack: slack.definition,
     zapier: zapier.definition,
     integromat: make.definition,
+    n8n: n8n.definition,
   }
 
 // don't add the bash script/definitions unless in self host

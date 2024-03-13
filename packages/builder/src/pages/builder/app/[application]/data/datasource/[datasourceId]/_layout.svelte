@@ -1,13 +1,12 @@
 <script>
   import { params } from "@roxi/routify"
-  import { datasources } from "stores/backend"
+  import { datasources, builderStore } from "stores/builder"
   import { syncURLToState } from "helpers/urlStateSync"
   import * as routify from "@roxi/routify"
   import { onDestroy } from "svelte"
-  import { store } from "builderStore"
 
   $: datasourceId = $datasources.selectedDatasourceId
-  $: store.actions.websocket.selectResource(datasourceId)
+  $: builderStore.selectResource(datasourceId)
 
   const stopSyncing = syncURLToState({
     urlParam: "datasourceId",

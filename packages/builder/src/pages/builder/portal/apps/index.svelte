@@ -16,8 +16,7 @@
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
   import AccountLockedModal from "components/portal/licensing/AccountLockedModal.svelte"
   import { sdk } from "@budibase/shared-core"
-
-  import { store, automationStore } from "builderStore"
+  import { automationStore, initialise } from "stores/builder"
   import { API } from "api"
   import { onMount } from "svelte"
   import { apps, auth, admin, licensing, environment } from "stores/portal"
@@ -153,8 +152,8 @@
 
       // Select Correct Application/DB in prep for creating user
       const pkg = await API.fetchAppPackage(createdApp.instance._id)
-      await store.actions.initialise(pkg)
-      await automationStore.actions.fetch()
+      await initialise(pkg)
+
       // Update checklist - in case first app
       await admin.init()
 

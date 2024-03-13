@@ -16,4 +16,5 @@ export enum Header {
   CORRELATION_ID = "x-budibase-correlation-id",
   AUTHORIZATION = "authorization",
   MIGRATING_APP = "x-budibase-migrating-app",
+  COOKIE = "cookie",
 }

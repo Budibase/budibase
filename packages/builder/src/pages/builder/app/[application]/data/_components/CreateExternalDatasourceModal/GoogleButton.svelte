@@ -1,7 +1,7 @@
 <script>
   import GoogleLogo from "assets/google-logo.png"
-  import { store } from "builderStore"
   import { auth } from "stores/portal"
+  import { appStore } from "stores/builder"
 
   export let disabled
   export let samePage
@@ -13,7 +13,7 @@
   class:disabled
   {disabled}
   on:click={async () => {
-    let appId = $store.appId
+    let appId = $appStore.appId
     const url = `/api/global/auth/${tenantId}/datasource/google?appId=${appId}`
     if (samePage) {
       window.location = url

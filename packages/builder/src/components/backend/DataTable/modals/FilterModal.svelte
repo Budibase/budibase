@@ -10,7 +10,7 @@
     notifications,
     Icon,
   } from "@budibase/bbui"
-  import { tables, views } from "stores/backend"
+  import { tables, views } from "stores/builder"
 
   const CONDITIONS = [
     {

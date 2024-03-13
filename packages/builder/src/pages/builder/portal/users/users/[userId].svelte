@@ -18,8 +18,8 @@
     Table,
   } from "@budibase/bbui"
   import { onMount, setContext } from "svelte"
-  import { users, auth, groups, apps, licensing, features } from "stores/portal"
-  import { roles } from "stores/backend"
+  import { users, auth, groups, apps, licensing } from "stores/portal"
+  import { roles } from "stores/builder"
   import ForceResetPasswordModal from "./_components/ForceResetPasswordModal.svelte"
   import UserGroupPicker from "components/settings/UserGroupPicker.svelte"
   import DeleteUserModal from "./_components/DeleteUserModal.svelte"
@@ -30,8 +30,8 @@
   import GroupNameTableRenderer from "../groups/_components/GroupNameTableRenderer.svelte"
   import AppNameTableRenderer from "./_components/AppNameTableRenderer.svelte"
   import AppRoleTableRenderer from "./_components/AppRoleTableRenderer.svelte"
-  import ScimBanner from "../_components/SCIMBanner.svelte"
   import { sdk } from "@budibase/shared-core"
+  import ActiveDirectoryInfo from "../_components/ActiveDirectoryInfo.svelte"
 
   export let userId
 
@@ -39,9 +39,10 @@
     name: {
       width: "1fr",
     },
-    ...(readonly
+    ...(!isAdmin
       ? {}
-      : {
+      : // Add
+        {
           _id: {
             displayName: "",
             width: "auto",
@@ -87,12 +88,15 @@
   let user
   let loaded = false
 
-  $: scimEnabled = $features.isScimEnabled
+  $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
+
   $: isSSO = !!user?.provider
-  $: readonly = !sdk.users.isAdmin($auth.user) || scimEnabled
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: isScim = user?.scimInfo?.isSync
+  $: readonly = !isAdmin || isScim
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
-  $: filteredGroups = getFilteredGroups($groups, searchTerm)
+  $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
   $: availableApps = getAvailableApps($apps, privileged, user?.roles)
   $: userGroups = $groups.filter(x => {
     return x.users?.find(y => {
@@ -274,8 +278,8 @@
     <Layout noPadding gap="S">
       <div class="details-title">
         <Heading size="S">Details</Heading>
-        {#if scimEnabled}
-          <ScimBanner />
+        {#if user?.scimInfo?.isSync}
+          <ActiveDirectoryInfo text="User synced from your AD" />
         {/if}
       </div>
       <div class="fields">
@@ -321,23 +325,23 @@
       <Layout gap="S" noPadding>
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
-          <div bind:this={popoverAnchor}>
-            <Button disabled={readonly} on:click={popover.show()} secondary>
-              Add to group
-            </Button>
-          </div>
-          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-            <UserGroupPicker
-              labelKey="name"
-              bind:searchTerm
-              list={filteredGroups}
-              selected={user.userGroups}
-              on:select={e => addGroup(e.detail)}
-              on:deselect={e => removeGroup(e.detail)}
-              iconComponent={GroupIcon}
-              extractIconProps={item => ({ group: item, size: "S" })}
-            />
-          </Popover>
+          {#if internalGroups?.length && isAdmin}
+            <div bind:this={popoverAnchor}>
+              <Button on:click={popover.show()} secondary>Add to group</Button>
+            </div>
+            <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+              <UserGroupPicker
+                labelKey="name"
+                bind:searchTerm
+                list={filteredGroups}
+                selected={user.userGroups}
+                on:select={e => addGroup(e.detail)}
+                on:deselect={e => removeGroup(e.detail)}
+                iconComponent={GroupIcon}
+                extractIconProps={item => ({ group: item, size: "S" })}
+              />
+            </Popover>
+          {/if}
         </div>
         <Table
           schema={groupSchema}

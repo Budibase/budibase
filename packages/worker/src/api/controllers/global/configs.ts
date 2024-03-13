@@ -498,6 +498,12 @@ export async function configChecklist(ctx: Ctx) {
 
         // They have set up a global user
         const userExists = await checkAnyUserExists()
+
+        // They have set up branding
+        const configDoc = await configs.getSettingsConfigDoc()
+        const config = configDoc.config
+        const branding = await pro.branding.getBrandingConfig(config)
+
         return {
           apps: {
             checked: apps.length > 0,
@@ -519,6 +525,7 @@ export async function configChecklist(ctx: Ctx) {
             label: "Set up single sign-on",
             link: "/builder/portal/settings/auth",
           },
+          branding,
         }
       }
     )

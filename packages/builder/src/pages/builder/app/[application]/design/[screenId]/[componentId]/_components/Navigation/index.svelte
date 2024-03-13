@@ -17,15 +17,20 @@
     Select,
     Combobox,
   } from "@budibase/bbui"
-  import { selectedScreen, store } from "builderStore"
+  import {
+    themeStore,
+    selectedScreen,
+    screenStore,
+    navigationStore,
+  } from "stores/builder"
   import { DefaultAppTheme } from "constants"
 
-  $: screenRouteOptions = $store.screens
+  $: screenRouteOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
 
   const updateShowNavigation = async e => {
-    await store.actions.screens.updateSetting(
+    await screenStore.updateSetting(
       get(selectedScreen),
       "showNavigation",
       e.detail
@@ -34,9 +39,9 @@
 
   const update = async (key, value) => {
     try {
-      let navigation = $store.navigation
+      let navigation = $navigationStore
       navigation[key] = value
-      await store.actions.navigation.save(navigation)
+      await navigationStore.save(navigation)
     } catch (error) {
       notifications.error("Error updating navigation settings")
     }
@@ -45,7 +50,7 @@
 
 <Panel
   title="Navigation"
-  icon={$selectedScreen.showNavigation ? "Visibility" : "VisibilityOff"}
+  icon={$selectedScreen?.showNavigation ? "Visibility" : "VisibilityOff"}
   borderLeft
   wide
 >
@@ -56,13 +61,13 @@
     <div class="toggle">
       <Toggle
         on:change={updateShowNavigation}
-        value={$selectedScreen.showNavigation}
+        value={$selectedScreen?.showNavigation}
       />
       <Body size="S">Show nav on this screen</Body>
     </div>
   </div>
 
-  {#if $selectedScreen.showNavigation}
+  {#if $selectedScreen?.showNavigation}
     <div class="divider" />
     <div class="customizeSection">
       <div class="subheading">
@@ -81,25 +86,25 @@
         </div>
         <ActionGroup quiet>
           <ActionButton
-            selected={$store.navigation.navigation === "Top"}
-            quiet={$store.navigation.navigation !== "Top"}
+            selected={$navigationStore.navigation === "Top"}
+            quiet={$navigationStore.navigation !== "Top"}
             icon="PaddingTop"
             on:click={() => update("navigation", "Top")}
           />
           <ActionButton
-            selected={$store.navigation.navigation === "Left"}
-            quiet={$store.navigation.navigation !== "Left"}
+            selected={$navigationStore.navigation === "Left"}
+            quiet={$navigationStore.navigation !== "Left"}
             icon="PaddingLeft"
             on:click={() => update("navigation", "Left")}
           />
         </ActionGroup>
 
-        {#if $store.navigation.navigation === "Top"}
+        {#if $navigationStore.navigation === "Top"}
           <div class="label">
             <Label size="M">Sticky header</Label>
           </div>
           <Checkbox
-            value={$store.navigation.sticky}
+            value={$navigationStore.sticky}
             on:change={e => update("sticky", e.detail)}
           />
           <div class="label">
@@ -108,7 +113,7 @@
           <Select
             options={["Max", "Large", "Medium", "Small"]}
             plaveholder={null}
-            value={$store.navigation.navWidth}
+            value={$navigationStore.navWidth}
             on:change={e => update("navWidth", e.detail)}
           />
         {/if}
@@ -116,15 +121,15 @@
           <Label size="M">Show title</Label>
         </div>
         <Checkbox
-          value={!$store.navigation.hideTitle}
+          value={!$navigationStore.hideTitle}
           on:change={e => update("hideTitle", !e.detail)}
         />
-        {#if !$store.navigation.hideTitle}
+        {#if !$navigationStore.hideTitle}
           <div class="label">
             <Label size="M">Title</Label>
           </div>
           <Input
-            value={$store.navigation.title}
+            value={$navigationStore.title}
             on:change={e => update("title", e.detail)}
             updateOnChange={false}
           />
@@ -133,8 +138,8 @@
           <Label>Background</Label>
         </div>
         <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.navigation.navBackground ||
+          spectrumTheme={$themeStore.theme}
+          value={$navigationStore.navBackground ||
             DefaultAppTheme.navBackground}
           on:change={e => update("navBackground", e.detail)}
         />
@@ -142,8 +147,8 @@
           <Label>Text</Label>
         </div>
         <ColorPicker
-          spectrumTheme={$store.theme}
-          value={$store.navigation.navTextColor || DefaultAppTheme.navTextColor}
+          spectrumTheme={$themeStore.theme}
+          value={$navigationStore.navTextColor || DefaultAppTheme.navTextColor}
           on:change={e => update("navTextColor", e.detail)}
         />
       </div>
@@ -159,15 +164,15 @@
           <Label size="M">Show logo</Label>
         </div>
         <Checkbox
-          value={!$store.navigation.hideLogo}
+          value={!$navigationStore.hideLogo}
           on:change={e => update("hideLogo", !e.detail)}
         />
-        {#if !$store.navigation.hideLogo}
+        {#if !$navigationStore.hideLogo}
           <div class="label">
             <Label size="M">Logo image URL</Label>
           </div>
           <Input
-            value={$store.navigation.logoUrl}
+            value={$navigationStore.logoUrl}
             on:change={e => update("logoUrl", e.detail)}
             updateOnChange={false}
           />
@@ -175,7 +180,7 @@
             <Label size="M">Logo link URL</Label>
           </div>
           <Combobox
-            value={$store.navigation.logoLinkUrl}
+            value={$navigationStore.logoLinkUrl}
             on:change={e => update("logoLinkUrl", e.detail)}
             options={screenRouteOptions}
           />
@@ -183,7 +188,7 @@
             <Label size="M">New tab</Label>
           </div>
           <Checkbox
-            value={!!$store.navigation.openLogoLinkInNewTab}
+            value={!!$navigationStore.openLogoLinkInNewTab}
             on:change={e => update("openLogoLinkInNewTab", !!e.detail)}
           />
         {/if}

@@ -310,6 +310,7 @@ export const BannedSearchTypes = [
   "formula",
   "json",
   "jsonarray",
+  "queryarray",
 ]
 
 export const DatasourceTypes = {

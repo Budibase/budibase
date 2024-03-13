@@ -6,6 +6,8 @@
   export let disabled
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click class:disabled class="option">
   <div class="header">
     <div class="icon">

@@ -11,7 +11,9 @@ export async function start(): Promise<StartedTestContainer> {
       MONGO_INITDB_ROOT_PASSWORD: "password",
     })
     .withWaitStrategy(
-      Wait.forSuccessfulCommand(`mongosh --eval "db.version()"`)
+      Wait.forSuccessfulCommand(
+        `mongosh --eval "db.version()"`
+      ).withStartupTimeout(10000)
     )
     .start()
 }

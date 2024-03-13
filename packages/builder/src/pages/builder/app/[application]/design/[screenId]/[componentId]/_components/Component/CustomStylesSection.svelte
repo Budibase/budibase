@@ -9,13 +9,13 @@
     Icon,
     Body,
   } from "@budibase/bbui"
-  import { selectedScreen, store } from "builderStore"
+  import { selectedScreen, componentStore } from "stores/builder"
   import ClientBindingPanel from "components/common/bindings/ClientBindingPanel.svelte"
   import {
     getBindableProperties,
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   export let componentInstance
   export let componentDefinition
@@ -27,7 +27,7 @@
 
   $: bindings = getBindableProperties(
     $selectedScreen,
-    $store.selectedComponentId
+    $componentStore.selectedComponentId
   )
 
   $: icon = componentDefinition?.icon
@@ -43,7 +43,7 @@
   const save = async () => {
     try {
       const value = readableToRuntimeBinding(bindings, tempValue)
-      await store.actions.components.updateCustomStyle(value)
+      await componentStore.updateCustomStyle(value)
     } catch (error) {
       notifications.error("Error updating custom style")
     }

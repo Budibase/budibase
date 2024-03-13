@@ -1,14 +1,10 @@
 <script>
-  import { currentAsset, store } from "builderStore"
   import {
     findClosestMatchingComponent,
     findComponent,
-  } from "builderStore/componentUtils"
-  import {
-    getDatasourceForProvider,
-    getSchemaForDatasource,
-  } from "builderStore/dataBinding"
-  import { tables } from "stores/backend"
+  } from "helpers/components"
+  import { getDatasourceForProvider, getSchemaForDatasource } from "dataBinding"
+  import { tables, selectedScreen, componentStore } from "stores/builder"
   import FilterEditor from "./FilterEditor/FilterEditor.svelte"
 
   export let componentInstance
@@ -18,29 +14,29 @@
 
   // Find the closest parent form
   $: form = findClosestMatchingComponent(
-    $currentAsset.props,
+    $selectedScreen.props,
     componentInstance._id,
     component => component._component.endsWith("/form")
   )
 
-  const resolveDatasource = (currentAsset, componentInstance, form) => {
-    if (!form && componentInstance._id != $store.selectedComponentId) {
+  const resolveDatasource = (selectedScreen, componentInstance, form) => {
+    if (!form && componentInstance._id != $componentStore.selectedComponentId) {
       const block = findComponent(
-        currentAsset.props,
-        $store.selectedComponentId
+        selectedScreen.props,
+        $componentStore.selectedComponentId
       )
-      const def = store.actions.components.getDefinition(block._component)
+      const def = componentStore.getDefinition(block._component)
       return def?.block === true
-        ? getDatasourceForProvider(currentAsset, block)
+        ? getDatasourceForProvider(selectedScreen, block)
         : {}
     } else {
-      return getDatasourceForProvider(currentAsset, form)
+      return getDatasourceForProvider(selectedScreen, form)
     }
   }
 
   // Get that form's schema
-  $: datasource = resolveDatasource($currentAsset, componentInstance, form)
-  $: formSchema = getSchemaForDatasource($currentAsset, datasource)?.schema
+  $: datasource = resolveDatasource($selectedScreen, componentInstance, form)
+  $: formSchema = getSchemaForDatasource($selectedScreen, datasource)?.schema
 
   // Get the schema for the relationship field that this picker is using
   $: columnSchema = formSchema?.[column]

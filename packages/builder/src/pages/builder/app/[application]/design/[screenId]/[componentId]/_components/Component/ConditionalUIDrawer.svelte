@@ -13,10 +13,9 @@
   import { generate } from "shortid"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { LuceneUtils, Constants } from "@budibase/frontend-core"
-  import { selectedComponent } from "builderStore"
+  import { selectedComponent, componentStore } from "stores/builder"
   import { getComponentForSetting } from "components/design/settings/componentSettings"
   import PropertyControl from "components/design/settings/controls/PropertyControl.svelte"
-  import { getComponentSettings } from "builderStore/componentUtils"
 
   export let conditions = []
   export let bindings = []
@@ -56,11 +55,13 @@
   ]
 
   let dragDisabled = true
-  $: settings = getComponentSettings($selectedComponent?._component)?.concat({
-    label: "Custom CSS",
-    key: "_css",
-    type: "text",
-  })
+  $: settings = componentStore
+    .getComponentSettings($selectedComponent?._component)
+    ?.concat({
+      label: "Custom CSS",
+      key: "_css",
+      type: "text",
+    })
   $: settingOptions = settings
     .filter(setting => setting.supportsConditions !== false)
     .map(setting => ({
@@ -148,6 +149,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <DrawerContent>
   <div class="container">
     <Layout noPadding>

@@ -1,6 +1,6 @@
 <script>
   import { goto, url } from "@roxi/routify"
-  import { tables, datasources } from "stores/backend"
+  import { tables, datasources } from "stores/builder"
   import {
     notifications,
     Input,

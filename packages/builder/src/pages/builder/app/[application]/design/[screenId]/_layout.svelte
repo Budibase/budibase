@@ -2,7 +2,7 @@
   import AppPanel from "./_components/AppPanel.svelte"
   import * as routify from "@roxi/routify"
   import { syncURLToState } from "helpers/urlStateSync"
-  import { store, selectedScreen } from "builderStore"
+  import { screenStore, selectedScreen } from "stores/builder"
   import { onDestroy } from "svelte"
   import LeftPanel from "./_components/LeftPanel.svelte"
 
@@ -10,10 +10,11 @@
   const stopSyncing = syncURLToState({
     urlParam: "screenId",
     stateKey: "selectedScreenId",
-    validate: id => $store.screens.some(screen => screen._id === id),
+    validate: id => $screenStore.screens.some(screen => screen._id === id),
     fallbackUrl: "../../design",
-    store,
     routify,
+    update: screenStore.select,
+    store: screenStore,
   })
 
   onDestroy(stopSyncing)

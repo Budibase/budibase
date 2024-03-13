@@ -13,6 +13,8 @@
   export let badge = ""
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <li
   class="spectrum-SideNav-item"
   class:is-selected={selected}

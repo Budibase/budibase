@@ -5,6 +5,7 @@ import {
   AutoFieldSubType,
   AutoReason,
   FormulaType,
+  JsonFieldSubType,
   RelationshipType,
 } from "./constants"
 
@@ -79,6 +80,11 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
     toTable: string
     toKey: string
   }
+}
+
+export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.JSON
+  subtype?: JsonFieldSubType.ARRAY
 }
 
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
@@ -162,6 +168,7 @@ export type FieldSchema =
   | NumberFieldMetadata
   | LongFormFieldMetadata
   | BBReferenceFieldMetadata
+  | JsonFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema

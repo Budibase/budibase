@@ -32,9 +32,7 @@ export interface FetchDatasourceInfoResponse {
   tableNames: string[]
 }
 
-export interface UpdateDatasourceRequest extends Datasource {
-  datasource: Datasource
-}
+export interface UpdateDatasourceRequest extends Datasource {}
 
 export interface BuildSchemaFromSourceRequest {
   tablesFilter?: string[]

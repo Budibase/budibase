@@ -12,7 +12,7 @@
 
 # erlang cookie for clouseau security
 -name couchdb@127.0.0.1
--setcookie monster
+-setcookie COUCHDB_ERLANG_COOKIE
 
 # Ensure that the Erlang VM listens on a known port
 -kernel inet_dist_listen_min 9100

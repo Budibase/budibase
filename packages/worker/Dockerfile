@@ -37,6 +37,7 @@ RUN apk del .gyp \
 
 COPY packages/worker/dist/ dist/
 COPY packages/worker/docker_run.sh .
+COPY packages/server/pm2.config.js .
 
 EXPOSE 4001
 

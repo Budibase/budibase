@@ -1,12 +1,14 @@
 <script>
   import { ModalContent, Body, Layout, Icon } from "@budibase/bbui"
-  import { OnboardingType } from "../../../../../../constants"
+  import { OnboardingType } from "constants"
 
   export let chooseCreationType
 
   let selectedOnboardingType
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ModalContent
   size="M"
   title="Choose your onboarding"

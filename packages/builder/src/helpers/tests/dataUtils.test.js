@@ -39,4 +39,11 @@ describe("check query string utils", () => {
     expect(broken.key1).toBe(obj2.key1)
     expect(broken.key2).toBe(obj2.key2)
   })
+
+  it("should not encode a URL more than once when building the query string", () => {
+    const queryString = buildQueryString({
+      values: "a%2Cb%2Cc",
+    })
+    expect(queryString).toBe("values=a%2Cb%2Cc")
+  })
 })

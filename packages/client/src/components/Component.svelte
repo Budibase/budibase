@@ -113,6 +113,9 @@
   // List of context keys which we use inside bindings
   let knownContextKeyMap = {}
 
+  // Cleanup function to stop observing context changes when unmounting
+  let unobserve
+
   // Set up initial state for each new component instance
   $: initialise(instance)
 
@@ -311,6 +314,11 @@
 
     // Force an initial enrichment of the new settings
     enrichComponentSettings(get(context), settingsDefinitionMap)
+
+    // Start observing changes in context now that we are initialised
+    if (!unobserve) {
+      unobserve = context.actions.observeChanges(handleContextChange)
+    }
   }
 
   // Extracts a map of all context keys which are required by action settings
@@ -567,8 +575,8 @@
     }
   }
 
-  // Register an unregister component instance
   onMount(() => {
+    // Register this component instance for external access
     if ($appStore.isDevApp) {
       if (!componentStore.actions.isComponentRegistered(id)) {
         componentStore.actions.registerInstance(id, {
@@ -581,16 +589,17 @@
           state: store,
         })
       }
-      return () => {
-        if (componentStore.actions.isComponentRegistered(id)) {
-          componentStore.actions.unregisterInstance(id)
-        }
+    }
+    return () => {
+      // Unregister component
+      if (componentStore.actions.isComponentRegistered(id)) {
+        componentStore.actions.unregisterInstance(id)
       }
+
+      // Stop observing context changes
+      unobserve?.()
     }
   })
-
-  // Observe changes to context
-  onMount(() => context.actions.observeChanges(handleContextChange))
 </script>
 
 {#if constructor && initialSettings && (visible || inSelectedPath) && !builderHidden}

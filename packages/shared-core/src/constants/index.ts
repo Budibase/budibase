@@ -99,6 +99,8 @@ export const SocketSessionTTL = 60
 export const ValidQueryNameRegex = /^[^()]*$/
 export const ValidColumnNameRegex = /^[_a-zA-Z0-9\s]*$/g
 
+export const REBOOT_CRON = "@reboot"
+
 export const InvalidFileExtensions = [
   "7z",
   "action",

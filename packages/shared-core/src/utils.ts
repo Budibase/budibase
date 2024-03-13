@@ -57,3 +57,13 @@ export function filterValueToLabel() {
     {}
   )
 }
+
+export function hasSchema(test: any) {
+  return (
+    typeof test === "object" &&
+    !Array.isArray(test) &&
+    test !== null &&
+    !(test instanceof Date) &&
+    Object.keys(test).length > 0
+  )
+}

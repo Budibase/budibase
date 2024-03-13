@@ -9,11 +9,11 @@
   } from "@budibase/bbui"
   import { AppStatus } from "constants"
   import { apps } from "stores/portal"
-  import { store } from "builderStore"
+  import { appStore } from "stores/builder"
   import ExportAppModal from "components/start/ExportAppModal.svelte"
   import ImportAppModal from "components/start/ImportAppModal.svelte"
 
-  $: filteredApps = $apps.filter(app => app.devId === $store.appId)
+  $: filteredApps = $apps.filter(app => app.devId === $appStore.appId)
   $: app = filteredApps.length ? filteredApps[0] : {}
   $: appDeployed = app?.status === AppStatus.DEPLOYED
 

@@ -1,5 +1,9 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
+  import {
+    automationStore,
+    selectedAutomation,
+    permissions,
+  } from "stores/builder"
   import {
     Icon,
     Divider,
@@ -17,7 +21,6 @@
   import FlowItemHeader from "./FlowItemHeader.svelte"
   import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
   import { ActionStepID, TriggerStepID } from "constants/backend/automations"
-  import { permissions } from "stores/backend"
 
   export let block
   export let testDataModal
@@ -100,6 +103,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class={`block ${block.type} hoverable`} class:selected on:click={() => {}}>
   {#if loopBlock}
     <div class="blockSection">

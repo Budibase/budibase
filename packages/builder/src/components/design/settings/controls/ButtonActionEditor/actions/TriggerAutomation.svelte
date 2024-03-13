@@ -1,6 +1,6 @@
 <script>
   import { Select, Label, Input, Checkbox, Icon, Body } from "@budibase/bbui"
-  import { automationStore } from "builderStore"
+  import { automationStore } from "stores/builder"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { TriggerStepID, ActionStepID } from "constants/backend/automations"
 

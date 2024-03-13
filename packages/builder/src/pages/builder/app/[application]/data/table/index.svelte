@@ -1,6 +1,6 @@
 <script>
   import { onMount } from "svelte"
-  import { datasources, tables } from "stores/backend"
+  import { datasources, tables } from "stores/builder"
   import { redirect } from "@roxi/routify"
   import { TableNames } from "constants"
 

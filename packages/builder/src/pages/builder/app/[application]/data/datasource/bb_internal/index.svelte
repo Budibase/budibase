@@ -2,16 +2,15 @@
   import { Button, Heading, Body, Layout, Modal, Divider } from "@budibase/bbui"
   import CreateTableModal from "components/backend/TableNavigator/modals/CreateTableModal.svelte"
   import ICONS from "components/backend/DatasourceNavigator/icons"
-  import { tables, datasources } from "stores/backend"
+  import { tables, datasources, builderStore } from "stores/builder"
   import { goto } from "@roxi/routify"
   import { onMount } from "svelte"
   import { BUDIBASE_INTERNAL_DB_ID, DB_TYPE_EXTERNAL } from "constants/backend"
   import { TableNames } from "constants"
-  import { store } from "builderStore"
 
   let modal
 
-  $: store.actions.websocket.selectResource(BUDIBASE_INTERNAL_DB_ID)
+  $: builderStore.selectResource(BUDIBASE_INTERNAL_DB_ID)
   $: internalTablesBySourceId = $tables.list.filter(
     table =>
       table.sourceType !== DB_TYPE_EXTERNAL &&
@@ -28,6 +27,8 @@
   <CreateTableModal />
 </Modal>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <section>
   <Layout>
     <Layout gap="XS" noPadding>

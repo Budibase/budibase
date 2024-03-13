@@ -7,7 +7,7 @@
   import { get } from "svelte/store"
   import TableImportSelection from "components/backend/Datasources/TableImportSelection/index.svelte"
   import DatasourceConfigEditor from "components/backend/Datasources/ConfigEditor/index.svelte"
-  import { datasources } from "stores/backend"
+  import { datasources } from "stores/builder"
   import { createOnGoogleAuthStore } from "./stores/onGoogleAuth.js"
   import { createDatasourceCreationStore } from "./stores/datasourceCreation.js"
   import { configFromIntegration } from "stores/selectors"

@@ -13,6 +13,8 @@
   export let hoverable = false
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <span
   on:click
   class="spectrum-Label"

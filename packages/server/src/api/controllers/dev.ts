@@ -1,7 +1,7 @@
 import fetch from "node-fetch"
 import env from "../../environment"
 import { checkSlashesInUrl } from "../../utilities"
-import { request } from "../../utilities/workerRequests"
+import { createRequest } from "../../utilities/workerRequests"
 import { clearLock as redisClearLock } from "../../utilities/redis"
 import { DocumentType } from "../../db/utils"
 import {
@@ -13,14 +13,19 @@ import {
 } from "@budibase/backend-core"
 import { App } from "@budibase/types"
 
-async function redirect(ctx: any, method: string, path: string = "global") {
+async function redirect(
+  ctx: any,
+  method: "GET" | "POST" | "DELETE",
+  path: string = "global"
+) {
   const { devPath } = ctx.params
   const queryString = ctx.originalUrl.split("?")[1] || ""
   const response = await fetch(
     checkSlashesInUrl(
       `${env.WORKER_URL}/api/${path}/${devPath}?${queryString}`
     ),
-    request(ctx, {
+    createRequest({
+      ctx,
       method,
       body: ctx.request.body,
     })

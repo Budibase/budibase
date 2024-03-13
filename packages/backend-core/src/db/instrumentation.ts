@@ -1,5 +1,4 @@
 import {
-  DocumentScope,
   DocumentDestroyResponse,
   DocumentInsertResponse,
   DocumentBulkResponse,
@@ -13,6 +12,7 @@ import {
   DatabasePutOpts,
   DatabaseQueryOpts,
   Document,
+  RowValue,
 } from "@budibase/types"
 import tracer from "dd-trace"
 import { Writable } from "stream"
@@ -24,9 +24,12 @@ export class DDInstrumentedDatabase implements Database {
     return this.db.name
   }
 
-  exists(): Promise<boolean> {
+  exists(docId?: string): Promise<boolean> {
     return tracer.trace("db.exists", span => {
-      span?.addTags({ db_name: this.name })
+      span?.addTags({ db_name: this.name, doc_id: docId })
+      if (docId) {
+        return this.db.exists(docId)
+      }
       return this.db.exists()
     })
   }
@@ -79,7 +82,7 @@ export class DDInstrumentedDatabase implements Database {
     })
   }
 
-  allDocs<T extends Document>(
+  allDocs<T extends Document | RowValue>(
     params: DatabaseQueryOpts
   ): Promise<AllDocsResponse<T>> {
     return tracer.trace("db.allDocs", span => {

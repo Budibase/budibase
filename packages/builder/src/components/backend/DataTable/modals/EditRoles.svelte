@@ -10,7 +10,7 @@
   import { onMount } from "svelte"
   import { API } from "api"
   import ErrorsBox from "components/common/ErrorsBox.svelte"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
 
   const BASE_ROLE = { _id: "", inherits: "BASIC", permissionId: "write" }
 

@@ -1,4 +1,4 @@
-const { atob } = require("../utilities")
+const { atob, isBackendService, isJSAllowed } = require("../utilities")
 const cloneDeep = require("lodash.clonedeep")
 const { LITERAL_MARKER } = require("../helpers/constants")
 const { getJsHelperList } = require("./list")
@@ -7,6 +7,9 @@ const { getJsHelperList } = require("./list")
 // This setter is used in the entrypoint (either index.js or index.mjs).
 let runJS
 module.exports.setJSRunner = runner => (runJS = runner)
+module.exports.removeJSRunner = () => {
+  runJS = undefined
+}
 
 let onErrorLog
 module.exports.setOnErrorLog = delegate => (onErrorLog = delegate)
@@ -39,7 +42,7 @@ const getContextValue = (path, context) => {
 
 // Evaluates JS code against a certain context
 module.exports.processJS = (handlebars, context) => {
-  if (process && process.env.NO_JS) {
+  if (!isJSAllowed() || (isBackendService() && !runJS)) {
     throw new Error("JS disabled in environment.")
   }
   try {

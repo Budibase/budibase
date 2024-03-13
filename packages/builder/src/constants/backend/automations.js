@@ -27,6 +27,7 @@ export const ActionStepID = {
   slack: "slack",
   zapier: "zapier",
   integromat: "integromat",
+  n8n: "n8n",
 }
 
 export const Features = {

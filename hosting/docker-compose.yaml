@@ -98,7 +98,6 @@ services:
   couchdb-service:
     restart: unless-stopped
     image: budibase/couchdb
-    pull_policy: always
     environment:
       - COUCHDB_PASSWORD=${COUCH_DB_PASSWORD}
       - COUCHDB_USER=${COUCH_DB_USER}

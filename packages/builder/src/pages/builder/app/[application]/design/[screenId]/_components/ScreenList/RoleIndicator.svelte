@@ -1,7 +1,7 @@
 <script>
   import { RoleUtils } from "@budibase/frontend-core"
   import { Tooltip, StatusLight } from "@budibase/bbui"
-  import { roles } from "stores/backend"
+  import { roles } from "stores/builder"
   import { Roles } from "constants/backend"
 
   export let roleId
@@ -16,6 +16,7 @@
       : `Requires ${role?.name} access`
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="container"
   on:mouseover={() => (showTooltip = true)}

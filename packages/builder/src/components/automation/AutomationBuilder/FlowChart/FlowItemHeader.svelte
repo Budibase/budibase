@@ -1,6 +1,6 @@
 <script>
-  import { automationStore, selectedAutomation } from "builderStore"
-  import { Icon, Body, StatusLight, AbsTooltip } from "@budibase/bbui"
+  import { automationStore, selectedAutomation } from "stores/builder"
+  import { Icon, Body, AbsTooltip, StatusLight } from "@budibase/bbui"
   import { externalActions } from "./ExternalActions"
   import { createEventDispatcher } from "svelte"
   import { Features } from "constants/backend/automations"
@@ -93,6 +93,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class:typing={typing && !automationNameError}
   class:typing-error={automationNameError}

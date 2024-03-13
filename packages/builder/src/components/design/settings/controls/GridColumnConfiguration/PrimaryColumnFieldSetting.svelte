@@ -1,10 +1,10 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { Icon } from "@budibase/bbui"
   import { setContext } from "svelte"
   import { writable } from "svelte/store"
   import { FieldTypeToComponentMap } from "../FieldConfiguration/utils"
-  import { store } from "builderStore"
+  import { componentStore } from "stores/builder"
 
   export let item
   export let anchor
@@ -35,7 +35,7 @@
     const component = `@budibase/standard-components/${
       FieldTypeToComponentMap[item.columnType]
     }`
-    return store.actions.components.getDefinition(component)?.icon
+    return componentStore.getDefinition(component)?.icon
   }
 
   $: icon = getIcon(item)

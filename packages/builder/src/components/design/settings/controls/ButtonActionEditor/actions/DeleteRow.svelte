@@ -1,6 +1,6 @@
 <script>
   import { Select, Label, Checkbox, Input, Body } from "@budibase/bbui"
-  import { tables, viewsV2 } from "stores/backend"
+  import { tables, viewsV2 } from "stores/builder"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
 
   export let parameters
@@ -45,7 +45,10 @@
     <Checkbox text="Require confirmation" bind:value={parameters.confirm} />
 
     {#if parameters.confirm}
-      <Label small>Confirm text</Label>
+      <Label small>Title</Label>
+      <Input placeholder="Delete Row" bind:value={parameters.customTitleText} />
+
+      <Label small>Text</Label>
       <Input
         placeholder="Are you sure you want to delete?"
         bind:value={parameters.confirmText}

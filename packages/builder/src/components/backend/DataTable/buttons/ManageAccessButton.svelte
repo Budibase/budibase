@@ -1,6 +1,6 @@
 <script>
   import { ActionButton, Modal } from "@budibase/bbui"
-  import { permissions } from "stores/backend"
+  import { permissions } from "stores/builder"
   import ManageAccessModal from "../modals/ManageAccessModal.svelte"
 
   export let resourceId

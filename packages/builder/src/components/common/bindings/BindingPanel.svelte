@@ -19,7 +19,7 @@
   import {
     readableToRuntimeBinding,
     runtimeToReadableBinding,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
 
   import { admin } from "stores/portal"
   import CodeEditor from "../CodeEditor/CodeEditor.svelte"

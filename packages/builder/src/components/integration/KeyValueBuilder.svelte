@@ -85,6 +85,16 @@
     activity = newActivity
     dispatch("change", fields)
   }
+
+  function isJsonArray(value) {
+    if (!value || typeof value === "string") {
+      return false
+    }
+    if (value.type === "array") {
+      return true
+    }
+    return value.type === "json" && value.subtype === "array"
+  }
 </script>
 
 <!-- Builds Objects with Key Value Pairs. Useful for building things like Request Headers. -->
@@ -112,7 +122,9 @@
         bind:value={field.name}
         on:blur={changed}
       />
-      {#if options}
+      {#if isJsonArray(field.value)}
+        <Select readonly={true} value="Array" options={["Array"]} />
+      {:else if options}
         <Select
           bind:value={field.value}
           {compare}

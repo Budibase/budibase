@@ -11,7 +11,7 @@
   import DateTimeRenderer from "components/common/renderers/DateTimeRenderer.svelte"
   import TestDisplay from "components/automation/AutomationBuilder/TestDisplay.svelte"
   import { goto } from "@roxi/routify"
-  import { automationStore } from "builderStore"
+  import { automationStore } from "stores/builder"
 
   export let history
   export let appId

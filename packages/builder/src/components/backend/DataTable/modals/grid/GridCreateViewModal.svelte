@@ -2,7 +2,7 @@
   import { getContext } from "svelte"
   import { Input, notifications, ModalContent } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
-  import { viewsV2 } from "stores/backend"
+  import { viewsV2 } from "stores/builder"
 
   const { filter, sort, definition } = getContext("grid")
 

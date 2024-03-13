@@ -303,7 +303,7 @@ class Orchestrator {
             if (timeout) {
               setTimeout(() => {
                 timeoutFlag = true
-              }, timeout || 12000)
+              }, timeout || env.AUTOMATION_THREAD_TIMEOUT)
             }
 
             stepCount++
@@ -621,7 +621,7 @@ export async function executeInThread(job: Job<AutomationData>) {
   const timeoutPromise = new Promise((resolve, reject) => {
     setTimeout(() => {
       reject(new Error("Timeout exceeded"))
-    }, job.data.event.timeout || 12000)
+    }, job.data.event.timeout || env.AUTOMATION_THREAD_TIMEOUT)
   })
 
   return await context.doInAppContext(appId, async () => {

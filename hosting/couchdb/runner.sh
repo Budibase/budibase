@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DATA_DIR=${DATA_DIR:-/data}
+COUCHDB_ERLANG_COOKIE=${COUCHDB_ERLANG_COOKIE:-B9CFC32C-3458-4A86-8448-B3C753991CA7}
 
 mkdir -p ${DATA_DIR}
 mkdir -p ${DATA_DIR}/couch/{dbs,views}
@@ -59,6 +60,9 @@ else
     sed -i "s#DATA_DIR#/data#g" /opt/clouseau/clouseau.ini
     sed -i "s#DATA_DIR#/data#g" /opt/couchdb/etc/local.ini
 fi
+
+sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/couchdb/etc/vm.args
+sed -i "s#COUCHDB_ERLANG_COOKIE#${COUCHDB_ERLANG_COOKIE}#g" /opt/clouseau/clouseau.ini
 
 # Start Clouseau. Budibase won't function correctly without Clouseau running, it
 # powers the search API endpoints which are used to do all sorts, including
