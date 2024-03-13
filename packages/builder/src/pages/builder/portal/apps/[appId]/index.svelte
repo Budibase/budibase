@@ -48,9 +48,6 @@
   onDestroy(() => {
     window.removeEventListener("message", receiveMessage)
   })
-  $: {
-    console.log(app);
-  }
 </script>
 
 <div class="container">

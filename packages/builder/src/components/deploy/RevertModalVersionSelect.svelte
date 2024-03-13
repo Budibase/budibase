@@ -22,6 +22,3 @@
     <option value={version}>{version}</option>
   {/each}
 </select>
-
-<style>
-</style>

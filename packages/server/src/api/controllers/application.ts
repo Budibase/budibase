@@ -271,7 +271,6 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
-
     let newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
@@ -665,6 +664,10 @@ export async function updateAppPackage(
 export async function setRevertableVersion(
   ctx: UserCtx
 ) {
+  if (!env.isDev()) {
+    ctx.status = 403;
+    return;
+  }
   const db = context.getAppDB()
   const app = await db.get(DocumentType.APP_METADATA)
   app.revertableVersion = ctx.request.body.revertableVersion
