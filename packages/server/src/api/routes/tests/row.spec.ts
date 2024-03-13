@@ -832,9 +832,19 @@ describe.each([
       })
 
       it("should allow enriching attachment rows", async () => {
-        const table = await config.createAttachmentTable()
+        const table = await config.api.table.save(
+          defaultTable({
+            schema: {
+              attachment: {
+                type: FieldType.ATTACHMENT,
+                name: "attachment",
+                constraints: { type: "array", presence: false },
+              },
+            },
+          })
+        )
         const attachmentId = `${uuid.v4()}.csv`
-        const row = await config.createRow({
+        const row = await config.api.row.save(table._id!, {
           name: "test",
           description: "test",
           attachment: [
