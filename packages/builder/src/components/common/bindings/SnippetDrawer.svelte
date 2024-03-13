@@ -80,8 +80,6 @@
     }
     return null
   }
-
-  $: console.log(nameError)
 </script>
 
 <Drawer bind:this={drawer}>
@@ -114,7 +112,11 @@
         Delete
       </Button>
     {/if}
-    <Button cta on:click={saveSnippet} disabled={loading || nameError != null}>
+    <Button
+      cta
+      on:click={saveSnippet}
+      disabled={!snippet && (loading || nameError)}
+    >
       Save
     </Button>
   </svelte:fragment>
