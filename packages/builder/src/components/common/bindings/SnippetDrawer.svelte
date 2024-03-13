@@ -80,6 +80,8 @@
     }
     return null
   }
+
+  $: console.log(nameError)
 </script>
 
 <Drawer bind:this={drawer}>
