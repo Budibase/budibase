@@ -292,7 +292,7 @@ export async function ensureSnippetContext() {
   // Otherwise get snippets for this app and update context
   let snippets: Snippet[] | undefined
   const db = getAppDB()
-  if (db) {
+  if (db && !env.isTest()) {
     const app = await db.get<App>(DocumentType.APP_METADATA)
     snippets = app.snippets
   }
