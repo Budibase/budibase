@@ -7,6 +7,7 @@ import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AutoFieldSubType,
+  Datasource,
   DeleteRow,
   FieldSchema,
   FieldType,
@@ -24,6 +25,7 @@ import {
   StaticQuotaName,
   Table,
   TableSourceType,
+  ViewV2,
 } from "@budibase/types"
 import {
   expectAnyExternalColsAttributes,
@@ -32,7 +34,7 @@ import {
   mocks,
   structures,
 } from "@budibase/backend-core/tests"
-import _ from "lodash"
+import _, { merge } from "lodash"
 import * as uuid from "uuid"
 
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
@@ -51,12 +53,21 @@ describe.each([
   ["mssql", databaseTestProviders.mssql],
   ["mariadb", databaseTestProviders.mariadb],
 ])("/rows (%s)", (__, dsProvider) => {
-  const isInternal = !dsProvider
-
+  const isInternal = dsProvider === undefined
   const request = setup.getRequest()
   const config = setup.getConfig()
+
   let table: Table
-  let tableId: string
+  let datasource: Datasource | undefined
+
+  beforeAll(async () => {
+    await config.init()
+    if (dsProvider) {
+      datasource = await config.createDatasource({
+        datasource: await dsProvider.datasource(),
+      })
+    }
+  })
 
   afterAll(async () => {
     if (dsProvider) {
@@ -65,24 +76,17 @@ describe.each([
     setup.afterAll()
   })
 
-  beforeAll(async () => {
-    await config.init()
-
-    if (dsProvider) {
-      await config.createDatasource({
-        datasource: await dsProvider.datasource(),
-      })
-    }
-  })
-
-  const generateTableConfig: () => SaveTableRequest = () => {
-    return {
+  function saveTableRequest(
+    ...overrides: Partial<SaveTableRequest>[]
+  ): SaveTableRequest {
+    const req: SaveTableRequest = {
       name: uuid.v4().substring(0, 16),
       type: "table",
+      sourceType: datasource
+        ? TableSourceType.EXTERNAL
+        : TableSourceType.INTERNAL,
+      sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
       primary: ["id"],
-      primaryDisplay: "name",
-      sourceType: TableSourceType.INTERNAL,
-      sourceId: INTERNAL_TABLE_SOURCE_ID,
       schema: {
         id: {
           type: FieldType.AUTO,
@@ -92,22 +96,36 @@ describe.each([
             presence: true,
           },
         },
-        name: {
-          type: FieldType.STRING,
-          name: "name",
-          constraints: {
-            type: "string",
+      },
+    }
+    return merge(req, ...overrides)
+  }
+
+  function defaultTable(
+    ...overrides: Partial<SaveTableRequest>[]
+  ): SaveTableRequest {
+    return saveTableRequest(
+      {
+        primaryDisplay: "name",
+        schema: {
+          name: {
+            type: FieldType.STRING,
+            name: "name",
+            constraints: {
+              type: "string",
+            },
           },
-        },
-        description: {
-          type: FieldType.STRING,
-          name: "description",
-          constraints: {
-            type: "string",
+          description: {
+            type: FieldType.STRING,
+            name: "description",
+            constraints: {
+              type: "string",
+            },
           },
         },
       },
-    }
+      ...overrides
+    )
   }
 
   beforeEach(async () => {
@@ -148,9 +166,7 @@ describe.each([
   }
 
   beforeAll(async () => {
-    const tableConfig = generateTableConfig()
-    let table = await createTable(tableConfig)
-    tableId = table._id!
+    table = await config.api.table.save(defaultTable())
   })
 
   describe("save, load, update", () => {
@@ -158,13 +174,13 @@ describe.each([
       const rowUsage = await getRowUsage()
 
       const res = await request
-        .post(`/api/${tableId}/rows`)
-        .send(basicRow(tableId))
+        .post(`/api/${table._id!}/rows`)
+        .send(basicRow(table._id!))
         .set(config.defaultHeaders())
         .expect("Content-Type", /json/)
         .expect(200)
       expect((res as any).res.statusMessage).toEqual(
-        `${config.table!.name} saved successfully`
+        `${table.name} saved successfully`
       )
       expect(res.body.name).toEqual("Test Contact")
       expect(res.body._rev).toBeDefined()
@@ -174,13 +190,10 @@ describe.each([
     it("Increment row autoId per create row request", async () => {
       const rowUsage = await getRowUsage()
 
-      const tableConfig = generateTableConfig()
-      const newTable = await createTable(
-        {
-          ...tableConfig,
+      const newTable = await config.api.table.save(
+        saveTableRequest({
           name: "TestTableAuto",
           schema: {
-            ...tableConfig.schema,
             "Row ID": {
               name: "Row ID",
               type: FieldType.NUMBER,
@@ -197,37 +210,25 @@ describe.each([
               },
             },
           },
-        },
-        { skipReassigning: true }
+        })
       )
 
-      const ids = [1, 2, 3]
-
-      // Performing several create row requests should increment the autoID fields accordingly
-      const createRow = async (id: number) => {
-        const res = await config.api.row.save(newTable._id!, {
-          name: "row_" + id,
-        })
-        expect(res.name).toEqual("row_" + id)
-        expect(res._rev).toBeDefined()
-        expect(res["Row ID"]).toEqual(id)
+      let previousId = 0
+      for (let i = 0; i < 10; i++) {
+        const row = await config.api.row.save(newTable._id!, {})
+        expect(row["Row ID"]).toBeGreaterThan(previousId)
+        previousId = row["Row ID"]
       }
-
-      for (let i = 0; i < ids.length; i++) {
-        await createRow(ids[i])
-      }
-
-      await assertRowUsage(rowUsage + ids.length)
+      await assertRowUsage(rowUsage + 10)
     })
 
     it("updates a row successfully", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
 
-      const res = await config.api.row.save(tableId, {
+      const res = await config.api.row.save(table._id!, {
         _id: existing._id,
         _rev: existing._rev,
-        tableId,
         name: "Updated Name",
       })
 
@@ -236,9 +237,9 @@ describe.each([
     })
 
     it("should load a row", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
 
-      const res = await config.api.row.get(tableId, existing._id!)
+      const res = await config.api.row.get(table._id!, existing._id!)
 
       expect(res).toEqual({
         ...existing,
@@ -247,29 +248,22 @@ describe.each([
     })
 
     it("should list all rows for given tableId", async () => {
-      const table = await createTable(generateTableConfig(), {
-        skipReassigning: true,
-      })
-      const tableId = table._id!
-      const newRow = {
-        tableId,
-        name: "Second Contact",
-        description: "new",
-      }
-      const firstRow = await config.createRow({ tableId })
-      await config.createRow(newRow)
+      const table = await config.api.table.save(defaultTable())
+      const rows = await Promise.all([
+        config.api.row.save(table._id!, {}),
+        config.api.row.save(table._id!, {}),
+      ])
 
-      const res = await config.api.row.fetch(tableId)
-
-      expect(res.length).toBe(2)
-      expect(res.find((r: Row) => r.name === newRow.name)).toBeDefined()
-      expect(res.find((r: Row) => r.name === firstRow.name)).toBeDefined()
+      const res = await config.api.row.fetch(table._id!)
+      expect(res.map(r => r._id)).toEqual(
+        expect.arrayContaining(rows.map(r => r._id))
+      )
     })
 
     it("load should return 404 when row does not exist", async () => {
-      await config.createRow()
-
-      await config.api.row.get(tableId, "1234567", {
+      const table = await config.api.table.save(defaultTable())
+      await config.api.row.save(table._id!, {})
+      await config.api.row.get(table._id!, "1234567", {
         status: 404,
       })
     })
@@ -459,7 +453,8 @@ describe.each([
         },
       })
 
-      const createViewResponse = await config.createView({
+      const createViewResponse = await config.api.viewV2.create({
+        tableId: table._id!,
         name: uuid.v4(),
         schema: {
           Country: {
@@ -496,25 +491,25 @@ describe.each([
     let otherTable: Table
 
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
-      const otherTableConfig = generateTableConfig()
-      // need a short name of table here - for relationship tests
-      otherTableConfig.name = "a"
-      otherTableConfig.schema.relationship = {
-        name: "relationship",
-        relationshipType: RelationshipType.ONE_TO_MANY,
-        type: FieldType.LINK,
-        tableId: table._id!,
-        fieldName: "relationship",
-      }
-      otherTable = await createTable(otherTableConfig)
-      // need to set the config back to the original table
-      config.table = table
+      table = await config.api.table.save(defaultTable())
+      otherTable = await config.api.table.save(
+        defaultTable({
+          name: "a",
+          schema: {
+            relationship: {
+              name: "relationship",
+              relationshipType: RelationshipType.ONE_TO_MANY,
+              type: FieldType.LINK,
+              tableId: table._id!,
+              fieldName: "relationship",
+            },
+          },
+        })
+      )
     })
 
     it("should update only the fields that are supplied", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
 
       const rowUsage = await getRowUsage()
 
@@ -536,7 +531,7 @@ describe.each([
     })
 
     it("should throw an error when given improper types", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
 
       await config.api.row.patch(
@@ -628,12 +623,11 @@ describe.each([
 
   describe("destroy", () => {
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
+      table = await config.api.table.save(defaultTable())
     })
 
     it("should be able to delete a row", async () => {
-      const createdRow = await config.createRow()
+      const createdRow = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
 
       const res = await config.api.row.bulkDelete(table._id!, {
@@ -644,7 +638,7 @@ describe.each([
     })
 
     it("should be able to bulk delete rows, including a row that doesn't exist", async () => {
-      const createdRow = await config.createRow()
+      const createdRow = await config.api.row.save(table._id!, {})
 
       const res = await config.api.row.bulkDelete(table._id!, {
         rows: [createdRow, { _id: "9999999" }],
@@ -657,8 +651,7 @@ describe.each([
 
   describe("validate", () => {
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
+      table = await config.api.table.save(defaultTable())
     })
 
     it("should return no errors on valid row", async () => {
@@ -690,13 +683,12 @@ describe.each([
 
   describe("bulkDelete", () => {
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
+      table = await config.api.table.save(defaultTable())
     })
 
     it("should be able to delete a bulk set of rows", async () => {
-      const row1 = await config.createRow()
-      const row2 = await config.createRow()
+      const row1 = await config.api.row.save(table._id!, {})
+      const row2 = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
 
       const res = await config.api.row.bulkDelete(table._id!, {
@@ -710,9 +702,9 @@ describe.each([
 
     it("should be able to delete a variety of row set types", async () => {
       const [row1, row2, row3] = await Promise.all([
-        config.createRow(),
-        config.createRow(),
-        config.createRow(),
+        config.api.row.save(table._id!, {}),
+        config.api.row.save(table._id!, {}),
+        config.api.row.save(table._id!, {}),
       ])
       const rowUsage = await getRowUsage()
 
@@ -726,7 +718,7 @@ describe.each([
     })
 
     it("should accept a valid row object and delete the row", async () => {
-      const row1 = await config.createRow()
+      const row1 = await config.api.row.save(table._id!, {})
       const rowUsage = await getRowUsage()
 
       const res = await config.api.row.delete(table._id!, row1 as DeleteRow)
@@ -768,12 +760,11 @@ describe.each([
   isInternal &&
     describe("fetchView", () => {
       beforeEach(async () => {
-        const tableConfig = generateTableConfig()
-        table = await createTable(tableConfig)
+        table = await config.api.table.save(defaultTable())
       })
 
       it("should be able to fetch tables contents via 'view'", async () => {
-        const row = await config.createRow()
+        const row = await config.api.row.save(table._id!, {})
         const rowUsage = await getRowUsage()
 
         const rows = await config.api.legacyView.get(table._id!)
@@ -797,7 +788,7 @@ describe.each([
           filters: [],
           schema: {},
         })
-        const row = await config.createRow()
+        const row = await config.api.row.save(table._id!, {})
         const rowUsage = await getRowUsage()
 
         const rows = await config.api.legacyView.get(view.name)
@@ -810,45 +801,34 @@ describe.each([
 
   describe("fetchEnrichedRows", () => {
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
+      table = await config.api.table.save(defaultTable())
     })
 
     it("should allow enriching some linked rows", async () => {
       const { linkedTable, firstRow, secondRow } = await tenancy.doInTenant(
         config.getTenantId(),
         async () => {
-          const linkedTable = await config.createLinkedTable(
-            RelationshipType.ONE_TO_MANY,
-            ["link"],
-            {
-              // Making sure that the combined table name + column name is within postgres limits
-              name: uuid.v4().replace(/-/g, "").substring(0, 16),
-              type: "table",
-              primary: ["id"],
-              primaryDisplay: "id",
+          const linkedTable = await config.api.table.save(
+            defaultTable({
               schema: {
-                id: {
-                  type: FieldType.AUTO,
-                  name: "id",
-                  autocolumn: true,
-                  constraints: {
-                    presence: true,
-                  },
+                link: {
+                  name: "link",
+                  fieldName: "link",
+                  type: FieldType.LINK,
+                  relationshipType: RelationshipType.ONE_TO_MANY,
+                  tableId: table._id!,
                 },
               },
-            }
+            })
           )
-          const firstRow = await config.createRow({
+          const firstRow = await config.api.row.save(table._id!, {
             name: "Test Contact",
             description: "original description",
-            tableId: table._id,
           })
-          const secondRow = await config.createRow({
+          const secondRow = await config.api.row.save(linkedTable._id!, {
             name: "Test 2",
             description: "og desc",
             link: [{ _id: firstRow._id }],
-            tableId: linkedTable._id,
           })
           return { linkedTable, firstRow, secondRow }
         }
@@ -882,8 +862,7 @@ describe.each([
   isInternal &&
     describe("attachments", () => {
       beforeAll(async () => {
-        const tableConfig = generateTableConfig()
-        table = await createTable(tableConfig)
+        table = await config.api.table.save(defaultTable())
       })
 
       it("should allow enriching attachment rows", async () => {
@@ -912,12 +891,11 @@ describe.each([
 
   describe("exportData", () => {
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-      table = await createTable(tableConfig)
+      table = await config.api.table.save(defaultTable())
     })
 
     it("should allow exporting all columns", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
       const res = await config.api.row.exportRows(table._id!, {
         rows: [existing._id!],
       })
@@ -935,7 +913,7 @@ describe.each([
     })
 
     it("should allow exporting only certain columns", async () => {
-      const existing = await config.createRow()
+      const existing = await config.api.row.save(table._id!, {})
       const res = await config.api.row.exportRows(table._id!, {
         rows: [existing._id!],
         columns: ["_id"],
@@ -952,21 +930,10 @@ describe.each([
 
   describe("view 2.0", () => {
     async function userTable(): Promise<Table> {
-      return {
+      return saveTableRequest({
         name: `users_${uuid.v4()}`,
-        sourceId: INTERNAL_TABLE_SOURCE_ID,
-        sourceType: TableSourceType.INTERNAL,
         type: "table",
-        primary: ["id"],
         schema: {
-          id: {
-            type: FieldType.AUTO,
-            name: "id",
-            autocolumn: true,
-            constraints: {
-              presence: true,
-            },
-          },
           name: {
             type: FieldType.STRING,
             name: "name",
@@ -988,7 +955,7 @@ describe.each([
             name: "jobTitle",
           },
         },
-      }
+      })
     }
 
     const randomRowData = () => ({
@@ -1001,8 +968,9 @@ describe.each([
 
     describe("create", () => {
       it("should persist a new row with only the provided view fields", async () => {
-        const table = await createTable(await userTable())
-        const view = await config.createView({
+        const table = await config.api.table.save(await userTable())
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
           schema: {
             name: { visible: true },
             surname: { visible: true },
@@ -1036,9 +1004,10 @@ describe.each([
 
     describe("patch", () => {
       it("should update only the view fields for a row", async () => {
-        const table = await createTable(await userTable())
+        const table = await config.api.table.save(await userTable())
         const tableId = table._id!
-        const view = await config.createView({
+        const view = await config.api.viewV2.create({
+          tableId: tableId,
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1077,16 +1046,17 @@ describe.each([
 
     describe("destroy", () => {
       it("should be able to delete a row", async () => {
-        const table = await createTable(await userTable())
+        const table = await config.api.table.save(await userTable())
         const tableId = table._id!
-        const view = await config.createView({
+        const view = await config.api.viewV2.create({
+          tableId: tableId,
           schema: {
             name: { visible: true },
             address: { visible: true },
           },
         })
 
-        const createdRow = await config.createRow()
+        const createdRow = await config.api.row.save(table._id!, {})
         const rowUsage = await getRowUsage()
 
         await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
@@ -1099,9 +1069,10 @@ describe.each([
       })
 
       it("should be able to delete multiple rows", async () => {
-        const table = await createTable(await userTable())
+        const table = await config.api.table.save(await userTable())
         const tableId = table._id!
-        const view = await config.createView({
+        const view = await config.api.viewV2.create({
+          tableId: tableId,
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1109,9 +1080,9 @@ describe.each([
         })
 
         const rows = await Promise.all([
-          config.createRow(),
-          config.createRow(),
-          config.createRow(),
+          config.api.row.save(table._id!, {}),
+          config.api.row.save(table._id!, {}),
+          config.api.row.save(table._id!, {}),
         ])
         const rowUsage = await getRowUsage()
 
@@ -1130,46 +1101,39 @@ describe.each([
     })
 
     describe("view search", () => {
+      let table: Table
       const viewSchema = { age: { visible: true }, name: { visible: true } }
-      async function userTable(): Promise<Table> {
-        return {
-          name: `users_${uuid.v4()}`,
-          sourceId: INTERNAL_TABLE_SOURCE_ID,
-          sourceType: TableSourceType.INTERNAL,
-          type: "table",
-          primary: ["id"],
-          schema: {
-            id: {
-              type: FieldType.AUTO,
-              name: "id",
-              autocolumn: true,
-              constraints: {
-                presence: true,
+
+      beforeAll(async () => {
+        table = await config.api.table.save(
+          saveTableRequest({
+            name: `users_${uuid.v4()}`,
+            schema: {
+              name: {
+                type: FieldType.STRING,
+                name: "name",
+                constraints: { type: "string" },
+              },
+              age: {
+                type: FieldType.NUMBER,
+                name: "age",
+                constraints: {},
               },
             },
-            name: {
-              type: FieldType.STRING,
-              name: "name",
-              constraints: { type: "string" },
-            },
-            age: {
-              type: FieldType.NUMBER,
-              name: "age",
-              constraints: {},
-            },
-          },
-        }
-      }
+          })
+        )
+      })
 
       it("returns empty rows from view when no schema is passed", async () => {
-        const table = await createTable(await userTable())
         const rows = await Promise.all(
           Array.from({ length: 10 }, () =>
             config.api.row.save(table._id!, { tableId: table._id })
           )
         )
 
-        const createViewResponse = await config.createView()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id!,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id)
 
         expect(response.rows).toHaveLength(10)
@@ -1193,8 +1157,6 @@ describe.each([
       })
 
       it("searching respects the view filters", async () => {
-        const table = await createTable(await userTable())
-
         await Promise.all(
           Array.from({ length: 10 }, () =>
             config.api.row.save(table._id!, {
@@ -1215,7 +1177,8 @@ describe.each([
           )
         )
 
-        const createViewResponse = await config.createView({
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id!,
           query: [
             { operator: SearchQueryOperators.EQUAL, field: "age", value: 40 },
           ],
@@ -1316,8 +1279,9 @@ describe.each([
       ]
 
       describe("sorting", () => {
+        let table: Table
         beforeAll(async () => {
-          const table = await createTable(await userTable())
+          table = await config.api.table.save(await userTable())
           const users = [
             { name: "Alice", age: 25 },
             { name: "Bob", age: 30 },
@@ -1337,7 +1301,8 @@ describe.each([
         it.each(sortTestOptions)(
           "allow sorting (%s)",
           async (sortParams, expected) => {
-            const createViewResponse = await config.createView({
+            const createViewResponse = await config.api.viewV2.create({
+              tableId: table._id!,
               sort: sortParams,
               schema: viewSchema,
             })
@@ -1356,7 +1321,8 @@ describe.each([
         it.each(sortTestOptions)(
           "allow override the default view sorting (%s)",
           async (sortParams, expected) => {
-            const createViewResponse = await config.createView({
+            const createViewResponse = await config.api.viewV2.create({
+              tableId: table._id!,
               sort: {
                 field: "name",
                 order: SortOrder.ASCENDING,
@@ -1384,7 +1350,7 @@ describe.each([
       })
 
       it("when schema is defined, defined columns and row attributes are returned", async () => {
-        const table = await createTable(await userTable())
+        const table = await config.api.table.save(await userTable())
         const rows = await Promise.all(
           Array.from({ length: 10 }, () =>
             config.api.row.save(table._id!, {
@@ -1395,7 +1361,8 @@ describe.each([
           )
         )
 
-        const view = await config.createView({
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
           schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
@@ -1415,21 +1382,25 @@ describe.each([
       })
 
       it("views without data can be returned", async () => {
-        const table = await createTable(await userTable())
-
-        const createViewResponse = await config.createView()
+        const table = await config.api.table.save(await userTable())
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id!,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id)
-
         expect(response.rows).toHaveLength(0)
       })
 
       it("respects the limit parameter", async () => {
-        await createTable(await userTable())
-        await Promise.all(Array.from({ length: 10 }, () => config.createRow()))
+        const table = await config.api.table.save(await userTable())
+        await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
+        )
 
         const limit = generator.integer({ min: 1, max: 8 })
 
-        const createViewResponse = await config.createView()
+        const createViewResponse = await config.api.viewV2.create({
+          tableId: table._id!,
+        })
         const response = await config.api.viewV2.search(createViewResponse.id, {
           limit,
           query: {},
@@ -1439,56 +1410,49 @@ describe.each([
       })
 
       it("can handle pagination", async () => {
-        await createTable(await userTable())
-        await Promise.all(Array.from({ length: 10 }, () => config.createRow()))
-
-        const createViewResponse = await config.createView()
-        const allRows = (await config.api.viewV2.search(createViewResponse.id))
-          .rows
-
-        const firstPageResponse = await config.api.viewV2.search(
-          createViewResponse.id,
-          {
-            paginate: true,
-            limit: 4,
-            query: {},
-          }
+        const table = await config.api.table.save(await userTable())
+        await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
         )
-        expect(firstPageResponse).toEqual({
-          rows: expect.arrayContaining(allRows.slice(0, 4)),
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+        })
+        const rows = (await config.api.viewV2.search(view.id)).rows
+
+        const page1 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          query: {},
+        })
+        expect(page1).toEqual({
+          rows: expect.arrayContaining(rows.slice(0, 4)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
           bookmark: expect.anything(),
         })
 
-        const secondPageResponse = await config.api.viewV2.search(
-          createViewResponse.id,
-          {
-            paginate: true,
-            limit: 4,
-            bookmark: firstPageResponse.bookmark,
+        const page2 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          bookmark: page1.bookmark,
 
-            query: {},
-          }
-        )
-        expect(secondPageResponse).toEqual({
-          rows: expect.arrayContaining(allRows.slice(4, 8)),
+          query: {},
+        })
+        expect(page2).toEqual({
+          rows: expect.arrayContaining(rows.slice(4, 8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: true,
           bookmark: expect.anything(),
         })
 
-        const lastPageResponse = await config.api.viewV2.search(
-          createViewResponse.id,
-          {
-            paginate: true,
-            limit: 4,
-            bookmark: secondPageResponse.bookmark,
-            query: {},
-          }
-        )
-        expect(lastPageResponse).toEqual({
-          rows: expect.arrayContaining(allRows.slice(8)),
+        const page3 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          bookmark: page2.bookmark,
+          query: {},
+        })
+        expect(page3).toEqual({
+          rows: expect.arrayContaining(rows.slice(8)),
           totalRows: isInternal ? 10 : undefined,
           hasNextPage: false,
           bookmark: expect.anything(),
@@ -1513,19 +1477,20 @@ describe.each([
         })
 
       describe("permissions", () => {
-        let viewId: string
-        let tableId: string
+        let table: Table
+        let view: ViewV2
 
         beforeAll(async () => {
-          await createTable(await userTable())
+          table = await config.api.table.save(await userTable())
           await Promise.all(
-            Array.from({ length: 10 }, () => config.createRow())
+            Array.from({ length: 10 }, () =>
+              config.api.row.save(table._id!, {})
+            )
           )
 
-          const createViewResponse = await config.createView()
-
-          tableId = table._id!
-          viewId = createViewResponse.id
+          view = await config.api.viewV2.create({
+            tableId: table._id!,
+          })
         })
 
         beforeEach(() => {
@@ -1534,7 +1499,7 @@ describe.each([
 
         it("does not allow public users to fetch by default", async () => {
           await config.publish()
-          await config.api.viewV2.publicSearch(viewId, undefined, {
+          await config.api.viewV2.publicSearch(view.id, undefined, {
             status: 403,
           })
         })
@@ -1543,11 +1508,11 @@ describe.each([
           await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
-            resourceId: viewId,
+            resourceId: view.id,
           })
           await config.publish()
 
-          const response = await config.api.viewV2.publicSearch(viewId)
+          const response = await config.api.viewV2.publicSearch(view.id)
 
           expect(response.rows).toHaveLength(10)
         })
@@ -1556,11 +1521,11 @@ describe.each([
           await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
-            resourceId: tableId,
+            resourceId: table._id!,
           })
           await config.publish()
 
-          const response = await config.api.viewV2.publicSearch(viewId)
+          const response = await config.api.viewV2.publicSearch(view.id)
 
           expect(response.rows).toHaveLength(10)
         })
@@ -1569,16 +1534,16 @@ describe.each([
           await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
             level: PermissionLevel.READ,
-            resourceId: tableId,
+            resourceId: table._id!,
           })
           await config.api.permission.add({
             roleId: roles.BUILTIN_ROLE_IDS.POWER,
             level: PermissionLevel.READ,
-            resourceId: viewId,
+            resourceId: view.id,
           })
           await config.publish()
 
-          await config.api.viewV2.publicSearch(viewId, undefined, {
+          await config.api.viewV2.publicSearch(view.id, undefined, {
             status: 403,
           })
         })
@@ -1589,18 +1554,8 @@ describe.each([
   let o2mTable: Table
   let m2mTable: Table
   beforeAll(async () => {
-    o2mTable = await createTable(
-      { ...generateTableConfig(), name: "o2m" },
-      {
-        skipReassigning: true,
-      }
-    )
-    m2mTable = await createTable(
-      { ...generateTableConfig(), name: "m2m" },
-      {
-        skipReassigning: true,
-      }
-    )
+    o2mTable = await config.api.table.save(defaultTable({ name: "o2m" }))
+    m2mTable = await config.api.table.save(defaultTable({ name: "m2m" }))
   })
 
   describe.each([
@@ -1662,21 +1617,9 @@ describe.each([
     let m2mData: Row[]
 
     beforeAll(async () => {
-      const tableConfig = generateTableConfig()
-
-      if (config.datasource) {
-        tableConfig.sourceId = config.datasource._id!
-        if (config.datasource.plus) {
-          tableConfig.sourceType = TableSourceType.EXTERNAL
-        }
-      }
-      const table = await config.api.table.save({
-        ...tableConfig,
-        schema: {
-          ...tableConfig.schema,
-          ...relSchema(),
-        },
-      })
+      const table = await config.api.table.save(
+        defaultTable({ schema: relSchema() })
+      )
       tableId = table._id!
 
       o2mData = [
@@ -1994,20 +1937,23 @@ describe.each([
   })
 
   describe("Formula fields", () => {
-    let relationshipTable: Table, tableId: string, relatedRow: Row
+    let table: Table
+    let otherTable: Table
+    let relatedRow: Row
 
     beforeAll(async () => {
-      const otherTableId = config.table!._id!
-      const cfg = generateTableConfig()
-      relationshipTable = await config.createLinkedTable(
-        RelationshipType.ONE_TO_MANY,
-        ["links"],
-        {
-          ...cfg,
-          // needs to be a short name
+      otherTable = await config.api.table.save(defaultTable())
+      table = await config.api.table.save(
+        saveTableRequest({
           name: "b",
           schema: {
-            ...cfg.schema,
+            links: {
+              name: "links",
+              fieldName: "links",
+              type: FieldType.LINK,
+              tableId: otherTable._id!,
+              relationshipType: RelationshipType.ONE_TO_MANY,
+            },
             formula: {
               name: "formula",
               type: FieldType.FORMULA,
@@ -2015,25 +1961,23 @@ describe.each([
               formulaType: FormulaType.DYNAMIC,
             },
           },
-        }
+        })
       )
 
-      tableId = relationshipTable._id!
-
-      relatedRow = await config.api.row.save(otherTableId, {
+      relatedRow = await config.api.row.save(otherTable._id!, {
         name: generator.word(),
         description: generator.paragraph(),
       })
-      await config.api.row.save(tableId, {
+      await config.api.row.save(table._id!, {
         name: generator.word(),
         description: generator.paragraph(),
-        tableId,
+        tableId: table._id!,
         links: [relatedRow._id],
       })
     })
 
     it("should be able to search for rows containing formulas", async () => {
-      const { rows } = await config.api.row.search(tableId)
+      const { rows } = await config.api.row.search(table._id!)
       expect(rows.length).toBe(1)
       expect(rows[0].links.length).toBe(1)
       const row = rows[0]
@@ -2054,22 +1998,22 @@ describe.each([
             `
         ).toString("base64")
 
-        const table = await config.createTable({
-          name: "table",
-          type: "table",
-          schema: {
-            text: {
-              name: "text",
-              type: FieldType.STRING,
+        const table = await config.api.table.save(
+          saveTableRequest({
+            schema: {
+              text: {
+                name: "text",
+                type: FieldType.STRING,
+              },
+              formula: {
+                name: "formula",
+                type: FieldType.FORMULA,
+                formula: `{{ js "${js}"}}`,
+                formulaType: FormulaType.DYNAMIC,
+              },
             },
-            formula: {
-              name: "formula",
-              type: FieldType.FORMULA,
-              formula: `{{ js "${js}"}}`,
-              formulaType: FormulaType.DYNAMIC,
-            },
-          },
-        })
+          })
+        )
 
         await config.api.row.save(table._id!, { text: "foo" })
         const { rows } = await config.api.row.search(table._id!)
