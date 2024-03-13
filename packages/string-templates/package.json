@@ -13,8 +13,7 @@
     },
     "./package.json": "./package.json",
     "./test/utils": "./test/utils.js",
-    "./iife": "./src/iife.js",
-    "./snippet": "./src/helpers/snippet.js"
+    "./iife": "./src/iife.js"
   },
   "files": [
     "dist",
