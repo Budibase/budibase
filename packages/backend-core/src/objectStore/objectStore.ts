@@ -178,19 +178,7 @@ export async function upload({
     config.Metadata = metadata
   }
 
-  /* Playing around here trying to get TTL working */
-  const currentDate = new Date()
-  currentDate.setMinutes(currentDate.getMinutes() + 30)
-
-  return objectStore
-    .upload(config, {
-      params: {
-        Expires: currentDate,
-        Bucket: bucketName,
-        Key: sanitizeKey(filename),
-      },
-    })
-    .promise()
+  return objectStore.upload(config).promise()
 }
 
 /**
