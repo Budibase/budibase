@@ -4,9 +4,11 @@ import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  BBReferenceFieldMetadata,
   FieldSchema,
   FieldSubtype,
   FieldType,
+  JsonFieldMetadata,
   Operation,
   QueryJson,
   RelationshipsJson,
@@ -716,7 +718,9 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return results
   }
 
-  _isJsonColumn(field: FieldSchema) {
+  _isJsonColumn(
+    field: FieldSchema
+  ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
     return (
       field.type === FieldType.JSON ||
       (field.type === FieldType.BB_REFERENCE &&
