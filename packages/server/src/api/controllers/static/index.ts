@@ -271,7 +271,6 @@ export const serveClientLibrary = async function (ctx: Ctx) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
   if (env.isProd() || (env.isDev() && version !== "0.0.0")) {
-    console.log("in other one")
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
