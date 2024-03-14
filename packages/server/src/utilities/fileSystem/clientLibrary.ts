@@ -6,6 +6,7 @@ import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
 import { DocumentType } from "../../db/utils"
+import { App } from "@budibase/types"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
