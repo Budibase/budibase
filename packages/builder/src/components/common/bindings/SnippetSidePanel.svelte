@@ -1,5 +1,14 @@
 <script>
-  import { Input, Layout, Icon, Popover, Tags, Tag, Body } from "@budibase/bbui"
+  import {
+    Input,
+    Layout,
+    Icon,
+    Popover,
+    Tags,
+    Tag,
+    Body,
+    Button,
+  } from "@budibase/bbui"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "components/common/CodeEditor"
   import SnippetDrawer from "./SnippetDrawer.svelte"
@@ -128,7 +137,7 @@
       {/if}
     </div>
     <div class="snippet-list">
-      {#if enableSnippets}
+      {#if enableSnippets && filteredSnippets?.length}
         {#each filteredSnippets as snippet}
           <div
             class="snippet"
@@ -149,10 +158,14 @@
       {:else}
         <div class="upgrade">
           <Body size="S">
-            Create reusable blocks of JS that can be managed and updated all in
-            one place with Snippets
+            Snippets let you create reusable JS functions and values that can
+            all be managed in one place
           </Body>
-          <UpgradeButton />
+          {#if enableSnippets}
+            <Button cta on:click={createSnippet}>Create snippet</Button>
+          {:else}
+            <UpgradeButton />
+          {/if}
         </div>
       {/if}
     </div>
