@@ -17,6 +17,7 @@
     appStore,
     devToolsStore,
     devToolsEnabled,
+    environmentStore,
   } from "stores"
   import NotificationDisplay from "components/overlay/NotificationDisplay.svelte"
   import ConfirmationDisplay from "components/overlay/ConfirmationDisplay.svelte"
@@ -36,6 +37,7 @@
   import DevToolsHeader from "components/devtools/DevToolsHeader.svelte"
   import DevTools from "components/devtools/DevTools.svelte"
   import FreeFooter from "components/FreeFooter.svelte"
+  import MaintenanceScreen from "components/MaintenanceScreen.svelte"
   import licensing from "../licensing"
 
   // Provide contexts
@@ -111,122 +113,128 @@
     class="spectrum spectrum--medium {$themeStore.baseTheme} {$themeStore.theme}"
     class:builder={$builderStore.inBuilder}
   >
-    <DeviceBindingsProvider>
-      <UserBindingsProvider>
-        <StateBindingsProvider>
-          <RowSelectionProvider>
-            <QueryParamsProvider>
-              <!-- Settings bar can be rendered outside of device preview -->
-              <!-- Key block needs to be outside the if statement or it breaks -->
-              {#key $builderStore.selectedComponentId}
-                {#if $builderStore.inBuilder}
-                  <SettingsBar />
-                {/if}
-              {/key}
-
-              <!-- Clip boundary for selection indicators -->
-              <div
-                id="clip-root"
-                class:preview={$builderStore.inBuilder}
-                class:tablet-preview={$builderStore.previewDevice === "tablet"}
-                class:mobile-preview={$builderStore.previewDevice === "mobile"}
-              >
-                <!-- Actual app -->
-                <div id="app-root">
-                  {#if showDevTools}
-                    <DevToolsHeader />
+    {#if $environmentStore.maintenance.length > 0}
+      <MaintenanceScreen maintenanceList={$environmentStore.maintenance} />
+    {:else}
+      <DeviceBindingsProvider>
+        <UserBindingsProvider>
+          <StateBindingsProvider>
+            <RowSelectionProvider>
+              <QueryParamsProvider>
+                <!-- Settings bar can be rendered outside of device preview -->
+                <!-- Key block needs to be outside the if statement or it breaks -->
+                {#key $builderStore.selectedComponentId}
+                  {#if $builderStore.inBuilder}
+                    <SettingsBar />
                   {/if}
+                {/key}
 
-                  <div id="app-body">
-                    {#if permissionError}
-                      <div class="error">
-                        <Layout justifyItems="center" gap="S">
-                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                          {@html ErrorSVG}
-                          <Heading size="L">
-                            You don't have permission to use this app
-                          </Heading>
-                          <Body size="S">
-                            Ask your administrator to grant you access
-                          </Body>
-                        </Layout>
-                      </div>
-                    {:else if !$screenStore.activeLayout}
-                      <div class="error">
-                        <Layout justifyItems="center" gap="S">
-                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                          {@html ErrorSVG}
-                          <Heading size="L">
-                            Something went wrong rendering your app
-                          </Heading>
-                          <Body size="S">
-                            Get in touch with support if this issue persists
-                          </Body>
-                        </Layout>
-                      </div>
-                    {:else if embedNoScreens}
-                      <div class="error">
-                        <Layout justifyItems="center" gap="S">
-                          <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                          {@html ErrorSVG}
-                          <Heading size="L">
-                            This Budibase app is not publicly accessible
-                          </Heading>
-                        </Layout>
-                      </div>
-                    {:else}
-                      <CustomThemeWrapper>
-                        {#key $screenStore.activeLayout._id}
-                          <Component
-                            isLayout
-                            instance={$screenStore.activeLayout.props}
-                          />
-                        {/key}
+                <!-- Clip boundary for selection indicators -->
+                <div
+                  id="clip-root"
+                  class:preview={$builderStore.inBuilder}
+                  class:tablet-preview={$builderStore.previewDevice ===
+                    "tablet"}
+                  class:mobile-preview={$builderStore.previewDevice ===
+                    "mobile"}
+                >
+                  <!-- Actual app -->
+                  <div id="app-root">
+                    {#if showDevTools}
+                      <DevToolsHeader />
+                    {/if}
 
-                        <!--
+                    <div id="app-body">
+                      {#if permissionError}
+                        <div class="error">
+                          <Layout justifyItems="center" gap="S">
+                            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                            {@html ErrorSVG}
+                            <Heading size="L">
+                              You don't have permission to use this app
+                            </Heading>
+                            <Body size="S">
+                              Ask your administrator to grant you access
+                            </Body>
+                          </Layout>
+                        </div>
+                      {:else if !$screenStore.activeLayout}
+                        <div class="error">
+                          <Layout justifyItems="center" gap="S">
+                            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                            {@html ErrorSVG}
+                            <Heading size="L">
+                              Something went wrong rendering your app
+                            </Heading>
+                            <Body size="S">
+                              Get in touch with support if this issue persists
+                            </Body>
+                          </Layout>
+                        </div>
+                      {:else if embedNoScreens}
+                        <div class="error">
+                          <Layout justifyItems="center" gap="S">
+                            <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                            {@html ErrorSVG}
+                            <Heading size="L">
+                              This Budibase app is not publicly accessible
+                            </Heading>
+                          </Layout>
+                        </div>
+                      {:else}
+                        <CustomThemeWrapper>
+                          {#key $screenStore.activeLayout._id}
+                            <Component
+                              isLayout
+                              instance={$screenStore.activeLayout.props}
+                            />
+                          {/key}
+
+                          <!--
                           Flatpickr needs to be inside the theme wrapper.
                           It also needs its own container because otherwise it hijacks
                           key events on the whole page. It is painful to work with.
                         -->
-                        <div id="flatpickr-root" />
+                          <div id="flatpickr-root" />
 
-                        <!-- Modal container to ensure they sit on top -->
-                        <div class="modal-container" />
+                          <!-- Modal container to ensure they sit on top -->
+                          <div class="modal-container" />
 
-                        <!-- Layers on top of app -->
-                        <NotificationDisplay />
-                        <ConfirmationDisplay />
-                        <PeekScreenDisplay />
-                      </CustomThemeWrapper>
-                    {/if}
+                          <!-- Layers on top of app -->
+                          <NotificationDisplay />
+                          <ConfirmationDisplay />
+                          <PeekScreenDisplay />
+                        </CustomThemeWrapper>
+                      {/if}
 
-                    {#if showDevTools}
-                      <DevTools />
+                      {#if showDevTools}
+                        <DevTools />
+                      {/if}
+                    </div>
+
+                    {#if !$builderStore.inBuilder && licensing.logoEnabled()}
+                      <FreeFooter />
                     {/if}
                   </div>
 
-                  {#if !$builderStore.inBuilder && licensing.logoEnabled()}
-                    <FreeFooter />
+                  <!-- Preview and dev tools utilities  -->
+                  {#if $appStore.isDevApp}
+                    <SelectionIndicator />
+                  {/if}
+                  {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
+                    <HoverIndicator />
+                  {/if}
+                  {#if $builderStore.inBuilder}
+                    <DNDHandler />
+                    <GridDNDHandler />
                   {/if}
                 </div>
-
-                <!-- Preview and dev tools utilities  -->
-                {#if $appStore.isDevApp}
-                  <SelectionIndicator />
-                {/if}
-                {#if $builderStore.inBuilder || $devToolsStore.allowSelection}
-                  <HoverIndicator />
-                {/if}
-                {#if $builderStore.inBuilder}
-                  <DNDHandler />
-                  <GridDNDHandler />
-                {/if}
-              </div>
-            </QueryParamsProvider>
-          </RowSelectionProvider>
-        </StateBindingsProvider>
-      </UserBindingsProvider>
-    </DeviceBindingsProvider>
+              </QueryParamsProvider>
+            </RowSelectionProvider>
+          </StateBindingsProvider>
+        </UserBindingsProvider>
+      </DeviceBindingsProvider>
+    {/if}
   </div>
   <KeyboardManager />
 {/if}
