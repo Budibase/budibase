@@ -504,8 +504,6 @@
   onMount(() => {
     mounted = true
   })
-
-  $: console.log({ editableColumn })
 </script>
 
 <Layout noPadding gap="S">
