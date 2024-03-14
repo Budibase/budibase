@@ -1,5 +1,6 @@
 <script>
   import BlockComponent from "components/BlockComponent.svelte"
+  import { FieldType } from "@budibase/types"
 
   export let field
   export let schema
@@ -21,12 +22,20 @@
     bb_reference: "bbreferencefield",
   }
 
-  const getComponentForField = field => {
+  const getFieldSchema = field => {
     const fieldSchemaName = field.field || field.name
     if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
       return null
     }
-    const type = schema[fieldSchemaName].type
+    return schema[fieldSchemaName]
+  }
+
+  const getComponentForField = field => {
+    const fieldSchema = getFieldSchema(field)
+    if (!fieldSchema) {
+      return null
+    }
+    const { type } = fieldSchema
     return FieldTypeToComponentMap[type]
   }
 
@@ -41,7 +50,28 @@
           placeholder: field.name,
           _instanceName: field.name,
         }
+
+    fieldProps = {
+      ...getPropsByType(field),
+      ...fieldProps,
+    }
     return fieldProps
+  }
+
+  function getPropsByType(field) {
+    const propsMapByType = {
+      [FieldType.ATTACHMENT]: (_field, schema) => {
+        return {
+          maximum: schema?.constraints?.length?.maximum,
+        }
+      },
+    }
+
+    const fieldSchema = getFieldSchema(field)
+    const mapper = propsMapByType[fieldSchema.type]
+    if (mapper) {
+      return mapper(field, fieldSchema)
+    }
   }
 </script>
 
