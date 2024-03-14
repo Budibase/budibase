@@ -126,7 +126,7 @@ const excludeFunctions = { string: ["raw"] }
  * This script is very specific to purpose, parsing the handlebars-helpers files to attempt to get information about them.
  */
 function run() {
-  const foundNames = []
+  const foundNames: string[] = []
   for (let collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
       `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
@@ -147,7 +147,7 @@ function run() {
       }
       foundNames.push(name)
       // this is ridiculous, but it parse the function header
-      const fnc = entry[1].toString()
+      const fnc = entry[1]!.toString()
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
       let args = jsDocInfo.tags
         .filter(tag => tag.title === "param")
@@ -176,8 +176,8 @@ function run() {
   }
 
   // convert all markdown to HTML
-  for (let collection of Object.values(outputJSON)) {
-    for (let helper of Object.values(collection)) {
+  for (let collection of Object.values<any>(outputJSON)) {
+    for (let helper of Object.values<any>(collection)) {
       helper.description = marked.parse(helper.description)
     }
   }
