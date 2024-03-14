@@ -98,7 +98,7 @@ describe("Test that the object processing works correctly", () => {
   it("should be able to handle null objects", async () => {
     let error = null
     try {
-      await processObject(null, null)
+      await processObject(null as any, null as any)
     } catch (err) {
       error = err
     }
