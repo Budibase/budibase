@@ -137,12 +137,26 @@
           <div class="label">
             <Label size="M">Text align</Label>
           </div>
-          <Select
-            options={["Left", "Center", "Right"]}
-            plaveholder={null}
-            value={$navigationStore.textAlign}
-            on:change={e => update("textAlign", e.detail)}
-          />
+          <ActionGroup quiet>
+            <ActionButton
+              selected={$navigationStore.textAlign === "Left"}
+              quiet={$navigationStore.textAlign !== "Left"}
+              icon="AlignLeft"
+              on:click={() => update("textAlign", "Left")}
+            />
+            <ActionButton
+              selected={$navigationStore.textAlign === "Center"}
+              quiet={$navigationStore.textAlign !== "Center"}
+              icon="AlignCenter"
+              on:click={() => update("textAlign", "Center")}
+            />
+            <ActionButton
+              selected={$navigationStore.textAlign === "Right"}
+              quiet={$navigationStore.textAlign !== "Right"}
+              icon="MoveLeftRight"
+              on:click={() => update("textAlign", "Right")}
+            />
+          </ActionGroup>
         {/if}
         <div class="label">
           <Label>Background</Label>
