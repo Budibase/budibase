@@ -66,6 +66,8 @@
       componentTreeNodesStore.expandNodes([component._id])
     },
     ["ArrowLeft"]: component => {
+      // Select the collapsing root component to ensure the currently selected component is not
+      // hidden in a collapsed node
       componentStore.select(component._id)
       componentTreeNodesStore.collapseNodes([component._id])
     },
@@ -74,8 +76,8 @@
       componentTreeNodesStore.expandNodes(childIds)
     },
     ["Ctrl+ArrowLeft"]: component => {
-      // Select the collapsing root component to ensure the currently selected component is hidden
-      // due to this action
+      // Select the collapsing root component to ensure the currently selected component is not
+      // hidden in a collapsed node
       componentStore.select(component._id)
 
       const childIds = getChildIdsForComponent(component)
