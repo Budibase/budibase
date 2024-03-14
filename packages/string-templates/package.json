@@ -19,7 +19,7 @@
     "src"
   ],
   "scripts": {
-    "build": "rollup -c",
+    "build": "tsc --emitDeclarationOnly && rollup -c",
     "dev": "rollup -cw",
     "test": "jest",
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
