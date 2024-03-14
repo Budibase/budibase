@@ -527,6 +527,38 @@
         "key": "disabled"
       },
       {
+        "type": "icon",
+        "label": "Icon",
+        "key": "icon"
+      },
+      {
+        "type": "select",
+        "label": "Gap",
+        "key": "gap",
+        "showInBar": true,
+        "barStyle": "picker",
+        "dependsOn": "icon",
+        "options": [
+          {
+            "label": "None",
+            "value": "N"
+          },
+          {
+            "label": "Small",
+            "value": "S"
+          },
+          {
+            "label": "Medium",
+            "value": "M"
+          },
+          {
+            "label": "Large",
+            "value": "L"
+          }
+        ],
+        "defaultValue": "M"
+      },
+      {
         "type": "event",
         "label": "On click",
         "key": "onClick"
@@ -1104,6 +1136,12 @@
         "type": "color",
         "label": "Color",
         "key": "color",
+        "showInBar": true
+      },
+      {
+        "type": "color",
+        "label": "Text Color",
+        "key": "textColor",
         "showInBar": true
       },
       {

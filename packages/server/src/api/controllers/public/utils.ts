@@ -1,11 +1,12 @@
 import { context } from "@budibase/backend-core"
 import { isExternalTableID } from "../../../integrations/utils"
 import { APP_PREFIX, DocumentType } from "../../../db/utils"
+import { Row } from "@budibase/types"
 
 export async function addRev(
   body: { _id?: string; _rev?: string },
   tableId?: string
-) {
+): Promise<Row> {
   if (!body._id || (tableId && isExternalTableID(tableId))) {
     return body
   }

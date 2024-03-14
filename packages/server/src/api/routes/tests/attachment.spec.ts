@@ -29,7 +29,7 @@ describe("/api/applications/:appId/sync", () => {
         let resp = (await config.api.attachment.process(
           "ohno.exe",
           Buffer.from([0]),
-          { expectStatus: 400 }
+          { status: 400 }
         )) as unknown as APIError
         expect(resp.message).toContain("invalid extension")
       })
@@ -40,7 +40,7 @@ describe("/api/applications/:appId/sync", () => {
         let resp = (await config.api.attachment.process(
           "OHNO.EXE",
           Buffer.from([0]),
-          { expectStatus: 400 }
+          { status: 400 }
         )) as unknown as APIError
         expect(resp.message).toContain("invalid extension")
       })
@@ -51,7 +51,7 @@ describe("/api/applications/:appId/sync", () => {
         undefined as any,
         undefined as any,
         {
-          expectStatus: 400,
+          status: 400,
         }
       )) as unknown as APIError
       expect(resp.message).toContain("No file provided")

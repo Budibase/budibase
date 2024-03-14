@@ -168,7 +168,7 @@
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {
-      builderStore.highlightSetting(data.setting)
+      builderStore.highlightSetting(data.setting, "error")
 
       // Also scroll setting into view
       const selector = `#${data.setting}-prop-control`
