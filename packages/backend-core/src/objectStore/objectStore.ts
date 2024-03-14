@@ -109,7 +109,10 @@ export function ObjectStore(
  * Given an object store and a bucket name this will make sure the bucket exists,
  * if it does not exist then it will create it.
  */
-export async function makeSureBucketExists(client: any, bucketName: string) {
+export async function createBucketIfNotExists(
+  client: any,
+  bucketName: string
+): Promise<boolean> {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -117,6 +120,7 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
         Bucket: bucketName,
       })
       .promise()
+    return true
   } catch (err: any) {
     const promises: any = STATE.bucketCreationPromises
     const doesntExist = err.statusCode === 404,
@@ -126,7 +130,6 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
       return true
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
-        // bucket doesn't exist create it
         promises[bucketName] = client
           .createBucket({
             Bucket: bucketName,
@@ -135,6 +138,8 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
         await promises[bucketName]
         delete promises[bucketName]
         return false
+      } else {
+        throw new Error("Access denied to object store bucket.")
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
@@ -155,11 +160,9 @@ export async function upload({
   addTTL,
 }: UploadParams) {
   const extension = filename.split(".").pop()
-  const fileBytes = path ? fs.readFileSync(path) : body
+  const fileBytes = path ? fs.createReadStream(path) : body
   const objectStore = ObjectStore(bucketName)
-
-  // If this is true the bucket existed previously - so we can conditionally add TTL
-  const bucketExisted = await makeSureBucketExists(objectStore, bucketName)
+  const bucketExisted = await createBucketIfNotExists(objectStore, bucketName)
 
   if (addTTL && !bucketExisted) {
     let ttlConfig = bucketTTLConfig(bucketName, 1)
@@ -202,7 +205,7 @@ export async function streamUpload(
   extra = {}
 ) {
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  await createBucketIfNotExists(objectStore, bucketName)
 
   // Set content type for certain known extensions
   if (filename?.endsWith(".js")) {
@@ -354,7 +357,7 @@ export async function retrieveDirectory(bucketName: string, path: string) {
  */
 export async function deleteFile(bucketName: string, filepath: string) {
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
     Key: sanitizeKey(filepath),
@@ -364,7 +367,7 @@ export async function deleteFile(bucketName: string, filepath: string) {
 
 export async function deleteFiles(bucketName: string, filepaths: string[]) {
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+  await createBucketIfNotExists(objectStore, bucketName)
   const params = {
     Bucket: bucketName,
     Delete: {

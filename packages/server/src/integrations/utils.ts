@@ -445,8 +445,8 @@ export function removeEmptyFilters(filters: SearchFilters) {
 }
 
 export async function handleXml(response: any) {
-  let data
-  const rawXml = await response.text()
+  let data,
+    rawXml = await response.text()
   data =
     (await xmlParser(rawXml, {
       explicitArray: false,
