@@ -17,7 +17,7 @@ const config = (format, outputFile) => ({
     file: outputFile,
   },
   plugins: [
-    typescript({ tsconfig: "tsconfig.json", resolveJsonModule: false }),
+    typescript(),
     resolve({
       preferBuiltins: true,
       browser: true,

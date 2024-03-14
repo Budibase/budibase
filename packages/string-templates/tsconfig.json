@@ -1,6 +1,7 @@
 {
   "include": ["src/**/*"],
   "compilerOptions": {
+    "rootDir": ".",
     "target": "es6",
     "moduleResolution": "node",
     "lib": ["dom"],
