@@ -160,15 +160,15 @@ export const InvalidFileExtensions = [
 ]
 
 export enum BpmCorrelationKey {
-  ONBOARDING = "budibase:onboarding:correlationkey"
+  ONBOARDING = "budibase:onboarding:correlationkey",
 }
 
 export enum BpmInstanceKey {
-  ONBOARDING = "budibase:onboarding:instancekey"
+  ONBOARDING = "budibase:onboarding:instancekey",
 }
 
 export enum BpmStatusKey {
-  ONBOARDING = "budibase:onboarding:status"
+  ONBOARDING = "budibase:onboarding:status",
 }
 
 export enum BpmStatusValue {
