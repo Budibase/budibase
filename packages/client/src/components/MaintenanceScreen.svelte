@@ -1,6 +1,17 @@
+<!--
+  This is the public facing maintenance screen. It is displayed when there is
+  required maintenance to be done on the Budibase installation. We only use this
+  if we detect that the Budibase installation is in a state where the vast
+  majority of apps would not function correctly.
+
+  The builder-facing maintenance screen is in
+  packages/builder/src/pages/builder/maintenance/index.svelte, and tends to
+  contain more detailed information and actions for the installation owner to
+  take.
+-->
 <script>
   import { MaintenanceType } from "@budibase/types"
-  import { Heading, Body, Button, Layout } from "@budibase/bbui"
+  import { Heading, Body, Layout } from "@budibase/bbui"
 
   export let maintenanceList
 </script>
@@ -11,22 +22,14 @@
       {#each maintenanceList as maintenance}
         {#if maintenance.type === MaintenanceType.SQS_MISSING}
           <Layout>
-            <Heading>Please upgrade your Budibase installation</Heading>
+            <Heading>Budibase installation requires maintenance</Heading>
             <Body>
-              We've detected that the version of Budibase you're using depends
-              on a more recent version of the CouchDB database than what you
-              have installed.
-            </Body>
-            <Body>
-              To resolve this, you can either rollback to a previous version of
-              Budibase, or follow the migration guide to update to a later
-              version of CouchDB.
+              The administrator of this Budibase installation needs to take
+              actions to update components that are out of date. Please contact
+              them and show them this warning. More information will be
+              available when they log into their account.
             </Body>
           </Layout>
-          <Button
-            on:click={() => (window.location = "https://docs.budibase.com")}
-            >Migration guide</Button
-          >
         {/if}
       {/each}
     </div>
