@@ -79,7 +79,7 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
-  const handleIconClick = (componentId) => {
+  const handleIconClick = componentId => {
     componentStore.select(componentId)
     componentTreeNodesStore.toggleNode(componentId)
   }
