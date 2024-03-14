@@ -23,7 +23,7 @@
     "build": "rollup -c",
     "dev": "rollup -cw",
     "test": "jest",
-    "manifest": "node ./scripts/gen-collection-info.js"
+    "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
   "dependencies": {
     "@budibase/handlebars-helpers": "^0.13.1",
