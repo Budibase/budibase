@@ -98,7 +98,7 @@ export async function processObject<T extends Record<string, any>>(
       } else if (typeof val === "object") {
         parsedValue = await processObject(object[key], context, opts)
       }
-      ;(object as any)[key] = parsedValue
+      object = { ...object, [key]: parsedValue }
     }
   }
   return object
