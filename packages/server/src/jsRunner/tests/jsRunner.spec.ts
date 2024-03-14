@@ -1,7 +1,7 @@
 import { validate as isValidUUID } from "uuid"
 import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
-import { runJsHelpersTests } from "@budibase/string-templates/test/utils"
+const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
 
 import tk from "timekeeper"
 import { init } from ".."
