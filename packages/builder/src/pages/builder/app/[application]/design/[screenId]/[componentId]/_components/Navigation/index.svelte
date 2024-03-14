@@ -141,19 +141,19 @@
             <ActionButton
               selected={$navigationStore.textAlign === "Left"}
               quiet={$navigationStore.textAlign !== "Left"}
-              icon="AlignLeft"
+              icon="TextAlignLeft"
               on:click={() => update("textAlign", "Left")}
             />
             <ActionButton
               selected={$navigationStore.textAlign === "Center"}
               quiet={$navigationStore.textAlign !== "Center"}
-              icon="AlignCenter"
+              icon="TextAlignCenter"
               on:click={() => update("textAlign", "Center")}
             />
             <ActionButton
               selected={$navigationStore.textAlign === "Right"}
               quiet={$navigationStore.textAlign !== "Right"}
-              icon="AlignRight"
+              icon="TextAlignRight"
               on:click={() => update("textAlign", "Right")}
             />
           </ActionGroup>
