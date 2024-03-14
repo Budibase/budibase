@@ -168,16 +168,15 @@ export function processStringSync(
   function process(stringPart: string) {
     const template = createTemplate(stringPart, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
-    return postprocess(
-      template({
-        now: new Date(now).toISOString(),
-        __opts: {
-          ...opts,
-          input: stringPart,
-        },
-        ...context,
-      })
-    )
+    const processedString = template({
+      now: new Date(now).toISOString(),
+      __opts: {
+        ...opts,
+        input: stringPart,
+      },
+      ...context,
+    })
+    return postprocess(processedString)
   }
   try {
     if (opts && opts.onlyFound) {
