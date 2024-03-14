@@ -63,7 +63,7 @@
     }
   }
 
-  const isOpen = (component) => {
+  const isOpen = component => {
     if (!component?._children?.length) {
       return false
     }

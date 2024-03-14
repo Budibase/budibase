@@ -1,9 +1,7 @@
-import { get } from 'svelte/store'
+import { get } from "svelte/store"
 import { createSessionStorageStore } from "@budibase/frontend-core"
 import { selectedScreen as selectedScreenStore } from "./screens"
-import {
-  findComponentPath,
-} from "helpers/components"
+import { findComponentPath } from "helpers/components"
 
 const baseStore = createSessionStorageStore("openNodes", {})
 
@@ -35,15 +33,11 @@ const collapseNodes = componentIds => {
   })
 }
 
-
 // Will ensure all parents of a node are expanded so that it is visible in the tree
 const makeNodeVisible = componentId => {
-  const selectedScreen = get(selectedScreenStore);
+  const selectedScreen = get(selectedScreenStore)
 
-  const path = findComponentPath(
-    selectedScreen.props,
-    componentId
-  )
+  const path = findComponentPath(selectedScreen.props, componentId)
 
   const componentIds = path.map(component => component._id)
 
@@ -57,7 +51,7 @@ const makeNodeVisible = componentId => {
 }
 
 const isNodeExpanded = componentId => {
-  const openNodes = get(baseStore);
+  const openNodes = get(baseStore)
   return !!openNodes[`nodeOpen-${componentId}`]
 }
 
@@ -67,7 +61,7 @@ const store = {
   expandNodes,
   makeNodeVisible,
   collapseNodes,
-  isNodeExpanded
+  isNodeExpanded,
 }
 
 export default store
