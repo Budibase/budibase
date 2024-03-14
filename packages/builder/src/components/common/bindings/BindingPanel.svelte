@@ -30,6 +30,7 @@
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
   import { Utils } from "@budibase/frontend-core"
+  import { licensing } from "stores/portal"
 
   const dispatch = createEventDispatcher()
 
@@ -66,6 +67,7 @@
   let expressionResult
   let evaluating = false
 
+  $: useSnippets = allowSnippets && !$licensing.isFreePlan
   $: editorModeOptions = getModeOptions(allowHBS, allowJS)
   $: sidePanelOptions = getSidePanelOptions(
     bindings,
@@ -78,29 +80,40 @@
   $: editorMode =
     mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
   $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
-  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
   $: requestEval(runtimeExpression, context, snippets)
+  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
+  $: hbsCompletions = getHBSCompletions(bindingCompletions)
+  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
   $: {
     // Ensure a valid side panel option is always selected
     if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
       sidePanel = sidePanelOptions[0]
     }
   }
-  $: hbsCompletions = [
-    hbAutocomplete([
-      ...bindingCompletions,
-      ...getHelperCompletions(EditorModes.Handlebars),
-    ]),
-  ]
-  $: jsCompletions = [
-    jsAutocomplete([
-      ...bindingCompletions,
-      ...getHelperCompletions(EditorModes.JS),
-    ]),
-    snippetAutoComplete(snippets),
-  ]
+
+  const getHBSCompletions = bindingCompletions => {
+    return [
+      hbAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.Handlebars),
+      ]),
+    ]
+  }
+
+  const getJSCompletions = (bindingCompletions, snippets, useSnippets) => {
+    const completions = [
+      jsAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.JS),
+      ]),
+    ]
+    if (useSnippets) {
+      completions.push(snippetAutoComplete(snippets))
+    }
+    return completions
+  }
 
   const getModeOptions = (allowHBS, allowJS) => {
     let options = []
@@ -113,7 +126,7 @@
     return options
   }
 
-  const getSidePanelOptions = (bindings, context, allowSnippets, mode) => {
+  const getSidePanelOptions = (bindings, context, useSnippets, mode) => {
     let options = []
     if (bindings?.length) {
       options.push(SidePanels.Bindings)
@@ -121,7 +134,7 @@
     if (context) {
       options.push(SidePanels.Evaluation)
     }
-    if (allowSnippets && mode === Modes.JavaScript) {
+    if (useSnippets && mode === Modes.JavaScript) {
       options.push(SidePanels.Snippets)
     }
     return options
