@@ -22,6 +22,7 @@ import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
+
 const BodyTypes = {
   NONE: "none",
   FORM_DATA: "form",

@@ -16,6 +16,7 @@ import { helpers } from "@budibase/shared-core"
 import { context, objectStore } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { formatBytes } from "../utilities"
+
 const { parseStringPromise: xmlParser } = require("xml2js")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
