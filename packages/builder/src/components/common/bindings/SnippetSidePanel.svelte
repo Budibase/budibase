@@ -1,8 +1,19 @@
 <script>
-  import { Input, Layout, Icon, Popover } from "@budibase/bbui"
+  import {
+    Input,
+    Layout,
+    Icon,
+    Popover,
+    Tags,
+    Tag,
+    Body,
+    Button,
+  } from "@budibase/bbui"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "components/common/CodeEditor"
   import SnippetDrawer from "./SnippetDrawer.svelte"
+  import { licensing } from "stores/portal"
+  import UpgradeButton from "pages/builder/portal/_components/UpgradeButton.svelte"
 
   export let addSnippet
   export let snippets
@@ -16,10 +27,11 @@
   let snippetDrawer
   let editableSnippet
 
-  $: filteredSnippets = getFilteredSnippets(snippets, search)
+  $: enableSnippets = !$licensing.isFreePlan
+  $: filteredSnippets = getFilteredSnippets(enableSnippets, snippets, search)
 
-  const getFilteredSnippets = (snippets, search) => {
-    if (!snippets?.length) {
+  const getFilteredSnippets = (enableSnippets, snippets, search) => {
+    if (!enableSnippets || !snippets?.length) {
       return []
     }
     if (!search?.length) {
@@ -81,58 +93,77 @@
 <div class="snippet-side-panel">
   <Layout noPadding gap="S">
     <div class="header">
-      {#if searching}
-        <div class="search-input">
-          <Input
-            placeholder="Search for snippets"
-            autocomplete="off"
-            bind:value={search}
-            autofocus
+      {#if enableSnippets}
+        {#if searching}
+          <div class="search-input">
+            <Input
+              placeholder="Search for snippets"
+              autocomplete="off"
+              bind:value={search}
+              autofocus
+            />
+          </div>
+          <Icon
+            size="S"
+            name="Close"
+            hoverable
+            newStyles
+            on:click={stopSearching}
           />
-        </div>
-        <Icon
-          size="S"
-          name="Close"
-          hoverable
-          newStyles
-          on:click={stopSearching}
-        />
+        {:else}
+          <div class="title">Snippets</div>
+          <Icon
+            size="S"
+            name="Search"
+            hoverable
+            newStyles
+            on:click={startSearching}
+          />
+          <Icon
+            size="S"
+            name="Add"
+            hoverable
+            newStyles
+            on:click={createSnippet}
+          />
+        {/if}
       {:else}
-        <div class="title">Snippets</div>
-        <Icon
-          size="S"
-          name="Search"
-          hoverable
-          newStyles
-          on:click={startSearching}
-        />
-        <Icon
-          size="S"
-          name="Add"
-          hoverable
-          newStyles
-          on:click={createSnippet}
-        />
+        <div class="title">
+          Snippets
+          <Tags>
+            <Tag icon="LockClosed">Premium</Tag>
+          </Tags>
+        </div>
       {/if}
     </div>
     <div class="snippet-list">
-      {#each filteredSnippets as snippet}
-        <div
-          class="snippet"
-          on:mouseenter={e => showSnippet(snippet, e.target)}
-          on:mouseleave={hidePopover}
-          on:click={() => addSnippet(snippet)}
-        >
-          {snippet.name}
-          <Icon
-            name="Edit"
-            hoverable
-            newStyles
-            size="S"
-            on:click={e => editSnippet(e, snippet)}
-          />
+      {#if enableSnippets}
+        {#each filteredSnippets as snippet}
+          <div
+            class="snippet"
+            on:mouseenter={e => showSnippet(snippet, e.target)}
+            on:mouseleave={hidePopover}
+            on:click={() => addSnippet(snippet)}
+          >
+            {snippet.name}
+            <Icon
+              name="Edit"
+              hoverable
+              newStyles
+              size="S"
+              on:click={e => editSnippet(e, snippet)}
+            />
+          </div>
+        {/each}
+      {:else}
+        <div class="upgrade">
+          <Body size="S">
+            Create reusable blocks of JS that can be managed and updated all in
+            one place with Snippets
+          </Body>
+          <UpgradeButton />
         </div>
-      {/each}
+      {/if}
     </div>
   </Layout>
 </div>
@@ -190,6 +221,25 @@
   .search-input,
   .title {
     flex: 1 1 auto;
+  }
+  .title {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--spacing-m);
+  }
+
+  /* Upgrade */
+  .upgrade {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-l);
+  }
+  .upgrade :global(p) {
+    text-align: center;
+    align-self: center;
   }
 
   /* List */
