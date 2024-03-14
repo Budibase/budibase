@@ -3,12 +3,15 @@ import * as setup from "./utilities"
 import {
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  QuotaUsageType,
   SaveTableRequest,
+  StaticQuotaName,
   Table,
   TableSourceType,
   View,
   ViewCalculation,
 } from "@budibase/types"
+import { quotas } from "@budibase/pro"
 
 const priceTable: SaveTableRequest = {
   name: "table",
@@ -55,6 +58,18 @@ describe("/views", () => {
       ...view,
     }
     return config.api.legacyView.save(viewToSave)
+  }
+
+  const getRowUsage = async () => {
+    const { total } = await config.doInContext(undefined, () =>
+      quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
+    )
+    return total
+  }
+
+  const assertRowUsage = async (expected: number) => {
+    const usage = await getRowUsage()
+    expect(usage).toBe(expected)
   }
 
   describe("create", () => {
@@ -264,6 +279,41 @@ describe("/views", () => {
       const views = await config.api.legacyView.fetch()
       expect(views.length).toBe(1)
       expect(views.find(({ name }) => name === "TestView")).toBeDefined()
+    })
+
+    it("should be able to fetch tables contents via 'view'", async () => {
+      const row = await config.api.row.save(table._id!, {})
+      const rowUsage = await getRowUsage()
+
+      const rows = await config.api.legacyView.get(table._id!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0]._id).toEqual(row._id)
+      await assertRowUsage(rowUsage)
+    })
+
+    it("should throw an error if view doesn't exist", async () => {
+      const rowUsage = await getRowUsage()
+
+      await config.api.legacyView.get("derp", undefined, { status: 404 })
+
+      await assertRowUsage(rowUsage)
+    })
+
+    it("should be able to run on a view", async () => {
+      const view = await config.api.legacyView.save({
+        tableId: table._id!,
+        name: "ViewTest",
+        filters: [],
+        schema: {},
+      })
+      const row = await config.api.row.save(table._id!, {})
+      const rowUsage = await getRowUsage()
+
+      const rows = await config.api.legacyView.get(view.name!)
+      expect(rows.length).toEqual(1)
+      expect(rows[0]._id).toEqual(row._id)
+
+      await assertRowUsage(rowUsage)
     })
   })
 
