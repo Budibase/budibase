@@ -51,6 +51,7 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
+    padding: var(--spacing-l);
   }
   .hero {
     margin: var(--spacing-l);
