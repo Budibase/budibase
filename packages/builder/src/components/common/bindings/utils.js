@@ -39,7 +39,7 @@ export class BindingHelpers {
     }
   }
 
-  // Adds a JS/HBS helper to the expression
+  // Adds a snippet to the expression
   onSelectSnippet(snippet) {
     const pos = this.getCaretPosition()
     const { start, end } = pos
