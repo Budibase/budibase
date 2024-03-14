@@ -4,7 +4,7 @@ import { Row, View, ViewCalculation } from "@budibase/types"
 export class LegacyViewAPI extends TestAPI {
   get = async (
     id: string,
-    query: { calculation: ViewCalculation; group?: string },
+    query?: { calculation: ViewCalculation; group?: string },
     expectations?: Expectations
   ) => {
     return await this._get<Row[]>(`/api/views/${id}`, { query, expectations })
