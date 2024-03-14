@@ -32,7 +32,7 @@ describe("docWritethrough", () => {
 
   describe("patch", () => {
     function generatePatchObject(fieldCount: number) {
-      const keys = generator.unique(() => generator.word(), fieldCount)
+      const keys = generator.unique(() => generator.guid(), fieldCount)
       return keys.reduce((acc, c) => {
         acc[c] = generator.word()
         return acc
