@@ -79,6 +79,11 @@
     return findComponentPath($selectedComponent, component._id)?.length > 0
   }
 
+  const handleIconClick = (componentId) => {
+    componentStore.select(componentId)
+    componentTreeNodesStore.toggleNode(componentId)
+  }
+
   const hover = hoverStore.hover
 </script>
 
@@ -100,7 +105,7 @@
         on:dragend={dndStore.actions.reset}
         on:dragstart={() => dndStore.actions.dragstart(component)}
         on:dragover={dragover(component, index)}
-        on:iconClick={() => componentTreeNodesStore.toggleNode(component._id)}
+        on:iconClick={() => handleIconClick(component._id)}
         on:drop={onDrop}
         hovering={$hoverStore.componentId === component._id}
         on:mouseenter={() => hover(component._id)}
