@@ -6,6 +6,7 @@ packages/server/coverage
 packages/worker/coverage
 packages/backend-core/coverage
 packages/server/client
+packages/server/coverage
 packages/builder/.routify
 packages/sdk/sdk
 packages/account-portal/packages/server/build
