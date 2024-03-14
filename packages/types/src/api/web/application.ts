@@ -13,10 +13,6 @@ export interface CreateAppRequest {
   templateString?: string
 }
 
-export interface SetRevertableVersionRequest {
-  revertableVersion: string
-}
-
 export interface FetchAppDefinitionResponse {
   layouts: Layout[]
   screens: Screen[]

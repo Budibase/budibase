@@ -50,7 +50,6 @@ import {
   CreateAppRequest,
   FetchAppDefinitionResponse,
   FetchAppPackageResponse,
-  SetRevertableVersionRequest,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
@@ -663,14 +662,14 @@ export async function updateAppPackage(
 }
 
 export async function setRevertableVersion(
-  ctx: UserCtx<SetRevertableVersionRequest>
+  ctx: UserCtx<{ revertableVersion: string }, App>
 ) {
   if (!env.isDev()) {
     ctx.status = 403
     return
   }
   const db = context.getAppDB()
-  const app = await db.get(DocumentType.APP_METADATA)
+  const app = await db.get<App>(DocumentType.APP_METADATA)
   app.revertableVersion = ctx.request.body.revertableVersion
   const response = await db.put(app)
 
