@@ -152,7 +152,9 @@ class RestIntegration implements IntegrationBase {
           contentType.includes("text/xml") ||
           contentType.includes("application/xml")
         ) {
-          raw = handleXml(response)
+          let xmlResponse = await handleXml(response)
+          data = xmlResponse.data
+          raw = xmlResponse.rawXml
         } else {
           data = await response.text()
           raw = data

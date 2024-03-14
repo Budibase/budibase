@@ -21,6 +21,7 @@ jest.mock("@budibase/backend-core", () => {
       ...core.objectStore,
       ObjectStoreBuckets: {
         APPS: "apps",
+        TEMP: "tmp-file-attachments",
       },
       upload: jest.fn(),
       getPresignedUrl: jest.fn(() => "https://presigned-url.com"),
@@ -662,17 +663,17 @@ describe("REST Integration", () => {
     const response = await config.integration.read(query)
 
     expect(objectStore.upload).toHaveBeenCalledWith({
-      bucket: objectStore.ObjectStoreBuckets.APPS,
+      bucket: objectStore.ObjectStoreBuckets.TEMP,
       filename: expect.stringContaining(
-        "app-id/attachments/00000000-0000-0000-0000-000000000000.tar.gz"
+        "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
       ),
-      ttl: 1800,
+      addTTL: true,
       body: responseData,
     })
 
     expect(objectStore.getPresignedUrl).toHaveBeenCalledWith(
-      "test",
-      expect.stringContaining(`app-id/attachments/`),
+      objectStore.ObjectStoreBuckets.TEMP,
+      expect.stringContaining(`app-id/`),
       600
     )
 
@@ -681,7 +682,7 @@ describe("REST Integration", () => {
       name: expect.stringContaining(".tar.gz"),
       url: "https://presigned-url.com",
       extension: "tar.gz",
-      key: expect.stringContaining(`app-id/attachments/`),
+      key: expect.stringContaining(`app-id/`),
     })
   })
 })

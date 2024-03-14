@@ -460,7 +460,7 @@ export async function handleXml(response: any) {
   if (keys.length === 1 && Array.isArray(data[keys[0]])) {
     data = data[keys[0]]
   }
-  return rawXml
+  return { data, rawXml }
 }
 
 export async function handleFileResponse(
