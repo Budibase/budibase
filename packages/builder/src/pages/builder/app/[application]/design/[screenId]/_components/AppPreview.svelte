@@ -130,7 +130,6 @@
       loading = false
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
-      console.log("selecting");
       componentStore.select(data.id)
       componentTreeNodesStore.makeNodeVisible(data.id)
     } else if (type === "hover-component") {

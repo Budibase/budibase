@@ -284,6 +284,6 @@ export const buildContextTreeLookupMap = rootComponent => {
 export const getChildIdsForComponent = component => {
   return [
     component._id,
-    ...(component?._children ?? []).map(getChildIdsForComponent).flat(1)
+    ...(component?._children ?? []).map(getChildIdsForComponent).flat(1),
   ]
 }
