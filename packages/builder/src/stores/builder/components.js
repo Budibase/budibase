@@ -654,19 +654,10 @@ export class ComponentStore extends BudiStore {
       state.selectedScreenId = targetScreenId
       state.selectedComponentId = newComponentId
 
-      const targetScreen = get(screenStore).screens.find(
-        screen => screen.id === targetScreenId
-      )
-
-      const componentPathIds = findComponentPath(
-        targetScreen?.props,
-        newComponentId
-      ).map(component => component._id)
-
-      componentTreeNodesStore.expandNodes(componentPathIds)
-
       return state
     })
+
+    componentTreeNodesStore.makeNodeVisible(newComponentId)
   }
 
   getPrevious() {

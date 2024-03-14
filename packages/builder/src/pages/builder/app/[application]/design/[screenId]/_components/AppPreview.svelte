@@ -130,14 +130,9 @@
       loading = false
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
+      console.log("selecting");
       componentStore.select(data.id)
-
-      const componentPath = findComponentPath(
-        $selectedScreen?.props,
-        data.id
-      ).map(component => component._id)
-
-      componentTreeNodesStore.expandNodes(componentPath)
+      componentTreeNodesStore.makeNodeVisible(data.id)
     } else if (type === "hover-component") {
       hoverStore.hover(data.id, false)
     } else if (type === "update-prop") {
