@@ -14,6 +14,8 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
+  FieldType,
+  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -502,8 +504,14 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
-    const processFn = (result: any) =>
-      result.recordset ? result.recordset : [{ [operation]: true }]
+    const processFn = (result: any) => {
+      if (json?.meta?.table && result.recordset) {
+        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+      } else if (result.recordset) {
+        return result.recordset
+      }
+      return [{ [operation]: true }]
+    }
     return this.queryWithReturning(json, queryFn, processFn)
   }
 
