@@ -271,13 +271,12 @@ export const insertBinding = (view, from, to, text, mode) => {
 }
 
 export const insertSnippet = (view, from, to, text) => {
-  const parsedInsert = `${text}()`
-  let cursorPos = from + parsedInsert.length - 1
+  let cursorPos = from + text.length
   view.dispatch({
     changes: {
       from,
       to,
-      insert: parsedInsert,
+      insert: text,
     },
     selection: {
       anchor: cursorPos,
