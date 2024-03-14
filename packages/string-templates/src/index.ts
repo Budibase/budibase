@@ -398,7 +398,7 @@ export function convertToJS(hbs: string) {
     prevBlock = block
     const { variable, value } = convertHBSBlock(block, count++)
     variables[variable] = value
-    js += `${stringPart.split("")}\${${variable}}`
+    js += `${[stringPart]}\${${variable}}`
   }
   let varBlock = ""
   for (let [variable, value] of Object.entries(variables)) {
