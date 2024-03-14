@@ -16,6 +16,7 @@ import { helpers } from "@budibase/shared-core"
 import { context, objectStore } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"
+import { formatBytes } from "../utilities"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -461,7 +462,11 @@ export async function handleXml(response: any) {
   return { data, rawXml }
 }
 
-export async function handleFileResponse(response: any, filename: string) {
+export async function handleFileResponse(
+  response: any,
+  filename: string,
+  startTime: number
+) {
   let presignedUrl
   const responseBuffer = await response.arrayBuffer()
   const fileExtension = filename.includes(".")
@@ -481,12 +486,17 @@ export async function handleFileResponse(response: any, filename: string) {
 
   presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
   return {
-    file: {
+    data: {
       size: responseBuffer.byteLength,
       name: processedFileName,
       url: presignedUrl,
       extension: fileExtension,
       key: key,
+    },
+    info: {
+      code: response.status,
+      size: formatBytes(responseBuffer.byteLength),
+      time: `${Math.round(performance.now() - startTime)}ms`,
     },
   }
 }

@@ -120,14 +120,14 @@ export async function createBucketIfNotExists(
         Bucket: bucketName,
       })
       .promise()
-    return true
+    return false
   } catch (err: any) {
     const promises: any = STATE.bucketCreationPromises
     const doesntExist = err.statusCode === 404,
       noAccess = err.statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
-      return true
+      return false
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
         promises[bucketName] = client
@@ -137,7 +137,7 @@ export async function createBucketIfNotExists(
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
-        return false
+        return true
       } else {
         throw new Error("Access denied to object store bucket.")
       }
@@ -162,9 +162,9 @@ export async function upload({
   const extension = filename.split(".").pop()
   const fileBytes = path ? fs.createReadStream(path) : body
   const objectStore = ObjectStore(bucketName)
-  const bucketExisted = await createBucketIfNotExists(objectStore, bucketName)
+  const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && !bucketExisted) {
+  if (addTTL && bucketCreated) {
     let ttlConfig = bucketTTLConfig(bucketName, 1)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
