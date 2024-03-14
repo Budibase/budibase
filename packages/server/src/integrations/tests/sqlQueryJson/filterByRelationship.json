@@ -53,7 +53,7 @@
       "primary": [
         "productid"
       ],
-      "name": "a",
+      "name": "products",
       "schema": {
         "productname": {
           "type": "string",

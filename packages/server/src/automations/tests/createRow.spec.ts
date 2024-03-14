@@ -24,7 +24,7 @@ describe("test the create row action", () => {
     expect(res.id).toBeDefined()
     expect(res.revision).toBeDefined()
     expect(res.success).toEqual(true)
-    const gottenRow = await config.getRow(table._id, res.id)
+    const gottenRow = await config.api.row.get(table._id, res.id)
     expect(gottenRow.name).toEqual("test")
     expect(gottenRow.description).toEqual("test")
   })

@@ -4,13 +4,21 @@ import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  BBReferenceFieldMetadata,
+  FieldSchema,
+  FieldSubtype,
+  FieldType,
+  JsonFieldMetadata,
   Operation,
   QueryJson,
   RelationshipsJson,
   SearchFilters,
   SortDirection,
+  Table,
 } from "@budibase/types"
 import environment from "../../environment"
+
+type QueryFunction = (query: Knex.SqlNative, operation: Operation) => any
 
 const envLimit = environment.SQL_MAX_ROWS
   ? parseInt(environment.SQL_MAX_ROWS)
@@ -322,15 +330,18 @@ class InternalBuilder {
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
     let { sort, paginate } = json
     const table = json.meta?.table
+    const aliases = json.tableAliases
+    const aliased =
+      table?.name && aliases?.[table.name] ? aliases[table.name] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
       for (let [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
-        query = query.orderBy(`${table?.name}.${key}`, direction)
+        query = query.orderBy(`${aliased}.${key}`, direction)
       }
     } else if (this.client === SqlClient.MS_SQL && paginate?.limit) {
       // @ts-ignore
-      query = query.orderBy(`${table?.name}.${table?.primary[0]}`)
+      query = query.orderBy(`${aliased}.${table?.primary[0]}`)
     }
     return query
   }
@@ -430,10 +441,12 @@ class InternalBuilder {
     aliases?: QueryJson["tableAliases"]
   ): Knex.QueryBuilder {
     const tableName = endpoint.entityId
-    const tableAliased = aliases?.[tableName]
-      ? `${tableName} as ${aliases?.[tableName]}`
-      : tableName
-    let query = knex(tableAliased)
+    const tableAlias = aliases?.[tableName]
+    let table: string | Record<string, string> = tableName
+    if (tableAlias) {
+      table = { [tableAlias]: tableName }
+    }
+    let query = knex(table)
     if (endpoint.schema) {
       query = query.withSchema(endpoint.schema)
     }
@@ -605,7 +618,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     return query.toSQL().toNative()
   }
 
-  async getReturningRow(queryFn: Function, json: QueryJson) {
+  async getReturningRow(queryFn: QueryFunction, json: QueryJson) {
     if (!json.extra || !json.extra.idFilter) {
       return {}
     }
@@ -617,7 +630,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       resource: {
         fields: [],
       },
-      filters: json.extra.idFilter,
+      filters: json.extra?.idFilter,
       paginate: {
         limit: 1,
       },
@@ -646,7 +659,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
   // this function recreates the returning functionality of postgres
   async queryWithReturning(
     json: QueryJson,
-    queryFn: Function,
+    queryFn: QueryFunction,
     processFn: Function = (result: any) => result
   ) {
     const sqlClient = this.getSqlClient()
@@ -682,6 +695,37 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return row
     }
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
+  }
+
+  convertJsonStringColumns(
+    table: Table,
+    results: Record<string, any>[]
+  ): Record<string, any>[] {
+    for (const [name, field] of Object.entries(table.schema)) {
+      if (!this._isJsonColumn(field)) {
+        continue
+      }
+      const fullName = `${table.name}.${name}`
+      for (let row of results) {
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
+        }
+        if (typeof row[name] === "string") {
+          row[name] = JSON.parse(row[name])
+        }
+      }
+    }
+    return results
+  }
+
+  _isJsonColumn(
+    field: FieldSchema
+  ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
+    return (
+      field.type === FieldType.JSON ||
+      (field.type === FieldType.BB_REFERENCE &&
+        field.subtype === FieldSubtype.USERS)
+    )
   }
 
   log(query: string, values?: any[]) {

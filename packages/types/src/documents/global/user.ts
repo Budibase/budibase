@@ -55,6 +55,7 @@ export interface User extends Document {
   dayPassRecordedAt?: string
   userGroups?: string[]
   onboardedAt?: string
+  tours?: Record<string, Date>
   scimInfo?: { isSync: true } & Record<string, any>
   ssoId?: string
 }
