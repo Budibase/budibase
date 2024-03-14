@@ -83,20 +83,22 @@ function createTemplate(string: string, opts?: ProcessOptions) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-export async function processObject(
-  object: { [x: string]: any },
+export async function processObject<T extends Record<string, any>>(
+  object: T,
   context: object,
   opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
-): Promise<object | Array<any>> {
+): Promise<T> {
   testObject(object)
-  for (let key of Object.keys(object || {})) {
+  for (const key of Object.keys(object || {})) {
     if (object[key] != null) {
-      let val = object[key]
+      const val = object[key]
+      let parsedValue
       if (typeof val === "string") {
-        object[key] = await processString(object[key], context, opts)
+        parsedValue = await processString(object[key], context, opts)
       } else if (typeof val === "object") {
-        object[key] = await processObject(object[key], context, opts)
+        parsedValue = await processObject(object[key], context, opts)
       }
+      ;(object as any)[key] = parsedValue
     }
   }
   return object
