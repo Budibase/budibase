@@ -511,14 +511,14 @@
   .code-editor :global(.binding__example) {
     padding: 0;
     margin: 0;
-    font-size: var(--font-size-s);
+    font-size: 12px;
     font-family: var(--font-mono);
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
     max-height: 480px;
   }
-  .code-editor :global(.binding__example) {
+  .code-editor :global(.binding__example.helper) {
     color: var(--spectrum-global-color-blue-700);
   }
   .code-editor :global(.binding__example span) {
