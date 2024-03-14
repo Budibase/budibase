@@ -13,6 +13,7 @@
 
   export let groupId
   export let readonly
+  export let isScimGroup
 
   let emailSearch
   let fetchGroupUsers
@@ -61,10 +62,10 @@
 </script>
 
 <div class="header">
-  {#if !readonly}
-    <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
-  {:else}
+  {#if isScimGroup}
     <ActiveDirectoryInfo text="Users synced from your AD" />
+  {:else if !readonly}
+    <EditUserPicker {groupId} onUsersUpdated={fetchGroupUsers.getInitialData} />
   {/if}
 
   <div class="controls-right">

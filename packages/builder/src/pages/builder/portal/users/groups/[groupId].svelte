@@ -49,7 +49,8 @@
 
   $: group = $groups.find(x => x._id === groupId)
   $: isScimGroup = group?.scimInfo?.isSync
-  $: readonly = !sdk.users.isAdmin($auth.user) || isScimGroup
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: readonly = !isAdmin || isScimGroup
   $: groupApps = $appsStore.apps
     .filter(app =>
       groups.actions
@@ -123,14 +124,18 @@
         <span slot="control">
           <Icon hoverable name="More" />
         </span>
-        <MenuItem icon="Refresh" on:click={() => editModal.show()}>
+        <MenuItem
+          icon="Refresh"
+          on:click={() => editModal.show()}
+          disabled={!isAdmin}
+        >
           Edit
         </MenuItem>
         <div title={isScimGroup && "Group synced from your AD"}>
           <MenuItem
             icon="Delete"
             on:click={() => deleteModal.show()}
-            disabled={isScimGroup}
+            disabled={readonly}
           >
             Delete
           </MenuItem>
@@ -139,7 +144,7 @@
     </div>
 
     <Layout noPadding gap="S">
-      <GroupUsers {groupId} {readonly} />
+      <GroupUsers {groupId} {readonly} {isScimGroup} />
     </Layout>
 
     <Layout noPadding gap="S">
