@@ -159,7 +159,6 @@ class RestIntegration implements IntegrationBase {
         }
       }
     } catch (err) {
-      console.log(err)
       throw "Failed to parse response body."
     }
 
