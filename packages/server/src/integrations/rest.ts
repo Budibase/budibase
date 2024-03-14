@@ -140,7 +140,7 @@ class RestIntegration implements IntegrationBase {
 
     try {
       if (filename) {
-        return handleFileResponse(response, filename, this.startTimeMs)
+        return handleFileResponse(response, filename)
       } else {
         if (response.status === 204) {
           data = []
@@ -161,7 +161,7 @@ class RestIntegration implements IntegrationBase {
         }
       }
     } catch (err) {
-      throw "Failed to parse response body."
+      throw `Failed to parse response body: ${err}`
     }
 
     const size = formatBytes(

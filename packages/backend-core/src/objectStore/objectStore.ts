@@ -9,7 +9,7 @@ import { promisify } from "util"
 import { join } from "path"
 import fs, { ReadStream } from "fs"
 import env from "../environment"
-import { bucketTTL, budibaseTempDir } from "./utils"
+import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 
@@ -162,7 +162,7 @@ export async function upload({
   const bucketExisted = await makeSureBucketExists(objectStore, bucketName)
 
   if (addTTL && !bucketExisted) {
-    let ttlConfig = bucketTTL(bucketName)
+    let ttlConfig = bucketTTLConfig(bucketName, 1)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
 

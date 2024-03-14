@@ -32,15 +32,16 @@ export function budibaseTempDir() {
   return bbTmp
 }
 
-export const bucketTTL = (
-  bucketName: string
+export const bucketTTLConfig = (
+  bucketName: string,
+  days: number
 ): PutBucketLifecycleConfigurationRequest => {
   const lifecycleRule = {
     ID: "ExpireAfterOneDay",
     Prefix: "",
     Status: "Enabled",
     Expiration: {
-      Days: 1,
+      Days: days,
     },
   }
   const lifecycleConfiguration = {
