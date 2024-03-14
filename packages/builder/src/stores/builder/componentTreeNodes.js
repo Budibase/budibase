@@ -1,3 +1,4 @@
+import { get } from 'svelte/store'
 import { createSessionStorageStore } from "@budibase/frontend-core"
 
 const baseStore = createSessionStorageStore("openNodes", {})
@@ -36,12 +37,18 @@ const collapseNode = componentId => {
   })
 }
 
+const isNodeExpanded = componentId => {
+  const openNodes = get(baseStore);
+  return !!openNodes[`nodeOpen-${componentId}`]
+}
+
 const store = {
   subscribe: baseStore.subscribe,
   toggleNode,
   expandNode,
   expandNodes,
   collapseNode,
+  isNodeExpanded
 }
 
 export default store

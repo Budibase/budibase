@@ -63,11 +63,11 @@
     }
   }
 
-  const isOpen = (component, openNodes) => {
+  const isOpen = (component) => {
     if (!component?._children?.length) {
       return false
     }
-    return openNodes[`nodeOpen-${component._id}`]
+    return componentTreeNodesStore.isNodeExpanded(component._id)
   }
 
   const isChildOfSelectedComponent = component => {

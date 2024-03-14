@@ -675,7 +675,6 @@ export class ComponentStore extends BudiStore {
     const screen = get(selectedScreen)
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(x => x._id === componentId)
-    const componentTreeNodes = get(componentTreeNodesStore)
 
     // Check for screen and navigation component edge cases
     const screenComponentId = `${screen._id}-screen`
@@ -696,12 +695,12 @@ export class ComponentStore extends BudiStore {
       const previousSibling = parent._children[index - 1]
       if (
         previousSibling._children?.length &&
-        componentTreeNodes[`nodeOpen-${previousSibling._id}`]
+        componentTreeNodesStore.isNodeExpanded(previousSibling._id)
       ) {
         let target = previousSibling
         while (
           target._children?.length &&
-          componentTreeNodes[`nodeOpen-${target._id}`]
+          componentTreeNodesStore.isNodeExpanded(target._id)
         ) {
           target = target._children[target._children.length - 1]
         }
@@ -723,7 +722,6 @@ export class ComponentStore extends BudiStore {
     const screen = get(selectedScreen)
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(x => x._id === componentId)
-    const componentTreeNodes = get(componentTreeNodesStore)
 
     // Check for screen and navigation component edge cases
     const screenComponentId = `${screen._id}-screen`
@@ -736,7 +734,7 @@ export class ComponentStore extends BudiStore {
     if (
       component._children?.length &&
       (state.selectedComponentId === navComponentId ||
-        componentTreeNodes[`nodeOpen-${component._id}`])
+        componentTreeNodesStore.isNodeExpanded(component._id))
     ) {
       return component._children[0]._id
     } else if (!parent) {
@@ -796,7 +794,6 @@ export class ComponentStore extends BudiStore {
     await screenStore.patch(screen => {
       const componentId = component?._id
       const parent = findComponentParent(screen.props, componentId)
-      const componentTreeNodes = get(componentTreeNodesStore)
 
       // Check we aren't right at the top of the tree
       const index = parent?._children.findIndex(x => x._id === componentId)
@@ -818,7 +815,7 @@ export class ComponentStore extends BudiStore {
         const definition = this.getDefinition(previousSibling._component)
         if (
           definition.hasChildren &&
-          componentTreeNodes[`nodeOpen-${previousSibling._id}`]
+          componentTreeNodesStore.isNodeExpanded(previousSibling._id)
         ) {
           previousSibling._children.push(originalComponent)
         }
@@ -845,7 +842,6 @@ export class ComponentStore extends BudiStore {
     await screenStore.patch(screen => {
       const componentId = component?._id
       const parent = findComponentParent(screen.props, componentId)
-      const componentTreeNodes = get(componentTreeNodesStore)
 
       // Sanity check parent is found
       if (!parent?._children?.length) {
@@ -874,7 +870,7 @@ export class ComponentStore extends BudiStore {
         const definition = this.getDefinition(nextSibling._component)
         if (
           definition.hasChildren &&
-          componentTreeNodes[`nodeOpen-${nextSibling._id}`]
+          componentTreeNodesStore.isNodeExpanded(nextSibling._id)
         ) {
           nextSibling._children.splice(0, 0, originalComponent)
         }
