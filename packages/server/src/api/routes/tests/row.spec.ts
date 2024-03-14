@@ -719,7 +719,7 @@ describe.each([
     })
   })
 
-  describe("fetchEnrichedRows", () => {
+  describe("enrich", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
     })
@@ -781,10 +781,6 @@ describe.each([
 
   isInternal &&
     describe("attachments", () => {
-      beforeAll(async () => {
-        table = await config.api.table.save(defaultTable())
-      })
-
       it("should allow enriching attachment rows", async () => {
         const table = await config.api.table.save(
           defaultTable({
@@ -819,7 +815,7 @@ describe.each([
       })
     })
 
-  describe("exportData", () => {
+  describe("exportRows", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
     })
