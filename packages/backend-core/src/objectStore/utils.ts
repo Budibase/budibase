@@ -2,6 +2,7 @@ import { join } from "path"
 import { tmpdir } from "os"
 import fs from "fs"
 import env from "../environment"
+import { PutBucketLifecycleConfigurationRequest } from "aws-sdk/clients/s3"
 
 /****************************************************
  *      NOTE: When adding a new bucket - name       *
@@ -29,4 +30,27 @@ try {
 
 export function budibaseTempDir() {
   return bbTmp
+}
+
+export const bucketTTL = (
+  bucketName: string
+): PutBucketLifecycleConfigurationRequest => {
+  const lifecycleRule = {
+    ID: "ExpireAfterOneDay",
+    Prefix: "",
+    Status: "Enabled",
+    Expiration: {
+      Days: 1,
+    },
+  }
+  const lifecycleConfiguration = {
+    Rules: [lifecycleRule],
+  }
+
+  const params = {
+    Bucket: bucketName,
+    LifecycleConfiguration: lifecycleConfiguration,
+  }
+
+  return params
 }
