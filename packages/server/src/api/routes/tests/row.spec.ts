@@ -38,11 +38,18 @@ import * as uuid from "uuid"
 const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
+jest.unmock("mysql2")
+jest.unmock("mysql2/promise")
+jest.unmock("mssql")
+
 const { basicRow } = setup.structures
 
 describe.each([
   ["internal", undefined],
   ["postgres", databaseTestProviders.postgres],
+  ["mysql", databaseTestProviders.mysql],
+  ["mssql", databaseTestProviders.mssql],
+  ["mariadb", databaseTestProviders.mariadb],
 ])("/rows (%s)", (__, dsProvider) => {
   const isInternal = !dsProvider
 
@@ -70,7 +77,7 @@ describe.each([
 
   const generateTableConfig: () => SaveTableRequest = () => {
     return {
-      name: uuid.v4(),
+      name: uuid.v4().substring(0, 16),
       type: "table",
       primary: ["id"],
       primaryDisplay: "name",
@@ -467,7 +474,6 @@ describe.each([
       const createRowResponse = await config.api.row.save(
         createViewResponse.id,
         {
-          OrderID: "1111",
           Country: "Aussy",
           Story: "aaaaa",
         }
@@ -477,7 +483,7 @@ describe.each([
       expect(row.Story).toBeUndefined()
       expect(row).toEqual({
         ...defaultRowFields,
-        OrderID: 1111,
+        OrderID: createRowResponse.OrderID,
         Country: "Aussy",
         _id: createRowResponse._id,
         _rev: createRowResponse._rev,
@@ -641,7 +647,7 @@ describe.each([
       const createdRow = await config.createRow()
 
       const res = await config.api.row.bulkDelete(table._id!, {
-        rows: [createdRow, { _id: "2" }],
+        rows: [createdRow, { _id: "9999999" }],
       })
 
       expect(res[0]._id).toEqual(createdRow._id)
