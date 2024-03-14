@@ -39,9 +39,10 @@
     name: {
       width: "1fr",
     },
-    ...(readonly
+    ...(!isAdmin
       ? {}
-      : {
+      : // Add
+        {
           _id: {
             displayName: "",
             width: "auto",
@@ -90,7 +91,9 @@
   $: internalGroups = $groups?.filter(g => !g?.scimInfo?.isSync)
 
   $: isSSO = !!user?.provider
-  $: readonly = !sdk.users.isAdmin($auth.user) || user?.scimInfo?.isSync
+  $: isAdmin = sdk.users.isAdmin($auth.user)
+  $: isScim = user?.scimInfo?.isSync
+  $: readonly = !isAdmin || isScim
   $: privileged = sdk.users.isAdminOrGlobalBuilder(user)
   $: nameLabel = getNameLabel(user)
   $: filteredGroups = getFilteredGroups(internalGroups, searchTerm)
@@ -322,23 +325,23 @@
       <Layout gap="S" noPadding>
         <div class="tableTitle">
           <Heading size="S">Groups</Heading>
-          {#if internalGroups?.length}
+          {#if internalGroups?.length && isAdmin}
             <div bind:this={popoverAnchor}>
               <Button on:click={popover.show()} secondary>Add to group</Button>
             </div>
+            <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
+              <UserGroupPicker
+                labelKey="name"
+                bind:searchTerm
+                list={filteredGroups}
+                selected={user.userGroups}
+                on:select={e => addGroup(e.detail)}
+                on:deselect={e => removeGroup(e.detail)}
+                iconComponent={GroupIcon}
+                extractIconProps={item => ({ group: item, size: "S" })}
+              />
+            </Popover>
           {/if}
-          <Popover align="right" bind:this={popover} anchor={popoverAnchor}>
-            <UserGroupPicker
-              labelKey="name"
-              bind:searchTerm
-              list={filteredGroups}
-              selected={user.userGroups}
-              on:select={e => addGroup(e.detail)}
-              on:deselect={e => removeGroup(e.detail)}
-              iconComponent={GroupIcon}
-              extractIconProps={item => ({ group: item, size: "S" })}
-            />
-          </Popover>
         </div>
         <Table
           schema={groupSchema}
