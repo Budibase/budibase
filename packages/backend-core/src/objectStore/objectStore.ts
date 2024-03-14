@@ -9,7 +9,7 @@ import { promisify } from "util"
 import { join } from "path"
 import fs, { ReadStream } from "fs"
 import env from "../environment"
-import { budibaseTempDir } from "./utils"
+import { bucketTTL, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 
@@ -33,6 +33,7 @@ type UploadParams = {
     [key: string]: string | undefined
   }
   body?: ReadableStream | Buffer
+  addTTL?: boolean
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -122,6 +123,7 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
       noAccess = err.statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
+      return true
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
         // bucket doesn't exist create it
@@ -132,6 +134,7 @@ export async function makeSureBucketExists(client: any, bucketName: string) {
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
+        return false
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
@@ -149,12 +152,19 @@ export async function upload({
   type,
   metadata,
   body,
-  ttl,
-}: UploadParams & { ttl?: number }) {
+  addTTL,
+}: UploadParams) {
   const extension = filename.split(".").pop()
   const fileBytes = path ? fs.readFileSync(path) : body
   const objectStore = ObjectStore(bucketName)
-  await makeSureBucketExists(objectStore, bucketName)
+
+  // If this is true the bucket existed previously - so we can conditionally add TTL
+  const bucketExisted = await makeSureBucketExists(objectStore, bucketName)
+
+  if (addTTL && !bucketExisted) {
+    let ttlConfig = bucketTTL(bucketName)
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+  }
 
   let contentType = type
   if (!contentType) {
