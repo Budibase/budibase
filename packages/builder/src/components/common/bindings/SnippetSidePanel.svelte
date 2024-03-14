@@ -1,14 +1,5 @@
 <script>
-  import {
-    Input,
-    Layout,
-    Icon,
-    Popover,
-    Tags,
-    Tag,
-    Body,
-    Button,
-  } from "@budibase/bbui"
+  import { Input, Layout, Icon, Popover, Tags, Tag, Body } from "@budibase/bbui"
   import CodeEditor from "components/common/CodeEditor/CodeEditor.svelte"
   import { EditorModes } from "components/common/CodeEditor"
   import SnippetDrawer from "./SnippetDrawer.svelte"
