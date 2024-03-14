@@ -727,7 +727,7 @@
         }
       }}
       thin
-      text="Multiple attachments"
+      text="Allow multiple"
     />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
