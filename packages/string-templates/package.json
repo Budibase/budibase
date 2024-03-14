@@ -16,8 +16,7 @@
   },
   "files": [
     "dist",
-    "src",
-    "manifest.json"
+    "src"
   ],
   "scripts": {
     "build": "rollup -c",

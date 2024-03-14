@@ -14,7 +14,7 @@ import { convertHBSBlock } from "./conversion"
 import { setJSRunner, removeJSRunner } from "./helpers/javascript"
 import { helpersToRemoveForJs } from "./helpers/list"
 
-import manifest from "../manifest.json"
+import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
 
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"

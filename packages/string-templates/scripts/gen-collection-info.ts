@@ -22,7 +22,7 @@ const COLLECTIONS = [
   "object",
   "uuid",
 ]
-const FILENAME = join(__dirname, "..", "manifest.json")
+const FILENAME = join(__dirname, "..", "src", "manifest.json")
 const outputJSON = {}
 const ADDED_HELPERS = {
   date: {
