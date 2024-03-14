@@ -16,28 +16,24 @@
   export let maintenanceList
 </script>
 
-<div class="main">
-  <div class="content">
-    <div class="inner-content">
-      {#each maintenanceList as maintenance}
-        {#if maintenance.type === MaintenanceType.SQS_MISSING}
-          <Layout>
-            <Heading>Budibase installation requires maintenance</Heading>
-            <Body>
-              The administrator of this Budibase installation needs to take
-              actions to update components that are out of date. Please contact
-              them and show them this warning. More information will be
-              available when they log into their account.
-            </Body>
-          </Layout>
-        {/if}
-      {/each}
-    </div>
-  </div>
+<div class="content">
+  {#each maintenanceList as maintenance}
+    {#if maintenance.type === MaintenanceType.SQS_MISSING}
+      <Layout>
+        <Heading>Budibase installation requires maintenance</Heading>
+        <Body>
+          The administrator of this Budibase installation needs to take actions
+          to update components that are out of date. Please contact them and
+          show them this warning. More information will be available when they
+          log into their account.
+        </Body>
+      </Layout>
+    {/if}
+  {/each}
 </div>
 
 <style>
-  .main {
+  .content {
     max-width: 700px;
     margin: auto;
     height: 100vh;
@@ -45,29 +41,13 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-  }
-  .content {
-    display: flex;
-    flex-direction: row;
-    align-items: baseline;
-    justify-content: center;
-    gap: var(--spacing-m);
+    padding: var(--spacing-l);
   }
 
-  .inner-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--spacing-m);
-  }
-
-  @media only screen and (max-width: 600px) {
+  @media (max-width: 640px) {
     .content {
-      flex-direction: column;
+      justify-content: flex-start;
       align-items: flex-start;
-    }
-    .main {
-      height: auto;
     }
   }
 </style>
