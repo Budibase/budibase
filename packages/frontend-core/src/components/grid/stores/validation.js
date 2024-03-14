@@ -1,7 +1,22 @@
-import { writable, get } from "svelte/store"
+import { writable, get, derived } from "svelte/store"
 
+// Normally we would break out actions into the explicit "createActions"
+// function, but for validation all these actions are pure so can go into
+// "createStores" instead to make dependency ordering simpler
 export const createStores = () => {
   const validation = writable({})
+
+  // Derive which rows have errors so that we can use that info later
+  const rowErrorMap = derived(validation, $validation => {
+    let map = {}
+    Object.entries($validation).forEach(([key, error]) => {
+      // Extract row ID from all errored cell IDs
+      if (error) {
+        map[key.split("-")[0]] = true
+      }
+    })
+    return map
+  })
 
   const setError = (cellId, error) => {
     if (!cellId) {
@@ -13,11 +28,16 @@ export const createStores = () => {
     }))
   }
 
+  const rowHasErrors = rowId => {
+    return get(rowErrorMap)[rowId]
+  }
+
   return {
     validation: {
       ...validation,
       actions: {
         setError,
+        rowHasErrors,
       },
     },
   }

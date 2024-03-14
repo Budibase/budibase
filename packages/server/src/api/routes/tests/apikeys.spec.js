@@ -13,7 +13,7 @@ describe("/api/keys", () => {
 
   describe("fetch", () => {
     it("should allow fetching", async () => {
-      await setup.switchToSelfHosted(async () => {
+      await config.withEnv({ SELF_HOSTED: "true" }, async () => {
         const res = await request
           .get(`/api/keys`)
           .set(config.defaultHeaders())
@@ -34,7 +34,7 @@ describe("/api/keys", () => {
 
   describe("update", () => {
     it("should allow updating a value", async () => {
-      await setup.switchToSelfHosted(async () => {
+      await config.withEnv({ SELF_HOSTED: "true" }, async () => {
         const res = await request
           .put(`/api/keys/TEST`)
           .send({

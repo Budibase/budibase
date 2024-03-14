@@ -34,7 +34,7 @@
         "keypartone",
         "keyparttwo"
       ],
-      "name": "a",
+      "name": "compositetable",
       "schema": {
         "keyparttwo": {
           "type": "string",

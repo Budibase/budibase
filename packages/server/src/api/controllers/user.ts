@@ -1,6 +1,6 @@
 import { generateUserFlagID, InternalTables } from "../../db/utils"
 import { getFullUser } from "../../utilities/users"
-import { context } from "@budibase/backend-core"
+import { cache, context } from "@budibase/backend-core"
 import {
   ContextUserMetadata,
   Ctx,

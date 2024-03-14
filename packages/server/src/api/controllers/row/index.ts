@@ -131,7 +131,10 @@ async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
       : fixRow(processedRow, ctx.params)
   })
 
-  return await Promise.all(processedRows)
+  const responses = await Promise.allSettled(processedRows)
+  return responses
+    .filter(resp => resp.status === "fulfilled")
+    .map(resp => (resp as PromiseFulfilledResult<Row>).value)
 }
 
 async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
@@ -211,7 +214,7 @@ export async function validate(ctx: Ctx<Row, ValidateResponse>) {
   }
 }
 
-export async function fetchEnrichedRow(ctx: any) {
+export async function fetchEnrichedRow(ctx: UserCtx<void, Row>) {
   const tableId = utils.getTableId(ctx)
   ctx.body = await pickApi(tableId).fetchEnrichedRow(ctx)
 }

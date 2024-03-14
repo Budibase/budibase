@@ -1,9 +1,10 @@
-import { QueryJson } from "@budibase/types"
+import { Datasource, Operation, QueryJson, SourceName } from "@budibase/types"
 import { join } from "path"
 import Sql from "../base/sql"
 import { SqlClient } from "../utils"
 import AliasTables from "../../api/controllers/row/alias"
 import { generator } from "@budibase/backend-core/tests"
+import { Knex } from "knex"
 
 function multiline(sql: string) {
   return sql.replace(/\n/g, "").replace(/ +/g, " ")
@@ -160,6 +161,28 @@ describe("Captures of real examples", () => {
     })
   })
 
+  describe("returning (everything bar Postgres)", () => {
+    it("should be able to handle row returning", () => {
+      const queryJson = getJson("createSimple.json")
+      const SQL = new Sql(SqlClient.MS_SQL, limit)
+      let query = SQL._query(queryJson, { disableReturning: true })
+      expect(query).toEqual({
+        sql: "insert into [people] ([age], [name]) values (@p0, @p1)",
+        bindings: [22, "Test"],
+      })
+
+      // now check returning
+      let returningQuery: Knex.SqlNative = { sql: "", bindings: [] }
+      SQL.getReturningRow((input: Knex.SqlNative) => {
+        returningQuery = input
+      }, queryJson)
+      expect(returningQuery).toEqual({
+        sql: "select * from (select top (@p0) * from [people] where [people].[name] = @p1 and [people].[age] = @p2 order by [people].[name] asc) as [people]",
+        bindings: [1, "Test", 22],
+      })
+    })
+  })
+
   describe("check max character aliasing", () => {
     it("should handle over 'z' max character alias", () => {
       const tableNames = []
@@ -172,6 +195,114 @@ describe("Captures of real examples", () => {
         alias = aliasing.getAlias(table)
       }
       expect(alias).toEqual("cv")
+    })
+  })
+
+  describe("check aliasing is disabled/enabled", () => {
+    const tables = ["tableA", "tableB"]
+
+    function getDatasource(source: SourceName): Datasource {
+      return {
+        source,
+        type: "datasource",
+        isSQL: true,
+      }
+    }
+
+    function getQuery(op: Operation, fields: string[] = ["a"]): QueryJson {
+      return {
+        endpoint: { datasourceId: "", entityId: "", operation: op },
+        resource: {
+          fields,
+        },
+      }
+    }
+
+    it("should check for Postgres aliased status", () => {
+      const aliasing = new AliasTables(tables)
+      const datasource = getDatasource(SourceName.POSTGRES)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.CREATE), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.UPDATE), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.DELETE), datasource)
+      ).toEqual(true)
+    })
+
+    it("should check for MS-SQL aliased status", () => {
+      const aliasing = new AliasTables(tables)
+      const datasource = getDatasource(SourceName.SQL_SERVER)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.CREATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.UPDATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.DELETE), datasource)
+      ).toEqual(false)
+    })
+
+    it("should check for MySQL aliased status", () => {
+      const aliasing = new AliasTables(tables)
+      const datasource = getDatasource(SourceName.MYSQL)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.CREATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.UPDATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.DELETE), datasource)
+      ).toEqual(false)
+    })
+
+    it("should check for Oracle aliased status", () => {
+      const aliasing = new AliasTables(tables)
+      const datasource = getDatasource(SourceName.ORACLE)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.CREATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ), datasource)
+      ).toEqual(true)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.UPDATE), datasource)
+      ).toEqual(false)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.DELETE), datasource)
+      ).toEqual(false)
+    })
+
+    it("should disable aliasing for non-SQL datasources", () => {
+      const aliasing = new AliasTables(tables)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ), {
+          source: SourceName.GOOGLE_SHEETS,
+          type: "datasource",
+          isSQL: false,
+        })
+      )
+    })
+
+    it("should disable when no fields", () => {
+      const aliasing = new AliasTables(tables)
+      const datasource = getDatasource(SourceName.POSTGRES)
+      expect(
+        aliasing.isAliasingEnabled(getQuery(Operation.READ, []), datasource)
+      ).toEqual(false)
     })
   })
 

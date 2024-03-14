@@ -90,7 +90,7 @@ describe("/users", () => {
       })
       await config.api.user.update(
         { ...user, roleId: roles.BUILTIN_ROLE_IDS.POWER },
-        { expectStatus: 409 }
+        { status: 409 }
       )
     })
   })

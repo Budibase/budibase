@@ -1,7 +1,7 @@
 <script>
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
   import { fetchData, Utils } from "@budibase/frontend-core"
-  import { getContext } from "svelte"
+  import { getContext, onMount } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
 
@@ -28,6 +28,7 @@
   let tableDefinition
   let searchTerm
   let open
+  let initialValue
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -109,7 +110,11 @@
   }
 
   $: forceFetchRows(filter)
-  $: debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
+  $: debouncedFetchRows(
+    searchTerm,
+    primaryDisplay,
+    initialValue || defaultValue
+  )
 
   const forceFetchRows = async () => {
     // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
@@ -127,9 +132,13 @@
     if (allRowsFetched || !primaryDisplay) {
       return
     }
-    if (defaultVal && !optionsObj[defaultVal]) {
+    // must be an array
+    if (defaultVal && !Array.isArray(defaultVal)) {
+      defaultVal = defaultVal.split(",")
+    }
+    if (defaultVal && defaultVal.some(val => !optionsObj[val])) {
       await fetch.update({
-        query: { equal: { _id: defaultVal } },
+        query: { oneOf: { _id: defaultVal } },
       })
     }
 
@@ -202,6 +211,16 @@
       fetch.nextPage()
     }
   }
+
+  onMount(() => {
+    // if the form is in 'Update' mode, then we need to fetch the matching row so that the value is correctly set
+    if (fieldState?.value) {
+      initialValue =
+        fieldSchema?.relationshipType !== "one-to-many"
+          ? flatten(fieldState?.value) ?? []
+          : flatten(fieldState?.value)?.[0]
+    }
+  })
 </script>
 
 <Field
