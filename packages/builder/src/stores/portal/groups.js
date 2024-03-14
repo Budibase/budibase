@@ -35,7 +35,9 @@ export function createGroupsStore() {
     get: getGroup,
 
     save: async group => {
-      const { _scimInfo, ...dataToSave } = group
+      const { ...dataToSave } = group
+      delete dataToSave.scimInfo
+      delete dataToSave.userGroups
       const response = await API.saveGroup(dataToSave)
       group._id = response._id
       group._rev = response._rev

@@ -1,6 +1,7 @@
 import Router from "@koa/router"
 import { auth, middleware, env as envCore } from "@budibase/backend-core"
 import currentApp from "../middleware/currentapp"
+import cleanup from "../middleware/cleanup"
 import zlib from "zlib"
 import { mainRoutes, staticRoutes, publicRoutes } from "./routes"
 import { middleware as pro } from "@budibase/pro"
@@ -62,6 +63,8 @@ if (apiEnabled()) {
     .use(auth.auditLog)
     // @ts-ignore
     .use(migrations)
+    // @ts-ignore
+    .use(cleanup)
 
   // authenticated routes
   for (let route of mainRoutes) {
