@@ -140,7 +140,7 @@ class RestIntegration implements IntegrationBase {
 
     try {
       if (filename) {
-        return handleFileResponse(response, filename)
+        return handleFileResponse(response, filename, this.startTimeMs)
       } else {
         if (response.status === 204) {
           data = []

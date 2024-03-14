@@ -7,11 +7,12 @@ import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs, { ReadStream } from "fs"
+import fs, { PathLike, ReadStream } from "fs"
 import env from "../environment"
 import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
+import fsp from "fs/promises"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -26,7 +27,7 @@ type ListParams = {
 type UploadParams = {
   bucket: string
   filename: string
-  path?: string
+  path?: string | PathLike
   type?: string | null
   // can be undefined, we will remove it
   metadata?: {
@@ -160,7 +161,9 @@ export async function upload({
   addTTL,
 }: UploadParams) {
   const extension = filename.split(".").pop()
-  const fileBytes = path ? fs.createReadStream(path) : body
+
+  const fileBytes = path ? (await fsp.open(path)).createReadStream() : body
+
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
