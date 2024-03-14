@@ -20,9 +20,8 @@ import { formatBytes } from "../utilities"
 import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
-import { blacklist, context, objectStore } from "@budibase/backend-core"
-import { v4 } from "uuid"
-
+import { blacklist } from "@budibase/backend-core"
+import { handleFileResponse, handleXml } from "./utils"
 const BodyTypes = {
   NONE: "none",
   FORM_DATA: "form",
@@ -130,7 +129,7 @@ class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(response: any, pagination: PaginationConfig | null) {
-    let data, raw, headers, presignedUrl, fileExtension, filename
+    let data, raw, headers, filename
 
     const contentType = response.headers.get("content-type") || ""
     const contentDisposition = response.headers.get("content-disposition") || ""
@@ -140,38 +139,7 @@ class RestIntegration implements IntegrationBase {
 
     try {
       if (filename) {
-        const responseBuffer = await response.arrayBuffer()
-        const fileExtension = filename.includes(".")
-          ? filename.split(".").slice(1).join(".")
-          : ""
-
-        const processedFileName = `${v4()}.${fileExtension}`
-        const key = `${context.getProdAppId()}/${processedFileName}`
-        const bucket = objectStore.ObjectStoreBuckets.TEMP
-
-        await objectStore.upload({
-          bucket: bucket,
-          filename: key,
-          body: Buffer.from(responseBuffer),
-          ttl: true,
-        })
-
-        presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
-        raw = Buffer.from(responseBuffer).toString()
-        return {
-          data: {
-            size: responseBuffer.byteLength,
-            name: processedFileName,
-            url: presignedUrl,
-            extension: fileExtension,
-            key: key,
-          },
-          info: {
-            code: response.status,
-            size: formatBytes(responseBuffer.byteLength),
-            time: `${Math.round(performance.now() - this.startTimeMs)}ms`,
-          },
-        }
+        return handleFileResponse(response, filename, this.startTimeMs)
       } else {
         if (response.status === 204) {
           data = []
@@ -183,19 +151,7 @@ class RestIntegration implements IntegrationBase {
           contentType.includes("text/xml") ||
           contentType.includes("application/xml")
         ) {
-          const rawXml = await response.text()
-          data =
-            (await xmlParser(rawXml, {
-              explicitArray: false,
-              trim: true,
-              explicitRoot: false,
-            })) || {}
-          // there is only one structure, its an array, return the array so it appears as rows
-          const keys = Object.keys(data)
-          if (keys.length === 1 && Array.isArray(data[keys[0]])) {
-            data = data[keys[0]]
-          }
-          raw = rawXml
+          raw = handleXml(response)
         } else {
           data = await response.text()
           raw = data

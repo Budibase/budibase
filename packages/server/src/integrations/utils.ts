@@ -13,6 +13,10 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "../constants"
 import { helpers } from "@budibase/shared-core"
+import { context, objectStore } from "@budibase/backend-core"
+import { v4 } from "uuid"
+import { formatBytes } from "../utilities"
+const { parseStringPromise: xmlParser } = require("xml2js")
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -439,4 +443,60 @@ export function removeEmptyFilters(filters: SearchFilters) {
     }
   }
   return filters
+}
+
+export async function handleXml(response: any) {
+  let data
+  const rawXml = await response.text()
+  data =
+    (await xmlParser(rawXml, {
+      explicitArray: false,
+      trim: true,
+      explicitRoot: false,
+    })) || {}
+  // there is only one structure, its an array, return the array so it appears as rows
+  const keys = Object.keys(data)
+  if (keys.length === 1 && Array.isArray(data[keys[0]])) {
+    data = data[keys[0]]
+  }
+  return rawXml
+}
+
+export async function handleFileResponse(
+  response: any,
+  filename: string,
+  startTime: number
+) {
+  let presignedUrl
+  const responseBuffer = await response.arrayBuffer()
+  const fileExtension = filename.includes(".")
+    ? filename.split(".").slice(1).join(".")
+    : ""
+
+  const processedFileName = `${v4()}.${fileExtension}`
+  const key = `${context.getProdAppId()}/${processedFileName}`
+  const bucket = objectStore.ObjectStoreBuckets.TEMP
+
+  await objectStore.upload({
+    bucket: bucket,
+    filename: key,
+    body: Buffer.from(responseBuffer),
+    addTTL: true,
+  })
+
+  presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
+  return {
+    data: {
+      size: responseBuffer.byteLength,
+      name: processedFileName,
+      url: presignedUrl,
+      extension: fileExtension,
+      key: key,
+    },
+    info: {
+      code: response.status,
+      size: formatBytes(responseBuffer.byteLength),
+      time: `${Math.round(performance.now() - startTime)}ms`,
+    },
+  }
 }
