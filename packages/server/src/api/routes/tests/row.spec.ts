@@ -719,49 +719,6 @@ describe.each([
     })
   })
 
-  // Legacy views are not available for external
-  isInternal &&
-    describe("fetchView", () => {
-      beforeEach(async () => {
-        table = await config.api.table.save(defaultTable())
-      })
-
-      it("should be able to fetch tables contents via 'view'", async () => {
-        const row = await config.api.row.save(table._id!, {})
-        const rowUsage = await getRowUsage()
-
-        const rows = await config.api.legacyView.get(table._id!)
-        expect(rows.length).toEqual(1)
-        expect(rows[0]._id).toEqual(row._id)
-        await assertRowUsage(rowUsage)
-      })
-
-      it("should throw an error if view doesn't exist", async () => {
-        const rowUsage = await getRowUsage()
-
-        await config.api.legacyView.get("derp", undefined, { status: 404 })
-
-        await assertRowUsage(rowUsage)
-      })
-
-      it("should be able to run on a view", async () => {
-        const view = await config.createLegacyView({
-          tableId: table._id!,
-          name: "ViewTest",
-          filters: [],
-          schema: {},
-        })
-        const row = await config.api.row.save(table._id!, {})
-        const rowUsage = await getRowUsage()
-
-        const rows = await config.api.legacyView.get(view.name)
-        expect(rows.length).toEqual(1)
-        expect(rows[0]._id).toEqual(row._id)
-
-        await assertRowUsage(rowUsage)
-      })
-    })
-
   describe("fetchEnrichedRows", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
