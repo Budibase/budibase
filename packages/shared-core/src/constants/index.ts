@@ -174,6 +174,6 @@ export enum BpmStatusKey {
 export enum BpmStatusValue {
   STARTED = "started",
   COMPLETING_ACCOUNT_INFO = "completing_account_info",
-  VALIDATING_EMAIL = "validating_email",
+  VERIFYING_EMAIL = "verifying_email",
   COMPLETED = "completed",
 }
