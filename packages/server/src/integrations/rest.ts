@@ -146,18 +146,18 @@ class RestIntegration implements IntegrationBase {
           : ""
 
         const processedFileName = `${v4()}.${fileExtension}`
-        const key = `${context.getProdAppId()}/attachments/${processedFileName}`
+        const key = `${context.getProdAppId()}/${processedFileName}`
+        const bucket = objectStore.ObjectStoreBuckets.TEMP
 
         await objectStore.upload({
-          bucket: objectStore.ObjectStoreBuckets.APPS,
+          bucket: bucket,
           filename: key,
           body: Buffer.from(responseBuffer),
-          ttl: 1800,
+          ttl: true,
         })
 
-        presignedUrl = await objectStore.getPresignedUrl("test", key, 600)
+        presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
         raw = Buffer.from(responseBuffer).toString()
-
         return {
           data: {
             size: responseBuffer.byteLength,
