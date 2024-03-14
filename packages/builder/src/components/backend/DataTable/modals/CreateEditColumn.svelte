@@ -170,10 +170,6 @@
           relationshipPart1 = part1
           relationshipPart2 = part2
         }
-      } else if (editableColumn.type === FieldType.ATTACHMENT) {
-        editableColumn.constraints ??= { length: {} }
-        editableColumn.constraints.length ??= {}
-        editableColumn.constraints.length.maximum = 1
       }
     }
 
@@ -508,6 +504,8 @@
   onMount(() => {
     mounted = true
   })
+
+  $: console.log({ editableColumn })
 </script>
 
 <Layout noPadding gap="S">
@@ -722,8 +720,11 @@
           editableColumn.constraints ??= { length: {} }
           editableColumn.constraints.length ??= {}
           editableColumn.constraints.length.maximum = 1
+          editableColumn.constraints.length.message =
+            "cannot contain multiple files"
         } else {
           delete editableColumn.constraints?.length?.maximum
+          delete editableColumn.constraints?.length?.message
         }
       }}
       thin
