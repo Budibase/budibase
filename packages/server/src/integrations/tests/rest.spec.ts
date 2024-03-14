@@ -13,9 +13,30 @@ jest.mock("node-fetch", () => {
   }))
 })
 
-import fetch from "node-fetch"
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    objectStore: {
+      ...core.objectStore,
+      ObjectStoreBuckets: {
+        APPS: "apps",
+      },
+      upload: jest.fn(),
+      getPresignedUrl: jest.fn(() => "https://presigned-url.com"),
+    },
+    context: {
+      ...core.context,
+      getProdAppId: jest.fn(() => "app-id"),
+    },
+  }
+})
+jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
+
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
+import { objectStore } from "@budibase/backend-core"
+import fetch from "node-fetch"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -610,5 +631,57 @@ describe("REST Integration", () => {
     expect(calledConfig.method).toBe("GET")
     expect(calledConfig.headers).toEqual({})
     expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
+  })
+
+  it("uploads file to object store and returns signed URL", async () => {
+    const responseData = Buffer.from("test file content")
+    const filename = "test.tar.gz"
+    const contentType = "application/gzip"
+
+    ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        headers: {
+          raw: () => ({
+            "content-type": [contentType],
+            "content-disposition": [`attachment; filename="${filename}"`],
+          }),
+          get: (header: any) => {
+            if (header === "content-type") return contentType
+            if (header === "content-disposition")
+              return `attachment; filename="${filename}"`
+          },
+        },
+        arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+      })
+    )
+
+    const query = {
+      path: "api",
+    }
+
+    const response = await config.integration.read(query)
+
+    expect(objectStore.upload).toHaveBeenCalledWith({
+      bucket: objectStore.ObjectStoreBuckets.APPS,
+      filename: expect.stringContaining(
+        "app-id/attachments/00000000-0000-0000-0000-000000000000.tar.gz"
+      ),
+      ttl: 1800,
+      body: responseData,
+    })
+
+    expect(objectStore.getPresignedUrl).toHaveBeenCalledWith(
+      "test",
+      expect.stringContaining(`app-id/attachments/`),
+      600
+    )
+
+    expect(response.data).toEqual({
+      size: responseData.byteLength,
+      name: expect.stringContaining(".tar.gz"),
+      url: "https://presigned-url.com",
+      extension: "tar.gz",
+      key: expect.stringContaining(`app-id/attachments/`),
+    })
   })
 })

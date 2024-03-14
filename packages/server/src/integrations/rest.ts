@@ -22,6 +22,7 @@ import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist, context, objectStore } from "@budibase/backend-core"
 import { v4 } from "uuid"
+
 const BodyTypes = {
   NONE: "none",
   FORM_DATA: "form",
@@ -169,12 +170,6 @@ class RestIntegration implements IntegrationBase {
             code: response.status,
             size: formatBytes(responseBuffer.byteLength),
             time: `${Math.round(performance.now() - this.startTimeMs)}ms`,
-          },
-          extra: {
-            headers: response.headers.raw(),
-          },
-          pagination: {
-            cursor: null,
           },
         }
       } else {
