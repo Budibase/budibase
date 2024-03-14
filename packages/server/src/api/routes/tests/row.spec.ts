@@ -742,7 +742,7 @@ describe.each([
       it("should throw an error if view doesn't exist", async () => {
         const rowUsage = await getRowUsage()
 
-        await config.api.legacyView.get("derp", { status: 404 })
+        await config.api.legacyView.get("derp", undefined, { status: 404 })
 
         await assertRowUsage(rowUsage)
       })

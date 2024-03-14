@@ -30,6 +30,7 @@ export interface View {
   map?: string
   reduce?: any
   meta?: ViewTemplateOpts
+  groupBy?: string
 }
 
 export interface ViewV2 {
