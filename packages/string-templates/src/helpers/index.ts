@@ -51,11 +51,11 @@ const HELPERS = [
       if (value && (value as any).string) {
         value = (value as any).string
       }
-      let text = value
+      let text: any = value
       if (__opts && __opts.escapeNewlines) {
         text = value.replace(/\n/g, "\\n")
       }
-      text = new SafeString(text.replace(/&amp;/g, "&")).toString()
+      text = new SafeString(text.replace(/&amp;/g, "&"))
       if (text == null || typeof text !== "string") {
         return text
       }

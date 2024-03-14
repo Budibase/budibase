@@ -342,14 +342,14 @@ describe("Test the literal helper", () => {
   })
 
   it("should allow use of the literal specifier for an object", async () => {
-    const output = await processString(`{{literal a}}`, {
+    const output: any = await processString(`{{literal a}}`, {
       a: { b: 1 },
     })
     expect(output.b).toBe(1)
   })
 
   it("should allow use of the literal specifier for an object with dashes", async () => {
-    const output = await processString(`{{literal a}}`, {
+    const output: any = await processString(`{{literal a}}`, {
       a: { b: "i-have-dashes" },
     })
     expect(output.b).toBe("i-have-dashes")
