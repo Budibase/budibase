@@ -1,6 +1,6 @@
 <script>
   import { Icon } from "@budibase/bbui"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import { sdk } from "@budibase/shared-core"
 
   export let value
@@ -10,7 +10,7 @@
 
   const getCount = () => {
     if (priviliged) {
-      return $apps.length
+      return $appsStore.apps.length
     } else {
       return sdk.users.hasAppBuilderPermissions(row)
         ? row?.builder?.apps?.length +
