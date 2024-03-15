@@ -100,7 +100,7 @@ export async function processObject<T extends Record<string, any>>(
         parsedValue = await processObject(object[key], context, opts)
       }
 
-      ;(object as Record<string, any>)[key] = parsedValue
+      (object as Record<string, any>)[key] = parsedValue
     }
   }
   return object
