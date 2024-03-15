@@ -28,7 +28,7 @@ jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { databaseTestProviders } from "./utils"
+import { objectStoreTestProviders } from "./utils"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -627,11 +627,11 @@ describe("REST Integration", () => {
 
   describe("File Handling", () => {
     beforeAll(async () => {
-      await databaseTestProviders.s3.start()
+      await objectStoreTestProviders.minio.start()
     })
 
     afterAll(async () => {
-      await databaseTestProviders.s3.stop()
+      await objectStoreTestProviders.minio.stop()
     })
 
     it("uploads file to object store and returns signed URL", async () => {

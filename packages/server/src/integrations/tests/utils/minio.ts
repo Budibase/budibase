@@ -1,10 +1,9 @@
-import { Datasource } from "@budibase/types"
 import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 
 let container: StartedTestContainer | undefined
 
-class MinioWaitStrategy extends AbstractWaitStrategy {
+class ObjectStoreWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
     const logs = Wait.forListeningPorts()
     await logs.waitUntilReady(container, boundPorts, startTime)
@@ -19,7 +18,7 @@ export async function start(): Promise<StartedTestContainer> {
       MINIO_ACCESS_KEY: "budibase",
       MINIO_SECRET_KEY: "budibase",
     })
-    .withWaitStrategy(new MinioWaitStrategy().withStartupTimeout(30000))
+    .withWaitStrategy(new ObjectStoreWaitStrategy().withStartupTimeout(30000))
     .start()
 
   return container

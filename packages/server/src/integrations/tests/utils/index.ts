@@ -4,7 +4,7 @@ import { Datasource } from "@budibase/types"
 import * as postgres from "./postgres"
 import * as mongodb from "./mongodb"
 import * as mysql from "./mysql"
-import * as s3 from "./s3"
+import * as minio from "./minio"
 import { StartedTestContainer } from "testcontainers"
 
 jest.setTimeout(30000)
@@ -15,4 +15,6 @@ export interface DatabaseProvider {
   datasource(): Promise<Datasource>
 }
 
-export const databaseTestProviders = { postgres, mongodb, mysql, s3 }
+export const databaseTestProviders = { postgres, mongodb, mysql }
+
+export const objectStoreTestProviders = { minio }
