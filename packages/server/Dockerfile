@@ -49,7 +49,7 @@ COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
 RUN ./scripts/removeWorkspaceDependencies.sh  package.json
 
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000 --frozen-lockfile \
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000 \
     # Remove unneeded data from file system to reduce image size
     && yarn cache clean && apt-get remove -y --purge --auto-remove g++ make python jq \
     && rm -rf /tmp/* /root/.node-gyp /usr/local/lib/node_modules/npm/node_modules/node-gyp
