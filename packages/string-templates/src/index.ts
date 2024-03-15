@@ -90,6 +90,7 @@ export async function processObject<T extends Record<string, any>>(
   opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
 ): Promise<T> {
   testObject(object)
+
   for (const key of Object.keys(object || {})) {
     if (object[key] != null) {
       const val = object[key]
@@ -100,7 +101,8 @@ export async function processObject<T extends Record<string, any>>(
         parsedValue = await processObject(object[key], context, opts)
       }
 
-      (object as Record<string, any>)[key] = parsedValue
+      // @ts-ignore
+      object[key] = parsedValue
     }
   }
   return object
