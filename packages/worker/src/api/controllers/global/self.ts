@@ -111,6 +111,9 @@ export async function getSelf(ctx: any) {
 }
 
 export const syncAppFavourites = async (processedAppIds: string[]) => {
+  if (processedAppIds.length === 0) {
+    return []
+  }
   const apps = await fetchAppsByIds(processedAppIds)
   return apps?.reduce((acc: string[], app) => {
     const id = app.appId.replace(dbCore.APP_DEV_PREFIX, "")
@@ -127,35 +130,27 @@ export const fetchAppsByIds = async (processedAppIds: string[]) => {
   )
 }
 
-const processUserAppFavourites = (
+const processUserAppFavourites = async (
   user: User,
-  appIdRequest: string[] | undefined
+  update: UpdateSelfRequest
 ) => {
-  const userAppFavourites = user.appFavourites || []
-  const appFavouritesRequest = appIdRequest || []
-  const appFavouritesUpdated = [
-    ...new Set(userAppFavourites.concat(appFavouritesRequest)),
-  ]
-
-  // Process state
-  let processedAppIds: string[]
-  if (userAppFavourites.length) {
-    const req = new Set(appFavouritesRequest)
-    const updated = new Set(userAppFavourites)
-    for (const element of req) {
-      if (updated.has(element)) {
-        // Subtract/Toggle any existing ones
-        updated.delete(element)
-      } else {
-        // Add new appIds
-        updated.add(element)
-      }
-    }
-    processedAppIds = [...updated]
-  } else {
-    processedAppIds = [...appFavouritesUpdated]
+  if (!("appFavourites" in update)) {
+    // Ignore requests without an explicit update to favourites.
+    return
   }
-  return processedAppIds
+
+  const userAppFavourites = user.appFavourites || []
+  const requestAppFavourites = new Set(update.appFavourites || [])
+  const containsAll = userAppFavourites.every(v => requestAppFavourites.has(v))
+
+  if (containsAll && requestAppFavourites.size === userAppFavourites.length) {
+    // Ignore request if the outcome will have no change
+    return
+  }
+
+  // Clean up the request by purging apps that no longer exist.
+  const syncedAppFavourites = await syncAppFavourites([...requestAppFavourites])
+  return syncedAppFavourites
 }
 
 export async function updateSelf(
@@ -164,16 +159,7 @@ export async function updateSelf(
   const update = ctx.request.body
 
   let user = await userSdk.db.getUser(ctx.user._id!)
-  let requestAppFavourites: string[] = [...(update.appFavourites || [])]
-  let updatedAppFavourites: string[] | undefined
-
-  if ("appFavourites" in update) {
-    const appIds: string[] = processUserAppFavourites(
-      user,
-      requestAppFavourites
-    )
-    updatedAppFavourites = await syncAppFavourites(appIds)
-  }
+  const updatedAppFavourites = await processUserAppFavourites(user, update)
 
   user = {
     ...user,

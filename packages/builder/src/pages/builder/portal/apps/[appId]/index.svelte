@@ -1,10 +1,6 @@
 <script>
   import { params, goto } from "@roxi/routify"
-  import {
-    auth,
-    sideBarCollapsed,
-    enriched as enrichedApps,
-  } from "stores/portal"
+  import { auth, sideBarCollapsed, enrichedApps } from "stores/portal"
   import AppRowContext from "components/start/AppRowContext.svelte"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {

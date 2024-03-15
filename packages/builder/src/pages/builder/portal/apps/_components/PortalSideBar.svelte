@@ -1,9 +1,5 @@
 <script>
-  import {
-    sideBarCollapsed,
-    enriched as enrichedApps,
-    auth,
-  } from "stores/portal"
+  import { sideBarCollapsed, enrichedApps, auth } from "stores/portal"
   import { params, goto } from "@roxi/routify"
   import NavItem from "components/common/NavItem.svelte"
   import NavHeader from "components/common/NavHeader.svelte"
