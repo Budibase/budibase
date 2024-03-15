@@ -2,6 +2,7 @@ import { auth, permissions } from "@budibase/backend-core"
 import { DataSourceOperation } from "../../../constants"
 import { WebhookActionType } from "@budibase/types"
 import Joi from "joi"
+import { ValidSnippetNameRegex } from "@budibase/shared-core"
 
 const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 const OPTIONAL_NUMBER = Joi.number().optional().allow(null)
@@ -226,6 +227,21 @@ export function applicationValidator(opts = { isCreate: true }) {
     base.name = appNameValidator.optional()
   }
 
+  const snippetValidator = Joi.array()
+    .optional()
+    .items(
+      Joi.object({
+        name: Joi.string()
+          .pattern(new RegExp(ValidSnippetNameRegex))
+          .error(
+            new Error(
+              "Snippet name cannot include spaces or special characters, and cannot start with a number"
+            )
+          ),
+        code: OPTIONAL_STRING,
+      })
+    )
+
   return auth.joiValidator.body(
     Joi.object({
       _id: OPTIONAL_STRING,
@@ -235,6 +251,7 @@ export function applicationValidator(opts = { isCreate: true }) {
       template: Joi.object({
         templateString: OPTIONAL_STRING,
       }).unknown(true),
+      snippets: snippetValidator,
     }).unknown(true)
   )
 }

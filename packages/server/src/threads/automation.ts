@@ -625,6 +625,7 @@ export async function executeInThread(job: Job<AutomationData>) {
   })
 
   return await context.doInAppContext(appId, async () => {
+    await context.ensureSnippetContext()
     const envVars = await sdkUtils.getEnvironmentVariables()
     // put into automation thread for whole context
     return await context.doInEnvironmentContext(envVars, async () => {
