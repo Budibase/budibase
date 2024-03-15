@@ -36,6 +36,8 @@
   import { ValidColumnNameRegex } from "@budibase/shared-core"
   import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
+  import { RowUtils } from "@budibase/frontend-core"
+  import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
 
   const AUTO_TYPE = FIELDS.AUTO.type
   const FORMULA_TYPE = FIELDS.FORMULA.type
@@ -49,43 +51,21 @@
 
   const dispatch = createEventDispatcher()
   const PROHIBITED_COLUMN_NAMES = ["type", "_id", "_rev", "tableId"]
-  const { dispatch: gridDispatch } = getContext("grid")
+  const { dispatch: gridDispatch, rows } = getContext("grid")
 
   export let field
 
   let mounted = false
-  const fieldDefinitions = Object.values(FIELDS).reduce(
-    // Storing the fields by complex field id
-    (acc, field) => ({
-      ...acc,
-      [makeFieldId(field.type, field.subtype)]: field,
-    }),
-    {}
-  )
-
-  function makeFieldId(type, subtype, autocolumn) {
-    // don't make field IDs for auto types
-    if (type === AUTO_TYPE || autocolumn) {
-      return type.toUpperCase()
-    } else {
-      return `${type}${subtype || ""}`.toUpperCase()
-    }
-  }
-
   let originalName
   let linkEditDisabled
   let primaryDisplay
   let indexes = [...($tables.selected.indexes || [])]
   let isCreating = undefined
-
   let relationshipPart1 = PrettyRelationshipDefinitions.Many
   let relationshipPart2 = PrettyRelationshipDefinitions.One
-
   let relationshipTableIdPrimary = null
   let relationshipTableIdSecondary = null
-
   let table = $tables.selected
-
   let confirmDeleteDialog
   let savingColumn
   let deleteColName
@@ -99,11 +79,6 @@
   }
   let relationshipOpts1 = Object.values(PrettyRelationshipDefinitions)
   let relationshipOpts2 = Object.values(PrettyRelationshipDefinitions)
-
-  $: if (primaryDisplay) {
-    editableColumn.constraints.presence = { allowEmpty: false }
-  }
-
   let relationshipMap = {
     [RelationshipType.ONE_TO_MANY]: {
       part1: PrettyRelationshipDefinitions.MANY,
@@ -118,7 +93,12 @@
       part2: PrettyRelationshipDefinitions.MANY,
     },
   }
+  let autoColumnInfo = getAutoColumnInformation()
 
+  $: rowGoldenSample = RowUtils.generateGoldenSample($rows)
+  $: if (primaryDisplay) {
+    editableColumn.constraints.presence = { allowEmpty: false }
+  }
   $: {
     // this parses any changes the user has made when creating a new internal relationship
     // into what we expect the schema to look like
@@ -148,6 +128,74 @@
       editableColumn.tableId = relationshipTableIdSecondary
     }
   }
+  $: initialiseField(field, savingColumn)
+  $: checkConstraints(editableColumn)
+  $: required = !!editableColumn?.constraints?.presence || primaryDisplay
+  $: uneditable =
+    $tables.selected?._id === TableNames.USERS &&
+    UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
+  $: invalid =
+    !editableColumn?.name ||
+    (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
+    Object.keys(errors).length !== 0
+  $: errors = checkErrors(editableColumn)
+  $: datasource = $datasources.list.find(
+    source => source._id === table?.sourceId
+  )
+  $: tableAutoColumnsTypes = getTableAutoColumnTypes($tables?.selected)
+  $: availableAutoColumns = Object.keys(autoColumnInfo).reduce((acc, key) => {
+    if (!tableAutoColumnsTypes.includes(key)) {
+      acc[key] = autoColumnInfo[key]
+    }
+    return acc
+  }, {})
+  $: availableAutoColumnKeys = availableAutoColumns
+    ? Object.keys(availableAutoColumns)
+    : []
+  $: autoColumnOptions = editableColumn.autocolumn
+    ? autoColumnInfo
+    : availableAutoColumns
+  // used to select what different options can be displayed for column type
+  $: canBeDisplay =
+    editableColumn?.type !== LINK_TYPE &&
+    editableColumn?.type !== AUTO_TYPE &&
+    editableColumn?.type !== JSON_TYPE &&
+    !editableColumn.autocolumn
+  $: canBeRequired =
+    editableColumn?.type !== LINK_TYPE &&
+    !uneditable &&
+    editableColumn?.type !== AUTO_TYPE &&
+    !editableColumn.autocolumn
+  $: externalTable = table.sourceType === DB_TYPE_EXTERNAL
+  // in the case of internal tables the sourceId will just be undefined
+  $: tableOptions = $tables.list.filter(
+    opt =>
+      opt.sourceType === table.sourceType && table.sourceId === opt.sourceId
+  )
+  $: typeEnabled =
+    !originalName ||
+    (originalName &&
+      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
+      !editableColumn?.autocolumn)
+
+  const fieldDefinitions = Object.values(FIELDS).reduce(
+    // Storing the fields by complex field id
+    (acc, field) => ({
+      ...acc,
+      [makeFieldId(field.type, field.subtype)]: field,
+    }),
+    {}
+  )
+
+  function makeFieldId(type, subtype, autocolumn) {
+    // don't make field IDs for auto types
+    if (type === AUTO_TYPE || autocolumn) {
+      return type.toUpperCase()
+    } else {
+      return `${type}${subtype || ""}`.toUpperCase()
+    }
+  }
+
   const initialiseField = (field, savingColumn) => {
     isCreating = !field
     if (field && !savingColumn) {
@@ -187,22 +235,6 @@
     }
   }
 
-  $: initialiseField(field, savingColumn)
-
-  $: checkConstraints(editableColumn)
-  $: required = !!editableColumn?.constraints?.presence || primaryDisplay
-  $: uneditable =
-    $tables.selected?._id === TableNames.USERS &&
-    UNEDITABLE_USER_FIELDS.includes(editableColumn.name)
-  $: invalid =
-    !editableColumn?.name ||
-    (editableColumn?.type === LINK_TYPE && !editableColumn?.tableId) ||
-    Object.keys(errors).length !== 0
-  $: errors = checkErrors(editableColumn)
-  $: datasource = $datasources.list.find(
-    source => source._id === table?.sourceId
-  )
-
   const getTableAutoColumnTypes = table => {
     return Object.keys(table?.schema).reduce((acc, key) => {
       let fieldSchema = table?.schema[key]
@@ -212,47 +244,6 @@
       return acc
     }, [])
   }
-
-  let autoColumnInfo = getAutoColumnInformation()
-
-  $: tableAutoColumnsTypes = getTableAutoColumnTypes($tables?.selected)
-  $: availableAutoColumns = Object.keys(autoColumnInfo).reduce((acc, key) => {
-    if (!tableAutoColumnsTypes.includes(key)) {
-      acc[key] = autoColumnInfo[key]
-    }
-    return acc
-  }, {})
-
-  $: availableAutoColumnKeys = availableAutoColumns
-    ? Object.keys(availableAutoColumns)
-    : []
-
-  $: autoColumnOptions = editableColumn.autocolumn
-    ? autoColumnInfo
-    : availableAutoColumns
-
-  // used to select what different options can be displayed for column type
-  $: canBeDisplay =
-    editableColumn?.type !== LINK_TYPE &&
-    editableColumn?.type !== AUTO_TYPE &&
-    editableColumn?.type !== JSON_TYPE &&
-    !editableColumn.autocolumn
-  $: canBeRequired =
-    editableColumn?.type !== LINK_TYPE &&
-    !uneditable &&
-    editableColumn?.type !== AUTO_TYPE &&
-    !editableColumn.autocolumn
-  $: externalTable = table.sourceType === DB_TYPE_EXTERNAL
-  // in the case of internal tables the sourceId will just be undefined
-  $: tableOptions = $tables.list.filter(
-    opt =>
-      opt.sourceType === table.sourceType && table.sourceId === opt.sourceId
-  )
-  $: typeEnabled =
-    !originalName ||
-    (originalName &&
-      SWITCHABLE_TYPES.indexOf(editableColumn.type) !== -1 &&
-      !editableColumn?.autocolumn)
 
   async function saveColumn() {
     savingColumn = true
@@ -679,6 +670,7 @@
       </div>
       <div class="input-length">
         <ModalBindableInput
+          panel={ServerBindingPanel}
           title="Formula"
           value={editableColumn.formula}
           on:change={e => {
@@ -689,6 +681,7 @@
           }}
           bindings={getBindings({ table })}
           allowJS
+          context={rowGoldenSample}
         />
       </div>
     </div>
