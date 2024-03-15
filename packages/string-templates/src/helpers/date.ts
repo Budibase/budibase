@@ -82,7 +82,7 @@ function initialConfig(str: any, pattern: any, options?: any) {
   return { str, pattern, options }
 }
 
-function setLocale(str: any, pattern: any, options?: any) {
+function setLocale(this: any, str: any, pattern: any, options?: any) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }
