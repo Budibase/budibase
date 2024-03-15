@@ -135,7 +135,6 @@ class RestIntegration implements IntegrationBase {
     let data, raw, headers, filename
 
     const contentType = response.headers.get("content-type") || ""
-    console.log("content-type: " + contentType)
     const contentDisposition = response.headers.get("content-disposition") || ""
     if (
       contentDisposition.includes("attachment") ||
