@@ -9,9 +9,10 @@
   import { createValidationStore } from "helpers/validation/yup"
   import { writable, get } from "svelte/store"
   import * as appValidation from "helpers/validation/yup/app"
-  import { apps } from "stores/portal"
+  import { appsStore, auth } from "stores/portal"
   import { onMount } from "svelte"
   import { API } from "api"
+  import { sdk } from "@budibase/shared-core"
 
   export let appId
   export let appName
@@ -67,8 +68,12 @@
     }
 
     try {
-      await API.duplicateApp(data, appId)
-      apps.load()
+      const app = await API.duplicateApp(data, appId)
+      appsStore.load()
+      if (!sdk.users.isBuilder($auth.user, app?.duplicateAppId)) {
+        // Refresh for access to created applications
+        await auth.getSelf()
+      }
       onDuplicateSuccess()
       notifications.success("App duplicated successfully")
     } catch (err) {
@@ -78,7 +83,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = get(apps)
+    const applications = get(appsStore).apps
     appValidation.name(validation, { apps: applications })
     appValidation.url(validation, { apps: applications })
 
