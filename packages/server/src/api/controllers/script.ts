@@ -1,6 +1,6 @@
 import { Ctx } from "@budibase/types"
 import { IsolatedVM } from "../../jsRunner/vm"
-import { iifeWrapper } from "../../jsRunner/utilities"
+import { iifeWrapper } from "@budibase/string-templates"
 
 export async function execute(ctx: Ctx) {
   const { script, context } = ctx.request.body

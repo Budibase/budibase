@@ -17,6 +17,7 @@
   export let tooltipType = TooltipType.Default
   export let tooltipColor
   export let tooltipWrap = true
+  export let newStyles = false
 </script>
 
 <AbsTooltip
@@ -26,7 +27,7 @@
   color={tooltipColor}
   noWrap={tooltipWrap}
 >
-  <div class="icon">
+  <div class="icon" class:newStyles>
     <svg
       on:click
       class:hoverable
@@ -55,6 +56,9 @@
     display: grid;
     place-items: center;
   }
+  .newStyles {
+    color: var(--spectrum-global-color-gray-700);
+  }
 
   svg.hoverable {
     pointer-events: all;
@@ -67,7 +71,10 @@
   svg.hoverable:active {
     color: var(--spectrum-global-color-blue-400) !important;
   }
-
+  .newStyles svg.hoverable:hover,
+  .newStyles svg.hoverable:active {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
   svg.disabled {
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;

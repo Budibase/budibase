@@ -55,7 +55,7 @@
           </div>
         {/if}
         <span />
-        <Icon name="Copy" hoverable on:click={copy} />
+        <Icon name="Copy" size="S" hoverable on:click={copy} />
       {:else}
         <div>Preview</div>
         {#if evaluating}
@@ -65,7 +65,7 @@
         {/if}
         <span />
         {#if !empty}
-          <Icon name="Copy" hoverable on:click={copy} />
+          <Icon name="Copy" newStyles size="S" hoverable on:click={copy} />
         {/if}
       {/if}
     </div>
