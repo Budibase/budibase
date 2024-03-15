@@ -47,7 +47,7 @@ function getVariable(variableName: string) {
   return `$("${variableName}")`
 }
 
-function buildList(parts: any[], value: any) {
+function buildList(parts: string[], value: any) {
   function build() {
     return parts
       .map((part: string) =>
