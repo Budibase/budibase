@@ -71,6 +71,7 @@
   class:scrollable
   class:highlighted
   class:selectedBy
+  class:actionsOpen={highlighted && withActions}
   on:dragend
   on:dragstart
   on:dragover
@@ -168,8 +169,9 @@
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions,
-  .hovering .actions {
-    visibility: visible;
+  .hovering .actions,
+  .nav-item.withActions.actionsOpen .actions {
+    opacity: 1;
   }
   .nav-item-content {
     flex: 1 1 auto;
@@ -272,7 +274,6 @@
     position: relative;
     display: grid;
     place-items: center;
-    visibility: hidden;
     order: 3;
     opacity: 0;
     width: 20px;
