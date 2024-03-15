@@ -682,7 +682,10 @@ export async function duplicateApp(
   // Build a new request
   const createRequest = {
     roleId: ctx.roleId,
-    user: ctx.user,
+    user: {
+      ...ctx.user,
+      _id: dbCore.getGlobalIDFromUserMetadataID(ctx.user._id || ""),
+    },
     request: {
       body: createRequestBody,
     },
