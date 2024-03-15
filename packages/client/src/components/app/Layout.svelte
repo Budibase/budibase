@@ -281,7 +281,18 @@
         </div>
       </div>
     {/if}
-    <div class="main-wrapper">
+    <div
+      class="main-wrapper"
+      on:click={() => {
+        // inBuilder
+        // check selected
+        // selectedComponentId : "ce300d7f6c08b432b8db18d11690932f5"
+        console.log("Screen check ", $builderStore)
+        if ($builderStore.inBuilder) {
+          builderStore.actions.selectComponent(null)
+        }
+      }}
+    >
       <div class="main size--{pageWidthClass}">
         <slot />
       </div>
