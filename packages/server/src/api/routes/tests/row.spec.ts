@@ -42,6 +42,7 @@ tk.freeze(timestamp)
 jest.unmock("mysql2")
 jest.unmock("mysql2/promise")
 jest.unmock("mssql")
+jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],
@@ -152,8 +153,8 @@ describe.each([
     table = await config.api.table.save(defaultTable())
   })
 
-  describe("save, load, update", () => {
-    it("returns a success message when the row is created", async () => {
+  describe("create", () => {
+    it("creates a new row successfully", async () => {
       const rowUsage = await getRowUsage()
       const row = await config.api.row.save(table._id!, {
         name: "Test Contact",
@@ -163,7 +164,44 @@ describe.each([
       await assertRowUsage(rowUsage + 1)
     })
 
-    it("Increment row autoId per create row request", async () => {
+    it("fails to create a row for a table that does not exist", async () => {
+      const rowUsage = await getRowUsage()
+      await config.api.row.save("1234567", {}, { status: 404 })
+      await assertRowUsage(rowUsage)
+    })
+
+    it("fails to create a row if required fields are missing", async () => {
+      const rowUsage = await getRowUsage()
+      const table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            required: {
+              type: FieldType.STRING,
+              name: "required",
+              constraints: {
+                type: "string",
+                presence: true,
+              },
+            },
+          },
+        })
+      )
+      await config.api.row.save(
+        table._id!,
+        {},
+        {
+          status: 500,
+          body: {
+            validationErrors: {
+              required: ["can't be blank"],
+            },
+          },
+        }
+      )
+      await assertRowUsage(rowUsage)
+    })
+
+    it("increment row autoId per create row request", async () => {
       const rowUsage = await getRowUsage()
 
       const newTable = await config.api.table.save(
@@ -196,52 +234,6 @@ describe.each([
         previousId = row["Row ID"]
       }
       await assertRowUsage(rowUsage + 10)
-    })
-
-    it("updates a row successfully", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-      const rowUsage = await getRowUsage()
-
-      const res = await config.api.row.save(table._id!, {
-        _id: existing._id,
-        _rev: existing._rev,
-        name: "Updated Name",
-      })
-
-      expect(res.name).toEqual("Updated Name")
-      await assertRowUsage(rowUsage)
-    })
-
-    it("should load a row", async () => {
-      const existing = await config.api.row.save(table._id!, {})
-
-      const res = await config.api.row.get(table._id!, existing._id!)
-
-      expect(res).toEqual({
-        ...existing,
-        ...defaultRowFields,
-      })
-    })
-
-    it("should list all rows for given tableId", async () => {
-      const table = await config.api.table.save(defaultTable())
-      const rows = await Promise.all([
-        config.api.row.save(table._id!, {}),
-        config.api.row.save(table._id!, {}),
-      ])
-
-      const res = await config.api.row.fetch(table._id!)
-      expect(res.map(r => r._id)).toEqual(
-        expect.arrayContaining(rows.map(r => r._id))
-      )
-    })
-
-    it("load should return 404 when row does not exist", async () => {
-      const table = await config.api.table.save(defaultTable())
-      await config.api.row.save(table._id!, {})
-      await config.api.row.get(table._id!, "1234567", {
-        status: 404,
-      })
     })
 
     isInternal &&
@@ -296,8 +288,6 @@ describe.each([
         }
         const table = await config.api.table.save(
           saveTableRequest({
-            name: "TestTable2",
-            type: "table",
             schema: {
               name: str,
               stringUndefined: str,
@@ -404,52 +394,59 @@ describe.each([
       })
   })
 
-  describe("view save", () => {
-    it("views have extra data trimmed", async () => {
-      const table = await config.api.table.save(
-        saveTableRequest({
-          name: "orders",
-          schema: {
-            Country: {
-              type: FieldType.STRING,
-              name: "Country",
-            },
-            Story: {
-              type: FieldType.STRING,
-              name: "Story",
-            },
-          },
-        })
-      )
+  describe("get", () => {
+    it("reads an existing row successfully", async () => {
+      const existing = await config.api.row.save(table._id!, {})
 
-      const createViewResponse = await config.api.viewV2.create({
-        tableId: table._id!,
-        name: uuid.v4(),
-        schema: {
-          Country: {
-            visible: true,
-          },
-        },
-      })
+      const res = await config.api.row.get(table._id!, existing._id!)
 
-      const createRowResponse = await config.api.row.save(
-        createViewResponse.id,
-        {
-          Country: "Aussy",
-          Story: "aaaaa",
-        }
-      )
-
-      const row = await config.api.row.get(table._id!, createRowResponse._id!)
-      expect(row.Story).toBeUndefined()
-      expect(row).toEqual({
+      expect(res).toEqual({
+        ...existing,
         ...defaultRowFields,
-        Country: "Aussy",
-        id: createRowResponse.id,
-        _id: createRowResponse._id,
-        _rev: createRowResponse._rev,
-        tableId: table._id,
       })
+    })
+
+    it("returns 404 when row does not exist", async () => {
+      const table = await config.api.table.save(defaultTable())
+      await config.api.row.save(table._id!, {})
+      await config.api.row.get(table._id!, "1234567", {
+        status: 404,
+      })
+    })
+  })
+
+  describe("fetch", () => {
+    it("fetches all rows for given tableId", async () => {
+      const table = await config.api.table.save(defaultTable())
+      const rows = await Promise.all([
+        config.api.row.save(table._id!, {}),
+        config.api.row.save(table._id!, {}),
+      ])
+
+      const res = await config.api.row.fetch(table._id!)
+      expect(res.map(r => r._id)).toEqual(
+        expect.arrayContaining(rows.map(r => r._id))
+      )
+    })
+
+    it("returns 404 when table does not exist", async () => {
+      await config.api.row.fetch("1234567", { status: 404 })
+    })
+  })
+
+  describe("update", () => {
+    it("updates an existing row successfully", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const rowUsage = await getRowUsage()
+
+      const res = await config.api.row.save(table._id!, {
+        _id: existing._id,
+        _rev: existing._rev,
+        name: "Updated Name",
+      })
+
+      expect(res.name).toEqual("Updated Name")
+      await assertRowUsage(rowUsage)
     })
   })
 
@@ -722,50 +719,7 @@ describe.each([
     })
   })
 
-  // Legacy views are not available for external
-  isInternal &&
-    describe("fetchView", () => {
-      beforeEach(async () => {
-        table = await config.api.table.save(defaultTable())
-      })
-
-      it("should be able to fetch tables contents via 'view'", async () => {
-        const row = await config.api.row.save(table._id!, {})
-        const rowUsage = await getRowUsage()
-
-        const rows = await config.api.legacyView.get(table._id!)
-        expect(rows.length).toEqual(1)
-        expect(rows[0]._id).toEqual(row._id)
-        await assertRowUsage(rowUsage)
-      })
-
-      it("should throw an error if view doesn't exist", async () => {
-        const rowUsage = await getRowUsage()
-
-        await config.api.legacyView.get("derp", undefined, { status: 404 })
-
-        await assertRowUsage(rowUsage)
-      })
-
-      it("should be able to run on a view", async () => {
-        const view = await config.createLegacyView({
-          tableId: table._id!,
-          name: "ViewTest",
-          filters: [],
-          schema: {},
-        })
-        const row = await config.api.row.save(table._id!, {})
-        const rowUsage = await getRowUsage()
-
-        const rows = await config.api.legacyView.get(view.name)
-        expect(rows.length).toEqual(1)
-        expect(rows[0]._id).toEqual(row._id)
-
-        await assertRowUsage(rowUsage)
-      })
-    })
-
-  describe("fetchEnrichedRows", () => {
+  describe("enrich", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
     })
@@ -827,10 +781,6 @@ describe.each([
 
   isInternal &&
     describe("attachments", () => {
-      beforeAll(async () => {
-        table = await config.api.table.save(defaultTable())
-      })
-
       it("should allow enriching attachment rows", async () => {
         const table = await config.api.table.save(
           defaultTable({
@@ -865,7 +815,7 @@ describe.each([
       })
     })
 
-  describe("exportData", () => {
+  describe("exportRows", () => {
     beforeAll(async () => {
       table = await config.api.table.save(defaultTable())
     })
@@ -947,6 +897,7 @@ describe.each([
         const table = await config.api.table.save(await userTable())
         const view = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
           schema: {
             name: { visible: true },
             surname: { visible: true },
@@ -984,6 +935,7 @@ describe.each([
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId: tableId,
+          name: generator.guid(),
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1026,6 +978,7 @@ describe.each([
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId: tableId,
+          name: generator.guid(),
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1049,6 +1002,7 @@ describe.each([
         const tableId = table._id!
         const view = await config.api.viewV2.create({
           tableId: tableId,
+          name: generator.guid(),
           schema: {
             name: { visible: true },
             address: { visible: true },
@@ -1109,6 +1063,7 @@ describe.each([
 
         const createViewResponse = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
         })
         const response = await config.api.viewV2.search(createViewResponse.id)
 
@@ -1155,6 +1110,7 @@ describe.each([
 
         const createViewResponse = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
           query: [
             { operator: SearchQueryOperators.EQUAL, field: "age", value: 40 },
           ],
@@ -1279,6 +1235,7 @@ describe.each([
           async (sortParams, expected) => {
             const createViewResponse = await config.api.viewV2.create({
               tableId: table._id!,
+              name: generator.guid(),
               sort: sortParams,
               schema: viewSchema,
             })
@@ -1299,6 +1256,7 @@ describe.each([
           async (sortParams, expected) => {
             const createViewResponse = await config.api.viewV2.create({
               tableId: table._id!,
+              name: generator.guid(),
               sort: {
                 field: "name",
                 order: SortOrder.ASCENDING,
@@ -1339,6 +1297,7 @@ describe.each([
 
         const view = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
           schema: { name: { visible: true } },
         })
         const response = await config.api.viewV2.search(view.id)
@@ -1361,6 +1320,7 @@ describe.each([
         const table = await config.api.table.save(await userTable())
         const createViewResponse = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
         })
         const response = await config.api.viewV2.search(createViewResponse.id)
         expect(response.rows).toHaveLength(0)
@@ -1376,6 +1336,7 @@ describe.each([
 
         const createViewResponse = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
         })
         const response = await config.api.viewV2.search(createViewResponse.id, {
           limit,
@@ -1392,6 +1353,7 @@ describe.each([
         )
         const view = await config.api.viewV2.create({
           tableId: table._id!,
+          name: generator.guid(),
         })
         const rows = (await config.api.viewV2.search(view.id)).rows
 
@@ -1466,6 +1428,7 @@ describe.each([
 
           view = await config.api.viewV2.create({
             tableId: table._id!,
+            name: generator.guid(),
           })
         })
 
