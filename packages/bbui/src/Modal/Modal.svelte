@@ -10,6 +10,7 @@
   export let inline = false
   export let disableCancel = false
   export let autoFocus = true
+  export let zIndex = 999
 
   const dispatch = createEventDispatcher()
   let visible = fixed || inline
@@ -101,7 +102,11 @@
   <Portal target=".modal-container">
     {#if visible}
       <!-- svelte-ignore a11y-no-static-element-interactions -->
-      <div class="spectrum-Underlay is-open" on:mousedown|self={cancel}>
+      <div
+        class="spectrum-Underlay is-open"
+        on:mousedown|self={cancel}
+        style="z-index:{zIndex || 999}"
+      >
         <div
           class="background"
           in:fade={{ duration: 200 }}
@@ -132,7 +137,6 @@
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    z-index: 999;
     overflow: auto;
     overflow-x: hidden;
     background: transparent;
