@@ -670,4 +670,45 @@ describe("REST Integration", () => {
       ),
     })
   })
+
+  it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
+    const responseData = Buffer.from("teest file contnt")
+    const non_ascii_filename = "ex%C3%A4mple.txt"
+    const contentType = "text/plain"
+
+    ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        headers: {
+          raw: () => ({
+            "content-type": [contentType],
+            "content-disposition": [
+              `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+            ],
+          }),
+          get: (header: any) => {
+            if (header === "content-type") return contentType
+            if (header === "content-disposition")
+              return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+          },
+        },
+        arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+      })
+    )
+
+    const query = {
+      path: "api",
+    }
+
+    const response = await config.integration.read(query)
+
+    expect(response.data).toEqual({
+      size: responseData.byteLength,
+      name: "00000000-0000-0000-0000-000000000000.pdf",
+      url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
+      extension: "pdf",
+      key: expect.stringContaining(
+        "app-id/00000000-0000-0000-0000-000000000000.pdf"
+      ),
+    })
+  })
 })
