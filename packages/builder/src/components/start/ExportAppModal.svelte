@@ -121,6 +121,7 @@
     <Input
       type="password"
       label="Password"
+      autocomplete="new-password"
       placeholder="Type here..."
       bind:value={password}
       error={$validation.errors.password}
