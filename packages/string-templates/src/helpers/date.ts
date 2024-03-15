@@ -27,11 +27,11 @@ dayjs.extend(dayjsTimezonePlugin)
  * https://github.com/helpers/helper-date
  */
 
-function isOptions(val) {
+function isOptions(val: any) {
   return typeof val === "object" && typeof val.hash === "object"
 }
 
-function isApp(thisArg) {
+function isApp(thisArg: any) {
   return (
     typeof thisArg === "object" &&
     typeof thisArg.options === "object" &&
@@ -39,7 +39,7 @@ function isApp(thisArg) {
   )
 }
 
-function getContext(thisArg, locals, options) {
+function getContext(thisArg: any, locals: any, options: any) {
   if (isOptions(thisArg)) {
     return getContext({}, locals, thisArg)
   }
@@ -68,7 +68,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-function initialConfig(str, pattern, options?) {
+function initialConfig(str: any, pattern: any, options?: any) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -82,7 +82,7 @@ function initialConfig(str, pattern, options?) {
   return { str, pattern, options }
 }
 
-function setLocale(str, pattern, options?) {
+function setLocale(str: any, pattern: any, options?: any) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }
@@ -93,7 +93,7 @@ function setLocale(str, pattern, options?) {
   dayjs.locale(opts.lang || opts.language)
 }
 
-export const date = (str, pattern, options) => {
+export const date = (str: any, pattern: any, options: any) => {
   const config = initialConfig(str, pattern, options)
 
   // if no args are passed, return a formatted date
@@ -119,7 +119,7 @@ export const date = (str, pattern, options) => {
   return date.format(config.pattern)
 }
 
-export const duration = (str, pattern, format) => {
+export const duration = (str: any, pattern: any, format: any) => {
   const config = initialConfig(str, pattern)
 
   setLocale(config.str, config.pattern)

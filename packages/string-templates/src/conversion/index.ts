@@ -63,7 +63,7 @@ function buildList(parts: any[], value: any) {
 }
 
 function splitBySpace(layer: string) {
-  const parts = []
+  const parts: string[] = []
   let started = null,
     endChar = null,
     last = 0
