@@ -1,11 +1,11 @@
-import { atob, isBackendService, isJSAllowed } from "../utilities"
+import { atob, isJSAllowed } from "../utilities"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS: (js: string, context: any) => any
+let runJS: ((js: string, context: any) => any) | undefined = undefined
 export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
 
 export const removeJSRunner = () => {
@@ -44,7 +44,7 @@ const getContextValue = (path: string, context: any) => {
 
 // Evaluates JS code against a certain context
 export function processJS(handlebars: string, context: any) {
-  if (!isJSAllowed() || (isBackendService() && !runJS)) {
+  if (!isJSAllowed() || !runJS) {
     throw new Error("JS disabled in environment.")
   }
   try {
