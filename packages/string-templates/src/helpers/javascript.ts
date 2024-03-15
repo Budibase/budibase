@@ -2,6 +2,7 @@ import { atob, isJSAllowed } from "../utilities"
 import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
+import { iifeWrapper } from "../iife"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
@@ -50,14 +51,36 @@ export function processJS(handlebars: string, context: any) {
   try {
     // Wrap JS in a function and immediately invoke it.
     // This is required to allow the final `return` statement to be valid.
-    const js = `(function(){${atob(handlebars)}})();`
+    const js = iifeWrapper(atob(handlebars))
+
+    // Transform snippets into an object for faster access, and cache previously
+    // evaluated snippets
+    let snippetMap: any = {}
+    let snippetCache: any = {}
+    for (let snippet of context.snippets || []) {
+      snippetMap[snippet.name] = snippet.code
+    }
 
     // Our $ context function gets a value from context.
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
+    const clonedContext = cloneDeep({ ...context, snippets: null })
     const sandboxContext = {
-      $: (path: string) => getContextValue(path, cloneDeep(context)),
+      $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
+
+      // Proxy to evaluate snippets when running in the browser
+      snippets: new Proxy(
+        {},
+        {
+          get: function (_, name) {
+            if (!(name in snippetCache)) {
+              snippetCache[name] = eval(iifeWrapper(snippetMap[name]))
+            }
+            return snippetCache[name]
+          },
+        }
+      ),
     }
 
     // Create a sandbox with our context and run the JS
