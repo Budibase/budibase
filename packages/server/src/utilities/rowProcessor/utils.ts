@@ -10,6 +10,7 @@ import {
   FieldType,
 } from "@budibase/types"
 import tracer from "dd-trace"
+import { context } from "@budibase/backend-core"
 
 interface FormulaOpts {
   dynamic?: boolean
@@ -44,16 +45,19 @@ export function fixAutoColumnSubType(
 /**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
-export function processFormulas<T extends Row | Row[]>(
+export async function processFormulas<T extends Row | Row[]>(
   table: Table,
   inputRows: T,
   { dynamic, contextRows }: FormulaOpts = { dynamic: true }
-): T {
-  return tracer.trace("processFormulas", {}, span => {
+): Promise<T> {
+  return tracer.trace("processFormulas", {}, async span => {
     const numRows = Array.isArray(inputRows) ? inputRows.length : 1
     span?.addTags({ table_id: table._id, dynamic, numRows })
     const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
     if (rows) {
+      // Ensure we have snippet context
+      await context.ensureSnippetContext()
+
       for (let [column, schema] of Object.entries(table.schema)) {
         if (schema.type !== FieldType.FORMULA) {
           continue
