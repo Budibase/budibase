@@ -1,23 +1,5 @@
 import { Helpers } from "@budibase/bbui"
-import { processString, processObjectSync } from "@budibase/string-templates"
-
-// Regex to test inputs with to see if they are likely candidates for template strings
-const looksLikeTemplate = /{{.*}}/
-
-/**
- * Enriches a given input with a row from the database.
- */
-export const enrichDataBinding = async (input, context) => {
-  // Only accept string inputs
-  if (!input || typeof input !== "string") {
-    return input
-  }
-  // Do a fast regex check if this looks like a template string
-  if (!looksLikeTemplate.test(input)) {
-    return input
-  }
-  return processString(input, context)
-}
+import { processObjectSync } from "@budibase/string-templates"
 
 /**
  * Recursively enriches all props in a props object and returns the new props.
