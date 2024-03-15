@@ -1,5 +1,5 @@
 import { atob, isBackendService, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash/fp/clonedeep"
+import cloneDeep from "lodash/fp/cloneDeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 
