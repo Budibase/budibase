@@ -21,6 +21,7 @@
   "scripts": {
     "build": "tsc --emitDeclarationOnly && rollup -c",
     "dev": "rollup -cw",
+    "check:types": "tsc -p tsconfig.json --noEmit --paths null",
     "test": "jest",
     "manifest": "ts-node ./scripts/gen-collection-info.ts"
   },
