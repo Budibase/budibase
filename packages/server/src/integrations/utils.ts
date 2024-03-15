@@ -17,6 +17,7 @@ import { context, objectStore } from "@budibase/backend-core"
 import { v4 } from "uuid"
 import { parseStringPromise as xmlParser } from "xml2js"
 import { formatBytes } from "../utilities"
+import bl from "bl"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -468,7 +469,6 @@ export async function handleFileResponse(
   startTime: number
 ) {
   let presignedUrl
-  const responseBuffer = await response.arrayBuffer()
   const fileExtension = filename.includes(".")
     ? filename.split(".").slice(1).join(".")
     : ""
@@ -477,17 +477,20 @@ export async function handleFileResponse(
   const key = `${context.getProdAppId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
-  await objectStore.upload({
-    bucket: bucket,
-    filename: key,
-    body: Buffer.from(responseBuffer),
-    addTTL: true,
-  })
-
+  const data = response.body.pipe(bl((error, data) => data))
+  if (response.body) {
+    await objectStore.streamUpload(
+      bucket,
+      key,
+      data,
+      true,
+      response.headers["content-type"]
+    )
+  }
   presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
   return {
     data: {
-      size: responseBuffer.byteLength,
+      size: data.byteLength,
       name: processedFileName,
       url: presignedUrl,
       extension: fileExtension,
@@ -495,7 +498,7 @@ export async function handleFileResponse(
     },
     info: {
       code: response.status,
-      size: formatBytes(responseBuffer.byteLength),
+      size: formatBytes(data.byteLength),
       time: `${Math.round(performance.now() - startTime)}ms`,
     },
   }

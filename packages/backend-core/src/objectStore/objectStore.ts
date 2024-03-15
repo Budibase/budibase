@@ -205,10 +205,18 @@ export async function streamUpload(
   bucketName: string,
   filename: string,
   stream: ReadStream | ReadableStream,
+  addTTL?: boolean,
+  type?: string,
   extra = {}
 ) {
+  const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
-  await createBucketIfNotExists(objectStore, bucketName)
+  const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
+
+  if (addTTL && bucketCreated) {
+    let ttlConfig = bucketTTLConfig(bucketName, 1)
+    await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
+  }
 
   // Set content type for certain known extensions
   if (filename?.endsWith(".js")) {
@@ -222,10 +230,19 @@ export async function streamUpload(
       ContentType: "image",
     }
   }
+
+  let contentType = type
+  if (!contentType) {
+    contentType = extension
+      ? CONTENT_TYPE_MAP[extension.toLowerCase()]
+      : CONTENT_TYPE_MAP.txt
+  }
+
   const params = {
     Bucket: sanitizeBucket(bucketName),
     Key: sanitizeKey(filename),
     Body: stream,
+    ContentType: contentType,
     ...extra,
   }
   return objectStore.upload(params).promise()
