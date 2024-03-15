@@ -1,4 +1,4 @@
-import helpers from "@budibase/handlebars-helpers"
+const helpers = require("@budibase/handlebars-helpers")
 import { date, duration } from "./date"
 import { HelperFunctionBuiltin } from "./constants"
 

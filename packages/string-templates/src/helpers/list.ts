@@ -20,7 +20,7 @@ const addedHelpers = {
   duration: duration,
 }
 
-let helpers = undefined
+let helpers: Record<string, any> = undefined
 
 export function getJsHelperList() {
   if (helpers) {
@@ -31,11 +31,12 @@ export function getJsHelperList() {
   for (let collection of Object.values(getExternalCollections())) {
     for (let [key, func] of Object.entries(collection)) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
-      helpers[key] = (...props) => func(...props, {})
+      helpers[key] = (...props: any) => func(...props, {})
     }
   }
-  for (let key of Object.keys(addedHelpers)) {
-    helpers[key] = addedHelpers[key]
+  helpers = {
+    ...helpers,
+    addedHelpers,
   }
 
   for (const toRemove of helpersToRemoveForJs) {

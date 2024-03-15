@@ -1,20 +1,23 @@
 import { atob, isBackendService, isJSAllowed } from "../utilities"
-import cloneDeep from "lodash.clonedeep"
+import cloneDeep from "lodash/fp/clonedeep"
 import { LITERAL_MARKER } from "../helpers/constants"
 import { getJsHelperList } from "./list"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS
-export const setJSRunner = runner => (runJS = runner)
+let runJS: (js: string, context: any) => any
+export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
 
-export const removeJSRunner = () => (runJS = undefined)
+export const removeJSRunner = () => {
+  runJS = undefined
+}
 
-let onErrorLog
-export const setOnErrorLog = delegate => (onErrorLog = delegate)
+let onErrorLog: (message: string) => void
+export const setOnErrorLog = (delegate: typeof onErrorLog) =>
+  (onErrorLog = delegate)
 
 // Helper utility to strip square brackets from a value
-const removeSquareBrackets = value => {
+const removeSquareBrackets = (value: string) => {
   if (!value || typeof value !== "string") {
     return value
   }
@@ -28,7 +31,7 @@ const removeSquareBrackets = value => {
 
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
-const getContextValue = (path, context) => {
+const getContextValue = (path: string, context: any) => {
   let data = context
   path.split(".").forEach(key => {
     if (data == null || typeof data !== "object") {
@@ -40,7 +43,7 @@ const getContextValue = (path, context) => {
 }
 
 // Evaluates JS code against a certain context
-export function processJS(handlebars, context) {
+export function processJS(handlebars: string, context: any) {
   if (!isJSAllowed() || (isBackendService() && !runJS)) {
     throw new Error("JS disabled in environment.")
   }
@@ -53,7 +56,7 @@ export function processJS(handlebars, context) {
     // We clone the context to avoid mutation in the binding affecting real
     // app context.
     const sandboxContext = {
-      $: path => getContextValue(path, cloneDeep(context)),
+      $: (path: string) => getContextValue(path, cloneDeep(context)),
       helpers: getJsHelperList(),
     }
 
