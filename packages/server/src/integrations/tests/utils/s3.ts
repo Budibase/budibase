@@ -4,28 +4,22 @@ import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-
 
 let container: StartedTestContainer | undefined
 
-class LocalstackS3WaitStrategy extends AbstractWaitStrategy {
+class MinioWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
-    const logs = Wait.forLogMessage("Ready.", 1)
+    const logs = Wait.forListeningPorts()
     await logs.waitUntilReady(container, boundPorts, startTime)
-
-    const command = Wait.forSuccessfulCommand(
-      `aws --endpoint-url=http://localhost:4566 s3 ls`
-    )
-    await command.waitUntilReady(container)
   }
 }
 
 export async function start(): Promise<StartedTestContainer> {
-  container = await new GenericContainer("localstack/localstack")
+  container = await new GenericContainer("minio/minio")
     .withExposedPorts(9000)
+    .withCommand(["server", "/data"])
     .withEnvironment({
-      SERVICES: "s3",
-      DEFAULT_REGION: "eu-west-1",
-      AWS_ACCESS_KEY_ID: "testkey",
-      AWS_SECRET_ACCESS_KEY: "testsecret",
+      MINIO_ACCESS_KEY: "budibase",
+      MINIO_SECRET_KEY: "budibase",
     })
-    .withWaitStrategy(new LocalstackS3WaitStrategy().withStartupTimeout(30000))
+    .withWaitStrategy(new MinioWaitStrategy().withStartupTimeout(30000))
     .start()
 
   return container
