@@ -24,7 +24,7 @@ import { getParsedManifest, runJsHelpersTests } from "./utils"
 
 tk.freeze("2021-01-21T12:00:00")
 
-function escapeRegExp(string) {
+function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
 }
 
@@ -40,9 +40,9 @@ describe("manifest", () => {
   describe("examples are valid", () => {
     describe.each(Object.keys(manifest))("%s", collection => {
       it.each(manifest[collection])("%s", async (_, { hbs, js }) => {
-        const context = {
-          double: i => i * 2,
-          isString: x => typeof x === "string",
+        const context: any = {
+          double: (i: number) => i * 2,
+          isString: (x: any) => typeof x === "string",
         }
 
         const arrays = hbs.match(/\[[^/\]]+\]/)

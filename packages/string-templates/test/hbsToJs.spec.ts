@@ -1,6 +1,6 @@
 import { convertToJS } from "../src/index"
 
-function checkLines(response, lines) {
+function checkLines(response: string, lines: string[]) {
   const toCheck = response.split("\n")
   let count = 0
   for (let line of lines) {
