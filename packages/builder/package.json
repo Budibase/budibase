@@ -103,6 +103,34 @@
       "build": {
         "outputs": [
           "{workspaceRoot}/packages/server/builder"
+        ],
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "dev": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          {
+            "projects": [
+              "@budibase/string-templates"
+            ],
+            "target": "build"
+          }
         ]
       }
     }
