@@ -14,6 +14,7 @@
   export let disabled = false
   export let color
   export let tooltip
+  export let newStyles = false
 
   $: rotation = getRotation(direction)
 
@@ -28,6 +29,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="icon"
+  class:newStyles
   on:mouseover={() => (showTooltip = true)}
   on:focus={() => (showTooltip = true)}
   on:mouseleave={() => (showTooltip = false)}
@@ -60,6 +62,9 @@
     display: grid;
     place-items: center;
   }
+  .newStyles {
+    color: var(--spectrum-global-color-gray-700);
+  }
 
   svg.hoverable {
     pointer-events: all;
@@ -72,7 +77,10 @@
   svg.hoverable:active {
     color: var(--spectrum-global-color-blue-400) !important;
   }
-
+  .newStyles svg.hoverable:hover,
+  .newStyles svg.hoverable:active {
+    color: var(--spectrum-global-color-gray-900) !important;
+  }
   svg.disabled {
     color: var(--spectrum-global-color-gray-500) !important;
     pointer-events: none !important;

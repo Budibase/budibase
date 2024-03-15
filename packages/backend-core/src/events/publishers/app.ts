@@ -13,6 +13,7 @@ import {
   AppVersionRevertedEvent,
   AppRevertedEvent,
   AppExportedEvent,
+  AppDuplicatedEvent,
 } from "@budibase/types"
 
 const created = async (app: App, timestamp?: string | number) => {
@@ -75,6 +76,17 @@ async function fileImported(app: App) {
     },
   }
   await publishEvent(Event.APP_FILE_IMPORTED, properties)
+}
+
+async function duplicated(app: App, duplicateAppId: string) {
+  const properties: AppDuplicatedEvent = {
+    duplicateAppId,
+    appId: app.appId,
+    audited: {
+      name: app.name,
+    },
+  }
+  await publishEvent(Event.APP_DUPLICATED, properties)
 }
 
 async function templateImported(app: App, templateKey: string) {
@@ -147,6 +159,7 @@ export default {
   published,
   unpublished,
   fileImported,
+  duplicated,
   templateImported,
   versionUpdated,
   versionReverted,

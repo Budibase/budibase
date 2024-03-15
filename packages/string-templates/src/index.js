@@ -3,6 +3,7 @@ const handlebars = require("handlebars")
 const { registerAll, registerMinimum } = require("./helpers/index")
 const processors = require("./processors")
 const { atob, btoa, isBackendService } = require("./utilities")
+const { iifeWrapper } = require("./iife")
 const manifest = require("../manifest.json")
 const {
   FIND_HBS_REGEX,
@@ -426,3 +427,4 @@ function defaultJSSetup() {
 defaultJSSetup()
 
 module.exports.defaultJSSetup = defaultJSSetup
+module.exports.iifeWrapper = iifeWrapper
