@@ -50,13 +50,6 @@ describe("REST Integration", () => {
   const BASE_URL = "https://myapi.com"
   let config: any
 
-  beforeAll(async () => {
-    await databaseTestProviders.s3.start()
-  })
-
-  afterAll(async () => {
-    await databaseTestProviders.s3.stop()
-  })
   beforeEach(() => {
     config = new TestConfiguration({
       url: BASE_URL,
@@ -632,83 +625,93 @@ describe("REST Integration", () => {
     expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
   })
 
-  it("uploads file to object store and returns signed URL", async () => {
-    const responseData = Buffer.from("teest file contnt")
-    const filename = "test.tar.gz"
-    const contentType = "application/gzip"
-
-    ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        headers: {
-          raw: () => ({
-            "content-type": [contentType],
-            "content-disposition": [`attachment; filename="${filename}"`],
-          }),
-          get: (header: any) => {
-            if (header === "content-type") return contentType
-            if (header === "content-disposition")
-              return `attachment; filename="${filename}"`
-          },
-        },
-        arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
-      })
-    )
-
-    const query = {
-      path: "api",
-    }
-
-    const response = await config.integration.read(query)
-
-    expect(response.data).toEqual({
-      size: responseData.byteLength,
-      name: "00000000-0000-0000-0000-000000000000.tar.gz",
-      url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz",
-      extension: "tar.gz",
-      key: expect.stringContaining(
-        "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
-      ),
+  describe("File Handling", () => {
+    beforeAll(async () => {
+      await databaseTestProviders.s3.start()
     })
-  })
 
-  it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
-    const responseData = Buffer.from("teest file contnt")
-    const non_ascii_filename = "ex%C3%A4mple.txt"
-    const contentType = "text/plain"
+    afterAll(async () => {
+      await databaseTestProviders.s3.stop()
+    })
 
-    ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
-      Promise.resolve({
-        headers: {
-          raw: () => ({
-            "content-type": [contentType],
-            "content-disposition": [
-              `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
-            ],
-          }),
-          get: (header: any) => {
-            if (header === "content-type") return contentType
-            if (header === "content-disposition")
-              return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+    it("uploads file to object store and returns signed URL", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const filename = "test.tar.gz"
+      const contentType = "application/gzip"
+
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [`attachment; filename="${filename}"`],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-disposition")
+                return `attachment; filename="${filename}"`
+            },
           },
-        },
-        arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+          arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+        })
+      )
+
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.tar.gz",
+        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz",
+        extension: "tar.gz",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
       })
-    )
+    })
 
-    const query = {
-      path: "api",
-    }
+    it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const non_ascii_filename = "ex%C3%A4mple.txt"
+      const contentType = "text/plain"
 
-    const response = await config.integration.read(query)
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [
+                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+              ],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-disposition")
+                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+            },
+          },
+          arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+        })
+      )
 
-    expect(response.data).toEqual({
-      size: responseData.byteLength,
-      name: "00000000-0000-0000-0000-000000000000.pdf",
-      url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
-      extension: "pdf",
-      key: expect.stringContaining(
-        "app-id/00000000-0000-0000-0000-000000000000.pdf"
-      ),
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.pdf",
+        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
+        extension: "pdf",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
+      })
     })
   })
 })
