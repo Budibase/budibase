@@ -67,6 +67,7 @@
     "bcryptjs": "2.4.3",
     "bull": "4.10.1",
     "chokidar": "3.5.3",
+    "content-disposition": "^0.5.4",
     "cookies": "0.8.0",
     "csvtojson": "2.0.10",
     "curlconverter": "3.21.0",

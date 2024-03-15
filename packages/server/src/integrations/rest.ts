@@ -22,6 +22,8 @@ import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
 import { handleFileResponse, handleXml } from "./utils"
+import { parse } from "content-disposition"
+import path from "path"
 
 const BodyTypes = {
   NONE: "none",
@@ -134,9 +136,8 @@ class RestIntegration implements IntegrationBase {
 
     const contentType = response.headers.get("content-type") || ""
     const contentDisposition = response.headers.get("content-disposition") || ""
-    const matches =
-      /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition) || []
-    filename = matches[1]?.replace(/['"]/g, "") || ""
+    filename =
+      path.basename(parse(contentDisposition).parameters?.filename) || ""
 
     try {
       if (filename) {

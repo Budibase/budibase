@@ -37,7 +37,7 @@ export const bucketTTLConfig = (
   days: number
 ): PutBucketLifecycleConfigurationRequest => {
   const lifecycleRule = {
-    ID: "ExpireAfterOneDay",
+    ID: `${bucketName}-ExpireAfterOneDay`,
     Prefix: "",
     Status: "Enabled",
     Expiration: {

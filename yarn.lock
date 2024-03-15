@@ -8570,7 +8570,7 @@ consolidate@^0.16.0:
   dependencies:
     bluebird "^3.7.2"
 
-content-disposition@^0.5.2, content-disposition@^0.5.3, content-disposition@~0.5.2:
+content-disposition@^0.5.2, content-disposition@^0.5.3, content-disposition@^0.5.4, content-disposition@~0.5.2:
   version "0.5.4"
   resolved "https://registry.yarnpkg.com/content-disposition/-/content-disposition-0.5.4.tgz#8b82b4efac82512a02bb0b1dcec9d2c5e8eb5bfe"
   integrity sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==
