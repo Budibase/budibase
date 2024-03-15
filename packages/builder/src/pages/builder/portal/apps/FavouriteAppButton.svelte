@@ -21,8 +21,22 @@
   {size}
   on:click={async e => {
     e.stopPropagation()
+    const userAppFavourites = new Set([...($auth.user.appFavourites || [])])
+    let processedAppIds = []
+
+    if ($auth.user.appFavourites && app?.appId) {
+      if (userAppFavourites.has(app.appId)) {
+        userAppFavourites.delete(app.appId)
+      } else {
+        userAppFavourites.add(app.appId)
+      }
+      processedAppIds = [...userAppFavourites]
+    } else {
+      processedAppIds = [app.appId]
+    }
+
     await auth.updateSelf({
-      appFavourites: [app?.appId],
+      appFavourites: processedAppIds,
     })
   }}
   disabled={!app}

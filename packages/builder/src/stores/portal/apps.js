@@ -141,7 +141,7 @@ export class AppsStore extends BudiStore {
 export const appsStore = new AppsStore()
 
 // Centralise any logic that enriches the apps list
-export const enriched = derived([appsStore, auth], ([$store, $auth]) => {
+export const enrichedApps = derived([appsStore, auth], ([$store, $auth]) => {
   const enrichedApps = $store.apps
     ? $store.apps.map(app => ({
         ...app,

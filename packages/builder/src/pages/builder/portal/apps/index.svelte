@@ -25,7 +25,7 @@
     admin,
     licensing,
     environment,
-    enriched as enrichedApps,
+    enrichedApps,
   } from "stores/portal"
   import { goto } from "@roxi/routify"
   import AppRow from "components/start/AppRow.svelte"

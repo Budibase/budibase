@@ -18,7 +18,7 @@
     auth,
     groups,
     licensing,
-    enriched as enrichedApps,
+    enrichedApps,
   } from "stores/portal"
   import { goto } from "@roxi/routify"
   import { AppStatus } from "constants"
