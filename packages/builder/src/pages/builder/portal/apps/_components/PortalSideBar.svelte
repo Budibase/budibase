@@ -1,10 +1,14 @@
 <script>
-  import { apps, sideBarCollapsed } from "stores/portal"
+  import { apps, sideBarCollapsed, auth } from "stores/portal"
   import { params, goto } from "@roxi/routify"
   import NavItem from "components/common/NavItem.svelte"
   import NavHeader from "components/common/NavHeader.svelte"
+  import AppRowContext from "components/start/AppRowContext.svelte"
+  import { AppStatus } from "constants"
+  import { sdk } from "@budibase/shared-core"
 
   let searchString
+  let opened
 
   $: filteredApps = $apps
     .filter(app => {
@@ -12,6 +16,12 @@
         !searchString ||
         app.name.toLowerCase().includes(searchString.toLowerCase())
       )
+    })
+    .map(app => {
+      return {
+        ...app,
+        deployed: app.status === AppStatus.DEPLOYED,
+      }
     })
     .sort((a, b) => {
       const lowerA = a.name.toLowerCase()
@@ -42,8 +52,22 @@
         icon={app.icon?.name || "Apps"}
         iconColor={app.icon?.color}
         selected={$params.appId === app.appId}
+        highlighted={opened == app.appId}
         on:click={() => $goto(`./${app.appId}`)}
-      />
+      >
+        {#if sdk.users.isBuilder($auth.user, app?.devId)}
+          <AppRowContext
+            {app}
+            align="left"
+            on:open={() => {
+              opened = app.appId
+            }}
+            on:close={() => {
+              opened = null
+            }}
+          />
+        {/if}
+      </NavItem>
     {/each}
   </div>
 </div>
