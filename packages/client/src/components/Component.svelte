@@ -565,7 +565,8 @@
 
     // If we don't know, check and cache
     if (used == null) {
-      used = bindingString.indexOf(`[${key}]`) !== -1
+      const searchString = key === "snippets" ? key : `[${key}]`
+      used = bindingString.indexOf(searchString) !== -1
       knownContextKeyMap[key] = used
     }
 
