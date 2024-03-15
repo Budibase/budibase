@@ -25,7 +25,7 @@ export async function start(): Promise<StartedTestContainer> {
       AWS_ACCESS_KEY_ID: "testkey",
       AWS_SECRET_ACCESS_KEY: "testsecret",
     })
-    .withWaitStrategy(new LocalstackS3WaitStrategy().withStartupTimeout(10000))
+    .withWaitStrategy(new LocalstackS3WaitStrategy().withStartupTimeout(30000))
     .start()
 
   return container
