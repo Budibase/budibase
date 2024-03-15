@@ -20,7 +20,7 @@ const addedHelpers = {
   duration: duration,
 }
 
-let helpers: Record<string, any> = undefined
+let helpers: Record<string, any>
 
 export function getJsHelperList() {
   if (helpers) {

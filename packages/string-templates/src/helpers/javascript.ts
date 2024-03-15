@@ -12,7 +12,7 @@ export const removeJSRunner = () => {
   runJS = undefined
 }
 
-let onErrorLog: (message: string) => void
+let onErrorLog: (message: Error) => void
 export const setOnErrorLog = (delegate: typeof onErrorLog) =>
   (onErrorLog = delegate)
 
@@ -63,7 +63,7 @@ export function processJS(handlebars: string, context: any) {
     // Create a sandbox with our context and run the JS
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
-  } catch (error) {
+  } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {
