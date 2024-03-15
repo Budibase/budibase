@@ -72,7 +72,8 @@
         navigation,
         hiddenComponentIds,
         usedPlugins,
-        location
+        location,
+        snippets
       } = parsed
 
       // Set some flags so the app knows we're in the builder
@@ -89,6 +90,7 @@
       window["##BUDIBASE_HIDDEN_COMPONENT_IDS##"] = hiddenComponentIds
       window["##BUDIBASE_USED_PLUGINS##"] = usedPlugins
       window["##BUDIBASE_LOCATION##"] = location
+      window["##BUDIBASE_SNIPPETS##"] = snippets
 
       // Initialise app
       try {

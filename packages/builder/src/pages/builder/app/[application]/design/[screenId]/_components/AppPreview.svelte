@@ -10,6 +10,7 @@
     navigationStore,
     selectedScreen,
     hoverStore,
+    snippets,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -68,6 +69,7 @@
       hostname: window.location.hostname,
       port: window.location.port,
     },
+    snippets: $snippets,
   }
 
   // Refresh the preview when required

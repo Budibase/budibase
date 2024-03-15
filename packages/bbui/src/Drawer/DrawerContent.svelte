@@ -19,7 +19,6 @@
   .drawer-contents {
     overflow-y: auto;
     flex: 1 1 auto;
-    height: 0;
   }
   .container {
     height: 100%;

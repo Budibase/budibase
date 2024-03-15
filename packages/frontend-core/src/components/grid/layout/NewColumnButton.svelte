@@ -38,7 +38,7 @@
   align={$visibleColumns.length ? "right" : "left"}
   offset={0}
   popoverTarget={document.getElementById(`add-column-button`)}
-  customZindex={100}
+  customZindex={50}
 >
   <div
     use:clickOutside={() => {
