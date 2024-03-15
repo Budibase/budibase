@@ -271,7 +271,7 @@ describe("test the string helpers", () => {
 })
 
 describe("test the comparison helpers", () => {
-  async function compare(func, a, b) {
+  async function compare(func: string, a: any, b: any) {
     const output = await processString(
       `{{ #${func} a b }}Success{{ else }}Fail{{ /${func} }}`,
       {

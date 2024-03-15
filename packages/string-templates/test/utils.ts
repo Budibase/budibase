@@ -3,7 +3,7 @@ import { getJsHelperList } from "../src/helpers"
 
 import { convertToJS, processStringSync, encodeJSBinding } from "../src/index"
 
-function tryParseJson(str) {
+function tryParseJson(str: string) {
   if (typeof str !== "string") {
     return
   }
@@ -25,7 +25,7 @@ type ExampleType = [
 ]
 
 export const getParsedManifest = () => {
-  const manifest = getManifest()
+  const manifest: any = getManifest()
   const collections = Object.keys(manifest)
 
   const examples = collections.reduce((acc, collection) => {
@@ -73,14 +73,14 @@ export const runJsHelpersTests = ({
   funcWrap?: any
   testsToSkip?: any
 } = {}) => {
-  funcWrap = funcWrap || (delegate => delegate())
+  funcWrap = funcWrap || ((delegate: () => any) => delegate())
   const manifest = getParsedManifest()
 
-  const processJS = (js, context) => {
+  const processJS = (js: string, context: object | undefined) => {
     return funcWrap(() => processStringSync(encodeJSBinding(js), context))
   }
 
-  function escapeRegExp(string) {
+  function escapeRegExp(string: string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
   }
 
@@ -98,9 +98,9 @@ export const runJsHelpersTests = ({
 
       examplesToRun.length &&
         it.each(examplesToRun)("%s", async (_, { hbs, js }) => {
-          const context = {
-            double: i => i * 2,
-            isString: x => typeof x === "string",
+          const context: any = {
+            double: (i: number) => i * 2,
+            isString: (x: any) => typeof x === "string",
           }
 
           const arrays = hbs.match(/\[[^/\]]+\]/)

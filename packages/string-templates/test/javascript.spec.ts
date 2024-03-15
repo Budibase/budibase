@@ -3,7 +3,7 @@ import vm from "vm"
 import { processStringSync, encodeJSBinding, setJSRunner } from "../src/index"
 import { UUID_REGEX } from "./constants"
 
-const processJS = (js, context?): any => {
+const processJS = (js: string, context?: object): any => {
   return processStringSync(encodeJSBinding(js), context)
 }
 

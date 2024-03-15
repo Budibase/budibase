@@ -157,7 +157,7 @@ export function processObjectSync(
  */
 export function processStringSync(
   string: string,
-  context: object,
+  context?: object,
   opts?: ProcessOptions
 ): string {
   // Take a copy of input in case of error
