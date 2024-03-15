@@ -188,7 +188,7 @@
 {/if}
 
 <svelte:window on:keydown={handleKeyDown} />
-<Modal bind:this={commandPaletteModal}>
+<Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
 </Modal>
 
