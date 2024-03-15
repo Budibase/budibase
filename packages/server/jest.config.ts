@@ -30,6 +30,7 @@ const baseConfig: Config.InitialProjectOptions = {
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/shared-core": "<rootDir>/../shared-core/src",
     "@budibase/types": "<rootDir>/../types/src",
+    "@budibase/string-templates/(.*)": ["<rootDir>/../string-templates/$1"],
     "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
   },
 }
