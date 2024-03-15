@@ -7,7 +7,7 @@
     Body,
     Button,
   } from "@budibase/bbui"
-  import { createEventDispatcher, getContext } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte"
   import {
     decodeJSBinding,
     encodeJSBinding,
@@ -19,27 +19,33 @@
     getHelperCompletions,
     jsAutocomplete,
     hbAutocomplete,
+    snippetAutoComplete,
     EditorModes,
     bindingsToCompletions,
   } from "../CodeEditor"
   import BindingSidePanel from "./BindingSidePanel.svelte"
   import EvaluationSidePanel from "./EvaluationSidePanel.svelte"
+  import SnippetSidePanel from "./SnippetSidePanel.svelte"
   import { BindingHelpers } from "./utils"
   import formatHighlight from "json-format-highlight"
   import { capitalise } from "helpers"
   import { Utils } from "@budibase/frontend-core"
-  import { get } from "svelte/store"
+  import { licensing } from "stores/portal"
 
   const dispatch = createEventDispatcher()
 
-  export let bindings
+  export let bindings = []
   export let value = ""
+  export let allowHBS = true
   export let allowJS = false
   export let allowHelpers = true
+  export let allowSnippets = true
   export let context = null
+  export let snippets = null
   export let autofocusEditor = false
+  export let placeholder = null
+  export let showTabBar = true
 
-  const drawerContext = getContext("drawer")
   const Modes = {
     Text: "Text",
     JavaScript: "JavaScript",
@@ -47,61 +53,110 @@
   const SidePanels = {
     Bindings: "FlashOn",
     Evaluation: "Play",
+    Snippets: "Code",
   }
 
+  let mode
+  let sidePanel
   let initialValueJS = value?.startsWith?.("{{ js ")
-  let mode = initialValueJS ? Modes.JavaScript : Modes.Text
-  let sidePanel = SidePanels.Bindings
-  let getCaretPosition
-  let insertAtPos
   let jsValue = initialValueJS ? value : null
   let hbsValue = initialValueJS ? null : value
+  let getCaretPosition
+  let insertAtPos
   let targetMode = null
   let expressionResult
-  let drawerIsModal
   let evaluating = false
 
-  $: drawerContext?.modal.subscribe(val => (drawerIsModal = val))
-  $: editorTabs = allowJS ? [Modes.Text, Modes.JavaScript] : [Modes.Text]
-  $: sideTabs = context
-    ? [SidePanels.Evaluation, SidePanels.Bindings]
-    : [SidePanels.Bindings]
-  $: enrichedBindings = enrichBindings(bindings, context)
+  $: useSnippets = allowSnippets && !$licensing.isFreePlan
+  $: editorModeOptions = getModeOptions(allowHBS, allowJS)
+  $: sidePanelOptions = getSidePanelOptions(
+    bindings,
+    context,
+    allowSnippets,
+    mode
+  )
+  $: enrichedBindings = enrichBindings(bindings, context, snippets)
   $: usingJS = mode === Modes.JavaScript
   $: editorMode =
     mode === Modes.JavaScript ? EditorModes.JS : EditorModes.Handlebars
   $: editorValue = editorMode === EditorModes.JS ? jsValue : hbsValue
-  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: runtimeExpression = readableToRuntimeBinding(enrichedBindings, value)
-  $: requestUpdateEvaluation(runtimeExpression, context)
+  $: requestEval(runtimeExpression, context, snippets)
+  $: bindingCompletions = bindingsToCompletions(enrichedBindings, editorMode)
   $: bindingHelpers = new BindingHelpers(getCaretPosition, insertAtPos)
-  $: hbsCompletions = [
-    hbAutocomplete([
-      ...bindingCompletions,
-      ...getHelperCompletions(EditorModes.Handlebars),
-    ]),
-  ]
-  $: jsCompletions = [
-    jsAutocomplete([
-      ...bindingCompletions,
-      ...getHelperCompletions(EditorModes.JS),
-    ]),
-  ]
+  $: hbsCompletions = getHBSCompletions(bindingCompletions)
+  $: jsCompletions = getJSCompletions(bindingCompletions, snippets, useSnippets)
+  $: {
+    // Ensure a valid side panel option is always selected
+    if (sidePanel && !sidePanelOptions.includes(sidePanel)) {
+      sidePanel = sidePanelOptions[0]
+    }
+  }
 
-  const debouncedUpdateEvaluation = Utils.debounce((expression, context) => {
-    expressionResult = processStringSync(expression || "", context)
+  const getHBSCompletions = bindingCompletions => {
+    return [
+      hbAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.Handlebars),
+      ]),
+    ]
+  }
+
+  const getJSCompletions = (bindingCompletions, snippets, useSnippets) => {
+    const completions = [
+      jsAutocomplete([
+        ...bindingCompletions,
+        ...getHelperCompletions(EditorModes.JS),
+      ]),
+    ]
+    if (useSnippets) {
+      completions.push(snippetAutoComplete(snippets))
+    }
+    return completions
+  }
+
+  const getModeOptions = (allowHBS, allowJS) => {
+    let options = []
+    if (allowHBS) {
+      options.push(Modes.Text)
+    }
+    if (allowJS) {
+      options.push(Modes.JavaScript)
+    }
+    return options
+  }
+
+  const getSidePanelOptions = (bindings, context, useSnippets, mode) => {
+    let options = []
+    if (bindings?.length) {
+      options.push(SidePanels.Bindings)
+    }
+    if (context) {
+      options.push(SidePanels.Evaluation)
+    }
+    if (useSnippets && mode === Modes.JavaScript) {
+      options.push(SidePanels.Snippets)
+    }
+    return options
+  }
+
+  const debouncedEval = Utils.debounce((expression, context, snippets) => {
+    expressionResult = processStringSync(expression || "", {
+      ...context,
+      snippets,
+    })
     evaluating = false
   }, 260)
 
-  const requestUpdateEvaluation = (expression, context) => {
+  const requestEval = (expression, context, snippets) => {
     evaluating = true
-    debouncedUpdateEvaluation(expression, context)
+    debouncedEval(expression, context, snippets)
   }
 
-  const getBindingValue = (binding, context) => {
+  const getBindingValue = (binding, context, snippets) => {
     const js = `return $("${binding.runtimeBinding}")`
     const hbs = encodeJSBinding(js)
-    const res = processStringSync(hbs, context)
+    const res = processStringSync(hbs, { ...context, snippets })
     return JSON.stringify(res, null, 2)
   }
 
@@ -116,12 +171,12 @@
     })
   }
 
-  const enrichBindings = (bindings, context) => {
+  const enrichBindings = (bindings, context, snippets) => {
     return bindings.map(binding => {
       if (!context) {
         return binding
       }
-      const value = getBindingValue(binding, context)
+      const value = getBindingValue(binding, context, snippets)
       return {
         ...binding,
         value,
@@ -133,7 +188,7 @@
   const updateValue = val => {
     const runtimeExpression = readableToRuntimeBinding(enrichedBindings, val)
     dispatch("change", val)
-    requestUpdateEvaluation(runtimeExpression, context)
+    requestEval(runtimeExpression, context, snippets)
   }
 
   const onSelectHelper = (helper, js) => {
@@ -149,7 +204,14 @@
     if (targetMode || newMode === mode) {
       return
     }
-    if (editorValue) {
+
+    // Get the raw editor value to see if we are abandoning changes
+    let rawValue = editorValue
+    if (mode === Modes.JavaScript) {
+      rawValue = decodeJSBinding(rawValue)
+    }
+
+    if (rawValue?.length) {
       targetMode = newMode
     } else {
       mode = newMode
@@ -177,47 +239,52 @@
     jsValue = encodeJSBinding(e.detail)
     updateValue(jsValue)
   }
+
+  onMount(() => {
+    // Set the initial mode appropriately
+    const initialValueMode = initialValueJS ? Modes.JavaScript : Modes.Text
+    if (editorModeOptions.includes(initialValueMode)) {
+      mode = initialValueMode
+    } else {
+      mode = editorModeOptions[0]
+    }
+
+    // Set the initial side panel
+    sidePanel = sidePanelOptions[0]
+  })
 </script>
 
 <DrawerContent padding={false}>
   <div class="binding-panel">
     <div class="main">
-      <div class="tabs">
-        <div class="editor-tabs">
-          {#each editorTabs as tab}
-            <ActionButton
-              size="M"
-              quiet
-              selected={mode === tab}
-              on:click={() => changeMode(tab)}
-            >
-              {capitalise(tab)}
-            </ActionButton>
-          {/each}
+      {#if showTabBar}
+        <div class="tabs">
+          <div class="editor-tabs">
+            {#each editorModeOptions as editorMode}
+              <ActionButton
+                size="M"
+                quiet
+                selected={mode === editorMode}
+                on:click={() => changeMode(editorMode)}
+              >
+                {capitalise(editorMode)}
+              </ActionButton>
+            {/each}
+          </div>
+          <div class="side-tabs">
+            {#each sidePanelOptions as panel}
+              <ActionButton
+                size="M"
+                quiet
+                selected={sidePanel === panel}
+                on:click={() => changeSidePanel(panel)}
+              >
+                <Icon name={panel} size="S" />
+              </ActionButton>
+            {/each}
+          </div>
         </div>
-        <div class="side-tabs">
-          {#each sideTabs as tab}
-            <ActionButton
-              size="M"
-              quiet
-              selected={sidePanel === tab}
-              on:click={() => changeSidePanel(tab)}
-            >
-              <Icon name={tab} size="S" />
-            </ActionButton>
-          {/each}
-          {#if drawerContext && get(drawerContext.resizable)}
-            <ActionButton
-              size="M"
-              quiet
-              selected={drawerIsModal}
-              on:click={() => drawerContext.modal.set(!drawerIsModal)}
-            >
-              <Icon name={drawerIsModal ? "Minimize" : "Maximize"} size="S" />
-            </ActionButton>
-          {/if}
-        </div>
-      </div>
+      {/if}
       <div class="editor">
         {#if mode === Modes.Text}
           {#key hbsCompletions}
@@ -228,7 +295,8 @@
               bind:insertAtPos
               completions={hbsCompletions}
               autofocus={autofocusEditor}
-              placeholder="Add bindings by typing &#123;&#123; or use the menu on the right"
+              placeholder={placeholder ||
+                "Add bindings by typing {{ or use the menu on the right"}
               jsBindingWrapping={false}
             />
           {/key}
@@ -242,7 +310,8 @@
               bind:getCaretPosition
               bind:insertAtPos
               autofocus={autofocusEditor}
-              placeholder="Add bindings by typing $ or use the menu on the right"
+              placeholder={placeholder ||
+                "Add bindings by typing $ or use the menu on the right"}
               jsBindingWrapping
             />
           {/key}
@@ -288,6 +357,11 @@
           {expressionResult}
           {evaluating}
           expression={editorValue}
+        />
+      {:else if sidePanel === SidePanels.Snippets}
+        <SnippetSidePanel
+          addSnippet={snippet => bindingHelpers.onSelectSnippet(snippet)}
+          {snippets}
         />
       {/if}
     </div>

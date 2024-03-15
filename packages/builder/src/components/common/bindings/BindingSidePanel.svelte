@@ -12,6 +12,7 @@
   export let context = null
 
   let search = ""
+  let searching = false
   let popover
   let popoverAnchor
   let hoverTarget
@@ -74,6 +75,13 @@
     if (!context || !binding.value || binding.value === "") {
       return
     }
+
+    // Roles have always been broken for JS. We need to exclude them from
+    // showing a popover as it will show "Error while executing JS".
+    if (binding.category === "Role") {
+      return
+    }
+
     stopHidingPopover()
     popoverAnchor = target
     hoverTarget = {
@@ -112,6 +120,17 @@
       hideTimeout = null
     }
   }
+
+  const startSearching = async () => {
+    searching = true
+    search = ""
+  }
+
+  const stopSearching = e => {
+    e.stopPropagation()
+    searching = false
+    search = ""
+  }
 </script>
 
 <Popover
@@ -141,7 +160,6 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="binding-side-panel">
   <Layout noPadding gap="S">
     {#if selectedCategory}
@@ -158,25 +176,34 @@
 
     {#if !selectedCategory}
       <div class="header">
-        <span class="search-input">
-          <Input
-            placeholder={"Search for bindings"}
-            autocomplete="off"
-            bind:value={search}
+        {#if searching}
+          <div class="search-input">
+            <Input
+              placeholder="Search for bindings"
+              autocomplete="off"
+              bind:value={search}
+              autofocus
+            />
+          </div>
+          <Icon
+            size="S"
+            name="Close"
+            hoverable
+            newStyles
+            on:click={stopSearching}
           />
-        </span>
-        <span
-          class="search-input-icon"
-          on:click={() => {
-            search = null
-          }}
-          class:searching={search}
-        >
-          <Icon size="S" name={search ? "Close" : "Search"} />
-        </span>
+        {:else}
+          <div class="title">Bindings</div>
+          <Icon
+            size="S"
+            name="Search"
+            hoverable
+            newStyles
+            on:click={startSearching}
+          />
+        {/if}
       </div>
     {/if}
-
     {#if !selectedCategory && !search}
       <ul class="category-list">
         {#each categoryNames as categoryName}
@@ -281,18 +308,15 @@
     background: var(--background);
     z-index: 1;
   }
-
   .header :global(input) {
     border: none;
     border-radius: 0;
     background: none;
     padding: 0;
   }
-  .search-input {
-    flex: 1;
-  }
-  .search-input-icon.searching {
-    cursor: pointer;
+  .search-input,
+  .title {
+    flex: 1 1 auto;
   }
 
   ul.category-list {
