@@ -72,6 +72,7 @@
   {#if parameters.type === "set"}
     <Label small>Value</Label>
     <DrawerBindableInput
+      title="Field value"
       {bindings}
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}

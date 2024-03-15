@@ -29,7 +29,12 @@ import { fetchDatasourceSchema } from "./utils/schema.js"
 import { getAPIKey } from "./utils/api.js"
 import { enrichButtonActions } from "./utils/buttonActions.js"
 import { processStringSync, makePropSafe } from "@budibase/string-templates"
-import { fetchData, LuceneUtils, Constants } from "@budibase/frontend-core"
+import {
+  fetchData,
+  LuceneUtils,
+  Constants,
+  RowUtils,
+} from "@budibase/frontend-core"
 
 export default {
   API,
@@ -65,6 +70,7 @@ export default {
   processStringSync,
   makePropSafe,
   createContextStore,
+  generateGoldenSample: RowUtils.generateGoldenSample,
 
   // Components
   Provider,
