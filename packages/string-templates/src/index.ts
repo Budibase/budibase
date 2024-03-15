@@ -18,6 +18,7 @@ import manifest from "./manifest.json"
 import { ProcessOptions } from "./types"
 
 export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
+export { iifeWrapper } from "./iife"
 
 const hbsInstance = create()
 registerAll(hbsInstance)

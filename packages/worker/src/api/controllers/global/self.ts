@@ -9,7 +9,12 @@ import {
 } from "@budibase/backend-core"
 import env from "../../../environment"
 import { groups } from "@budibase/pro"
-import { UpdateSelfRequest, UpdateSelfResponse, UserCtx } from "@budibase/types"
+import {
+  UpdateSelfRequest,
+  UpdateSelfResponse,
+  User,
+  UserCtx,
+} from "@budibase/types"
 
 const { newid } = utils
 
@@ -105,16 +110,63 @@ export async function getSelf(ctx: any) {
   addSessionAttributesToUser(ctx)
 }
 
+export const syncAppFavourites = async (processedAppIds: string[]) => {
+  if (processedAppIds.length === 0) {
+    return []
+  }
+  const apps = await fetchAppsByIds(processedAppIds)
+  return apps?.reduce((acc: string[], app) => {
+    const id = app.appId.replace(dbCore.APP_DEV_PREFIX, "")
+    if (processedAppIds.includes(id)) {
+      acc.push(id)
+    }
+    return acc
+  }, [])
+}
+
+export const fetchAppsByIds = async (processedAppIds: string[]) => {
+  return await dbCore.getAppsByIDs(
+    processedAppIds.map(appId => `${dbCore.APP_DEV_PREFIX}${appId}`)
+  )
+}
+
+const processUserAppFavourites = async (
+  user: User,
+  update: UpdateSelfRequest
+) => {
+  if (!("appFavourites" in update)) {
+    // Ignore requests without an explicit update to favourites.
+    return
+  }
+
+  const userAppFavourites = user.appFavourites || []
+  const requestAppFavourites = new Set(update.appFavourites || [])
+  const containsAll = userAppFavourites.every(v => requestAppFavourites.has(v))
+
+  if (containsAll && requestAppFavourites.size === userAppFavourites.length) {
+    // Ignore request if the outcome will have no change
+    return
+  }
+
+  // Clean up the request by purging apps that no longer exist.
+  const syncedAppFavourites = await syncAppFavourites([...requestAppFavourites])
+  return syncedAppFavourites
+}
+
 export async function updateSelf(
   ctx: UserCtx<UpdateSelfRequest, UpdateSelfResponse>
 ) {
   const update = ctx.request.body
 
   let user = await userSdk.db.getUser(ctx.user._id!)
+  const updatedAppFavourites = await processUserAppFavourites(user, update)
+
   user = {
     ...user,
     ...update,
+    ...(updatedAppFavourites ? { appFavourites: updatedAppFavourites } : {}),
   }
+
   user = await userSdk.db.save(user, { requirePassword: false })
 
   if (update.password) {
