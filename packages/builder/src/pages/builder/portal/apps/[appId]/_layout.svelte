@@ -1,8 +1,8 @@
 <script>
   import { params, redirect } from "@roxi/routify"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
 
-  $: app = $apps.find(app => app.appId === $params.appId)
+  $: app = $appsStore.apps.find(app => app.appId === $params.appId)
   $: {
     if (!app) {
       $redirect("../")

@@ -3,7 +3,7 @@
   import { Page, Layout, AbsTooltip, TooltipPosition } from "@budibase/bbui"
   import { url, isActive } from "@roxi/routify"
   import DeleteModal from "components/deploy/DeleteModal.svelte"
-  import { isOnlyUser } from "stores/builder"
+  import { isOnlyUser, appStore } from "stores/builder"
 
   let deleteModal
 </script>
@@ -67,7 +67,11 @@
   </Page>
 </div>
 
-<DeleteModal bind:this={deleteModal} />
+<DeleteModal
+  bind:this={deleteModal}
+  appId={$appStore.appId}
+  appName={$appStore.name}
+/>
 
 <style>
   .delete-action :global(.text) {
