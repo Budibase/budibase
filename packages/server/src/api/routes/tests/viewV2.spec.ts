@@ -544,7 +544,7 @@ describe.each([
     })
   })
 
-  describe.only("row operations", () => {
+  describe("row operations", () => {
     let table: Table, view: ViewV2
     beforeEach(async () => {
       table = await config.api.table.save(
