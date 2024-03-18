@@ -52,7 +52,7 @@ export enum InternalTemplateBinding {
   RESET_URL = "resetUrl",
   RESET_CODE = "resetCode",
   INVITE_URL = "inviteUrl",
-  INVITE_CODE = "inviteUrl",
+  INVITE_CODE = "inviteCode",
   CONTENTS = "contents",
 }
 
