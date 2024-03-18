@@ -115,6 +115,7 @@ export class RowAPI extends TestAPI {
         expectations,
       }
     )
+    this._checkResponse(response, expectations)
     return response.text
   }
 

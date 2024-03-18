@@ -31,6 +31,6 @@ export class LegacyViewAPI extends TestAPI {
       query: { view: viewName, format },
       expectations,
     })
-    return response.text
+    return this._checkResponse(response, expectations).text
   }
 }
