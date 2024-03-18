@@ -69,12 +69,12 @@ export async function updateLock(devAppId: string, user: ContextUser) {
   await devAppClient.store(devAppId, inputUser, APP_DEV_LOCK_SECONDS)
 }
 
-export async function clearLock(devAppId: string, user: ContextUser) {
+export async function clearLock(devAppId: string, userId: string) {
   const value = await devAppClient.get(devAppId)
   if (!value) {
     return
   }
-  const userId = getGlobalIDFromUserMetadataID(user._id!)
+  userId = getGlobalIDFromUserMetadataID(userId)
   if (value._id !== userId) {
     throw "User does not hold lock, cannot clear it."
   }

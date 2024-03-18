@@ -8,10 +8,8 @@ import {
   BulkImportResponse,
   SearchRowResponse,
   SearchParams,
-  DeleteRowRequest,
   DeleteRows,
   DeleteRow,
-  ExportRowsResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 

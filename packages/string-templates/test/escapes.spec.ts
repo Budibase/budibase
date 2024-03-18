@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals"
 import { processString } from "../src/index"
 
 describe("Handling context properties with spaces in their name", () => {

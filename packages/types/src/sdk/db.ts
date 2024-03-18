@@ -91,7 +91,7 @@ export type DatabaseDeleteIndexOpts = {
   type?: string | undefined
 }
 
-type DBPrimitiveKey = string | number | {}
+type DBPrimitiveKey = string | number | Record<string, never>
 export type DatabaseKey = DBPrimitiveKey | DBPrimitiveKey[]
 
 export type DatabaseQueryOpts = {

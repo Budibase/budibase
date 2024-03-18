@@ -1,16 +1,14 @@
-const HELPER_LIBRARY = "@budibase/handlebars-helpers"
-const helpers = require(HELPER_LIBRARY)
-const { HelperFunctionBuiltin } = require("../src/helpers/constants")
-const fs = require("fs")
-const doctrine = require("doctrine")
-const marked = require("marked")
+import helpers from "@budibase/handlebars-helpers"
+import { HelperFunctionBuiltin } from "../src/helpers/constants"
+import fs from "fs"
+import doctrine, { Annotation } from "doctrine"
+import marked from "marked"
 
 /**
  * full list of supported helpers can be found here:
  * https://github.com/budibase/handlebars-helpers
  */
-const { join } = require("path")
-const path = require("path")
+import path, { join } from "path"
 
 const COLLECTIONS = [
   "math",
@@ -71,7 +69,13 @@ function lookForward(lines, funcLines, idx) {
   return true
 }
 
-function getCommentInfo(file, func) {
+interface CommentInfo extends Annotation {
+  acceptsBlock?: boolean
+  acceptsInline?: boolean
+  example?: string
+}
+
+function getCommentInfo(file, func): CommentInfo {
   const lines = file.split("\n")
   const funcLines = func.split("\n")
   let comment = null
@@ -96,9 +100,9 @@ function getCommentInfo(file, func) {
     }
   }
   if (comment == null) {
-    return { description: "" }
+    return { description: "", tags: [] }
   }
-  const docs = doctrine.parse(comment, { unwrap: true })
+  const docs = doctrine.parse(comment, { unwrap: true }) as CommentInfo
   // some hacky fixes
   docs.description = docs.description.replace(/\n/g, " ")
   docs.description = docs.description.replace(/[ ]{2,}/g, " ")
@@ -129,7 +133,9 @@ function run() {
   const foundNames: string[] = []
   for (const collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
-      `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
+      `${path.dirname(
+        require.resolve("@budibase/handlebars-helpers")
+      )}/lib/${collection}.js`,
       "utf8"
     )
     const collectionInfo = {}

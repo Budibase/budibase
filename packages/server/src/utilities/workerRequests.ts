@@ -1,10 +1,4 @@
-import {
-  Response,
-  default as fetch,
-  type RequestInit,
-  Headers,
-  HeadersInit,
-} from "node-fetch"
+import { Response, default as fetch, type RequestInit } from "node-fetch"
 import env from "../environment"
 import { checkSlashesInUrl } from "./index"
 import {
@@ -13,7 +7,6 @@ import {
   tenancy,
   logging,
   env as coreEnv,
-  utils,
 } from "@budibase/backend-core"
 import { Ctx, User, EmailInvite } from "@budibase/types"
 

@@ -58,8 +58,7 @@ export default class BuilderSocket extends BaseSocket {
     // Remove app lock from this user if they have no other connections,
     // and transfer it to someone else if possible
     try {
-      // @ts-ignore
-      const session: SocketSession = socket.data
+      const session = socket.data as SocketSession
       const { _id, sessionId, room } = session
       const sessions = await this.getRoomSessions(room)
       const hasOtherSession = sessions.some(otherSession => {
@@ -67,9 +66,7 @@ export default class BuilderSocket extends BaseSocket {
       })
       if (!hasOtherSession && room) {
         // Clear the lock from this user since they had no other sessions
-        // @ts-ignore
-        const user: ContextUser = { _id: socket.data._id }
-        await clearLock(room, user)
+        await clearLock(room, session._id)
 
         // Transfer lock ownership to the next oldest user
         const otherSessions = sessions.filter(x => x._id !== _id).slice()
@@ -79,8 +76,7 @@ export default class BuilderSocket extends BaseSocket {
         const nextSession = otherSessions[0]
         if (nextSession) {
           const { _id, email, firstName, lastName } = nextSession
-          // @ts-ignore
-          const nextUser: ContextUser = { _id, email, firstName, lastName }
+          const nextUser = { _id, email, firstName, lastName } as ContextUser
           await updateLock(room, nextUser)
           this.io.to(room).emit(BuilderSocketEvent.LockTransfer, {
             userId: _id,
@@ -92,7 +88,7 @@ export default class BuilderSocket extends BaseSocket {
     }
   }
 
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: any) {
     await super.updateUser(socket, {
       builderMetadata: {
         ...socket.data.builderMetadata,

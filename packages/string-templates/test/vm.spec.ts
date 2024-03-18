@@ -1,5 +1,8 @@
+import { jest, describe, it, expect } from "@jest/globals"
+
 jest.mock("../src/utilities", () => {
-  const utilities = jest.requireActual("../src/utilities")
+  const utilities =
+    jest.requireActual<typeof import("../src/utilities")>("../src/utilities")
   return {
     ...utilities,
     isBackendService: jest.fn().mockReturnValue(true),

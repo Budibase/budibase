@@ -24,7 +24,7 @@ const anonUser = () => ({
   firstName: "Anonymous",
 })
 
-export class BaseSocket {
+export abstract class BaseSocket {
   app: Koa
   io: Server
   path: string
@@ -207,8 +207,7 @@ export class BaseSocket {
     }
 
     // Store in redis
-    // @ts-ignore
-    const user: SocketSession = socket.data
+    const user = socket.data as SocketSession
     const { sessionId } = user
     const key = this.getSessionKey(sessionId)
     await this.redisClient?.store(key, user, SocketSessionTTL)
@@ -225,8 +224,7 @@ export class BaseSocket {
 
   // Disconnects a socket from its current room
   async leaveRoom(socket: Socket) {
-    // @ts-ignore
-    const user: SocketSession = socket.data
+    const user = socket.data as SocketSession
     const { room, sessionId } = user
     if (!room) {
       return
@@ -250,7 +248,7 @@ export class BaseSocket {
   }
 
   // Updates a connected user's metadata, assuming a room change is not required.
-  async updateUser(socket: Socket, patch: Object) {
+  async updateUser(socket: Socket, patch: any) {
     socket.data = {
       ...socket.data,
       ...patch,
@@ -262,13 +260,8 @@ export class BaseSocket {
     }
   }
 
-  async onConnect(socket: Socket) {
-    // Override
-  }
-
-  async onDisconnect(socket: Socket) {
-    // Override
-  }
+  abstract onConnect(socket: Socket): Promise<void>
+  abstract onDisconnect(socket: Socket): Promise<void>
 
   // Emit an event to all sockets
   emit(event: string, payload: any) {

@@ -96,20 +96,11 @@ export function processAutoColumn(
  * @returns The coerced value
  */
 export function coerce(row: any, type: string) {
-  // no coercion specified for type, skip it
-  if (!TYPE_TRANSFORM_MAP[type]) {
+  const coercionFn = TYPE_TRANSFORM_MAP[type]
+  if (!coercionFn) {
     return row
   }
-  // eslint-disable-next-line no-prototype-builtins
-  if (TYPE_TRANSFORM_MAP[type].hasOwnProperty(row)) {
-    // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type][row]
-  } else if (TYPE_TRANSFORM_MAP[type].parse) {
-    // @ts-ignore
-    return TYPE_TRANSFORM_MAP[type].parse(row)
-  }
-
-  return row
+  return coercionFn(row)
 }
 
 /**

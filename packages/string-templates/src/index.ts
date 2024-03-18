@@ -101,7 +101,7 @@ export async function processObject<T extends Record<string, any>>(
         parsedValue = await processObject(object[key], context, opts)
       }
 
-      // @ts-ignore
+      // @ts-expect-error - not sure why generic types can't be indexed for writing
       object[key] = parsedValue
     }
   }

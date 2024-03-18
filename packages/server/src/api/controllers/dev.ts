@@ -72,7 +72,7 @@ export function buildRedirectDelete(path: string) {
 export async function clearLock(ctx: any) {
   const { appId } = ctx.params
   try {
-    await redisClearLock(appId, ctx.user)
+    await redisClearLock(appId, ctx.user._id)
   } catch (err) {
     ctx.throw(400, `Unable to remove lock. ${err}`)
   }

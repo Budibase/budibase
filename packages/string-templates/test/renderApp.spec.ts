@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals"
 import { processString } from "../src/index"
 
 describe("specific test case for whether or not full app template can still be rendered", () => {

@@ -1,4 +1,4 @@
-// @ts-ignore we don't have types for it
+// @ts-expect-error - we don't have types for it
 import helpers from "@budibase/handlebars-helpers"
 
 import { date, duration } from "./date"

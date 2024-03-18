@@ -34,27 +34,27 @@ export const getParsedManifest = () => {
       requiresBlock: boolean
     }>(manifest[collection])
       .filter(
-        ([_, details]) =>
+        ([, details]) =>
           details.example?.split("->").map(x => x.trim()).length > 1
       )
       .map(([name, details]): ExampleType => {
         const example = details.example
-        let [hbs, js] = example.split("->").map(x => x.trim())
+        const [hbs, js] = example.split("->").map(x => x.trim())
 
         // Trim 's
-        js = js.replace(/^'|'$/g, "")
+        let processedJs = js.replace(/^'|'$/g, "")
         let parsedExpected: string
-        if ((parsedExpected = tryParseJson(js))) {
+        if ((parsedExpected = tryParseJson(processedJs))) {
           if (Array.isArray(parsedExpected)) {
             if (typeof parsedExpected[0] === "object") {
-              js = JSON.stringify(parsedExpected)
+              processedJs = JSON.stringify(parsedExpected)
             } else {
-              js = parsedExpected.join(",")
+              processedJs = parsedExpected.join(",")
             }
           }
         }
         const requiresHbsBody = details.requiresBlock
-        return [name, { hbs, js, requiresHbsBody }]
+        return [name, { hbs, js: processedJs, requiresHbsBody }]
       })
 
     if (functions.length) {
@@ -93,7 +93,7 @@ export const runJsHelpersTests = ({
 
     describe.each(Object.keys(jsExamples))("%s", collection => {
       const examplesToRun = jsExamples[collection]
-        .filter(([_, { requiresHbsBody }]) => !requiresHbsBody)
+        .filter(([, { requiresHbsBody }]) => !requiresHbsBody)
         .filter(([key]) => !testsToSkip?.includes(key))
 
       examplesToRun.length &&

@@ -1,7 +1,10 @@
+import { describe, it, expect, jest, beforeAll } from "@jest/globals"
 import vm from "vm"
 
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
-  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
+  const actual = jest.requireActual<
+    typeof import("@budibase/handlebars-helpers/lib/math")
+  >("@budibase/handlebars-helpers/lib/math")
 
   return {
     ...actual,
@@ -9,7 +12,9 @@ jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   }
 })
 jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
-  const actual = jest.requireActual("@budibase/handlebars-helpers/lib/uuid")
+  const actual = jest.requireActual<
+    typeof import("@budibase/handlebars-helpers/lib/uuid")
+  >("@budibase/handlebars-helpers/lib/uuid")
 
   return {
     ...actual,
@@ -48,7 +53,7 @@ describe("manifest", () => {
         const arrays = hbs.match(/\[[^/\]]+\]/)
         arrays?.forEach((arrayString, i) => {
           hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+          context[`array${i}`] = JSON.parse(arrayString.replace(/'/g, '"'))
         })
 
         let result = await processString(hbs, context)

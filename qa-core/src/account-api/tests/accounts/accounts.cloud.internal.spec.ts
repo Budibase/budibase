@@ -20,7 +20,7 @@ describe("Account Internal Operations", () => {
     await config.api.accounts.delete(accountId, { status: 404 })
 
     // Create new account
-    const [_, account] = await config.api.accounts.create({
+    const [, account] = await config.api.accounts.create({
       ...fixtures.accounts.generateAccount({
         hosting: Hosting.CLOUD,
       }),

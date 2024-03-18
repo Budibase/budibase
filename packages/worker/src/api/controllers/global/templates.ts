@@ -49,21 +49,18 @@ export async function fetch(ctx: any) {
 }
 
 export async function fetchByType(ctx: any) {
-  // @ts-ignore
   ctx.body = await getTemplates({
     type: ctx.params.type,
   })
 }
 
 export async function fetchByOwner(ctx: any) {
-  // @ts-ignore
   ctx.body = await getTemplates({
     ownerId: ctx.params.ownerId,
   })
 }
 
 export async function find(ctx: any) {
-  // @ts-ignore
   ctx.body = await getTemplates({
     id: ctx.params.id,
   })

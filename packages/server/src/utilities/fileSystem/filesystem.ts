@@ -97,24 +97,6 @@ export const stringToFileStream = (contents: any) => {
   return fs.createReadStream(path)
 }
 
-/**
- * Creates a temp file and returns it from the API.
- * @param fileContents the contents to be returned in file.
- */
-export const sendTempFile = (fileContents: any) => {
-  const path = storeTempFile(fileContents)
-  return fs.createReadStream(path)
-}
-
-/**
- * All file reads come through here just to make sure all of them make sense
- * allows a centralised location to check logic is all good.
- */
-export const readFileSync = (filepath: PathLike, options = "utf8") => {
-  // @ts-ignore
-  return fs.readFileSync(filepath, options)
-}
-
 export const createTempFolder = (item: any) => {
   const path = join(budibaseTempDir(), item)
   try {
@@ -140,14 +122,13 @@ export const extractTarball = async (fromFilePath: string, toPath: string) => {
 /**
  * Find for a file recursively from start path applying filter, return first match
  */
-export const findFileRec = (startPath: PathLike, filter: string): any => {
+export const findFileRec = (startPath: string, filter: string): any => {
   if (!fs.existsSync(startPath)) {
     return
   }
 
   const files = fs.readdirSync(startPath)
   for (let i = 0, len = files.length; i < len; i++) {
-    // @ts-ignore
     const filename = join(startPath, files[i])
     const stat = fs.lstatSync(filename)
 

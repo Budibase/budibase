@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals"
 import { processString, processObject, isValid } from "../src/index"
 import tableJson from "./examples/table.json"
 import dayjs from "dayjs"

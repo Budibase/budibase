@@ -1,3 +1,4 @@
+import { describe, it, expect } from "@jest/globals"
 import { convertToJS } from "../src/index"
 
 function checkLines(response: string, lines: string[]) {

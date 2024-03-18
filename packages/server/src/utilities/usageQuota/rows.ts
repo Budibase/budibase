@@ -49,8 +49,8 @@ async function getAppRows(appId: string) {
  * Rows duplicates may exist across apps due to data import so they are not filtered out.
  */
 export async function getUniqueRows(appIds: string[]) {
-  let uniqueRows: Row[] = [],
-    rowsByApp: { [key: string]: Row[] } = {}
+  let uniqueRows: Row[] = []
+  const rowsByApp: { [key: string]: Row[] } = {}
   const pairs = getAppPairs(appIds)
 
   for (const pair of Object.values(pairs)) {

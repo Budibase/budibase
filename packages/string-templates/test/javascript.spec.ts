@@ -1,3 +1,5 @@
+import { describe, it, expect, beforeAll } from "@jest/globals"
+
 import vm from "vm"
 
 import { processStringSync, encodeJSBinding, setJSRunner } from "../src/index"

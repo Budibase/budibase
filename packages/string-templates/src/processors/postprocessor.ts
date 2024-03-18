@@ -1,20 +1,21 @@
 import { LITERAL_MARKER } from "../helpers/constants"
+import { Processor } from "./processor"
 
 export const PostProcessorNames = {
   CONVERT_LITERALS: "convert-literals",
 }
 
-/* eslint-disable no-unused-vars */
-class Postprocessor {
+class Postprocessor extends Processor {
   name: string
-  private fn: any
+  private fn: (statement: string) => string
 
   constructor(name: string, fn: any) {
+    super()
     this.name = name
     this.fn = fn
   }
 
-  process(statement: any) {
+  override process(statement: string) {
     return this.fn(statement)
   }
 }

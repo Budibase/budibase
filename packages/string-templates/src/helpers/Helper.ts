@@ -13,7 +13,7 @@ export default class Helper {
     // wrap the function so that no helper can cause handlebars to break
     handlebars.registerHelper(
       this.name,
-      (value: any, info: { data: { root: {} } }) => {
+      (value: any, info: { data: { root: Record<string, never> } }) => {
         let context = {}
         if (info && info.data && info.data.root) {
           context = info.data.root

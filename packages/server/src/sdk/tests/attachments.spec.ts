@@ -62,7 +62,7 @@ describe("should be able to re-write attachment URLs", () => {
     }
 
     dbCore.directCouchFind
-      // @ts-ignore
+      // @ts-expect-error - jest mock function
       .mockReturnValueOnce({ rows: rows.slice(0, 25), bookmark: "aaa" })
       .mockReturnValueOnce({ rows: rows.slice(25, limit), bookmark: "bbb" })
     await sdk.backups.updateAttachmentColumns(db.name, db)

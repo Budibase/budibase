@@ -1,6 +1,5 @@
 import Router from "@koa/router"
-
-const compress = require("koa-compress")
+import compress from "koa-compress"
 
 import zlib from "zlib"
 import { routes } from "./routes"

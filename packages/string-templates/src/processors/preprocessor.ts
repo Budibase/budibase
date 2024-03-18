@@ -1,5 +1,6 @@
 import { HelperNames } from "../helpers"
 import { swapStrings, isAlphaNumeric } from "../utilities"
+import { Processor } from "./processor"
 
 const FUNCTION_CASES = ["#", "else", "/"]
 
@@ -9,17 +10,17 @@ export const PreprocessorNames = {
   FINALISE: "finalise",
 }
 
-/* eslint-disable no-unused-vars */
-class Preprocessor {
+class Preprocessor extends Processor {
   name: string
-  private fn: any
+  private fn: (statement: string, opts?: any) => string
 
   constructor(name: string, fn: any) {
+    super()
     this.name = name
     this.fn = fn
   }
 
-  process(fullString: string, statement: string, opts: Object) {
+  override process(fullString: string, statement: string, opts?: any) {
     const output = this.fn(statement, opts)
     const idx = fullString.indexOf(statement)
     return swapStrings(fullString, idx, statement.length, output)
@@ -53,7 +54,7 @@ export const processors = [
 
   new Preprocessor(
     PreprocessorNames.FINALISE,
-    (statement: string, opts: { noHelpers: any }) => {
+    (statement: string, opts?: { noHelpers: any }) => {
       const noHelpers = opts && opts.noHelpers
       let insideStatement = statement.slice(2, statement.length - 2)
       if (insideStatement.charAt(0) === " ") {

@@ -1,9 +1,9 @@
 import { join } from "path"
+import dotenv from "dotenv"
 
 let LOADED = false
 if (!LOADED) {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  require("dotenv").config({
+  dotenv.config({
     path: join(__dirname, "..", ".env"),
   })
   LOADED = true

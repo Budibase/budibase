@@ -2,8 +2,13 @@ import { FIND_HBS_REGEX } from "../utilities"
 import * as preprocessor from "./preprocessor"
 import * as postprocessor from "./postprocessor"
 import { ProcessOptions } from "../types"
+import { Processor } from "./processor"
 
-function process(output: string, processors: any[], opts?: ProcessOptions) {
+function process(
+  output: string,
+  processors: Processor[],
+  opts?: ProcessOptions
+) {
   for (const processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {

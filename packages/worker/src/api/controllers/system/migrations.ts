@@ -1,4 +1,4 @@
-const { migrate, MIGRATIONS } = require("../../../migrations")
+import { migrate, MIGRATIONS } from "../../../migrations"
 
 export const runMigrations = async (ctx: any) => {
   const options = ctx.request.body

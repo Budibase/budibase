@@ -19,122 +19,114 @@ const parseArrayString = (value: any) => {
 /**
  * A map of how we convert various properties in rows to each other based on the row type.
  */
-export const TYPE_TRANSFORM_MAP: any = {
-  [FieldType.LINK]: {
-    "": [],
-    //@ts-ignore
-    [null]: [],
-    //@ts-ignore
-    [undefined]: undefined,
-    parse: (link: any) => {
-      if (Array.isArray(link) && typeof link[0] === "object") {
-        return link.map(el => (el && el._id ? el._id : el))
+export const TYPE_TRANSFORM_MAP: Record<string, (val: any) => any> = {
+  [FieldType.LINK]: (link: any) => {
+    if (link === "" || link === null || link === undefined) {
+      return []
+    }
+    if (Array.isArray(link) && typeof link[0] === "object") {
+      return link.map(el => (el && el._id ? el._id : el))
+    }
+    if (typeof link === "string") {
+      return [link]
+    }
+    return link
+  },
+  [FieldType.OPTIONS]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.ARRAY]: (val: any) => {
+    if (val === null) {
+      return []
+    }
+    if (val === undefined) {
+      return undefined
+    }
+    return parseArrayString(val)
+  },
+  [FieldType.STRING]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.BARCODEQR]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.FORMULA]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.LONGFORM]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.NUMBER]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    if (val === undefined) {
+      return undefined
+    }
+    return parseFloat(val)
+  },
+  [FieldType.BIGINT]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    return val
+  },
+  [FieldType.DATETIME]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    if (val === undefined) {
+      return undefined
+    }
+    if (val instanceof Date) {
+      return val.toISOString()
+    }
+    return val
+  },
+  [FieldType.ATTACHMENT]: (val: any) => {
+    if (val === null) {
+      return []
+    }
+    if (val === undefined) {
+      return undefined
+    }
+    return parseArrayString(val)
+  },
+  [FieldType.BOOLEAN]: (val: any) => {
+    if (val === "" || val === null) {
+      return null
+    }
+    if (val === undefined) {
+      return undefined
+    }
+    return val
+  },
+  [FieldType.AUTO]: () => {
+    return undefined
+  },
+  [FieldType.JSON]: (val: any) => {
+    try {
+      if (val === "") {
+        return undefined
       }
-      if (typeof link === "string") {
-        return [link]
-      }
-      return link
-    },
-  },
-  [FieldType.OPTIONS]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.ARRAY]: {
-    //@ts-ignore
-    [null]: [],
-    //@ts-ignore
-    [undefined]: undefined,
-    parse: parseArrayString,
-  },
-  [FieldType.STRING]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.BARCODEQR]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.FORMULA]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.LONGFORM]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.NUMBER]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-    parse: (n: any) => parseFloat(n),
-  },
-  [FieldType.BIGINT]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-  },
-  [FieldType.DATETIME]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-    parse: (date: any) => {
-      if (date instanceof Date) {
-        return date.toISOString()
-      }
-      return date
-    },
-  },
-  [FieldType.ATTACHMENT]: {
-    //@ts-ignore
-    [null]: [],
-    //@ts-ignore
-    [undefined]: undefined,
-    parse: parseArrayString,
-  },
-  [FieldType.BOOLEAN]: {
-    "": null,
-    //@ts-ignore
-    [null]: null,
-    //@ts-ignore
-    [undefined]: undefined,
-    true: true,
-    false: false,
-  },
-  [FieldType.AUTO]: {
-    parse: () => undefined,
-  },
-  [FieldType.JSON]: {
-    parse: (input: any) => {
-      try {
-        if (input === "") {
-          return undefined
-        }
-        return JSON.parse(input)
-      } catch (err) {
-        return input
-      }
-    },
+      return JSON.parse(val)
+    } catch (err) {
+      return val
+    }
   },
 }

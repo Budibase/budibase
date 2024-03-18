@@ -1,12 +1,13 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
 import { join } from "path"
+import dotenv from "dotenv"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.WORKER)
 
 let LOADED = false
 if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
-  require("dotenv").config({
+  dotenv.config({
     path: join(__dirname, "..", ".env"),
   })
   LOADED = true
@@ -69,9 +70,11 @@ const environment = {
   PASSPORT_OIDCAUTH_FAILURE_REDIRECT:
     process.env.PASSPORT_OIDCAUTH_FAILURE_REDIRECT || "/error",
 
-  _set(key: any, value: any) {
+  _set(key: string, value: any) {
     process.env[key] = value
-    // @ts-ignore
+    // @ts-expect-error - can't narrow the key type because if you reference
+    // environment here it'll complain that you're referencing the type in its
+    // initialiser
     environment[key] = value
   },
   isDev: coreEnv.isDev,
@@ -92,12 +95,12 @@ if (!environment.APPS_URL) {
 for (const [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
-    // @ts-ignore
+    // @ts-expect-error - we know the key will be in the environment
     environment[key] = 0
   }
   // handle the edge case of "false" to disable an environment variable
   if (value === "false") {
-    // @ts-ignore
+    // @ts-expect-error - we know the key will be in the environment
     environment[key] = 0
   }
 }

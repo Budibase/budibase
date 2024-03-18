@@ -5,6 +5,7 @@ import {
   events,
   utils as utilsCore,
   configs,
+  middleware,
 } from "@budibase/backend-core"
 import {
   ConfigType,
@@ -131,9 +132,17 @@ export const resetUpdate = async (ctx: Ctx<PasswordResetUpdateRequest>) => {
 
 // DATASOURCE
 
+function isValidProvider(
+  provider: string
+): provider is keyof typeof middleware.datasource {
+  return Object.keys(middleware.datasource).includes(provider)
+}
+
 export const datasourcePreAuth = async (ctx: any, next: any) => {
-  const provider = ctx.params.provider
-  const { middleware } = require(`@budibase/backend-core`)
+  const provider = ctx.params.provider as string
+  if (!isValidProvider(provider)) {
+    throw new Error(`Invalid datasource provider: ${provider}`)
+  }
   const handler = middleware.datasource[provider]
 
   setCookie(
@@ -157,7 +166,9 @@ export const datasourceAuth = async (ctx: any, next: any) => {
     throw new Error("Unable to retrieve datasource authentication cookie")
   }
   const provider = authStateCookie.provider
-  const { middleware } = require(`@budibase/backend-core`)
+  if (!isValidProvider(provider)) {
+    throw new Error(`Invalid datasource provider: ${provider}`)
+  }
   const handler = middleware.datasource[provider]
   return handler.postAuth(passport, ctx, next)
 }
@@ -225,7 +236,7 @@ export async function oidcCallbackUrl() {
   return ssoCallbackUrl(ConfigType.OIDC)
 }
 
-export const oidcStrategyFactory = async (ctx: any, configId: any) => {
+export const oidcStrategyFactory = async (ctx: any) => {
   const config = await configs.getOIDCConfig()
   if (!config) {
     return ctx.throw(400, "OIDC config not found")
@@ -247,7 +258,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
   if (!configId) {
     ctx.throw(400, "OIDC config id is required")
   }
-  const strategy = await oidcStrategyFactory(ctx, configId)
+  const strategy = await oidcStrategyFactory(ctx)
 
   setCookie(ctx, configId, Cookie.OIDC_CONFIG)
 
@@ -268,8 +279,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
 }
 
 export const oidcCallback = async (ctx: any, next: any) => {
-  const configId = getCookie(ctx, Cookie.OIDC_CONFIG)
-  const strategy = await oidcStrategyFactory(ctx, configId)
+  const strategy = await oidcStrategyFactory(ctx)
 
   return passport.authenticate(
     strategy,

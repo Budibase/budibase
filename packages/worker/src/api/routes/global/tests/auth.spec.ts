@@ -52,7 +52,7 @@ describe("/api/global/auth", () => {
     describe("POST /api/global/auth/:tenantId/login", () => {
       it("logs in with correct credentials", async () => {
         const tenantId = config.tenantId!
-        const email = config.user?.email!
+        const email = config.getDefaultUser().email!
         const password = config.userPassword
 
         const response = await config.api.auth.login(tenantId, email, password)
@@ -63,7 +63,7 @@ describe("/api/global/auth", () => {
 
       it("should return 403 with incorrect credentials", async () => {
         const tenantId = config.tenantId!
-        const email = config.user?.email!
+        const email = config.getDefaultUser().email!
         const password = "incorrect"
 
         const response = await config.api.auth.login(
@@ -168,10 +168,7 @@ describe("/api/global/auth", () => {
         let user: User
 
         async function testSSOUser() {
-          const { res } = await config.api.auth.requestPasswordReset(
-            sendMailMock,
-            user.email
-          )
+          await config.api.auth.requestPasswordReset(sendMailMock, user.email)
           expect(sendMailMock).not.toHaveBeenCalled()
         }
 

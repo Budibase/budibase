@@ -49,7 +49,6 @@ import {
   AuthToken,
   Automation,
   CreateViewRequest,
-  Ctx,
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -69,6 +68,8 @@ import {
   Webhook,
   WithRequired,
 } from "@budibase/types"
+
+import { getServer } from "../../app"
 
 import API from "./api"
 import { cloneDeep } from "lodash"
@@ -109,7 +110,7 @@ export default class TestConfiguration {
     if (openServer) {
       // use a random port because it doesn't matter
       env.PORT = "0"
-      this.server = require("../../app").getServer()
+      this.server = getServer()
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
       this.started = true
@@ -233,7 +234,7 @@ export default class TestConfiguration {
     if (this.server) {
       this.server.close()
     } else {
-      require("../../app").getServer().close()
+      getServer().close()
     }
     if (this.allApps) {
       cleanup(this.allApps.map(app => app.appId))
@@ -606,7 +607,6 @@ export default class TestConfiguration {
 
   async publish() {
     await this._req(deployController.publishApp)
-    // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
 

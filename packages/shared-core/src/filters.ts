@@ -149,8 +149,8 @@ export const buildLuceneQuery = (filter: SearchFilter[]) => {
   }
 
   filter.forEach(expression => {
-    let { operator, field, type, value, externalType, onEmptyFilter } =
-      expression
+    const { operator, field, type, externalType, onEmptyFilter } = expression
+    let { value } = expression
     const isHbs =
       typeof value === "string" && (value.match(HBS_REGEX) || []).length > 0
     // Parse all values into correct types

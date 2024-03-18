@@ -42,11 +42,16 @@
       ],
       "rules": {
         "@typescript-eslint/no-explicit-any": "off",
-        "local-rules/no-budibase-imports": "error"
+        "local-rules/no-budibase-imports": "error",
+        "prefer-const": ["error", { "destructuring": "all" }]
       }
     },
     {
       "files": ["**/*.spec.ts"],
+      "plugins": ["jest"],
+      "env": {
+        "jest/globals": true
+      },
       "parser": "@typescript-eslint/parser",
       "extends": [
         "eslint:recommended",
@@ -57,7 +62,8 @@
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
         "local-rules/remove-only-from-tests": "warn",
-        "no-console": "warn"
+        "no-console": "warn",
+        "prefer-const": ["error", { "destructuring": "all" }]
       }
     },
     {
