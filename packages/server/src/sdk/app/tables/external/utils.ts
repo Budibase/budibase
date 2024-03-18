@@ -24,7 +24,7 @@ export function cleanupRelationships(
 ) {
   const tableToIterate = oldTable ? oldTable : table
   // clean up relationships in couch table schemas
-  for (let [key, schema] of Object.entries(tableToIterate.schema)) {
+  for (const [key, schema] of Object.entries(tableToIterate.schema)) {
     if (
       schema.type === FieldType.LINK &&
       (!oldTable || table.schema[key] == null)
@@ -39,7 +39,7 @@ export function cleanupRelationships(
       if (!relatedTable || !foreignKey) {
         continue
       }
-      for (let [relatedKey, relatedSchema] of Object.entries(
+      for (const [relatedKey, relatedSchema] of Object.entries(
         relatedTable.schema
       )) {
         if (relatedSchema.type !== FieldType.LINK) {

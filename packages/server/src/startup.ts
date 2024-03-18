@@ -107,7 +107,7 @@ export async function startup(app?: Koa, server?: Server) {
 
   // get the references to the queue promises, don't await as
   // they will never end, unless the processing stops
-  let queuePromises = []
+  const queuePromises = []
   // configure events to use the pro audit log write
   // can't integrate directly into backend-core due to cyclic issues
   queuePromises.push(events.processors.init(pro.sdk.auditLogs.write))

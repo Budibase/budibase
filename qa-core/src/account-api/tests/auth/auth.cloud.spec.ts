@@ -22,7 +22,7 @@ describe("Password Management", () => {
     await config.api.accounts.create(createAccountRequest, { autoVerify: true })
 
     // Request password reset to get code
-    const [_, code] = await config.api.auth.resetPassword(
+    const [, code] = await config.api.auth.resetPassword(
       createAccountRequest.email
     )
 

@@ -13,7 +13,7 @@ async function init() {
     .helpOption(false)
     .version(version)
   // add commands
-  for (let command of getCommands()) {
+  for (const command of getCommands()) {
     command.configure(program)
   }
   // this will stop the program if no command found

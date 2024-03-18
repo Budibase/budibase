@@ -13,7 +13,7 @@ type Passport = {
 }
 
 async function fetchGoogleCreds() {
-  let config = await configs.getGoogleDatasourceConfig()
+  const config = await configs.getGoogleDatasourceConfig()
 
   if (!config) {
     throw new Error("No google configuration found")
@@ -30,7 +30,7 @@ export async function preAuth(
   const googleConfig = await fetchGoogleCreds()
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
+  const callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const strategy = await google.strategyFactory(
     googleConfig,
     callbackUrl,
@@ -57,7 +57,7 @@ export async function postAuth(
   const config = await fetchGoogleCreds()
   const platformUrl = await configs.getPlatformUrl({ tenantAware: false })
 
-  let callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
+  const callbackUrl = `${platformUrl}/api/global/auth/datasource/google/callback`
   const authStateCookie = utils.getCookie<{ appId: string }>(
     ctx,
     Cookie.DatasourceAuth

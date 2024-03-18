@@ -190,7 +190,7 @@ const environment = {
 }
 
 // clean up any environment variable edge cases
-for (let [key, value] of Object.entries(environment)) {
+for (const [key, value] of Object.entries(environment)) {
   // handle the edge case of "0" to disable an environment variable
   if (value === "0") {
     // @ts-ignore

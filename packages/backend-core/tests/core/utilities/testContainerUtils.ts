@@ -8,12 +8,12 @@ function formatDockerPsResult(serverName: string, port: number) {
   if (!lines) {
     return null
   }
-  for (let line of lines) {
+  for (const line of lines) {
     if (first) {
       first = false
       continue
     }
-    let toLookFor = serverName.split("-service")[0]
+    const toLookFor = serverName.split("-service")[0]
     if (!line.includes(toLookFor)) {
       continue
     }

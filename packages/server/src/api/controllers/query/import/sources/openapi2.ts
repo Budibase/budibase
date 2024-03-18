@@ -78,11 +78,11 @@ export class OpenAPI2 extends OpenAPISource {
     const url = this.getUrl()
     const queries = []
 
-    for (let [path, pathItem] of Object.entries(this.document.paths)) {
+    for (const [path, pathItem] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
-      let pathParams: OpenAPIV2.Parameter[] = []
+      const pathParams: OpenAPIV2.Parameter[] = []
 
-      for (let [key, opOrParams] of Object.entries(pathItem)) {
+      for (const [key, opOrParams] of Object.entries(pathItem)) {
         if (isParameter(key, opOrParams)) {
           const pathParameters = opOrParams as OpenAPIV2.Parameter[]
           pathParams.push(...pathParameters)
@@ -106,7 +106,7 @@ export class OpenAPI2 extends OpenAPISource {
         const operationParams = operation.parameters || []
         const allParams = [...pathParams, ...operationParams]
 
-        for (let param of allParams) {
+        for (const param of allParams) {
           if (parameterNotRef(param)) {
             switch (param.in) {
               case "query":
@@ -128,7 +128,7 @@ export class OpenAPI2 extends OpenAPISource {
               case "body":
                 // set the request body to the example provided
                 // future enhancement: generate an example from the schema
-                let bodyParam: OpenAPIV2.InBodyParameterObject =
+                const bodyParam: OpenAPIV2.InBodyParameterObject =
                   param as OpenAPIV2.InBodyParameterObject
                 if (param.schema.example) {
                   const schema = bodyParam.schema as OpenAPIV2.SchemaObject

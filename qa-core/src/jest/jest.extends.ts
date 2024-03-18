@@ -4,6 +4,7 @@ import { Response } from "node-fetch"
 export {}
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toHaveStatusCode(code: number): R

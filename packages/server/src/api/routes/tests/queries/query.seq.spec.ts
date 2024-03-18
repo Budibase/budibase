@@ -39,8 +39,8 @@ const mockIsProdAppID = dbCore.isProdAppID as jest.MockedFunction<
 >
 
 describe("/queries", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
   let datasource: Datasource & Required<Pick<Datasource, "_id">>, query: Query
 
   afterAll(setup.afterAll)

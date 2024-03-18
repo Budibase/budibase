@@ -28,8 +28,8 @@ export async function createLinkView() {
     map: function (doc: LinkDocument) {
       // everything in this must remain constant as its going to Pouch, no external variables
       if (doc.type === "link") {
-        let doc1 = doc.doc1
-        let doc2 = doc.doc2
+        const doc1 = doc.doc1
+        const doc2 = doc.doc2
         // eslint-disable-next-line no-undef
         // @ts-ignore
         emit([doc1.tableId, doc1.rowId], {
@@ -95,11 +95,11 @@ export async function createAllSearchIndex() {
     SearchIndex.ROWS,
     function (doc: Row) {
       function idx(input: Row, prev?: string) {
-        for (let key of Object.keys(input)) {
+        for (const key of Object.keys(input)) {
           let idxKey = prev != null ? `${prev}.${key}` : key
           idxKey = idxKey.replace(/ /g, "_")
           if (Array.isArray(input[key])) {
-            for (let val of input[key]) {
+            for (const val of input[key]) {
               if (typeof val !== "object") {
                 // eslint-disable-next-line no-undef
                 // @ts-ignore

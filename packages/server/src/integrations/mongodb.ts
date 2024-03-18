@@ -38,7 +38,7 @@ interface MongoDBQuery {
 }
 
 const getSchema = () => {
-  let schema = {
+  const schema = {
     docs: "https://github.com/mongodb/node-mongodb-native",
     friendlyName: "MongoDB",
     type: "Non-relational",
@@ -394,7 +394,7 @@ class MongoIntegration implements IntegrationBase {
     const self = this
 
     function interpolateObjectIds(json: any) {
-      for (let field of Object.keys(json || {})) {
+      for (const field of Object.keys(json || {})) {
         if (json[field] instanceof Object) {
           json[field] = self.createObjectIds(json[field])
         }
@@ -425,12 +425,12 @@ class MongoIntegration implements IntegrationBase {
   }
 
   parseQueryParams(params: string, mode: string) {
-    let queryParams = []
+    const queryParams = []
     let openCount = 0
     let inQuotes = false
     let i = 0
     let startIndex = 0
-    for (let c of params) {
+    for (const c of params) {
       if (c === '"' && i > 0 && params[i - 1] !== "\\") {
         inQuotes = !inQuotes
       }
@@ -447,9 +447,9 @@ class MongoIntegration implements IntegrationBase {
       }
       i++
     }
-    let group1 = queryParams[0] ?? {}
-    let group2 = queryParams[1] ?? {}
-    let group3 = queryParams[2] ?? {}
+    const group1 = queryParams[0] ?? {}
+    const group2 = queryParams[1] ?? {}
+    const group3 = queryParams[2] ?? {}
     if (mode === "update") {
       return {
         filter: group1,
@@ -470,7 +470,7 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let json = this.createObjectIds(query.json)
+      const json = this.createObjectIds(query.json)
 
       // For mongodb we add an extra actionType to specify
       // which method we want to call on the collection
@@ -517,7 +517,7 @@ class MongoIntegration implements IntegrationBase {
           if (typeof query.json === "string") {
             json = this.parseQueryParams(query.json, "update")
           }
-          let findAndUpdateJson = this.createObjectIds(json) as {
+          const findAndUpdateJson = this.createObjectIds(json) as {
             filter: Filter<any>
             update: UpdateFilter<any>
             options: FindOneAndUpdateOptions
@@ -560,7 +560,7 @@ class MongoIntegration implements IntegrationBase {
       if (typeof queryJson === "string") {
         queryJson = this.parseQueryParams(queryJson, "update")
       }
-      let json = this.createObjectIds(queryJson) as {
+      const json = this.createObjectIds(queryJson) as {
         filter: Filter<any>
         update: UpdateFilter<any>
         options: object
@@ -645,11 +645,11 @@ class MongoIntegration implements IntegrationBase {
       await this.connect()
       const db = this.client.db(this.config.db)
       const collection = db.collection(query.extra.collection)
-      let response = []
+      const response = []
       if (query.extra?.actionType === "pipeline") {
         for await (const doc of collection.aggregate(
           query.steps.map(({ key, value }) => {
-            let temp: any = {}
+            const temp: any = {}
             temp[key] = JSON.parse(value.value)
             return this.createObjectIds(temp)
           })

@@ -47,7 +47,7 @@ export async function fetch(ctx: UserCtx<void, FetchTablesResponse>) {
   const datasources = await sdk.datasources.getExternalDatasources()
 
   const external = datasources.flatMap(datasource => {
-    let entities = datasource.entities
+    const entities = datasource.entities
     if (entities) {
       return Object.values(entities).map<Table>((entity: Table) => ({
         ...entity,
@@ -117,8 +117,8 @@ export async function bulkImport(
   ctx: UserCtx<BulkImportRequest, BulkImportResponse>
 ) {
   const tableId = ctx.params.tableId
-  let tableBefore = await sdk.tables.getTable(tableId)
-  let tableAfter = await pickApi({ tableId }).bulkImport(ctx)
+  const tableBefore = await sdk.tables.getTable(tableId)
+  const tableAfter = await pickApi({ tableId }).bulkImport(ctx)
 
   if (!isEqual(tableBefore, tableAfter)) {
     await sdk.tables.saveTable(tableAfter)
@@ -174,11 +174,11 @@ export async function validateExistingTableImport(ctx: UserCtx) {
 
 export async function migrate(ctx: UserCtx<MigrateRequest, MigrateResponse>) {
   const { oldColumn, newColumn } = ctx.request.body
-  let tableId = ctx.params.tableId as string
+  const tableId = ctx.params.tableId as string
   const table = await sdk.tables.getTable(tableId)
-  let result = await sdk.tables.migrate(table, oldColumn, newColumn)
+  const result = await sdk.tables.migrate(table, oldColumn, newColumn)
 
-  for (let table of result.tablesUpdated) {
+  for (const table of result.tablesUpdated) {
     builderSocket?.emitTableUpdate(ctx, table, {
       includeOriginator: true,
     })

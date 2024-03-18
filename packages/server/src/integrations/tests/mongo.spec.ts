@@ -23,7 +23,7 @@ function disableConsole() {
 
 describe("MongoDB Integration", () => {
   let config: any
-  let indexName = "Users"
+  const indexName = "Users"
 
   beforeEach(() => {
     config = new TestConfiguration()

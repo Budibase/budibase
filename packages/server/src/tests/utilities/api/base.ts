@@ -94,7 +94,7 @@ export abstract class TestAPI {
       expectHeaders["Content-Type"] = /^application\/json/
     }
 
-    let queryParams = []
+    const queryParams = []
     for (const [key, value] of Object.entries(query)) {
       if (value) {
         queryParams.push(`${key}=${value}`)

@@ -21,7 +21,7 @@ import * as setup from "./utilities"
 import { Automation } from "@budibase/types"
 
 describe("Run through some parts of the automations system", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await automation.init()

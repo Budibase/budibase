@@ -36,7 +36,7 @@ async function exportBackup(opts: BackupOpts) {
   console.log("CouchDB Export")
   const bar = progressBar(dbList.length)
   let count = 0
-  for (let db of dbList) {
+  for (const db of dbList) {
     bar.update(++count)
     const remote = new Remote(db)
     const local = new Local(join(TEMP_DIR, COUCH_DIR, db))
@@ -80,7 +80,7 @@ async function importBackup(opts: BackupOpts) {
   console.log("CouchDB Import")
   const bar = progressBar(dbList.length)
   let count = 0
-  for (let db of dbList) {
+  for (const db of dbList) {
     bar.update(++count)
     const remote = new Remote(db)
     const local = new Local(join(TEMP_DIR, COUCH_DIR, db))

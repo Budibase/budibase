@@ -23,7 +23,7 @@ export async function getAllDbs(opts = { efficient: false }) {
     const json = await directCouchAllDbs(queryString)
     dbs = dbs.concat(json)
   }
-  let tenantId = getTenantId()
+  const tenantId = getTenantId()
   if (!env.MULTI_TENANCY || (!efficient && tenantId === DEFAULT_TENANT_ID)) {
     // just get all DBs when:
     // - single tenancy
@@ -58,7 +58,7 @@ export async function getAllApps({
   if (!env.MULTI_TENANCY && !tenantId) {
     tenantId = DEFAULT_TENANT_ID
   }
-  let dbs = await getAllDbs({ efficient })
+  const dbs = await getAllDbs({ efficient })
   const appDbNames = dbs.filter((dbName: any) => {
     if (env.isTest() && !dbName) {
       return false

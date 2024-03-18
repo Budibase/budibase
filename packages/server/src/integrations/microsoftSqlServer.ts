@@ -322,7 +322,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     try {
       if (Array.isArray(query.bindings)) {
         let count = 0
-        for (let binding of query.bindings) {
+        for (const binding of query.bindings) {
           request.input(`p${count++}`, binding)
         }
       }
@@ -335,7 +335,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
-      let readableMessage = getReadableErrorMessage(
+      const readableMessage = getReadableErrorMessage(
         SourceName.SQL_SERVER,
         err.number
       )
@@ -389,7 +389,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     entities: Record<string, Table>
   ): Promise<Schema> {
     await this.connect()
-    let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
+    const tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     if (tableInfo == null || !Array.isArray(tableInfo)) {
       throw "Unable to get list of tables in database"
     }
@@ -401,7 +401,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       .filter((name: string) => this.MASTER_TABLES.indexOf(name) === -1)
 
     const tables: Record<string, Table> = {}
-    for (let tableName of tableNames) {
+    for (const tableName of tableNames) {
       // get the column definition (type)
       const definition = await this.runSQL(
         this.getDefinitionSQL(tableName, schemaName)
@@ -424,8 +424,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         .filter(col => col.IS_NULLABLE === "NO")
         .map(col => col.COLUMN_NAME)
 
-      let schema: TableSchema = {}
-      for (let def of definition) {
+      const schema: TableSchema = {}
+      for (const def of definition) {
         const name = def.COLUMN_NAME
         if (typeof name !== "string") {
           continue
@@ -450,8 +450,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         schema,
       }
     }
-    let externalTables = finaliseExternalTables(tables, entities)
-    let errors = checkExternalTables(externalTables)
+    const externalTables = finaliseExternalTables(tables, entities)
+    const errors = checkExternalTables(externalTables)
     return {
       tables: externalTables,
       errors,
@@ -459,7 +459,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
   }
 
   async queryTableNames() {
-    let tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
+    const tableInfo: MSSQLTablesResponse[] = await this.runSQL(this.TABLES_SQL)
     const schema = this.config.schema || DEFAULT_SCHEMA
     return tableInfo
       .filter((record: any) => record.TABLE_SCHEMA === schema)

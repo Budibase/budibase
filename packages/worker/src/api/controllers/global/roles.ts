@@ -13,13 +13,13 @@ export async function fetch(ctx: Ctx) {
   // always use the dev apps as they'll be most up to date (true)
   const apps = (await dbCore.getAllApps({ tenantId, all: true })) as App[]
   const promises = []
-  for (let app of apps) {
+  for (const app of apps) {
     // use dev app IDs
     promises.push(roles.getAllRoles(app.appId))
   }
   const roleList = await Promise.all(promises)
   const response: any = {}
-  for (let app of apps) {
+  for (const app of apps) {
     const deployedAppId = dbCore.getProdAppID(app.appId)
     response[deployedAppId] = {
       roles: roleList.shift(),
@@ -52,7 +52,7 @@ export async function removeAppRole(ctx: Ctx) {
   const bulk = []
   const cacheInvalidations = []
   const prodAppId = dbCore.getProdAppID(appId)
-  for (let user of users) {
+  for (const user of users) {
     let updated = false
     if (user.roles[prodAppId]) {
       cacheInvalidations.push(cache.user.invalidateUser(user._id!))

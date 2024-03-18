@@ -22,7 +22,7 @@ export async function init() {
   }
   const adapters = []
   const serverAdapter: any = new KoaAdapter()
-  for (let queue of queues) {
+  for (const queue of queues) {
     adapters.push(new BullAdapter(queue))
   }
   createBullBoard({

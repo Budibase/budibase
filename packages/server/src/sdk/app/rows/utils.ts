@@ -62,7 +62,7 @@ export function cleanExportRows(
   columns?: string[],
   customHeaders: { [key: string]: string } = {}
 ) {
-  let cleanRows = [...rows]
+  const cleanRows = [...rows]
 
   const relationships = Object.entries(schema)
     .filter((entry: any[]) => entry[1].type === FieldType.LINK)
@@ -78,11 +78,11 @@ export function cleanExportRows(
   if (format === Format.CSV) {
     // Intended to append empty values in export
     const schemaKeys = Object.keys(schema)
-    for (let key of schemaKeys) {
+    for (const key of schemaKeys) {
       if (columns?.length && columns.indexOf(key) > 0) {
         continue
       }
-      for (let row of cleanRows) {
+      for (const row of cleanRows) {
         if (row[key] == null) {
           row[key] = undefined
         }
@@ -90,7 +90,7 @@ export function cleanExportRows(
     }
   } else if (format === Format.JSON) {
     // Replace row keys with custom headers
-    for (let row of cleanRows) {
+    for (const row of cleanRows) {
       renameKeys(customHeaders, row)
     }
   }
@@ -138,7 +138,7 @@ export async function validate({
     throw new Error("Unable to fetch table for validation")
   }
   const errors: Record<string, any> = {}
-  for (let fieldName of Object.keys(fetchedTable.schema)) {
+  for (const fieldName of Object.keys(fetchedTable.schema)) {
     const column = fetchedTable.schema[fieldName]
     const constraints = cloneDeep(column.constraints)
     const type = column.type

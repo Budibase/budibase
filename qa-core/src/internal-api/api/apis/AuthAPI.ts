@@ -13,11 +13,11 @@ export default class AuthAPI {
 
   async login(
     tenantId: string,
-    email: String,
-    password: String,
+    email: string,
+    password: string,
     opts: APIRequestOpts = { doExpect: true }
   ): Promise<[Response, string]> {
-    const [response, json] = await this.client.post(
+    const [response] = await this.client.post(
       `/global/auth/${tenantId}/login`,
       {
         body: {

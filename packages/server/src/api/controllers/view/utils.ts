@@ -40,7 +40,7 @@ export async function getViews(): Promise<DBView[]> {
   const response: DBView[] = []
   if (env.SELF_HOSTED) {
     const designDoc = await db.get<DesignDocument>("_design/database")
-    for (let name of Object.keys(designDoc.views || {})) {
+    for (const name of Object.keys(designDoc.views || {})) {
       // Only return custom views, not built ins
       const viewNames = Object.values(ViewName) as string[]
       if (viewNames.indexOf(name) !== -1) {
@@ -62,7 +62,7 @@ export async function getViews(): Promise<DBView[]> {
         })
       )
     ).rows.map(row => row.doc!)
-    for (let viewDoc of views) {
+    for (const viewDoc of views) {
       response.push({
         name: viewDoc.name,
         ...viewDoc.view,
@@ -145,7 +145,7 @@ export async function migrateToInMemoryView(db: Database, viewName: string) {
 }
 
 export async function migrateToDesignView(db: Database, viewName: string) {
-  let view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
+  const view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
   const designDoc = await db.get<DesignDocument>("_design/database")
   const meta = view.view.meta
   if (!meta) {
@@ -161,7 +161,7 @@ export async function migrateToDesignView(db: Database, viewName: string) {
 
 export async function getFromDesignDoc(db: Database, viewName: string) {
   const designDoc = await db.get<DesignDocument>("_design/database")
-  let view = designDoc.views?.[viewName]
+  const view = designDoc.views?.[viewName]
   if (view == null) {
     throw { status: 404, message: "Unable to get view" }
   }
@@ -172,7 +172,7 @@ export async function getFromMemoryDoc(
   db: Database,
   viewName: string
 ): Promise<DBView> {
-  let view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
+  const view = await db.get<InMemoryView>(generateMemoryViewID(viewName))
   if (view) {
     return view.view
   } else {

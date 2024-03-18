@@ -660,7 +660,7 @@ describe("SQL query builder", () => {
   })
 
   it("should sort SQL Server tables by the primary key if no sort data is provided", () => {
-    let query = new Sql(SqlClient.MS_SQL, limit)._query(
+    const query = new Sql(SqlClient.MS_SQL, limit)._query(
       generateReadJson({
         sort: {},
         paginate: {
@@ -675,7 +675,7 @@ describe("SQL query builder", () => {
   })
 
   it("should not parse JSON string as Date", () => {
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+    const query = new Sql(SqlClient.POSTGRES, limit)._query(
       generateCreateJson(TABLE_NAME, {
         name: '{ "created_at":"2023-09-09T03:21:06.024Z" }',
       })
@@ -688,7 +688,7 @@ describe("SQL query builder", () => {
 
   it("should parse and trim valid string as Date", () => {
     const dateObj = new Date("2023-09-09T03:21:06.024Z")
-    let query = new Sql(SqlClient.POSTGRES, limit)._query(
+    const query = new Sql(SqlClient.POSTGRES, limit)._query(
       generateCreateJson(TABLE_NAME, {
         name: " 2023-09-09T03:21:06.024Z ",
       })

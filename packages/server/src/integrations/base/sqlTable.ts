@@ -26,11 +26,11 @@ function generateSchema(
   oldTable: null | Table = null,
   renamed?: RenameColumn
 ) {
-  let primaryKey = table && table.primary ? table.primary[0] : null
+  const primaryKey = table && table.primary ? table.primary[0] : null
   const columns = Object.values(table.schema)
   // all columns in a junction table will be meta
-  let metaCols = columns.filter(col => (col as NumberFieldMetadata).meta)
-  let isJunction = metaCols.length === columns.length
+  const metaCols = columns.filter(col => (col as NumberFieldMetadata).meta)
+  const isJunction = metaCols.length === columns.length
   // can't change primary once its set for now
   if (primaryKey && !oldTable && !isJunction) {
     schema.increments(primaryKey).primary()
@@ -42,7 +42,7 @@ function generateSchema(
   const foreignKeys = Object.values(table.schema).map(
     col => (col as any).foreignKey
   )
-  for (let [key, column] of Object.entries(table.schema)) {
+  for (const [key, column] of Object.entries(table.schema)) {
     // skip things that are already correct
     const oldColumn = oldTable ? oldTable.schema[key] : null
     if (
@@ -200,7 +200,7 @@ class SqlTableQueryBuilder {
 
   _tableQuery(json: QueryJson): Knex.Sql | Knex.SqlNative {
     let client = knex({ client: this.sqlClient }).schema
-    let schemaName = json?.endpoint?.schema
+    const schemaName = json?.endpoint?.schema
     if (schemaName) {
       client = client.withSchema(schemaName)
     }

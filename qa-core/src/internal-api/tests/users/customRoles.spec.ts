@@ -22,8 +22,7 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     //Create level 1 role
     const role = {
@@ -31,11 +30,10 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "public",
       name: "level 1",
     }
-    const [createRoleResponse, createRoleJson] =
-      await config.api.users.createRole(role)
+    const [, createRoleJson] = await config.api.users.createRole(role)
 
     // Update user roles
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const prodAppId = db.getProdAppID(app.appId!)
@@ -49,8 +47,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
     expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
 
@@ -59,8 +58,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     await config.api.screens.create(fixtures.screens.generateScreen("ADMIN"))
 
     await config.api.apps.publish(app.appId)
-    const [firstappPackageResponse, firstappPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, firstappPackageJson] = await config.api.apps.getAppPackage(
+      app.appId!
+    )
     expect(firstappPackageJson.screens).toBeDefined()
     expect(firstappPackageJson.screens.length).toEqual(3)
 
@@ -70,12 +70,11 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       appUser[0].email!,
       appUser[0].password!
     )
-    const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
+    await config.api.users.getSelf()
 
     // fetch app package
 
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
@@ -84,8 +83,7 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -95,11 +93,10 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "read_only",
       name: "level 2",
     }
-    const [createRoleResponse, createRoleJson] =
-      await config.api.users.createRole(role)
+    const [, createRoleJson] = await config.api.users.createRole(role)
 
     // Update user roles
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const prodAppId = db.getProdAppID(app.appId!)
@@ -113,8 +110,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
     expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
 
@@ -123,18 +121,18 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     await config.api.screens.create(fixtures.screens.generateScreen("ADMIN"))
 
     await config.api.apps.publish(app.appId)
-    const [firstappPackageResponse, firstappPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, firstappPackageJson] = await config.api.apps.getAppPackage(
+      app.appId!
+    )
     expect(firstappPackageJson.screens).toBeDefined()
     expect(firstappPackageJson.screens.length).toEqual(3)
 
     // login with level 1 user
     await config.login(appUser[0].email!, appUser[0].password!)
-    const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
+    await config.api.users.getSelf()
 
     // fetch app package
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
@@ -142,8 +140,7 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -153,11 +150,10 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "write",
       name: "level 3",
     }
-    const [createRoleResponse, createRoleJson] =
-      await config.api.users.createRole(role)
+    const [, createRoleJson] = await config.api.users.createRole(role)
 
     // Update user roles
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const prodAppId = db.getProdAppID(app.appId!)
@@ -171,8 +167,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
     expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
 
@@ -181,18 +178,18 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     await config.api.screens.create(fixtures.screens.generateScreen("ADMIN"))
 
     await config.api.apps.publish(app.appId)
-    const [firstappPackageResponse, firstappPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, firstappPackageJson] = await config.api.apps.getAppPackage(
+      app.appId!
+    )
     expect(firstappPackageJson.screens).toBeDefined()
     expect(firstappPackageJson.screens.length).toEqual(3)
 
     // login with level 1 user
     await config.login(appUser[0].email!, appUser[0].password!)
-    const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
+    await config.api.users.getSelf()
 
     // fetch app package
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
@@ -200,8 +197,7 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -211,11 +207,10 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "power",
       name: "level 4",
     }
-    const [createRoleResponse, createRoleJson] =
-      await config.api.users.createRole(role)
+    const [, createRoleJson] = await config.api.users.createRole(role)
 
     // Update user roles
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const prodAppId = db.getProdAppID(app.appId!)
@@ -229,8 +224,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
     expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
 
@@ -239,18 +235,18 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     await config.api.screens.create(fixtures.screens.generateScreen("ADMIN"))
 
     await config.api.apps.publish(app.appId)
-    const [firstappPackageResponse, firstappPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, firstappPackageJson] = await config.api.apps.getAppPackage(
+      app.appId!
+    )
     expect(firstappPackageJson.screens).toBeDefined()
     expect(firstappPackageJson.screens.length).toEqual(3)
 
     // login with level 1 user
     await config.login(appUser[0].email!, appUser[0].password!)
-    const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
+    await config.api.users.getSelf()
 
     // fetch app package
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })
@@ -258,8 +254,7 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     // Create App
 
@@ -269,11 +264,10 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
       permissionId: "admin",
       name: "level 5",
     }
-    const [createRoleResponse, createRoleJson] =
-      await config.api.users.createRole(role)
+    const [, createRoleJson] = await config.api.users.createRole(role)
 
     // Update user roles
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const prodAppId = db.getProdAppID(app.appId!)
@@ -287,8 +281,9 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[prodAppId]).toBeDefined()
     expect(changedUserInfoJson.roles[prodAppId]).toEqual(createRoleJson._id)
 
@@ -297,18 +292,18 @@ describe.skip("Internal API - App Specific Roles & Permissions", () => {
     await config.api.screens.create(fixtures.screens.generateScreen("ADMIN"))
 
     await config.api.apps.publish(app.appId)
-    const [firstappPackageResponse, firstappPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, firstappPackageJson] = await config.api.apps.getAppPackage(
+      app.appId!
+    )
     expect(firstappPackageJson.screens).toBeDefined()
     expect(firstappPackageJson.screens.length).toEqual(3)
 
     // login with level 1 user
     await config.login(appUser[0].email!, appUser[0].password!)
-    const [selfInfoResponse, selfInfoJson] = await config.api.users.getSelf()
+    await config.api.users.getSelf()
 
     // fetch app package
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.screens).toBeDefined()
     expect(appPackageJson.screens.length).toEqual(1)
   })

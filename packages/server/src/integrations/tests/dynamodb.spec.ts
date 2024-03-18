@@ -12,7 +12,7 @@ class TestConfiguration {
 
 describe("DynamoDB Integration", () => {
   let config: any
-  let tableName = "Users"
+  const tableName = "Users"
 
   beforeEach(() => {
     config = new TestConfiguration()

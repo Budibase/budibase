@@ -17,7 +17,7 @@ async function getInitConfig(type: string, isQuick: boolean, port: number) {
       const output = await fetch(DO_USER_DATA_URL)
       const data = await output.text()
       const response = parseEnv(data)
-      for (let [key, value] of Object.entries(makeFiles.ConfigMap)) {
+      for (const [key, value] of Object.entries(makeFiles.ConfigMap)) {
         if (response[key]) {
           config[value as string] = response[key]
         }

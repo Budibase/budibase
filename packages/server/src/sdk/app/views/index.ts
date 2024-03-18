@@ -57,7 +57,7 @@ export function enrichSchema(view: View | ViewV2, tableSchema: TableSchema) {
     return view
   }
 
-  let schema = cloneDeep(tableSchema)
+  const schema = cloneDeep(tableSchema)
   const anyViewOrder = Object.values(view.schema || {}).some(
     ui => ui.order != null
   )

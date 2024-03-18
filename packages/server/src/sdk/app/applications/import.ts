@@ -50,7 +50,7 @@ function mergeUpdateAndDeleteDocuments(
 ) {
   // compress the documents to create and to delete (if same ID, then just update the rev)
   const finalToDelete = []
-  for (let deleteDoc of deleteDocs) {
+  for (const deleteDoc of deleteDocs) {
     const found = updateDocs.find(doc => doc._id === deleteDoc._id)
     if (found) {
       found._rev = deleteDoc._rev
@@ -64,11 +64,11 @@ function mergeUpdateAndDeleteDocuments(
 async function removeImportableDocuments(db: Database) {
   // get the references to the documents, not the whole document
   const docPromises = []
-  for (let docType of DocumentTypesToImport) {
+  for (const docType of DocumentTypesToImport) {
     docPromises.push(db.allDocs(dbCore.getDocParams(docType)))
   }
   let documentRefs: { _id: string; _rev: string }[] = []
-  for (let response of await Promise.all(docPromises)) {
+  for (const response of await Promise.all(docPromises)) {
     documentRefs = documentRefs.concat(
       response.rows.map(row => ({
         _id: row.id,
@@ -83,7 +83,7 @@ async function removeImportableDocuments(db: Database) {
 async function getImportableDocuments(db: Database) {
   // get the whole document
   const docPromises = []
-  for (let docType of DocumentTypesToImport) {
+  for (const docType of DocumentTypesToImport) {
     docPromises.push(
       db.allDocs<Document>(
         dbCore.getDocParams(docType, null, { include_docs: true })
@@ -92,7 +92,7 @@ async function getImportableDocuments(db: Database) {
   }
   // map the responses to the document itself
   let documents: Document[] = []
-  for (let response of await Promise.all(docPromises)) {
+  for (const response of await Promise.all(docPromises)) {
     documents = documents.concat(response.rows.map(row => row.doc!))
   }
   // remove the _rev, stops it being written

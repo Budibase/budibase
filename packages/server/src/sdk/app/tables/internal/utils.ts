@@ -5,7 +5,7 @@ export function checkAutoColumns(table: Table, oldTable?: Table) {
   if (!table.schema) {
     return table
   }
-  for (let [key, schema] of Object.entries(table.schema)) {
+  for (const [key, schema] of Object.entries(table.schema)) {
     if (!schema.autocolumn || schema.subtype) {
       continue
     }

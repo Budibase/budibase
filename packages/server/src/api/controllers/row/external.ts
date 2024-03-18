@@ -118,8 +118,8 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkDestroy(ctx: UserCtx) {
   const { rows } = ctx.request.body
   const tableId = utils.getTableId(ctx)
-  let promises: Promise<{ row: Row; table: Table }>[] = []
-  for (let row of rows) {
+  const promises: Promise<{ row: Row; table: Table }>[] = []
+  for (const row of rows) {
     promises.push(
       handleRequest(Operation.DELETE, tableId, {
         id: breakRowIdField(row._id),
@@ -155,7 +155,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   const row = response[0]
   // this seems like a lot of work, but basically we need to dig deeper for the enrich
   // for a single row, there is probably a better way to do this with some smart multi-layer joins
-  for (let [fieldName, field] of Object.entries(table.schema)) {
+  for (const [fieldName, field] of Object.entries(table.schema)) {
     if (
       field.type !== FieldType.LINK ||
       !row[fieldName] ||

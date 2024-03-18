@@ -39,8 +39,8 @@ export async function askQuestions() {
   console.log(
     "*** NOTE: use a .env file to load these parameters repeatedly ***"
   )
-  let config: Record<string, string> = {}
-  for (let property of REQUIRED) {
+  const config: Record<string, string> = {}
+  for (const property of REQUIRED) {
     config[property.value] = await string(property.value, property.default)
   }
   return config
@@ -52,7 +52,7 @@ export function loadEnvironment(path: string) {
   }
   const env = fs.readFileSync(path, "utf8")
   const config = checkURLs(dotenv.parse(env))
-  for (let required of REQUIRED) {
+  for (const required of REQUIRED) {
     if (!config[required.value]) {
       throw `Cannot find "${required.value}" property in .env file`
     }
@@ -69,7 +69,7 @@ export async function getConfig(envFile: boolean | string = true) {
     config = await askQuestions()
   }
   // fill out environment
-  for (let key of Object.keys(config)) {
+  for (const key of Object.keys(config)) {
     environment._set(key, config[key])
   }
   return config

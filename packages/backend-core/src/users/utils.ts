@@ -31,7 +31,7 @@ async function isCreatorByGroupMembership(user?: User | ContextUser) {
   if (userGroups.length > 0) {
     const db = context.getGlobalDB()
     const groups: UserGroup[] = []
-    for (let groupId of userGroups) {
+    for (const groupId of userGroups) {
       try {
         const group = await db.get<UserGroup>(groupId)
         groups.push(group)

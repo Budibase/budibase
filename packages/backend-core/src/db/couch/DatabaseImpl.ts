@@ -105,9 +105,9 @@ export class DatabaseImpl implements Database {
   }
 
   private async checkAndCreateDb() {
-    let shouldCreate = !this.pouchOpts?.skip_setup
+    const shouldCreate = !this.pouchOpts?.skip_setup
     // check exists in a lightweight fashion
-    let exists = await this.exists()
+    const exists = await this.exists()
     if (!shouldCreate && !exists) {
       throw new Error("DB does not exist")
     }

@@ -83,7 +83,7 @@ export function HelperNames() {
 }
 
 export function registerMinimum(handlebars: typeof Handlebars) {
-  for (let helper of HELPERS) {
+  for (const helper of HELPERS) {
     helper.register(handlebars)
   }
 }
@@ -95,7 +95,7 @@ export function registerAll(handlebars: typeof Handlebars) {
 }
 
 export function unregisterAll(handlebars: any) {
-  for (let helper of HELPERS) {
+  for (const helper of HELPERS) {
     helper.unregister(handlebars)
   }
   // unregister all imported helpers

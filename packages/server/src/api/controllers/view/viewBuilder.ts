@@ -86,7 +86,7 @@ function parseFilterExpression(filters: ViewFilter[]) {
   const expression = []
 
   let first = true
-  for (let filter of filters) {
+  for (const filter of filters) {
     if (!first && filter.conjunction) {
       expression.push(TOKEN_MAP[filter.conjunction])
     }
@@ -146,7 +146,7 @@ export default function (
   let schema = null,
     statFilter = null
 
-  let groupBySchema = groupByMulti ? GROUP_PROPERTY_MULTI : GROUP_PROPERTY
+  const groupBySchema = groupByMulti ? GROUP_PROPERTY_MULTI : GROUP_PROPERTY
 
   if (calculation) {
     schema = {

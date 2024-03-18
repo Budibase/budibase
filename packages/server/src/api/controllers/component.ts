@@ -8,9 +8,9 @@ export async function fetchAppComponentDefinitions(ctx: UserCtx) {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
-    let componentManifests = await Promise.all(
+    const componentManifests = await Promise.all(
       app.componentLibraries.map(async (library: any) => {
-        let manifest = await getComponentLibraryManifest(library)
+        const manifest = await getComponentLibraryManifest(library)
         return {
           manifest,
           library,
@@ -18,8 +18,8 @@ export async function fetchAppComponentDefinitions(ctx: UserCtx) {
       })
     )
     const definitions: { [key: string]: any } = {}
-    for (let { manifest, library } of componentManifests) {
-      for (let key of Object.keys(manifest)) {
+    for (const { manifest, library } of componentManifests) {
+      for (const key of Object.keys(manifest)) {
         if (key === "features") {
           definitions[key] = manifest[key]
         } else {

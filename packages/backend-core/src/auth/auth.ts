@@ -89,7 +89,7 @@ async function refreshGoogleAccessToken(
   config: GoogleInnerConfig,
   refreshToken: any
 ): Promise<RefreshResponse> {
-  let callbackUrl = await google.getCallbackUrl(config)
+  const callbackUrl = await google.getCallbackUrl(config)
 
   let strategy
   try {
@@ -143,7 +143,7 @@ export async function refreshOAuthToken(
       }
       return refreshOIDCAccessToken(oidcConfig, refreshToken)
     case SSOProviderType.GOOGLE:
-      let googleConfig = await configs.getGoogleConfig()
+      const googleConfig = await configs.getGoogleConfig()
       if (!googleConfig) {
         return { err: { data: "Google configuration not found" } }
       }

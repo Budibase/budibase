@@ -6,7 +6,7 @@ import { serverLogAutomation } from "../../tests/utilities/structures"
 import env from "../../environment"
 
 describe("Test triggering an automation from another automation", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await automation.init()
@@ -19,8 +19,8 @@ describe("Test triggering an automation from another automation", () => {
   })
 
   it("should trigger an other server log automation", async () => {
-    let automation = serverLogAutomation()
-    let newAutomation = await config.createAutomation(automation)
+    const automation = serverLogAutomation()
+    const newAutomation = await config.createAutomation(automation)
 
     const inputs: any = {
       automation: {

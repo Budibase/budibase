@@ -127,15 +127,15 @@ const excludeFunctions = { string: ["raw"] }
  */
 function run() {
   const foundNames: string[] = []
-  for (let collection of COLLECTIONS) {
+  for (const collection of COLLECTIONS) {
     const collectionFile = fs.readFileSync(
       `${path.dirname(require.resolve(HELPER_LIBRARY))}/lib/${collection}.js`,
       "utf8"
     )
     const collectionInfo = {}
     // collect information about helper
-    let hbsHelperInfo = helpers[collection]()
-    for (let entry of Object.entries(hbsHelperInfo)) {
+    const hbsHelperInfo = helpers[collection]()
+    for (const entry of Object.entries(hbsHelperInfo)) {
       const name = entry[0]
       // skip built in functions and ones seen already
       if (
@@ -149,7 +149,7 @@ function run() {
       // this is ridiculous, but it parse the function header
       const fnc = entry[1]!.toString()
       const jsDocInfo = getCommentInfo(collectionFile, fnc)
-      let args = jsDocInfo.tags
+      const args = jsDocInfo.tags
         .filter(tag => tag.title === "param")
         .map(
           tag =>
@@ -167,7 +167,7 @@ function run() {
     outputJSON[collection] = collectionInfo
   }
   // add extra helpers
-  for (let [collectionName, collection] of Object.entries(ADDED_HELPERS)) {
+  for (const [collectionName, collection] of Object.entries(ADDED_HELPERS)) {
     let input = collection
     if (outputJSON[collectionName]) {
       input = Object.assign(outputJSON[collectionName], collection)
@@ -176,8 +176,8 @@ function run() {
   }
 
   // convert all markdown to HTML
-  for (let collection of Object.values<any>(outputJSON)) {
-    for (let helper of Object.values<any>(collection)) {
+  for (const collection of Object.values<any>(outputJSON)) {
+    for (const helper of Object.values<any>(collection)) {
       helper.description = marked.parse(helper.description)
     }
   }

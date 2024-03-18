@@ -4,18 +4,18 @@ import * as postprocessor from "./postprocessor"
 import { ProcessOptions } from "../types"
 
 function process(output: string, processors: any[], opts?: ProcessOptions) {
-  for (let processor of processors) {
+  for (const processor of processors) {
     // if a literal statement has occurred stop
     if (typeof output !== "string") {
       break
     }
     // re-run search each time incase previous processor updated/removed a match
-    let regexp = new RegExp(FIND_HBS_REGEX)
-    let matches = output.match(regexp)
+    const regexp = new RegExp(FIND_HBS_REGEX)
+    const matches = output.match(regexp)
     if (matches == null) {
       continue
     }
-    for (let match of matches) {
+    for (const match of matches) {
       output = processor.process(output, match, opts)
     }
   }
@@ -32,6 +32,6 @@ export function preprocess(string: string, opts: ProcessOptions) {
   return process(string, processors, opts)
 }
 export function postprocess(string: string) {
-  let processors = postprocessor.processors
+  const processors = postprocessor.processors
   return process(string, processors)
 }

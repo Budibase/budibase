@@ -59,7 +59,7 @@ class LinkController {
     if (table == null) {
       table = await this.table()
     }
-    for (let fieldName of Object.keys(table.schema)) {
+    for (const fieldName of Object.keys(table.schema)) {
       const { type } = table.schema[fieldName]
       if (type === FieldType.LINK) {
         return true
@@ -94,7 +94,7 @@ class LinkController {
    */
   validateTable(table: Table) {
     const usedAlready = []
-    for (let schema of Object.values(table.schema)) {
+    for (const schema of Object.values(table.schema)) {
       if (schema.type !== FieldType.LINK) {
         continue
       }
@@ -120,7 +120,7 @@ class LinkController {
       "autocolumn",
       "relationshipType",
     ]
-    for (let field of compareFields) {
+    for (const field of compareFields) {
       // @ts-ignore
       if (linkSchema1[field] !== linkSchema2[field]) {
         return false
@@ -167,7 +167,7 @@ class LinkController {
     const operations = []
     // get link docs to compare against
     const linkDocs = (await this.getRowLinkDocs(row._id!)) as LinkDocument[]
-    for (let fieldName of Object.keys(table.schema)) {
+    for (const fieldName of Object.keys(table.schema)) {
       // get the links this row wants to make
       const rowField = row[fieldName]
       const field = table.schema[fieldName]
@@ -202,12 +202,12 @@ class LinkController {
         }
 
         // iterate through the link IDs in the row field, see if any don't exist already
-        for (let linkId of rowField) {
+        for (const linkId of rowField) {
           if (
             linkedSchema?.type === FieldType.LINK &&
             linkedSchema?.relationshipType === RelationshipType.ONE_TO_MANY
           ) {
-            let links = (
+            const links = (
               (await getLinkDocuments({
                 tableId: field.tableId,
                 rowId: linkId,
@@ -248,7 +248,7 @@ class LinkController {
           }
         }
         // find the docs that need to be deleted
-        let toDeleteDocs = thisFieldLinkDocs
+        const toDeleteDocs = thisFieldLinkDocs
           .filter(doc => {
             let correctDoc
             if (
@@ -306,11 +306,11 @@ class LinkController {
    * @returns The table has now been updated.
    */
   async removeFieldFromTable(fieldName: string) {
-    let oldTable = this._oldTable
-    let field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
+    const oldTable = this._oldTable
+    const field = oldTable?.schema[fieldName] as RelationshipFieldMetadata
     const linkDocs = await this.getTableLinkDocs()
-    let toDelete = linkDocs.filter(linkDoc => {
-      let correctFieldName =
+    const toDelete = linkDocs.filter(linkDoc => {
+      const correctFieldName =
         linkDoc.doc1.tableId === oldTable?._id
           ? linkDoc.doc1.fieldName
           : linkDoc.doc2.fieldName
@@ -326,7 +326,7 @@ class LinkController {
     )
     try {
       // remove schema from other table, if it exists
-      let linkedTable = await this._db.get<Table>(field.tableId)
+      const linkedTable = await this._db.get<Table>(field.tableId)
       if (field.fieldName) {
         delete linkedTable.schema[field.fieldName]
       }
@@ -350,7 +350,7 @@ class LinkController {
     // validate the table first
     this.validateTable(table)
     const schema = table.schema
-    for (let fieldName of Object.keys(schema)) {
+    for (const fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       if (field.type === FieldType.LINK && field.fieldName) {
         // handle this in a separate try catch, want
@@ -409,7 +409,7 @@ class LinkController {
     const oldTable = this._oldTable
     // first start by checking if any link columns have been deleted
     const newTable = await this.table()
-    for (let fieldName of Object.keys(oldTable?.schema || {})) {
+    for (const fieldName of Object.keys(oldTable?.schema || {})) {
       const field = oldTable?.schema[fieldName] as FieldSchema
       // this field has been removed from the table schema
       if (field.type === FieldType.LINK && newTable.schema[fieldName] == null) {
@@ -430,7 +430,7 @@ class LinkController {
   async tableDeleted() {
     const table = await this.table()
     const schema = table.schema
-    for (let fieldName of Object.keys(schema)) {
+    for (const fieldName of Object.keys(schema)) {
       const field = schema[fieldName]
       try {
         if (field.type === FieldType.LINK && field.fieldName) {

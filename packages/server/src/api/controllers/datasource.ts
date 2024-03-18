@@ -143,7 +143,7 @@ export async function update(
       }
     : ctx.request.body
 
-  let datasource: Datasource = {
+  const datasource: Datasource = {
     ...baseDatasource,
     ...sdk.datasources.mergeConfigs(dataSourceBody, baseDatasource),
   }
@@ -185,7 +185,7 @@ export async function update(
   builderSocket?.emitDatasourceUpdate(ctx, datasource)
   // send table updates if they have occurred
   if (datasource.entities) {
-    for (let table of Object.values(datasource.entities)) {
+    for (const table of Object.values(datasource.entities)) {
       const oldTable = baseDatasource.entities?.[table.name]
       if (!oldTable || !isEqual(oldTable, table)) {
         builderSocket?.emitTableUpdate(ctx, table, { includeOriginator: true })

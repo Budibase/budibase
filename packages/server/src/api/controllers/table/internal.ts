@@ -17,7 +17,7 @@ export async function save(
   renaming?: RenameColumn
 ) {
   const { rows, ...rest } = ctx.request.body
-  let tableToSave: Table = {
+  const tableToSave: Table = {
     _id: generateTableID(),
     ...rest,
     // Ensure these fields are populated, even if not sent in the request

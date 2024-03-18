@@ -5,8 +5,8 @@ jest.setTimeout(15000)
 const PASSWORD = "testtest"
 
 describe("/applications/:appId/import", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
 
   afterAll(setup.afterAll)
 

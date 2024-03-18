@@ -1,4 +1,4 @@
-import fetch, { Response, HeadersInit } from "node-fetch"
+import fetch, { Response, HeadersInit, RequestInit } from "node-fetch"
 import env from "../../environment"
 import { State } from "../../types"
 import { Header } from "@budibase/backend-core"
@@ -30,29 +30,27 @@ export default class AccountInternalAPIClient {
   apiCall =
     (method: APIMethod) =>
     async (url = "", options: ApiOptions = {}): Promise<[Response, any]> => {
-      const requestOptions = {
+      const requestOptions: RequestInit = {
         method,
         body: JSON.stringify(options.body),
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          cookie: this.state.cookie,
+          cookie: this.state.cookie!,
           redirect: "follow",
-          follow: 20,
+          follow: "20",
           ...options.headers,
         },
-        credentials: "include",
       }
 
       if (options.internal) {
         requestOptions.headers = {
           ...requestOptions.headers,
-          ...{ [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY },
+          ...{ [Header.API_KEY]: env.ACCOUNT_PORTAL_API_KEY! },
           cookie: "",
         }
       }
 
-      // @ts-ignore
       const response = await fetch(`${this.host}${url}`, requestOptions)
 
       let body: any

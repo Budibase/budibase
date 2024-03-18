@@ -12,7 +12,7 @@ let initialised = false
  * Exposed for exceptional cases such as in-memory views.
  */
 export const getPouch = (opts: PouchOptions = {}) => {
-  let { url, cookie } = getCouchInfo()
+  const { url, cookie } = getCouchInfo()
   let POUCH_DB_DEFAULTS = {
     prefix: url,
     fetch: (url: string, opts: any) => {

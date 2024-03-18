@@ -1,5 +1,5 @@
 import env from "../../environment"
-import fetch, { HeadersInit } from "node-fetch"
+import fetch, { RequestInit } from "node-fetch"
 import { State } from "../../types"
 
 type APIMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -7,7 +7,7 @@ type APIMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
 interface ApiOptions {
   method?: APIMethod
   body?: object
-  headers?: HeadersInit | undefined
+  headers?: Record<string, string> | undefined
 }
 
 class BudibasePublicAPIClient {
@@ -25,22 +25,20 @@ class BudibasePublicAPIClient {
   apiCall =
     (method: APIMethod) =>
     async (url = "", options: ApiOptions = {}) => {
-      const requestOptions = {
+      const requestOptions: RequestInit = {
         method,
         body: JSON.stringify(options.body),
         headers: {
-          "x-budibase-api-key": this.state.apiKey,
-          "x-budibase-app-id": this.state.appId,
+          "x-budibase-api-key": this.state.apiKey!,
+          "x-budibase-app-id": this.state.appId!,
           "Content-Type": "application/json",
           Accept: "application/json",
           ...options.headers,
           redirect: "follow",
-          follow: 20,
+          follow: "20",
         },
       }
 
-      // prettier-ignore
-      // @ts-ignore
       const response = await fetch(`${this.host}${url}`, requestOptions)
 
       let body: any

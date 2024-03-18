@@ -170,7 +170,7 @@ class RestIntegration implements IntegrationBase {
     )
     const time = `${Math.round(performance.now() - this.startTimeMs)}ms`
     headers = response.headers.raw()
-    for (let [key, value] of Object.entries(headers)) {
+    for (const [key, value] of Object.entries(headers)) {
       headers[key] = Array.isArray(value) ? value[0] : value
     }
 
@@ -219,7 +219,7 @@ class RestIntegration implements IntegrationBase {
       }
 
       // Prepend query string with pagination params
-      let paginationString = params.toString()
+      const paginationString = params.toString()
       if (paginationString) {
         queryString = `${paginationString}&${queryString}`
       }
@@ -285,7 +285,7 @@ class RestIntegration implements IntegrationBase {
         break
       case BodyTypes.ENCODED:
         const params = new URLSearchParams()
-        for (let [key, value] of Object.entries(object)) {
+        for (const [key, value] of Object.entries(object)) {
           params.append(key, value as string)
         }
         addPaginationToBody((key: string, value: any) => {
@@ -295,7 +295,7 @@ class RestIntegration implements IntegrationBase {
         break
       case BodyTypes.FORM_DATA:
         const form = new FormData()
-        for (let [key, value] of Object.entries(object)) {
+        for (const [key, value] of Object.entries(object)) {
           form.append(key, value)
         }
         addPaginationToBody((key: string, value: any) => {
@@ -326,7 +326,7 @@ class RestIntegration implements IntegrationBase {
   }
 
   getAuthHeaders(authConfigId: string): { [key: string]: any } {
-    let headers: any = {}
+    const headers: any = {}
 
     if (this.config.authConfigs && authConfigId) {
       const authConfig = this.config.authConfigs.filter(
@@ -376,7 +376,7 @@ class RestIntegration implements IntegrationBase {
     }
 
     if (disabledHeaders) {
-      for (let headerKey of Object.keys(this.headers)) {
+      for (const headerKey of Object.keys(this.headers)) {
         if (disabledHeaders[headerKey]) {
           delete this.headers[headerKey]
         }

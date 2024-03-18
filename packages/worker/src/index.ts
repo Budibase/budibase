@@ -4,7 +4,7 @@ if (process.env.DD_APM_ENABLED) {
 
 // need to load environment first
 import env from "./environment"
-import Application from "koa"
+import Koa from "koa"
 import { bootstrap } from "global-agent"
 import * as db from "./db"
 import { sdk as proSdk } from "@budibase/pro"
@@ -25,7 +25,7 @@ import koaBody from "koa-body"
 import http from "http"
 import api from "./api"
 
-const koaSession = require("koa-session")
+import session from "koa-session"
 
 import { userAgent } from "koa-useragent"
 
@@ -42,7 +42,7 @@ if (coreEnv.ENABLE_SSO_MAINTENANCE_MODE) {
 // this will setup http and https proxies form env variables
 bootstrap()
 
-const app: Application = new Application()
+const app: Koa = new Koa()
 
 app.keys = ["secret", "key"]
 
@@ -50,7 +50,8 @@ app.keys = ["secret", "key"]
 app.use(handleScimBody)
 app.use(koaBody({ multipart: true }))
 
-app.use(koaSession(app))
+// @ts-expect-error - types don't line up here but code works
+app.use(session(app))
 app.use(middleware.correlation)
 app.use(middleware.pino)
 app.use(userAgent)

@@ -16,7 +16,7 @@ import { getExistingInvites } from "../cache/invite"
  * return an array of emails that match the supplied emails.
  */
 export async function searchExistingEmails(emails: string[]) {
-  let matchedEmails: string[] = []
+  const matchedEmails: string[] = []
 
   const existingTenantUsers = await getExistingTenantUsers(emails)
   matchedEmails.push(...existingTenantUsers.map(user => user.email))

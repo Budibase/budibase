@@ -121,7 +121,7 @@ export async function updateTestHistory(
 
 export function removeDeprecated(definitions: any) {
   const base = cloneDeep(definitions)
-  for (let key of Object.keys(base)) {
+  for (const key of Object.keys(base)) {
     if (base[key].deprecated) {
       delete base[key]
     }
@@ -133,7 +133,7 @@ export function removeDeprecated(definitions: any) {
 export async function disableAllCrons(appId: any) {
   const promises = []
   const jobs = await automationQueue.getRepeatableJobs()
-  for (let job of jobs) {
+  for (const job of jobs) {
     if (job.key.includes(`${appId}_cron`)) {
       promises.push(automationQueue.removeRepeatableByKey(job.key))
       if (job.id) {
@@ -147,7 +147,7 @@ export async function disableAllCrons(appId: any) {
 
 export async function disableCronById(jobId: number | string) {
   const repeatJobs = await automationQueue.getRepeatableJobs()
-  for (let repeatJob of repeatJobs) {
+  for (const repeatJob of repeatJobs) {
     if (repeatJob.id === jobId) {
       await automationQueue.removeRepeatableByKey(repeatJob.key)
     }
@@ -164,7 +164,7 @@ export async function clearMetadata() {
       })
     )
   ).rows.map((row: any) => row.doc)
-  for (let metadata of automationMetadata) {
+  for (const metadata of automationMetadata) {
     metadata._deleted = true
   }
   await db.bulkDocs(automationMetadata)
@@ -322,7 +322,7 @@ export function isErrorInOutput(output: {
 }) {
   let first = true,
     error = false
-  for (let step of output.steps) {
+  for (const step of output.steps) {
     // skip the trigger, its always successful if automation ran
     if (first) {
       first = false

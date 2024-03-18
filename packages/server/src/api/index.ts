@@ -67,7 +67,7 @@ if (apiEnabled()) {
     .use(cleanup)
 
   // authenticated routes
-  for (let route of mainRoutes) {
+  for (const route of mainRoutes) {
     router.use(route.routes())
     router.use(route.allowedMethods())
   }

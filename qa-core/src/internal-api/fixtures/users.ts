@@ -45,7 +45,7 @@ const generateAppUser = (): Partial<User> => {
   }
 }
 
-export const generateInviteUser = (): Object[] => {
+export const generateInviteUser = () => {
   const randomId = generator.guid()
   return [
     {

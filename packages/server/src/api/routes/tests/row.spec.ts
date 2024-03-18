@@ -512,7 +512,7 @@ describe.each([
     })
 
     it("should not overwrite links if those links are not set", async () => {
-      let linkField: FieldSchema = {
+      const linkField: FieldSchema = {
         type: FieldType.LINK,
         name: "",
         fieldName: "",
@@ -524,7 +524,7 @@ describe.each([
         tableId: InternalTable.USER_METADATA,
       }
 
-      let table = await config.api.table.save({
+      const table = await config.api.table.save({
         name: "TestTable",
         type: "table",
         sourceType: TableSourceType.INTERNAL,
@@ -535,10 +535,10 @@ describe.each([
         },
       })
 
-      let user1 = await config.createUser()
-      let user2 = await config.createUser()
+      const user1 = await config.createUser()
+      const user2 = await config.createUser()
 
-      let row = await config.api.row.save(table._id!, {
+      const row = await config.api.row.save(table._id!, {
         user1: [{ _id: user1._id }],
         user2: [{ _id: user2._id }],
       })
@@ -547,7 +547,7 @@ describe.each([
       expect(getResp.user1[0]._id).toEqual(user1._id)
       expect(getResp.user2[0]._id).toEqual(user2._id)
 
-      let patchResp = await config.api.row.patch(table._id!, {
+      const patchResp = await config.api.row.patch(table._id!, {
         _id: row._id!,
         _rev: row._rev!,
         tableId: table._id!,
@@ -566,7 +566,7 @@ describe.each([
         name: "test",
         description: "test",
       })
-      let row2 = await config.api.row.save(otherTable._id!, {
+      const row2 = await config.api.row.save(otherTable._id!, {
         name: "test",
         description: "test",
         relationship: [row._id],

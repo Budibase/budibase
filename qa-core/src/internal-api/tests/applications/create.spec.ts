@@ -31,8 +31,7 @@ describe("Internal API - Application creation", () => {
       useTemplate: "false",
     })
 
-    const [appPackageResponse, appPackageJson] =
-      await config.api.apps.getAppPackage(app.appId!)
+    const [, appPackageJson] = await config.api.apps.getAppPackage(app.appId!)
     expect(appPackageJson.application.name).toEqual(app.name)
     expect(appPackageJson.application.version).toEqual(app.version)
     expect(appPackageJson.application.url).toEqual(app.url)

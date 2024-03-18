@@ -18,7 +18,6 @@ export const appFromTemplate = (): CreateAppRequest => {
   return {
     name: uniqueWord(),
     url: `/${uniqueWord()}`,
-    // @ts-ignore
     useTemplate: "true",
     templateName: "Near Miss Register",
     templateKey: "app/near-miss-register",

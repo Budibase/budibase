@@ -128,7 +128,7 @@ export function breakExternalTableId(tableId: string | undefined) {
     return {}
   }
   const parts = tableId.split(DOUBLE_SEPARATOR)
-  let datasourceId = parts.shift()
+  const datasourceId = parts.shift()
   // if they need joined
   let tableName = parts.join(DOUBLE_SEPARATOR)
   // if contains encoded spaces, decode it
@@ -190,11 +190,11 @@ export function generateColumnDefinition(config: {
   presence: boolean
   options?: string[]
 }) {
-  let { externalType, autocolumn, name, presence, options } = config
+  const { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
   const lowerCaseType = externalType.toLowerCase()
-  let matchingTypes = []
-  for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
+  const matchingTypes = []
+  for (const [external, internal] of Object.entries(SQL_TYPE_MAP)) {
     if (lowerCaseType.includes(external)) {
       matchingTypes.push({ external, internal })
     }
@@ -247,7 +247,7 @@ export function isIsoDateString(str: string) {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/.test(trimmedValue)) {
     return false
   }
-  let d = new Date(trimmedValue)
+  const d = new Date(trimmedValue)
   return d.toISOString() === trimmedValue
 }
 
@@ -329,7 +329,7 @@ function copyExistingPropsOver(
     table.views = entities[tableName].views
 
     const existingTableSchema = entities[tableName].schema
-    for (let key in existingTableSchema) {
+    for (const key in existingTableSchema) {
       if (!existingTableSchema.hasOwnProperty(key)) {
         continue
       }
@@ -355,9 +355,9 @@ export function finaliseExternalTables(
   tables: Record<string, Table>,
   entities: Record<string, Table>
 ): Record<string, Table> {
-  let finalTables: Record<string, Table> = {}
+  const finalTables: Record<string, Table> = {}
   const tableIds = Object.values(tables).map(table => table._id!)
-  for (let [name, table] of Object.entries(tables)) {
+  for (const [name, table] of Object.entries(tables)) {
     finalTables[name] = copyExistingPropsOver(name, table, entities, tableIds)
   }
   // sort the tables by name, this is for the UI to display them in alphabetical order
@@ -371,7 +371,7 @@ export function checkExternalTables(
 ): Record<string, string> {
   const invalidColumns = Object.values(InvalidColumns) as string[]
   const errors: Record<string, string> = {}
-  for (let [name, table] of Object.entries(tables)) {
+  for (const [name, table] of Object.entries(tables)) {
     if (!table.primary || table.primary.length === 0) {
       errors[name] = "Table must have a primary key."
     }
@@ -415,19 +415,19 @@ export function isValidFilter(value: any) {
 // don't do a pure falsy check, as 0 is included
 // https://github.com/Budibase/budibase/issues/10118
 export function removeEmptyFilters(filters: SearchFilters) {
-  for (let filterField of NoEmptyFilterStrings) {
+  for (const filterField of NoEmptyFilterStrings) {
     if (!filters[filterField]) {
       continue
     }
 
-    for (let filterType of Object.keys(filters)) {
+    for (const filterType of Object.keys(filters)) {
       if (filterType !== filterField) {
         continue
       }
       // don't know which one we're checking, type could be anything
       const value = filters[filterType] as unknown
       if (typeof value === "object") {
-        for (let [key, value] of Object.entries(
+        for (const [key, value] of Object.entries(
           filters[filterType] as object
         )) {
           if (value == null || value === "") {

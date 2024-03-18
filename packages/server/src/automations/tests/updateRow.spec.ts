@@ -14,7 +14,7 @@ import * as uuid from "uuid"
 
 describe("test the update row action", () => {
   let table: Table, row: Row, inputs: any
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
@@ -55,7 +55,7 @@ describe("test the update row action", () => {
   })
 
   it("should not overwrite links if those links are not set", async () => {
-    let linkField: FieldSchema = {
+    const linkField: FieldSchema = {
       type: FieldType.LINK,
       name: "",
       fieldName: "",
@@ -67,7 +67,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.save({
+    const table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,
@@ -78,10 +78,10 @@ describe("test the update row action", () => {
       },
     })
 
-    let user1 = await config.createUser()
-    let user2 = await config.createUser()
+    const user1 = await config.createUser()
+    const user2 = await config.createUser()
 
-    let row = await config.api.row.save(table._id!, {
+    const row = await config.api.row.save(table._id!, {
       user1: [{ _id: user1._id }],
       user2: [{ _id: user2._id }],
     })
@@ -90,7 +90,7 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
+    const stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
       rowId: row._id,
       row: {
         _id: row._id,
@@ -108,7 +108,7 @@ describe("test the update row action", () => {
   })
 
   it("should overwrite links if those links are not set and we ask it do", async () => {
-    let linkField: FieldSchema = {
+    const linkField: FieldSchema = {
       type: FieldType.LINK,
       name: "",
       fieldName: "",
@@ -120,7 +120,7 @@ describe("test the update row action", () => {
       tableId: InternalTable.USER_METADATA,
     }
 
-    let table = await config.api.table.save({
+    const table = await config.api.table.save({
       name: uuid.v4(),
       type: "table",
       sourceType: TableSourceType.INTERNAL,
@@ -131,10 +131,10 @@ describe("test the update row action", () => {
       },
     })
 
-    let user1 = await config.createUser()
-    let user2 = await config.createUser()
+    const user1 = await config.createUser()
+    const user2 = await config.createUser()
 
-    let row = await config.api.row.save(table._id!, {
+    const row = await config.api.row.save(table._id!, {
       user1: [{ _id: user1._id }],
       user2: [{ _id: user2._id }],
     })
@@ -143,7 +143,7 @@ describe("test the update row action", () => {
     expect(getResp.user1[0]._id).toEqual(user1._id)
     expect(getResp.user2[0]._id).toEqual(user2._id)
 
-    let stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
+    const stepResp = await setup.runStep(setup.actions.UPDATE_ROW.stepId, {
       rowId: row._id,
       row: {
         _id: row._id,

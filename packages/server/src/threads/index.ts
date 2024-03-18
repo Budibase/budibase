@@ -111,7 +111,7 @@ export class Thread {
           resolve()
         }
       }
-      for (let worker of Thread.workerRefs) {
+      for (const worker of Thread.workerRefs) {
         workerFarm.end(worker, complete)
       }
       Thread.workerRefs = []

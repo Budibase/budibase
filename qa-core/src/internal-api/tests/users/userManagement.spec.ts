@@ -36,7 +36,7 @@ describe("Internal API - User Management & Permissions", () => {
     await config.api.users.addMultiple(userList)
 
     // Check users are added
-    const [allUsersResponse, allUsersJson] = await config.api.users.getAll()
+    const [, allUsersJson] = await config.api.users.getAll()
     expect(allUsersJson.length).toBeGreaterThan(0)
   })
 
@@ -44,7 +44,7 @@ describe("Internal API - User Management & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [userResponse, userJson] = await config.api.users.addMultiple(appUser)
+    const [, userJson] = await config.api.users.addMultiple(appUser)
     const userId = userJson.created.successful[0]._id
     await config.api.users.delete(userId)
   })
@@ -53,8 +53,8 @@ describe("Internal API - User Management & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [userResponse, userJson] = await config.api.users.addMultiple(appUser)
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userJson] = await config.api.users.addMultiple(appUser)
+    const [, userInfoJson] = await config.api.users.getInfo(
       userJson.created.successful[0]._id
     )
     const body: User = {
@@ -68,8 +68,8 @@ describe("Internal API - User Management & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [userResponse, userJson] = await config.api.users.addMultiple(appUser)
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userJson] = await config.api.users.addMultiple(appUser)
+    const [, userInfoJson] = await config.api.users.getInfo(
       userJson.created.successful[0]._id
     )
     const body: User = {
@@ -82,8 +82,9 @@ describe("Internal API - User Management & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(userJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      userJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.builder?.global).toBeDefined()
     expect(changedUserInfoJson.builder?.global).toEqual(true)
   })

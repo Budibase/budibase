@@ -35,7 +35,7 @@ export function getPermissionType(resourceId: string) {
 export function getBasePermissions(resourceId: string) {
   const type = getPermissionType(resourceId)
   const basePermissions: { [key: string]: string } = {}
-  for (let [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
+  for (const [roleId, role] of Object.entries(roles.getBuiltinRoles())) {
     if (!role.permissionId) {
       continue
     }

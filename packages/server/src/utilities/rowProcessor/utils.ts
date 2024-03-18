@@ -58,7 +58,7 @@ export async function processFormulas<T extends Row | Row[]>(
       // Ensure we have snippet context
       await context.ensureSnippetContext()
 
-      for (let [column, schema] of Object.entries(table.schema)) {
+      for (const [column, schema] of Object.entries(table.schema)) {
         if (schema.type !== FieldType.FORMULA) {
           continue
         }
@@ -74,9 +74,9 @@ export async function processFormulas<T extends Row | Row[]>(
         }
         // iterate through rows and process formula
         for (let i = 0; i < rows.length; i++) {
-          let row = rows[i]
-          let context = contextRows ? contextRows[i] : row
-          let formula = schema.formula
+          const row = rows[i]
+          const context = contextRows ? contextRows[i] : row
+          const formula = schema.formula
           rows[i] = {
             ...row,
             [column]: tracer.trace("processStringSync", {}, span => {
@@ -99,9 +99,9 @@ export function processDates<T extends Row | Row[]>(
   table: Table,
   inputRows: T
 ): T {
-  let rows = Array.isArray(inputRows) ? inputRows : [inputRows]
-  let datesWithTZ: string[] = []
-  for (let [column, schema] of Object.entries(table.schema)) {
+  const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+  const datesWithTZ: string[] = []
+  for (const [column, schema] of Object.entries(table.schema)) {
     if (schema.type !== FieldType.DATETIME) {
       continue
     }
@@ -110,8 +110,8 @@ export function processDates<T extends Row | Row[]>(
     }
   }
 
-  for (let row of rows) {
-    for (let col of datesWithTZ) {
+  for (const row of rows) {
+    for (const col of datesWithTZ) {
       if (row[col] && typeof row[col] === "string" && !row[col].endsWith("Z")) {
         row[col] = new Date(row[col]).toISOString()
       }

@@ -46,8 +46,8 @@ export async function checkCacheForDynamicVariable(
 
 export async function invalidateDynamicVariables(cachedVars: QueryVariable[]) {
   const cache = await getClient()
-  let promises = []
-  for (let variable of cachedVars) {
+  const promises = []
+  for (const variable of cachedVars) {
     promises.push(
       cache.delete(makeVariableKey(variable.queryId, variable.name))
     )

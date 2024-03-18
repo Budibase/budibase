@@ -53,9 +53,7 @@ export default class DatasourcesAPI extends BaseAPI {
   }
 
   async delete(dataSourceId: string, revId: string): Promise<Response> {
-    const [response, json] = await this.del(
-      `/datasources/${dataSourceId}/${revId}`
-    )
+    const [response] = await this.del(`/datasources/${dataSourceId}/${revId}`)
 
     return response
   }

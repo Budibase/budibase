@@ -17,11 +17,11 @@ function findColumnInQueries(
   if (!options.query) {
     return
   }
-  for (let filterBlock of Object.values(options.query)) {
+  for (const filterBlock of Object.values(options.query)) {
     if (typeof filterBlock !== "object") {
       continue
     }
-    for (let [key, filter] of Object.entries(filterBlock)) {
+    for (const [key, filter] of Object.entries(filterBlock)) {
       if (key.endsWith(column)) {
         filterBlock[key] = callback(filter)
       }
@@ -64,7 +64,7 @@ export function searchInputMapping(table: Table, options: SearchParams) {
   if (!table?.schema) {
     return options
   }
-  for (let [key, column] of Object.entries(table.schema)) {
+  for (const [key, column] of Object.entries(table.schema)) {
     switch (column.type) {
       case FieldType.BB_REFERENCE:
         const subtype = column.subtype as FieldSubtype

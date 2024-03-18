@@ -12,7 +12,7 @@ import { context } from "@budibase/backend-core"
 
 function checkForSchemaErrors(schema: Record<string, Table>) {
   const errors: Record<string, string> = {}
-  for (let [tableName, table] of Object.entries(schema)) {
+  for (const [tableName, table] of Object.entries(schema)) {
     if (tableName.includes(".")) {
       errors[tableName] = "Table names containing dots are not supported."
     } else {
@@ -39,14 +39,14 @@ export async function buildFilteredSchema(
     return schema
   }
 
-  let filteredSchema: Schema = { tables: {}, errors: {} }
-  for (let key in schema.tables) {
+  const filteredSchema: Schema = { tables: {}, errors: {} }
+  for (const key in schema.tables) {
     if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
       filteredSchema.tables[key] = schema.tables[key]
     }
   }
 
-  for (let key in schema.errors) {
+  for (const key in schema.errors) {
     if (filter.some(filter => filter.toLowerCase() === key.toLowerCase())) {
       filteredSchema.errors[key] = schema.errors[key]
     }

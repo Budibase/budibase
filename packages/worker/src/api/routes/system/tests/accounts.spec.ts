@@ -20,7 +20,7 @@ describe("accounts", () => {
   describe("metadata", () => {
     describe("saveMetadata", () => {
       it("saves account metadata", async () => {
-        let account = structures.accounts.account()
+        const account = structures.accounts.account()
 
         const response = await config.api.accounts.saveMetadata(account)
 

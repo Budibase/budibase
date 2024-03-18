@@ -11,10 +11,10 @@ interface ScreenProps {
   _id: string
   _component: string
   _styles: {
-    normal: {}
-    hover: {}
-    active: {}
-    selected: {}
+    normal: object
+    hover: object
+    active: object
+    selected: object
   }
   _children: []
   _instanceName: string

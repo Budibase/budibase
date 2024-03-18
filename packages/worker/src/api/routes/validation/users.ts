@@ -49,7 +49,7 @@ export const buildUserBulkUserValidation = (isSelf = false) => {
       _rev: Joi.string(),
     }
   }
-  let bulkSchema = {
+  const bulkSchema = {
     create: Joi.object({
       groups: Joi.array().optional(),
       users: Joi.array().items(Joi.object(schema).required().unknown(true)),

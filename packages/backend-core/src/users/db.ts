@@ -35,7 +35,7 @@ type QuotaUpdateFn = (
   cb?: () => Promise<any>
 ) => Promise<any>
 type GroupUpdateFn = (groupId: string, userIds: string[]) => Promise<any>
-type FeatureFn = () => Promise<Boolean>
+type FeatureFn = () => Promise<boolean>
 type GroupGetFn = (ids: string[]) => Promise<UserGroup[]>
 type GroupBuildersFn = (user: User) => Promise<string[]>
 type QuotaFns = { addUsers: QuotaUpdateFn; removeUsers: QuotaUpdateFn }
@@ -170,14 +170,14 @@ export class UserDB {
   }
 
   static async countUsersByApp(appId: string) {
-    let response: any = await usersCore.searchGlobalUsersByApp(appId, {})
+    const response: any = await usersCore.searchGlobalUsersByApp(appId, {})
     return {
       userCount: response.length,
     }
   }
 
   static async getUsersByAppAccess(opts: { appId?: string; limit?: number }) {
-    let response: User[] = await usersCore.searchGlobalUsersByAppAccess(
+    const response: User[] = await usersCore.searchGlobalUsersByAppAccess(
       opts.appId,
       { limit: opts.limit || 50 }
     )
@@ -268,12 +268,12 @@ export class UserDB {
 
       // make sure we set the _id field for a new user
       // Also if this is a new user, associate groups with them
-      let groupPromises = []
+      const groupPromises = []
       if (!_id) {
         _id = builtUser._id!
 
         if (userGroups.length > 0) {
-          for (let groupId of userGroups) {
+          for (const groupId of userGroups) {
             groupPromises.push(UserDB.groups.addUsers(groupId, [_id!]))
           }
         }
@@ -281,7 +281,7 @@ export class UserDB {
 
       try {
         // save the user to db
-        let response = await db.put(builtUser)
+        const response = await db.put(builtUser)
         builtUser._rev = response.rev
 
         await eventHelpers.handleSaveEvents(builtUser, dbUser)
@@ -313,9 +313,9 @@ export class UserDB {
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
-    let usersToSave: any[] = []
-    let newUsers: any[] = []
-    let newCreators: any[] = []
+    const usersToSave: any[] = []
+    const newUsers: any[] = []
+    const newCreators: any[] = []
 
     const emails = newUsersRequested.map((user: User) => user.email)
     const existingEmails = await searchExistingEmails(emails)
@@ -384,7 +384,7 @@ export class UserDB {
         if (Array.isArray(saved) && groups) {
           const groupPromises = []
           const createdUserIds = saved.map(user => user._id)
-          for (let groupId of groups) {
+          for (const groupId of groups) {
             groupPromises.push(UserDB.groups.addUsers(groupId, createdUserIds))
           }
           await Promise.all(groupPromises)
@@ -439,7 +439,7 @@ export class UserDB {
       creator => !!creator
     ).length
 
-    for (let user of usersToDelete) {
+    for (const user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
     await UserDB.quotas.removeUsers(toDelete.length, creatorsToDeleteCount)

@@ -151,7 +151,7 @@ export async function exportRows(
     throw new HTTPError("Datasource has not been configured for plus API.", 400)
   }
 
-  let result = await search({ tableId, query: requestQuery, sort, sortOrder })
+  const result = await search({ tableId, query: requestQuery, sort, sortOrder })
   let rows: Row[] = []
   let headers
 
@@ -164,7 +164,7 @@ export async function exportRows(
   if (columns && columns.length) {
     for (let i = 0; i < result.rows.length; i++) {
       rows[i] = {}
-      for (let column of columns) {
+      for (const column of columns) {
         rows[i][column] = result.rows[i][column]
       }
     }
@@ -173,7 +173,7 @@ export async function exportRows(
     rows = result.rows
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
+  const exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
 
   let content: string
   switch (format) {

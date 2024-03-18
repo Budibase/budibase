@@ -24,7 +24,7 @@ export async function refreshBlacklist() {
   const blacklist = env.BLACKLIST_IPS
   const list = blacklist?.split(",") || []
   let final: string[] = []
-  for (let addr of list) {
+  for (const addr of list) {
     const trimmed = addr.trim()
     if (!net.isIP(trimmed)) {
       const addresses = await lookup(trimmed)

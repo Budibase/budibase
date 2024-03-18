@@ -18,8 +18,8 @@ describe("Internal API - /screens endpoints", () => {
 
     // Create Screen
     const roleArray = ["BASIC", "POWER", "ADMIN", "PUBLIC"]
-    for (let role in roleArray) {
-      const [response, screen] = await config.api.screens.create(
+    for (const role in roleArray) {
+      await config.api.screens.create(
         fixtures.screens.generateScreen(roleArray[role])
       )
     }
@@ -41,7 +41,7 @@ describe("Internal API - /screens endpoints", () => {
     await config.createApp()
 
     // Create Screen
-    const [screenResponse, screen] = await config.api.screens.create(
+    const [, screen] = await config.api.screens.create(
       fixtures.screens.generateScreen("BASIC")
     )
 

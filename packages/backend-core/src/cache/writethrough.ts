@@ -43,7 +43,7 @@ async function put(
     cacheItem = await cache.get(makeCacheKey(db, key))
   }
   const updateDb = !cacheItem || cacheItem.lastWrite < Date.now() - writeRateMs
-  let output = doc
+  const output = doc
   if (updateDb) {
     const lockResponse = await locks.doWithLock(
       {

@@ -382,15 +382,13 @@ describe("scim", () => {
           { expect: 200 }
         )
 
-        const expectedScimUser: ScimUserResponse = {
+        expect(res).toEqual({
           schemas: ["urn:ietf:params:scim:schemas:core:2.0:User"],
           id: internalUser._id!,
           externalId: scimUserRequest.externalId,
           meta: {
             resourceType: "User",
-            // @ts-ignore
             created: mocks.date.MOCK_DATE.toISOString(),
-            // @ts-ignore
             lastModified: mocks.date.MOCK_DATE.toISOString(),
           },
           userName: scimUserData.username,
@@ -407,9 +405,7 @@ describe("scim", () => {
               primary: true,
             },
           ],
-        }
-
-        expect(res).toEqual(expectedScimUser)
+        })
       })
 
       it("a user cannot be SCIM synchronised with another SCIM user", async () => {
@@ -704,6 +700,7 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, ...groupData } = g
                 return groupData
               })
@@ -723,6 +720,7 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, displayName, ...groupData } = g
                 return groupData
               })
@@ -872,6 +870,7 @@ describe("scim", () => {
           qs: "excludedAttributes=members",
         })
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { members, ...expectedResponse } = group
 
         expect(response).toEqual(expectedResponse)

@@ -63,7 +63,7 @@ export function logErrorToFile(file: string, error: string) {
 
 export function parseEnv(env: string) {
   const lines = env.toString().split("\n")
-  let result: Record<string, string> = {}
+  const result: Record<string, string> = {}
   for (const line of lines) {
     const match = line.match(/^([^=:#]+?)[=:](.*)/)
     if (match) {
@@ -86,14 +86,14 @@ export function checkSlashesInUrl(url: string) {
 export function moveDirectory(oldPath: string, newPath: string) {
   const files = fs.readdirSync(oldPath)
   // check any file exists already
-  for (let file of files) {
+  for (const file of files) {
     if (fs.existsSync(join(newPath, file))) {
       throw new Error(
         "Unable to remove top level directory - some skeleton files already exist."
       )
     }
   }
-  for (let file of files) {
+  for (const file of files) {
     fs.renameSync(join(oldPath, file), join(newPath, file))
   }
   fs.rmdirSync(oldPath)
@@ -105,7 +105,7 @@ export function capitaliseFirstLetter(str: string) {
 
 export function stringifyToDotEnv(json: Record<string, string | number>) {
   let str = ""
-  for (let [key, value] of Object.entries(json)) {
+  for (const [key, value] of Object.entries(json)) {
     str += `${key}=${value}\n`
   }
   return str

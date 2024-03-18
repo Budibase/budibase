@@ -20,8 +20,8 @@ const mockUploadDirectory = objectStore.uploadDirectory as jest.Mock
 const mockDeleteFolder = objectStore.deleteFolder as jest.Mock
 
 describe("/plugins", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
@@ -49,7 +49,7 @@ describe("/plugins", () => {
 
   describe("upload", () => {
     it("should be able to upload a plugin", async () => {
-      let res = await createPlugin()
+      const res = await createPlugin()
       expect(res.body).toBeDefined()
       expect(res.body.plugins).toBeDefined()
       expect(res.body.plugins[0]._id).toEqual("plg_comment-box")
@@ -60,7 +60,7 @@ describe("/plugins", () => {
       mockUploadDirectory.mockImplementationOnce(() => {
         throw new Error()
       })
-      let res = await createPlugin(400)
+      const res = await createPlugin(400)
       expect(res.body.message).toEqual("Failed to import plugin: Error")
       expect(events.plugin.imported).toHaveBeenCalledTimes(0)
     })

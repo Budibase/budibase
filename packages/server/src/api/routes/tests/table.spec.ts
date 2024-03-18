@@ -29,8 +29,8 @@ const { basicTable } = setup.structures
 const ISO_REGEX_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
 describe("/tables", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
   let appId: string
 
   afterAll(setup.afterAll)
@@ -667,7 +667,7 @@ describe("/tables", () => {
         },
       })
 
-      let testRow = await config.api.row.save(table._id!, {})
+      const testRow = await config.api.row.save(table._id!, {})
 
       await Promise.all(
         users.map(u =>

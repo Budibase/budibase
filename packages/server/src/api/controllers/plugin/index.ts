@@ -12,9 +12,9 @@ export async function upload(ctx: any) {
       ? Array.from(ctx.request.files.file)
       : [ctx.request.files.file]
   try {
-    let docs = []
+    const docs = []
     // can do single or multiple plugins
-    for (let plugin of plugins) {
+    for (const plugin of plugins) {
       const doc = await sdk.plugins.processUploaded(plugin, PluginSource.FILE)
       docs.push(doc)
     }
@@ -36,7 +36,7 @@ export async function create(ctx: any) {
     let metadata
     let directory
     // Generating random name as a backup and needed for url
-    let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
+    const name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
     switch (source) {
       case PluginSource.NPM:

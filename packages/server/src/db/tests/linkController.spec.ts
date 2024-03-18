@@ -50,7 +50,7 @@ function mockOneToManyColumn(): OneToManyRelationshipFieldMetadata {
 }
 
 describe("test the link controller", () => {
-  let config = new TestConfig()
+  const config = new TestConfig()
   let table1: Table, table2: Table, appId: string
 
   beforeAll(async () => {
@@ -161,7 +161,7 @@ describe("test the link controller", () => {
       // get initial count
       const beforeLinks = await controller.getRowLinkDocs(row._id!)
       await controller.rowDeleted()
-      let afterLinks = await controller.getRowLinkDocs(row._id!)
+      const afterLinks = await controller.getRowLinkDocs(row._id!)
       expect(beforeLinks.length).toEqual(1)
       expect(afterLinks.length).toEqual(0)
     })
@@ -211,7 +211,7 @@ describe("test the link controller", () => {
     const controller = await createLinkController(table1, row)
     await context.doInAppContext(appId, async () => {
       await controller.rowSaved()
-      let links = await controller.getRowLinkDocs(row._id!)
+      const links = await controller.getRowLinkDocs(row._id!)
       expect(links.length).toEqual(0)
     })
   })
@@ -220,9 +220,9 @@ describe("test the link controller", () => {
     await createLinkedRow()
     const controller = await createLinkController(table1)
     await context.doInAppContext(appId, async () => {
-      let before = await controller.getTableLinkDocs()
+      const before = await controller.getTableLinkDocs()
       await controller.tableDeleted()
-      let after = await controller.getTableLinkDocs()
+      const after = await controller.getTableLinkDocs()
       expect(before.length).toEqual(1)
       expect(after.length).toEqual(0)
     })
@@ -233,9 +233,9 @@ describe("test the link controller", () => {
     await createLinkedRow("link2")
     const controller = await createLinkController(table1, undefined, table1)
     await context.doInAppContext(appId, async () => {
-      let before = await controller.getTableLinkDocs()
+      const before = await controller.getTableLinkDocs()
       await controller.removeFieldFromTable("link")
-      let after = await controller.getTableLinkDocs()
+      const after = await controller.getTableLinkDocs()
       expect(before.length).toEqual(2)
       // shouldn't delete the other field
       expect(after.length).toEqual(1)
@@ -334,9 +334,9 @@ describe("test the link controller", () => {
     linkSchema.tableId = "not_found"
     const controller = await createLinkController(table1, undefined, table1)
     await context.doInAppContext(appId, async () => {
-      let before = await controller.getTableLinkDocs()
+      const before = await controller.getTableLinkDocs()
       await controller.removeFieldFromTable("link")
-      let after = await controller.getTableLinkDocs()
+      const after = await controller.getTableLinkDocs()
       expect(before.length).toEqual(2)
       // shouldn't delete the other field
       expect(after.length).toEqual(1)

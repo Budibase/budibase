@@ -13,7 +13,7 @@ module ArangoMock {
   arangodb.aql = (strings, ...args) => {
     let str = strings.join("{}")
 
-    for (let arg of args) {
+    for (const arg of args) {
       str = str.replace("{}", arg)
     }
 

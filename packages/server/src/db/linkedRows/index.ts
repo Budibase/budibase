@@ -40,7 +40,7 @@ export const EventType = {
 }
 
 function clearRelationshipFields(table: Table, rows: Row[]) {
-  for (let [key, field] of Object.entries(table.schema)) {
+  for (const [key, field] of Object.entries(table.schema)) {
     if (field.type === FieldType.LINK) {
       rows = rows.map(row => {
         delete row[key]
@@ -79,7 +79,7 @@ async function getFullLinkedDocs(links: LinkDocumentValue[]) {
   const db = context.getAppDB()
   const linkedRowIds = links.map(link => link.id)
   const uniqueRowIds = [...new Set(linkedRowIds)]
-  let dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
+  const dbRows = await db.getMultiple<Row>(uniqueRowIds, { allowMissing: true })
   // convert the unique db rows back to a full list of linked rows
   const linked = linkedRowIds
     .map(id => dbRows.find(row => row && row._id === id))
@@ -116,7 +116,7 @@ export async function updateLinks(args: {
   if (tableId == null && table != null) {
     args.tableId = table._id!
   }
-  let linkController = new LinkController(args)
+  const linkController = new LinkController(args)
   try {
     if (
       !(await linkController.doesTableHaveLinkedFields(table)) &&
@@ -163,7 +163,7 @@ export async function attachFullLinkedDocs(
     return rows
   }
   // get tables and links
-  let response = await Promise.all([
+  const response = await Promise.all([
     getLinksForRows(rows),
     sdk.tables.getTables(linkedTableIds),
   ])
@@ -184,8 +184,8 @@ export async function attachFullLinkedDocs(
   if (linksWithoutFromRow.length > 0) {
     linked = await getFullLinkedDocs(linksWithoutFromRow)
   }
-  for (let row of rows) {
-    for (let link of links.filter(link => link.thisId === row._id)) {
+  for (const row of rows) {
+    for (const link of links.filter(link => link.thisId === row._id)) {
       if (row[link.fieldName] == null) {
         row[link.fieldName] = []
       }
@@ -224,16 +224,16 @@ export async function squashLinksToPrimaryDisplay(
   // will populate this as we find them
   const linkedTables = [table]
   const isArray = Array.isArray(enriched)
-  let enrichedArray = !isArray ? [enriched] : enriched
-  for (let row of enrichedArray) {
+  const enrichedArray = !isArray ? [enriched] : enriched
+  for (const row of enrichedArray) {
     // this only fetches the table if its not already in array
     const rowTable = await getLinkedTable(row.tableId!, linkedTables)
-    for (let [column, schema] of Object.entries(rowTable?.schema || {})) {
+    for (const [column, schema] of Object.entries(rowTable?.schema || {})) {
       if (schema.type !== FieldType.LINK || !Array.isArray(row[column])) {
         continue
       }
       const newLinks = []
-      for (let link of row[column]) {
+      for (const link of row[column]) {
         const linkTblId = link.tableId || getRelatedTableForField(table, column)
         const linkedTable = await getLinkedTable(linkTblId!, linkedTables)
         const obj: any = { _id: link._id }

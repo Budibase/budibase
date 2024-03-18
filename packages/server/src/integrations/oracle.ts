@@ -325,8 +325,8 @@ class OracleIntegration extends Sql implements DatasourcePlus {
         })
     })
 
-    let externalTables = finaliseExternalTables(tables, entities)
-    let errors = checkExternalTables(externalTables)
+    const externalTables = finaliseExternalTables(tables, entities)
+    const errors = checkExternalTables(externalTables)
     return { tables: externalTables, errors }
   }
 
@@ -427,7 +427,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
-      for (let query of input) {
+      for (const query of input) {
         responses.push(await this.internalQuery(query))
       }
       return responses

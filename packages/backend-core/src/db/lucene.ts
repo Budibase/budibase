@@ -261,7 +261,7 @@ export class QueryBuilder<T> {
 
   isMultiCondition() {
     let count = 0
-    for (let filters of Object.values(this.#query)) {
+    for (const filters of Object.values(this.#query)) {
       // not contains is one massive filter in allOr mode
       if (typeof filters === "object") {
         count += Object.keys(filters).length
@@ -272,7 +272,7 @@ export class QueryBuilder<T> {
 
   compressFilters(filters: Record<string, string[]>) {
     const compressed: typeof filters = {}
-    for (let key of Object.keys(filters)) {
+    for (const key of Object.keys(filters)) {
       const finalKey = removeKeyNumbering(key)
       if (compressed[finalKey]) {
         compressed[finalKey] = compressed[finalKey].concat(filters[key])
@@ -283,7 +283,7 @@ export class QueryBuilder<T> {
     // add prefixes back
     const final: typeof filters = {}
     let count = 1
-    for (let [key, value] of Object.entries(compressed)) {
+    for (const [key, value] of Object.entries(compressed)) {
       final[`${count++}:${key}`] = value
     }
     return final
@@ -380,7 +380,7 @@ export class QueryBuilder<T> {
         key = builder.preprocess(builder.handleSpaces(key), {
           escape: true,
         })
-        let expression = queryFn(key, value)
+        const expression = queryFn(key, value)
         if (expression == null) {
           continue
         }
@@ -485,7 +485,7 @@ export class QueryBuilder<T> {
   }
 
   buildSearchBody() {
-    let body: any = {
+    const body: any = {
       q: this.buildSearchQuery(),
       limit: Math.min(this.#limit, QueryBuilder.maxLimit),
       include_docs: this.#includeDocs,
@@ -579,7 +579,7 @@ async function runQuery<T>(
   }
   const json = await response.json()
 
-  let output: SearchResponse<T> = {
+  const output: SearchResponse<T> = {
     rows: [],
     totalRows: 0,
   }

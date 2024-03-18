@@ -23,7 +23,7 @@ export async function saveTable(table: Table): Promise<Table> {
     resp = await db.put(table)
   }
 
-  let tableClone = cloneDeep(table)
+  const tableClone = cloneDeep(table)
   tableClone._rev = resp.rev
   return tableClone
 }

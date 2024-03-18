@@ -33,7 +33,7 @@ export async function runInProd(fn: any) {
 
 export async function runStep(stepId: string, inputs: any, stepContext?: any) {
   async function run() {
-    let step = await getAction(stepId)
+    const step = await getAction(stepId)
     expect(step).toBeDefined()
     if (!step) {
       throw new Error("No step found")

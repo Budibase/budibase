@@ -195,7 +195,7 @@ class S3Integration implements IntegrationBase {
       acl: string
     }
   }) {
-    let params: any = {
+    const params: any = {
       Bucket: query.bucket,
       ACL: query.extra?.acl,
       GrantFullControl: query.grantFullControl,

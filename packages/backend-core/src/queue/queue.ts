@@ -19,7 +19,7 @@ let QUEUES: BullQueue.Queue[] | InMemoryQueue[] = []
 let cleanupInterval: NodeJS.Timeout
 
 async function cleanup() {
-  for (let queue of QUEUES) {
+  for (const queue of QUEUES) {
     await queue.clean(CLEANUP_PERIOD_MS, "completed")
   }
 }
@@ -67,7 +67,7 @@ export async function shutdown() {
     timers.clear(cleanupInterval)
   }
   if (QUEUES.length) {
-    for (let queue of QUEUES) {
+    for (const queue of QUEUES) {
       await queue.close()
     }
     QUEUES = []

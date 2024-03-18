@@ -102,7 +102,7 @@ export default class AccountAPI extends BaseAPI {
     opts: APIRequestOpts = { status: 200 }
   ): Promise<[Response, SearchAccountsResponse]> {
     return this.doRequest(() => {
-      let body: SearchAccountsRequest = {}
+      const body: SearchAccountsRequest = {}
       if (search === "email") {
         body.email = searchType
       } else if (search === "tenantId") {

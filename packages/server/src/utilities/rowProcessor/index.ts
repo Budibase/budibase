@@ -44,9 +44,9 @@ export function processAutoColumn(
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let noUser = !userId
-  let isUserTable = table._id === InternalTables.USER_METADATA
-  let now = new Date().toISOString()
+  const noUser = !userId
+  const isUserTable = table._id === InternalTables.USER_METADATA
+  const now = new Date().toISOString()
   // if a row doesn't have a revision then it doesn't exist yet
   const creating = !row._rev
   // check its not user table, or whether any of the processing options have been disabled
@@ -127,10 +127,10 @@ export async function inputProcessing(
   row: Row,
   opts?: AutoColumnProcessingOpts
 ) {
-  let clonedRow = cloneDeep(row)
+  const clonedRow = cloneDeep(row)
 
   const dontCleanseKeys = ["type", "_id", "_rev", "tableId"]
-  for (let [key, value] of Object.entries(clonedRow)) {
+  for (const [key, value] of Object.entries(clonedRow)) {
     const field = table.schema[key]
     // cleanse fields that aren't in the schema
     if (!field) {
@@ -219,9 +219,9 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
 
   // process complex types: attachements, bb references...
-  for (let [property, column] of Object.entries(table.schema)) {
+  for (const [property, column] of Object.entries(table.schema)) {
     if (column.type === FieldType.ATTACHMENT) {
-      for (let row of enriched) {
+      for (const row of enriched) {
         if (row[property] == null || !Array.isArray(row[property])) {
           continue
         }
@@ -235,7 +235,7 @@ export async function outputProcessing<T extends Row[] | Row>(
       !opts.skipBBReferences &&
       column.type == FieldType.BB_REFERENCE
     ) {
-      for (let row of enriched) {
+      for (const row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
           column.subtype as FieldSubtype
@@ -255,8 +255,8 @@ export async function outputProcessing<T extends Row[] | Row>(
   }
   // remove null properties to match internal API
   if (isExternalTableID(table._id!)) {
-    for (let row of enriched) {
-      for (let key of Object.keys(row)) {
+    for (const row of enriched) {
+      for (const key of Object.keys(row)) {
         if (row[key] === null) {
           delete row[key]
         }

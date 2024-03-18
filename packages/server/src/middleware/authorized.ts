@@ -121,7 +121,7 @@ const authorized =
         (await sdk.permissions.getResourcePerms(subResourceId))
 
       function getPermLevel(permLevel: string) {
-        let result: string[] = []
+        const result: string[] = []
         if (permissions[permLevel]) {
           result.push(permissions[permLevel].role)
         }

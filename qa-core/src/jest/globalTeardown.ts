@@ -8,7 +8,7 @@ const internalApi = new BudibaseInternalAPI({})
 const API_OPTS: APIRequestOpts = { doExpect: false }
 
 async function deleteAccount() {
-  // @ts-ignore
+  // @ts-expect-error - global has no index signature
   const accountID = global.qa.accountId
 
   const [response] = await accountsApi.accounts.delete(accountID, {

@@ -11,7 +11,7 @@ function resetQuotasIfRequired(quota: { quotaReset: number; usageQuota: any }) {
   // Check if the quota needs reset
   if (Date.now() >= quota.quotaReset) {
     quota.quotaReset = getNewQuotaReset()
-    for (let prop of Object.keys(quota.usageQuota)) {
+    for (const prop of Object.keys(quota.usageQuota)) {
       quota.usageQuota[prop] = 0
     }
   }

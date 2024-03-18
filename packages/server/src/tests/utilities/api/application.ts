@@ -76,7 +76,7 @@ export class ApplicationAPI extends TestAPI {
     fields: object,
     expectations?: Expectations
   ): Promise<DuplicateAppResponse> => {
-    let headers = {
+    const headers = {
       ...this.config.defaultHeaders(),
       [constants.Header.APP_ID]: appId,
     }

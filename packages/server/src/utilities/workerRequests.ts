@@ -37,7 +37,7 @@ export function createRequest(request: Request): RequestInit {
   } else if (ctx && ctx.headers) {
     // copy all Budibase utilised headers over - copying everything can have
     // side effects like requests being rejected due to odd content types etc
-    for (let header of Object.values(constants.Header)) {
+    for (const header of Object.values(constants.Header)) {
       const value = ctx.headers[header]
       if (value === undefined) {
         continue

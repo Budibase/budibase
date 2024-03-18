@@ -180,7 +180,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     super(SqlClient.POSTGRES)
     this.config = config
 
-    let newConfig: ClientConfig = {
+    const newConfig: ClientConfig = {
       ...this.config,
       ssl: this.config.ssl
         ? {
@@ -262,7 +262,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     if (query && query.sql) {
       const matches = query.sql.match(JSON_REGEX)
       if (matches && matches.length > 0) {
-        for (let match of matches) {
+        for (const match of matches) {
           const escaped = escapeDangerousCharacters(match)
           query.sql = query.sql.replace(match, escaped)
         }
@@ -274,7 +274,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       return await client.query(query.sql, bindings)
     } catch (err: any) {
       await this.closeConnection()
-      let readableMessage = getReadableErrorMessage(
+      const readableMessage = getReadableErrorMessage(
         SourceName.POSTGRES,
         err.code
       )
@@ -305,7 +305,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
       const primaryKeysResponse = await this.client.query(
         this.PRIMARY_KEYS_SQL()
       )
-      for (let table of primaryKeysResponse.rows) {
+      for (const table of primaryKeysResponse.rows) {
         const tableName = table.table_name
         if (!tableKeys[tableName]) {
           tableKeys[tableName] = []
@@ -338,7 +338,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
         return acc
       }, {})
 
-      for (let column of columnsResponse.rows) {
+      for (const column of columnsResponse.rows) {
         const tableName: string = column.table_name
         const columnName: string = column.column_name
 
@@ -425,7 +425,7 @@ class PostgresIntegration extends Sql implements DatasourcePlus {
     const input = this._query(json) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
-      for (let query of input) {
+      for (const query of input) {
         responses.push(await this.internalQuery(query, false))
       }
       await this.closeConnection()

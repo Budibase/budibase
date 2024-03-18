@@ -38,7 +38,7 @@ describe("Accounts", () => {
       await config.loginAsAccount(createAccountRequest, { status: 400 })
 
       // Re-send verification email to get access to code
-      const [_, code] = await config.accountsApi.accounts.sendVerificationEmail(
+      const [, code] = await config.accountsApi.accounts.sendVerificationEmail(
         email
       )
 
@@ -52,7 +52,7 @@ describe("Accounts", () => {
       await config.loginAsAccount(createAccountRequest)
 
       // Verify self response matches account
-      const [selfRes, selfBody] = await config.api.accounts.self()
+      const [, selfBody] = await config.api.accounts.self()
       expect(selfBody.email).toBe(email)
 
       // Delete account
@@ -68,14 +68,14 @@ describe("Accounts", () => {
       const tenantId = generator.string()
 
       // Empty result
-      const [_, emptyBody] = await config.api.accounts.search(
+      const [, emptyBody] = await config.api.accounts.search(
         tenantId,
         "tenantId"
       )
       expect(emptyBody.length).toBe(0)
 
       // Hit result
-      const [hitRes, hitBody] = await config.api.accounts.search(
+      const [, hitBody] = await config.api.accounts.search(
         config.state.tenantId!,
         "tenantId"
       )
@@ -87,11 +87,11 @@ describe("Accounts", () => {
       const email = generator.email({ domain: "example.com" })
 
       // Empty result
-      const [_, emptyBody] = await config.api.accounts.search(email, "email")
+      const [, emptyBody] = await config.api.accounts.search(email, "email")
       expect(emptyBody.length).toBe(0)
 
       // Hit result
-      const [hitRes, hitBody] = await config.api.accounts.search(
+      const [, hitBody] = await config.api.accounts.search(
         config.state.email!,
         "email"
       )

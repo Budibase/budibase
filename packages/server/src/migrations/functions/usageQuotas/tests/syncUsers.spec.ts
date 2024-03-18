@@ -3,7 +3,7 @@ import * as syncUsers from "../syncUsers"
 import { quotas } from "@budibase/pro"
 
 describe("syncUsers", () => {
-  let config = new TestConfig(false)
+  const config = new TestConfig(false)
 
   beforeEach(async () => {
     await config.init()

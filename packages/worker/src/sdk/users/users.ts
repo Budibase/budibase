@@ -21,7 +21,7 @@ export async function invite(
   const newUsers: InviteUserRequest[] = []
 
   // separate duplicates from new users
-  for (let user of users) {
+  for (const user of users) {
     if (matchedEmails.includes(user.email)) {
       // This "Unavailable" is load bearing. The tests and frontend both check for it
       // specifically
@@ -35,7 +35,7 @@ export async function invite(
 
   // send the emails for new users
   const tenantId = tenancy.getTenantId()
-  for (let user of users) {
+  for (const user of users) {
     try {
       let userInfo = user.userInfo
       if (!userInfo) {

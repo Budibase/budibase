@@ -70,7 +70,7 @@ export async function save(
   table = await tableSaveFunctions.mid(table, renaming)
 
   // update schema of non-statistics views when new columns are added
-  for (let view in table.views) {
+  for (const view in table.views) {
     const tableView = table.views[view]
     if (!tableView) continue
 

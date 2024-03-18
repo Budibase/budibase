@@ -22,7 +22,7 @@ const setup = require("./utilities")
 
 describe("test the outgoing webhook action", () => {
   let inputs
-  let config = setup.getConfig()
+  const config = setup.getConfig()
   beforeAll(async () => {
     await config.init()
   })
@@ -52,7 +52,7 @@ describe("test the outgoing webhook action", () => {
       addInvite: true,
       ...invite,
     }
-    let resp = generateResponse(inputs.to, inputs.from)
+    const resp = generateResponse(inputs.to, inputs.from)
     const res = await setup.runStep(
       setup.actions.SEND_EMAIL_SMTP.stepId,
       inputs

@@ -8,7 +8,7 @@ const DEFAULT_TEMPLATES_BUCKET =
   "prod-budi-templates.s3-eu-west-1.amazonaws.com"
 
 export async function fetch(ctx: BBContext) {
-  let type = env.TEMPLATE_REPOSITORY
+  const type = env.TEMPLATE_REPOSITORY
   let response,
     error = false
   try {

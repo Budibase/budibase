@@ -171,7 +171,7 @@ export async function exportView(ctx: Ctx) {
   }
 
   await fetchView(ctx)
-  let rows = ctx.body as Row[]
+  const rows = ctx.body as Row[]
 
   let schema: TableSchema = view && view.meta && view.meta.schema
   const tableId =
@@ -183,7 +183,7 @@ export async function exportView(ctx: Ctx) {
     schema = table.schema
   }
 
-  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, [])
+  const exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, [])
 
   if (format === Format.CSV) {
     ctx.attachment(`${viewName}.csv`)

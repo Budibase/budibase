@@ -208,7 +208,7 @@ export class BaseSocket {
 
     // Store in redis
     // @ts-ignore
-    let user: SocketSession = socket.data
+    const user: SocketSession = socket.data
     const { sessionId } = user
     const key = this.getSessionKey(sessionId)
     await this.redisClient?.store(key, user, SocketSessionTTL)
@@ -226,7 +226,7 @@ export class BaseSocket {
   // Disconnects a socket from its current room
   async leaveRoom(socket: Socket) {
     // @ts-ignore
-    let user: SocketSession = socket.data
+    const user: SocketSession = socket.data
     const { room, sessionId } = user
     if (!room) {
       return
@@ -284,7 +284,7 @@ export class BaseSocket {
     payload: any,
     options?: EmitOptions
   ) {
-    let emitPayload = { ...payload }
+    const emitPayload = { ...payload }
     if (!options?.includeOriginator) {
       emitPayload.apiSessionId = ctx.headers?.[Header.SESSION_ID]
     }

@@ -79,7 +79,7 @@ async function initDeployedApp(prodAppId: any) {
   await clearMetadata()
   const { count } = await disableAllCrons(prodAppId)
   const promises = []
-  for (let automation of automations) {
+  for (const automation of automations) {
     promises.push(enableCronTrigger(prodAppId, automation))
   }
   const results = await Promise.all(promises)

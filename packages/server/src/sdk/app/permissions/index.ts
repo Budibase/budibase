@@ -77,16 +77,16 @@ export async function getResourcePerms(
 ): Promise<ResourcePermissions> {
   const rolesList = await roles.getAllRoles()
 
-  let permissions: ResourcePermissions = {}
+  const permissions: ResourcePermissions = {}
 
   const permsToInherit = await getInheritablePermissions(resourceId)
 
   const allowsExplicitPerm = (await allowsExplicitPermissions(resourceId))
     .allowed
 
-  for (let level of CURRENTLY_SUPPORTED_LEVELS) {
+  for (const level of CURRENTLY_SUPPORTED_LEVELS) {
     // update the various roleIds in the resource permissions
-    for (let role of rolesList) {
+    for (const role of rolesList) {
       const rolePerms = allowsExplicitPerm
         ? roles.checkForRoleResourceArray(role.permissions || {}, resourceId)
         : {}

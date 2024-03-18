@@ -45,7 +45,7 @@ const _import = async (ctx: UserCtx) => {
   if (!body.datasourceId) {
     // construct new datasource
     const info: any = await importer.getInfo()
-    let datasource = {
+    const datasource = {
       type: "datasource",
       source: "REST",
       config: {
@@ -115,7 +115,7 @@ function getOAuthConfigCookieId(ctx: UserCtx) {
 
 function getAuthConfig(ctx: UserCtx) {
   const authCookie = utils.getCookie<SessionCookie>(ctx, constants.Cookie.Auth)
-  let authConfigCtx: any = {}
+  const authConfigCtx: any = {}
   authConfigCtx["configId"] = getOAuthConfigCookieId(ctx)
   authConfigCtx["sessionId"] = authCookie ? authCookie.sessionId : null
   return authConfigCtx
@@ -128,7 +128,7 @@ function enrichParameters(
   [key: string]: string
 } {
   // make sure parameters are fully enriched with defaults
-  for (let parameter of queryParameters) {
+  for (const parameter of queryParameters) {
     if (!requestParameters[parameter.name]) {
       requestParameters[parameter.name] = parameter.default
     }
@@ -212,7 +212,7 @@ export async function preview(
     key: string,
     fieldArray: any[]
   ) {
-    let schema: { [key: string]: any } = {}
+    const schema: { [key: string]: any } = {}
     // build the schema by aggregating all row objects in the array
     for (const item of fieldArray) {
       if (JsonUtils.hasSchema(item)) {
@@ -238,7 +238,7 @@ export async function preview(
       [key: string]: Record<string, string | QuerySchema>
     } = {}
     if (rows?.length > 0) {
-      for (let key of new Set(keys)) {
+      for (const key of new Set(keys)) {
         const fieldMetadata = getFieldMetadata(rows[0][key], key)
         previewSchema[key] = fieldMetadata
         if (
@@ -275,7 +275,7 @@ export async function preview(
 
     // if existing schema, update to include any previous schema keys
     if (existingSchema) {
-      for (let key of Object.keys(previewSchema)) {
+      for (const key of Object.keys(previewSchema)) {
         if (existingSchema[key]) {
           previewSchema[key] = existingSchema[key]
         }

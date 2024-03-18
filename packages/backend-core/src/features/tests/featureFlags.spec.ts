@@ -13,7 +13,7 @@ describe("featureFlags", () => {
   })
 
   it("Should return no flags when the TENANT_FEATURE_FLAG is empty", async () => {
-    let features = buildFeatureFlags()
+    const features = buildFeatureFlags()
     expect(features).toBeUndefined()
   })
 
@@ -29,7 +29,7 @@ describe("featureFlags", () => {
       tenant2: [USER_GROUPS],
     }
 
-    let features = buildFeatureFlags()
+    const features = buildFeatureFlags()
 
     expect(features).toBeDefined()
     expect(features).toEqual(parsedFlags)
@@ -41,8 +41,8 @@ describe("featureFlags", () => {
       `*:${LICENSING},*:${USER_GROUPS},tenant1:${ONBOARDING_TOUR}`
     )
 
-    let tenant1Flags = getTenantFeatureFlags("tenant1")
-    let tenant2Flags = getTenantFeatureFlags("tenant2")
+    const tenant1Flags = getTenantFeatureFlags("tenant1")
+    const tenant2Flags = getTenantFeatureFlags("tenant2")
 
     expect(tenant1Flags).toBeDefined()
     expect(tenant1Flags).toEqual([LICENSING, USER_GROUPS, ONBOARDING_TOUR])
@@ -58,8 +58,8 @@ it("Should exclude tenant1 from global feature flag", async () => {
     `*:${LICENSING},*:${ONBOARDING_TOUR},tenant1:!${ONBOARDING_TOUR}`
   )
 
-  let tenant1Flags = getTenantFeatureFlags("tenant1")
-  let tenant2Flags = getTenantFeatureFlags("tenant2")
+  const tenant1Flags = getTenantFeatureFlags("tenant1")
+  const tenant2Flags = getTenantFeatureFlags("tenant2")
 
   expect(tenant1Flags).toBeDefined()
   expect(tenant1Flags).toEqual([LICENSING])
@@ -74,8 +74,8 @@ it("Should explicitly add flags to configured tenants only", async () => {
     `tenant1:${ONBOARDING_TOUR},tenant1:${LICENSING},tenant2:${LICENSING}`
   )
 
-  let tenant1Flags = getTenantFeatureFlags("tenant1")
-  let tenant2Flags = getTenantFeatureFlags("tenant2")
+  const tenant1Flags = getTenantFeatureFlags("tenant1")
+  const tenant2Flags = getTenantFeatureFlags("tenant2")
 
   expect(tenant1Flags).toBeDefined()
   expect(tenant1Flags).toEqual([ONBOARDING_TOUR, LICENSING])

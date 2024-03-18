@@ -22,7 +22,7 @@ async function syncUsersToApp(
   }
   await context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
-    for (let user of users) {
+    for (const user of users) {
       let ctxUser = user as ContextUser
       let deletedUser = false
       const metadataId = generateUserMetadataID(user._id!)
@@ -70,7 +70,7 @@ async function syncUsersToApp(
         metadata.roleId = roleId
       }
 
-      let combined = sdk.users.combineMetadataAndUser(ctxUser, metadata)
+      const combined = sdk.users.combineMetadataAndUser(ctxUser, metadata)
       // if no combined returned, there are no updates to make
       if (combined) {
         await db.put(combined)
@@ -84,7 +84,7 @@ export async function syncUsersToAllApps(userIds: string[]) {
   const users = await getRawGlobalUsers(userIds)
   const groups = await proSdk.groups.fetch()
   const finalUsers: (User | DeletedUser)[] = []
-  for (let userId of userIds) {
+  for (const userId of userIds) {
     const user = users.find(user => user._id === userId)
     if (!user) {
       finalUsers.push({ _id: userId, deleted: true })
@@ -93,10 +93,10 @@ export async function syncUsersToAllApps(userIds: string[]) {
     }
   }
   const devAppIds = await dbCore.getDevAppIDs()
-  let promises = []
-  for (let devAppId of devAppIds) {
+  const promises = []
+  for (const devAppId of devAppIds) {
     const prodAppId = dbCore.getProdAppID(devAppId)
-    for (let appId of [prodAppId, devAppId]) {
+    for (const appId of [prodAppId, devAppId]) {
       promises.push(syncUsersToApp(appId, finalUsers, groups))
     }
   }

@@ -33,7 +33,7 @@ export class AttachmentCleanup {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
       const tableSchema = opts.oldTable?.schema || table.schema
-      for (let [key, schema] of Object.entries(tableSchema)) {
+      for (const [key, schema] of Object.entries(tableSchema)) {
         if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }
@@ -67,7 +67,7 @@ export class AttachmentCleanup {
   static async rowDelete(table: Table, rows: Row[]) {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
-      for (let [key, schema] of Object.entries(table.schema)) {
+      for (const [key, schema] of Object.entries(table.schema)) {
         if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }
@@ -87,7 +87,7 @@ export class AttachmentCleanup {
   static rowUpdate(table: Table, opts: { row: Row; oldRow: Row }) {
     return AttachmentCleanup.coreCleanup(() => {
       let files: string[] = []
-      for (let [key, schema] of Object.entries(table.schema)) {
+      for (const [key, schema] of Object.entries(table.schema)) {
         if (schema.type !== FieldType.ATTACHMENT) {
           continue
         }

@@ -53,18 +53,18 @@ function cleanAutomationInputs(automation: Automation) {
   if (automation == null) {
     return automation
   }
-  let steps = automation.definition.steps
-  let trigger = automation.definition.trigger
-  let allSteps = [...steps, trigger]
+  const steps = automation.definition.steps
+  const trigger = automation.definition.trigger
+  const allSteps = [...steps, trigger]
   // live is not a property used anymore
   if (automation.live != null) {
     delete automation.live
   }
-  for (let step of allSteps) {
+  for (const step of allSteps) {
     if (step == null) {
       continue
     }
-    for (let inputName of Object.keys(step.inputs)) {
+    for (const inputName of Object.keys(step.inputs)) {
       if (!step.inputs[inputName] || step.inputs[inputName] === "") {
         delete step.inputs[inputName]
       }
@@ -98,7 +98,7 @@ export async function create(
   })
   const response = await db.put(automation)
   await events.automation.created(automation)
-  for (let step of automation.definition.steps) {
+  for (const step of automation.definition.steps) {
     await events.automation.stepCreated(automation, step)
   }
   automation._rev = response.rev
@@ -133,13 +133,13 @@ export async function handleStepEvents(
 ) {
   // new steps
   const newSteps = getNewSteps(oldAutomation, automation)
-  for (let step of newSteps) {
+  for (const step of newSteps) {
     await events.automation.stepCreated(automation, step)
   }
 
   // old steps
   const deletedSteps = getDeletedSteps(oldAutomation, automation)
-  for (let step of deletedSteps) {
+  for (const step of deletedSteps) {
     await events.automation.stepDeleted(automation, step)
   }
 }
@@ -270,9 +270,9 @@ export async function getDefinitionList(ctx: UserCtx) {
 
 export async function trigger(ctx: UserCtx) {
   const db = context.getAppDB()
-  let automation = await db.get<Automation>(ctx.params.id)
+  const automation = await db.get<Automation>(ctx.params.id)
 
-  let hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
+  const hasCollectStep = sdk.automations.utils.checkForCollectStep(automation)
   if (hasCollectStep && (await features.isSyncAutomationsEnabled())) {
     const response: AutomationResults = await triggers.externalTrigger(
       automation,
@@ -285,7 +285,7 @@ export async function trigger(ctx: UserCtx) {
       { getResponses: true }
     )
 
-    let collectedValue = response.steps.find(
+    const collectedValue = response.steps.find(
       step => step.stepId === AutomationActionStepId.COLLECT
     )
     ctx.body = collectedValue?.outputs
@@ -317,7 +317,7 @@ function prepareTestInput(input: any) {
 
 export async function test(ctx: UserCtx) {
   const db = context.getAppDB()
-  let automation = await db.get<Automation>(ctx.params.id)
+  const automation = await db.get<Automation>(ctx.params.id)
   await setTestFlag(automation._id!)
   const testInput = prepareTestInput(ctx.request.body)
   const response = await triggers.externalTrigger(

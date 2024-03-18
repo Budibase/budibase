@@ -8,7 +8,7 @@ function getAppPairs(appIds: string[]) {
   // collect the app ids into dev / prod pairs
   // keyed by the dev app id
   const pairs: { [key: string]: { devId?: string; prodId?: string } } = {}
-  for (let appId of appIds) {
+  for (const appId of appIds) {
     const devId = dbCore.getDevelopmentAppID(appId)
     if (!pairs[devId]) {
       pairs[devId] = {}
@@ -33,7 +33,7 @@ async function getAppRows(appId: string) {
     return response.rows
       .map(r => r.id)
       .filter(id => {
-        for (let exclusion of ROW_EXCLUSIONS) {
+        for (const exclusion of ROW_EXCLUSIONS) {
           if (id.startsWith(exclusion)) {
             return false
           }
@@ -53,9 +53,9 @@ export async function getUniqueRows(appIds: string[]) {
     rowsByApp: { [key: string]: Row[] } = {}
   const pairs = getAppPairs(appIds)
 
-  for (let pair of Object.values(pairs)) {
+  for (const pair of Object.values(pairs)) {
     let appRows: Row[] = []
-    for (let appId of [pair.devId, pair.prodId]) {
+    for (const appId of [pair.devId, pair.prodId]) {
       if (!appId) {
         continue
       }

@@ -102,10 +102,10 @@ function typeCoercion(filters: SearchFilters, table: Table) {
   if (!filters || !table) {
     return filters
   }
-  for (let key of Object.keys(filters)) {
+  for (const key of Object.keys(filters)) {
     const searchParam = filters[key as keyof SearchFilters]
     if (typeof searchParam === "object") {
-      for (let [property, value] of Object.entries(searchParam)) {
+      for (const [property, value] of Object.entries(searchParam)) {
         // We need to strip numerical prefixes here, so that we can look up
         // the correct field name in the schema
         const columnName = dbCore.removeKeyNumbering(property)

@@ -35,7 +35,7 @@ export default class LicenseAPI extends BaseAPI {
     body: CreateOfflineLicenseRequest,
     opts: { status?: number } = {}
   ): Promise<Response> {
-    const [response, json] = await this.client.post(
+    const [response] = await this.client.post(
       `/api/internal/accounts/${accountId}/license/offline`,
       {
         body,
@@ -112,7 +112,7 @@ export default class LicenseAPI extends BaseAPI {
     accountId: string,
     opts: { status?: number } = {}
   ): Promise<Response> {
-    const [response, json] = await this.client.post(
+    const [response] = await this.client.post(
       `/api/accounts/${accountId}/license/refresh`,
       {
         internal: true,
@@ -131,9 +131,7 @@ export default class LicenseAPI extends BaseAPI {
   async licenseUsageTriggered(
     opts: { status?: number } = {}
   ): Promise<Response> {
-    const [response, json] = await this.client.post(
-      `/api/license/usage/triggered`
-    )
+    const [response] = await this.client.post(`/api/license/usage/triggered`)
     expect(response.status).toBe(opts.status ? opts.status : 201)
     return response
   }

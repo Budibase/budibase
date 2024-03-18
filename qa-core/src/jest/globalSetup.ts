@@ -11,14 +11,14 @@ const internalApi = new BudibaseInternalAPI({})
 
 const API_OPTS: APIRequestOpts = { doExpect: false }
 
-// @ts-ignore
+// @ts-expect-error - global has no index signature
 global.qa = {}
 
 async function createAccount(): Promise<[CreateAccountRequest, Account]> {
   const account = fixtures.accounts.generateAccount()
   await accountsApi.accounts.validateEmail(account.email, API_OPTS)
   await accountsApi.accounts.validateTenantId(account.tenantId, API_OPTS)
-  const [res, newAccount] = await accountsApi.accounts.create(account, {
+  const [, newAccount] = await accountsApi.accounts.create(account, {
     ...API_OPTS,
     autoVerify: true,
   })
@@ -63,25 +63,25 @@ async function loginAsAdmin() {
   const username = env.BB_ADMIN_USER_EMAIL!
   const password = env.BB_ADMIN_USER_PASSWORD!
   const tenantId = DEFAULT_TENANT_ID
-  const [res, cookie] = await internalApi.auth.login(
+  const [, cookie] = await internalApi.auth.login(
     tenantId,
     username,
     password,
     API_OPTS
   )
 
-  // @ts-ignore
+  // @ts-expect-error - global has no index signature
   global.qa.authCookie = cookie
 }
 
 async function loginAsAccount(account: CreateAccountRequest) {
-  const [res, cookie] = await accountsApi.auth.login(
+  const [, cookie] = await accountsApi.auth.login(
     account.email,
     account.password,
     API_OPTS
   )
 
-  // @ts-ignore
+  // @ts-expect-error - global has no index signature
   global.qa.authCookie = cookie
 }
 
@@ -93,20 +93,20 @@ async function setup() {
 
   if (env.multiTenancy) {
     const [account, newAccount] = await createAccount()
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     global.qa.tenantId = account.tenantId
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     global.qa.email = account.email
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     global.qa.accountId = newAccount.accountId
     await loginAsAccount(account)
   } else {
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     global.qa.tenantId = DEFAULT_TENANT_ID
     await loginAsAdmin()
   }
 
-  // @ts-ignore
+  // @ts-expect-error - global has no index signature
   console.log(`Tenant: ${global.qa.tenantId}`)
   console.log("GLOBAL SETUP COMPLETE")
 }

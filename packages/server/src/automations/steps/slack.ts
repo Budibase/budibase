@@ -55,7 +55,7 @@ export const definition: AutomationStepSchema = {
 }
 
 export async function run({ inputs }: AutomationStepInput) {
-  let { url, text } = inputs
+  const { url, text } = inputs
   if (!url?.trim()?.length) {
     return {
       httpStatus: 400,

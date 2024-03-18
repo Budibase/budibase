@@ -28,7 +28,7 @@ export async function number(question: string, defaultNumber?: number) {
     name: "number",
     message: question,
     validate: (value: string) => {
-      let valid = !isNaN(parseFloat(value))
+      const valid = !isNaN(parseFloat(value))
       return valid || "Please enter a number"
     },
     filter: Number,

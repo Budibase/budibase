@@ -4,7 +4,7 @@ describe("test the delete row action", () => {
   let table: any
   let row: any
   let inputs: any
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeEach(async () => {
     await config.init()

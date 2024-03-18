@@ -49,7 +49,7 @@ export default function (
     }
 
     // don't apply when the content type isn't supported
-    let contentType = ctx.get("content-type")
+    const contentType = ctx.get("content-type")
       ? ctx.get("content-type").toLowerCase()
       : ""
     if (

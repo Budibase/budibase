@@ -15,7 +15,7 @@ export async function errorHandling(ctx: any, next: any) {
       console.error(err)
     }
 
-    let error: APIError = {
+    const error: APIError = {
       message: err.message,
       status: status,
       validationErrors: err.validation,

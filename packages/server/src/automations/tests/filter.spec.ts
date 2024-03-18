@@ -8,7 +8,7 @@ describe("test the filter logic", () => {
     value: any,
     pass = true
   ) {
-    let res = await setup.runStep(setup.actions.FILTER.stepId, {
+    const res = await setup.runStep(setup.actions.FILTER.stepId, {
       field,
       condition,
       value,

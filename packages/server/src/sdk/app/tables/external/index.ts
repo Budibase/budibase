@@ -52,7 +52,7 @@ export async function save(
     throw new Error("A column type has changed.")
   }
 
-  for (let view in tableToSave.views) {
+  for (const view in tableToSave.views) {
     const tableView = tableToSave.views[view]
     if (!tableView || !viewSdk.isV2(tableView)) continue
 
@@ -78,7 +78,7 @@ export async function save(
   const extraTablesToUpdate = []
 
   // check if relations need setup
-  for (let schema of Object.values(tableToSave.schema)) {
+  for (const schema of Object.values(tableToSave.schema)) {
     if (schema.type !== FieldType.LINK || isRelationshipSetup(schema)) {
       continue
     }
@@ -151,9 +151,9 @@ export async function save(
     opts?.renaming
   )
   // update any extra tables (like foreign keys in other tables)
-  for (let extraTable of extraTablesToUpdate) {
+  for (const extraTable of extraTablesToUpdate) {
     const oldExtraTable = oldTables[extraTable.name]
-    let op = oldExtraTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
+    const op = oldExtraTable ? Operation.UPDATE_TABLE : Operation.CREATE_TABLE
     await makeTableRequest(datasource, op, extraTable, tables, oldExtraTable)
   }
 

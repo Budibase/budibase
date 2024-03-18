@@ -9,7 +9,7 @@ const MB_IN_BYTES = 1024 * 1024
 
 function sanitiseResults(results: AutomationResults) {
   const message = `[removed] - max results size of ${MAX_LOG_SIZE_MB}MB exceeded`
-  for (let step of results.steps) {
+  for (const step of results.steps) {
     step.inputs = {
       message,
     }
@@ -37,13 +37,13 @@ export async function storeLog(
 
 export async function checkAppMetadata(apps: App[]) {
   const maxStartDate = await automations.logs.oldestLogDate()
-  for (let metadata of apps) {
+  for (const metadata of apps) {
     if (!metadata.automationErrors) {
       continue
     }
-    for (let [key, errors] of Object.entries(metadata.automationErrors)) {
+    for (const [key, errors] of Object.entries(metadata.automationErrors)) {
       const updated = []
-      for (let error of errors) {
+      for (const error of errors) {
         if (!error) {
           continue
         }

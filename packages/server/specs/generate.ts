@@ -69,7 +69,7 @@ function writeFile(output: any, filename: string) {
       spec = JSON.stringify(output, null, 2)
     }
     // input the static variables
-    for (let [key, replacement] of Object.entries(VARIABLES)) {
+    for (const [key, replacement] of Object.entries(VARIABLES)) {
       spec = spec.replace(new RegExp(`{${key}}`, "g"), replacement)
     }
     writeFileSync(path, spec)

@@ -22,7 +22,7 @@ function handleStalled(queue: Queue, removeStalledCb?: StalledFn) {
     } else if (job.opts.repeat) {
       const jobId = job.id
       const repeatJobs = await queue.getRepeatableJobs()
-      for (let repeatJob of repeatJobs) {
+      for (const repeatJob of repeatJobs) {
         if (repeatJob.id === jobId) {
           await queue.removeRepeatableByKey(repeatJob.key)
         }

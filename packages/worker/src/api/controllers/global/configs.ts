@@ -203,7 +203,7 @@ export async function save(ctx: UserCtx<Config>) {
   const config = body.config
 
   const existingConfig = await configs.getConfig(type)
-  let eventFns = await getEventFns(ctx.request.body, existingConfig)
+  const eventFns = await getEventFns(ctx.request.body, existingConfig)
 
   if (existingConfig) {
     body._rev = existingConfig._rev
@@ -308,7 +308,7 @@ export async function find(ctx: UserCtx) {
   try {
     // Find the config with the most granular scope based on context
     const type = ctx.params.type
-    let scopedConfig = await configs.getConfig(type)
+    const scopedConfig = await configs.getConfig(type)
 
     if (scopedConfig) {
       if (type === ConfigType.OIDC_LOGOS) {
@@ -423,7 +423,7 @@ export async function upload(ctx: UserCtx) {
   const file = ctx.request.files.file as any
   const { type, name } = ctx.params
 
-  let bucket = coreEnv.GLOBAL_BUCKET_NAME
+  const bucket = coreEnv.GLOBAL_BUCKET_NAME
   const key = objectStore.getGlobalFileS3Key(type, name)
 
   const result = await objectStore.upload({

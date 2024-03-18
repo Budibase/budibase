@@ -50,14 +50,14 @@ export async function updateAttachmentColumns(prodAppId: string, db: Database) {
   // iterate through attachment documents and update them
   const tables = await sdk.tables.getAllInternalTables(db)
   let updatedRows: Row[] = []
-  for (let table of tables) {
+  for (const table of tables) {
     const { rows, columns } = await sdk.rows.getRowsWithAttachments(
       db.name,
       table
     )
     updatedRows = updatedRows.concat(
       rows.map(row => {
-        for (let column of columns) {
+        for (const column of columns) {
           if (Array.isArray(row[column])) {
             row[column] = row[column].map((attachment: RowAttachment) =>
               rewriteAttachmentUrl(prodAppId, attachment)
@@ -81,8 +81,8 @@ async function updateAutomations(prodAppId: string, db: Database) {
     )
   ).rows.map(row => row.doc) as Automation[]
   const devAppId = dbCore.getDevAppID(prodAppId)
-  let toSave: Automation[] = []
-  for (let automation of automations) {
+  const toSave: Automation[] = []
+  for (const automation of automations) {
     const oldDevAppId = automation.appId,
       oldProdAppId = dbCore.getProdAppID(automation.appId)
     if (
@@ -131,7 +131,7 @@ export async function untarFile(file: { path: string }) {
 
 async function decryptFiles(path: string, password: string) {
   try {
-    for (let file of await fsp.readdir(path)) {
+    for (const file of await fsp.readdir(path)) {
       const inputPath = join(path, file)
       if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
         const outputPath = inputPath.replace(/\.enc$/, "")
@@ -161,7 +161,7 @@ export async function importApp(
   template: TemplateType,
   opts: { importObjStoreContents: boolean } = { importObjStoreContents: true }
 ) {
-  let prodAppId = dbCore.getProdAppID(appId)
+  const prodAppId = dbCore.getProdAppID(appId)
   let dbStream: any
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
@@ -175,8 +175,8 @@ export async function importApp(
     const contents = await fsp.readdir(tmpPath)
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
-      let promises = []
-      let excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
+      const promises = []
+      const excludedFiles = [GLOBAL_DB_EXPORT_FILE, DB_EXPORT_FILE]
       for (let filename of contents) {
         const path = join(tmpPath, filename)
         if (excludedFiles.includes(filename)) {

@@ -7,6 +7,7 @@
     "@babel/preset-env": "^7.22.5",
     "@esbuild-plugins/tsconfig-paths": "^0.1.2",
     "@types/node": "20.10.0",
+    "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "6.9.0",
     "esbuild": "^0.18.17",
     "esbuild-node-externals": "^1.8.0",

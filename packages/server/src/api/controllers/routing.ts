@@ -47,8 +47,8 @@ async function getRoutingStructure() {
   const screenRoutes = await getRoutingInfo()
   const routing = new Routing()
 
-  for (let screenRoute of screenRoutes) {
-    let fullpath = screenRoute.routing.route
+  for (const screenRoute of screenRoutes) {
+    const fullpath = screenRoute.routing.route
     const roleId = screenRoute.routing.roleId
     routing.addScreenId(fullpath, roleId, screenRoute.id)
   }
@@ -62,10 +62,10 @@ export async function fetch(ctx: UserCtx) {
 
 export async function clientFetch(ctx: UserCtx) {
   const routing = await getRoutingStructure()
-  let roleId = ctx.user?.role?._id
+  const roleId = ctx.user?.role?._id
   const roleIds = roleId ? await roles.getUserRoleIdHierarchy(roleId) : []
-  for (let topLevel of Object.values(routing.routes) as any) {
-    for (let subpathKey of Object.keys(topLevel.subpaths)) {
+  for (const topLevel of Object.values(routing.routes) as any) {
+    for (const subpathKey of Object.keys(topLevel.subpaths)) {
       let found = false
       const subpath = topLevel.subpaths[subpathKey]
       const roleOptions = Object.keys(subpath.screens)
@@ -74,7 +74,7 @@ export async function clientFetch(ctx: UserCtx) {
         subpath.roleId = roles.BUILTIN_ROLE_IDS.BASIC
         found = true
       } else {
-        for (let roleId of roleIds) {
+        for (const roleId of roleIds) {
           if (roleId && roleOptions.indexOf(roleId) !== -1) {
             subpath.screenId = subpath.screens[roleId]
             subpath.roleId = roleId

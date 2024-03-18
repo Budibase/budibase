@@ -148,7 +148,7 @@ router
 router.get("/health", ctx => (ctx.status = 200))
 
 // authenticated routes
-for (let route of routes) {
+for (const route of routes) {
   router.use(route.routes())
   router.use(route.allowedMethods())
 }

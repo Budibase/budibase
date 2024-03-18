@@ -21,11 +21,11 @@ export default class BudibaseTestConfiguration {
   // LIFECYCLE
 
   async beforeAll() {
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     this.state.tenantId = global.qa.tenantId
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     this.state.email = global.qa.email
-    // @ts-ignore
+    // @ts-expect-error - global has no index signature
     this.state.cookie = global.qa.authCookie
   }
 
@@ -73,7 +73,7 @@ export default class BudibaseTestConfiguration {
     account: CreateAccountRequest,
     opts: APIRequestOpts = {}
   ) {
-    const [_, cookie] = await this.accountsApi.auth.login(
+    const [, cookie] = await this.accountsApi.auth.login(
       account.email,
       account.password,
       opts
@@ -88,7 +88,7 @@ export default class BudibaseTestConfiguration {
     if (!tenantId) {
       throw new Error("Could not determine tenant id")
     }
-    const [res, cookie] = await this.internalApi.auth.login(
+    const [, cookie] = await this.internalApi.auth.login(
       tenantId,
       email,
       password

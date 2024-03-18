@@ -34,7 +34,7 @@ describe("test link functionality", () => {
   })
 
   describe("getRelatedTableForField", () => {
-    let link = basicTable()
+    const link = basicTable()
     link.schema.link = {
       name: "link",
       relationshipType: RelationshipType.ONE_TO_MANY,

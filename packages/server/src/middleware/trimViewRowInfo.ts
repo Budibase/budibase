@@ -42,7 +42,7 @@ export async function trimViewFields<T extends Row>(
   const toBeRemoved = Object.keys(body).filter(
     key => !allowedKeys.includes(key)
   )
-  for (let removeKey of toBeRemoved) {
+  for (const removeKey of toBeRemoved) {
     delete body[removeKey]
   }
 }

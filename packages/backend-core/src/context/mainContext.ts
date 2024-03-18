@@ -13,7 +13,7 @@ import {
 import { Database, IdentityContext, Snippet, App } from "@budibase/types"
 import { ContextMap } from "./types"
 
-let TEST_APP_ID: string | null = null
+const TEST_APP_ID: string | null = null
 
 export function getGlobalDBName(tenantId?: string) {
   // tenant ID can be set externally, for example user API where
@@ -113,7 +113,7 @@ async function newContext<T>(updates: ContextMap, task: () => T) {
   guardMigration()
 
   // see if there already is a context setup
-  let context: ContextMap = updateContext(updates)
+  const context: ContextMap = updateContext(updates)
   return Context.run(context, task)
 }
 

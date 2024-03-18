@@ -7,7 +7,7 @@ export async function directCouchCall(
   method: string = "GET",
   body?: any
 ) {
-  let { url, cookie } = getCouchInfo()
+  const { url, cookie } = getCouchInfo()
   const couchUrl = `${url}/${path}`
   return await directCouchUrlCall({ url: couchUrl, cookie, method, body })
 }

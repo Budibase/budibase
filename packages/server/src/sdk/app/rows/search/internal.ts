@@ -48,7 +48,7 @@ export async function search(options: SearchParams) {
     disableEscaping: options.disableEscaping,
   }
 
-  let table = await sdk.tables.getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
   options = searchInputMapping(table, options)
   if (params.sort && !params.sortType) {
     const schema = table.schema
@@ -100,7 +100,7 @@ export async function exportRows(
 
   let result
   if (rowIds) {
-    let response = (
+    const response = (
       await db.allDocs({
         include_docs: true,
         keys: rowIds,
@@ -109,7 +109,7 @@ export async function exportRows(
 
     result = await outputProcessing(table, response)
   } else if (query) {
-    let searchResponse = await search({
+    const searchResponse = await search({
       tableId,
       query,
       sort,
@@ -119,13 +119,13 @@ export async function exportRows(
   }
 
   let rows: Row[] = []
-  let schema = table.schema
+  const schema = table.schema
   let headers
   // Filter data to only specified columns if required
   if (columns && columns.length) {
     for (let i = 0; i < result.length; i++) {
       rows[i] = {}
-      for (let column of columns) {
+      for (const column of columns) {
         rows[i][column] = result[i][column]
       }
     }
@@ -134,7 +134,7 @@ export async function exportRows(
     rows = result
   }
 
-  let exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
+  const exportRows = cleanExportRows(rows, schema, format, columns, customHeaders)
   if (format === Format.CSV) {
     return {
       fileName: "export.csv",
@@ -253,9 +253,9 @@ const CALCULATION_TYPES = {
 }
 
 async function getView(db: Database, viewName: string) {
-  let mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
-  let secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
-  let migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
+  const mainGetter = env.SELF_HOSTED ? getFromDesignDoc : getFromMemoryDoc
+  const secondaryGetter = env.SELF_HOSTED ? getFromMemoryDoc : getFromDesignDoc
+  const migration = env.SELF_HOSTED ? migrateToDesignView : migrateToInMemoryView
   let viewInfo,
     migrate = false
   try {

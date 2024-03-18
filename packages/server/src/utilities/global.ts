@@ -88,7 +88,7 @@ export async function getRawGlobalUser(userId: string): Promise<User> {
 
 export async function getGlobalUser(userId: string): Promise<ContextUser> {
   const appId = context.getAppId()
-  let user = await getRawGlobalUser(userId)
+  const user = await getRawGlobalUser(userId)
   return processUser(user, { appId })
 }
 

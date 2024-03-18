@@ -9,10 +9,10 @@ import { platform } from "@budibase/backend-core"
  * Description:
  * Re-sync the global-db users to the global-info db users
  */
-export const run = async (globalDb: any) => {
+export const run = async () => {
   const users = (await usersSdk.db.allUsers()) as User[]
   const promises = []
-  for (let user of users) {
+  for (const user of users) {
     promises.push(
       platform.users.addUser(user.tenantId, user._id as string, user.email)
     )

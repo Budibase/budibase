@@ -17,7 +17,7 @@ async function getSkeletonUrl(type: string) {
     throw new Error("Failed to retrieve skeleton metadata")
   }
   const json = (await resp.json()) as { assets: any[] }
-  for (let asset of json["assets"]) {
+  for (const asset of json["assets"]) {
     if (asset.name && asset.name.includes(type)) {
       return asset["browser_download_url"]
     }
@@ -47,7 +47,7 @@ export async function fleshOutSkeleton(
   description: string,
   version: string
 ) {
-  for (let file of HBS_FILES) {
+  for (const file of HBS_FILES) {
     const oldFile = join(name, file),
       newFile = join(name, file.substring(0, file.length - 4))
     const hbsContents = fs.readFileSync(oldFile, "utf8")

@@ -61,7 +61,7 @@ describe("Public API - /applications endpoints", () => {
 
     // Verify publish
     const prodAppId = dbCore.getProdAppID(config.context._id)
-    const [_, publishedApp] = await config.api.apps.read(prodAppId)
+    const [, publishedApp] = await config.api.apps.read(prodAppId)
     expect(response).toHaveStatusCode(200)
     expect(publishedApp._id).toEqual(prodAppId)
   })

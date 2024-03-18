@@ -10,7 +10,7 @@ function updateSchema(query: Query): Query {
     return query
   }
   const schema: Record<string, QuerySchema> = {}
-  for (let key of Object.keys(query.schema)) {
+  for (const key of Object.keys(query.schema)) {
     if (typeof query.schema[key] === "string") {
       schema[key] = { type: query.schema[key] as string, name: key }
     } else {
@@ -29,7 +29,7 @@ function updateSchemas(queries: Query[]): Query[] {
 function enrichQueries(input: any) {
   const wasArray = Array.isArray(input)
   const queries = wasArray ? input : [input]
-  for (let query of queries) {
+  for (const query of queries) {
     if (query.queryVerb === BaseQueryVerbs.READ) {
       query.readable = true
     }
@@ -76,7 +76,7 @@ export async function enrichContext(
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }
   // enrich the fields with dynamic parameters
-  for (let key of Object.keys(fields)) {
+  for (const key of Object.keys(fields)) {
     if (fields[key] == null) {
       continue
     }

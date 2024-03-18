@@ -10,8 +10,8 @@ export default async (ctx: Ctx, next: any) => {
     return resp
   }
 
-  let errors = []
-  for (let fn of current.cleanup) {
+  const errors = []
+  for (const fn of current.cleanup) {
     try {
       await tracer.trace("cleanup", async span => {
         await fn()

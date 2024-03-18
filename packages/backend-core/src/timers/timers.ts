@@ -15,7 +15,7 @@ export function clear(interval: NodeJS.Timeout) {
 }
 
 export function cleanup() {
-  for (let interval of intervals) {
+  for (const interval of intervals) {
     clearInterval(interval)
   }
   intervals = []

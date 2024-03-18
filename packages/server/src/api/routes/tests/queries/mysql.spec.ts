@@ -22,7 +22,7 @@ DROP TABLE test_table
 `
 
 describe("/queries", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
   let datasource: Datasource
 
   async function createQuery(query: Partial<Query>): Promise<Query> {

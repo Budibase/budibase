@@ -124,16 +124,16 @@ export class OpenAPI3 extends OpenAPISource {
 
     const queries: Query[] = []
 
-    for (let [path, pathItemObject] of Object.entries(this.document.paths)) {
+    for (const [path, pathItemObject] of Object.entries(this.document.paths)) {
       // parameters that apply to every operation in the path
-      let pathParams: OpenAPIV3.ParameterObject[] = []
+      const pathParams: OpenAPIV3.ParameterObject[] = []
 
       // pathItemObject can be undefined
       if (!pathItemObject) {
         continue
       }
 
-      for (let [key, opOrParams] of Object.entries(pathItemObject)) {
+      for (const [key, opOrParams] of Object.entries(pathItemObject)) {
         if (isParameter(key, opOrParams)) {
           const pathParameters = opOrParams as OpenAPIV3.ParameterObject[]
           pathParams.push(...pathParameters)
@@ -146,7 +146,7 @@ export class OpenAPI3 extends OpenAPISource {
         const name = operation.operationId || path
         let queryString = ""
         const headers: any = {}
-        let requestBody = getRequestBody(operation)
+        const requestBody = getRequestBody(operation)
         const parameters: QueryParameter[] = []
         const mimeTypes = getMimeTypes(operation)
 
@@ -158,7 +158,7 @@ export class OpenAPI3 extends OpenAPISource {
         const operationParams = operation.parameters || []
         const allParams = [...pathParams, ...operationParams]
 
-        for (let param of allParams) {
+        for (const param of allParams) {
           if (parameterNotRef(param)) {
             switch (param.in) {
               case "query":

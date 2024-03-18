@@ -177,7 +177,7 @@ export const googlePreAuth = async (ctx: any, next: any) => {
   if (!config) {
     return ctx.throw(400, "Google config not found")
   }
-  let callbackUrl = await googleCallbackUrl(config)
+  const callbackUrl = await googleCallbackUrl(config)
   const strategy = await google.strategyFactory(
     config,
     callbackUrl,
@@ -231,7 +231,7 @@ export const oidcStrategyFactory = async (ctx: any, configId: any) => {
     return ctx.throw(400, "OIDC config not found")
   }
 
-  let callbackUrl = await oidcCallbackUrl()
+  const callbackUrl = await oidcCallbackUrl()
 
   //Remote Config
   const enrichedConfig = await oidc.fetchStrategyConfig(config, callbackUrl)
@@ -256,7 +256,7 @@ export const oidcPreAuth = async (ctx: Ctx, next: any) => {
     return ctx.throw(400, "OIDC config not found")
   }
 
-  let authScopes =
+  const authScopes =
     config.scopes?.length > 0
       ? config.scopes
       : ["profile", "email", "offline_access"]

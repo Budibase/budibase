@@ -30,7 +30,7 @@ export default class BuilderSocket extends BaseSocket {
       const sessions = await this.getRoomSessions(appId)
 
       // Track collaboration usage by unique users
-      let userIdMap: any = {}
+      const userIdMap: any = {}
       sessions?.forEach(session => {
         if (session._id) {
           userIdMap[session._id] = true
@@ -72,7 +72,7 @@ export default class BuilderSocket extends BaseSocket {
         await clearLock(room, user)
 
         // Transfer lock ownership to the next oldest user
-        let otherSessions = sessions.filter(x => x._id !== _id).slice()
+        const otherSessions = sessions.filter(x => x._id !== _id).slice()
         otherSessions.sort((a, b) => {
           return a.connectedAt < b.connectedAt ? -1 : 1
         })

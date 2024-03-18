@@ -51,7 +51,7 @@ export default class AppAPI extends BaseAPI {
   }
 
   async create(body: CreateAppRequest): Promise<App> {
-    const [response, json] = await this.post(`/applications`, body)
+    const [, json] = await this.post(`/applications`, body)
     expect(json._id).toBeDefined()
     return json
   }
@@ -97,7 +97,7 @@ export default class AppAPI extends BaseAPI {
   }
 
   async delete(appId: string): Promise<Response> {
-    const [response, _] = await this.del(`/applications/${appId}`)
+    const [response] = await this.del(`/applications/${appId}`)
     return response
   }
 
@@ -123,7 +123,7 @@ export default class AppAPI extends BaseAPI {
   }
 
   async unpublish(appId: string): Promise<[Response]> {
-    const [response, json] = await this.post(
+    const [response] = await this.post(
       `/applications/${appId}/unpublish`,
       undefined,
       204

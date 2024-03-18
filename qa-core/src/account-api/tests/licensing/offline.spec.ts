@@ -20,20 +20,19 @@ describe("offline", () => {
     await config.internalApi.license.deleteOfflineLicenseToken()
 
     // installation: Assert token not found
-    let [getTokenRes] = await config.internalApi.license.getOfflineLicenseToken(
-      { status: 404 }
-    )
+    await config.internalApi.license.getOfflineLicenseToken({ status: 404 })
 
     // installation: Retrieve Identifier
-    const [getIdentifierRes, identifier] =
+    const [, identifier] =
       await config.internalApi.license.getOfflineIdentifier()
 
     // account-portal: Create self-host account
     const createAccountRequest = fixures.accounts.generateAccount({
       hosting: Hosting.SELF,
     })
-    const [createAccountRes, account] =
-      await config.accountsApi.accounts.create(createAccountRequest)
+    const [, account] = await config.accountsApi.accounts.create(
+      createAccountRequest
+    )
     const accountId = account.accountId!
     const tenantId = account.tenantId!
 
@@ -57,7 +56,7 @@ describe("offline", () => {
     )
 
     // account-portal: Retrieve offline token
-    const [getLicenseRes, offlineLicense] =
+    const [, offlineLicense] =
       await config.accountsApi.licenses.getOfflineLicense(accountId, tenantId)
 
     // installation: Activate offline token

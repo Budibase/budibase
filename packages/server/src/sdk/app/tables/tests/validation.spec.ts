@@ -104,7 +104,7 @@ describe("validation and update of external table schemas", () => {
     compareTable: Table,
     columnsToCheck: string[]
   ) {
-    for (let columnName of columnsToCheck) {
+    for (const columnName of columnsToCheck) {
       const columnA = table.schema[columnName]
       const columnB = table.schema[columnName]
       expect(isEqual(columnA, columnB)).toBe(true)

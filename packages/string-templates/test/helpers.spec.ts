@@ -431,7 +431,7 @@ describe("Cover a few complex use cases", () => {
 
   it("should confirm a bunch of invalid strings", () => {
     const invalids = ["{{ awd )", "{{ awdd () ", "{{ awdwad ", "{{ awddawd }"]
-    for (let invalid of invalids) {
+    for (const invalid of invalids) {
       const validity = isValid(invalid)
       expect(validity).toBe(false)
     }

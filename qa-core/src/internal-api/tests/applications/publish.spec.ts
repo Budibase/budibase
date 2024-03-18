@@ -34,7 +34,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
   it("Sync application before deployment", async () => {
     const app = await config.createApp()
 
-    const [syncResponse, sync] = await config.api.apps.sync(app.appId!)
+    const [, sync] = await config.api.apps.sync(app.appId!)
     expect(sync).toEqual({
       message: "App sync completed successfully.",
     })
@@ -46,7 +46,7 @@ describe("Internal API - Application creation, update, publish and delete", () =
     // publish app
     await config.api.apps.publish(app._id)
 
-    const [syncResponse, sync] = await config.api.apps.sync(app.appId!)
+    const [, sync] = await config.api.apps.sync(app.appId!)
     expect(sync).toEqual({
       message: "App sync completed successfully.",
     })

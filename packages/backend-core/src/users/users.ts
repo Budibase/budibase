@@ -49,7 +49,7 @@ export function isSupportedUserSearch(query: SearchQuery) {
     { op: SearchQueryOperators.STRING, key: "email" },
     { op: SearchQueryOperators.EQUAL, key: "_id" },
   ]
-  for (let [key, operation] of Object.entries(query)) {
+  for (const [key, operation] of Object.entries(query)) {
     if (typeof operation !== "object") {
       return false
     }
@@ -115,7 +115,7 @@ export async function getById(id: string, opts?: GetOpts): Promise<User> {
  * all the users to find one with this email address.
  */
 export async function getGlobalUserByEmail(
-  email: String,
+  email: string,
   opts?: GetOpts
 ): Promise<User | undefined> {
   if (email == null) {
@@ -186,7 +186,7 @@ export async function searchGlobalUsersByAppAccess(
 ) {
   const roleSelector = `roles.${appId}`
 
-  let orQuery: any[] = [
+  const orQuery: any[] = [
     {
       "builder.global": true,
     },
@@ -204,7 +204,7 @@ export async function searchGlobalUsersByAppAccess(
     orQuery.push(roleCheck)
   }
 
-  let searchOptions: CouchFindOptions = {
+  const searchOptions: CouchFindOptions = {
     selector: {
       $or: orQuery,
       _id: {

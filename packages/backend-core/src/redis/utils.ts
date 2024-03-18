@@ -88,7 +88,7 @@ export function getRedisConnectionDetails() {
 
 export function getRedisOptions() {
   const { host, password, port } = getRedisConnectionDetails()
-  let redisOpts: Redis.RedisOptions = {
+  const redisOpts: Redis.RedisOptions = {
     connectTimeout: CONNECT_TIMEOUT_MS,
     port: port,
     host,
@@ -117,7 +117,7 @@ export function addDbPrefix(db: string, key: string) {
 }
 
 export function removeDbPrefix(key: string) {
-  let parts = key.split(SEPARATOR)
+  const parts = key.split(SEPARATOR)
   if (parts.length >= 2) {
     parts.shift()
     return parts.join(SEPARATOR)

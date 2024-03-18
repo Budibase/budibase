@@ -116,7 +116,7 @@ export async function run({ inputs }: AutomationStepInput) {
   }
   to = to || undefined
   try {
-    let response = await sendSmtpEmail({
+    const response = await sendSmtpEmail({
       to,
       from,
       subject,

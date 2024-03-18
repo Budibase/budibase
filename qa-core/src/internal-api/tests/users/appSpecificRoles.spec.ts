@@ -19,12 +19,11 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const appUser = fixtures.users.generateUser()
     expect(appUser[0].builder?.global).toEqual(false)
     expect(appUser[0].admin?.global).toEqual(false)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(appUser)
+    const [, createUserJson] = await config.api.users.addMultiple(appUser)
 
     const app = await config.createApp(fixtures.apps.appFromTemplate())
 
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const body: User = {
@@ -35,8 +34,9 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("BASIC")
   })
@@ -46,13 +46,12 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const adminUser = fixtures.users.generateUser(1, "admin")
     expect(adminUser[0].builder?.global).toEqual(true)
     expect(adminUser[0].admin?.global).toEqual(true)
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(adminUser)
+    const [, createUserJson] = await config.api.users.addMultiple(adminUser)
 
     // const app = await config.createApp(fixtures.apps.appFromTemplate())
     const app = await config.createApp(fixtures.apps.appFromTemplate())
 
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const body: User = {
@@ -63,8 +62,9 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     }
     await config.api.users.updateInfo(body)
 
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("ADMIN")
 
@@ -79,12 +79,11 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     const powerUser = fixtures.users.generateUser(1, "developer")
     expect(powerUser[0].builder?.global).toEqual(true)
 
-    const [createUserResponse, createUserJson] =
-      await config.api.users.addMultiple(powerUser)
+    const [, createUserJson] = await config.api.users.addMultiple(powerUser)
 
     const app = await config.createApp()
 
-    const [userInfoResponse, userInfoJson] = await config.api.users.getInfo(
+    const [, userInfoJson] = await config.api.users.getInfo(
       createUserJson.created.successful[0]._id
     )
     const body: User = {
@@ -96,8 +95,9 @@ describe("Internal API - App Specific Roles & Permissions", () => {
     await config.api.users.updateInfo(body)
 
     // Get the user information again and check if the role was added
-    const [changedUserInfoResponse, changedUserInfoJson] =
-      await config.api.users.getInfo(createUserJson.created.successful[0]._id)
+    const [, changedUserInfoJson] = await config.api.users.getInfo(
+      createUserJson.created.successful[0]._id
+    )
     expect(changedUserInfoJson.roles[app.appId!]).toBeDefined()
     expect(changedUserInfoJson.roles[app.appId!]).toEqual("POWER")
   })

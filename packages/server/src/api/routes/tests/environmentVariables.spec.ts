@@ -22,8 +22,8 @@ env._set("ENCRYPTION_KEY", "budibase")
 mocks.licenses.useEnvironmentVariables()
 
 describe("/api/env/variables", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
 
   afterAll(setup.afterAll)
 

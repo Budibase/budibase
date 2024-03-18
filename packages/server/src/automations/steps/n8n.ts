@@ -89,7 +89,7 @@ export async function run({ inputs }: AutomationStepInput) {
     }
   }
   let response
-  let request: {
+  const request: {
     method: string
     headers: HeadersInit
     body?: string

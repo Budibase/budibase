@@ -22,7 +22,7 @@ export default class SelfAPI extends BaseAPI {
   }
 
   async getApiKey(): Promise<ApiKeyResponse> {
-    const [response, json] = await this.get(`/global/self/api_key`)
+    const [, json] = await this.get(`/global/self/api_key`)
     expect(json).toHaveProperty("apiKey")
     return json
   }

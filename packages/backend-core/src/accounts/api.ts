@@ -21,7 +21,7 @@ export default class API {
       }
     }
 
-    let json = options.headers["Content-Type"] === "application/json"
+    const json = options.headers["Content-Type"] === "application/json"
 
     // add x-budibase-correlation-id header
     logging.correlation.setHeader(options.headers)

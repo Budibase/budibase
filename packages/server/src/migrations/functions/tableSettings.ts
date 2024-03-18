@@ -39,7 +39,7 @@ export const run = async (appDb: any) => {
   }
 
   // Recursively update any relevant components and mutate the screen docs
-  for (let screen of screens) {
+  for (const screen of screens) {
     const changed = migrateTableSettings(screen.props)
 
     // Save screen if we updated it

@@ -129,7 +129,7 @@ export async function roleToNumber(id: string) {
   const hierarchy = (await getUserRoleHierarchy(id, {
     defaultPublic: true,
   })) as RoleDoc[]
-  for (let role of hierarchy) {
+  for (const role of hierarchy) {
     if (role?.inherits && isBuiltin(role.inherits)) {
       return builtinRoleToNumber(role.inherits) + 1
     }
@@ -200,8 +200,8 @@ async function getAllUserRoles(
     return getAllRoles()
   }
   let currentRole = await getRole(userRoleId, opts)
-  let roles = currentRole ? [currentRole] : []
-  let roleIds = [userRoleId]
+  const roles = currentRole ? [currentRole] : []
+  const roleIds = [userRoleId]
   // get all the inherited roles
   while (
     currentRole &&
@@ -294,7 +294,7 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
     const builtinRoles = getBuiltinRoles()
 
     // need to combine builtin with any DB record of them (for sake of permissions)
-    for (let builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
+    for (const builtinRoleId of EXTERNAL_BUILTIN_ROLE_IDS) {
       const builtinRole = builtinRoles[builtinRoleId]
       const dbBuiltin = roles.filter(
         dbRole =>
@@ -310,11 +310,11 @@ export async function getAllRoles(appId?: string): Promise<RoleDoc[]> {
       }
     }
     // check permissions
-    for (let role of roles) {
+    for (const role of roles) {
       if (!role.permissions) {
         continue
       }
-      for (let resourceId of Object.keys(role.permissions)) {
+      for (const resourceId of Object.keys(role.permissions)) {
         role.permissions = checkForRoleResourceArray(
           role.permissions,
           resourceId
@@ -353,11 +353,11 @@ export class AccessController {
   }
 
   async checkScreensAccess(screens: Screen[], userRoleId: string) {
-    let accessibleScreens = []
+    const accessibleScreens = []
     // don't want to handle this with Promise.all as this would mean all custom roles would be
     // retrieved at same time, it is likely a custom role will be re-used and therefore want
     // to work in sync for performance save
-    for (let screen of screens) {
+    for (const screen of screens) {
       const accessible = await this.checkScreenAccess(screen, userRoleId)
       if (accessible) {
         accessibleScreens.push(accessible)

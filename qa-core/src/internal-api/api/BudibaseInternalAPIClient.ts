@@ -1,5 +1,5 @@
 import env from "../../environment"
-import fetch, { HeadersInit } from "node-fetch"
+import fetch, { HeadersInit, RequestInit } from "node-fetch"
 import { State } from "../../types"
 
 type APIMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
@@ -25,23 +25,20 @@ class BudibaseInternalAPIClient {
   apiCall =
     (method: APIMethod) =>
     async (url = "", options: ApiOptions = {}) => {
-      const requestOptions = {
+      const requestOptions: RequestInit = {
         method,
         body: JSON.stringify(options.body),
         headers: {
-          "x-budibase-app-id": this.state.appId,
+          "x-budibase-app-id": this.state.appId!,
           "Content-Type": "application/json",
           Accept: "application/json",
-          cookie: this.state.cookie,
+          cookie: this.state.cookie!,
           redirect: "follow",
-          follow: 20,
+          follow: "20",
           ...options.headers,
         },
-        credentials: "include",
       }
 
-      // prettier-ignore
-      // @ts-ignore
       const response = await fetch(`${this.host}${url}`, requestOptions)
 
       let body: any

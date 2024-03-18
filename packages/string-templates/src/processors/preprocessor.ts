@@ -43,7 +43,7 @@ export const processors = [
   }),
 
   new Preprocessor(PreprocessorNames.FIX_FUNCTIONS, (statement: string) => {
-    for (let specialCase of FUNCTION_CASES) {
+    for (const specialCase of FUNCTION_CASES) {
       const toFind = `{ ${specialCase}`,
         replacement = `{${specialCase}`
       statement = statement.replace(new RegExp(toFind, "g"), replacement)
@@ -64,7 +64,7 @@ export const processors = [
       }
       const possibleHelper = insideStatement.split(" ")[0]
       // function helpers can't be wrapped
-      for (let specialCase of FUNCTION_CASES) {
+      for (const specialCase of FUNCTION_CASES) {
         if (possibleHelper.includes(specialCase)) {
           return statement
         }

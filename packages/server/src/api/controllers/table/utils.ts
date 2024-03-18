@@ -120,8 +120,8 @@ export async function importToRows(
   table: Table,
   user?: ContextUser
 ) {
-  let originalTable = table
-  let finalData: any = []
+  const originalTable = table
+  const finalData: any = []
   for (let i = 0; i < data.length; i++) {
     let row = data[i]
     row._id = generateRowID(table._id!)
@@ -147,8 +147,8 @@ export async function importToRows(
           schema.type === FieldType.ARRAY) &&
         row[fieldName]
       ) {
-        let merged = [...schema.constraints!.inclusion!, ...rowVal]
-        let superSet = new Set(merged)
+        const merged = [...schema.constraints!.inclusion!, ...rowVal]
+        const superSet = new Set(merged)
         schema.constraints!.inclusion = Array.from(superSet)
         schema.constraints!.inclusion.sort()
       }
@@ -175,7 +175,7 @@ export async function handleDataImport(
   const db = context.getAppDB()
   const data = parse(importRows, schema)
 
-  let finalData: any = await importToRows(data, table, user)
+  const finalData: any = await importToRows(data, table, user)
 
   //Set IDs of finalData to match existing row if an update is expected
   if (identifierFields.length > 0) {
@@ -258,7 +258,7 @@ export async function handleSearchIndexes(table: Table) {
 export function checkStaticTables(table: Table) {
   // check user schema has all required elements
   if (table._id === InternalTables.USER_METADATA) {
-    for (let [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
+    for (const [key, schema] of Object.entries(USERS_TABLE_SCHEMA.schema)) {
       // check if the schema exists on the table to be created/updated
       if (table.schema[key] == null) {
         table.schema[key] = schema as FieldSchema
@@ -303,7 +303,7 @@ class TableSaveFunctions {
 
   // when confirmed valid
   async mid(table: Table, columnRename?: RenameColumn) {
-    let response = await checkForColumnUpdates(
+    const response = await checkForColumnUpdates(
       table,
       this.oldTable,
       columnRename
@@ -336,7 +336,7 @@ export async function checkForViewUpdates(
   const tableViews = views.filter(view => view.meta?.tableId === table._id)
 
   // Check each table view to see if impacted by this table action
-  for (let view of tableViews) {
+  for (const view of tableViews) {
     let needsUpdated = false
     const viewMetadata = view.meta as any
     if (!viewMetadata) {
@@ -450,7 +450,7 @@ export function areSwitchableTypes(type1: FieldType, type2: FieldType) {
   ) {
     return false
   }
-  for (let option of CanSwitchTypes) {
+  for (const option of CanSwitchTypes) {
     const index1 = option.indexOf(type1),
       index2 = option.indexOf(type2)
     if (index1 !== -1 && index2 !== -1 && index1 !== index2) {
@@ -464,7 +464,7 @@ export function hasTypeChanged(table: Table, oldTable: Table | undefined) {
   if (!oldTable) {
     return false
   }
-  for (let [key, field] of Object.entries(oldTable.schema)) {
+  for (const [key, field] of Object.entries(oldTable.schema)) {
     if (!table.schema[key]) {
       continue
     }

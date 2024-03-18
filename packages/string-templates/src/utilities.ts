@@ -47,12 +47,12 @@ export const removeHandlebarsStatements = (
   string: string,
   replacement = "Invalid binding"
 ) => {
-  let regexp = new RegExp(FIND_HBS_REGEX)
-  let matches = string.match(regexp)
+  const regexp = new RegExp(FIND_HBS_REGEX)
+  const matches = string.match(regexp)
   if (matches == null) {
     return string
   }
-  for (let match of matches) {
+  for (const match of matches) {
     const idx = string.indexOf(match)
     string = swapStrings(string, idx, match.length, replacement)
   }

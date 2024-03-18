@@ -12,7 +12,7 @@ class TestConfiguration {
 
 describe("ArangoDB Integration", () => {
   let config: any
-  let indexName = "Users"
+  const indexName = "Users"
 
   beforeEach(() => {
     config = new TestConfiguration()

@@ -57,7 +57,7 @@ describe("Users", () => {
     await config.doInTenant(async () => {
       const db = getGlobalDB()
       await db.put(group)
-      for (let user of users) {
+      for (const user of users) {
         await db.put(user)
         const creator = await isCreator(user)
         expect(creator).toBe(true)

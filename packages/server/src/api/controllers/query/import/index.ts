@@ -24,7 +24,7 @@ export class RestImporter {
   }
 
   init = async () => {
-    for (let source of this.sources) {
+    for (const source of this.sources) {
       if (await source.isSupported(this.data)) {
         this.source = source
         break
@@ -84,7 +84,7 @@ export class RestImporter {
     const importSource = this.source.getImportSource()
     const datasource: Datasource = await db.get(datasourceId)
     await events.query.imported(datasource, importSource, count)
-    for (let query of successQueries) {
+    for (const query of successQueries) {
       await events.query.created(datasource, query)
     }
 

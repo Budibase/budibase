@@ -134,7 +134,7 @@ export function getRelatedTableForField(table: Table, fieldName: string) {
   if (field?.type === FieldType.LINK) {
     return field.tableId
   }
-  for (let column of Object.values(table.schema)) {
+  for (const column of Object.values(table.schema)) {
     if (column.type === FieldType.LINK && column.fieldName === fieldName) {
       return column.tableId
     }

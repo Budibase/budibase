@@ -11,12 +11,12 @@ import { QueryPreview } from "@budibase/types"
 
 tk.freeze(mocks.date.MOCK_DATE)
 
-let { basicDatasource } = setup.structures
+const { basicDatasource } = setup.structures
 const pg = require("pg")
 
 describe("/datasources", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
   let datasource: any
 
   afterAll(setup.afterAll)
@@ -121,7 +121,7 @@ describe("/datasources", () => {
       const datasources = res.body
 
       // remove non-deterministic fields
-      for (let source of datasources) {
+      for (const source of datasources) {
         delete source._id
         delete source._rev
       }

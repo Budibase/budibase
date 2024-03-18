@@ -4,7 +4,7 @@ import { quotas } from "@budibase/pro"
 import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 
 describe("syncApps", () => {
-  let config = new TestConfig(false)
+  const config = new TestConfig(false)
 
   beforeEach(async () => {
     await config.init()

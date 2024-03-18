@@ -20,7 +20,7 @@ class AutomationEmitter {
   async getMaxAutomationChain() {
     const db = context.getAppDB()
     const appMetadata = await db.get<App>(DocumentType.APP_METADATA)
-    let chainAutomations = appMetadata?.automations?.chainAutomations
+    const chainAutomations = appMetadata?.automations?.chainAutomations
 
     if (chainAutomations === true) {
       return MAX_AUTOMATIONS_ALLOWED
@@ -32,7 +32,7 @@ class AutomationEmitter {
   }
 
   async emitRow(eventName: string, appId: string, row: Row, table?: Table) {
-    let MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
+    const MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
 
     // don't emit even if we've reached max automation chain
     if (this.chainCount >= MAX_AUTOMATION_CHAIN) {
@@ -49,7 +49,7 @@ class AutomationEmitter {
   }
 
   async emitTable(eventName: string, appId: string, table?: Table) {
-    let MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
+    const MAX_AUTOMATION_CHAIN = await this.getMaxAutomationChain()
 
     // don't emit even if we've reached max automation chain
     if (this.chainCount >= MAX_AUTOMATION_CHAIN) {

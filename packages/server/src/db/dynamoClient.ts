@@ -66,7 +66,7 @@ class Table {
     if (otherProps) {
       params = merge(params, otherProps)
     }
-    let response = await docClient.get(params).promise()
+    const response = await docClient.get(params).promise()
     return response.Item
   }
 
@@ -127,8 +127,8 @@ class Table {
 }
 
 export function init(endpoint: string) {
-  let AWS = require("aws-sdk")
-  let docClientParams: any = {
+  const AWS = require("aws-sdk")
+  const docClientParams: any = {
     correctClockSkew: true,
     region: AWS_REGION,
   }

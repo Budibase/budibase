@@ -194,9 +194,9 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
     // Clean numeric prefixing. This will overwrite duplicate search fields,
     // but this is fine because we only support a single custom search on
     // email and id
-    for (let filters of Object.values(body.query)) {
+    for (const filters of Object.values(body.query)) {
       if (filters && typeof filters === "object") {
-        for (let [field, value] of Object.entries(filters)) {
+        for (const [field, value] of Object.entries(filters)) {
           delete filters[field]
           const cleanedField = db.removeKeyNumbering(field)
           if (filters[cleanedField] !== undefined) {
@@ -217,7 +217,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
   } else {
     const paginated = await userSdk.core.paginatedUsers(body)
     // user hashed password shouldn't ever be returned
-    for (let user of paginated.data) {
+    for (const user of paginated.data) {
       if (user) {
         delete user.password
       }
@@ -230,7 +230,7 @@ export const search = async (ctx: Ctx<SearchUsersRequest>) => {
 export const fetch = async (ctx: any) => {
   const all = await userSdk.db.allUsers()
   // user hashed password shouldn't ever be returned
-  for (let user of all) {
+  for (const user of all) {
     if (user) {
       delete user.password
     }
@@ -264,9 +264,9 @@ export const onboardUsers = async (
     return
   }
 
-  let createdPasswords: Record<string, string> = {}
+  const createdPasswords: Record<string, string> = {}
   const users: User[] = ctx.request.body.map(invite => {
-    let password = Math.random().toString(36).substring(2, 22)
+    const password = Math.random().toString(36).substring(2, 22)
     createdPasswords[invite.email] = password
 
     return {
@@ -280,7 +280,7 @@ export const onboardUsers = async (
     }
   })
 
-  let resp = await userSdk.db.bulkCreate(users)
+  const resp = await userSdk.db.bulkCreate(users)
   for (const user of resp.successful) {
     user.password = createdPasswords[user.email]
   }
@@ -290,7 +290,7 @@ export const onboardUsers = async (
 export const invite = async (ctx: Ctx<InviteUserRequest>) => {
   const request = ctx.request.body
 
-  let multiRequest = [request]
+  const multiRequest = [request]
   const response = await userSdk.invite(multiRequest)
 
   // explicitly throw for single user invite
@@ -340,7 +340,7 @@ export const getUserInvites = async (ctx: any) => {
 
 export const updateInvite = async (ctx: any) => {
   const { code } = ctx.params
-  let updateBody = { ...ctx.request.body }
+  const updateBody = { ...ctx.request.body }
 
   delete updateBody.email
 
@@ -352,7 +352,7 @@ export const updateInvite = async (ctx: any) => {
     return
   }
 
-  let updated = {
+  const updated = {
     ...invite,
   }
 

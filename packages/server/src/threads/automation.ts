@@ -76,7 +76,7 @@ class Orchestrator {
   executionOutput: AutomationContext
 
   constructor(job: AutomationJob) {
-    let automation = job.data.automation
+    const automation = job.data.automation
     let triggerOutput = job.data.event
     const metadata = triggerOutput.metadata
     this._chainCount = metadata ? metadata.automationChainCount! : 0
@@ -107,7 +107,7 @@ class Orchestrator {
   }
 
   async getStepFunctionality(stepId: string) {
-    let step = await actions.getAction(stepId)
+    const step = await actions.getAction(stepId)
     if (step == null) {
       throw `Cannot find automation step by name ${stepId}`
     }
@@ -251,7 +251,7 @@ class Orchestrator {
 
         // this will retrieve from context created at start of thread
         this._context.env = await sdkUtils.getEnvironmentVariables()
-        let automation = this._automation
+        const automation = this._automation
         let stopped = false
         let loopStep: LoopStep | undefined = undefined
 
@@ -261,7 +261,7 @@ class Orchestrator {
         let metadata
         let timeoutFlag = false
         let wasLoopStep = false
-        let timeout = this._job.data.event.timeout
+        const timeout = this._job.data.event.timeout
         // check if this is a recurring automation,
         if (isProdAppID(this._appId) && isRecurring(automation)) {
           span?.addTags({ recurring: true })
@@ -273,7 +273,7 @@ class Orchestrator {
           }
         }
         const start = performance.now()
-        for (let step of automation.definition.steps) {
+        for (const step of automation.definition.steps) {
           const stepSpan = tracer.startSpan("Orchestrator.execute.step", {
             childOf: span,
           })
@@ -319,10 +319,10 @@ class Orchestrator {
               stepSpan?.addTags({ step: { iterations } })
             }
             for (let index = 0; index < iterations; index++) {
-              let originalStepInput = cloneDeep(step.inputs)
+              const originalStepInput = cloneDeep(step.inputs)
               // Handle if the user has set a max iteration count or if it reaches the max limit set by us
               if (loopStep && input.binding) {
-                let tempOutput = {
+                const tempOutput = {
                   items: loopSteps,
                   iterations: iterationCount,
                 }
@@ -359,9 +359,9 @@ class Orchestrator {
 
                 // The "Loop" binding in the front end is "fake", so replace it here so the context can understand it
                 // Pretty hacky because we need to account for the row object
-                for (let [key, value] of Object.entries(originalStepInput)) {
+                for (const [key, value] of Object.entries(originalStepInput)) {
                   if (typeof value === "object") {
-                    for (let [innerKey, innerValue] of Object.entries(
+                    for (const [innerKey, innerValue] of Object.entries(
                       originalStepInput[key]
                     )) {
                       if (typeof innerValue === "string") {
@@ -371,7 +371,7 @@ class Orchestrator {
                             `steps.${loopStepNumber}`
                           )
                       } else if (typeof value === "object") {
-                        for (let [innerObject, innerValue] of Object.entries(
+                        for (const [innerObject, innerValue] of Object.entries(
                           originalStepInput[key][innerKey]
                         )) {
                           originalStepInput[key][innerKey][innerObject] =
@@ -452,7 +452,7 @@ class Orchestrator {
               }
 
               // If it's a loop step, we need to manually add the bindings to the context
-              let stepFn = await this.getStepFunctionality(step.stepId)
+              const stepFn = await this.getStepFunctionality(step.stepId)
               let inputs = await processObject(originalStepInput, this._context)
               inputs = automationUtils.cleanInputValues(
                 inputs,
@@ -535,7 +535,7 @@ class Orchestrator {
             wasLoopStep = false
           }
           if (loopSteps && loopSteps.length) {
-            let tempOutput = {
+            const tempOutput = {
               success: true,
               items: loopSteps,
               iterations: iterationCount,

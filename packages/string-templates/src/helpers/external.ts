@@ -30,14 +30,14 @@ export const externalCollections = EXTERNAL_FUNCTION_COLLECTIONS
 export const addedHelpers = ADDED_HELPERS
 
 export function registerAll(handlebars: typeof Handlebars) {
-  for (let [name, helper] of Object.entries(ADDED_HELPERS)) {
+  for (const [name, helper] of Object.entries(ADDED_HELPERS)) {
     handlebars.registerHelper(name, helper)
   }
-  let externalNames = []
-  for (let collection of EXTERNAL_FUNCTION_COLLECTIONS) {
+  const externalNames = []
+  for (const collection of EXTERNAL_FUNCTION_COLLECTIONS) {
     // collect information about helper
-    let hbsHelperInfo = helpers[collection]()
-    for (let entry of Object.entries(hbsHelperInfo)) {
+    const hbsHelperInfo = helpers[collection]()
+    for (const entry of Object.entries(hbsHelperInfo)) {
       const name = entry[0]
       // skip built in functions and ones seen already
       if (
@@ -58,10 +58,10 @@ export function registerAll(handlebars: typeof Handlebars) {
 }
 
 export function unregisterAll(handlebars: typeof Handlebars) {
-  for (let name of Object.keys(ADDED_HELPERS)) {
+  for (const name of Object.keys(ADDED_HELPERS)) {
     handlebars.unregisterHelper(name)
   }
-  for (let name of externalHelperNames) {
+  for (const name of externalHelperNames) {
     handlebars.unregisterHelper(name)
   }
   externalHelperNames = []

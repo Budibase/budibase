@@ -34,7 +34,7 @@ export function addBaseTemplates(templates: Template[], type?: string) {
       purposeList = Object.values(TemplatePurpose)
       break
   }
-  for (let purpose of purposeList) {
+  for (const purpose of purposeList) {
     // check if a template exists already for purpose
     if (templates.find(template => template.purpose === purpose)) {
       continue

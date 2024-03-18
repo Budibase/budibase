@@ -185,7 +185,7 @@ describe("postgres integrations", () => {
     }
   }) {
     let { rowData } = opts as any
-    let foreignRows: ForeignRowsInfo[] = []
+    const foreignRows: ForeignRowsInfo[] = []
 
     if (opts?.createForeignRows?.createOneToMany) {
       const foreignKey = `fk_${oneToManyRelationshipInfo.table.name}_${oneToManyRelationshipInfo.fieldName}`
@@ -380,7 +380,7 @@ describe("postgres integrations", () => {
     describe("given than a row exists", () => {
       let row: Row
       beforeEach(async () => {
-        let rowResponse = _.sample(await populatePrimaryRows(1))!
+        const rowResponse = _.sample(await populatePrimaryRows(1))!
         row = rowResponse.row
       })
 
@@ -443,7 +443,7 @@ describe("postgres integrations", () => {
       })
 
       it("multiple rows can be removed at once", async () => {
-        let rowsToDelete = _.sampleSize(rows, 3)!
+        const rowsToDelete = _.sampleSize(rows, 3)!
 
         const res = await deleteRow(primaryPostgresTable._id, {
           rows: rowsToDelete,
@@ -513,7 +513,7 @@ describe("postgres integrations", () => {
 
       describe("with all relationship types", () => {
         beforeEach(async () => {
-          let [createdRow] = await populatePrimaryRows(1, {
+          const [createdRow] = await populatePrimaryRows(1, {
             createOneToMany: true,
             createManyToOne: 3,
             createManyToMany: 2,
@@ -571,7 +571,7 @@ describe("postgres integrations", () => {
 
       describe("with only one to many", () => {
         beforeEach(async () => {
-          let [createdRow] = await populatePrimaryRows(1, {
+          const [createdRow] = await populatePrimaryRows(1, {
             createOneToMany: true,
           })
           row = createdRow.row
@@ -606,7 +606,7 @@ describe("postgres integrations", () => {
 
       describe("with only many to one", () => {
         beforeEach(async () => {
-          let [createdRow] = await populatePrimaryRows(1, {
+          const [createdRow] = await populatePrimaryRows(1, {
             createManyToOne: 3,
           })
           row = createdRow.row
@@ -639,7 +639,7 @@ describe("postgres integrations", () => {
 
       describe("with only many to many", () => {
         beforeEach(async () => {
-          let [createdRow] = await populatePrimaryRows(1, {
+          const [createdRow] = await populatePrimaryRows(1, {
             createManyToMany: 2,
           })
           row = createdRow.row

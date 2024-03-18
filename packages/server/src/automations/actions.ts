@@ -95,7 +95,7 @@ export async function getActionDefinitions() {
   const actionDefinitions = BUILTIN_ACTION_DEFINITIONS
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.AUTOMATION)
-    for (let plugin of plugins) {
+    for (const plugin of plugins) {
       const schema = plugin.schema.schema as AutomationStep
       actionDefinitions[schema.stepId] = {
         ...schema,

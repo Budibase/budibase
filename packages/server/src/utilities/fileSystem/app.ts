@@ -39,7 +39,7 @@ export const getComponentLibraryManifest = async (library: string) => {
       join(TOP_LEVEL_PATH, "packages/client", filename),
       join(process.cwd(), "client", filename),
     ]
-    for (let path of paths) {
+    for (const path of paths) {
       if (fs.existsSync(path)) {
         // always load from new so that updates are refreshed
         delete require.cache[require.resolve(path)]
@@ -80,7 +80,7 @@ export const getComponentLibraryManifest = async (library: string) => {
  * Given a set of app IDs makes sure file system is cleared of any of their temp info.
  */
 export const cleanup = (appIds: string[]) => {
-  for (let appId of appIds) {
+  for (const appId of appIds) {
     const path = join(budibaseTempDir(), appId)
     if (fs.existsSync(path)) {
       fs.rmdirSync(path, { recursive: true })

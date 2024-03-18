@@ -91,9 +91,9 @@ describe("/api/global/groups", () => {
   describe("update", () => {
     it("should be able to update a basic group", async () => {
       const group = structures.groups.UserGroup()
-      let oldGroup = await config.api.groups.saveGroup(group)
+      const oldGroup = await config.api.groups.saveGroup(group)
 
-      let updatedGroup = {
+      const updatedGroup = {
         ...oldGroup.body,
         ...group,
         name: "New Name",
@@ -173,7 +173,7 @@ describe("/api/global/groups", () => {
   describe("destroy", () => {
     it("should be able to delete a basic group", async () => {
       const group = structures.groups.UserGroup()
-      let oldGroup = await config.api.groups.saveGroup(group)
+      const oldGroup = await config.api.groups.saveGroup(group)
       await config.api.groups.deleteGroup(oldGroup.body._id, oldGroup.body._rev)
 
       expect(events.group.deleted).toBeCalledTimes(1)
@@ -305,7 +305,7 @@ describe("/api/global/groups", () => {
       })
       await config.createSession(builder)
 
-      let resp = await config.api.groups.saveGroup(
+      const resp = await config.api.groups.saveGroup(
         structures.groups.UserGroup()
       )
       group = resp.body as UserGroup

@@ -43,7 +43,7 @@ export const toggleBetaUiFeature = async function (ctx: Ctx) {
     return
   }
 
-  let builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
+  const builderPath = join(TOP_LEVEL_PATH, "new_design_ui")
 
   // // download it from S3
   if (!fs.existsSync(builderPath)) {
@@ -73,7 +73,7 @@ export const uploadFile = async function (
     throw new BadRequestError("No file provided")
   }
 
-  let files = file && Array.isArray(file) ? Array.from(file) : [file]
+  const files = file && Array.isArray(file) ? Array.from(file) : [file]
 
   ctx.body = await Promise.all(
     files.map(async file => {
@@ -165,7 +165,7 @@ export const serveApp = async function (ctx: Ctx) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
-    let appId = context.getAppId()
+    const appId = context.getAppId()
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
@@ -233,7 +233,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
   const appInfo = await db.get<App>(DocumentType.APP_METADATA)
 
   if (!env.isJest()) {
-    let appId = context.getAppId()
+    const appId = context.getAppId()
     const templateLoc = join(__dirname, "templates")
     const previewLoc = fs.existsSync(templateLoc) ? templateLoc : __dirname
     const previewHbs = loadHandlebarsFile(join(previewLoc, "preview.hbs"))
@@ -248,7 +248,7 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 
 export const serveClientLibrary = async function (ctx: Ctx) {
   const appId = context.getAppId() || (ctx.request.query.appId as string)
-  let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
+  const rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }

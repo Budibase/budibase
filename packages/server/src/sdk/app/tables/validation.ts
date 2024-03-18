@@ -12,7 +12,7 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
   const tables = Object.values(datasource.entities)
   // make sure all foreign key columns are marked as auto columns
   const foreignKeys: { tableId: string; key: string }[] = []
-  for (let table of tables) {
+  for (const table of tables) {
     Object.values(table.schema).forEach(column => {
       if (column.type !== FieldType.LINK) {
         return
@@ -36,7 +36,7 @@ function checkForeignKeysAreAutoColumns(datasource: Datasource) {
 
   // now make sure schemas are all accurate
   for (const table of tables) {
-    for (let column of Object.values(table.schema)) {
+    for (const column of Object.values(table.schema)) {
       const shouldBeForeign = foreignKeys.find(
         options => options.tableId === table._id && options.key === column.name
       )

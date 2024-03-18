@@ -32,7 +32,7 @@ import { withCache, TTL, CacheKey } from "../cache/generic"
  * - installation
  */
 const getCurrentIdentity = async (): Promise<Identity> => {
-  let identityContext = identityCtx.getIdentity()
+  const identityContext = identityCtx.getIdentity()
   const environment = getDeploymentEnvironment()
 
   let identityType
@@ -165,8 +165,8 @@ const identifyUser = async (
   const id = user._id as string
   const tenantId = await getEventTenantId(user.tenantId)
   const type = IdentityType.USER
-  let builder = users.hasBuilderPermissions(user)
-  let admin = users.hasAdminPermissions(user)
+  const builder = users.hasBuilderPermissions(user)
+  const admin = users.hasAdminPermissions(user)
   let providerType
   if (isSSOUser(user)) {
     providerType = user.providerType
@@ -198,8 +198,8 @@ const identifyUser = async (
 const identifyAccount = async (account: Account) => {
   let id = account.accountId
   const tenantId = account.tenantId
-  let type = IdentityType.USER
-  let providerType = isSSOAccount(account) ? account.providerType : undefined
+  const type = IdentityType.USER
+  const providerType = isSSOAccount(account) ? account.providerType : undefined
   const verified = account.verified
   const accountHolder = true
   const hosting = account.hosting

@@ -167,7 +167,7 @@ export async function upload({
   }
   if (metadata && typeof metadata === "object") {
     // remove any nullish keys from the metadata object, as these may be considered invalid
-    for (let key of Object.keys(metadata)) {
+    for (const key of Object.keys(metadata)) {
       if (!metadata[key] || typeof metadata[key] !== "string") {
         delete metadata[key]
       }
@@ -246,7 +246,7 @@ export async function listAllObjects(bucketName: string, path: string) {
     token,
     objects: AWS.S3.Types.Object[] = []
   do {
-    let params: ListParams = {}
+    const params: ListParams = {}
     if (token) {
       params.ContinuationToken = token
     }
@@ -303,15 +303,15 @@ export async function retrieveToTmp(bucketName: string, filepath: string) {
 }
 
 export async function retrieveDirectory(bucketName: string, path: string) {
-  let writePath = join(budibaseTempDir(), v4())
+  const writePath = join(budibaseTempDir(), v4())
   fs.mkdirSync(writePath)
   const objects = await listAllObjects(bucketName, path)
-  let streams = await Promise.all(
+  const streams = await Promise.all(
     objects.map(obj => getReadStream(bucketName, obj.Key!))
   )
   let count = 0
   const writePromises: Promise<Error>[] = []
-  for (let obj of objects) {
+  for (const obj of objects) {
     const filename = obj.Key!
     const stream = streams[count++]
     const possiblePath = filename.split("/")
@@ -404,9 +404,9 @@ export async function uploadDirectory(
   bucketPath: string
 ) {
   bucketName = sanitizeBucket(bucketName)
-  let uploads = []
+  const uploads = []
   const files = fs.readdirSync(localPath, { withFileTypes: true })
-  for (let file of files) {
+  for (const file of files) {
     const path = sanitizeKey(join(bucketPath, file.name))
     const local = join(localPath, file.name)
     if (file.isDirectory()) {

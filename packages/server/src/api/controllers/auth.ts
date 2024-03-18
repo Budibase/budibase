@@ -18,7 +18,7 @@ const addSessionAttributesToUser = (ctx: any) => {
 }
 
 export async function fetchSelf(ctx: UserCtx) {
-  let userId = ctx.user.userId || ctx.user._id
+  const userId = ctx.user.userId || ctx.user._id
   /* istanbul ignore next */
   if (!userId || !ctx.isAuthenticated) {
     ctx.body = {}

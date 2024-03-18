@@ -13,7 +13,7 @@ export interface DatasourceRequest {
       port?: string
       schema?: string
       user?: string
-      defaultHeaders?: {}
+      defaultHeaders?: object
       rejectUnauthorized?: boolean
       url?: string
     }

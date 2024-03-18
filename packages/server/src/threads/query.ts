@@ -60,8 +60,8 @@ class QueryRunner {
 
   async execute(): Promise<QueryResponse> {
     let { datasource, fields, queryVerb, transformer, schema } = this
-    let datasourceClone = cloneDeep(datasource)
-    let fieldsClone = cloneDeep(fields)
+    const datasourceClone = cloneDeep(datasource)
+    const fieldsClone = cloneDeep(fields)
 
     const Integration = await getIntegration(datasourceClone.source)
     if (!Integration) {
@@ -70,7 +70,7 @@ class QueryRunner {
 
     if (datasourceClone.config?.authConfigs) {
       const updatedConfigs = []
-      for (let config of datasourceClone.config.authConfigs) {
+      for (const config of datasourceClone.config.authConfigs) {
         updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
       }
       datasourceClone.config.authConfigs = updatedConfigs
@@ -113,7 +113,7 @@ class QueryRunner {
       query.paginationValues = this.pagination
     }
 
-    let output = threadUtils.formatResponse(await integration[queryVerb](query))
+    const output = threadUtils.formatResponse(await integration[queryVerb](query))
     let rows = output as Row[],
       info = undefined,
       extra = undefined,
@@ -226,7 +226,7 @@ class QueryRunner {
     } else {
       // In this event the user may have oAuth issues that
       // could require re-authenticating with their provider.
-      let errorMessage = resp.err.data ? resp.err.data : resp.err.toString()
+      const errorMessage = resp.err.data ? resp.err.data : resp.err.toString()
       throw new Error(
         "OAuth2 access token could not be refreshed: " + errorMessage
       )
@@ -236,7 +236,7 @@ class QueryRunner {
   }
 
   async getDynamicVariable(variable: QueryVariable) {
-    let { parameters } = this
+    const { parameters } = this
     const queryId = variable.queryId,
       name = variable.name
     let value = await threadUtils.checkCacheForDynamicVariable(queryId, name)
@@ -254,13 +254,13 @@ class QueryRunner {
   }
 
   async addDatasourceVariables() {
-    let { datasource, parameters, fields } = this
+    const { datasource, parameters, fields } = this
     if (!datasource || !datasource.config) {
       return parameters
     }
     const staticVars = datasource.config.staticVariables || {}
     const dynamicVars = datasource.config.dynamicVariables || []
-    for (let [key, value] of Object.entries(staticVars)) {
+    for (const [key, value] of Object.entries(staticVars)) {
       if (!parameters[key]) {
         parameters[key] = value
       }

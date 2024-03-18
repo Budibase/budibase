@@ -15,7 +15,7 @@ export function csv(
 ) {
   let csv = getHeaders(headers, customHeaders).join(delimiter)
 
-  for (let row of rows) {
+  for (const row of rows) {
     csv = `${csv}\n${headers
       .map(header => {
         let val = row[header]

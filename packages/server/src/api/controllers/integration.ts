@@ -8,7 +8,7 @@ const DISABLED_EXTERNAL_INTEGRATIONS = [
 
 export async function fetch(ctx: UserCtx) {
   const definitions = await getDefinitions()
-  for (let disabledIntegration of DISABLED_EXTERNAL_INTEGRATIONS) {
+  for (const disabledIntegration of DISABLED_EXTERNAL_INTEGRATIONS) {
     delete definitions[disabledIntegration]
   }
   ctx.body = definitions

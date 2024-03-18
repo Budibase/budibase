@@ -48,7 +48,7 @@ describe("should be able to re-write attachment URLs", () => {
     const db = dbCore.getDB("app_aaa")
     await db.put(table)
     const limit = 30
-    let rows = []
+    const rows = []
     for (let i = 0; i < limit; i++) {
       const rowToWrite = {
         ...row,
@@ -67,7 +67,7 @@ describe("should be able to re-write attachment URLs", () => {
       .mockReturnValueOnce({ rows: rows.slice(25, limit), bookmark: "bbb" })
     await sdk.backups.updateAttachmentColumns(db.name, db)
     const finalRows = await sdk.rows.getAllInternalRows(db.name)
-    for (let rowToCheck of finalRows) {
+    for (const rowToCheck of finalRows) {
       expect(rowToCheck.otherCol).toBe(row.otherCol)
       expect(rowToCheck.photo[0].url).toBe("")
       expect(rowToCheck.photo[0].key).toBe(`${db.name}/attachments/a.png`)

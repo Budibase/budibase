@@ -73,9 +73,9 @@ class InMemoryQueue implements Partial<Queue> {
       if (this._messages.length <= 0) {
         return
       }
-      let msg = this._messages.shift()
+      const msg = this._messages.shift()
 
-      let resp = func(msg)
+      const resp = func(msg)
 
       async function retryFunc(fnc: any) {
         try {

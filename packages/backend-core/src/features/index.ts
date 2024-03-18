@@ -47,7 +47,7 @@ export function getTenantFeatureFlags(tenantId: string) {
     const tenantOverrides = tenantFlags.reduce(
       (acc: string[], flag: string) => {
         if (flag.startsWith("!")) {
-          let stripped = flag.substring(1)
+          const stripped = flag.substring(1)
           acc.push(stripped)
         }
         return acc

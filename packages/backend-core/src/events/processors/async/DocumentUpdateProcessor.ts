@@ -25,7 +25,7 @@ export default class DocumentUpdateProcessor implements EventProcessor {
     if (!tenantId || !docId) {
       return
     }
-    for (let { events, processor } of this.processors) {
+    for (const { events, processor } of this.processors) {
       if (events.includes(event)) {
         await doInTenant(tenantId, async () => {
           await processor({

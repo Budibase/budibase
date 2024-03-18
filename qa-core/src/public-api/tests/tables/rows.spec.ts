@@ -9,10 +9,10 @@ describe("Public API - /rows endpoints", () => {
     await config.beforeAll()
     await config.createApp()
 
-    const [tResp, table] = await config.api.tables.seed()
+    const [, table] = await config.api.tables.seed()
     config.state.tableId = table._id
 
-    const [rResp, row] = await config.api.rows.seed(table._id)
+    const [, row] = await config.api.rows.seed(table._id)
     config.context = row
   })
 

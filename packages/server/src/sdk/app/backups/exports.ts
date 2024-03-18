@@ -113,7 +113,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   if (!env.isTest()) {
     // write just the static files
     if (config?.excludeRows) {
-      for (let path of STATIC_APP_FILES) {
+      for (const path of STATIC_APP_FILES) {
         const contents = await objectStore.retrieve(
           ObjectStoreBuckets.APPS,
           join(appPath, path)
@@ -133,7 +133,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   const downloadedPath = join(tmpPath, appPath)
   if (fs.existsSync(downloadedPath)) {
     const allFiles = await fsp.readdir(downloadedPath)
-    for (let file of allFiles) {
+    for (const file of allFiles) {
       const path = join(downloadedPath, file)
       // move out of app directory, simplify structure
       await fsp.rename(path, join(downloadedPath, "..", file))
@@ -149,7 +149,7 @@ export async function exportApp(appId: string, config?: ExportOpts) {
   })
 
   if (config?.encryptPassword) {
-    for (let file of await fsp.readdir(tmpPath)) {
+    for (const file of await fsp.readdir(tmpPath)) {
       const path = join(tmpPath, file)
 
       // skip the attachments - too big to encrypt

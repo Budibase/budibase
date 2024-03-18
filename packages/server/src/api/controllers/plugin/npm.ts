@@ -29,7 +29,7 @@ export async function npmUpload(url: string, name: string, headers = {}) {
       throw new Error("NPM Package not found")
     }
 
-    let npmDetails = await response.json()
+    const npmDetails = await response.json()
     pluginName = npmDetails.name
     const npmVersion = npmDetails["dist-tags"].latest
     npmTarballUrl = npmDetails?.versions?.[npmVersion]?.dist?.tarball

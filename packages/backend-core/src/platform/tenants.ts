@@ -53,7 +53,7 @@ function newTenantsDoc(): Tenants {
 
 async function createTenantsDoc(): Promise<Tenants> {
   const db = getPlatformDB()
-  let tenants = newTenantsDoc()
+  const tenants = newTenantsDoc()
 
   try {
     const response = await db.put(tenants)

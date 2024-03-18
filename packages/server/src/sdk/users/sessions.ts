@@ -10,7 +10,7 @@ export const enrichApps = async (apps: App[]) => {
   // Get all sessions for all apps and enrich app list
   const sessions = await builderSocket?.getRoomSessions(devAppIds)
   if (sessions?.length) {
-    let appSessionMap: Record<string, SocketSession[]> = {}
+    const appSessionMap: Record<string, SocketSession[]> = {}
     sessions.forEach(session => {
       const room = session.room
       if (!room) {
@@ -23,7 +23,7 @@ export const enrichApps = async (apps: App[]) => {
     })
     return apps.map(app => {
       // Shallow clone to avoid mutating original reference
-      let enriched = { ...app }
+      const enriched = { ...app }
       const sessions = appSessionMap[app.appId]
       if (sessions?.length) {
         enriched.sessions = sessions

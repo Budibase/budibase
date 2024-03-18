@@ -15,7 +15,7 @@ import { Automation } from "@budibase/types"
 import { mocks } from "@budibase/backend-core/tests"
 
 const MAX_RETRIES = 4
-let {
+const {
   basicAutomation,
   newAutomation,
   automationTrigger,
@@ -26,8 +26,8 @@ let {
 jest.setTimeout(30000)
 
 describe("/automations", () => {
-  let request = setup.getRequest()
-  let config = setup.getConfig()
+  const request = setup.getRequest()
+  const config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
@@ -144,7 +144,7 @@ describe("/automations", () => {
 
   describe("test", () => {
     it("tests the automation successfully", async () => {
-      let table = await config.createTable()
+      const table = await config.createTable()
       let automation = newAutomation()
       automation.definition.trigger.inputs.tableId = table._id
       automation.definition.steps[0].inputs = {
@@ -166,7 +166,7 @@ describe("/automations", () => {
       for (let tries = 0; tries < MAX_RETRIES; tries++) {
         expect(res.body).toBeDefined()
         await setup.delay(500)
-        let elements = await getAllTableRows(config)
+        const elements = await getAllTableRows(config)
         // don't test it unless there are values to test
         if (elements.length > 1) {
           expect(elements.length).toBeGreaterThanOrEqual(MAX_RETRIES)
@@ -245,7 +245,7 @@ describe("/automations", () => {
     }
 
     it("updates a automations name", async () => {
-      let automation = newAutomation()
+      const automation = newAutomation()
       await config.createAutomation(automation)
       automation.name = "Updated Name"
       jest.clearAllMocks()
@@ -272,7 +272,7 @@ describe("/automations", () => {
     })
 
     it("updates a automations name using POST request", async () => {
-      let automation = newAutomation()
+      const automation = newAutomation()
       await config.createAutomation(automation)
       automation.name = "Updated Name"
       jest.clearAllMocks()
@@ -415,9 +415,9 @@ describe("/automations", () => {
 
   describe("checkForCollectStep", () => {
     it("should return true if a collect step exists in an automation", async () => {
-      let automation = collectAutomation()
+      const automation = collectAutomation()
       await config.createAutomation(automation)
-      let res = await sdk.automations.utils.checkForCollectStep(automation)
+      const res = await sdk.automations.utils.checkForCollectStep(automation)
       expect(res).toEqual(true)
     })
   })

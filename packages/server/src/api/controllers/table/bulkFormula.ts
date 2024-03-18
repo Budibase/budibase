@@ -29,9 +29,9 @@ function isStaticFormula(
  * in the formula.
  */
 function getFormulaThatUseColumn(table: Table, columnNames: string[] | string) {
-  let formula: string[] = []
+  const formula: string[] = []
   columnNames = Array.isArray(columnNames) ? columnNames : [columnNames]
-  for (let column of Object.values(table.schema)) {
+  for (const column of Object.values(table.schema)) {
     // not a static formula, or doesn't contain a relationship
     if (!isStaticFormula(column)) {
       continue
@@ -57,11 +57,11 @@ async function checkIfFormulaNeedsCleared(
     tbl => tbl._id !== table._id
   )
   const schemaToUse = oldTable ? oldTable.schema : table.schema
-  let removedColumns = Object.values(schemaToUse).filter(
+  const removedColumns = Object.values(schemaToUse).filter(
     column => deletion || !table.schema[column.name]
   )
   // remove any formula columns that used related columns
-  for (let removed of removedColumns) {
+  for (const removed of removedColumns) {
     let tableToUse: Table | undefined = table
     // if relationship, get the related table
     if (removed.type === FieldType.LINK) {
@@ -80,7 +80,7 @@ async function checkIfFormulaNeedsCleared(
     if (!table.relatedFormula) {
       continue
     }
-    for (let relatedTableId of table.relatedFormula) {
+    for (const relatedTableId of table.relatedFormula) {
       const relatedColumns = Object.values(table.schema).filter(
         column =>
           column.type === FieldType.LINK && column.tableId === relatedTableId
@@ -90,7 +90,7 @@ async function checkIfFormulaNeedsCleared(
       // relationships won't be used for this
       if (relatedTable && relatedColumns && removed.type !== FieldType.LINK) {
         let relatedFormulaToRemove: string[] = []
-        for (let column of relatedColumns) {
+        for (const column of relatedColumns) {
           relatedFormulaToRemove = relatedFormulaToRemove.concat(
             getFormulaThatUseColumn(relatedTable, [
               (column as any).fieldName!,
@@ -129,7 +129,7 @@ async function updateRelatedFormulaLinksOnTables(
     isRelationshipColumn
   )
   // we start by removing the formula field from all tables
-  for (let otherTable of tables) {
+  for (const otherTable of tables) {
     if (!otherTable.relatedFormula) {
       continue
     }
@@ -140,8 +140,8 @@ async function updateRelatedFormulaLinksOnTables(
   }
   // if deleting, just remove the table IDs, don't try add
   if (!deletion) {
-    for (let relatedCol of relatedColumns) {
-      let columns = getFormulaThatUseColumn(table, relatedCol.name)
+    for (const relatedCol of relatedColumns) {
+      const columns = getFormulaThatUseColumn(table, relatedCol.name)
       if (!columns || columns.length === 0) {
         continue
       }
@@ -162,7 +162,7 @@ async function updateRelatedFormulaLinksOnTables(
     }
   }
   // now we just need to compare all the tables and see if any need saved
-  for (let initial of initialTables) {
+  for (const initial of initialTables) {
     const found = tables.find(tbl => initial._id === tbl._id)
     if (found && !isEqual(initial, found)) {
       await db.put(found)

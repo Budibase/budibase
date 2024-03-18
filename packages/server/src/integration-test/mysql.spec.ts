@@ -315,7 +315,7 @@ describe("mysql integrations", () => {
     it("will rename a column", async () => {
       await makeRequest("post", "/api/tables/", primaryMySqlTable)
 
-      let renameColumnOnTable: TableRequest = {
+      const renameColumnOnTable: TableRequest = {
         ...primaryMySqlTable,
         schema: {
           id: {

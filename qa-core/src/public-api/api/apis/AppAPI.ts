@@ -60,9 +60,7 @@ export default class AppAPI {
   }
 
   async unpublish(id: string): Promise<[Response]> {
-    const [response, json] = await this.client.post(
-      `/applications/${id}/unpublish`
-    )
+    const [response] = await this.client.post(`/applications/${id}/unpublish`)
     return [response]
   }
 }

@@ -8,7 +8,7 @@ export function processFeatureEnvVar<T>(
   } else {
     list = featureList.split(",")
   }
-  for (let feature of list) {
+  for (const feature of list) {
     if (!fullList.includes(feature)) {
       throw new Error(`Feature: ${feature} is not an allowed option`)
     }

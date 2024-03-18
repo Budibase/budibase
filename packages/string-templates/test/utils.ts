@@ -112,7 +112,7 @@ export const runJsHelpersTests = ({
             context[`array${i}`] = JSON.parse(arrayString.replace(/'/g, '"'))
           })
 
-          let convertedJs = convertToJS(hbs)
+          const convertedJs = convertToJS(hbs)
 
           let result = await processJS(convertedJs, context)
           result = result.replace(/&nbsp;/g, " ")

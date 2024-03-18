@@ -19,7 +19,7 @@ const JOB_OPTS = {
 
 async function getAllAutomations() {
   const db = context.getAppDB()
-  let automations = await db.allDocs<Automation>(
+  const automations = await db.allDocs<Automation>(
     getAutomationParams(null, { include_docs: true })
   )
   return automations.rows.map(row => row.doc!)
@@ -42,9 +42,9 @@ async function queueRelevantRowAutomations(
       return trigger && trigger.event === eventType
     })
 
-    for (let automation of automations) {
-      let automationDef = automation.definition
-      let automationTrigger = automationDef?.trigger
+    for (const automation of automations) {
+      const automationDef = automation.definition
+      const automationTrigger = automationDef?.trigger
       // don't queue events which are for dev apps, only way to test automations is
       // running tests on them, in production the test flag will never
       // be checked due to lazy evaluation (first always false)
@@ -104,7 +104,7 @@ export async function externalTrigger(
     // values are likely to be submitted as strings, so we shall convert to correct type
     const coercedFields: any = {}
     const fields = automation.definition.trigger.inputs.fields
-    for (let key of Object.keys(fields || {})) {
+    for (const key of Object.keys(fields || {})) {
       coercedFields[key] = coerce(params.fields[key], fields[key])
     }
     params.fields = coercedFields
@@ -135,11 +135,11 @@ export async function rebootTrigger() {
     dev: false,
     idsOnly: true,
   })) as string[]
-  for (let prodAppId of appIds) {
+  for (const prodAppId of appIds) {
     await context.doInAppContext(prodAppId, async () => {
-      let automations = await getAllAutomations()
-      let rebootEvents = []
-      for (let automation of automations) {
+      const automations = await getAllAutomations()
+      const rebootEvents = []
+      for (const automation of automations) {
         if (utils.isRebootTrigger(automation)) {
           const job = {
             automation,

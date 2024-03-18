@@ -69,7 +69,7 @@ export async function fetch(opts?: {
     ...datasources,
   ])
 
-  for (let datasource of allDatasources) {
+  for (const datasource of allDatasources) {
     if (datasource.type === dbCore.BUDIBASE_DATASOURCE_TYPE) {
       datasource.entities = internal[datasource._id!]
     }
@@ -93,7 +93,7 @@ export function areRESTVariablesValid(datasource: Datasource) {
   const restConfig = datasource.config as RestConfig
   const varNames: string[] = []
   if (restConfig.dynamicVariables) {
-    for (let variable of restConfig.dynamicVariables) {
+    for (const variable of restConfig.dynamicVariables) {
       if (varNames.includes(variable.name)) {
         return false
       }
@@ -101,7 +101,7 @@ export function areRESTVariablesValid(datasource: Datasource) {
     }
   }
   if (restConfig.staticVariables) {
-    for (let name of Object.keys(restConfig.staticVariables)) {
+    for (const name of Object.keys(restConfig.staticVariables)) {
       if (varNames.includes(name)) {
         return false
       }
@@ -112,7 +112,7 @@ export function areRESTVariablesValid(datasource: Datasource) {
 }
 
 export function checkDatasourceTypes(schema: Integration, config: any) {
-  for (let key of Object.keys(config)) {
+  for (const key of Object.keys(config)) {
     if (!schema.datasource[key]) {
       continue
     }
@@ -187,7 +187,7 @@ function useEnvVars(str: any) {
 
 export async function removeSecrets(datasources: Datasource[]) {
   const definitions = await getDefinitions()
-  for (let datasource of datasources) {
+  for (const datasource of datasources) {
     const schema = definitions[datasource.source]
     if (!schema) {
       continue
@@ -200,7 +200,7 @@ export async function removeSecrets(datasources: Datasource[]) {
       // specific to REST datasources, contains passwords
       if (hasAuthConfigs(datasource)) {
         const configs = datasource.config.authConfigs as RestAuthConfig[]
-        for (let config of configs) {
+        for (const config of configs) {
           if (config.type !== RestAuthType.BASIC) {
             continue
           }
@@ -211,7 +211,7 @@ export async function removeSecrets(datasources: Datasource[]) {
         }
       }
       // remove general passwords
-      for (let key of Object.keys(datasource.config)) {
+      for (const key of Object.keys(datasource.config)) {
         if (
           schema.datasource?.[key]?.type === DatasourceFieldType.PASSWORD &&
           !useEnvVars(datasource.config[key])
@@ -236,7 +236,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   if (hasAuthConfigs(update)) {
     const configs = update.config.authConfigs as RestAuthConfig[]
     const oldConfigs = (old.config?.authConfigs as RestAuthConfig[]) || []
-    for (let config of configs) {
+    for (const config of configs) {
       if (config.type !== RestAuthType.BASIC) {
         continue
       }
@@ -254,7 +254,7 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
   }
 
   // update back to actual passwords for everything else
-  for (let [key, value] of Object.entries(update.config)) {
+  for (const [key, value] of Object.entries(update.config)) {
     if (value !== PASSWORD_REPLACEMENT) {
       continue
     }
@@ -339,7 +339,7 @@ const preSaveAction: Partial<Record<SourceName, any>> = {
  */
 export function setDefaultDisplayColumns(datasource: Datasource) {
   //
-  for (let entity of Object.values(datasource.entities || {})) {
+  for (const entity of Object.values(datasource.entities || {})) {
     if (entity.primaryDisplay) {
       continue
     }

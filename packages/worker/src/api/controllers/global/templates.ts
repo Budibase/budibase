@@ -8,7 +8,7 @@ import { tenancy, db as dbCore } from "@budibase/backend-core"
 
 export async function save(ctx: any) {
   const db = tenancy.getGlobalDB()
-  let template = ctx.request.body
+  const template = ctx.request.body
   if (!template.ownerId) {
     template.ownerId = GLOBAL_OWNER
   }
@@ -26,7 +26,7 @@ export async function save(ctx: any) {
 export async function definitions(ctx: any) {
   const bindings: any = {}
   const info: any = {}
-  for (let template of TemplateMetadata.email) {
+  for (const template of TemplateMetadata.email) {
     bindings[template.purpose] = template.bindings
     info[template.purpose] = {
       name: template.name,

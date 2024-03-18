@@ -95,7 +95,7 @@ export async function getDefinitions() {
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
     // extract the actual schema from each custom
-    for (let plugin of plugins) {
+    for (const plugin of plugins) {
       const sourceId = plugin.name
       pluginSchemas[sourceId] = {
         ...plugin.schema["schema"],
@@ -118,7 +118,7 @@ export async function getIntegration(integration: SourceName) {
   }
   if (env.SELF_HOSTED) {
     const plugins = await sdk.plugins.fetch(PluginType.DATASOURCE)
-    for (let plugin of plugins) {
+    for (const plugin of plugins) {
       if (plugin.name === integration) {
         // need to use commonJS require due to its dynamic runtime nature
         const retrieved = await getDatasourcePlugin(plugin)

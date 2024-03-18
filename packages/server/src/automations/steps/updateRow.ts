@@ -83,7 +83,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
   const tableId = inputs.row.tableId
 
   // clear any undefined, null or empty string properties so that they aren't updated
-  for (let propKey of Object.keys(inputs.row)) {
+  for (const propKey of Object.keys(inputs.row)) {
     const clearRelationships =
       inputs.meta?.fields?.[propKey]?.clearRelationships
     if (

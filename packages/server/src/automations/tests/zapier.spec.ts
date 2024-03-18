@@ -1,7 +1,7 @@
 import { getConfig, afterAll, runStep, actions } from "./utilities"
 
 describe("test the outgoing webhook action", () => {
-  let config = getConfig()
+  const config = getConfig()
 
   beforeAll(async () => {
     await config.init()

@@ -47,8 +47,8 @@ export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   }
 
   // need to build up full patch fields before coerce
-  let combinedRow: any = cloneDeep(oldRow)
-  for (let key of Object.keys(inputs)) {
+  const combinedRow: any = cloneDeep(oldRow)
+  for (const key of Object.keys(inputs)) {
     if (!dbTable.schema[key]) continue
     combinedRow[key] = inputs[key]
   }
@@ -108,7 +108,7 @@ export async function destroy(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const { _id } = ctx.request.body
   let row = await db.get<Row>(_id)
-  let _rev = ctx.request.body._rev || row._rev
+  const _rev = ctx.request.body._rev || row._rev
 
   if (row.tableId !== tableId) {
     throw "Supplied tableId doesn't match the row's tableId"
@@ -146,7 +146,7 @@ export async function destroy(ctx: UserCtx) {
 export async function bulkDestroy(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const table = await sdk.tables.getTable(tableId)
-  let { rows } = ctx.request.body
+  const { rows } = ctx.request.body
 
   // before carrying out any updates, make sure the rows are ready to be returned
   // they need to be the full rows (including previous relationships) for automations
@@ -209,7 +209,7 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
 
   // perform output processing
   let final: Promise<Row[]>[] = []
-  for (let linkTable of linkTables) {
+  for (const linkTable of linkTables) {
     const relatedRows = linkedRows.filter(row => row.tableId === linkTable._id)
     // include the row being enriched for performance reasons, don't need to fetch it to include
     final = final.concat(
@@ -224,8 +224,8 @@ export async function fetchEnrichedRow(ctx: UserCtx) {
   linkedRows = flatten(await Promise.all(final))
 
   // insert the link rows in the correct place throughout the main row
-  for (let fieldName of Object.keys(table.schema)) {
-    let field = table.schema[fieldName]
+  for (const fieldName of Object.keys(table.schema)) {
+    const field = table.schema[fieldName]
     if (field.type === FieldType.LINK) {
       // find the links that pertain to this field
       const links = linkVals.filter(link => link.fieldName === fieldName)

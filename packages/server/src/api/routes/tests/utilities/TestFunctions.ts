@@ -45,7 +45,7 @@ export const clearAllApps = async (
     if (!apps || apps.length <= 0) {
       return
     }
-    for (let app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
+    for (const app of apps.filter((x: any) => !exceptions.includes(x.appId))) {
       const { appId } = app
       const req = new Request(null, { appId })
       await runRequest(appId, appController.destroy, req)
@@ -55,7 +55,7 @@ export const clearAllApps = async (
 
 export const clearAllAutomations = async (config: TestConfiguration) => {
   const automations = await config.getAllAutomations()
-  for (let auto of automations) {
+  for (const auto of automations) {
     await context.doInAppContext(config.getAppId(), async () => {
       await config.deleteAutomation(auto)
     })

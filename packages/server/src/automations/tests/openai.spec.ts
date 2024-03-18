@@ -30,7 +30,7 @@ const mockedOpenAIApi = openai.OpenAIApi as jest.MockedClass<
 const OPENAI_PROMPT = "What is the meaning of life?"
 
 describe("test the openai action", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()
@@ -45,7 +45,7 @@ describe("test the openai action", () => {
   it("should present the correct error message when the OPENAI_API_KEY variable isn't set", async () => {
     delete environment.OPENAI_API_KEY
 
-    let res = await setup.runStep("OPENAI", {
+    const res = await setup.runStep("OPENAI", {
       prompt: OPENAI_PROMPT,
     })
     expect(res.response).toEqual(

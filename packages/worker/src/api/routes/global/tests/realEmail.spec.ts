@@ -2,8 +2,8 @@ jest.unmock("node-fetch")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 
-const nodemailer = require("nodemailer")
-const fetch = require("node-fetch")
+import nodemailer from "nodemailer"
+import fetch from "node-fetch"
 
 // for the real email tests give them a long time to try complete/fail
 jest.setTimeout(30000)
@@ -43,8 +43,9 @@ describe("/api/global/email", () => {
       }
       expect(res.body.message).toBeDefined()
       const testUrl = nodemailer.getTestMessageUrl(res.body)
-      console.log(`${purpose} URL: ${testUrl}`)
-      expect(testUrl).toBeDefined()
+      if (typeof testUrl !== "string") {
+        throw new Error("Expected testUrl to be a string")
+      }
       response = await fetch(testUrl)
       text = await response.text()
     } catch (err: any) {

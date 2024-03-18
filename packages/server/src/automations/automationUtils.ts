@@ -27,17 +27,17 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
   if (schema == null) {
     return inputs
   }
-  for (let inputKey of Object.keys(inputs)) {
-    let input = inputs[inputKey]
+  for (const inputKey of Object.keys(inputs)) {
+    const input = inputs[inputKey]
     if (typeof input !== "string") {
       continue
     }
-    let propSchema = schema.properties[inputKey]
+    const propSchema = schema.properties[inputKey]
     if (!propSchema) {
       continue
     }
     if (propSchema.type === "boolean") {
-      let lcInput = input.toLowerCase()
+      const lcInput = input.toLowerCase()
       if (lcInput === "true") {
         inputs[inputKey] = true
       }
@@ -46,14 +46,14 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
       }
     }
     if (propSchema.type === "number") {
-      let floatInput = parseFloat(input)
+      const floatInput = parseFloat(input)
       if (!isNaN(floatInput)) {
         inputs[inputKey] = floatInput
       }
     }
   }
   //Check if input field for Update Row should be a relationship and cast to array
-  for (let key in inputs.row) {
+  for (const key in inputs.row) {
     if (
       inputs.schema?.[key]?.type === "link" &&
       inputs.row[key] &&
@@ -79,7 +79,7 @@ export function cleanInputValues(inputs: Record<string, any>, schema?: any) {
  * @returns The cleaned up rows object, will should now have all the required primitive types.
  */
 export async function cleanUpRow(tableId: string, row: Row) {
-  let table = await sdk.tables.getTable(tableId)
+  const table = await sdk.tables.getTable(tableId)
   return cleanInputValues(row, { properties: table.schema })
 }
 
@@ -97,10 +97,10 @@ export function getError(err: any) {
 }
 
 export function substituteLoopStep(hbsString: string, substitute: string) {
-  let checkForJS = isJSBinding(hbsString)
+  const checkForJS = isJSBinding(hbsString)
   let substitutedHbsString = ""
-  let open = checkForJS ? `$("` : "{{"
-  let closed = checkForJS ? `")` : "}}"
+  const open = checkForJS ? `$("` : "{{"
+  const closed = checkForJS ? `")` : "}}"
   if (checkForJS) {
     hbsString = decodeJSBinding(hbsString) as string
   }
@@ -114,8 +114,8 @@ export function substituteLoopStep(hbsString: string, substitute: string) {
       substitutedHbsString += hbsString.substring(pointer)
       break
     }
-    let before = hbsString.substring(pointer, openPointer)
-    let block = hbsString
+    const before = hbsString.substring(pointer, openPointer)
+    const block = hbsString
       .substring(openPointer, closedPointer)
       .replace(/loop/, substitute)
     substitutedHbsString += before + block

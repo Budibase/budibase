@@ -3,7 +3,7 @@ import * as setup from "./utilities"
 describe("test the create row action", () => {
   let table: any
   let row: any
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeEach(async () => {
     await config.init()

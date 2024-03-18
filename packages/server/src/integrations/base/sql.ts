@@ -71,7 +71,7 @@ function parse(input: any) {
 }
 
 function parseBody(body: any) {
-  for (let [key, value] of Object.entries(body)) {
+  for (const [key, value] of Object.entries(body)) {
     body[key] = parse(value)
   }
   return body
@@ -81,7 +81,7 @@ function parseFilters(filters: SearchFilters | undefined): SearchFilters {
   if (!filters) {
     return {}
   }
-  for (let [key, value] of Object.entries(filters)) {
+  for (const [key, value] of Object.entries(filters)) {
     let parsed
     if (typeof value === "object") {
       parsed = parseFilters(value)
@@ -147,7 +147,7 @@ class InternalBuilder {
       structure: { [key: string]: any },
       fn: (key: string, value: any) => void
     ) {
-      for (let [key, value] of Object.entries(structure)) {
+      for (const [key, value] of Object.entries(structure)) {
         const updatedKey = dbCore.removeKeyNumbering(key)
         const isRelationshipField = updatedKey.includes(".")
         if (!opts.relationship && !isRelationshipField) {
@@ -179,7 +179,7 @@ class InternalBuilder {
       const rawFnc = `${fnc}Raw`
       const not = mode === filters?.notContains ? "NOT " : ""
       function stringifyArray(value: Array<any>, quoteStyle = '"'): string {
-        for (let i in value) {
+        for (const i in value) {
           if (typeof value[i] === "string") {
             value[i] = `${quoteStyle}${value[i]}${quoteStyle}`
           }
@@ -213,7 +213,7 @@ class InternalBuilder {
         const andOr = mode === filters?.containsAny ? " OR " : " AND "
         iterate(mode, (key: string, value: Array<any>) => {
           let statement = ""
-          for (let i in value) {
+          for (const i in value) {
             if (typeof value[i] === "string") {
               value[i] = `%"${value[i].toLowerCase()}"%`
             } else {
@@ -328,13 +328,13 @@ class InternalBuilder {
   }
 
   addSorting(query: Knex.QueryBuilder, json: QueryJson): Knex.QueryBuilder {
-    let { sort, paginate } = json
+    const { sort, paginate } = json
     const table = json.meta?.table
     const aliases = json.tableAliases
     const aliased =
       table?.name && aliases?.[table.name] ? aliases[table.name] : table?.name
     if (sort && Object.keys(sort || {}).length > 0) {
-      for (let [key, value] of Object.entries(sort)) {
+      for (const [key, value] of Object.entries(sort)) {
         const direction =
           value.direction === SortDirection.ASCENDING ? "asc" : "desc"
         query = query.orderBy(`${aliased}.${key}`, direction)
@@ -369,7 +369,7 @@ class InternalBuilder {
     }
     const tableSets: Record<string, [RelationshipsJson]> = {}
     // aggregate into table sets (all the same to tables)
-    for (let relationship of relationships) {
+    for (const relationship of relationships) {
       const keyObj: { toTable: string; throughTable: string | undefined } = {
         toTable: relationship.tableName,
         throughTable: undefined,
@@ -384,23 +384,23 @@ class InternalBuilder {
         tableSets[key] = [relationship]
       }
     }
-    for (let [key, relationships] of Object.entries(tableSets)) {
+    for (const [key, relationships] of Object.entries(tableSets)) {
       const { toTable, throughTable } = JSON.parse(key)
       const toAlias = aliases?.[toTable] || toTable,
         throughAlias = aliases?.[throughTable] || throughTable,
         fromAlias = aliases?.[fromTable] || fromTable
-      let toTableWithSchema = this.tableNameWithSchema(toTable, {
+      const toTableWithSchema = this.tableNameWithSchema(toTable, {
         alias: toAlias,
         schema,
       })
-      let throughTableWithSchema = this.tableNameWithSchema(throughTable, {
+      const throughTableWithSchema = this.tableNameWithSchema(throughTable, {
         alias: throughAlias,
         schema,
       })
       if (!throughTable) {
         // @ts-ignore
         query = query.leftJoin(toTableWithSchema, function () {
-          for (let relationship of relationships) {
+          for (const relationship of relationships) {
             const from = relationship.from,
               to = relationship.to
             // @ts-ignore
@@ -411,7 +411,7 @@ class InternalBuilder {
         query = query
           // @ts-ignore
           .leftJoin(throughTableWithSchema, function () {
-            for (let relationship of relationships) {
+            for (const relationship of relationships) {
               const fromPrimary = relationship.fromPrimary
               const from = relationship.from
               // @ts-ignore
@@ -423,7 +423,7 @@ class InternalBuilder {
             }
           })
           .leftJoin(toTableWithSchema, function () {
-            for (let relationship of relationships) {
+            for (const relationship of relationships) {
               const toPrimary = relationship.toPrimary
               const to = relationship.to
               // @ts-ignore
@@ -455,10 +455,10 @@ class InternalBuilder {
 
   create(knex: Knex, json: QueryJson, opts: QueryOptions): Knex.QueryBuilder {
     const { endpoint, body } = json
-    let query = this.knexWithAlias(knex, endpoint)
+    const query = this.knexWithAlias(knex, endpoint)
     const parsedBody = parseBody(body)
     // make sure no null values in body for creation
-    for (let [key, value] of Object.entries(parsedBody)) {
+    for (const [key, value] of Object.entries(parsedBody)) {
       if (value == null) {
         delete parsedBody[key]
       }
@@ -474,7 +474,7 @@ class InternalBuilder {
 
   bulkCreate(knex: Knex, json: QueryJson): Knex.QueryBuilder {
     const { endpoint, body } = json
-    let query = this.knexWithAlias(knex, endpoint)
+    const query = this.knexWithAlias(knex, endpoint)
     if (!Array.isArray(body)) {
       return query
     }
@@ -667,7 +667,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
     const input = this._query(json, { disableReturning: true })
     if (Array.isArray(input)) {
       const responses = []
-      for (let query of input) {
+      for (const query of input) {
         responses.push(await queryFn(query, operation))
       }
       return responses
@@ -706,7 +706,7 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
         continue
       }
       const fullName = `${table.name}.${name}`
-      for (let row of results) {
+      for (const row of results) {
         if (typeof row[fullName] === "string") {
           row[fullName] = JSON.parse(row[fullName])
         }

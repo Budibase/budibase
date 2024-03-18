@@ -55,7 +55,7 @@ export async function invalidateSessions(
     if (sessionKeys && sessionKeys.length > 0) {
       const client = await redis.getSessionClient()
       const promises = []
-      for (let sessionKey of sessionKeys) {
+      for (const sessionKey of sessionKeys) {
         promises.push(client.delete(sessionKey.key))
       }
       if (!env.isTest()) {

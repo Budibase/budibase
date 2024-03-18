@@ -25,7 +25,7 @@ export async function runView(
         _rev: undefined,
       }))
     )
-    let fn = (doc: Document, emit: any) => emit(doc._id)
+    const fn = (doc: Document, emit: any) => emit(doc._id)
     // BUDI-7060 -> indirect eval call appears to cause issues in cloud
     eval("fn = " + view?.map?.replace("function (doc)", "function (doc, emit)"))
     const queryFns: any = {
@@ -40,7 +40,7 @@ export async function runView(
       group: !!group,
     })
     // need to fix the revs to be totally accurate
-    for (let row of response.rows) {
+    for (const row of response.rows) {
       if (!row._rev || !row._id) {
         continue
       }

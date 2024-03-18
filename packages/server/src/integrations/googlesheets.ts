@@ -276,7 +276,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       table._id = id
     }
     // build schema from headers
-    for (let header of headerValues) {
+    for (const header of headerValues) {
       table.schema[header] = {
         name: header,
         type: FieldType.STRING,
@@ -330,7 +330,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       },
       10
     )
-    let externalTables = finaliseExternalTables(tables, entities)
+    const externalTables = finaliseExternalTables(tables, entities)
     errors = { ...errors, ...checkExternalTables(externalTables) }
     return { tables: externalTables, errors }
   }
@@ -399,7 +399,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
 
     if (table._rename) {
       const headers = []
-      for (let header of sheet.headerValues) {
+      for (const header of sheet.headerValues) {
         if (header === table._rename.old) {
           headers.push(table._rename.updated)
         } else {
@@ -416,7 +416,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       const updatedHeaderValues = [...sheet.headerValues]
 
       // add new column - doesn't currently exist
-      for (let [key, column] of Object.entries(table.schema)) {
+      for (const [key, column] of Object.entries(table.schema)) {
         if (!ALLOWED_TYPES.includes(column.type)) {
           throw new Error(
             `Column type: ${column.type} not allowed for GSheets integration.`
@@ -431,7 +431,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
 
       // clear out deleted columns
-      for (let key of sheet.headerValues) {
+      for (const key of sheet.headerValues) {
         if (!Object.keys(table.schema).includes(key)) {
           const idx = updatedHeaderValues.indexOf(key)
           updatedHeaderValues.splice(idx, 1)
@@ -478,8 +478,8 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     try {
       await this.connect()
       const sheet = this.client.sheetsByTitle[query.sheet]
-      let rowsToInsert = []
-      for (let row of query.rows) {
+      const rowsToInsert = []
+      for (const row of query.rows) {
         rowsToInsert.push(typeof row === "string" ? JSON.parse(row) : row)
       }
       const rows = await sheet.addRows(rowsToInsert)
@@ -525,7 +525,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
         const idFilterKeys = Object.keys(query.filters.equal).filter(filter =>
           filter.includes(GOOGLE_SHEETS_PRIMARY_KEY)
         )
-        for (let idFilterKey of idFilterKeys) {
+        for (const idFilterKey of idFilterKeys) {
           const id = query.filters.equal[idFilterKey]
           delete query.filters.equal[idFilterKey]
           query.filters.equal[`_${GOOGLE_SHEETS_PRIMARY_KEY}`] = id
@@ -537,7 +537,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       }
       const headerValues = sheet.headerValues
       let response = []
-      for (let row of filtered) {
+      for (const row of filtered) {
         response.push(
           this.buildRowObject(headerValues, row._rawData, row._rowNumber)
         )
@@ -583,7 +583,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
       if (row) {
         const updateValues =
           typeof query.row === "string" ? JSON.parse(query.row) : query.row
-        for (let key in updateValues) {
+        for (const key in updateValues) {
           row[key] = updateValues[key]
 
           if (row[key] === null) {

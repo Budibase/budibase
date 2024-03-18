@@ -20,7 +20,7 @@ function improveErrors(errors: string[]): string[] {
     if (error.includes(INPUT_CRON_START)) {
       error = error.split(INPUT_CRON_START)[0].trim()
     }
-    for (let [oldErr, newErr] of Object.entries(ERROR_SWAPS)) {
+    for (const [oldErr, newErr] of Object.entries(ERROR_SWAPS)) {
       if (error.includes(oldErr)) {
         error = error.replace(new RegExp(oldErr, "g"), newErr)
       }

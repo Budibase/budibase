@@ -116,7 +116,7 @@ export default class AliasTables {
   reverse<T extends Row | Row[]>(rows: T): T {
     const process = (row: Row) => {
       const final: Row = {}
-      for (let [key, value] of Object.entries(row)) {
+      for (const [key, value] of Object.entries(row)) {
         if (!key.includes(".")) {
           final[key] = value
         } else {
@@ -136,7 +136,7 @@ export default class AliasTables {
 
   aliasMap(tableNames: (string | undefined)[]) {
     const map: Record<string, string> = {}
-    for (let tableName of tableNames) {
+    for (const tableName of tableNames) {
       if (tableName) {
         map[tableName] = this.getAlias(tableName)
       }
@@ -158,12 +158,12 @@ export default class AliasTables {
         )
       }
       if (json.filters) {
-        for (let [filterKey, filter] of Object.entries(json.filters)) {
+        for (const [filterKey, filter] of Object.entries(json.filters)) {
           if (typeof filter !== "object") {
             continue
           }
           const aliasedFilters: typeof filter = {}
-          for (let key of Object.keys(filter)) {
+          for (const key of Object.keys(filter)) {
             aliasedFilters[this.aliasField(key)] = filter[key]
           }
           json.filters[filterKey as keyof SearchFilters] = aliasedFilters
@@ -189,7 +189,7 @@ export default class AliasTables {
       }
       // invert and return
       const invertedTableAliases: Record<string, string> = {}
-      for (let [key, value] of Object.entries(this.tableAliases)) {
+      for (const [key, value] of Object.entries(this.tableAliases)) {
         invertedTableAliases[value] = key
       }
       json.tableAliases = invertedTableAliases

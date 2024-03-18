@@ -241,7 +241,7 @@ export default class TestConfiguration {
   }
 
   async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
-    let cleanup = this.setEnv(newEnvVars)
+    const cleanup = this.setEnv(newEnvVars)
     try {
       await f()
     } finally {
@@ -272,7 +272,7 @@ export default class TestConfiguration {
     newEnvVars: Partial<typeof coreEnv>,
     f: () => Promise<void>
   ) {
-    let cleanup = this.setCoreEnv(newEnvVars)
+    const cleanup = this.setCoreEnv(newEnvVars)
     try {
       await f()
     } finally {
@@ -690,7 +690,7 @@ export default class TestConfiguration {
       tableConfig.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
     tableConfig.primaryDisplay = "name"
-    for (let link of links) {
+    for (const link of links) {
       tableConfig.schema[link] = {
         type: FieldType.LINK,
         fieldName: link,

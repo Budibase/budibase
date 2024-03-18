@@ -34,12 +34,12 @@ export async function updateRelatedFormula(
     return
   }
   let promises: Promise<any>[] = []
-  for (let enrichedRow of Array.isArray(enrichedRows)
+  for (const enrichedRow of Array.isArray(enrichedRows)
     ? enrichedRows
     : [enrichedRows]) {
     // the related rows by tableId
-    let relatedRows: Record<string, Row[]> = {}
-    for (let [key, field] of Object.entries(enrichedRow)) {
+    const relatedRows: Record<string, Row[]> = {}
+    for (const [key, field] of Object.entries(enrichedRow)) {
       const columnDefinition = table.schema[key]
       if (columnDefinition && columnDefinition.type === FieldType.LINK) {
         const relatedTableId = columnDefinition.tableId!
@@ -55,7 +55,7 @@ export async function updateRelatedFormula(
           relatedRows[relatedTableId].concat(uniqueRelatedRows)
       }
     }
-    for (let tableId of table.relatedFormula) {
+    for (const tableId of table.relatedFormula) {
       let relatedTable: Table
       try {
         // no rows to update, skip
@@ -66,7 +66,7 @@ export async function updateRelatedFormula(
       } catch (err) {
         // no error scenario, table doesn't seem to exist anymore, ignore
       }
-      for (let column of Object.values(relatedTable!.schema)) {
+      for (const column of Object.values(relatedTable!.schema)) {
         // needs updated in related rows
         if (
           column.type === FieldType.FORMULA &&
@@ -91,7 +91,7 @@ export async function updateRelatedFormula(
 export async function updateAllFormulasInTable(table: Table) {
   const db = context.getAppDB()
   // start by getting the raw rows (which will be written back to DB after update)
-  let rows = (
+  const rows = (
     await db.allDocs<Row>(
       getRowParams(table._id, null, {
         include_docs: true,
@@ -100,11 +100,11 @@ export async function updateAllFormulasInTable(table: Table) {
   ).rows.map(row => row.doc!)
   // now enrich the rows, note the clone so that we have the base state of the
   // rows so that we don't write any of the enriched information back
-  let enrichedRows = await outputProcessing(table, cloneDeep(rows), {
+  const enrichedRows = await outputProcessing(table, cloneDeep(rows), {
     squash: false,
   })
   const updatedRows = []
-  for (let row of rows) {
+  for (const row of rows) {
     // find the enriched row, if found process the formulas
     const enrichedRow = enrichedRows.find(
       (enriched: Row) => enriched._id === row._id
@@ -164,7 +164,7 @@ export async function finaliseRow(
           },
           async () => {
             const latestTable = await sdk.tables.getTable(table._id!)
-            let response = processAutoColumn(null, latestTable, row, {
+            const response = processAutoColumn(null, latestTable, row, {
               reprocessing: true,
             })
             await db.put(response.table)

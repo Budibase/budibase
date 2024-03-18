@@ -12,7 +12,7 @@ function validate(
     }
     let params = null
     // @ts-ignore
-    let reqProp = ctx.request?.[property]
+    const reqProp = ctx.request?.[property]
     if (ctx[property] != null) {
       params = ctx[property]
     } else if (reqProp != null) {

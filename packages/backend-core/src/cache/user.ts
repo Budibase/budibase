@@ -120,7 +120,7 @@ export async function getUsers(
 ): Promise<{ users: User[]; notFoundIds?: string[] }> {
   const client = await redis.getUserClient()
   // try cache
-  let usersFromCache = await client.bulkGet<User>(userIds)
+  const usersFromCache = await client.bulkGet<User>(userIds)
   const missingUsersFromCache = userIds.filter(uid => !usersFromCache[uid])
   const users = Object.values(usersFromCache)
   let notFoundIds

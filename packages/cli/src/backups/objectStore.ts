@@ -19,7 +19,7 @@ export async function exportObjects() {
   fs.mkdirSync(path)
   let fullList: any[] = []
   let errorCount = 0
-  for (let bucket of bucketList) {
+  for (const bucket of bucketList) {
     const client = ObjectStore(bucket)
     try {
       await client.headBucket().promise()
@@ -35,7 +35,7 @@ export async function exportObjects() {
   }
   const bar = progressBar(fullList.length)
   let count = 0
-  for (let object of fullList) {
+  for (const object of fullList) {
     const filename = object.Key
     const data = await retrieve(object.bucket, filename)
     const possiblePath = filename.split("/")
@@ -59,7 +59,7 @@ export async function importObjects() {
   })
   const bar = progressBar(total)
   let count = 0
-  for (let bucket of buckets) {
+  for (const bucket of buckets) {
     const client = ObjectStore(bucket)
     await makeSureBucketExists(client, bucket)
     const files = await uploadDirectory(bucket, join(path, bucket), "/")

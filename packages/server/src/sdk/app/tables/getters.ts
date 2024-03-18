@@ -41,7 +41,7 @@ export function processTables(tables: Table[]): Table[] {
 }
 
 function processEntities(tables: Record<string, Table>) {
-  for (let key of Object.keys(tables)) {
+  for (const key of Object.keys(tables)) {
     tables[key] = processTable(tables[key])
   }
   return tables
@@ -63,7 +63,7 @@ async function getAllExternalTables(): Promise<Table[]> {
   const datasources = await sdk.datasources.fetch({ enriched: true })
   const allEntities = datasources.map(datasource => datasource.entities)
   let final: Table[] = []
-  for (let entities of allEntities) {
+  for (const entities of allEntities) {
     if (entities) {
       final = final.concat(Object.values(entities))
     }
@@ -86,7 +86,7 @@ export async function getTable(tableId: string): Promise<Table> {
   const db = context.getAppDB()
   let output: Table
   if (isExternalTableID(tableId)) {
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    const { datasourceId, tableName } = breakExternalTableId(tableId)
     const datasource = await datasources.get(datasourceId!)
     const table = await getExternalTable(datasourceId!, tableName!)
     output = { ...table, sql: isSQL(datasource) }

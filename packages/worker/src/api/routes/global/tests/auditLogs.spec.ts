@@ -55,7 +55,7 @@ describe("/api/global/auditlogs", () => {
         events: [Event.USER_CREATED],
       })
       expect(response.data.length).toBeGreaterThan(0)
-      for (let log of response.data) {
+      for (const log of response.data) {
         expect(log.event).toBe(Event.USER_CREATED)
       }
     })
@@ -72,7 +72,7 @@ describe("/api/global/auditlogs", () => {
         endDate: end.toISOString(),
       })
       expect(response.data.length).toBeGreaterThan(0)
-      for (let log of response.data) {
+      for (const log of response.data) {
         expect(log.timestamp).toBe(now.toISOString())
       }
     })
@@ -83,7 +83,7 @@ describe("/api/global/auditlogs", () => {
         userIds: [userId],
       })
       expect(response.data.length).toBeGreaterThan(0)
-      for (let log of response.data) {
+      for (const log of response.data) {
         expect(log.user._id).toBe(userId)
       }
     })
@@ -93,7 +93,7 @@ describe("/api/global/auditlogs", () => {
         appIds: [APP_ID],
       })
       expect(response.data.length).toBeGreaterThan(0)
-      for (let log of response.data) {
+      for (const log of response.data) {
         expect(log.app?._id).toBe(APP_ID)
       }
     })
@@ -103,7 +103,7 @@ describe("/api/global/auditlogs", () => {
         fullSearch: "User",
       })
       expect(response.data.length).toBeGreaterThan(0)
-      for (let log of response.data) {
+      for (const log of response.data) {
         expect(log.name.includes("User")).toBe(true)
       }
     })

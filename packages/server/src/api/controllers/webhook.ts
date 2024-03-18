@@ -48,14 +48,14 @@ export async function buildSchema(ctx: BBContext) {
     webhook.bodySchema = toJsonSchema(ctx.request.body)
     // update the automation outputs
     if (webhook.action.type === WebhookActionType.AUTOMATION) {
-      let automation = (await db.get(webhook.action.target)) as Automation
+      const automation = (await db.get(webhook.action.target)) as Automation
       const autoOutputs = automation.definition.trigger.schema.outputs
-      let properties = webhook.bodySchema.properties
+      const properties = webhook.bodySchema.properties
       // reset webhook outputs
       autoOutputs.properties = {
         body: autoOutputs.properties.body,
       }
-      for (let prop of Object.keys(properties)) {
+      for (const prop of Object.keys(properties)) {
         autoOutputs.properties[prop] = {
           type: properties[prop].type,
           description: AUTOMATION_DESCRIPTION,
@@ -81,7 +81,7 @@ export async function trigger(ctx: BBContext) {
       if (webhook.action.type === WebhookActionType.AUTOMATION) {
         // trigger with both the pure request and then expand it
         // incase the user has produced a schema to bind to
-        let hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
+        const hasCollectStep = sdk.automations.utils.checkForCollectStep(target)
 
         if (hasCollectStep && (await pro.features.isSyncAutomationsEnabled())) {
           const response = await triggers.externalTrigger(
@@ -94,7 +94,7 @@ export async function trigger(ctx: BBContext) {
             { getResponses: true }
           )
 
-          let collectedValue = response.steps.find(
+          const collectedValue = response.steps.find(
             (step: any) => step.stepId === AutomationActionStepId.COLLECT
           )
 

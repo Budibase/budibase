@@ -150,8 +150,8 @@ function promisifyStream(stream: any, client: RedisWrapper) {
     stream.on("end", async () => {
       const keysArray: string[] = Array.from(outputKeys) as string[]
       try {
-        let getPromises = []
-        for (let key of keysArray) {
+        const getPromises = []
+        for (const key of keysArray) {
           getPromises.push(client.get(key))
         }
         const jsonArray = await Promise.all(getPromises)
@@ -201,7 +201,7 @@ class RedisWrapper {
     key = `${db}${SEPARATOR}${key}`
     let stream
     if (CLUSTERED) {
-      let node = (this.getClient() as never as Cluster).nodes("master")
+      const node = (this.getClient() as never as Cluster).nodes("master")
       stream = node[0].scanStream({ match: key + "*", count: 100 })
     } else {
       stream = (this.getClient() as Redis).scanStream({
@@ -245,11 +245,11 @@ class RedisWrapper {
       return {}
     }
     const prefixedKeys = keys.map(key => addDbPrefix(db, key))
-    let response = await this.getClient().mget(prefixedKeys)
+    const response = await this.getClient().mget(prefixedKeys)
     if (Array.isArray(response)) {
-      let final: Record<string, T> = {}
+      const final: Record<string, T> = {}
       let count = 0
-      for (let result of response) {
+      for (const result of response) {
         if (result) {
           let parsed
           try {
@@ -326,7 +326,7 @@ class RedisWrapper {
   }
 
   async clear() {
-    let items = await this.scan()
+    const items = await this.scan()
     await Promise.all(items.map((obj: any) => this.delete(obj.key)))
   }
 

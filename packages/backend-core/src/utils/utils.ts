@@ -29,7 +29,7 @@ function confirmAppId(possibleAppId: string | undefined) {
 
 export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
-  let possibleAppUrl = `/${appUrl.toLowerCase()}`
+  const possibleAppUrl = `/${appUrl.toLowerCase()}`
 
   let tenantId: string | undefined = context.getTenantId()
   if (!env.isDev() && env.MULTI_TENANCY) {
@@ -83,7 +83,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // look in headers
   const options = [ctx.request.headers[Header.APP_ID]]
   let appId
-  for (let option of options) {
+  for (const option of options) {
     appId = confirmAppId(option as string)
     if (appId) {
       break

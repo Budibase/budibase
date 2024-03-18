@@ -8,7 +8,6 @@ import {
 } from "@budibase/types"
 import BudibaseInternalAPIClient from "../BudibaseInternalAPIClient"
 import BaseAPI from "./BaseAPI"
-import { APIRequestOpts } from "../../../types"
 
 export default class LicenseAPI extends BaseAPI {
   constructor(client: BudibaseInternalAPIClient) {

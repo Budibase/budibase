@@ -8,7 +8,7 @@ const DATASOURCE_PATH = join(budibaseTempDir(), "datasource")
 const AUTOMATION_PATH = join(budibaseTempDir(), "automation")
 
 export const getPluginMetadata = async (path: string) => {
-  let metadata: any = {}
+  const metadata: any = {}
   try {
     const pkg = fs.readFileSync(join(path, "package.json"), "utf8")
     const schema = fs.readFileSync(join(path, "schema.json"), "utf8")

@@ -12,14 +12,13 @@ dbConfig.init()
 import env from "../environment"
 import * as controllers from "./controllers"
 
-const supertest = require("supertest")
+import supertest from "supertest"
 
 import { Config } from "../constants"
 import {
   users,
   context,
   sessions,
-  auth,
   constants,
   env as coreEnv,
   db as dbCore,
@@ -55,6 +54,7 @@ class TestConfiguration {
 
     if (opts.openServer) {
       env.PORT = "0" // random port
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       this.server = require("../index").default
       // we need the request for logging in, involves cookies, hard to fake
       this.request = supertest(this.server)
@@ -127,6 +127,7 @@ class TestConfiguration {
     if (this.server) {
       await this.server.close()
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       await require("../index").default.close()
     }
   }
@@ -242,7 +243,7 @@ class TestConfiguration {
   }
 
   async withEnv(newEnvVars: Partial<typeof env>, f: () => Promise<void>) {
-    let cleanup = this.setEnv(newEnvVars)
+    const cleanup = this.setEnv(newEnvVars)
     try {
       await f()
     } finally {
@@ -292,6 +293,15 @@ class TestConfiguration {
       }
       await db.put(devInfo)
     })
+  }
+
+  getDefaultUser(): User {
+    if (!this.user) {
+      throw new Error(
+        "Default user hasn't been created yet, remember to call beforeAll in your test."
+      )
+    }
+    return this.user!
   }
 
   async getUser(email: string): Promise<User> {

@@ -138,12 +138,12 @@ export function doesHaveBasePermission(
     ...new Set(rolesHierarchy.map(role => role.permissionId)),
   ]
   const builtins = Object.values(BUILTIN_PERMISSIONS)
-  let permissions = flatten(
+  const permissions = flatten(
     builtins
       .filter(builtin => basePermissions.indexOf(builtin._id) !== -1)
       .map(builtin => builtin.permissions)
   )
-  for (let permission of permissions) {
+  for (const permission of permissions) {
     if (
       permission.type === permType &&
       getAllowedLevels(permission.level).indexOf(permLevel) !== -1

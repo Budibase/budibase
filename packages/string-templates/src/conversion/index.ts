@@ -1,7 +1,7 @@
 import { getJsHelperList } from "../helpers"
 
 function getLayers(fullBlock: string): string[] {
-  let layers = []
+  const layers = []
   while (fullBlock.length) {
     const start = fullBlock.lastIndexOf("("),
       end = fullBlock.indexOf(")")
@@ -112,7 +112,7 @@ export function convertHBSBlock(block: string, blockNumber: number) {
 
   let value = null
   const list = getJsHelperList()
-  for (let layer of layers) {
+  for (const layer of layers) {
     const parts = splitBySpace(layer)
     if (value || parts.length > 1 || list[parts[0]]) {
       // first of layer should always be the helper

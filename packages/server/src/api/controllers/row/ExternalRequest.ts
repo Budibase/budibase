@@ -69,12 +69,12 @@ function buildFilters(
   if (filters) {
     // need to map over the filters and make sure the _id field isn't present
     let prefix = 1
-    for (let operator of Object.values(filters)) {
-      for (let field of Object.keys(operator || {})) {
+    for (const operator of Object.values(filters)) {
+      for (const field of Object.keys(operator || {})) {
         if (dbCore.removeKeyNumbering(field) === "_id") {
           if (primary) {
             const parts = breakRowIdField(operator[field])
-            for (let field of primary) {
+            for (const field of primary) {
               operator[`${prefix}:${field}`] = parts.shift()
             }
             prefix++
@@ -95,7 +95,7 @@ function buildFilters(
   }
   const equal: any = {}
   if (primary && idCopy) {
-    for (let field of primary) {
+    for (const field of primary) {
       // work through the ID and get the parts
       equal[field] = idCopy.shift()
     }
@@ -158,7 +158,7 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
     .filter(schema => primaryOptions.find(val => val === schema[1].type))
     .map(([fieldName]) => fieldName)
   const iterateObject = (obj: { [key: string]: any }) => {
-    for (let [field, value] of Object.entries(obj)) {
+    for (const [field, value] of Object.entries(obj)) {
       if (fieldNames.find(name => name === field) && isRowId(value)) {
         obj[field] = convertRowId(value)
       }
@@ -166,7 +166,7 @@ function cleanupConfig(config: RunConfig, table: Table): RunConfig {
   }
   // check the row and filters to make sure they aren't a key of some sort
   if (config.filters) {
-    for (let [key, filter] of Object.entries(config.filters)) {
+    for (const [key, filter] of Object.entries(config.filters)) {
       // oneOf is an array, don't iterate it
       if (
         typeof filter !== "object" ||
@@ -195,9 +195,9 @@ function generateIdForRow(
     return ""
   }
   // build id array
-  let idParts = []
-  for (let field of primary) {
-    let fieldValue = extractFieldValue({
+  const idParts = []
+  for (const field of primary) {
+    const fieldValue = extractFieldValue({
       row,
       tableName: table.name,
       fieldName: field,
@@ -255,7 +255,7 @@ function basicProcessing({
 }): Row {
   const thisRow: Row = {}
   // filter the row down to what is actually the row (not joined)
-  for (let field of Object.values(table.schema)) {
+  for (const field of Object.values(table.schema)) {
     const fieldName = field.name
 
     const value = extractFieldValue({
@@ -277,7 +277,7 @@ function basicProcessing({
 }
 
 function fixArrayTypes(row: Row, table: Table) {
-  for (let [fieldName, schema] of Object.entries(table.schema)) {
+  for (const [fieldName, schema] of Object.entries(table.schema)) {
     if (schema.type === FieldType.ARRAY && typeof row[fieldName] === "string") {
       try {
         row[fieldName] = JSON.parse(row[fieldName])
@@ -360,9 +360,9 @@ export class ExternalRequest<T extends Operation> {
     // we don't really support composite keys for relationships, this is why [0] is used
     // @ts-ignore
     const tablePrimary: string = table.primary[0]
-    let newRow: Row = {},
+    const newRow: Row = {},
       manyRelationships: ManyRelationship[] = []
-    for (let [key, field] of Object.entries(table.schema)) {
+    for (const [key, field] of Object.entries(table.schema)) {
       // if set already, or not set just skip it
       if (row[key] === undefined || newRow[key] || !isEditableColumn(field)) {
         continue
@@ -442,15 +442,15 @@ export class ExternalRequest<T extends Operation> {
     row: Row,
     relationships: RelationshipsJson[]
   ): Promise<Row> {
-    for (let relationship of relationships) {
+    for (const relationship of relationships) {
       const linkedTable = this.tables[relationship.tableName]
       if (!linkedTable || !row[relationship.column]) {
         continue
       }
-      for (let key of Object.keys(row[relationship.column])) {
+      for (const key of Object.keys(row[relationship.column])) {
         let relatedRow: Row = row[relationship.column][key]
         // add this row as context for the relationship
-        for (let col of Object.values(linkedTable.schema)) {
+        for (const col of Object.values(linkedTable.schema)) {
           if (col.type === FieldType.LINK && col.tableId === table._id) {
             relatedRow[col.name] = [row]
           }
@@ -479,7 +479,7 @@ export class ExternalRequest<T extends Operation> {
     relationships: RelationshipsJson[]
   ) {
     const columns: { [key: string]: any } = {}
-    for (let relationship of relationships) {
+    for (const relationship of relationships) {
       const linkedTable = this.tables[relationship.tableName]
       if (!linkedTable) {
         continue
@@ -495,13 +495,13 @@ export class ExternalRequest<T extends Operation> {
         continue
       }
 
-      let linked = basicProcessing({ row, table: linkedTable, isLinked: true })
+      const linked = basicProcessing({ row, table: linkedTable, isLinked: true })
       if (!linked._id) {
         continue
       }
       columns[relationship.column] = linked
     }
-    for (let [column, related] of Object.entries(columns)) {
+    for (const [column, related] of Object.entries(columns)) {
       if (!row._id) {
         continue
       }
@@ -530,7 +530,7 @@ export class ExternalRequest<T extends Operation> {
       return []
     }
     let finalRows: { [key: string]: Row } = {}
-    for (let row of rows) {
+    for (const row of rows) {
       const rowId = generateIdForRow(row, table)
       row._id = rowId
       // this is a relationship of some sort
@@ -562,7 +562,7 @@ export class ExternalRequest<T extends Operation> {
 
     // make sure all related rows are correct
     let finalRowArray = []
-    for (let row of Object.values(finalRows)) {
+    for (const row of Object.values(finalRows)) {
       finalRowArray.push(
         await this.processRelationshipFields(table, row, relationships)
       )
@@ -580,7 +580,7 @@ export class ExternalRequest<T extends Operation> {
    */
   buildRelationships(table: Table): RelationshipsJson[] {
     const relationships = []
-    for (let [fieldName, field] of Object.entries(table.schema)) {
+    for (const [fieldName, field] of Object.entries(table.schema)) {
       if (field.type !== FieldType.LINK) {
         continue
       }
@@ -703,7 +703,7 @@ export class ExternalRequest<T extends Operation> {
     // if we're creating (in a through table) need to wipe the existing ones first
     const promises = []
     const related = await this.lookupRelations(mainTableId, row)
-    for (let relationship of relationships) {
+    for (const relationship of relationships) {
       const { key, tableId, isUpdate, id, ...rest } = relationship
       const body: { [key: string]: any } = processObjectSync(rest, row, {})
       const linkTable = this.getTable(tableId)
@@ -756,7 +756,7 @@ export class ExternalRequest<T extends Operation> {
       }
     }
     // finally cleanup anything that needs to be removed
-    for (let [colName, { isMany, rows, tableId }] of Object.entries(related)) {
+    for (const [colName, { isMany, rows, tableId }] of Object.entries(related)) {
       const table: Table | undefined = this.getTable(tableId)
       // if its not the foreign key skip it, nothing to do
       if (
@@ -765,7 +765,7 @@ export class ExternalRequest<T extends Operation> {
       ) {
         continue
       }
-      for (let row of rows) {
+      for (const row of rows) {
         const rowId = generateIdForRow(row, table)
         const promise: Promise<any> = isMany
           ? removeManyToManyRelationships(rowId, table, colName)
@@ -781,7 +781,7 @@ export class ExternalRequest<T extends Operation> {
   async removeRelationshipsToRow(table: Table, rowId: string) {
     const row = await this.getRow(table, rowId)
     const related = await this.lookupRelations(table._id!, row)
-    for (let column of Object.values(table.schema)) {
+    for (const column of Object.values(table.schema)) {
       const relationshipColumn = column as RelationshipFieldMetadata
       if (!isManyToOne(relationshipColumn)) {
         continue
@@ -822,7 +822,7 @@ export class ExternalRequest<T extends Operation> {
         .map(column => `${table.name}.${column[0]}`)
     }
     let fields = extractRealFields(table)
-    for (let field of Object.values(table.schema)) {
+    for (const field of Object.values(table.schema)) {
       if (field.type !== FieldType.LINK || !includeRelations) {
         continue
       }
@@ -840,7 +840,7 @@ export class ExternalRequest<T extends Operation> {
 
   async run(config: RunConfig): Promise<ExternalRequestReturnType<T>> {
     const { operation, tableId } = this
-    let { datasourceId, tableName } = breakExternalTableId(tableId)
+    const { datasourceId, tableName } = breakExternalTableId(tableId)
     if (!tableName) {
       throw "Unable to run without a table name"
     }
@@ -852,7 +852,7 @@ export class ExternalRequest<T extends Operation> {
       this.tables = this.datasource.entities
     }
     const table = this.tables[tableName]
-    let isSql = isSQL(this.datasource)
+    const isSql = isSQL(this.datasource)
     if (!table) {
       throw `Unable to process query, table "${tableName}" not defined.`
     }
@@ -862,7 +862,7 @@ export class ExternalRequest<T extends Operation> {
       table
     )
     //if the sort column is a formula, remove it
-    for (let sortColumn of Object.keys(sort || {})) {
+    for (const sortColumn of Object.keys(sort || {})) {
       if (!sort?.[sortColumn]) {
         continue
       }
@@ -890,7 +890,7 @@ export class ExternalRequest<T extends Operation> {
     ) {
       throw "Deletion must be filtered"
     }
-    let json = {
+    const json = {
       endpoint: {
         datasourceId: datasourceId!,
         entityId: tableName,

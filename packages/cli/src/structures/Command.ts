@@ -55,7 +55,7 @@ export class Command {
     if (this.help) {
       command = command.description(getHelpDescription(thisCmd.help!))
     }
-    for (let opt of thisCmd.opts) {
+    for (const opt of thisCmd.opts) {
       command = command.option(opt.command, getSubHelpDescription(opt.help))
     }
     command.helpOption(
@@ -66,7 +66,7 @@ export class Command {
       try {
         let executed = false,
           found = false
-        for (let opt of thisCmd.opts) {
+        for (const opt of thisCmd.opts) {
           let lookup = opt.command.split(" ")[0].replace("--", "")
           // need to handle how commander converts watch-plugin-dir to watchPluginDir
           lookup = this.convertToCommander(lookup)

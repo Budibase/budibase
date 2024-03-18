@@ -34,7 +34,7 @@ const priceTable: SaveTableRequest = {
 }
 
 describe("/views", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
   let table: Table
 
   afterAll(setup.afterAll)
@@ -467,7 +467,7 @@ describe("/views", () => {
       })
       table = await config.api.table.get(table._id!)
 
-      let res = await config.api.legacyView.export(view.name!, "json")
+      const res = await config.api.legacyView.export(view.name!, "json")
 
       assertJsonExport(res)
       expect(events.view.exported).toBeCalledTimes(1)
@@ -484,7 +484,7 @@ describe("/views", () => {
       })
       table = await config.api.table.get(table._id!)
 
-      let res = await config.api.legacyView.export(view.name!, "csv")
+      const res = await config.api.legacyView.export(view.name!, "csv")
 
       assertCSVExport(res)
       expect(events.view.exported).toBeCalledTimes(1)

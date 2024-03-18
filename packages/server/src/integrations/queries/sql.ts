@@ -14,9 +14,9 @@ export async function interpolateSQL(
     return fields
   }
   const bindings = findHBSBlocks(sql)
-  let variables = [],
+  const variables = [],
     arrays = []
-  for (let binding of bindings) {
+  for (const binding of bindings) {
     // look for array/list operations in the SQL statement, which will need handled later
     const listRegexMatch = sql.match(
       new RegExp(`(in|IN|In|iN)( )+[(]?${binding}[)]?`)

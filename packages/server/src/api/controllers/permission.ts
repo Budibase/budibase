@@ -73,7 +73,7 @@ async function updatePermissionOnRole(
 
   // now try to find any roles which need updated, e.g. removing the
   // resource from another role and then adding to the new role
-  for (let role of dbRoles) {
+  for (const role of dbRoles) {
     let updated = false
     const rolePermissions = role.permissions ? role.permissions : {}
     // make sure its an array, also handle migrating
@@ -135,9 +135,9 @@ export function fetchLevels(ctx: UserCtx) {
 export async function fetch(ctx: UserCtx) {
   const db = context.getAppDB()
   const dbRoles: Role[] = await getAllDBRoles(db)
-  let permissions: any = {}
+  const permissions: any = {}
   // create an object with structure role ID -> resource ID -> level
-  for (let role of dbRoles) {
+  for (const role of dbRoles) {
     if (!role.permissions) {
       continue
     }
@@ -145,7 +145,7 @@ export async function fetch(ctx: UserCtx) {
     if (!roleId) {
       ctx.throw(400, "Unable to retrieve role")
     }
-    for (let [resource, levelArr] of Object.entries(role.permissions)) {
+    for (const [resource, levelArr] of Object.entries(role.permissions)) {
       const levels: string[] = Array.isArray(levelArr) ? levelArr : [levelArr]
       const perms: Record<string, string> = {}
       levels.forEach(level => (perms[level] = roleId!))
@@ -154,7 +154,7 @@ export async function fetch(ctx: UserCtx) {
   }
   // apply the base permissions
   const finalPermissions: Record<string, Record<string, string>> = {}
-  for (let [resource, permission] of Object.entries(permissions)) {
+  for (const [resource, permission] of Object.entries(permissions)) {
     const basePerms = getBasePermissions(resource)
     finalPermissions[resource] = Object.assign(basePerms, permission)
   }

@@ -69,7 +69,7 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
     }
   }
 
-  let ctx: any = buildCtx(appId, emitter, {
+  const ctx: any = buildCtx(appId, emitter, {
     body: {
       _id: inputs.id,
       _rev: inputs.revision,

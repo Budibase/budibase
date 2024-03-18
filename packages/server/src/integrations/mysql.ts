@@ -188,7 +188,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       )
       response.connected = result?.checkRes == 2
     } catch (e: any) {
-      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, e.errno)
+      const readableMessage = getReadableErrorMessage(SourceName.MYSQL, e.errno)
       if (readableMessage) {
         response.error = readableMessage
       } else {
@@ -268,7 +268,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
     } catch (err: any) {
-      let readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
+      const readableMessage = getReadableErrorMessage(SourceName.MYSQL, err.errno)
       if (readableMessage) {
         throw new Error(readableMessage)
       } else {
@@ -291,14 +291,14 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     try {
       // get the tables first
       const tableNames = await this.queryTableNames()
-      for (let tableName of tableNames) {
+      for (const tableName of tableNames) {
         const primaryKeys = []
         const schema: TableSchema = {}
         const descResp: MySQLColumn[] = await this.internalQuery(
           { sql: `DESCRIBE \`${tableName}\`;` },
           { connect: false }
         )
-        for (let column of descResp) {
+        for (const column of descResp) {
           const columnName = column.Field
           if (column.Key === "PRI" && primaryKeys.indexOf(column.Key) === -1) {
             primaryKeys.push(columnName)
@@ -337,8 +337,8 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       await this.disconnect()
     }
 
-    let externalTables = finaliseExternalTables(tables, entities)
-    let errors = checkExternalTables(tables)
+    const externalTables = finaliseExternalTables(tables, entities)
+    const errors = checkExternalTables(tables)
     return { tables: externalTables, errors }
   }
 
@@ -405,7 +405,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       const [databaseResult] = await this.internalQuery({
         sql: `SHOW CREATE DATABASE ${this.config.database}`,
       })
-      let dumpContent = [databaseResult["Create Database"]]
+      const dumpContent = [databaseResult["Create Database"]]
 
       const tablesResult = await this.internalQuery({
         sql: `SHOW TABLES`,

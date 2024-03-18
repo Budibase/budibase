@@ -38,7 +38,7 @@ export async function fetch(status: AppStatus, user: ContextUser) {
   // get the locks for all the dev apps
   if (dev || all) {
     const locks = await getLocksById(appIds)
-    for (let app of apps) {
+    for (const app of apps) {
       const lock = locks[app.appId]
       if (lock) {
         app.lockedBy = lock as any

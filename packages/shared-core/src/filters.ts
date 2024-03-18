@@ -98,12 +98,12 @@ const cleanupQuery = (query: SearchQuery) => {
   if (!query) {
     return query
   }
-  for (let filterField of NoEmptyFilterStrings) {
+  for (const filterField of NoEmptyFilterStrings) {
     if (!query[filterField]) {
       continue
     }
 
-    for (let [key, value] of Object.entries(query[filterField]!)) {
+    for (const [key, value] of Object.entries(query[filterField]!)) {
       if (value == null || value === "") {
         delete query[filterField]![key]
       }
@@ -130,7 +130,7 @@ const removeKeyNumbering = (key: string) => {
  * @param filter the builder filter structure
  */
 export const buildLuceneQuery = (filter: SearchFilter[]) => {
-  let query: SearchQuery = {
+  const query: SearchQuery = {
     string: {},
     fuzzy: {},
     range: {},
@@ -479,7 +479,7 @@ export const hasFilters = (query?: SearchQuery) => {
     return false
   }
   const skipped = ["allOr", "onEmptyFilter"]
-  for (let [key, value] of Object.entries(query)) {
+  for (const [key, value] of Object.entries(query)) {
     if (skipped.includes(key) || typeof value !== "object") {
       continue
     }

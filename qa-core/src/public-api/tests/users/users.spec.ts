@@ -7,7 +7,7 @@ describe("Public API - /users endpoints", () => {
 
   beforeAll(async () => {
     await config.beforeAll()
-    const [_, user] = await config.api.users.seed()
+    const [, user] = await config.api.users.seed()
     config.context = user
   })
 

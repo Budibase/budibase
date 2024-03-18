@@ -1,5 +1,5 @@
 // lucene searching not supported in test due to use of PouchDB
-let rows: Row[] = []
+const rows: Row[] = []
 jest.mock("../../sdk/app/rows/search/internalSearch", () => ({
   fullSearch: jest.fn(() => {
     return {
@@ -15,7 +15,7 @@ const NAME = "Test"
 
 describe("Test a query step automation", () => {
   let table: Table
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   beforeAll(async () => {
     await config.init()

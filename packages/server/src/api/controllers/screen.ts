@@ -39,7 +39,7 @@ export async function fetch(ctx: BBContext) {
 
 export async function save(ctx: UserCtx<Screen, Screen>) {
   const db = context.getAppDB()
-  let screen = ctx.request.body
+  const screen = ctx.request.body
 
   let eventFn
   if (!screen._id) {
@@ -50,7 +50,7 @@ export async function save(ctx: UserCtx<Screen, Screen>) {
   const response = await db.put(screen)
 
   // Find any custom components being used
-  let pluginNames: string[] = []
+  const pluginNames: string[] = []
   let pluginAdded = false
   findPlugins(screen.props, pluginNames)
   if (pluginNames.length) {
@@ -71,7 +71,7 @@ export async function save(ctx: UserCtx<Screen, Screen>) {
 
     // Update the app metadata
     const application = await db.get<any>(DocumentType.APP_METADATA)
-    let usedPlugins = application.usedPlugins || []
+    const usedPlugins = application.usedPlugins || []
 
     requiredPlugins.forEach((plugin: Plugin) => {
       if (!usedPlugins.find((x: Plugin) => x._id === plugin._id)) {

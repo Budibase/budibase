@@ -8,7 +8,7 @@ import { mocks } from "@budibase/backend-core/tests"
 mocks.licenses.useBackups()
 
 describe("/backups", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
 
   afterAll(setup.afterAll)
 
@@ -62,7 +62,7 @@ describe("/backups", () => {
     it("should be able to calculate the backup statistics", async () => {
       await config.createAutomation()
       await config.createScreen()
-      let res = await sdk.backups.calculateBackupStats(config.getAppId()!)
+      const res = await sdk.backups.calculateBackupStats(config.getAppId()!)
       expect(res.automations).toEqual(1)
       expect(res.datasources).toEqual(1)
       expect(res.screens).toEqual(1)

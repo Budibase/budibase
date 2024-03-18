@@ -6,8 +6,7 @@ import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
 import { configs, cache } from "@budibase/backend-core"
 import ical from "ical-generator"
-
-const nodemailer = require("nodemailer")
+import { createTransport, getTestMessageUrl } from "nodemailer"
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
 const TYPE = TemplateType.EMAIL
@@ -50,7 +49,7 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
       },
     }
   }
-  return nodemailer.createTransport(options)
+  return createTransport(options)
 }
 
 async function getLinkCode(
@@ -88,13 +87,13 @@ async function buildEmail(
   if (FULL_EMAIL_PURPOSES.indexOf(purpose) === -1) {
     throw `Unable to build an email of type ${purpose}`
   }
-  let [base, body] = await Promise.all([
+  const [base, body] = await Promise.all([
     getTemplateByPurpose(TYPE, EmailTemplatePurpose.BASE),
     getTemplateByPurpose(TYPE, purpose),
   ])
 
   // Change from branding to core
-  let core = EmailTemplates[EmailTemplatePurpose.CORE]
+  const core = EmailTemplates[EmailTemplatePurpose.CORE]
 
   if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
@@ -153,7 +152,7 @@ export async function sendEmail(
   const transport = createSMTPTransport(config)
   // if there is a link code needed this will retrieve it
   const code = await getLinkCode(purpose, email, opts.user, opts?.info)
-  let context = await getSettingsTemplateContext(purpose, code)
+  const context = await getSettingsTemplateContext(purpose, code)
 
   let message: any = {
     from: opts?.from || config?.from,
@@ -198,7 +197,7 @@ export async function sendEmail(
 
   const response = await transport.sendMail(message)
   if (TEST_MODE) {
-    console.log("Test email URL: " + nodemailer.getTestMessageUrl(response))
+    console.log("Test email URL: " + getTestMessageUrl(response))
   }
   return response
 }

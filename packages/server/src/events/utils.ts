@@ -32,7 +32,7 @@ export function rowEmission({
   table,
   metadata,
 }: BBEventOpts) {
-  let event: BBEvent = {
+  const event: BBEvent = {
     row,
     appId,
     tableId: row?.tableId,
@@ -62,7 +62,7 @@ export function tableEmission({
   if (inputTable) {
     inputTable.tableId = tableId
   }
-  let event: BBEvent = {
+  const event: BBEvent = {
     table: inputTable,
     appId,
     tableId: tableId,

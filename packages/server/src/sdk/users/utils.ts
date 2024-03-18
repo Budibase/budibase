@@ -73,7 +73,7 @@ export async function fetchMetadata(): Promise<ContextUserMetadata[]> {
   const global = await getGlobalUsers()
   const metadata = await rawUserMetadata()
   const users: ContextUserMetadata[] = []
-  for (let user of global) {
+  for (const user of global) {
     // find the metadata that matches up to the global ID
     const info = metadata.find(meta => meta._id!.includes(user._id!))
     // remove these props, not for the correct DB
@@ -91,7 +91,7 @@ export async function fetchMetadata(): Promise<ContextUserMetadata[]> {
 export async function syncGlobalUsers() {
   // sync user metadata
   const dbs = [context.getDevAppDB(), context.getProdAppDB()]
-  for (let db of dbs) {
+  for (const db of dbs) {
     if (!(await db.exists())) {
       continue
     }
@@ -100,14 +100,14 @@ export async function syncGlobalUsers() {
       rawUserMetadata(db),
     ])
     const toWrite = []
-    for (let user of users) {
+    for (const user of users) {
       const combined = combineMetadataAndUser(user, metadata)
       if (combined) {
         toWrite.push(combined)
       }
     }
-    let foundEmails: string[] = []
-    for (let data of metadata) {
+    const foundEmails: string[] = []
+    for (const data of metadata) {
       if (!data._id) {
         continue
       }

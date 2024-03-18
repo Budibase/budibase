@@ -17,7 +17,7 @@ export const buildMatcherRegex = (
     // use a wildcard pattern
     const matches = route.match(PARAM_REGEX)
     if (matches) {
-      for (let match of matches) {
+      for (const match of matches) {
         const suffix = match.endsWith("/") ? "/" : ""
         const pattern = "/.*" + suffix
         route = route.replace(match, pattern)

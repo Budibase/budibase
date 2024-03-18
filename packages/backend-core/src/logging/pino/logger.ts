@@ -89,7 +89,7 @@ if (!env.DISABLE_PINO_LOGGER) {
    */
   function getLogParams(args: any[]): [MergingObject, string] {
     let error = undefined
-    let objects: any[] = []
+    const objects: any[] = []
     let message = ""
 
     args.forEach(arg => {

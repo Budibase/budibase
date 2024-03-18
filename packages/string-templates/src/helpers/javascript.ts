@@ -55,9 +55,9 @@ export function processJS(handlebars: string, context: any) {
 
     // Transform snippets into an object for faster access, and cache previously
     // evaluated snippets
-    let snippetMap: any = {}
-    let snippetCache: any = {}
-    for (let snippet of context.snippets || []) {
+    const snippetMap: any = {}
+    const snippetCache: any = {}
+    for (const snippet of context.snippets || []) {
       snippetMap[snippet.name] = snippet.code
     }
 

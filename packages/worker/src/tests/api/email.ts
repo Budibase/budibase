@@ -13,7 +13,7 @@ export class EmailAPI extends TestAPI {
         email: "test@example.com",
         purpose,
         tenantId: this.config.getTenantId(),
-        userId: this.config.user?._id!,
+        userId: this.config.getDefaultUser()._id!,
       })
       .set(this.config.defaultHeaders())
       .expect("Content-Type", /json/)

@@ -9,7 +9,7 @@ export default class TableAPI extends BaseAPI {
     super(client)
   }
 
-  async getAll(expectedNumber: Number): Promise<[Response, Table[]]> {
+  async getAll(expectedNumber: number): Promise<[Response, Table[]]> {
     const [response, json] = await this.get(`/tables`)
     expect(json.length).toBe(expectedNumber)
     return [response, json]

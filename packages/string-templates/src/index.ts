@@ -140,8 +140,8 @@ export function processObjectSync(
   opts: any
 ): object | Array<any> {
   testObject(object)
-  for (let key of Object.keys(object || {})) {
-    let val = object[key]
+  for (const key of Object.keys(object || {})) {
+    const val = object[key]
     if (typeof val === "string") {
       object[key] = processStringSync(object[key], context, opts)
     } else if (typeof val === "object") {
@@ -185,7 +185,7 @@ export function processStringSync(
   try {
     if (opts && opts.onlyFound) {
       const blocks = findHBSBlocks(string)
-      for (let block of blocks) {
+      for (const block of blocks) {
         const outcome = process(block)
         string = string.replace(block, outcome)
       }
@@ -212,7 +212,7 @@ export function disableEscaping(string: string) {
 
   // find the unique set
   const unique = [...new Set(matches)]
-  for (let match of unique) {
+  for (const match of unique) {
     // add a negative lookahead to exclude any already
     const regex = new RegExp(`${match}(?!})`, "g")
     string = string.replace(regex, `{${match}}`)
@@ -330,18 +330,18 @@ export function decodeJSBinding(handlebars: string): string | null {
  * @returns {boolean} Will return true if all strings found in HBS statement.
  */
 export function doesContainStrings(template: string, strings: any[]): boolean {
-  let regexp = new RegExp(FIND_HBS_REGEX)
-  let matches = template.match(regexp)
+  const regexp = new RegExp(FIND_HBS_REGEX)
+  const matches = template.match(regexp)
   if (matches == null) {
     return false
   }
-  for (let match of matches) {
+  for (const match of matches) {
     let hbs = match
     if (isJSBinding(match)) {
       hbs = decodeJSBinding(match)!
     }
     let allFound = true
-    for (let string of strings) {
+    for (const string of strings) {
       if (!hbs.includes(string)) {
         allFound = false
       }
@@ -363,8 +363,8 @@ export function findHBSBlocks(string: string): string[] {
   if (!string || typeof string !== "string") {
     return []
   }
-  let regexp = new RegExp(FIND_ANY_HBS_REGEX)
-  let matches = string.match(regexp)
+  const regexp = new RegExp(FIND_ANY_HBS_REGEX)
+  const matches = string.match(regexp)
   if (matches == null) {
     return []
   }
@@ -393,7 +393,7 @@ export function convertToJS(hbs: string) {
     js += hbs
   }
   let count = 1
-  for (let block of blocks) {
+  for (const block of blocks) {
     let stringPart = hbs
     if (prevBlock) {
       stringPart = stringPart.split(prevBlock)[1]
@@ -405,7 +405,7 @@ export function convertToJS(hbs: string) {
     js += `${[stringPart]}\${${variable}}`
   }
   let varBlock = ""
-  for (let [variable, value] of Object.entries(variables)) {
+  for (const [variable, value] of Object.entries(variables)) {
     varBlock += `const ${variable} = ${value};\n`
   }
   js += "`;"

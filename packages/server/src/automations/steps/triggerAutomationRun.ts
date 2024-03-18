@@ -71,7 +71,7 @@ export async function run({ inputs }: AutomationStepInput) {
       }
     } else {
       const db = context.getAppDB()
-      let automation = await db.get<Automation>(inputs.automation.automationId)
+      const automation = await db.get<Automation>(inputs.automation.automationId)
 
       const response: AutomationResults = await triggers.externalTrigger(
         automation,

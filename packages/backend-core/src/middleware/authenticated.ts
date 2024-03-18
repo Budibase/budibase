@@ -97,7 +97,7 @@ export default function (
     }
     try {
       // check the actual user is authenticated first, try header or cookie
-      let headerToken = ctx.request.headers[Header.TOKEN]
+      const headerToken = ctx.request.headers[Header.TOKEN]
 
       const authCookie =
         getCookie<SessionCookie>(ctx, Cookie.Auth) ||

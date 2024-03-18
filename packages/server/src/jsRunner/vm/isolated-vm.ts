@@ -72,7 +72,7 @@ export class IsolatedVM implements VM {
 
     this.addToContext({
       helpersStripProtocol: new ivm.Callback((str: string) => {
-        var parsed = url.parse(str) as any
+        const parsed = url.parse(str) as any
         parsed.protocol = ""
         return parsed.format()
       }),
@@ -100,8 +100,8 @@ export class IsolatedVM implements VM {
 
   withSnippets(snippets?: Snippet[]) {
     // Transform snippets into a map for faster access
-    let snippetMap: Record<string, string> = {}
-    for (let snippet of snippets || []) {
+    const snippetMap: Record<string, string> = {}
+    for (const snippet of snippets || []) {
       snippetMap[snippet.name] = snippet.code
     }
     const snippetsSource = loadBundle(BundleType.SNIPPETS)
@@ -243,7 +243,7 @@ export class IsolatedVM implements VM {
   }
 
   private addToContext(context: Record<string, any>) {
-    for (let key in context) {
+    for (const key in context) {
       const value = context[key]
       this.jail.setSync(
         key,
@@ -255,7 +255,7 @@ export class IsolatedVM implements VM {
   }
 
   private removeFromContext(keys: string[]) {
-    for (let key of keys) {
+    for (const key of keys) {
       this.jail.deleteSync(key)
     }
   }

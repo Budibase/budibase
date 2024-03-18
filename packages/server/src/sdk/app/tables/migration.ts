@@ -42,7 +42,7 @@ export async function migrate(
   table.schema[newColumn.name] = newColumn
   table = await sdk.tables.saveTable(table)
 
-  let migrator = getColumnMigrator(table, oldColumn, newColumn)
+  const migrator = getColumnMigrator(table, oldColumn, newColumn)
   try {
     return await migrator.doMigration()
   } catch (e) {
@@ -144,15 +144,15 @@ abstract class UserColumnMigrator implements ColumnMigrator {
   }
 
   async doMigration(): Promise<MigrationResult> {
-    let oldTable = cloneDeep(this.table)
-    let rows = await sdk.rows.fetchRaw(this.table._id!)
-    let rowsById = rows.reduce((acc, row) => {
+    const oldTable = cloneDeep(this.table)
+    const rows = await sdk.rows.fetchRaw(this.table._id!)
+    const rowsById = rows.reduce((acc, row) => {
       acc[row._id!] = row
       return acc
     }, {} as Record<string, Row>)
 
-    let links = await sdk.links.fetchWithDocument(this.table._id!)
-    for (let link of links) {
+    const links = await sdk.links.fetchWithDocument(this.table._id!)
+    for (const link of links) {
       const userSide = this.pickUserTableLinkSide(link)
       const otherSide = this.pickOtherTableLinkSide(link)
       if (
@@ -163,7 +163,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
         continue
       }
 
-      let row = rowsById[otherSide.rowId]
+      const row = rowsById[otherSide.rowId]
       if (!row) {
         // This can happen if the row has been deleted but the link hasn't,
         // which was a state that was found during the initial testing of this
@@ -174,7 +174,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
       this.updateRow(row, userSide)
     }
 
-    let db = context.getAppDB()
+    const db = context.getAppDB()
     await db.bulkDocs(rows)
 
     delete this.table.schema[this.oldColumn.name]
@@ -185,7 +185,7 @@ abstract class UserColumnMigrator implements ColumnMigrator {
       oldTable,
     })
 
-    let otherTable = await sdk.tables.getTable(this.oldColumn.tableId)
+    const otherTable = await sdk.tables.getTable(this.oldColumn.tableId)
     return {
       tablesUpdated: [this.table, otherTable],
     }

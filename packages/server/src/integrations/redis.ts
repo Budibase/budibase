@@ -164,11 +164,11 @@ class RedisIntegration {
     return this.redisContext(async () => {
       // commands split line by line
       const commands = query.json.trim().split("\n")
-      let pipelineCommands = []
+      const pipelineCommands = []
       let tokenised
 
       // process each command separately
-      for (let command of commands) {
+      for (const command of commands) {
         const valueToken = command.trim().match(/".*"/)
         if (valueToken?.[0]) {
           tokenised = [

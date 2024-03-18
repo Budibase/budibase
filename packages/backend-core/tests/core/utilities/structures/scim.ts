@@ -24,7 +24,7 @@ export function createUserRequest(userData?: Partial<CreateUserRequestFields>) {
     ...userData,
   }
 
-  let user: ScimCreateUserRequest = {
+  const user: ScimCreateUserRequest = {
     schemas: [
       "urn:ietf:params:scim:schemas:core:2.0:User",
       "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User",

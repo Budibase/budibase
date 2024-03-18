@@ -209,7 +209,7 @@ export async function fetchAppPackage(
 ) {
   const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<App>(DocumentType.APP_METADATA)
+  const application = await db.get<App>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
@@ -278,7 +278,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     const instance = await createInstance(appId, instanceConfig)
     const db = context.getAppDB()
 
-    let newApplication: App = {
+    const newApplication: App = {
       _id: DocumentType.APP_METADATA,
       _rev: undefined,
       appId,
@@ -367,7 +367,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
 }
 
 async function creationEvents(request: any, app: App) {
-  let creationFns: ((app: App) => Promise<void>)[] = []
+  const creationFns: ((app: App) => Promise<void>)[] = []
 
   const body = request.body
   if (body.useTemplate === "true") {
@@ -394,7 +394,7 @@ async function creationEvents(request: any, app: App) {
     creationFns.push(a => events.app.created(a))
   }
 
-  for (let fn of creationFns) {
+  for (const fn of creationFns) {
     await fn(app)
   }
 }
@@ -737,7 +737,7 @@ async function migrateAppNavigation() {
   const screens: Screen[] = await getScreens()
 
   // Migrate all screens, removing custom layouts
-  for (let screen of screens) {
+  for (const screen of screens) {
     if (!screen.layoutId) {
       continue
     }
@@ -754,7 +754,7 @@ async function migrateAppNavigation() {
     (layout: Layout) => layout._id === BASE_LAYOUT_PROP_IDS.PRIVATE
   )
   if (layout && !existing.navigation) {
-    let navigationSettings: any = {
+    const navigationSettings: any = {
       navigation: "Top",
       title: name,
       navWidth: "Large",

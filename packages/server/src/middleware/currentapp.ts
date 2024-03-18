@@ -16,7 +16,7 @@ import tracer from "dd-trace"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
-  let requestAppId = await utils.getAppIdFromCtx(ctx)
+  const requestAppId = await utils.getAppIdFromCtx(ctx)
   if (!requestAppId) {
     return next()
   }

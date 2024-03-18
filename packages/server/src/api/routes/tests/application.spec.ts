@@ -21,7 +21,7 @@ import tk from "timekeeper"
 import * as uuid from "uuid"
 
 describe("/applications", () => {
-  let config = setup.getConfig()
+  const config = setup.getConfig()
   let app: App
 
   afterAll(setup.afterAll)

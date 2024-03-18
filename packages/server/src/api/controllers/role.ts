@@ -180,7 +180,7 @@ export async function accessible(ctx: UserCtx<void, AccessibleRolesResponse>) {
     const inherits = (await roles.getRole(roleHeader))?.inherits
     const orderedRoles = ctx.body.reverse()
     let filteredRoles = [roleHeader]
-    for (let role of orderedRoles) {
+    for (const role of orderedRoles) {
       filteredRoles = [role, ...filteredRoles]
       if (role === inherits) {
         break

@@ -80,7 +80,7 @@ describe("/api/global/roles", () => {
 
   describe("DELETE /api/global/roles/:appId", () => {
     it("removes an app role", async () => {
-      let user = structures.users.user()
+      const user = structures.users.user()
       user.roles = {
         app_test: "role1",
       }

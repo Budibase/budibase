@@ -121,11 +121,11 @@ function isDeleteRow(input: any): input is DeleteRow {
 }
 
 async function processDeleteRowsRequest(ctx: UserCtx<DeleteRowRequest>) {
-  let request = ctx.request.body as DeleteRows
+  const request = ctx.request.body as DeleteRows
   const tableId = utils.getTableId(ctx)
 
   const processedRows = request.rows.map(row => {
-    let processedRow: Row = typeof row == "string" ? { _id: row } : row
+    const processedRow: Row = typeof row == "string" ? { _id: row } : row
     return !processedRow._rev
       ? addRev(fixRow(processedRow, ctx.params), tableId)
       : fixRow(processedRow, ctx.params)
@@ -141,14 +141,14 @@ async function deleteRows(ctx: UserCtx<DeleteRowRequest>) {
   const tableId = utils.getTableId(ctx)
   const appId = ctx.appId
 
-  let deleteRequest = ctx.request.body as DeleteRows
+  const deleteRequest = ctx.request.body as DeleteRows
 
   deleteRequest.rows = await processDeleteRowsRequest(ctx)
 
   const { rows } = await pickApi(tableId).bulkDestroy(ctx)
   await quotas.removeRows(rows.length)
 
-  for (let row of rows) {
+  for (const row of rows) {
     ctx.eventEmitter && ctx.eventEmitter.emitRow(`row:delete`, appId, row)
     gridSocket?.emitRowDeletion(ctx, row)
   }

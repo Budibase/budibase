@@ -25,7 +25,7 @@ describe("/api/global/template", () => {
   describe("GET /api/global/template/definitions", () => {
     describe("retrieves definitions", () => {
       it("checks description definitions", async () => {
-        let result = await config.api.templates.definitions()
+        const result = await config.api.templates.definitions()
 
         expect(result.body.info[EmailTemplatePurpose.BASE].description).toEqual(
           TemplateMetadata[TemplateType.EMAIL][0].description
@@ -45,7 +45,7 @@ describe("/api/global/template", () => {
       })
 
       it("checks description bindings", async () => {
-        let result = await config.api.templates.definitions()
+        const result = await config.api.templates.definitions()
 
         expect(result.body.bindings[EmailTemplatePurpose.BASE]).toEqual(
           TemplateMetadata[TemplateType.EMAIL][0].bindings
@@ -68,23 +68,23 @@ describe("/api/global/template", () => {
 
   describe("POST /api/global/template", () => {
     it("adds a new template", async () => {
-      let purpose = "base"
-      let contents = "Test contents"
-      let updatedTemplate = {
+      const purpose = "base"
+      const contents = "Test contents"
+      const updatedTemplate = {
         contents: contents,
         purpose: purpose,
         type: "email",
       }
       await config.api.templates.saveTemplate(updatedTemplate)
-      let res = await config.api.templates.getTemplate()
-      let newTemplate = res.body.find((t: any) => (t.purpose = purpose))
+      const res = await config.api.templates.getTemplate()
+      const newTemplate = res.body.find((t: any) => (t.purpose = purpose))
       expect(newTemplate.contents).toEqual(contents)
     })
   })
 
   describe("GET /api/global/template", () => {
     it("fetches templates", async () => {
-      let res = await config.api.templates.getTemplate()
+      const res = await config.api.templates.getTemplate()
       expect(
         res.body.find((t: any) => t.purpose === EmailTemplatePurpose.BASE)
       ).toBeDefined()
