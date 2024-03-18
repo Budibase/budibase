@@ -25,10 +25,9 @@ module.exports = {
       docs: {
         description:
           "disallow the use of 'test.com' in strings and replace it with 'example.com'",
-        recommended: true,
       },
-      schema: [], // no options
-      fixable: "code", // Indicates that this rule supports automatic fixing
+      schema: [],
+      fixable: "code",
     },
     create: function (context) {
       return {
@@ -57,7 +56,6 @@ module.exports = {
       docs: {
         description:
           "enforce using the example.com domain for generator.email calls",
-        recommended: true,
       },
       fixable: "code",
       schema: [],
@@ -92,7 +90,6 @@ module.exports = {
       type: "suggestion",
       docs: {
         description: "reminds you to move .only from tests before committing.",
-        recommended: true,
       },
       schema: [],
     },
