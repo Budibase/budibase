@@ -40,7 +40,7 @@
     indentMore,
     indentLess,
   } from "@codemirror/commands"
-  import { Compartment } from "@codemirror/state"
+  import { Compartment, EditorState } from "@codemirror/state"
   import { javascript } from "@codemirror/lang-javascript"
   import { EditorModes } from "./"
   import { themeStore } from "stores/portal"
@@ -53,6 +53,7 @@
   export let autocompleteEnabled = true
   export let autofocus = false
   export let jsBindingWrapping = true
+  export let readonly = false
 
   const dispatch = createEventDispatcher()
 
@@ -82,8 +83,8 @@
     })
   }
 
-  // For handlebars only.
-  const bindStyle = new MatchDecorator({
+  // Match decoration for HBS bindings
+  const hbsMatchDeco = new MatchDecorator({
     regexp: FIND_ANY_HBS_REGEX,
     decoration: () => {
       return Decoration.mark({
@@ -94,12 +95,35 @@
       })
     },
   })
-
-  let plugin = ViewPlugin.define(
+  const hbsMatchDecoPlugin = ViewPlugin.define(
     view => ({
-      decorations: bindStyle.createDeco(view),
+      decorations: hbsMatchDeco.createDeco(view),
       update(u) {
-        this.decorations = bindStyle.updateDeco(u, this.decorations)
+        this.decorations = hbsMatchDeco.updateDeco(u, this.decorations)
+      },
+    }),
+    {
+      decorations: v => v.decorations,
+    }
+  )
+
+  // Match decoration for snippets
+  const snippetMatchDeco = new MatchDecorator({
+    regexp: /snippets\.[^\s(]+/g,
+    decoration: () => {
+      return Decoration.mark({
+        tag: "span",
+        attributes: {
+          class: "snippet-wrap",
+        },
+      })
+    },
+  })
+  const snippetMatchDecoPlugin = ViewPlugin.define(
+    view => ({
+      decorations: snippetMatchDeco.createDeco(view),
+      update(u) {
+        this.decorations = snippetMatchDeco.updateDeco(u, this.decorations)
       },
     }),
     {
@@ -141,33 +165,21 @@
 
   const buildBaseExtensions = () => {
     return [
-      ...(mode.name === "handlebars" ? [plugin] : []),
-      history(),
       drawSelection(),
       dropCursor(),
       bracketMatching(),
       closeBrackets(),
-      highlightActiveLine(),
       syntaxHighlighting(oneDarkHighlightStyle, { fallback: true }),
-      highlightActiveLineGutter(),
       highlightSpecialChars(),
-      lineNumbers(),
-      foldGutter(),
       EditorView.lineWrapping,
-      EditorView.updateListener.of(v => {
-        const docStr = v.state.doc?.toString()
-        if (docStr === value) {
-          return
-        }
-        dispatch("change", docStr)
-      }),
-      keymap.of(buildKeymap()),
       themeConfig.of([...(isDark ? [oneDark] : [])]),
     ]
   }
 
+  // None of this is reactive, but it never has been, so we just assume most
+  // config flags aren't changed at runtime
   const buildExtensions = base => {
-    const complete = [...base]
+    let complete = [...base]
 
     if (autocompleteEnabled) {
       complete.push(
@@ -175,7 +187,10 @@
           override: [...completions],
           closeOnBlur: true,
           icons: false,
-          optionClass: () => "autocomplete-option",
+          optionClass: completion =>
+            completion.simple
+              ? "autocomplete-option-simple"
+              : "autocomplete-option",
         })
       )
       complete.push(
@@ -201,20 +216,49 @@
             view.dispatch(tr)
             return true
           }
-
           return false
         })
       )
     }
 
+    // JS only plugins
     if (mode.name === "javascript") {
+      complete.push(snippetMatchDecoPlugin)
       complete.push(javascript())
-      complete.push(highlightWhitespace())
+      if (!readonly) {
+        complete.push(highlightWhitespace())
+      }
+    }
+    // HBS only plugins
+    else {
+      complete.push(hbsMatchDecoPlugin)
     }
 
     if (placeholder) {
       complete.push(placeholderFn(placeholder))
     }
+
+    if (readonly) {
+      complete.push(EditorState.readOnly.of(true))
+    } else {
+      complete = [
+        ...complete,
+        history(),
+        highlightActiveLine(),
+        highlightActiveLineGutter(),
+        lineNumbers(),
+        foldGutter(),
+        keymap.of(buildKeymap()),
+        EditorView.updateListener.of(v => {
+          const docStr = v.state.doc?.toString()
+          if (docStr === value) {
+            return
+          }
+          dispatch("change", docStr)
+        }),
+      ]
+    }
+
     return complete
   }
 
@@ -300,7 +344,6 @@
 
   /* Active line */
   .code-editor :global(.cm-line) {
-    height: 16px;
     padding: 0 var(--spacing-s);
     color: var(--spectrum-alias-text-color);
   }
@@ -317,6 +360,9 @@
     width: 100%;
     background: var(--spectrum-global-color-gray-100) !important;
     z-index: -2;
+  }
+  .code-editor :global(.cm-highlightSpace:before) {
+    color: var(--spectrum-global-color-gray-500);
   }
 
   /* Code selection */
@@ -360,9 +406,12 @@
     font-style: italic;
   }
 
-  /* Highlight bindings */
+  /* Highlight bindings and snippets */
   .code-editor :global(.binding-wrap) {
-    color: var(--spectrum-global-color-blue-700);
+    color: var(--spectrum-global-color-blue-700) !important;
+  }
+  .code-editor :global(.snippet-wrap *) {
+    color: #61afef !important;
   }
 
   /* Completion popover */
@@ -391,7 +440,8 @@
   }
 
   /* Completion item container */
-  .code-editor :global(.autocomplete-option) {
+  .code-editor :global(.autocomplete-option),
+  .code-editor :global(.autocomplete-option-simple) {
     padding: var(--spacing-s) var(--spacing-m) !important;
     padding-left: calc(16px + 2 * var(--spacing-m)) !important;
     display: flex;
@@ -399,9 +449,13 @@
     align-items: center;
     color: var(--spectrum-alias-text-color);
   }
+  .code-editor :global(.autocomplete-option-simple) {
+    padding-left: var(--spacing-s) !important;
+  }
 
   /* Highlighted completion item */
-  .code-editor :global(.autocomplete-option[aria-selected]) {
+  .code-editor :global(.autocomplete-option[aria-selected]),
+  .code-editor :global(.autocomplete-option-simple[aria-selected]) {
     background: var(--spectrum-global-color-blue-400);
     color: white;
   }
@@ -416,6 +470,9 @@
     font-size: var(--font-size-s);
     font-family: var(--font-sans);
     text-transform: capitalize;
+  }
+  .code-editor :global(.autocomplete-option-simple .cm-completionLabel) {
+    text-transform: none;
   }
 
   /* Completion item type */
@@ -454,14 +511,14 @@
   .code-editor :global(.binding__example) {
     padding: 0;
     margin: 0;
-    font-size: var(--font-size-s);
+    font-size: 12px;
     font-family: var(--font-mono);
     white-space: pre;
     text-overflow: ellipsis;
     overflow: hidden;
     max-height: 480px;
   }
-  .code-editor :global(.binding__example) {
+  .code-editor :global(.binding__example.helper) {
     color: var(--spectrum-global-color-blue-700);
   }
   .code-editor :global(.binding__example span) {

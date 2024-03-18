@@ -57,8 +57,10 @@
 </script>
 
 <script>
-  import Portal from "svelte-portal"
   import Button from "../Button/Button.svelte"
+  import Icon from "../Icon/Icon.svelte"
+  import ActionButton from "../ActionButton/ActionButton.svelte"
+  import Portal from "svelte-portal"
   import { setContext, createEventDispatcher, onDestroy } from "svelte"
   import { generate } from "shortid"
 
@@ -170,7 +172,8 @@
 
 {#if visible}
   <Portal target=".modal-container">
-    <div class="drawer-container">
+    <!-- This class is unstyled, but needed by click_outside -->
+    <div class="drawer-wrapper">
       <div
         class="underlay"
         class:hidden={!$modal}
@@ -184,10 +187,24 @@
         {style}
       >
         <header>
-          <div class="text">{title || "Bindings"}</div>
+          {#if $$slots.title}
+            <slot name="title" />
+          {:else}
+            <div class="text">{title || "Bindings"}</div>
+          {/if}
           <div class="buttons">
             <Button secondary quiet on:click={hide}>Cancel</Button>
             <slot name="buttons" />
+            {#if $resizable}
+              <ActionButton
+                size="M"
+                quiet
+                selected={$modal}
+                on:click={() => modal.set(!$modal)}
+              >
+                <Icon name={$modal ? "Minimize" : "Maximize"} size="S" />
+              </ActionButton>
+            {/if}
           </div>
         </header>
         <slot name="body" />
@@ -206,7 +223,7 @@
     height: 420px;
     background: var(--background);
     border: var(--border-light);
-    z-index: 999;
+    z-index: 100;
     border-radius: 8px;
     overflow: hidden;
     box-sizing: border-box;
@@ -233,7 +250,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 999;
+    z-index: 100;
     display: block;
     transition: opacity 260ms ease-out;
   }
@@ -273,5 +290,9 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-m);
+  }
+  .buttons :global(.icon) {
+    width: 16px;
+    display: flex;
   }
 </style>
