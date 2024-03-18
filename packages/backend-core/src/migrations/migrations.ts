@@ -36,7 +36,7 @@ export const backPopulateMigrations = async (opts: MigrationNoOpOptions) => {
   // filter migrations to the type and populate a no-op migration
   const migrations: Migration[] = DEFINITIONS.filter(
     def => def.type === opts.type
-  ).map(d => ({ ...d, fn: () => {} }))
+  ).map(d => ({ ...d, fn: async () => {} }))
   await runMigrations(migrations, { noOp: opts })
 }
 
@@ -45,10 +45,6 @@ export const runMigration = async (
   options: MigrationOptions = {}
 ) => {
   const migrationType = migration.type
-  let tenantId: string | undefined
-  if (migrationType !== MigrationType.INSTALLATION) {
-    tenantId = context.getTenantId()
-  }
   const migrationName = migration.name
   const silent = migration.silent
 

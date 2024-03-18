@@ -8,4 +8,11 @@ export default class ClientAppWebsocket extends BaseSocket {
   constructor(app: Koa, server: http.Server) {
     super(app, server, "/socket/client", [authorized(permissions.BUILDER)])
   }
+
+  async onConnect(): Promise<void> {
+    // do nothing
+  }
+  async onDisconnect(): Promise<void> {
+    // do nothing
+  }
 }

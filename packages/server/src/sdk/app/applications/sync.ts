@@ -3,11 +3,7 @@ import { db as dbCore, context, logging, roles } from "@budibase/backend-core"
 import { User, ContextUser, UserGroup } from "@budibase/types"
 import { sdk as proSdk } from "@budibase/pro"
 import sdk from "../../"
-import {
-  getGlobalUsers,
-  getRawGlobalUsers,
-  processUser,
-} from "../../../utilities/global"
+import { getRawGlobalUsers, processUser } from "../../../utilities/global"
 import { generateUserMetadataID, InternalTables } from "../../../db/utils"
 
 type DeletedUser = { _id: string; deleted: boolean }

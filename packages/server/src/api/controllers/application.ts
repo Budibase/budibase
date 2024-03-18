@@ -26,7 +26,6 @@ import {
   env as envCore,
   ErrorCode,
   events,
-  HTTPError,
   migrations,
   objectStore,
   roles,
@@ -313,7 +312,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
     // If we used a template or imported an app there will be an existing doc.
     // Fetch and migrate some metadata from the existing app.
     try {
-      const existing: App = await db.get(DocumentType.APP_METADATA)
+      const existing = await db.get<App>(DocumentType.APP_METADATA)
       const keys: (keyof App)[] = [
         "_rev",
         "navigation",
@@ -323,7 +322,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       ]
       keys.forEach(key => {
         if (existing[key]) {
-          // @ts-ignore
+          // @ts-expect-error - we know these will be the same types
           newApplication[key] = existing[key]
         }
       })

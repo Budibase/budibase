@@ -70,6 +70,10 @@ export default class GridSocket extends BaseSocket {
     })
   }
 
+  async onDisconnect(): Promise<void> {
+    // do nothing
+  }
+
   async updateUser(socket: Socket, patch: any) {
     await super.updateUser(socket, {
       gridMetadata: {

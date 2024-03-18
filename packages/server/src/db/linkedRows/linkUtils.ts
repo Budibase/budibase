@@ -43,12 +43,14 @@ export async function getLinkDocuments(args: {
   const { tableId, rowId, fieldName, includeDocs } = args
   const db = context.getAppDB()
   let params: DatabaseQueryOpts
-  if (rowId) {
+  if (tableId && rowId) {
     params = { key: [tableId, rowId] }
   }
   // only table is known
-  else {
+  else if (tableId) {
     params = { startkey: [tableId], endkey: [tableId, {}] }
+  } else {
+    throw new Error("tableId or rowId must be provided")
   }
   if (includeDocs) {
     params.include_docs = true
@@ -89,9 +91,8 @@ export async function getLinkDocuments(args: {
     // check if the view doesn't exist, it should for all new instances
     if (err != null && err.name === "not_found") {
       await createLinkView()
-      return getLinkDocuments(arguments[0])
+      return getLinkDocuments(args)
     } else {
-      /* istanbul ignore next */
       logging.logAlert("Failed to get link documents", err)
       throw err
     }

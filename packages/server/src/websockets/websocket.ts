@@ -57,7 +57,7 @@ export abstract class BaseSocket {
       const ctx = createContext(this.app, socket)
 
       try {
-        await runMiddlewares(ctx, middlewares, () => {
+        await runMiddlewares(ctx, middlewares, async () => {
           // Middlewares are finished
           // Extract some data from our enriched koa context to persist
           // as metadata for the socket

@@ -129,6 +129,7 @@
     "@types/koa-send": "^4.1.6",
     "@types/koa__router": "8.0.8",
     "@types/lodash": "4.14.200",
+    "@types/memorystream": "^0.3.4",
     "@types/mssql": "9.1.4",
     "@types/node-fetch": "2.6.4",
     "@types/oracledb": "5.2.2",

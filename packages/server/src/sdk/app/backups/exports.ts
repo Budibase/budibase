@@ -19,8 +19,7 @@ import { join } from "path"
 import env from "../../../environment"
 import { v4 as uuid } from "uuid"
 import tar from "tar"
-
-const MemoryStream = require("memorystream")
+import MemoryStream from "memorystream"
 
 export interface DBDumpOpts {
   filter?: any

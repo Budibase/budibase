@@ -1,7 +1,6 @@
 import { createMockContext, createMockCookies } from "@shopify/jest-koa-mocks"
-import { BBContext } from "@budibase/types"
 
-export const newContext = (): BBContext => {
+export const newContext = () => {
   const ctx = createMockContext()
   return {
     ...ctx,

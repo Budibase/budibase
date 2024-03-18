@@ -203,7 +203,6 @@ export async function importApp(
   } else {
     dbStream = await getTemplateStream(template)
   }
-  // @ts-ignore
   const { ok } = await db.load(dbStream)
   if (!ok) {
     throw "Error loading database dump from template."

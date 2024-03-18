@@ -184,6 +184,8 @@ function run() {
   // convert all markdown to HTML
   for (const collection of Object.values<any>(outputJSON)) {
     for (const helper of Object.values<any>(collection)) {
+      // @ts-expect-error - I tried adding @types/marked as a dependency and it caused
+      // really weird problems, the @budibase/types package started failing its build
       helper.description = marked.parse(helper.description)
     }
   }
