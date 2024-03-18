@@ -81,9 +81,6 @@ describe("migrations", () => {
         expect(events.screen.created).toBeCalledTimes(2)
         expect(events.backfill.appSucceeded).toBeCalledTimes(2)
 
-        const processor = events.processors.analyticsProcessor.processEvent
-        console.log(processor)
-
         // to make sure caching is working as expected
         expect(
           events.processors.analyticsProcessor.processEvent
