@@ -15,6 +15,7 @@ const config: Config.InitialOptions = {
     "@budibase/backend-core": "<rootDir>/../backend-core/src",
     "@budibase/types": "<rootDir>/../types/src",
     "@budibase/shared-core": ["<rootDir>/../shared-core/src"],
+    "@budibase/string-templates": ["<rootDir>/../string-templates/src"],
   },
 }
 

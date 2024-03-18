@@ -20,7 +20,7 @@ import sdk from "../../../sdk"
 import * as uuid from "uuid"
 
 import tk from "timekeeper"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
 
 tk.freeze(mocks.date.MOCK_DATE)
@@ -417,8 +417,8 @@ describe("/tables", () => {
     it("should fetch views", async () => {
       const tableId = config.table!._id!
       const views = [
-        await config.api.viewV2.create({ tableId }),
-        await config.api.viewV2.create({ tableId }),
+        await config.api.viewV2.create({ tableId, name: generator.guid() }),
+        await config.api.viewV2.create({ tableId, name: generator.guid() }),
       ]
 
       const res = await request
@@ -455,7 +455,7 @@ describe("/tables", () => {
         },
       }))
 
-      await config.api.viewV2.create({ tableId })
+      await config.api.viewV2.create({ tableId, name: generator.guid() })
       await config.createLegacyView()
 
       const res = await config.api.table.fetch()
