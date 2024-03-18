@@ -1,7 +1,7 @@
-const { processString, processObject, isValid } = require("../src/index.js")
-const tableJson = require("./examples/table.json")
-const dayjs = require("dayjs")
-const { UUID_REGEX } = require("./constants")
+import { processString, processObject, isValid } from "../src/index"
+import tableJson from "./examples/table.json"
+import dayjs from "dayjs"
+import { UUID_REGEX } from "./constants"
 
 describe("test the custom helpers we have applied", () => {
   it("should be able to use the object helper", async () => {
@@ -188,9 +188,7 @@ describe("test the date helpers", () => {
         time: date.toUTCString(),
       }
     )
-    const formatted = new dayjs(date)
-      .tz("America/New_York")
-      .format("HH-mm-ss Z")
+    const formatted = dayjs(date).tz("America/New_York").format("HH-mm-ss Z")
     expect(output).toBe(formatted)
   })
 
@@ -200,7 +198,7 @@ describe("test the date helpers", () => {
       time: date.toUTCString(),
     })
     const timezone = dayjs.tz.guess()
-    const offset = new dayjs(date).tz(timezone).format("Z")
+    const offset = dayjs(date).tz(timezone).format("Z")
     expect(output).toBe(offset)
   })
 })
@@ -273,7 +271,7 @@ describe("test the string helpers", () => {
 })
 
 describe("test the comparison helpers", () => {
-  async function compare(func, a, b) {
+  async function compare(func: string, a: any, b: any) {
     const output = await processString(
       `{{ #${func} a b }}Success{{ else }}Fail{{ /${func} }}`,
       {
@@ -344,14 +342,14 @@ describe("Test the literal helper", () => {
   })
 
   it("should allow use of the literal specifier for an object", async () => {
-    const output = await processString(`{{literal a}}`, {
+    const output: any = await processString(`{{literal a}}`, {
       a: { b: 1 },
     })
     expect(output.b).toBe(1)
   })
 
   it("should allow use of the literal specifier for an object with dashes", async () => {
-    const output = await processString(`{{literal a}}`, {
+    const output: any = await processString(`{{literal a}}`, {
       a: { b: "i-have-dashes" },
     })
     expect(output.b).toBe("i-have-dashes")
