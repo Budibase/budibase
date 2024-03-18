@@ -852,6 +852,42 @@ describe.each([
       expect(Object.keys(row).length).toEqual(1)
       expect(row._id).toEqual(existing._id)
     })
+
+    it("should handle single quotes in row filtering", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      const res = await config.api.row.exportRows(table._id!, {
+        rows: [`['${existing._id!}']`],
+      })
+      const results = JSON.parse(res)
+      expect(results.length).toEqual(1)
+      const row = results[0]
+      expect(row._id).toEqual(existing._id)
+    })
+
+    it("should return an error on composite keys", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      await config.api.row.exportRows(
+        table._id!,
+        {
+          rows: [`['${existing._id!}']`, "['d001', '10111']"],
+        },
+        {
+          status: 400,
+          body: {
+            message: "Export data does not support composite keys.",
+          },
+        }
+      )
+    })
+
+    it("should return an error if no table is found", async () => {
+      const existing = await config.api.row.save(table._id!, {})
+      await config.api.row.exportRows(
+        "1234567",
+        { rows: [existing._id!] },
+        { status: 404 }
+      )
+    })
   })
 
   describe("view 2.0", () => {
