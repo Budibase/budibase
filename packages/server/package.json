@@ -175,6 +175,10 @@
         ]
       },
       "build": {
+        "inputs": [
+          "{projectRoot}/builder",
+          "{projectRoot}/client"
+        ],
         "outputs": [
           "{projectRoot}/builder",
           "{projectRoot}/client",
