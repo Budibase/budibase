@@ -156,7 +156,7 @@ export async function createBucketIfNotExists(
         delete promises[bucketName]
         return { created: true, exists: false }
       } else {
-        throw new Error("Access denied to object store bucket.")
+        throw new Error("Access denied to object store bucket." + err)
       }
     } else {
       throw new Error("Unable to write to object store bucket.")
