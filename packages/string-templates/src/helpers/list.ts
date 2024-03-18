@@ -1,7 +1,7 @@
-const { date, duration } = require("./date")
+import { date, duration } from "./date"
 
 // https://github.com/evanw/esbuild/issues/56
-const externalCollections = {
+const getExternalCollections = (): Record<string, () => any> => ({
   math: require("@budibase/handlebars-helpers/lib/math"),
   array: require("@budibase/handlebars-helpers/lib/array"),
   number: require("@budibase/handlebars-helpers/lib/number"),
@@ -11,32 +11,32 @@ const externalCollections = {
   object: require("@budibase/handlebars-helpers/lib/object"),
   regex: require("@budibase/handlebars-helpers/lib/regex"),
   uuid: require("@budibase/handlebars-helpers/lib/uuid"),
-}
+})
 
-const helpersToRemoveForJs = ["sortBy"]
-module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+export const helpersToRemoveForJs = ["sortBy"]
 
 const addedHelpers = {
   date: date,
   duration: duration,
 }
 
-let helpers = undefined
+let helpers: Record<string, any>
 
-module.exports.getJsHelperList = () => {
+export function getJsHelperList() {
   if (helpers) {
     return helpers
   }
 
   helpers = {}
-  for (let collection of Object.values(externalCollections)) {
+  for (let collection of Object.values(getExternalCollections())) {
     for (let [key, func] of Object.entries(collection)) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
-      helpers[key] = (...props) => func(...props, {})
+      helpers[key] = (...props: any) => func(...props, {})
     }
   }
-  for (let key of Object.keys(addedHelpers)) {
-    helpers[key] = addedHelpers[key]
+  helpers = {
+    ...helpers,
+    addedHelpers,
   }
 
   for (const toRemove of helpersToRemoveForJs) {

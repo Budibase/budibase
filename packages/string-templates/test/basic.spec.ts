@@ -1,4 +1,4 @@
-const {
+import {
   processObject,
   processString,
   isValid,
@@ -8,7 +8,7 @@ const {
   doesContainString,
   disableEscaping,
   findHBSBlocks,
-} = require("../src/index.js")
+} from "../src/index"
 
 describe("Test that the string processing works correctly", () => {
   it("should process a basic template string", async () => {
@@ -28,7 +28,7 @@ describe("Test that the string processing works correctly", () => {
   it("should fail gracefully when wrong type passed in", async () => {
     let error = null
     try {
-      await processString(null, null)
+      await processString(null as any, null as any)
     } catch (err) {
       error = err
     }
@@ -76,7 +76,7 @@ describe("Test that the object processing works correctly", () => {
   it("should fail gracefully when object passed in has cycles", async () => {
     let error = null
     try {
-      const innerObj = { a: "thing {{ a }}" }
+      const innerObj: any = { a: "thing {{ a }}" }
       innerObj.b = innerObj
       await processObject(innerObj, { a: 1 })
     } catch (err) {
@@ -98,7 +98,7 @@ describe("Test that the object processing works correctly", () => {
   it("should be able to handle null objects", async () => {
     let error = null
     try {
-      await processObject(null, null)
+      await processObject(null as any, null as any)
     } catch (err) {
       error = err
     }
