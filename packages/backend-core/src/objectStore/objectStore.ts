@@ -129,7 +129,7 @@ export function ObjectStore(
 export async function createBucketIfNotExists(
   client: any,
   bucketName: string
-): Promise<boolean> {
+): Promise<{ created: boolean; exists: boolean }> {
   bucketName = sanitizeBucket(bucketName)
   try {
     await client
@@ -137,14 +137,14 @@ export async function createBucketIfNotExists(
         Bucket: bucketName,
       })
       .promise()
-    return false
+    return { created: false, exists: true }
   } catch (err: any) {
     const promises: any = STATE.bucketCreationPromises
     const doesntExist = err.statusCode === 404,
       noAccess = err.statusCode === 403
     if (promises[bucketName]) {
       await promises[bucketName]
-      return false
+      return { created: false, exists: true }
     } else if (doesntExist || noAccess) {
       if (doesntExist) {
         promises[bucketName] = client
@@ -154,7 +154,7 @@ export async function createBucketIfNotExists(
           .promise()
         await promises[bucketName]
         delete promises[bucketName]
-        return true
+        return { created: true, exists: false }
       } else {
         throw new Error("Access denied to object store bucket.")
       }
@@ -183,7 +183,7 @@ export async function upload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated) {
+  if (addTTL && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, 1)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
@@ -229,7 +229,7 @@ export async function streamUpload({
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
 
-  if (addTTL && bucketCreated) {
+  if (addTTL && bucketCreated.created) {
     let ttlConfig = bucketTTLConfig(bucketName, 1)
     await objectStore.putBucketLifecycleConfiguration(ttlConfig).promise()
   }
