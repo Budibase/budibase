@@ -29,6 +29,7 @@ import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
 import { objectStoreTestProviders } from "./utils"
+import { Readable } from "stream"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -638,7 +639,9 @@ describe("REST Integration", () => {
       const responseData = Buffer.from("teest file contnt")
       const filename = "test.tar.gz"
       const contentType = "application/gzip"
-
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
           headers: {
@@ -652,7 +655,7 @@ describe("REST Integration", () => {
                 return `attachment; filename="${filename}"`
             },
           },
-          arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+          body: mockReadable,
         })
       )
 
@@ -675,9 +678,10 @@ describe("REST Integration", () => {
 
     it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
       const responseData = Buffer.from("teest file contnt")
-      const non_ascii_filename = "ex%C3%A4mple.txt"
       const contentType = "text/plain"
-
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
       ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
         Promise.resolve({
           headers: {
@@ -693,7 +697,7 @@ describe("REST Integration", () => {
                 return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
             },
           },
-          arrayBuffer: jest.fn(() => Promise.resolve(responseData)),
+          body: mockReadable,
         })
       )
 

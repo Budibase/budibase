@@ -468,7 +468,8 @@ export async function handleFileResponse(
   filename: string,
   startTime: number
 ) {
-  let presignedUrl
+  let presignedUrl,
+    size = 0
   const fileExtension = filename.includes(".")
     ? filename.split(".").slice(1).join(".")
     : ""
@@ -478,7 +479,19 @@ export async function handleFileResponse(
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
   const stream = response.body.pipe(bl((error, data) => data))
+
   if (response.body) {
+    const contentLength = response.headers.get("content-length")
+    if (contentLength) {
+      size = parseInt(contentLength, 10)
+    } else {
+      const chunks: Buffer[] = []
+      for await (const chunk of response.body) {
+        chunks.push(chunk)
+        size += chunk.length
+      }
+    }
+
     await objectStore.streamUpload({
       bucket,
       filename: key,
@@ -490,7 +503,7 @@ export async function handleFileResponse(
   presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
   return {
     data: {
-      size: stream.byteLength,
+      size,
       name: processedFileName,
       url: presignedUrl,
       extension: fileExtension,
@@ -498,7 +511,7 @@ export async function handleFileResponse(
     },
     info: {
       code: response.status,
-      size: formatBytes(stream.byteLength),
+      size: formatBytes(size.toString()),
       time: `${Math.round(performance.now() - startTime)}ms`,
     },
   }
