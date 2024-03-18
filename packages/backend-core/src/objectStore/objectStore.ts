@@ -13,6 +13,7 @@ import { bucketTTLConfig, budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
 import { APP_PREFIX, APP_DEV_PREFIX } from "../db"
 import fsp from "fs/promises"
+import { add } from "lodash"
 
 const streamPipeline = promisify(stream.pipeline)
 // use this as a temporary store of buckets that are being created
@@ -35,6 +36,21 @@ type UploadParams = {
   }
   body?: ReadableStream | Buffer
   addTTL?: boolean
+  extra?: any
+}
+
+type StreamUploadParams = {
+  bucket: string
+  filename: string
+  stream: ReadStream
+  type?: string | null
+  // can be undefined, we will remove it
+  metadata?: {
+    [key: string]: string | undefined
+  }
+  body?: ReadableStream | Buffer
+  addTTL?: boolean
+  extra?: any
 }
 
 const CONTENT_TYPE_MAP: any = {
@@ -201,14 +217,14 @@ export async function upload({
  * Similar to the upload function but can be used to send a file stream
  * through to the object store.
  */
-export async function streamUpload(
-  bucketName: string,
-  filename: string,
-  stream: ReadStream | ReadableStream,
-  addTTL?: boolean,
-  type?: string,
-  extra = {}
-) {
+export async function streamUpload({
+  bucket: bucketName,
+  stream,
+  filename,
+  type,
+  extra,
+  addTTL,
+}: StreamUploadParams) {
   const extension = filename.split(".").pop()
   const objectStore = ObjectStore(bucketName)
   const bucketCreated = await createBucketIfNotExists(objectStore, bucketName)
@@ -448,7 +464,13 @@ export async function uploadDirectory(
     if (file.isDirectory()) {
       uploads.push(uploadDirectory(bucketName, local, path))
     } else {
-      uploads.push(streamUpload(bucketName, path, fs.createReadStream(local)))
+      uploads.push(
+        streamUpload({
+          bucket: bucketName,
+          filename: path,
+          stream: fs.createReadStream(local),
+        })
+      )
     }
   }
   await Promise.all(uploads)

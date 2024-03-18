@@ -477,20 +477,20 @@ export async function handleFileResponse(
   const key = `${context.getProdAppId()}/${processedFileName}`
   const bucket = objectStore.ObjectStoreBuckets.TEMP
 
-  const data = response.body.pipe(bl((error, data) => data))
+  const stream = response.body.pipe(bl((error, data) => data))
   if (response.body) {
-    await objectStore.streamUpload(
+    await objectStore.streamUpload({
       bucket,
-      key,
-      data,
-      true,
-      response.headers["content-type"]
-    )
+      filename: key,
+      stream,
+      addTTL: true,
+      type: response.headers["content-type"],
+    })
   }
   presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
   return {
     data: {
-      size: data.byteLength,
+      size: stream.byteLength,
       name: processedFileName,
       url: presignedUrl,
       extension: fileExtension,
@@ -498,7 +498,7 @@ export async function handleFileResponse(
     },
     info: {
       code: response.status,
-      size: formatBytes(data.byteLength),
+      size: formatBytes(stream.byteLength),
       time: `${Math.round(performance.now() - startTime)}ms`,
     },
   }
