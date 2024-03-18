@@ -11,21 +11,9 @@ import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {
   create = async (
-    viewData?: Partial<CreateViewRequest>,
+    view: CreateViewRequest,
     expectations?: Expectations
   ): Promise<ViewV2> => {
-    let tableId = viewData?.tableId
-    if (!tableId && !this.config.table) {
-      throw "Test requires table to be configured."
-    }
-
-    tableId = tableId || this.config.table!._id!
-    const view = {
-      tableId,
-      name: generator.guid(),
-      ...viewData,
-    }
-
     const exp: Expectations = {
       status: 201,
       ...expectations,
