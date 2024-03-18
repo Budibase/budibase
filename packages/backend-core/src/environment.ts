@@ -1,6 +1,5 @@
 import { existsSync, readFileSync } from "fs"
 import { ServiceType } from "@budibase/types"
-import dotenv from "dotenv"
 
 function isTest() {
   return isJest()
@@ -20,7 +19,7 @@ function isDev() {
 
 let LOADED = false
 if (!LOADED && isDev() && !isTest()) {
-  dotenv.config()
+  require("dotenv").config()
   LOADED = true
 }
 
