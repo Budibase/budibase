@@ -51,6 +51,12 @@
       "parser": "@typescript-eslint/parser",
       "extends": ["eslint:recommended"],
       "rules": {
+        "no-unused-vars": "off",
+        "no-inner-declarations": "off",
+        "no-case-declarations": "off",
+        "no-useless-escape": "off",
+        "no-undef": "off",
+        "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
         "local-rules/remove-only-from-tests": "warn",
