@@ -25,8 +25,7 @@ module.exports = {
       docs: {
         description:
           "disallow the use of 'test.com' in strings and replace it with 'example.com'",
-        category: "Possible Errors",
-        recommended: false,
+        recommended: true,
       },
       schema: [], // no options
       fixable: "code", // Indicates that this rule supports automatic fixing
@@ -58,8 +57,7 @@ module.exports = {
       docs: {
         description:
           "enforce using the example.com domain for generator.email calls",
-        category: "Possible Errors",
-        recommended: false,
+        recommended: true,
       },
       fixable: "code",
       schema: [],
@@ -83,6 +81,33 @@ module.exports = {
                   'generator.email({ domain: "example.com" })'
                 )
               },
+            })
+          }
+        },
+      }
+    },
+  },
+  "remove-only-from-tests": {
+    meta: {
+      type: "suggestion",
+      docs: {
+        description: "reminds you to move .only from tests before committing.",
+        recommended: true,
+      },
+      schema: [],
+    },
+    create: function (context) {
+      return {
+        CallExpression(node) {
+          if (
+            node.callee.type === "MemberExpression" &&
+            (node.callee.object.name === "it" ||
+              node.callee.object.name === "describe") &&
+            node.callee.property.name === "only"
+          ) {
+            context.report({
+              node: node.callee,
+              message: "Remember to remove .only from tests before committing.",
             })
           }
         },

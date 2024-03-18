@@ -43,9 +43,18 @@
         "no-useless-escape": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
-        "local-rules/no-budibase-imports": "error",
+        "local-rules/no-budibase-imports": "error"
+      }
+    },
+    {
+      "files": ["**/*.spec.ts"],
+      "parser": "@typescript-eslint/parser",
+      "extends": ["eslint:recommended"],
+      "rules": {
         "local-rules/no-test-com": "error",
-        "local-rules/email-domain-example-com": "error"
+        "local-rules/email-domain-example-com": "error",
+        "local-rules/remove-only-from-tests": "warn",
+        "no-console": "warn"
       }
     },
     {
