@@ -18,10 +18,11 @@ import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import { Client } from "pg"
-// @ts-ignore
+
+// @ts-expect-error - calling function from the mock file
 fetch.mockSearch()
 
-const config = setup.getConfig()!
+const config = setup.getConfig()
 
 jest.unmock("pg")
 jest.mock("../websockets")

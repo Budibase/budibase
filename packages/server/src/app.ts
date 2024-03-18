@@ -26,6 +26,7 @@ async function start() {
 
 start().catch(err => {
   console.error(`Failed server startup - ${err.message}`)
+  console.error(err.stack)
   throw err
 })
 
