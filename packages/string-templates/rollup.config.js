@@ -6,6 +6,7 @@ import builtins from "rollup-plugin-node-builtins"
 import globals from "rollup-plugin-node-globals"
 import typescript from "@rollup/plugin-typescript"
 import injectProcessEnv from "rollup-plugin-inject-process-env"
+import inject from "@rollup/plugin-inject"
 
 const production = !process.env.ROLLUP_WATCH
 
@@ -24,6 +25,7 @@ const config = (format, outputFile) => ({
     }),
     commonjs(),
     globals(),
+    inject({ Buffer: ["buffer", "Buffer"] }),
     builtins(),
     json(),
     injectProcessEnv({
