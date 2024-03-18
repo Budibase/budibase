@@ -1,13 +1,12 @@
 import { env as coreEnv } from "@budibase/backend-core"
 import { ServiceType } from "@budibase/types"
-import dotenv from "dotenv"
 
 coreEnv._set("SERVICE_TYPE", ServiceType.APPS)
 import { join } from "path"
 
 let LOADED = false
 if (!LOADED && coreEnv.isDev() && !coreEnv.isTest()) {
-  dotenv.config({
+  require("dotenv").config({
     path: join(__dirname, "..", ".env"),
   })
   LOADED = true
