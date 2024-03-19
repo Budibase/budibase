@@ -76,7 +76,7 @@ describe("MySQL Integration", () => {
   })
 
   describe("binding type coerce", () => {
-    it("ignores non-string types ", async () => {
+    it("ignores non-string types", async () => {
       const sql = "select * from users;"
       const date = new Date()
       await config.integration.read({

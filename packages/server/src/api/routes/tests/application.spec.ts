@@ -128,7 +128,7 @@ describe("/applications", () => {
     it("creates empty app", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
     })
 
     it("creates app from template", async () => {
@@ -139,8 +139,8 @@ describe("/applications", () => {
         templateString: "{}",
       })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.templateImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.templateImported).toHaveBeenCalledTimes(1)
     })
 
     it("creates app from file", async () => {
@@ -150,8 +150,8 @@ describe("/applications", () => {
         templateFile: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.fileImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -181,8 +181,8 @@ describe("/applications", () => {
       expect(app.navigation!.navTextColor).toBe(
         "var(--spectrum-global-color-gray-50)"
       )
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.fileImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
     })
 
     it("should reject with a known name", async () => {
@@ -228,32 +228,32 @@ describe("/applications", () => {
         name: "TEST_APP",
       })
       expect(updatedApp._rev).toBeDefined()
-      expect(events.app.updated).toBeCalledTimes(1)
+      expect(events.app.updated).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("publish", () => {
     it("should publish app with dev app ID", async () => {
       await config.api.application.publish(app.appId)
-      expect(events.app.published).toBeCalledTimes(1)
+      expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
     it("should publish app with prod app ID", async () => {
       await config.api.application.publish(app.appId.replace("_dev", ""))
-      expect(events.app.published).toBeCalledTimes(1)
+      expect(events.app.published).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("manage client library version", () => {
     it("should be able to update the app client library version", async () => {
       await config.api.application.updateClient(app.appId)
-      expect(events.app.versionUpdated).toBeCalledTimes(1)
+      expect(events.app.versionUpdated).toHaveBeenCalledTimes(1)
     })
 
     it("should be able to revert the app client library version", async () => {
       await config.api.application.updateClient(app.appId)
       await config.api.application.revertClient(app.appId)
-      expect(events.app.versionReverted).toBeCalledTimes(1)
+      expect(events.app.versionReverted).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -310,26 +310,26 @@ describe("/applications", () => {
   describe("unpublish", () => {
     it("should unpublish app with dev app ID", async () => {
       await config.api.application.unpublish(app.appId)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should unpublish app with prod app ID", async () => {
       await config.api.application.unpublish(app.appId.replace("_dev", ""))
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
       await config.api.application.delete(app.appId)
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
       await config.api.application.delete(app.appId.replace("_dev", ""))
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -346,7 +346,7 @@ describe("/applications", () => {
         }
       )
 
-      expect(events.app.duplicated).toBeCalled()
+      expect(events.app.duplicated).toHaveBeenCalled()
       expect(resp.duplicateAppId).toBeDefined()
       expect(resp.sourceAppId).toEqual(app.appId)
       expect(resp.duplicateAppId).not.toEqual(app.appId)
@@ -374,7 +374,7 @@ describe("/applications", () => {
         },
         { body: { message: "App name is already in use." }, status: 400 }
       )
-      expect(events.app.duplicated).not.toBeCalled()
+      expect(events.app.duplicated).not.toHaveBeenCalled()
     })
 
     it("should reject with a known url", async () => {
@@ -386,7 +386,7 @@ describe("/applications", () => {
         },
         { body: { message: "App URL is already in use." }, status: 400 }
       )
-      expect(events.app.duplicated).not.toBeCalled()
+      expect(events.app.duplicated).not.toHaveBeenCalled()
     })
   })
 

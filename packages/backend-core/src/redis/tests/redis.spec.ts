@@ -184,7 +184,7 @@ describe("redis", () => {
       const key = structures.uuid()
       await redis.store(key, value)
 
-      await expect(redis.increment(key)).rejects.toThrowError(
+      await expect(redis.increment(key)).rejects.toThrow(
         "ERR value is not an integer or out of range"
       )
     })

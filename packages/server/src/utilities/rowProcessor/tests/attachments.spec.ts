@@ -64,12 +64,12 @@ describe("attachment cleanup", () => {
     await AttachmentCleanup.tableUpdate(originalTable, [row()], {
       oldTable: table(),
     })
-    expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
+    expect(mockedDeleteFiles).toHaveBeenCalledWith(BUCKET, [FILE_NAME])
   })
 
   it("should be able to cleanup a table deletion", async () => {
     await AttachmentCleanup.tableDelete(table(), [row()])
-    expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
+    expect(mockedDeleteFiles).toHaveBeenCalledWith(BUCKET, [FILE_NAME])
   })
 
   it("should handle table column renaming", async () => {
@@ -80,12 +80,12 @@ describe("attachment cleanup", () => {
       oldTable: table(),
       rename: { old: "attach", updated: "attach2" },
     })
-    expect(mockedDeleteFiles).not.toBeCalled()
+    expect(mockedDeleteFiles).not.toHaveBeenCalled()
   })
 
   it("shouldn't cleanup if no table changes", async () => {
     await AttachmentCleanup.tableUpdate(table(), [row()], { oldTable: table() })
-    expect(mockedDeleteFiles).not.toBeCalled()
+    expect(mockedDeleteFiles).not.toHaveBeenCalled()
   })
 
   it("should handle row updates", async () => {
@@ -95,12 +95,12 @@ describe("attachment cleanup", () => {
       row: updatedRow,
       oldRow: row(),
     })
-    expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
+    expect(mockedDeleteFiles).toHaveBeenCalledWith(BUCKET, [FILE_NAME])
   })
 
   it("should handle row deletion", async () => {
     await AttachmentCleanup.rowDelete(table(), [row()])
-    expect(mockedDeleteFiles).toBeCalledWith(BUCKET, [FILE_NAME])
+    expect(mockedDeleteFiles).toHaveBeenCalledWith(BUCKET, [FILE_NAME])
   })
 
   it("should handle row deletion and not throw when attachments are undefined", async () => {
@@ -113,7 +113,7 @@ describe("attachment cleanup", () => {
 
   it("shouldn't cleanup attachments if row not updated", async () => {
     await AttachmentCleanup.rowUpdate(table(), { row: row(), oldRow: row() })
-    expect(mockedDeleteFiles).not.toBeCalled()
+    expect(mockedDeleteFiles).not.toHaveBeenCalled()
   })
 
   it("should be able to cleanup a column and not throw when attachments are undefined", async () => {
@@ -126,8 +126,8 @@ describe("attachment cleanup", () => {
         oldTable: table(),
       }
     )
-    expect(mockedDeleteFiles).toBeCalledTimes(1)
-    expect(mockedDeleteFiles).toBeCalledWith(BUCKET, ["file 1", "file 2"])
+    expect(mockedDeleteFiles).toHaveBeenCalledTimes(1)
+    expect(mockedDeleteFiles).toHaveBeenCalledWith(BUCKET, ["file 1", "file 2"])
   })
 
   it("should be able to cleanup a column and not throw when ALL attachments are undefined", async () => {
@@ -140,6 +140,6 @@ describe("attachment cleanup", () => {
         oldTable: table(),
       }
     )
-    expect(mockedDeleteFiles).not.toBeCalled()
+    expect(mockedDeleteFiles).not.toHaveBeenCalled()
   })
 })

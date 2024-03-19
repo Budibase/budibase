@@ -24,13 +24,13 @@ function buildUserCtx(user: ContextUser) {
 }
 
 function passed(throwFn: jest.Func, nextFn: jest.Func) {
-  expect(throwFn).not.toBeCalled()
-  expect(nextFn).toBeCalled()
+  expect(throwFn).not.toHaveBeenCalled()
+  expect(nextFn).toHaveBeenCalled()
 }
 
 function threw(throwFn: jest.Func) {
   // cant check next, the throw function doesn't actually throw - so it still continues
-  expect(throwFn).toBeCalled()
+  expect(throwFn).toHaveBeenCalled()
 }
 
 describe("adminOnly middleware", () => {

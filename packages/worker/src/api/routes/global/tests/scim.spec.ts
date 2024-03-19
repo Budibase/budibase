@@ -304,7 +304,7 @@ describe("scim", () => {
 
           await postScimUser({ body })
 
-          expect(events.user.created).toBeCalledTimes(1)
+          expect(events.user.created).toHaveBeenCalledTimes(1)
         })
 
         it("if the username is an email, the user name will be used as email", async () => {
@@ -571,7 +571,7 @@ describe("scim", () => {
 
         await patchScimUser({ id: user.id, body })
 
-        expect(events.user.updated).toBeCalledTimes(1)
+        expect(events.user.updated).toHaveBeenCalledTimes(1)
       })
     })
 
@@ -603,7 +603,7 @@ describe("scim", () => {
       it("an event is dispatched", async () => {
         await deleteScimUser(user.id, { expect: 204 })
 
-        expect(events.user.deleted).toBeCalledTimes(1)
+        expect(events.user.deleted).toHaveBeenCalledTimes(1)
       })
 
       it("an account holder cannot be removed even when synched", async () => {
