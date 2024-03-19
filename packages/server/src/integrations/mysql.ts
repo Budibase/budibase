@@ -390,7 +390,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
         if (json?.meta?.table && Array.isArray(result)) {
-          return this.convertJsonStringColumns(json.meta.table, result)
+          return this.convertJsonStringColumns(
+            json.meta.table,
+            result,
+            json.tableAliases
+          )
         }
         return result
       }
