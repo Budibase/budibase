@@ -1,4 +1,6 @@
 import type Nano from "@budibase/nano"
+// @ts-ignore this import is actually used
+import type PouchDB from "pouchdb"
 import {
   AllDocsResponse,
   AnyDocument,
