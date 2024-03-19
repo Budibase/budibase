@@ -705,10 +705,13 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       if (!this._isJsonColumn(field)) {
         continue
       }
-      const fullName = `${table.name}.${name}`
       for (let row of results) {
-        if (typeof row[fullName] === "string") {
-          row[fullName] = JSON.parse(row[fullName])
+        const columnNames = Object.keys(row)
+        const fullColumnName = columnNames.find(
+          column => column.includes(`.${name}`) || column === name
+        )
+        if (fullColumnName && typeof row[fullColumnName] === "string") {
+          row[fullColumnName] = JSON.parse(row[fullColumnName])
         }
         if (typeof row[name] === "string") {
           row[name] = JSON.parse(row[name])

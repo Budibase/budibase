@@ -68,16 +68,8 @@ export async function processOutputBBReferences(
     return value || undefined
   }
 
-  let ids: string[] = []
-  if (typeof value === "string") {
-    try {
-      ids = JSON.parse(value)
-    } catch (err) {
-      ids = value.split(",").filter(id => !!id)
-    }
-  } else if (Array.isArray(value)) {
-    ids = value
-  }
+  const ids =
+    typeof value === "string" ? value.split(",").filter(id => !!id) : value
 
   switch (subtype) {
     case FieldSubtype.USER:
