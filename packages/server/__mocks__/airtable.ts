@@ -1,5 +1,5 @@
 module AirtableMock {
-  function Airtable() {
+  const Airtable = () => {
     // @ts-ignore
     this.base = jest.fn()
   }

@@ -12,7 +12,7 @@ module OracleDbMock {
   const close = jest.fn()
 
   // mock connection
-  function Connection() {}
+  const Connection = () => {}
   Connection.prototype.execute = execute
   Connection.prototype.close = close
 
