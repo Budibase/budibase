@@ -5,7 +5,7 @@
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
-  import { writable } from "svelte/store"
+  import { get, writable } from "svelte/store"
 
   export let actionType
   export let rowId
@@ -15,7 +15,7 @@
   export let buttonPosition = "bottom"
   export let size
 
-  const { fetchDatasourceSchema } = getContext("sdk")
+  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
 
@@ -44,6 +44,16 @@
   $: fetchSchema(dataSource)
   $: enrichedSteps = enrichSteps(steps, schema, $component.id, $currentStep)
   $: updateCurrentStep(enrichedSteps, $builderStore, $component)
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const id = get(component).id
+    const rows = get(context)[`${id}-provider`]?.rows || []
+    const goldenRow = generateGoldenSample(rows)
+    return {
+      [`${id}-repeater`]: goldenRow,
+    }
+  }
 
   const updateCurrentStep = (steps, builderStore, component) => {
     const { componentId, step } = builderStore.metadata || {}

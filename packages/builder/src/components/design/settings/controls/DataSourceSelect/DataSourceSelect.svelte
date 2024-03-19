@@ -48,7 +48,6 @@
   let drawer
   let tmpQueryParams
   let tmpCustomData
-  let customDataValid = true
   let modal
 
   $: text = value?.label ?? "Choose an option"
@@ -267,14 +266,11 @@
     <Drawer title="Custom data" bind:this={drawer}>
       <div slot="buttons" style="display:contents">
         <Button primary on:click={promptForCSV}>Load CSV</Button>
-        <Button cta on:click={saveCustomData} disabled={!customDataValid}>
-          Save
-        </Button>
+        <Button cta on:click={saveCustomData}>Save</Button>
       </div>
       <div slot="description">Provide a JSON array to use as data</div>
       <ClientBindingPanel
         slot="body"
-        bind:valid={customDataValid}
         value={tmpCustomData}
         on:change={event => (tmpCustomData = event.detail)}
         {bindings}

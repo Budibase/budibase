@@ -16,7 +16,6 @@
   export let placeholder
   export let label
   export let disabled = false
-  export let fillWidth
   export let allowJS = true
   export let allowHelpers = true
   export let updateOnChange = true
@@ -26,7 +25,6 @@
 
   const dispatch = createEventDispatcher()
   let bindingDrawer
-  let valid = true
   let currentVal = value
 
   $: readableValue = runtimeToReadableBinding(bindings, value)
@@ -173,22 +171,14 @@
 <Drawer
   on:drawerHide
   on:drawerShow
-  {fillWidth}
   bind:this={bindingDrawer}
-  {title}
+  title={title ?? placeholder ?? "Bindings"}
   left={drawerLeft}
-  headless
 >
-  <svelte:fragment slot="description">
-    Add the objects on the left to enrich your text.
-  </svelte:fragment>
-  <Button cta slot="buttons" disabled={!valid} on:click={saveBinding}>
-    Save
-  </Button>
+  <Button cta slot="buttons" on:click={saveBinding}>Save</Button>
   <svelte:component
     this={panel}
     slot="body"
-    bind:valid
     value={readableValue}
     on:change={event => (tempValue = event.detail)}
     {bindings}
