@@ -247,7 +247,7 @@ export class QueryBuilder<T> {
     }
     // Escape characters
     if (!this.#noEscaping && escape && originalType === "string") {
-      value = `${value}`.replace(/[ \/#+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
+      value = `${value}`.replace(/[ /#+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
 
     // Wrap in quotes

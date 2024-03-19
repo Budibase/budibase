@@ -41,10 +41,10 @@ describe("/api/global/self", () => {
       user._rev = dbUser._rev
       user.dayPassRecordedAt = mocks.date.MOCK_DATE.toISOString()
       expect(res.body._id).toBe(user._id)
-      expect(events.user.updated).toBeCalledTimes(1)
-      expect(events.user.updated).toBeCalledWith(dbUser)
-      expect(events.user.passwordUpdated).toBeCalledTimes(1)
-      expect(events.user.passwordUpdated).toBeCalledWith(dbUser)
+      expect(events.user.updated).toHaveBeenCalledTimes(1)
+      expect(events.user.updated).toHaveBeenCalledWith(dbUser)
+      expect(events.user.passwordUpdated).toHaveBeenCalledTimes(1)
+      expect(events.user.passwordUpdated).toHaveBeenCalledWith(dbUser)
     })
   })
 
