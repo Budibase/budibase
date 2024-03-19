@@ -508,7 +508,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
     const processFn = (result: any) => {
       if (json?.meta?.table && result.recordset) {
-        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+        return this.convertJsonStringColumns(
+          json.meta.table,
+          result.recordset,
+          json.tableAliases
+        )
       } else if (result.recordset) {
         return result.recordset
       }
