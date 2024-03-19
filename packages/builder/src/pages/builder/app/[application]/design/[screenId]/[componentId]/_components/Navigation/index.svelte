@@ -26,6 +26,12 @@
   import { DefaultAppTheme } from "constants"
   import BarButtonList from "/src/components/design/settings/controls/BarButtonList.svelte"
 
+  $: selectArray = [
+    { value: "Left", barIcon: "TextAlignLeft" },
+    { value: "Center", barIcon: "TextAlignCenter" },
+    { value: "Right", barIcon: "TextAlignRight" },
+  ]
+
   $: screenRouteOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
@@ -46,6 +52,10 @@
     } catch (error) {
       notifications.error("Error updating navigation settings")
     }
+  }
+
+  const updateTextAlign = textAlignValue => {
+    navigationStore.syncAppNavigation({ textAlign: textAlignValue })
   }
 </script>
 
@@ -139,28 +149,10 @@
             <Label size="M">Text align</Label>
           </div>
           <BarButtonList
-            options={}
+            options={selectArray}
+            value={$navigationStore.textAlign}
+            onChange={updateTextAlign}
           />
-          <!-- <ActionGroup quiet>
-            <ActionButton
-              selected={$navigationStore.textAlign === "Left"}
-              quiet={$navigationStore.textAlign !== "Left"}
-              icon="TextAlignLeft"
-              on:click={() => update("textAlign", "Left")}
-            />
-            <ActionButton
-              selected={$navigationStore.textAlign === "Center"}
-              quiet={$navigationStore.textAlign !== "Center"}
-              icon="TextAlignCenter"
-              on:click={() => update("textAlign", "Center")}
-            />
-            <ActionButton
-              selected={$navigationStore.textAlign === "Right"}
-              quiet={$navigationStore.textAlign !== "Right"}
-              icon="TextAlignRight"
-              on:click={() => update("textAlign", "Right")}
-            />
-          </ActionGroup> -->
         {/if}
         <div class="label">
           <Label>Background</Label>
