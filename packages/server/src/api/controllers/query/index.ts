@@ -31,8 +31,7 @@ const Runner = new Thread(ThreadType.QUERY, {
 
 function validateQueryInputs(parameters: Record<string, string>) {
   for (let entry of Object.entries(parameters)) {
-    const key = entry[0],
-      value = entry[1]
+    const [key, value] = entry
     if (typeof value !== "string") {
       continue
     }
