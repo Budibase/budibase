@@ -21,6 +21,9 @@ import { performance } from "perf_hooks"
 import FormData from "form-data"
 import { URLSearchParams } from "url"
 import { blacklist } from "@budibase/backend-core"
+import { handleFileResponse, handleXml } from "./utils"
+import { parse } from "content-disposition"
+import path from "path"
 
 const BodyTypes = {
   NONE: "none",
@@ -129,42 +132,44 @@ class RestIntegration implements IntegrationBase {
   }
 
   async parseResponse(response: any, pagination: PaginationConfig | null) {
-    let data, raw, headers
+    let data, raw, headers, filename
+
     const contentType = response.headers.get("content-type") || ""
+    const contentDisposition = response.headers.get("content-disposition") || ""
+    if (
+      contentDisposition.includes("attachment") ||
+      contentDisposition.includes("form-data")
+    ) {
+      filename =
+        path.basename(parse(contentDisposition).parameters?.filename) || ""
+    }
+
     try {
-      if (response.status === 204) {
-        data = []
-        raw = []
-      } else if (contentType.includes("application/json")) {
-        data = await response.json()
-        raw = JSON.stringify(data)
-      } else if (
-        contentType.includes("text/xml") ||
-        contentType.includes("application/xml")
-      ) {
-        const rawXml = await response.text()
-        data =
-          (await xmlParser(rawXml, {
-            explicitArray: false,
-            trim: true,
-            explicitRoot: false,
-          })) || {}
-        // there is only one structure, its an array, return the array so it appears as rows
-        const keys = Object.keys(data)
-        if (keys.length === 1 && Array.isArray(data[keys[0]])) {
-          data = data[keys[0]]
-        }
-        raw = rawXml
-      } else if (contentType.includes("application/pdf")) {
-        data = await response.arrayBuffer() // Save PDF as ArrayBuffer
-        raw = Buffer.from(data)
+      if (filename) {
+        return handleFileResponse(response, filename, this.startTimeMs)
       } else {
-        data = await response.text()
-        raw = data
+        if (response.status === 204) {
+          data = []
+          raw = []
+        } else if (contentType.includes("application/json")) {
+          data = await response.json()
+          raw = JSON.stringify(data)
+        } else if (
+          contentType.includes("text/xml") ||
+          contentType.includes("application/xml")
+        ) {
+          let xmlResponse = await handleXml(response)
+          data = xmlResponse.data
+          raw = xmlResponse.rawXml
+        } else {
+          data = await response.text()
+          raw = data
+        }
       }
     } catch (err) {
-      throw "Failed to parse response body."
+      throw `Failed to parse response body: ${err}`
     }
+
     const size = formatBytes(
       response.headers.get("content-length") || Buffer.byteLength(raw, "utf8")
     )

@@ -13,9 +13,23 @@ jest.mock("node-fetch", () => {
   }))
 })
 
-import fetch from "node-fetch"
+jest.mock("@budibase/backend-core", () => {
+  const core = jest.requireActual("@budibase/backend-core")
+  return {
+    ...core,
+    context: {
+      ...core.context,
+      getProdAppId: jest.fn(() => "app-id"),
+    },
+  }
+})
+jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
+
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
+import fetch from "node-fetch"
+import { objectStoreTestProviders } from "./utils"
+import { Readable } from "stream"
 
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
@@ -610,5 +624,98 @@ describe("REST Integration", () => {
     expect(calledConfig.method).toBe("GET")
     expect(calledConfig.headers).toEqual({})
     expect(calledConfig.agent.options.rejectUnauthorized).toBe(false)
+  })
+
+  describe("File Handling", () => {
+    beforeAll(async () => {
+      await objectStoreTestProviders.minio.start()
+    })
+
+    afterAll(async () => {
+      await objectStoreTestProviders.minio.stop()
+    })
+
+    it("uploads file to object store and returns signed URL", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const filename = "test.tar.gz"
+      const contentType = "application/gzip"
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [`attachment; filename="${filename}"`],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-disposition")
+                return `attachment; filename="${filename}"`
+            },
+          },
+          body: mockReadable,
+        })
+      )
+
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.tar.gz",
+        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz",
+        extension: "tar.gz",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
+      })
+    })
+
+    it("uploads file with non ascii filename to object store and returns signed URL ", async () => {
+      const responseData = Buffer.from("teest file contnt")
+      const contentType = "text/plain"
+      const mockReadable = new Readable()
+      mockReadable.push(responseData)
+      mockReadable.push(null)
+      ;(fetch as unknown as jest.Mock).mockImplementationOnce(() =>
+        Promise.resolve({
+          headers: {
+            raw: () => ({
+              "content-type": [contentType],
+              "content-disposition": [
+                `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`,
+              ],
+            }),
+            get: (header: any) => {
+              if (header === "content-type") return contentType
+              if (header === "content-disposition")
+                return `attachment; filename="£ and ? rates.pdf"; filename*=UTF-8\'\'%C2%A3%20and%20%E2%82%AC%20rates.pdf`
+            },
+          },
+          body: mockReadable,
+        })
+      )
+
+      const query = {
+        path: "api",
+      }
+
+      const response = await config.integration.read(query)
+
+      expect(response.data).toEqual({
+        size: responseData.byteLength,
+        name: "00000000-0000-0000-0000-000000000000.pdf",
+        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
+        extension: "pdf",
+        key: expect.stringContaining(
+          "app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
+      })
+    })
   })
 })

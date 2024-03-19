@@ -29,6 +29,7 @@ const DefaultBucketName = {
   TEMPLATES: "templates",
   GLOBAL: "global",
   PLUGINS: "plugins",
+  TEMP: "tmp-file-attachments",
 }
 
 const selfHosted = !!parseInt(process.env.SELF_HOSTED || "")
@@ -146,6 +147,7 @@ const environment = {
     process.env.GLOBAL_BUCKET_NAME || DefaultBucketName.GLOBAL,
   PLUGIN_BUCKET_NAME:
     process.env.PLUGIN_BUCKET_NAME || DefaultBucketName.PLUGINS,
+  TEMP_BUCKET_NAME: process.env.TEMP_BUCKET_NAME || DefaultBucketName.TEMP,
   USE_COUCH: process.env.USE_COUCH || true,
   MOCK_REDIS: process.env.MOCK_REDIS,
   DEFAULT_LICENSE: process.env.DEFAULT_LICENSE,
