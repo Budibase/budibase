@@ -75,6 +75,7 @@
       .filter(field => !field.autocolumn)
       .map(field => ({
         name: field.name,
+        active: true,
       }))
   }
 
