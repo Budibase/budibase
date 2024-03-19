@@ -5,7 +5,7 @@
   import CreateAppModal from "components/start/CreateAppModal.svelte"
   import TemplateDisplay from "components/common/TemplateDisplay.svelte"
   import AppLimitModal from "components/portal/licensing/AppLimitModal.svelte"
-  import { apps, templates, licensing } from "stores/portal"
+  import { appsStore, templates, licensing } from "stores/portal"
   import { Breadcrumbs, Breadcrumb, Header } from "components/portal/page"
 
   let template
@@ -35,7 +35,7 @@
   }
 </script>
 
-{#if !$apps.length}
+{#if !$appsStore.apps.length}
   <FirstAppOnboarding />
 {:else}
   <Page>

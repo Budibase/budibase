@@ -5,7 +5,8 @@
   import { builderStore } from "stores"
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
-  import { writable } from "svelte/store"
+  import { get, writable } from "svelte/store"
+  import FormBlockComponent from "./FormBlockComponent.svelte"
 
   export let actionType
   export let rowId
@@ -15,7 +16,7 @@
   export let buttonPosition = "bottom"
   export let size
 
-  const { fetchDatasourceSchema } = getContext("sdk")
+  const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
   const context = getContext("context")
 
@@ -23,27 +24,21 @@
   const currentStep = writable(1)
   setContext("current-step", currentStep)
 
-  const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
-  }
-
   let schema
 
   $: fetchSchema(dataSource)
   $: enrichedSteps = enrichSteps(steps, schema, $component.id, $currentStep)
   $: updateCurrentStep(enrichedSteps, $builderStore, $component)
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const id = get(component).id
+    const rows = get(context)[`${id}-provider`]?.rows || []
+    const goldenRow = generateGoldenSample(rows)
+    return {
+      [`${id}-repeater`]: goldenRow,
+    }
+  }
 
   const updateCurrentStep = (steps, builderStore, component) => {
     const { componentId, step } = builderStore.metadata || {}
@@ -66,27 +61,6 @@
 
     // Add 1 because the form component expects 1 indexed rather than 0 indexed
     currentStep.set(newStep + 1)
-  }
-
-  const getPropsForField = field => {
-    if (field._component) {
-      return field
-    }
-    return {
-      field: field.name,
-      label: field.name,
-      placeholder: field.name,
-      _instanceName: field.name,
-    }
-  }
-
-  const getComponentForField = field => {
-    const fieldSchemaName = field.field || field.name
-    if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
-      return null
-    }
-    const type = schema[fieldSchemaName].type
-    return FieldTypeToComponentMap[type]
   }
 
   const fetchSchema = async () => {
@@ -195,15 +169,7 @@
               class:mobile={$context.device.mobile}
             >
               {#each step.fields as field, fieldIdx (`${field.field || field.name}_${fieldIdx}`)}
-                {#if getComponentForField(field)}
-                  <BlockComponent
-                    type={getComponentForField(field)}
-                    props={getPropsForField(field)}
-                    order={fieldIdx}
-                    interactive
-                    name={field.field}
-                  />
-                {/if}
+                <FormBlockComponent {field} {schema} order={fieldIdx} />
               {/each}
             </div>
           </BlockComponent>
