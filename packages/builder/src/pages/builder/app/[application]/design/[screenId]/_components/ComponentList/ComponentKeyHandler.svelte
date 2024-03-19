@@ -4,12 +4,12 @@
     selectedScreen,
     componentStore,
     selectedComponent,
+    componentTreeNodesStore,
   } from "stores/builder"
-  import { findComponent } from "helpers/components"
+  import { findComponent, getChildIdsForComponent } from "helpers/components"
   import { goto, isActive } from "@roxi/routify"
   import { notifications } from "@budibase/bbui"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
-  import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
   let confirmDeleteDialog
   let confirmEjectDialog
@@ -63,38 +63,25 @@
       componentStore.selectNext()
     },
     ["ArrowRight"]: component => {
-      componentTreeNodesStore.expandNode(component._id)
+      componentTreeNodesStore.expandNodes([component._id])
     },
     ["ArrowLeft"]: component => {
-      componentTreeNodesStore.collapseNode(component._id)
+      // Select the collapsing root component to ensure the currently selected component is not
+      // hidden in a collapsed node
+      componentStore.select(component._id)
+      componentTreeNodesStore.collapseNodes([component._id])
     },
     ["Ctrl+ArrowRight"]: component => {
-      componentTreeNodesStore.expandNode(component._id)
-
-      const expandChildren = component => {
-        const children = component._children ?? []
-
-        children.forEach(child => {
-          componentTreeNodesStore.expandNode(child._id)
-          expandChildren(child)
-        })
-      }
-
-      expandChildren(component)
+      const childIds = getChildIdsForComponent(component)
+      componentTreeNodesStore.expandNodes(childIds)
     },
     ["Ctrl+ArrowLeft"]: component => {
-      componentTreeNodesStore.collapseNode(component._id)
+      // Select the collapsing root component to ensure the currently selected component is not
+      // hidden in a collapsed node
+      componentStore.select(component._id)
 
-      const collapseChildren = component => {
-        const children = component._children ?? []
-
-        children.forEach(child => {
-          componentTreeNodesStore.collapseNode(child._id)
-          collapseChildren(child)
-        })
-      }
-
-      collapseChildren(component)
+      const childIds = getChildIdsForComponent(component)
+      componentTreeNodesStore.collapseNodes(childIds)
     },
     ["Escape"]: () => {
       if ($isActive(`./:componentId/new`)) {
