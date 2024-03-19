@@ -114,9 +114,16 @@ export const syncAppFavourites = async (processedAppIds: string[]) => {
   if (processedAppIds.length === 0) {
     return []
   }
-  const apps = await fetchAppsByIds(processedAppIds)
+
+  const tenantId = tenancy.getTenantId()
+  const appPrefix =
+    tenantId === tenancy.DEFAULT_TENANT_ID
+      ? dbCore.APP_DEV_PREFIX
+      : `${dbCore.APP_DEV_PREFIX}${tenantId}_`
+
+  const apps = await fetchAppsByIds(processedAppIds, appPrefix)
   return apps?.reduce((acc: string[], app) => {
-    const id = app.appId.replace(dbCore.APP_DEV_PREFIX, "")
+    const id = app.appId.replace(appPrefix, "")
     if (processedAppIds.includes(id)) {
       acc.push(id)
     }
@@ -124,9 +131,14 @@ export const syncAppFavourites = async (processedAppIds: string[]) => {
   }, [])
 }
 
-export const fetchAppsByIds = async (processedAppIds: string[]) => {
+export const fetchAppsByIds = async (
+  processedAppIds: string[],
+  appPrefix: string
+) => {
   return await dbCore.getAppsByIDs(
-    processedAppIds.map(appId => `${dbCore.APP_DEV_PREFIX}${appId}`)
+    processedAppIds.map(appId => {
+      return `${appPrefix}${appId}`
+    })
   )
 }
 

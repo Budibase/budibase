@@ -1,12 +1,22 @@
-const dayjs = require("dayjs")
-dayjs.extend(require("dayjs/plugin/duration"))
-dayjs.extend(require("dayjs/plugin/advancedFormat"))
-dayjs.extend(require("dayjs/plugin/isoWeek"))
-dayjs.extend(require("dayjs/plugin/weekYear"))
-dayjs.extend(require("dayjs/plugin/weekOfYear"))
-dayjs.extend(require("dayjs/plugin/relativeTime"))
-dayjs.extend(require("dayjs/plugin/utc"))
-dayjs.extend(require("dayjs/plugin/timezone"))
+import dayjs from "dayjs"
+
+import dayjsDurationPlugin from "dayjs/plugin/duration"
+import dayjsAdvancedFormatPlugin from "dayjs/plugin/advancedFormat"
+import dayjsIsoWeekPlugin from "dayjs/plugin/isoWeek"
+import dayjsWeekYearPlugin from "dayjs/plugin/weekYear"
+import dayjsWeekOfYearPlugin from "dayjs/plugin/weekOfYear"
+import dayjsRelativeTimePlugin from "dayjs/plugin/relativeTime"
+import dayjsUtcPlugin from "dayjs/plugin/utc"
+import dayjsTimezonePlugin from "dayjs/plugin/timezone"
+
+dayjs.extend(dayjsDurationPlugin)
+dayjs.extend(dayjsAdvancedFormatPlugin)
+dayjs.extend(dayjsIsoWeekPlugin)
+dayjs.extend(dayjsWeekYearPlugin)
+dayjs.extend(dayjsWeekOfYearPlugin)
+dayjs.extend(dayjsRelativeTimePlugin)
+dayjs.extend(dayjsUtcPlugin)
+dayjs.extend(dayjsTimezonePlugin)
 
 /**
  * This file was largely taken from the helper-date package - we did this for two reasons:
@@ -17,11 +27,11 @@ dayjs.extend(require("dayjs/plugin/timezone"))
  * https://github.com/helpers/helper-date
  */
 
-function isOptions(val) {
+function isOptions(val: any) {
   return typeof val === "object" && typeof val.hash === "object"
 }
 
-function isApp(thisArg) {
+function isApp(thisArg: any) {
   return (
     typeof thisArg === "object" &&
     typeof thisArg.options === "object" &&
@@ -29,7 +39,7 @@ function isApp(thisArg) {
   )
 }
 
-function getContext(thisArg, locals, options) {
+function getContext(thisArg: any, locals: any, options: any) {
   if (isOptions(thisArg)) {
     return getContext({}, locals, thisArg)
   }
@@ -58,7 +68,7 @@ function getContext(thisArg, locals, options) {
   return context
 }
 
-function initialConfig(str, pattern, options) {
+function initialConfig(str: any, pattern: any, options?: any) {
   if (isOptions(pattern)) {
     options = pattern
     pattern = null
@@ -72,7 +82,7 @@ function initialConfig(str, pattern, options) {
   return { str, pattern, options }
 }
 
-function setLocale(str, pattern, options) {
+function setLocale(this: any, str: any, pattern: any, options?: any) {
   // if options is null then it'll get updated here
   const config = initialConfig(str, pattern, options)
   const defaults = { lang: "en", date: new Date(config.str) }
@@ -83,7 +93,7 @@ function setLocale(str, pattern, options) {
   dayjs.locale(opts.lang || opts.language)
 }
 
-module.exports.date = (str, pattern, options) => {
+export const date = (str: any, pattern: any, options: any) => {
   const config = initialConfig(str, pattern, options)
 
   // if no args are passed, return a formatted date
@@ -109,7 +119,7 @@ module.exports.date = (str, pattern, options) => {
   return date.format(config.pattern)
 }
 
-module.exports.duration = (str, pattern, format) => {
+export const duration = (str: any, pattern: any, format: any) => {
   const config = initialConfig(str, pattern)
 
   setLocale(config.str, config.pattern)
