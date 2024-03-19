@@ -300,11 +300,11 @@ export async function save(
   const fetchSchema = opts?.fetchSchema || false
   const tablesFilter = opts?.tablesFilter || []
 
-  datasource = {
+  datasource = addDatasourceFlags({
     _id: generateDatasourceID({ plus }),
     ...datasource,
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
-  }
+  })
 
   let errors: Record<string, string> = {}
   if (fetchSchema) {
