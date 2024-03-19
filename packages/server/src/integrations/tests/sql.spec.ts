@@ -389,7 +389,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb @> '[20]' and "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -440,7 +440,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where NOT \"${TABLE_NAME}\".\"age\"::jsonb @> '[20]' and NOT \"${TABLE_NAME}\".\"name\"::jsonb @> '["John"]' limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where NOT "${TABLE_NAME}"."age"::jsonb @> '[20]' and NOT "${TABLE_NAME}"."name"::jsonb @> '["John"]' limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -491,7 +491,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [10],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"age\"::jsonb ?| array [20,25] and \"${TABLE_NAME}\".\"name\"::jsonb ?| array ['John','Mary'] limit $1) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."age"::jsonb ?| array [20,25] and "${TABLE_NAME}"."name"::jsonb ?| array ['John','Mary'] limit $1) as "${TABLE_NAME}"`,
     })
   })
 
@@ -572,7 +572,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2000-01-01 00:00:00", 500],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" > $1 limit $2) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" > $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -591,7 +591,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["2010-01-01 00:00:00", 500],
-      sql: `select * from (select * from \"${TABLE_NAME}\" where \"${TABLE_NAME}\".\"dob\" < $1 limit $2) as \"${TABLE_NAME}\"`,
+      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."dob" < $1 limit $2) as "${TABLE_NAME}"`,
     })
   })
 
@@ -607,7 +607,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["john%", limit],
-      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -622,7 +622,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ["%20%", "%25%", `%"john"%`, `%"mary"%`, limit],
-      sql: `select * from (select * from (select * from \"test\" where (LOWER(\"test\".\"age\") LIKE :1 AND LOWER(\"test\".\"age\") LIKE :2) and (LOWER(\"test\".\"name\") LIKE :3 AND LOWER(\"test\".\"name\") LIKE :4)) where rownum <= :5) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where (LOWER("test"."age") LIKE :1 AND LOWER("test"."age") LIKE :2) and (LOWER("test"."name") LIKE :3 AND LOWER("test"."name") LIKE :4)) where rownum <= :5) "test"`,
     })
 
     query = new Sql(SqlClient.ORACLE, limit)._query(
@@ -636,7 +636,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [`%jo%`, limit],
-      sql: `select * from (select * from (select * from \"test\" where LOWER(\"test\".\"name\") LIKE :1) where rownum <= :2) \"test\"`,
+      sql: `select * from (select * from (select * from "test" where LOWER("test"."name") LIKE :1) where rownum <= :2) "test"`,
     })
   })
 
@@ -663,7 +663,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: ['{ "created_at":"2023-09-09T03:21:06.024Z" }'],
-      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+      sql: `insert into "test" ("name") values ($1) returning *`,
     })
   })
 
@@ -676,7 +676,7 @@ describe("SQL query builder", () => {
     )
     expect(query).toEqual({
       bindings: [dateObj],
-      sql: `insert into \"test\" (\"name\") values ($1) returning *`,
+      sql: `insert into "test" ("name") values ($1) returning *`,
     })
   })
 
