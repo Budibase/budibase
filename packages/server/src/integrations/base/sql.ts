@@ -699,19 +699,18 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
 
   convertJsonStringColumns(
     table: Table,
-    results: Record<string, any>[]
+    results: Record<string, any>[],
+    aliases?: Record<string, string>
   ): Record<string, any>[] {
     for (const [name, field] of Object.entries(table.schema)) {
       if (!this._isJsonColumn(field)) {
         continue
       }
+      const tableName = aliases?.[table.name] || table.name
+      const fullName = `${tableName}.${name}`
       for (let row of results) {
-        const columnNames = Object.keys(row)
-        const fullColumnName = columnNames.find(
-          column => column.includes(`.${name}`) || column === name
-        )
-        if (fullColumnName && typeof row[fullColumnName] === "string") {
-          row[fullColumnName] = JSON.parse(row[fullColumnName])
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
         }
         if (typeof row[name] === "string") {
           row[name] = JSON.parse(row[name])
