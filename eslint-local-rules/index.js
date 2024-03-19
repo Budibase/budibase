@@ -85,30 +85,4 @@ module.exports = {
       }
     },
   },
-  "remove-only-from-tests": {
-    meta: {
-      type: "suggestion",
-      docs: {
-        description: "reminds you to move .only from tests before committing.",
-      },
-      schema: [],
-    },
-    create: function (context) {
-      return {
-        CallExpression(node) {
-          if (
-            node.callee.type === "MemberExpression" &&
-            (node.callee.object.name === "it" ||
-              node.callee.object.name === "describe") &&
-            node.callee.property.name === "only"
-          ) {
-            context.report({
-              node: node.callee,
-              message: "Remember to remove .only from tests before committing.",
-            })
-          }
-        },
-      }
-    },
-  },
 }
