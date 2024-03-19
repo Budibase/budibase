@@ -81,6 +81,7 @@ exports[`/datasources fetch returns all the datasources from the server 1`] = `
   {
     "config": {},
     "createdAt": "2020-01-01T00:00:00.000Z",
+    "isSQL": true,
     "name": "Test",
     "source": "POSTGRES",
     "type": "datasource",

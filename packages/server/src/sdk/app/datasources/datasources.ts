@@ -30,8 +30,14 @@ import {
 } from "../../../db/utils"
 import sdk from "../../index"
 import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrations/googlesheets"
+import { helpers } from "@budibase/shared-core"
 
 const ENV_VAR_PREFIX = "env."
+
+function addDatasourceFlags(datasource: Datasource) {
+  datasource.isSQL = helpers.isSQL(datasource)
+  return datasource
+}
 
 export async function fetch(opts?: {
   enriched: boolean
@@ -56,7 +62,7 @@ export async function fetch(opts?: {
   } as Datasource
 
   // Get external datasources
-  const datasources = (
+  let datasources = (
     await db.allDocs<Datasource>(
       getDatasourceParams(null, {
         include_docs: true,
@@ -75,6 +81,7 @@ export async function fetch(opts?: {
     }
   }
 
+  datasources = datasources.map(datasource => addDatasourceFlags(datasource))
   if (opts?.enriched) {
     const envVars = await getEnvironmentVariables()
     const promises = datasources.map(datasource =>
@@ -150,6 +157,7 @@ async function enrichDatasourceWithValues(
 }
 
 export async function enrich(datasource: Datasource) {
+  datasource = addDatasourceFlags(datasource)
   const { datasource: response } = await enrichDatasourceWithValues(datasource)
   return response
 }
@@ -159,7 +167,8 @@ export async function get(
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get<Datasource>(datasourceId)
+  let datasource = await appDb.get<Datasource>(datasourceId)
+  datasource = addDatasourceFlags(datasource)
   if (opts?.enriched) {
     return (await enrichDatasourceWithValues(datasource)).datasource
   } else {
@@ -271,13 +280,14 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
 export async function getExternalDatasources(): Promise<Datasource[]> {
   const db = context.getAppDB()
 
-  const externalDatasources = await db.allDocs<Datasource>(
+  let dsResponse = await db.allDocs<Datasource>(
     getDatasourcePlusParams(undefined, {
       include_docs: true,
     })
   )
 
-  return externalDatasources.rows.map(r => r.doc!)
+  const externalDatasources = dsResponse.rows.map(r => r.doc!)
+  return externalDatasources.map(datasource => addDatasourceFlags(datasource))
 }
 
 export async function save(
@@ -290,11 +300,11 @@ export async function save(
   const fetchSchema = opts?.fetchSchema || false
   const tablesFilter = opts?.tablesFilter || []
 
-  datasource = {
+  datasource = addDatasourceFlags({
     _id: generateDatasourceID({ plus }),
     ...datasource,
     type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
-  }
+  })
 
   let errors: Record<string, string> = {}
   if (fetchSchema) {
