@@ -26,7 +26,7 @@
   import { DefaultAppTheme } from "constants"
   import BarButtonList from "/src/components/design/settings/controls/BarButtonList.svelte"
 
-  $: selectArray = [
+  $: alignmentOptions = [
     { value: "Left", barIcon: "TextAlignLeft" },
     { value: "Center", barIcon: "TextAlignCenter" },
     { value: "Right", barIcon: "TextAlignRight" },
@@ -149,7 +149,7 @@
             <Label size="M">Text align</Label>
           </div>
           <BarButtonList
-            options={selectArray}
+            options={alignmentOptions}
             value={$navigationStore.textAlign}
             onChange={updateTextAlign}
           />
