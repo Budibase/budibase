@@ -408,6 +408,21 @@ describe("/queries", () => {
         },
       })
     })
+
+    it("shouldn't allow handlebars to be passed as parameters", async () => {
+      const res = await request
+        .post(`/api/queries/${query._id}`)
+        .send({
+          parameters: {
+            a: "{{ 'test' }}",
+          },
+        })
+        .set(config.defaultHeaders())
+        .expect(400)
+      expect(res.body.message).toEqual(
+        "Parameter 'a' input contains a handlebars binding - this is not allowed."
+      )
+    })
   })
 
   describe("variables", () => {
