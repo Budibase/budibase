@@ -66,28 +66,25 @@ describe("migrations", () => {
         )[0]
         await migrations.runMigration(migration)
 
-        expect(events.app.created).toBeCalledTimes(1)
-        expect(events.app.published).toBeCalledTimes(1)
-        expect(events.automation.created).toBeCalledTimes(2)
-        expect(events.automation.stepCreated).toBeCalledTimes(1)
-        expect(events.datasource.created).toBeCalledTimes(2)
-        expect(events.layout.created).toBeCalledTimes(1)
-        expect(events.query.created).toBeCalledTimes(2)
-        expect(events.role.created).toBeCalledTimes(2)
-        expect(events.table.created).toBeCalledTimes(3)
-        expect(events.view.created).toBeCalledTimes(2)
-        expect(events.view.calculationCreated).toBeCalledTimes(1)
-        expect(events.view.filterCreated).toBeCalledTimes(1)
-        expect(events.screen.created).toBeCalledTimes(2)
-        expect(events.backfill.appSucceeded).toBeCalledTimes(2)
-
-        const processor = events.processors.analyticsProcessor.processEvent
-        console.log(processor)
+        expect(events.app.created).toHaveBeenCalledTimes(1)
+        expect(events.app.published).toHaveBeenCalledTimes(1)
+        expect(events.automation.created).toHaveBeenCalledTimes(2)
+        expect(events.automation.stepCreated).toHaveBeenCalledTimes(1)
+        expect(events.datasource.created).toHaveBeenCalledTimes(2)
+        expect(events.layout.created).toHaveBeenCalledTimes(1)
+        expect(events.query.created).toHaveBeenCalledTimes(2)
+        expect(events.role.created).toHaveBeenCalledTimes(2)
+        expect(events.table.created).toHaveBeenCalledTimes(3)
+        expect(events.view.created).toHaveBeenCalledTimes(2)
+        expect(events.view.calculationCreated).toHaveBeenCalledTimes(1)
+        expect(events.view.filterCreated).toHaveBeenCalledTimes(1)
+        expect(events.screen.created).toHaveBeenCalledTimes(2)
+        expect(events.backfill.appSucceeded).toHaveBeenCalledTimes(2)
 
         // to make sure caching is working as expected
         expect(
           events.processors.analyticsProcessor.processEvent
-        ).toBeCalledTimes(23)
+        ).toHaveBeenCalledTimes(23)
       })
     })
   })
@@ -123,24 +120,24 @@ describe("migrations", () => {
       )[0]
       await migrations.runMigration(migration)
 
-      expect(events.user.created).toBeCalledTimes(3)
-      expect(events.role.assigned).toBeCalledTimes(2)
-      expect(events.user.permissionBuilderAssigned).toBeCalledTimes(1) // default test user
-      expect(events.user.permissionAdminAssigned).toBeCalledTimes(1) // admin from above
-      expect(events.rows.created).toBeCalledTimes(1)
-      expect(events.rows.created).toBeCalledWith(2, timestamp)
-      expect(events.email.SMTPCreated).toBeCalledTimes(1)
-      expect(events.auth.SSOCreated).toBeCalledTimes(2)
-      expect(events.auth.SSOActivated).toBeCalledTimes(2)
-      expect(events.org.logoUpdated).toBeCalledTimes(1)
-      expect(events.org.nameUpdated).toBeCalledTimes(1)
-      expect(events.org.platformURLUpdated).toBeCalledTimes(1)
-      expect(events.backfill.tenantSucceeded).toBeCalledTimes(1)
+      expect(events.user.created).toHaveBeenCalledTimes(3)
+      expect(events.role.assigned).toHaveBeenCalledTimes(2)
+      expect(events.user.permissionBuilderAssigned).toHaveBeenCalledTimes(1) // default test user
+      expect(events.user.permissionAdminAssigned).toHaveBeenCalledTimes(1) // admin from above
+      expect(events.rows.created).toHaveBeenCalledTimes(1)
+      expect(events.rows.created).toHaveBeenCalledWith(2, timestamp)
+      expect(events.email.SMTPCreated).toHaveBeenCalledTimes(1)
+      expect(events.auth.SSOCreated).toHaveBeenCalledTimes(2)
+      expect(events.auth.SSOActivated).toHaveBeenCalledTimes(2)
+      expect(events.org.logoUpdated).toHaveBeenCalledTimes(1)
+      expect(events.org.nameUpdated).toHaveBeenCalledTimes(1)
+      expect(events.org.platformURLUpdated).toHaveBeenCalledTimes(1)
+      expect(events.backfill.tenantSucceeded).toHaveBeenCalledTimes(1)
 
       // to make sure caching is working as expected
-      expect(events.processors.analyticsProcessor.processEvent).toBeCalledTimes(
-        19
-      )
+      expect(
+        events.processors.analyticsProcessor.processEvent
+      ).toHaveBeenCalledTimes(19)
     })
   })
 })

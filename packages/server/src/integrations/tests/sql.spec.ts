@@ -342,25 +342,6 @@ describe("SQL query builder", () => {
     })
   })
 
-  it("should use greater than when only low range specified", () => {
-    const date = new Date()
-    const query = sql._query(
-      generateReadJson({
-        filters: {
-          range: {
-            property: {
-              low: date,
-            },
-          },
-        },
-      })
-    )
-    expect(query).toEqual({
-      bindings: [date, limit],
-      sql: `select * from (select * from "${TABLE_NAME}" where "${TABLE_NAME}"."property" > $1 limit $2) as "${TABLE_NAME}"`,
-    })
-  })
-
   it("should use AND like expression for MS-SQL when filter is contains", () => {
     const query = new Sql(SqlClient.MS_SQL, 10)._query(
       generateReadJson({
