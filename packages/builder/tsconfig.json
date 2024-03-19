@@ -7,19 +7,13 @@
     "baseUrl": ".",
     "paths": {
       "assets/*": ["./assets/*"],
-      "components/*": ["./src/components/*"],
-      "pages/*": ["./src/pages/*"],
-      "templates": ["./src/templates"],
-      "templates/*": ["./src/templates/*"],
-      "stores/*": ["./src/stores/*"],
-      "dataBinding": ["./src/dataBinding.js"],
-      "api": ["./src/api.js"],
-      "constants": ["./src/constants"],
-      "constants/*": ["./src/constants/*"],
-      "analytics": ["./src/analytics"],
-      "actions": ["./src/actions"],
-      "helpers": ["./src/helpers"],
-      "helpers/*": ["./src/helpers/*"]
+      "@budibase/*": [
+        "../*/src/index.ts",
+        "../*/src/index.js",
+        "../*",
+        "../../node_modules/@budibase/*"
+      ],
+      "*": ["./src/*"]
     }
   }
 }
