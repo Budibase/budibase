@@ -49,7 +49,11 @@
     {
       "files": ["**/*.spec.ts"],
       "parser": "@typescript-eslint/parser",
-      "extends": ["eslint:recommended"],
+      "plugins": ["jest"],
+      "extends": ["eslint:recommended", "plugin:jest/recommended"],
+      "env": {
+        "jest/globals": true
+      },
       "rules": {
         "no-unused-vars": "off",
         "no-inner-declarations": "off",
@@ -59,7 +63,6 @@
         "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
-        "local-rules/remove-only-from-tests": "warn",
         "no-console": "warn"
       }
     },
