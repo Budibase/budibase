@@ -14,21 +14,34 @@ import {
   SessionCookie,
   JsonFieldSubType,
   QueryResponse,
-  QueryPreview,
   QuerySchema,
   FieldType,
   ExecuteQueryRequest,
   ExecuteQueryResponse,
-  Row,
   QueryParameter,
   PreviewQueryRequest,
   PreviewQueryResponse,
 } from "@budibase/types"
 import { ValidQueryNameRegex, utils as JsonUtils } from "@budibase/shared-core"
+import { findHBSBlocks } from "@budibase/string-templates"
 
 const Runner = new Thread(ThreadType.QUERY, {
   timeoutMs: env.QUERY_THREAD_TIMEOUT,
 })
+
+function validateQueryInputs(parameters: Record<string, string>) {
+  for (let entry of Object.entries(parameters)) {
+    const [key, value] = entry
+    if (typeof value !== "string") {
+      continue
+    }
+    if (findHBSBlocks(value).length !== 0) {
+      throw new Error(
+        `Parameter '${key}' input contains a handlebars binding - this is not allowed.`
+      )
+    }
+  }
+}
 
 export async function fetch(ctx: UserCtx) {
   ctx.body = await sdk.queries.fetch()
@@ -123,10 +136,10 @@ function getAuthConfig(ctx: UserCtx) {
 
 function enrichParameters(
   queryParameters: QueryParameter[],
-  requestParameters: { [key: string]: string } = {}
-): {
-  [key: string]: string
-} {
+  requestParameters: Record<string, string> = {}
+): Record<string, string> {
+  // first check parameters are all valid
+  validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
   for (let parameter of queryParameters) {
     if (!requestParameters[parameter.name]) {
