@@ -24,6 +24,13 @@
     navigationStore,
   } from "stores/builder"
   import { DefaultAppTheme } from "constants"
+  import BarButtonList from "/src/components/design/settings/controls/BarButtonList.svelte"
+
+  $: alignmentOptions = [
+    { value: "Left", barIcon: "TextAlignLeft" },
+    { value: "Center", barIcon: "TextAlignCenter" },
+    { value: "Right", barIcon: "TextAlignRight" },
+  ]
 
   $: screenRouteOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
@@ -45,6 +52,10 @@
     } catch (error) {
       notifications.error("Error updating navigation settings")
     }
+  }
+
+  const updateTextAlign = textAlignValue => {
+    navigationStore.syncAppNavigation({ textAlign: textAlignValue })
   }
 </script>
 
@@ -132,6 +143,15 @@
             value={$navigationStore.title}
             on:change={e => update("title", e.detail)}
             updateOnChange={false}
+          />
+
+          <div class="label">
+            <Label size="M">Text align</Label>
+          </div>
+          <BarButtonList
+            options={alignmentOptions}
+            value={$navigationStore.textAlign}
+            onChange={updateTextAlign}
           />
         {/if}
         <div class="label">
