@@ -34,18 +34,42 @@
     },
     {
       "files": ["**/*.ts"],
+      "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
       "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
         "no-inner-declarations": "off",
         "no-case-declarations": "off",
-        "no-useless-escape": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
-        "local-rules/no-budibase-imports": "error",
+        "local-rules/no-budibase-imports": "error"
+      }
+    },
+    {
+      "files": ["**/*.spec.ts"],
+      "excludedFiles": ["qa-core/**"],
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["jest"],
+      "extends": ["eslint:recommended", "plugin:jest/recommended"],
+      "env": {
+        "jest/globals": true
+      },
+      "rules": {
+        "no-unused-vars": "off",
+        "no-inner-declarations": "off",
+        "no-case-declarations": "off",
+        "no-undef": "off",
+        "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",
-        "local-rules/email-domain-example-com": "error"
+        "local-rules/email-domain-example-com": "error",
+        "no-console": "warn",
+        // We have a lot of tests that don't have assertions, they use our test
+        // API client that does the assertions for them
+        "jest/expect-expect": "off",
+        // We do this in some tests where the behaviour of internal tables
+        // differs to external, but the API is broadly the same
+        "jest/no-conditional-expect": "off"
       }
     },
     {
