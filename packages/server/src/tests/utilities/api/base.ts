@@ -143,15 +143,11 @@ export abstract class TestAPI {
     return await request
   }
 
-  protected _request = async <T>(
-    method: Method,
-    url: string,
-    opts?: RequestOpts
-  ): Promise<T> => {
-    const { expectations } = opts || {}
+  protected _checkResponse = (
+    response: Response,
+    expectations?: Expectations
+  ) => {
     const { status = 200 } = expectations || {}
-
-    const response = await this._requestRaw(method, url, opts)
 
     if (response.status !== status) {
       let message = `Expected status ${status} but got ${response.status}`
@@ -191,6 +187,17 @@ export abstract class TestAPI {
       expect(response.body).toMatchObject(expectations.body)
     }
 
-    return response.body
+    return response
+  }
+
+  protected _request = async <T>(
+    method: Method,
+    url: string,
+    opts?: RequestOpts
+  ): Promise<T> => {
+    return this._checkResponse(
+      await this._requestRaw(method, url, opts),
+      opts?.expectations
+    ).body
   }
 }
