@@ -30,7 +30,9 @@ describe("/applications", () => {
   beforeEach(async () => {
     app = await config.api.application.create({ name: utils.newid() })
     const deployment = await config.api.application.publish(app.appId)
-    expect(deployment.status).toBe("SUCCESS")
+    if (deployment.status !== "SUCCESS") {
+      throw new Error("Failed to publish app")
+    }
     jest.clearAllMocks()
   })
 

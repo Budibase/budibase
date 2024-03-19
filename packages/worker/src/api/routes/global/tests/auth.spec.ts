@@ -360,7 +360,10 @@ describe("/api/global/auth", () => {
 
         const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
 
-        expect(events.auth.login).toHaveBeenCalledWith("oidc", "oauth@example.com")
+        expect(events.auth.login).toHaveBeenCalledWith(
+          "oidc",
+          "oauth@example.com"
+        )
         expect(events.auth.login).toHaveBeenCalledTimes(1)
         expect(res.status).toBe(302)
         const location: string = res.get("location")
@@ -368,13 +371,5 @@ describe("/api/global/auth", () => {
         expectSetAuthCookie(res)
       })
     })
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/oidc/callback", () => {})
-
-    describe("GET /api/global/auth/oidc/callback", () => {})
-
-    describe("GET /api/admin/auth/oidc/callback", () => {})
   })
 })
