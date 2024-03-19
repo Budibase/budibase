@@ -717,7 +717,7 @@ export class ExternalRequest<T extends Operation> {
 
       const rows = related[key]?.rows || []
 
-      function relationshipMatchPredicate({
+      const relationshipMatchPredicate = ({
         row,
         linkPrimary,
         linkSecondary,
@@ -725,7 +725,7 @@ export class ExternalRequest<T extends Operation> {
         row: Row
         linkPrimary: string
         linkSecondary?: string
-      }) {
+      }) => {
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
