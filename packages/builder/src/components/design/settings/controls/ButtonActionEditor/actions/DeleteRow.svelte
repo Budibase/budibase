@@ -31,7 +31,7 @@
     <Label small>Row IDs</Label>
     <DrawerBindableInput
       {bindings}
-      title="Rows to delete"
+      title="Row IDs to delete"
       value={parameters.rowId}
       on:change={value => (parameters.rowId = value.detail)}
     />

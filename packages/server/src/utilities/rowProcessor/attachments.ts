@@ -43,7 +43,7 @@ export class AttachmentCleanup {
         if ((columnRemoved && !renaming) || opts.deleting) {
           rows.forEach(row => {
             files = files.concat(
-              row[key].map((attachment: any) => attachment.key)
+              (row[key] || []).map((attachment: any) => attachment.key)
             )
           })
         }
