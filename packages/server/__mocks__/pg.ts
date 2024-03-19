@@ -11,8 +11,7 @@ module PgMock {
   }))
 
   // constructor
-  function Client() {}
-
+  const Client = () => {}
   Client.prototype.query = query
   Client.prototype.end = jest.fn(cb => {
     if (cb) cb()

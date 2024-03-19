@@ -9,7 +9,7 @@ module AwsMock {
     ...extra,
   })
 
-  function DocumentClient() {
+  const DocumentClient = () => {
     // @ts-ignore
     this.put = jest.fn(response({}))
     // @ts-ignore
@@ -36,7 +36,7 @@ module AwsMock {
     this.delete = jest.fn(response({}))
   }
 
-  function S3() {
+  const S3 = () => {
     // @ts-ignore
     this.listObjects = jest.fn(
       response({

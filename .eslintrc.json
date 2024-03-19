@@ -39,7 +39,6 @@
       "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
-        "no-inner-declarations": "off",
         "no-case-declarations": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
@@ -57,7 +56,6 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "no-inner-declarations": "off",
         "no-case-declarations": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
