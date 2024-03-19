@@ -1,4 +1,4 @@
-module.exports.HelperFunctionBuiltin = [
+export const HelperFunctionBuiltin = [
   "#if",
   "#unless",
   "#each",
@@ -15,11 +15,11 @@ module.exports.HelperFunctionBuiltin = [
   "with",
 ]
 
-module.exports.HelperFunctionNames = {
+export const HelperFunctionNames = {
   OBJECT: "object",
   ALL: "all",
   LITERAL: "literal",
   JS: "js",
 }
 
-module.exports.LITERAL_MARKER = "%LITERAL%"
+export const LITERAL_MARKER = "%LITERAL%"
