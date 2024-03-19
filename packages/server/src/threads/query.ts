@@ -84,13 +84,9 @@ class QueryRunner {
     // pre-query, make sure datasource variables are added to parameters
     const parameters = await this.addDatasourceVariables()
 
-    // Enrich the parameters with the addition context items.
-    // 'user' is now a reserved variable key in mapping parameters
-    const enrichedParameters = await sdk.queries.enrichContext(
-      parameters,
-      this.ctx
-    )
-    const enrichedContext = { ...enrichedParameters, ...this.ctx }
+    // Do NOT enrich parameters yet. This is the user input
+    // and it shouldn't be interpolated.
+    const enrichedContext = { ...parameters, ...this.ctx }
 
     // Parse global headers
     if (datasourceClone.config?.defaultHeaders) {
@@ -135,7 +131,7 @@ class QueryRunner {
 
       const ctx = {
         data: rows,
-        params: enrichedParameters,
+        params: parameters,
       }
       rows = vm.withContext(ctx, () => vm.execute(transformer))
     }
