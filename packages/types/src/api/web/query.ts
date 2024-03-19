@@ -11,7 +11,7 @@ export interface PreviewQueryResponse {
 }
 
 export interface ExecuteQueryRequest {
-  parameters?: { [key: string]: string }
+  parameters?: Record<string, string>
   pagination?: any
 }
 

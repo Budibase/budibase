@@ -1,6 +1,6 @@
 # -- Passed to all pods created by this chart. Should not ordinarily need to be changed.
 imagePullSecrets: []
-# -- Override the name of the deploymen. Defaults to {{ .Chart.Name }}.
+# -- Override the name of the deployment. Defaults to {{ .Chart.Name }}.
 nameOverride: ""
 
 serviceAccount:
