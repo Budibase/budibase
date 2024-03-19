@@ -279,3 +279,11 @@ export const buildContextTreeLookupMap = rootComponent => {
   })
   return map
 }
+
+// Get a flat list of ids for all descendants of a component
+export const getChildIdsForComponent = component => {
+  return [
+    component._id,
+    ...(component?._children ?? []).map(getChildIdsForComponent).flat(1),
+  ]
+}
