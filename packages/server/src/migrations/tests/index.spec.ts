@@ -135,9 +135,9 @@ describe("migrations", () => {
       expect(events.backfill.tenantSucceeded).toHaveBeenCalledTimes(1)
 
       // to make sure caching is working as expected
-      expect(events.processors.analyticsProcessor.processEvent).toHaveBeenCalledTimes(
-        19
-      )
+      expect(
+        events.processors.analyticsProcessor.processEvent
+      ).toHaveBeenCalledTimes(19)
     })
   })
 })
