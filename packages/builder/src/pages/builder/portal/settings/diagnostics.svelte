@@ -47,12 +47,17 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 {#if sdk.users.isAdmin($auth.user) && diagnosticInfo}
   <Layout noPadding>
-    <Layout gap="XS">
+    <Layout gap="XS" noPadding>
       <Heading size="M">Diagnostics</Heading>
-      Please include this diagnostic information in support requests and github issues
-      by clicking the button on the top right to copy to clipboard.
+      <Body>
+        Please include this diagnostic information in support requests and
+        github issues by clicking the button on the top right to copy to
+        clipboard.
+      </Body>
       <Divider />
       <Body size="M">
         <section>

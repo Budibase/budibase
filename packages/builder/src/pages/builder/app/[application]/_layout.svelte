@@ -8,7 +8,7 @@
     userStore,
     deploymentStore,
   } from "stores/builder"
-  import { auth, apps } from "stores/portal"
+  import { auth, appsStore } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
@@ -52,7 +52,7 @@
       const pkg = await API.fetchAppPackage(application)
       await initialise(pkg)
 
-      await apps.load()
+      await appsStore.load()
       await deploymentStore.load()
 
       loaded = true
@@ -69,11 +69,12 @@
   // brought back to the same screen.
   const topItemNavigate = path => () => {
     const activeTopNav = $layout.children.find(c => $isActive(c.path))
-    if (!activeTopNav) return
-    builderStore.setPreviousTopNavPath(
-      activeTopNav.path,
-      window.location.pathname
-    )
+    if (activeTopNav) {
+      builderStore.setPreviousTopNavPath(
+        activeTopNav.path,
+        window.location.pathname
+      )
+    }
     $goto($builderStore.previousTopNavPath[path] || path)
   }
 
@@ -95,7 +96,7 @@
         const release_date = new Date("2023-03-01T00:00:00.000Z")
         const onboarded = new Date($auth.user?.onboardedAt)
         if (onboarded < release_date) {
-          builderStore.startTour(TOUR_KEYS.FEATURE_ONBOARDING)
+          builderStore.setTour(TOUR_KEYS.FEATURE_ONBOARDING)
         }
       }
     }
@@ -143,7 +144,7 @@
         </span>
         <Tabs {selected} size="M">
           {#each $layout.children as { path, title }}
-            <TourWrap tourStepKey={`builder-${title}-section`}>
+            <TourWrap stepKeys={[`builder-${title}-section`]}>
               <Tab
                 quiet
                 selected={$isActive(path)}
@@ -187,7 +188,7 @@
 {/if}
 
 <svelte:window on:keydown={handleKeyDown} />
-<Modal bind:this={commandPaletteModal}>
+<Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
 </Modal>
 

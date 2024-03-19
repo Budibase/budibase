@@ -243,6 +243,8 @@
   <MigrationModal {column} />
 </Modal>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="header-cell"
   class:open
@@ -315,7 +317,7 @@
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  customZindex={100}
+  customZindex={50}
 >
   {#if editIsOpen}
     <div

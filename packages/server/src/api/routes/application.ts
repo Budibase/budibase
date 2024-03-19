@@ -4,7 +4,6 @@ import * as deploymentController from "../controllers/deploy"
 import authorized from "../../middleware/authorized"
 import { permissions } from "@budibase/backend-core"
 import { applicationValidator } from "./utils/validators"
-import { importToApp } from "../controllers/application"
 
 const router: Router = new Router()
 
@@ -56,8 +55,13 @@ router
   )
   .delete(
     "/api/applications/:appId",
-    authorized(permissions.GLOBAL_BUILDER),
+    authorized(permissions.BUILDER),
     controller.destroy
+  )
+  .post(
+    "/api/applications/:appId/duplicate",
+    authorized(permissions.BUILDER),
+    controller.duplicateApp
   )
   .post(
     "/api/applications/:appId/import",

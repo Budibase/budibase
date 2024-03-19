@@ -1,13 +1,15 @@
 import newid from "./newid"
 import { context, db as dbCore } from "@budibase/backend-core"
 import {
-  FieldType,
+  DatabaseQueryOpts,
+  Datasource,
   DocumentType,
   FieldSchema,
-  RelationshipFieldMetadata,
-  VirtualDocumentType,
+  FieldType,
   INTERNAL_TABLE_SOURCE_ID,
-  DatabaseQueryOpts,
+  RelationshipFieldMetadata,
+  SourceName,
+  VirtualDocumentType,
   LinkDocument,
 } from "@budibase/types"
 
@@ -21,11 +23,11 @@ export const enum AppStatus {
   DEPLOYED = "published",
 }
 
-export const BudibaseInternalDB = {
+export const BudibaseInternalDB: Datasource = {
   _id: INTERNAL_TABLE_SOURCE_ID,
   type: dbCore.BUDIBASE_DATASOURCE_TYPE,
   name: "Budibase DB",
-  source: "BUDIBASE",
+  source: SourceName.BUDIBASE,
   config: {},
 }
 

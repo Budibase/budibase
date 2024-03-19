@@ -56,6 +56,7 @@
   </GridCell>
 </div>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="button-column"
   style="left:{left}px"

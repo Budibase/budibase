@@ -110,7 +110,7 @@ export async function updateAllFormulasInTable(table: Table) {
       (enriched: Row) => enriched._id === row._id
     )
     if (enrichedRow) {
-      const processed = processFormulas(table, cloneDeep(row), {
+      const processed = await processFormulas(table, cloneDeep(row), {
         dynamic: false,
         contextRows: [enrichedRow],
       })
@@ -143,7 +143,7 @@ export async function finaliseRow(
     squash: false,
   })) as Row
   // use enriched row to generate formulas for saving, specifically only use as context
-  row = processFormulas(table, row, {
+  row = await processFormulas(table, row, {
     dynamic: false,
     contextRows: [enrichedRow],
   })
@@ -179,7 +179,7 @@ export async function finaliseRow(
   const response = await db.put(row)
   // for response, calculate the formulas for the enriched row
   enrichedRow._rev = response.rev
-  enrichedRow = processFormulas(table, enrichedRow, {
+  enrichedRow = await processFormulas(table, enrichedRow, {
     dynamic: false,
   })
   // this updates the related formulas in other rows based on the relations to this row

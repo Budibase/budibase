@@ -219,6 +219,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="container" transition:fly|local={{ x: 260, duration: 300 }}>
   <Panel
     title="Add component"

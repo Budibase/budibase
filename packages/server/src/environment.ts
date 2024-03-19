@@ -19,11 +19,11 @@ function parseIntSafe(number?: string) {
 }
 
 const DEFAULTS = {
-  QUERY_THREAD_TIMEOUT: 10000,
+  QUERY_THREAD_TIMEOUT: 15000,
   AUTOMATION_THREAD_TIMEOUT: 12000,
   AUTOMATION_SYNC_TIMEOUT: 120000,
   AUTOMATION_MAX_ITERATIONS: 200,
-  JS_PER_EXECUTION_TIME_LIMIT_MS: 1000,
+  JS_PER_EXECUTION_TIME_LIMIT_MS: 1500,
   TEMPLATE_REPOSITORY: "app",
   PLUGINS_DIR: "/plugins",
   FORKED_PROCESS_NAME: "main",
@@ -76,13 +76,16 @@ const environment = {
     DEFAULTS.AUTOMATION_THREAD_TIMEOUT > QUERY_THREAD_TIMEOUT
       ? DEFAULTS.AUTOMATION_THREAD_TIMEOUT
       : QUERY_THREAD_TIMEOUT,
-  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
   BB_ADMIN_USER_EMAIL: process.env.BB_ADMIN_USER_EMAIL,
   BB_ADMIN_USER_PASSWORD: process.env.BB_ADMIN_USER_PASSWORD,
   PLUGINS_DIR: process.env.PLUGINS_DIR || DEFAULTS.PLUGINS_DIR,
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   MAX_IMPORT_SIZE_MB: process.env.MAX_IMPORT_SIZE_MB,
   SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
+  // SQL
+  SQL_MAX_ROWS: process.env.SQL_MAX_ROWS,
+  SQL_LOGGING_ENABLE: process.env.SQL_LOGGING_ENABLE,
+  SQL_ALIASING_DISABLE: process.env.SQL_ALIASING_DISABLE,
   // flags
   ALLOW_DEV_AUTOMATIONS: process.env.ALLOW_DEV_AUTOMATIONS,
   DISABLE_THREADING: process.env.DISABLE_THREADING,
@@ -113,6 +116,7 @@ const environment = {
     process.env[key] = value
     // @ts-ignore
     environment[key] = value
+    cleanVariables()
   },
   isTest: coreEnv.isTest,
   isJest: coreEnv.isJest,
@@ -128,18 +132,22 @@ const environment = {
   },
 }
 
-// clean up any environment variable edge cases
-for (let [key, value] of Object.entries(environment)) {
-  // handle the edge case of "0" to disable an environment variable
-  if (value === "0") {
-    // @ts-ignore
-    environment[key] = 0
-  }
-  // handle the edge case of "false" to disable an environment variable
-  if (value === "false") {
-    // @ts-ignore
-    environment[key] = 0
+function cleanVariables() {
+  // clean up any environment variable edge cases
+  for (let [key, value] of Object.entries(environment)) {
+    // handle the edge case of "0" to disable an environment variable
+    if (value === "0") {
+      // @ts-ignore
+      environment[key] = 0
+    }
+    // handle the edge case of "false" to disable an environment variable
+    if (value === "false") {
+      // @ts-ignore
+      environment[key] = 0
+    }
   }
 }
+
+cleanVariables()
 
 export default environment

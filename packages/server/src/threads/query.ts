@@ -7,14 +7,14 @@ import {
   QueryVariable,
   QueryResponse,
 } from "./definitions"
-import { VM2 } from "../jsRunner/vm"
+import { IsolatedVM } from "../jsRunner/vm"
+import { iifeWrapper, processStringSync } from "@budibase/string-templates"
 import { getIntegration } from "../integrations"
-import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName } from "@budibase/types"
+import { Datasource, Query, SourceName, Row } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -43,7 +43,7 @@ class QueryRunner {
     this.parameters = input.parameters
     this.pagination = input.pagination
     this.transformer = input.transformer
-    this.queryId = input.queryId
+    this.queryId = input.queryId!
     this.schema = input.schema
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
@@ -114,7 +114,7 @@ class QueryRunner {
     }
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
-    let rows = output,
+    let rows = output as Row[],
       info = undefined,
       extra = undefined,
       pagination = undefined
@@ -127,11 +127,17 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new VM2({
+      transformer = iifeWrapper(transformer)
+      let vm = new IsolatedVM()
+      if (datasource.source === SourceName.MONGODB) {
+        vm = vm.withParsingBson(rows)
+      }
+
+      const ctx = {
         data: rows,
         params: enrichedParameters,
-      })
-      rows = runner.execute(transformer)
+      }
+      rows = vm.withContext(ctx, () => vm.execute(transformer))
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -163,7 +169,12 @@ class QueryRunner {
     }
 
     // get all the potential fields in the schema
-    let keys = rows.flatMap(Object.keys)
+    const keysSet: Set<string> = new Set()
+    rows.forEach(row => {
+      const keys = Object.keys(row)
+      keys.forEach(key => keysSet.add(key))
+    })
+    const keys: string[] = [...keysSet]
 
     if (integration.end) {
       integration.end()

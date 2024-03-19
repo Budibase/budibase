@@ -45,6 +45,8 @@
   const hover = hoverStore.hover
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="components">
   <div class="header" class:scrolling>
     <Body size="S">Components</Body>

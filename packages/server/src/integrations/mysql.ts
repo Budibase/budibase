@@ -12,7 +12,9 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
   FieldType,
+  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -261,6 +263,7 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
       const bindings = opts?.disableCoercion
         ? baseBindings
         : bindingTypeCoerce(baseBindings)
+      this.log(query.sql, bindings)
       // Node MySQL is callback based, so we must wrap our call in a promise
       const response = await this.client!.query(query.sql, bindings)
       return response[0]
@@ -380,12 +383,18 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     return results.length ? results : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     await this.connect()
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
-      return await this.queryWithReturning(json, queryFn)
+      const processFn = (result: any) => {
+        if (json?.meta?.table && Array.isArray(result)) {
+          return this.convertJsonStringColumns(json.meta.table, result)
+        }
+        return result
+      }
+      return await this.queryWithReturning(json, queryFn, processFn)
     } finally {
       await this.disconnect()
     }

@@ -15,7 +15,14 @@
     FancySelect,
   } from "@budibase/bbui"
   import { builderStore, appStore, roles } from "stores/builder"
-  import { groups, licensing, apps, users, auth, admin } from "stores/portal"
+  import {
+    groups,
+    licensing,
+    appsStore,
+    users,
+    auth,
+    admin,
+  } from "stores/portal"
   import {
     fetchData,
     Constants,
@@ -54,7 +61,7 @@
 
   let inviteFailureResponse = ""
   $: validEmail = emailValidator(email) === true
-  $: prodAppId = apps.getProdAppID($appStore.appId)
+  $: prodAppId = appsStore.getProdAppID($appStore.appId)
   $: promptInvite = showInvite(
     filteredInvites,
     filteredUsers,
@@ -539,6 +546,8 @@
 
 <svelte:window on:keydown={handleKeyDown} />
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   transition:fly={{ x: 400, duration: 260 }}
   id="builder-side-panel-container"

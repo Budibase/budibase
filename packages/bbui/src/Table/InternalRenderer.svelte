@@ -19,6 +19,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div on:click|stopPropagation={onClick}>
   <Icon size="S" name="Copy" />
 </div>

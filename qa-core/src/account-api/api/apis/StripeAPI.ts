@@ -11,12 +11,12 @@ export default class StripeAPI extends BaseAPI {
   }
 
   async createCheckoutSession(
-    priceId: string,
+    price: object,
     opts: APIRequestOpts = { status: 200 }
   ) {
     return this.doRequest(() => {
       return this.client.post(`/api/stripe/checkout-session`, {
-        body: { priceId },
+        body: { prices: [price] },
       })
     }, opts)
   }

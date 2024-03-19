@@ -107,9 +107,9 @@ jobs:
       - name: Test
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
-            yarn test --ignore=@budibase/worker --ignore=@budibase/server --ignore=@budibase/pro
+            yarn test --ignore=@budibase/worker --ignore=@budibase/server
           fi
 
   test-worker:
@@ -158,31 +158,6 @@ jobs:
             yarn test --scope=@budibase/server --since=${{ env.NX_BASE_BRANCH }}
           else
             yarn test --scope=@budibase/server
-          fi
-
-  test-pro:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == 'Budibase/budibase'
-    steps:
-      - name: Checkout repo and submodules
-        uses: actions/checkout@v4
-        with:
-          submodules: true
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
-          fetch-depth: 0
-
-      - name: Use Node.js 20.x
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.x
-          cache: yarn
-      - run: yarn --frozen-lockfile
-      - name: Test
-        run: |
-          if ${{ env.USE_NX_AFFECTED }}; then
-            yarn test --scope=@budibase/pro --since=${{ env.NX_BASE_BRANCH }}
-          else
-            yarn test --scope=@budibase/pro
           fi
 
   integration-test:

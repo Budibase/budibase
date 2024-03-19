@@ -60,6 +60,7 @@
   let authConfigId
   let dynamicVariables, addVariableModal, varBinding, globalDynamicBindings
   let restBindings = getRestBindings()
+  let nestedSchemaFields = {}
 
   $: staticVariables = datasource?.config?.staticVariables || {}
 
@@ -160,6 +161,7 @@
     newQuery.fields.authConfigId = authConfigId
     newQuery.fields.disabledHeaders = restUtils.flipHeaderState(enabledHeaders)
     newQuery.schema = schema || {}
+    newQuery.nestedSchemaFields = nestedSchemaFields || {}
 
     return newQuery
   }
@@ -238,6 +240,7 @@
           }
         }
         schema = response.schema
+        nestedSchemaFields = response.nestedSchemaFields
         notifications.success("Request sent successfully")
       }
     } catch (error) {

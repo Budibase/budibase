@@ -13,6 +13,9 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
+  FieldType,
+  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -329,6 +332,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         operation === Operation.CREATE
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
+      this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
@@ -492,7 +496,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const schema = this.config.schema
     await this.connect()
     if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
@@ -500,8 +504,14 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
-    const processFn = (result: any) =>
-      result.recordset ? result.recordset : [{ [operation]: true }]
+    const processFn = (result: any) => {
+      if (json?.meta?.table && result.recordset) {
+        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+      } else if (result.recordset) {
+        return result.recordset
+      }
+      return [{ [operation]: true }]
+    }
     return this.queryWithReturning(json, queryFn, processFn)
   }
 

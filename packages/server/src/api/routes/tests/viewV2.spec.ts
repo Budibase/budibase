@@ -1,9 +1,11 @@
 import * as setup from "./utilities"
 import {
   CreateViewRequest,
+  Datasource,
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  SaveTableRequest,
   SearchQueryOperators,
   SortOrder,
   SortType,
@@ -14,65 +16,88 @@ import {
   ViewV2,
 } from "@budibase/types"
 import { generator } from "@budibase/backend-core/tests"
-import { generateDatasourceID } from "../../../db/utils"
+import * as uuid from "uuid"
+import { databaseTestProviders } from "../../../integrations/tests/utils"
+import merge from "lodash/merge"
 
-function priceTable(): Table {
-  return {
-    name: "table",
-    type: "table",
-    sourceId: INTERNAL_TABLE_SOURCE_ID,
-    sourceType: TableSourceType.INTERNAL,
-    schema: {
-      Price: {
-        type: FieldType.NUMBER,
-        name: "Price",
-        constraints: {},
-      },
-      Category: {
-        type: FieldType.STRING,
-        name: "Category",
-        constraints: {
-          type: "string",
-        },
-      },
-    },
-  }
-}
-
-const config = setup.getConfig()
-
-beforeAll(async () => {
-  await config.init()
-})
+jest.unmock("mysql2")
+jest.unmock("mysql2/promise")
+jest.unmock("mssql")
+jest.unmock("pg")
 
 describe.each([
-  ["internal ds", () => config.createTable(priceTable())],
-  [
-    "external ds",
-    async () => {
-      const datasource = await config.createDatasource({
-        datasource: {
-          ...setup.structures.basicDatasource().datasource,
-          plus: true,
-          _id: generateDatasourceID({ plus: true }),
-        },
-      })
+  ["internal", undefined],
+  ["postgres", databaseTestProviders.postgres],
+  ["mysql", databaseTestProviders.mysql],
+  ["mssql", databaseTestProviders.mssql],
+  ["mariadb", databaseTestProviders.mariadb],
+])("/v2/views (%s)", (_, dsProvider) => {
+  const config = setup.getConfig()
 
-      return config.createExternalTable({
-        ...priceTable(),
-        sourceId: datasource._id,
-        sourceType: TableSourceType.EXTERNAL,
-      })
-    },
-  ],
-])("/v2/views (%s)", (_, tableBuilder) => {
   let table: Table
+  let datasource: Datasource
+
+  function saveTableRequest(
+    ...overrides: Partial<SaveTableRequest>[]
+  ): SaveTableRequest {
+    const req: SaveTableRequest = {
+      name: uuid.v4().substring(0, 16),
+      type: "table",
+      sourceType: datasource
+        ? TableSourceType.EXTERNAL
+        : TableSourceType.INTERNAL,
+      sourceId: datasource ? datasource._id! : INTERNAL_TABLE_SOURCE_ID,
+      primary: ["id"],
+      schema: {
+        id: {
+          type: FieldType.AUTO,
+          name: "id",
+          autocolumn: true,
+          constraints: {
+            presence: true,
+          },
+        },
+      },
+    }
+    return merge(req, ...overrides)
+  }
+
+  function priceTable(): SaveTableRequest {
+    return saveTableRequest({
+      schema: {
+        Price: {
+          type: FieldType.NUMBER,
+          name: "Price",
+          constraints: {},
+        },
+        Category: {
+          type: FieldType.STRING,
+          name: "Category",
+          constraints: {
+            type: "string",
+          },
+        },
+      },
+    })
+  }
 
   beforeAll(async () => {
-    table = await tableBuilder()
+    await config.init()
+
+    if (dsProvider) {
+      datasource = await config.createDatasource({
+        datasource: await dsProvider.datasource(),
+      })
+    }
+    table = await config.api.table.save(priceTable())
   })
 
-  afterAll(setup.afterAll)
+  afterAll(async () => {
+    if (dsProvider) {
+      await dsProvider.stop()
+    }
+    setup.afterAll()
+  })
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
@@ -177,7 +202,7 @@ describe.each([
       }
 
       await config.api.viewV2.create(newView, {
-        expectStatus: 201,
+        status: 201,
       })
     })
   })
@@ -186,9 +211,12 @@ describe.each([
     let view: ViewV2
 
     beforeEach(async () => {
-      table = await tableBuilder()
+      table = await config.api.table.save(priceTable())
 
-      view = await config.api.viewV2.create({ name: "View A" })
+      view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: "View A",
+      })
     })
 
     it("can update an existing view data", async () => {
@@ -247,6 +275,9 @@ describe.each([
           ...updatedData,
           schema: {
             ...table.schema,
+            id: expect.objectContaining({
+              visible: false,
+            }),
             Category: expect.objectContaining({
               visible: false,
             }),
@@ -275,7 +306,7 @@ describe.each([
       const tableId = table._id!
       await config.api.viewV2.update(
         { ...view, id: generator.guid() },
-        { expectStatus: 404 }
+        { status: 404 }
       )
 
       expect(await config.api.table.get(tableId)).toEqual(
@@ -304,7 +335,7 @@ describe.each([
             },
           ],
         },
-        { expectStatus: 404 }
+        { status: 404 }
       )
 
       expect(await config.api.table.get(tableId)).toEqual(
@@ -320,25 +351,27 @@ describe.each([
     })
 
     it("cannot update views v1", async () => {
-      const viewV1 = await config.createLegacyView()
-      await config.api.viewV2.update(
-        {
-          ...viewV1,
+      const viewV1 = await config.api.legacyView.save({
+        tableId: table._id!,
+        name: generator.guid(),
+        filters: [],
+        schema: {},
+      })
+
+      await config.api.viewV2.update(viewV1 as unknown as ViewV2, {
+        status: 400,
+        body: {
+          message: "Only views V2 can be updated",
+          status: 400,
         },
-        {
-          expectStatus: 400,
-          handleResponse: r => {
-            expect(r.body).toEqual({
-              message: "Only views V2 can be updated",
-              status: 400,
-            })
-          },
-        }
-      )
+      })
     })
 
     it("cannot update the a view with unmatching ids between url and body", async () => {
-      const anotherView = await config.api.viewV2.create()
+      const anotherView = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: generator.guid(),
+      })
       const result = await config
         .request!.put(`/api/v2/views/${anotherView.id}`)
         .send(view)
@@ -403,7 +436,7 @@ describe.each([
           } as Record<string, FieldSchema>,
         },
         {
-          expectStatus: 200,
+          status: 200,
         }
       )
     })
@@ -413,7 +446,10 @@ describe.each([
     let view: ViewV2
 
     beforeAll(async () => {
-      view = await config.api.viewV2.create()
+      view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: generator.guid(),
+      })
     })
 
     it("can delete an existing view", async () => {
@@ -448,6 +484,45 @@ describe.each([
         UIFieldMetadata
       >
       expect(viewSchema.Price?.visible).toEqual(false)
+    })
+  })
+
+  describe("read", () => {
+    it("views have extra data trimmed", async () => {
+      const table = await config.api.table.save(
+        saveTableRequest({
+          name: "orders",
+          schema: {
+            Country: {
+              type: FieldType.STRING,
+              name: "Country",
+            },
+            Story: {
+              type: FieldType.STRING,
+              name: "Story",
+            },
+          },
+        })
+      )
+
+      const view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: uuid.v4(),
+        schema: {
+          Country: {
+            visible: true,
+          },
+        },
+      })
+
+      let row = await config.api.row.save(view.id, {
+        Country: "Aussy",
+        Story: "aaaaa",
+      })
+
+      row = await config.api.row.get(table._id!, row._id!)
+      expect(row.Story).toBeUndefined()
+      expect(row.Country).toEqual("Aussy")
     })
   })
 })
