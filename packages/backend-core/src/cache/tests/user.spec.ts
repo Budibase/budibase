@@ -55,8 +55,8 @@ describe("user cache", () => {
         })),
       })
 
-      expect(UserDB.bulkGet).toBeCalledTimes(1)
-      expect(UserDB.bulkGet).toBeCalledWith(userIdsToRequest)
+      expect(UserDB.bulkGet).toHaveBeenCalledTimes(1)
+      expect(UserDB.bulkGet).toHaveBeenCalledWith(userIdsToRequest)
     })
 
     it("on a second all, all of them are retrieved from cache", async () => {
@@ -82,7 +82,7 @@ describe("user cache", () => {
         ),
       })
 
-      expect(UserDB.bulkGet).toBeCalledTimes(1)
+      expect(UserDB.bulkGet).toHaveBeenCalledTimes(1)
     })
 
     it("when some users are cached, only the missing ones are retrieved from db", async () => {
@@ -110,8 +110,8 @@ describe("user cache", () => {
         ),
       })
 
-      expect(UserDB.bulkGet).toBeCalledTimes(1)
-      expect(UserDB.bulkGet).toBeCalledWith([
+      expect(UserDB.bulkGet).toHaveBeenCalledTimes(1)
+      expect(UserDB.bulkGet).toHaveBeenCalledWith([
         userIdsToRequest[1],
         userIdsToRequest[2],
         userIdsToRequest[4],
