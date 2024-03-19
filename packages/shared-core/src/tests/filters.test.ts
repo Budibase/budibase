@@ -5,7 +5,6 @@ import {
   SearchFilter,
 } from "@budibase/types"
 import { buildLuceneQuery, runLuceneQuery } from "../filters"
-import { expect, describe, it, test } from "vitest"
 
 describe("runLuceneQuery", () => {
   const docs = [
