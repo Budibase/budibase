@@ -18,7 +18,7 @@
     Divider,
     ActionButton,
   } from "@budibase/bbui"
-  import { licensing, users, apps, auditLogs } from "stores/portal"
+  import { licensing, users, appsStore, auditLogs } from "stores/portal"
   import LockedFeature from "../../_components/LockedFeature.svelte"
   import { createPaginationStore } from "helpers/pagination"
   import { onMount, setContext } from "svelte"
@@ -102,7 +102,7 @@
     enrich(parseEventObject($auditLogs.events), selectedEvents, "id"),
     "id"
   )
-  $: sortedApps = sort(enrich($apps, selectedApps, "appId"), "name")
+  $: sortedApps = sort(enrich($appsStore.apps, selectedApps, "appId"), "name")
 
   const debounce = value => {
     clearTimeout(timer)

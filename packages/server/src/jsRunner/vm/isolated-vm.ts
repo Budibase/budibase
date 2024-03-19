@@ -6,8 +6,8 @@ import crypto from "crypto"
 import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
-import { VM } from "@budibase/types"
-import { iifeWrapper } from "../utilities"
+import { Snippet, VM } from "@budibase/types"
+import { iifeWrapper } from "@budibase/string-templates"
 import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
@@ -95,6 +95,26 @@ export class IsolatedVM implements VM {
       script.release()
     })
 
+    return this
+  }
+
+  withSnippets(snippets?: Snippet[]) {
+    // Transform snippets into a map for faster access
+    let snippetMap: Record<string, string> = {}
+    for (let snippet of snippets || []) {
+      snippetMap[snippet.name] = snippet.code
+    }
+    const snippetsSource = loadBundle(BundleType.SNIPPETS)
+    const script = this.isolate.compileScriptSync(`
+      const snippetDefinitions = ${JSON.stringify(snippetMap)};
+      const snippetCache = {};
+      ${snippetsSource};
+      snippets = snippets.default;
+    `)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
     return this
   }
 

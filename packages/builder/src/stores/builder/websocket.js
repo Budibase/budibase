@@ -6,11 +6,12 @@ import {
   themeStore,
   navigationStore,
   deploymentStore,
+  snippets,
   datasources,
   tables,
 } from "stores/builder"
 import { get } from "svelte/store"
-import { auth, apps } from "stores/portal"
+import { auth, appsStore } from "stores/portal"
 import { screenStore } from "./screens"
 import { SocketEvent, BuilderSocketEvent, helpers } from "@budibase/shared-core"
 import { notifications } from "@budibase/bbui"
@@ -64,11 +65,12 @@ export const createBuilderWebsocket = appId => {
     appStore.syncMetadata(metadata)
     themeStore.syncMetadata(metadata)
     navigationStore.syncMetadata(metadata)
+    snippets.syncMetadata(metadata)
   })
   socket.onOther(
     BuilderSocketEvent.AppPublishChange,
     async ({ user, published }) => {
-      await apps.load()
+      await appsStore.load()
       if (published) {
         await deploymentStore.load()
       }

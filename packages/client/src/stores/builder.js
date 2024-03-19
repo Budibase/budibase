@@ -18,6 +18,7 @@ const createBuilderStore = () => {
     usedPlugins: null,
     eventResolvers: {},
     metadata: null,
+    snippets: null,
 
     // Legacy - allow the builder to specify a layout
     layout: null,

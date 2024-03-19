@@ -49,7 +49,7 @@
   <div class="side-bar-controls">
     <NavHeader
       title="Automations"
-      placeholder="Search for automation"
+      placeholder="Search for automations"
       bind:value={searchString}
       onAdd={() => modal.show()}
     />
