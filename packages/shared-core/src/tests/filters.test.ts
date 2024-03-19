@@ -193,7 +193,7 @@ describe("runLuceneQuery", () => {
     expect(runLuceneQuery(docs, query).map(row => row.order_id)).toEqual([2, 3])
   })
 
-  test.each([[523, 259], "523,259"])(
+  it.each([[523, 259], "523,259"])(
     "should return rows with matches on numeric oneOf filter",
     input => {
       const query = buildQuery({
@@ -208,7 +208,7 @@ describe("runLuceneQuery", () => {
     }
   )
 
-  test.each([
+  it.each([
     [false, []],
     [true, [1, 2, 3]],
   ])("should return %s  if allOr is %s ", (allOr, expectedResult) => {
