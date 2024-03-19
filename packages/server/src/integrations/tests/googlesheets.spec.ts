@@ -109,9 +109,9 @@ describe("Google Sheets Integration", () => {
         sheetsByTitle[table.name] = sheet
         await integration.updateTable(table)
 
-        expect(sheet.loadHeaderRow).toBeCalledTimes(1)
-        expect(sheet.setHeaderRow).toBeCalledTimes(1)
-        expect(sheet.setHeaderRow).toBeCalledWith(tableColumns)
+        expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
+        expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
+        expect(sheet.setHeaderRow).toHaveBeenCalledWith(tableColumns)
       })
     })
 
@@ -127,9 +127,9 @@ describe("Google Sheets Integration", () => {
         await integration.updateTable(table)
         return sheet
       })
-      expect(sheet.loadHeaderRow).toBeCalledTimes(1)
-      expect(sheet.setHeaderRow).toBeCalledTimes(1)
-      expect(sheet.setHeaderRow).toBeCalledWith(["name"])
+      expect(sheet.loadHeaderRow).toHaveBeenCalledTimes(1)
+      expect(sheet.setHeaderRow).toHaveBeenCalledTimes(1)
+      expect(sheet.setHeaderRow).toHaveBeenCalledWith(["name"])
 
       // No undefined are sent
       expect((sheet.setHeaderRow as any).mock.calls[0][0]).toHaveLength(1)
@@ -148,7 +148,7 @@ describe("Google Sheets Integration", () => {
 
         const res = await integration.getTableNames()
 
-        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
+        expect(mockGoogleIntegration.loadInfo).toHaveBeenCalledTimes(1)
         expect(res).toEqual(sheetNames)
       })
     })
@@ -159,7 +159,7 @@ describe("Google Sheets Integration", () => {
       await config.doInContext(structures.uuid(), async () => {
         const res = await integration.testConnection()
 
-        expect(mockGoogleIntegration.loadInfo).toBeCalledTimes(1)
+        expect(mockGoogleIntegration.loadInfo).toHaveBeenCalledTimes(1)
         expect(res).toEqual({ connected: true })
       })
     })

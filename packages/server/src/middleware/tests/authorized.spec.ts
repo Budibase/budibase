@@ -213,11 +213,11 @@ describe("Authorization middleware", () => {
       it("will fetch resource permissions when resource is set", async () => {
         await config.executeMiddleware()
 
-        expect(config.throw).not.toBeCalled()
+        expect(config.throw).not.toHaveBeenCalled()
         expect(config.next).toHaveBeenCalled()
 
-        expect(mockedGetResourcePerms).toBeCalledTimes(1)
-        expect(mockedGetResourcePerms).toBeCalledWith(resourceId)
+        expect(mockedGetResourcePerms).toHaveBeenCalledTimes(1)
+        expect(mockedGetResourcePerms).toHaveBeenCalledWith(resourceId)
       })
     })
   })

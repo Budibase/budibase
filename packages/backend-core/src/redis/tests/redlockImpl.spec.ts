@@ -96,7 +96,7 @@ describe("redlockImpl", () => {
             task: mockTask,
             executionTimeMs: lockTtl * 2,
           })
-        ).rejects.toThrowError(
+        ).rejects.toThrow(
           `Unable to fully release the lock on resource \"lock:${config.tenantId}_persist_writethrough\".`
         )
       }
