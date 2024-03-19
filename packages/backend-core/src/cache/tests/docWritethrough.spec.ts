@@ -265,6 +265,7 @@ describe("docWritethrough", () => {
     })
 
     // This is not yet supported
+    // eslint-disable-next-line jest/no-disabled-tests
     it.skip("patches will execute in order", async () => {
       let incrementalValue = 0
       const keyToOverride = generator.word()

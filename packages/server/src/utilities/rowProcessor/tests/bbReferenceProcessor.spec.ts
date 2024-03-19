@@ -110,9 +110,7 @@ describe("bbReferenceProcessor", () => {
           config.doInTenant(() =>
             processInputBBReferences(userIdCsv, FieldSubtype.USER)
           )
-        ).rejects.toThrow(
-          new InvalidBBRefError(wrongId, FieldSubtype.USER)
-        )
+        ).rejects.toThrow(new InvalidBBRefError(wrongId, FieldSubtype.USER))
       })
 
       it("validate valid user object", async () => {

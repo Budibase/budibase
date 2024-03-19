@@ -245,7 +245,10 @@ describe("/queries", () => {
       expect(responseBody.rows.length).toEqual(1)
       expect(events.query.previewed).toHaveBeenCalledTimes(1)
       delete datasource.config
-      expect(events.query.previewed).toHaveBeenCalledWith(datasource, queryPreview)
+      expect(events.query.previewed).toHaveBeenCalledWith(
+        datasource,
+        queryPreview
+      )
     })
 
     it("should apply authorization to endpoint", async () => {

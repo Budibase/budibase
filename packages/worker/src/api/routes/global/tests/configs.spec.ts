@@ -61,7 +61,9 @@ describe("configs", () => {
           expect(events.auth.SSOCreated).toHaveBeenCalledWith(ConfigType.GOOGLE)
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
-          expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
 
@@ -88,7 +90,9 @@ describe("configs", () => {
           expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.GOOGLE)
           expect(events.auth.SSOActivated).not.toHaveBeenCalled()
           expect(events.auth.SSODeactivated).toHaveBeenCalledTimes(1)
-          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
 
@@ -104,7 +108,9 @@ describe("configs", () => {
           expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.GOOGLE)
           expect(events.auth.SSODeactivated).not.toHaveBeenCalled()
           expect(events.auth.SSOActivated).toHaveBeenCalledTimes(1)
-          expect(events.auth.SSOActivated).toHaveBeenCalledWith(ConfigType.GOOGLE)
+          expect(events.auth.SSOActivated).toHaveBeenCalledWith(
+            ConfigType.GOOGLE
+          )
           await config.deleteConfig(ConfigType.GOOGLE)
         })
       })
@@ -154,7 +160,9 @@ describe("configs", () => {
           expect(events.auth.SSOUpdated).toHaveBeenCalledWith(ConfigType.OIDC)
           expect(events.auth.SSOActivated).not.toHaveBeenCalled()
           expect(events.auth.SSODeactivated).toHaveBeenCalledTimes(1)
-          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(ConfigType.OIDC)
+          expect(events.auth.SSODeactivated).toHaveBeenCalledWith(
+            ConfigType.OIDC
+          )
           await config.deleteConfig(ConfigType.OIDC)
         })
 

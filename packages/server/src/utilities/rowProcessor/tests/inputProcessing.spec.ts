@@ -62,7 +62,9 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledTimes(1)
+    expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledTimes(
+      1
+    )
     expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledWith(
       "123",
       "user"
@@ -150,7 +152,9 @@ describe("rowProcessor - inputProcessing", () => {
 
       const { row } = await inputProcessing(userId, table, newRow)
 
-      expect(bbReferenceProcessor.processInputBBReferences).not.toHaveBeenCalled()
+      expect(
+        bbReferenceProcessor.processInputBBReferences
+      ).not.toHaveBeenCalled()
       expect(row).toEqual(newRow)
     }
   )
