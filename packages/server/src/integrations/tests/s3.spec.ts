@@ -79,7 +79,7 @@ describe("S3 Integration", () => {
     })
   })
 
-  it("calls the delete method with the correct params ", async () => {
+  it("calls the delete method with the correct params", async () => {
     await config.integration.delete({
       bucket: "test",
       delete: `{
