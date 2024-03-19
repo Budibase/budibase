@@ -4,6 +4,7 @@ import {
   type CreateAppRequest,
   type FetchAppDefinitionResponse,
   type FetchAppPackageResponse,
+  DuplicateAppResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 import { AppStatus } from "../../../db/utils"
@@ -66,6 +67,22 @@ export class ApplicationAPI extends TestAPI {
       headers: {
         [constants.Header.APP_ID]: appId,
       },
+      expectations,
+    })
+  }
+
+  duplicateApp = async (
+    appId: string,
+    fields: object,
+    expectations?: Expectations
+  ): Promise<DuplicateAppResponse> => {
+    let headers = {
+      ...this.config.defaultHeaders(),
+      [constants.Header.APP_ID]: appId,
+    }
+    return this._post(`/api/applications/${appId}/duplicate`, {
+      headers,
+      fields,
       expectations,
     })
   }

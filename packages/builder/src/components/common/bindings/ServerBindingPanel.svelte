@@ -1,10 +1,11 @@
 <script>
   import BindingPanel from "./BindingPanel.svelte"
+  import { snippets } from "stores/builder"
 
   export let bindings = []
-  export let valid
   export let value = ""
   export let allowJS = false
+  export let context = null
 
   $: enrichedBindings = enrichBindings(bindings)
 
@@ -19,9 +20,10 @@
 </script>
 
 <BindingPanel
-  bind:valid
   bindings={enrichedBindings}
+  snippets={$snippets}
   {value}
   {allowJS}
+  {context}
   on:change
 />

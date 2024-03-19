@@ -25,7 +25,7 @@
 </script>
 
 <Icon name="Settings" hoverable size="S" on:click={open} />
-<Drawer bind:this={drawer} title="Table Columns">
+<Drawer bind:this={drawer} title={column.name}>
   <svelte:fragment slot="description">
     "{column.name}" column settings
   </svelte:fragment>

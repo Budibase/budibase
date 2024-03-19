@@ -9,6 +9,7 @@
   export let api
   export let invertX = false
   export let invertY = false
+  export let schema
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -97,6 +98,7 @@
       {value}
       compact
       on:change={e => onChange(e.detail)}
+      maximum={schema.constraints?.length?.maximum}
       {processFiles}
       {deleteAttachments}
       {handleFileTooLarge}

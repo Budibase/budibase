@@ -12,8 +12,6 @@ COPY .yarnrc .
 
 COPY packages/server/package.json packages/server/package.json
 COPY packages/worker/package.json packages/worker/package.json
-# string-templates does not get bundled during the esbuild process, so we want to use the local version
-COPY packages/string-templates/package.json packages/string-templates/package.json
 
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
@@ -26,7 +24,7 @@ RUN ./scripts/removeWorkspaceDependencies.sh packages/worker/package.json
 RUN echo '' > scripts/syncProPackage.js
 RUN jq 'del(.scripts.postinstall)' package.json > temp.json && mv temp.json package.json
 RUN ./scripts/removeWorkspaceDependencies.sh package.json
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production
+RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production --frozen-lockfile
 
 # copy the actual code
 COPY packages/server/dist packages/server/dist
@@ -35,7 +33,6 @@ COPY packages/server/client packages/server/client
 COPY packages/server/builder packages/server/builder
 COPY packages/worker/dist packages/worker/dist
 COPY packages/worker/pm2.config.js packages/worker/pm2.config.js
-COPY packages/string-templates packages/string-templates
 
 
 FROM budibase/couchdb:v3.3.3 as runner
@@ -52,11 +49,11 @@ RUN apt-get update && \
 
 # Install postgres client for pg_dump utils
 RUN apt install -y software-properties-common apt-transport-https ca-certificates gnupg \
-    && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
-    && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
-    && apt update -y \
-    && apt install postgresql-client-15 -y \
-    && apt remove software-properties-common apt-transport-https gpg -y
+  && curl -fsSl https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
+  && echo deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main | tee /etc/apt/sources.list.d/postgresql.list \
+  && apt update -y \
+  && apt install postgresql-client-15 -y \
+  && apt remove software-properties-common apt-transport-https gpg -y
 
 # We use pm2 in order to run multiple node processes in a single container
 RUN npm install --global pm2
@@ -100,9 +97,6 @@ COPY --from=build /app/node_modules /node_modules
 COPY --from=build /app/package.json /package.json
 COPY --from=build /app/packages/server /app
 COPY --from=build /app/packages/worker /worker
-COPY --from=build /app/packages/string-templates /string-templates
-
-RUN cd /string-templates && yarn link && cd ../app && yarn link @budibase/string-templates && cd ../worker && yarn link @budibase/string-templates
 
 
 EXPOSE 80

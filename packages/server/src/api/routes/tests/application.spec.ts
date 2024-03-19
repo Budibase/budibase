@@ -16,8 +16,9 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
-import type { App } from "@budibase/types"
+import { type App } from "@budibase/types"
 import tk from "timekeeper"
+import * as uuid from "uuid"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -31,6 +32,96 @@ describe("/applications", () => {
     const deployment = await config.api.application.publish(app.appId)
     expect(deployment.status).toBe("SUCCESS")
     jest.clearAllMocks()
+  })
+
+  // These need to go first for the app totals to make sense
+  describe("permissions", () => {
+    it("should only return apps a user has access to", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      user = await config.globalUser({
+        ...user,
+        builder: {
+          apps: [config.getProdAppId()],
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const role = await config.api.roles.save({
+        name: "Test",
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      user = await config.globalUser({
+        ...user,
+        roles: {
+          [config.getProdAppId()]: role.name,
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role on a group", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const roleName = uuid.v4().replace(/-/g, "")
+      const role = await config.api.roles.save({
+        name: roleName,
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      const group = await config.createGroup(role._id!)
+
+      user = await config.globalUser({
+        ...user,
+        userGroups: [group._id!],
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
   })
 
   describe("create", () => {
@@ -92,6 +183,20 @@ describe("/applications", () => {
       )
       expect(events.app.created).toBeCalledTimes(1)
       expect(events.app.fileImported).toBeCalledTimes(1)
+    })
+
+    it("should reject with a known name", async () => {
+      await config.api.application.create(
+        { name: app.name },
+        { body: { message: "App name is already in use." }, status: 400 }
+      )
+    })
+
+    it("should reject with a known url", async () => {
+      await config.api.application.create(
+        { name: "made up", url: app?.url! },
+        { body: { message: "App URL is already in use." }, status: 400 }
+      )
     })
   })
 
@@ -228,6 +333,63 @@ describe("/applications", () => {
     })
   })
 
+  describe("POST /api/applications/:appId/duplicate", () => {
+    it("should duplicate an existing app", async () => {
+      const resp = await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: "to-dupe copy",
+          url: "/to-dupe-copy",
+        },
+        {
+          status: 200,
+        }
+      )
+
+      expect(events.app.duplicated).toBeCalled()
+      expect(resp.duplicateAppId).toBeDefined()
+      expect(resp.sourceAppId).toEqual(app.appId)
+      expect(resp.duplicateAppId).not.toEqual(app.appId)
+    })
+
+    it("should reject an unknown app id with a 404", async () => {
+      await config.api.application.duplicateApp(
+        app.appId.slice(0, -1) + "a",
+        {
+          name: "to-dupe 123",
+          url: "/to-dupe-123",
+        },
+        {
+          status: 404,
+        }
+      )
+    })
+
+    it("should reject with a known name", async () => {
+      const resp = await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: app.name,
+          url: "/known-name",
+        },
+        { body: { message: "App name is already in use." }, status: 400 }
+      )
+      expect(events.app.duplicated).not.toBeCalled()
+    })
+
+    it("should reject with a known url", async () => {
+      const resp = await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: "this is fine",
+          url: app.url,
+        },
+        { body: { message: "App URL is already in use." }, status: 400 }
+      )
+      expect(events.app.duplicated).not.toBeCalled()
+    })
+  })
+
   describe("POST /api/applications/:appId/sync", () => {
     it("should not sync automation logs", async () => {
       const automation = await config.createAutomation()
@@ -246,20 +408,6 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
-    })
-  })
-
-  describe("permissions", () => {
-    it("should only return apps a user has access to", async () => {
-      const user = await config.createUser({
-        builder: { global: false },
-        admin: { global: false },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(0)
-      })
     })
   })
 })

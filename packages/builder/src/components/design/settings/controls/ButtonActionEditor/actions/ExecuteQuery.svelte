@@ -64,7 +64,13 @@
 
       {#if parameters.confirm}
         <Input
-          label="Confirm text"
+          label="Title"
+          placeholder="Execute Query"
+          bind:value={parameters.customTitleText}
+        />
+
+        <Input
+          label="Text"
           placeholder="Are you sure you want to execute this query?"
           bind:value={parameters.confirmText}
         />
