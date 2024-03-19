@@ -39,25 +39,28 @@ export async function create(ctx: any) {
     let name = "PLUGIN_" + Math.floor(100000 + Math.random() * 900000)
 
     switch (source) {
-      case PluginSource.NPM:
+      case PluginSource.NPM: {
         const { metadata: metadataNpm, directory: directoryNpm } =
           await npmUpload(url, name)
         metadata = metadataNpm
         directory = directoryNpm
         break
-      case PluginSource.GITHUB:
+      }
+      case PluginSource.GITHUB: {
         const { metadata: metadataGithub, directory: directoryGithub } =
           await githubUpload(url, name, githubToken)
         metadata = metadataGithub
         directory = directoryGithub
         break
-      case PluginSource.URL:
+      }
+      case PluginSource.URL: {
         const headersObj = headers || {}
         const { metadata: metadataUrl, directory: directoryUrl } =
           await urlUpload(url, name, headersObj)
         metadata = metadataUrl
         directory = directoryUrl
         break
+      }
     }
 
     pluginCore.validate(metadata?.schema)
