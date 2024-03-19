@@ -15,6 +15,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="property-group-container">
   {#if name}
     <div class="property-group-name" on:click={onHeaderClick}>

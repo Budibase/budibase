@@ -1,11 +1,11 @@
 import { Ctx } from "@budibase/types"
-import { VM2 } from "../../jsRunner/vm"
+import { IsolatedVM } from "../../jsRunner/vm"
+import { iifeWrapper } from "@budibase/string-templates"
 
 export async function execute(ctx: Ctx) {
   const { script, context } = ctx.request.body
-  const runner = new VM2(context)
-  const result = runner.execute(script)
-  ctx.body = result
+  const vm = new IsolatedVM()
+  ctx.body = vm.withContext(context, () => vm.execute(iifeWrapper(script)))
 }
 
 export async function save(ctx: Ctx) {

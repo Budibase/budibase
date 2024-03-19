@@ -60,6 +60,10 @@ export interface RenameColumn {
   updated: string
 }
 
+export interface AddColumn {
+  name: string
+}
+
 export interface RelationshipsJson {
   through?: string
   from?: string
@@ -94,6 +98,7 @@ export interface QueryJson {
     idFilter?: SearchFilters
   }
   relationships?: RelationshipsJson[]
+  tableAliases?: Record<string, string>
 }
 
 export interface SqlQuery {

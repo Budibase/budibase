@@ -39,6 +39,7 @@
 
 <svelte:window on:keydown={onKeyDown} />
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="header" class:search>
   <input
     readonly={!search}
@@ -58,7 +59,7 @@
     class="searchButton"
     class:hide={search}
   >
-    <Icon size="S" name="Search" />
+    <Icon size="S" name="Search" hoverable hoverColor="var(--ink)" />
   </div>
 
   <div
@@ -67,7 +68,7 @@
     class="addButton"
     class:rotate={search}
   >
-    <Icon name="Add" />
+    <Icon name="Add" hoverable hoverColor="var(--ink)" />
   </div>
 </div>
 

@@ -40,7 +40,7 @@ describe("migrations", () => {
 
   describe("backfill", () => {
     it("runs app db migration", async () => {
-      await config.doInContext(null, async () => {
+      await config.doInContext(undefined, async () => {
         await clearMigrations()
         await config.createAutomation()
         await config.createAutomation(structures.newAutomation())
@@ -93,18 +93,18 @@ describe("migrations", () => {
   })
 
   it("runs global db migration", async () => {
-    await config.doInContext(null, async () => {
+    await config.doInContext(undefined, async () => {
       await clearMigrations()
-      const appId = config.prodAppId
+      const appId = config.getProdAppId()
       const roles = { [appId]: "role_12345" }
       await config.createUser({
-        builder: false,
-        admin: true,
+        builder: { global: false },
+        admin: { global: true },
         roles,
       }) // admin only
       await config.createUser({
-        builder: false,
-        admin: false,
+        builder: { global: false },
+        admin: { global: false },
         roles,
       }) // non admin non builder
       await config.createTable()

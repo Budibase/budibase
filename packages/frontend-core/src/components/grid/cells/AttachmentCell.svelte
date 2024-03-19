@@ -9,6 +9,7 @@
   export let api
   export let invertX = false
   export let invertY = false
+  export let schema
 
   const { API, notifications } = getContext("grid")
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
@@ -77,6 +78,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="attachment-cell" class:editable on:click={editable ? open : null}>
   {#each value || [] as attachment}
     {#if isImage(attachment.extension)}
@@ -95,6 +98,7 @@
       {value}
       compact
       on:change={e => onChange(e.detail)}
+      maximum={schema.constraints?.length?.maximum}
       {processFiles}
       {deleteAttachments}
       {handleFileTooLarge}

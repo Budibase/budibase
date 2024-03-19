@@ -16,6 +16,7 @@
     <Heading size="XS">{heading}</Heading>
   </div>
 {/if}
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul class="spectrum-Menu" role="listbox">
   {#each dataSet as data}
     <li

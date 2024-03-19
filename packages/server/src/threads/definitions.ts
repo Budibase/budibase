@@ -7,10 +7,10 @@ export interface QueryEvent {
   datasource: Datasource
   queryVerb: string
   fields: { [key: string]: any }
-  parameters: { [key: string]: any }
+  parameters: { [key: string]: unknown }
   pagination?: any
   transformer: any
-  queryId: string
+  queryId?: string
   environmentVariables?: Record<string, string>
   ctx?: any
   schema?: Record<string, QuerySchema | string>

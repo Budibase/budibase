@@ -21,6 +21,8 @@
   onMount(() => subscribe("close-edit-column", close))
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   id="add-column-button"
   bind:this={anchor}
@@ -36,7 +38,7 @@
   align={$visibleColumns.length ? "right" : "left"}
   offset={0}
   popoverTarget={document.getElementById(`add-column-button`)}
-  customZindex={100}
+  customZindex={50}
 >
   <div
     use:clickOutside={() => {

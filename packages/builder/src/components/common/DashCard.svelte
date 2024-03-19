@@ -8,6 +8,8 @@
   $: actionDefined = typeof action === "function"
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="dash-card">
   <div class="dash-card-header" class:active={actionDefined} on:click={action}>
     <span class="dash-card-title">

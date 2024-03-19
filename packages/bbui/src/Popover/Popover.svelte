@@ -12,6 +12,7 @@
   export let anchor
   export let align = "right"
   export let portalTarget
+  export let minWidth
   export let maxWidth
   export let maxHeight
   export let open = false
@@ -21,7 +22,6 @@
   export let customHeight
   export let animate = true
   export let customZindex
-
   export let handlePostionUpdate
   export let showPopover = true
   export let clickOutsideOverride = false
@@ -78,6 +78,7 @@
 </script>
 
 {#if open}
+  <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <Portal {target}>
     <div
       tabindex="0"
@@ -86,6 +87,7 @@
         align,
         maxHeight,
         maxWidth,
+        minWidth,
         useAnchorWidth,
         offset,
         customUpdate: handlePostionUpdate,
@@ -101,6 +103,8 @@
       role="presentation"
       style="height: {customHeight}; --customZindex: {customZindex};"
       transition:fly|local={{ y: -20, duration: animate ? 200 : 0 }}
+      on:mouseenter
+      on:mouseleave
     >
       <slot />
     </div>

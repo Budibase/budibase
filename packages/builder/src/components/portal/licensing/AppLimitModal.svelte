@@ -31,17 +31,11 @@
       : null}
   >
     <Body>
-      You are currently on our <span class="free-plan">Free plan</span>. Upgrade
-      to our Pro plan to get unlimited apps and additional features.
+      You have exceeded the app limit for your current plan. Upgrade to get
+      unlimited apps and additional features!
     </Body>
     {#if !$auth.user.accountPortalAccess}
       <Body>Please contact the account holder to upgrade.</Body>
     {/if}
   </ModalContent>
 </Modal>
-
-<style>
-  .free-plan {
-    font-weight: 600;
-  }
-</style>

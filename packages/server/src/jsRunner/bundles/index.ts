@@ -5,24 +5,23 @@ import fs from "fs"
 export const enum BundleType {
   HELPERS = "helpers",
   BSON = "bson",
+  SNIPPETS = "snippets",
 }
 
-const bundleSourceCode = {
-  [BundleType.HELPERS]: "../bundles/index-helpers.ivm.bundle.js",
-  [BundleType.BSON]: "../bundles/bson.ivm.bundle.js",
+const bundleSourceFile: Record<BundleType, string> = {
+  [BundleType.HELPERS]: "./index-helpers.ivm.bundle.js",
+  [BundleType.BSON]: "./bson.ivm.bundle.js",
+  [BundleType.SNIPPETS]: "./snippets.ivm.bundle.js",
 }
+const bundleSourceCode: Partial<Record<BundleType, string>> = {}
 
 export function loadBundle(type: BundleType) {
-  if (environment.isJest()) {
-    return fs.readFileSync(require.resolve(bundleSourceCode[type]), "utf-8")
+  let sourceCode = bundleSourceCode[type]
+  if (sourceCode) {
+    return sourceCode
   }
 
-  switch (type) {
-    case BundleType.HELPERS:
-      return require("../bundles/index-helpers.ivm.bundle.js")
-    case BundleType.BSON:
-      return require("../bundles/bson.ivm.bundle.js")
-    default:
-      utils.unreachable(type)
-  }
+  sourceCode = fs.readFileSync(require.resolve(bundleSourceFile[type]), "utf-8")
+  bundleSourceCode[type] = sourceCode
+  return sourceCode
 }

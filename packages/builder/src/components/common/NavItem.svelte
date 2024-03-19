@@ -8,6 +8,7 @@
   export let iconTooltip
   export let withArrow = false
   export let withActions = true
+  export let showActions = false
   export let indentLevel = 0
   export let text
   export let border = true
@@ -60,12 +61,16 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
   class="nav-item"
   class:hovering
   class:border
   class:selected
   class:withActions
+  class:showActions
+  class:actionsOpen={highlighted && withActions}
   class:scrollable
   class:highlighted
   class:selectedBy
@@ -166,8 +171,10 @@
     --avatars-background: var(--spectrum-global-color-gray-300);
   }
   .nav-item:hover .actions,
-  .hovering .actions {
-    visibility: visible;
+  .hovering .actions,
+  .nav-item.withActions.actionsOpen .actions,
+  .nav-item.withActions.showActions .actions {
+    opacity: 1;
   }
   .nav-item-content {
     flex: 1 1 auto;
@@ -270,7 +277,6 @@
     position: relative;
     display: grid;
     place-items: center;
-    visibility: hidden;
     order: 3;
     opacity: 0;
     width: 20px;

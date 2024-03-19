@@ -10,6 +10,7 @@
     navigationStore,
     selectedScreen,
     hoverStore,
+    snippets,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -68,6 +69,7 @@
       hostname: window.location.hostname,
       port: window.location.port,
     },
+    snippets: $snippets,
   }
 
   // Refresh the preview when required
@@ -174,7 +176,7 @@
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {
-      builderStore.highlightSetting(data.setting)
+      builderStore.highlightSetting(data.setting, "error")
 
       // Also scroll setting into view
       const selector = `#${data.setting}-prop-control`
@@ -196,6 +198,16 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)
+    } else if (type === "provide-context") {
+      let context = data?.context
+      if (context) {
+        try {
+          context = JSON.parse(context)
+        } catch (error) {
+          context = null
+        }
+      }
+      previewStore.setSelectedComponentContext(context)
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
@@ -236,6 +248,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
   {#if loading}
     <div class="center">

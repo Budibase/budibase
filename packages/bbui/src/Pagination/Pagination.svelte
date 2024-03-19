@@ -10,6 +10,8 @@
   export let hasNextPage = true
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <nav class="spectrum-Pagination spectrum-Pagination--explicit">
   <div
     href="#"

@@ -77,7 +77,7 @@
     </DatasourceOption>
     <DatasourceOption
       on:click={() => internalTableModal.show({ promptUpload: true })}
-      title="Upload data"
+      title="Upload CSV / JSON"
       description="Non-relational"
       {disabled}
     >

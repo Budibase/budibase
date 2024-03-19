@@ -13,9 +13,10 @@
     "build": "node ./scripts/build.js",
     "postbuild": "copyfiles -f ../client/dist/budibase-client.js ../client/manifest.json client && copyfiles -f ../../yarn.lock ./dist/",
     "check:types": "tsc -p tsconfig.json --noEmit --paths null",
-    "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=esm --external:handlebars",
-    "build:isolated-vm-lib:bson": "esbuild --minify --bundle src/jsRunner/bundles/bsonPackage.ts --outfile=src/jsRunner/bundles/bson.ivm.bundle.js --platform=node --format=esm",
-    "build:isolated-vm-libs": "yarn build:isolated-vm-lib:string-templates && yarn build:isolated-vm-lib:bson",
+    "build:isolated-vm-lib:snippets": "esbuild --minify --bundle src/jsRunner/bundles/snippets.ts --outfile=src/jsRunner/bundles/snippets.ivm.bundle.js --platform=node --format=iife --global-name=snippets",
+    "build:isolated-vm-lib:string-templates": "esbuild --minify --bundle src/jsRunner/bundles/index-helpers.ts --outfile=src/jsRunner/bundles/index-helpers.ivm.bundle.js --platform=node --format=iife --external:handlebars --global-name=helpers",
+    "build:isolated-vm-lib:bson": "esbuild --minify --bundle src/jsRunner/bundles/bsonPackage.ts --outfile=src/jsRunner/bundles/bson.ivm.bundle.js --platform=node --format=iife --global-name=bson",
+    "build:isolated-vm-libs": "yarn build:isolated-vm-lib:string-templates && yarn build:isolated-vm-lib:bson && yarn build:isolated-vm-lib:snippets",
     "build:dev": "yarn prebuild && tsc --build --watch --preserveWatchOutput",
     "debug": "yarn build && node --expose-gc --inspect=9222 dist/index.js",
     "jest": "NODE_OPTIONS=\"--no-node-snapshot $NODE_OPTIONS\" jest",
@@ -107,14 +108,12 @@
     "server-destroy": "1.0.1",
     "snowflake-promise": "^4.5.0",
     "socket.io": "4.6.1",
-    "svelte": "^3.49.0",
     "tar": "6.1.15",
     "to-json-schema": "0.2.5",
     "undici": "^6.0.1",
     "undici-types": "^6.0.1",
     "uuid": "^8.3.2",
     "validate.js": "0.13.1",
-    "vm2": "^3.9.19",
     "worker-farm": "1.7.0",
     "xml2js": "0.5.0"
   },
@@ -151,7 +150,7 @@
     "rimraf": "3.0.2",
     "supertest": "6.3.3",
     "swagger-jsdoc": "6.1.0",
-    "testcontainers": "10.6.0",
+    "testcontainers": "10.7.2",
     "timekeeper": "2.2.0",
     "ts-node": "10.8.1",
     "tsconfig-paths": "4.0.0",
@@ -176,6 +175,10 @@
         ]
       },
       "build": {
+        "inputs": [
+          "{projectRoot}/builder",
+          "{projectRoot}/client"
+        ],
         "outputs": [
           "{projectRoot}/builder",
           "{projectRoot}/client",

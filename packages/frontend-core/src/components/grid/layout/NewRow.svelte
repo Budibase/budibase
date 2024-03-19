@@ -153,6 +153,8 @@
 </script>
 
 <!-- New row FAB -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <TempTooltip
   text="Click here to create your first row"
   condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}

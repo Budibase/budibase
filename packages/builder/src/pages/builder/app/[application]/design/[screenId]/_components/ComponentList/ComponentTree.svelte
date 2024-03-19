@@ -86,6 +86,8 @@
   const hover = hoverStore.hover
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <ul>
   {#each filteredComponents || [] as component, index (component._id)}
     {@const opened = isOpen(component, $selectedComponentPath, openNodes)}

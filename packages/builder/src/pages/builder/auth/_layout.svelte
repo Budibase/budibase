@@ -10,13 +10,18 @@
     $redirect("../")
   }
 
-  if ($admin?.checklist?.branding) {
+  if ($admin?.cloud && $admin?.checklist?.branding) {
     let url = new URL(window.location.href)
     let hostname = url.hostname
     let parts = hostname.split(".")
-    let tenantId = parts[0]
+    let newTenantId = parts[0]
     let domain = parts.slice(-2).join(".")
-    CookieUtils.setCookie("tenantId", tenantId, domain)
+
+    let existingTenantId = CookieUtils.getCookie("tenantId")
+
+    if (!existingTenantId || existingTenantId !== newTenantId) {
+      CookieUtils.setCookie("tenantId", newTenantId, domain)
+    }
   }
 
   if (

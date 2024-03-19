@@ -22,6 +22,8 @@
   export let hoverable = false
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   on:click
   class="spectrum-StatusLight spectrum-StatusLight--size{size}"

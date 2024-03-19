@@ -4,6 +4,8 @@
   import { organisation } from "stores/portal"
 </script>
 
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions-->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <img
   src={$organisation.logoUrl || Logo}
   alt="Budibase Logo"

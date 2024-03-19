@@ -4,7 +4,8 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
   BUDIBASE_INTERNAL_DB_ID,
 } from "constants/backend"
-import { tables, queries } from "./"
+import { tables } from "./tables"
+import { queries } from "./queries"
 import { API } from "api"
 import { DatasourceFeature } from "@budibase/types"
 import { TableNames } from "constants"

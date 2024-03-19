@@ -20,3 +20,9 @@
 >
   <slot />
 </p>
+
+<style>
+  p {
+    text-wrap: pretty;
+  }
+</style>

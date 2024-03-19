@@ -31,6 +31,8 @@
   <mark>{ancestorName}</mark>
 </span>
 <span>-</span>
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <span
   class="spectrum-Link"
   on:click={() => {

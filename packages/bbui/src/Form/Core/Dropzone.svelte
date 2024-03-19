@@ -137,6 +137,9 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <div class="container" class:compact>
   {#if selectedImage}
     {#if gallery}
@@ -194,7 +197,9 @@
         >
           <Icon name="ChevronRight" />
         </div>
-        <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {#if maximum !== 1}
+          <div class="footer">File {selectedImageIdx + 1} of {fileCount}</div>
+        {/if}
       </div>
     {:else if value?.length}
       {#each value as file}
