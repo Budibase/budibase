@@ -130,7 +130,7 @@
       // Catch any app errors
       loading = false
       error = event.error || "An unknown error occurred"
-    } else if (type === "select-component" && data.id) {
+    } else if (type === "select-component" && "id" in data) {
       componentStore.select(data.id)
     } else if (type === "hover-component") {
       hoverStore.hover(data.id, false)

@@ -5,10 +5,14 @@
   $: color = $builderStore.editMode
     ? "var(--spectrum-global-color-static-green-500)"
     : "var(--spectrum-global-color-static-blue-600)"
+
+  $: isScreen = $builderStore.selectedComponentId?.startsWith(
+    $builderStore.screen._id
+  )
 </script>
 
 <IndicatorSet
-  componentId={$builderStore.selectedComponentId}
+  componentId={!isScreen ? $builderStore.selectedComponentId : null}
   {color}
   zIndex="910"
   transition
