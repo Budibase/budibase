@@ -39,7 +39,6 @@
       "extends": ["eslint:recommended"],
       "rules": {
         "no-unused-vars": "off",
-        "no-case-declarations": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
         "local-rules/no-budibase-imports": "error"
@@ -56,7 +55,6 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "no-case-declarations": "off",
         "no-undef": "off",
         "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",

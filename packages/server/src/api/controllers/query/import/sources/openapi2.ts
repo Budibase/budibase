@@ -109,13 +109,14 @@ export class OpenAPI2 extends OpenAPISource {
         for (let param of allParams) {
           if (parameterNotRef(param)) {
             switch (param.in) {
-              case "query":
+              case "query": {
                 let prefix = ""
                 if (queryString) {
                   prefix = "&"
                 }
                 queryString = `${queryString}${prefix}${param.name}={{${param.name}}}`
                 break
+              }
               case "header":
                 headers[param.name] = `{{${param.name}}}`
                 break
@@ -125,7 +126,7 @@ export class OpenAPI2 extends OpenAPISource {
               case "formData":
                 // future enhancement
                 break
-              case "body":
+              case "body": {
                 // set the request body to the example provided
                 // future enhancement: generate an example from the schema
                 let bodyParam: OpenAPIV2.InBodyParameterObject =
@@ -135,6 +136,7 @@ export class OpenAPI2 extends OpenAPISource {
                   requestBody = schema.example
                 }
                 break
+              }
             }
 
             // add the parameter if it can be bound in our config
