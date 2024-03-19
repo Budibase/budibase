@@ -6,7 +6,7 @@ import { getDB } from "../../db"
 
 import {
   DocWritethrough,
-  docWritethroughProcessorQueue,
+  DocWritethroughProcessor,
   init,
 } from "../docWritethrough"
 
@@ -15,7 +15,7 @@ import InMemoryQueue from "../../queue/inMemoryQueue"
 const initialTime = Date.now()
 
 async function waitForQueueCompletion() {
-  const queue: InMemoryQueue = docWritethroughProcessorQueue as never
+  const queue: InMemoryQueue = DocWritethroughProcessor.queue as never
   await queue.waitForCompletion()
 }
 
@@ -235,7 +235,7 @@ describe("docWritethrough", () => {
           return acc
         }, {})
       }
-      const queueMessageSpy = jest.spyOn(docWritethroughProcessorQueue, "add")
+      const queueMessageSpy = jest.spyOn(DocWritethroughProcessor.queue, "add")
 
       await config.doInTenant(async () => {
         let patches = await parallelPatch(5)
