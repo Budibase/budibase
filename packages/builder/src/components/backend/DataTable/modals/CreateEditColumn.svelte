@@ -470,7 +470,7 @@
       newError.name = `Column name already in use.`
     }
 
-    if (fieldInfo.type === "auto" && !fieldInfo.subtype) {
+    if (fieldInfo.type === FieldType.AUTO && !fieldInfo.subtype) {
       newError.subtype = `Auto Column requires a type`
     }
 
@@ -531,18 +531,18 @@
     }}
   />
 
-  {#if editableColumn.type === "string"}
+  {#if editableColumn.type === FieldType.STRING}
     <Input
       type="number"
       label="Max Length"
       bind:value={editableColumn.constraints.length.maximum}
     />
-  {:else if editableColumn.type === "options"}
+  {:else if editableColumn.type === FieldType.OPTIONS}
     <OptionSelectDnD
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
     />
-  {:else if editableColumn.type === "longform"}
+  {:else if editableColumn.type === FieldType.LONGFORM}
     <div>
       <div class="tooltip-alignment">
         <Label size="M">Formatting</Label>
@@ -560,12 +560,12 @@
         text="Enable rich text support (markdown)"
       />
     </div>
-  {:else if editableColumn.type === "array"}
+  {:else if editableColumn.type === FieldType.ARRAY}
     <OptionSelectDnD
       bind:constraints={editableColumn.constraints}
       bind:optionColors={editableColumn.optionColors}
     />
-  {:else if editableColumn.type === "datetime" && !editableColumn.autocolumn}
+  {:else if editableColumn.type === FieldType.DATETIME && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Earliest</Label>
@@ -604,7 +604,7 @@
       </div>
     {/if}
     <Toggle bind:value={editableColumn.dateOnly} text="Date only" />
-  {:else if editableColumn.type === "number" && !editableColumn.autocolumn}
+  {:else if editableColumn.type === FieldType.NUMBER && !editableColumn.autocolumn}
     <div class="split-label">
       <div class="label-length">
         <Label size="M">Min Value</Label>
@@ -629,7 +629,7 @@
         />
       </div>
     </div>
-  {:else if editableColumn.type === "link"}
+  {:else if editableColumn.type === FieldType.LINK}
     <RelationshipSelector
       bind:relationshipPart1
       bind:relationshipPart2
@@ -702,6 +702,24 @@
       disabled={!isCreating}
       thin
       text="Allow multiple users"
+    />
+  {:else if editableColumn.type === FieldType.ATTACHMENT}
+    <Toggle
+      value={editableColumn.constraints?.length?.maximum !== 1}
+      on:change={e => {
+        if (!e.detail) {
+          editableColumn.constraints ??= { length: {} }
+          editableColumn.constraints.length ??= {}
+          editableColumn.constraints.length.maximum = 1
+          editableColumn.constraints.length.message =
+            "cannot contain multiple files"
+        } else {
+          delete editableColumn.constraints?.length?.maximum
+          delete editableColumn.constraints?.length?.message
+        }
+      }}
+      thin
+      text="Allow multiple"
     />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
