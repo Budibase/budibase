@@ -64,8 +64,10 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack", user })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledWith(
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).toHaveBeenCalledTimes(1)
+    expect(bbReferenceProcessor.processOutputBBReferences).toHaveBeenCalledWith(
       "123",
       FieldSubtype.USER
     )
@@ -150,7 +152,9 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack" })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).toBeCalledTimes(1)
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).toHaveBeenCalledTimes(1)
   })
 
   it("does not fetch bb references when not in the schema", async () => {
@@ -189,6 +193,8 @@ describe("rowProcessor - outputProcessing", () => {
 
     expect(result).toEqual({ name: "Jack", user: "123" })
 
-    expect(bbReferenceProcessor.processOutputBBReferences).not.toBeCalled()
+    expect(
+      bbReferenceProcessor.processOutputBBReferences
+    ).not.toHaveBeenCalled()
   })
 })
