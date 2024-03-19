@@ -24,6 +24,7 @@
     navigationStore,
   } from "stores/builder"
   import { DefaultAppTheme } from "constants"
+  import BarButtonList from "/src/components/design/settings/controls/BarButtonList.svelte"
 
   $: screenRouteOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
@@ -137,7 +138,10 @@
           <div class="label">
             <Label size="M">Text align</Label>
           </div>
-          <ActionGroup quiet>
+          <BarButtonList
+            options={}
+          />
+          <!-- <ActionGroup quiet>
             <ActionButton
               selected={$navigationStore.textAlign === "Left"}
               quiet={$navigationStore.textAlign !== "Left"}
@@ -156,7 +160,7 @@
               icon="TextAlignRight"
               on:click={() => update("textAlign", "Right")}
             />
-          </ActionGroup>
+          </ActionGroup> -->
         {/if}
         <div class="label">
           <Label>Background</Label>
