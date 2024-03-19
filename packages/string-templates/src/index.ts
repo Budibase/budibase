@@ -1,5 +1,5 @@
 import { Context, createContext, runInNewContext } from "vm"
-import { create } from "handlebars"
+import { create, TemplateDelegate } from "handlebars"
 import { registerAll, registerMinimum } from "./helpers/index"
 import { preprocess, postprocess } from "./processors"
 import {
@@ -47,7 +47,7 @@ function testObject(object: any) {
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
-const templateCache: Record<string, HandlebarsTemplateDelegate<any>> = {}
+const templateCache: Record<string, TemplateDelegate<any>> = {}
 function createTemplate(string: string, opts?: ProcessOptions) {
   opts = { ...defaultOpts, ...opts }
 
