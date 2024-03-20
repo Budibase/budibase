@@ -20,6 +20,7 @@
 
   $: visibleIndicators = indicators.filter(x => x.visible)
   $: offset = $builderStore.inBuilder ? 0 : 2
+  $: componentId, debouncedUpdate()
 
   let updating = false
   let observers = []

@@ -1,10 +1,9 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import IndicatorSet from "./IndicatorSet.svelte"
-  import { builderStore, dndIsDragging, hoverStore } from "stores"
+  import { dndIsDragging, hoverStore } from "stores"
 
   $: componentId = $hoverStore.hoveredComponentId
-  $: zIndex = componentId === $builderStore.selectedComponentId ? 900 : 920
 
   const onMouseOver = e => {
     // Ignore if dragging
@@ -46,6 +45,6 @@
   componentId={$dndIsDragging ? null : componentId}
   color="var(--spectrum-global-color-static-blue-200)"
   transition
-  {zIndex}
+  zIndex="890"
   allowResizeAnchors
 />
