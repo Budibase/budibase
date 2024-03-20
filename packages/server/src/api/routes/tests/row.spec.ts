@@ -3,7 +3,7 @@ import { databaseTestProviders } from "../../../integrations/tests/utils"
 import tk from "timekeeper"
 import { outputProcessing } from "../../../utilities/rowProcessor"
 import * as setup from "./utilities"
-import { context, InternalTable, roles, tenancy } from "@budibase/backend-core"
+import { context, InternalTable, tenancy } from "@budibase/backend-core"
 import { quotas } from "@budibase/pro"
 import {
   AutoFieldSubType,
@@ -14,25 +14,15 @@ import {
   FieldTypeSubtypes,
   FormulaType,
   INTERNAL_TABLE_SOURCE_ID,
-  PermissionLevel,
   QuotaUsageType,
   RelationshipType,
   Row,
   SaveTableRequest,
-  SearchQueryOperators,
-  SortOrder,
-  SortType,
   StaticQuotaName,
   Table,
   TableSourceType,
-  ViewV2,
 } from "@budibase/types"
-import {
-  expectAnyExternalColsAttributes,
-  expectAnyInternalColsAttributes,
-  generator,
-  mocks,
-} from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import _, { merge } from "lodash"
 import * as uuid from "uuid"
 
