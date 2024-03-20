@@ -49,7 +49,6 @@ import {
   AuthToken,
   Automation,
   CreateViewRequest,
-  Ctx,
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
