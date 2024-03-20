@@ -1,4 +1,3 @@
-import { quotas } from "@budibase/pro"
 import {
   UserCtx,
   ViewV2,
