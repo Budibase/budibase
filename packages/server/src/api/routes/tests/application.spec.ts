@@ -369,7 +369,7 @@ describe("/applications", () => {
     })
 
     it("should reject with a known name", async () => {
-      const resp = await config.api.application.duplicateApp(
+      await config.api.application.duplicateApp(
         app.appId,
         {
           name: app.name,
@@ -381,7 +381,7 @@ describe("/applications", () => {
     })
 
     it("should reject with a known url", async () => {
-      const resp = await config.api.application.duplicateApp(
+      await config.api.application.duplicateApp(
         app.appId,
         {
           name: "this is fine",

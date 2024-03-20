@@ -32,10 +32,7 @@ export default async (ctx: Ctx<Row>, next: Next) => {
 }
 
 // have to mutate the koa context, can't return
-export async function trimViewFields<T extends Row>(
-  body: Row,
-  viewId: string
-): Promise<void> {
+export async function trimViewFields(body: Row, viewId: string): Promise<void> {
   const view = await sdk.views.get(viewId)
   const allowedKeys = sdk.views.allowedFields(view)
   // have to mutate the context, can't update reference
