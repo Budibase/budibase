@@ -17,13 +17,14 @@ export interface UIFieldMetadata {
 }
 
 interface BaseRelationshipFieldMetadata
-  extends Omit<BaseFieldSchema, "subtype"> {
+  extends BaseFieldSchema<
+    AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY | undefined
+  > {
   type: FieldType.LINK
   main?: boolean
   fieldName: string
   tableId: string
   tableRev?: string
-  subtype?: AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY
 }
 
 // External tables use junction tables, internal tables don't require them
@@ -60,18 +61,17 @@ export type RelationshipFieldMetadata =
   | ManyToOneRelationshipFieldMetadata
 
 export interface AutoColumnFieldMetadata
-  extends Omit<BaseFieldSchema, "subtype"> {
+  extends BaseFieldSchema<AutoFieldSubType | undefined> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
 }
 
-export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+export interface NumberFieldMetadata
+  extends BaseFieldSchema<AutoFieldSubType.AUTO_ID | undefined> {
   type: FieldType.NUMBER
-  subtype?: AutoFieldSubType.AUTO_ID
   lastID?: number
   autoReason?: AutoReason.FOREIGN_KEY
   // used specifically when Budibase generates external tables, this denotes if a number field
@@ -82,16 +82,18 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   }
 }
 
-export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+export interface JsonFieldMetadata
+  extends BaseFieldSchema<JsonFieldSubType.ARRAY | undefined> {
   type: FieldType.JSON
-  subtype?: JsonFieldSubType.ARRAY
 }
 
-export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+export interface DateFieldMetadata
+  extends BaseFieldSchema<
+    AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT | undefined
+  > {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
-  subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
@@ -106,10 +108,15 @@ export interface FormulaFieldMetadata extends BaseFieldSchema {
 }
 
 export interface BBReferenceFieldMetadata
-  extends Omit<BaseFieldSchema, "subtype"> {
+  extends BaseFieldSchema<FieldSubtype.USER | FieldSubtype.USERS> {
   type: FieldType.BB_REFERENCE
-  subtype: FieldSubtype.USER | FieldSubtype.USERS
+
   relationshipType?: RelationshipType
+}
+
+export interface AttachmentFieldMetadata
+  extends BaseFieldSchema<FieldSubtype.SINGLE | undefined> {
+  type: FieldType.ATTACHMENT
 }
 
 export interface FieldConstraints {
@@ -136,7 +143,7 @@ export interface FieldConstraints {
   }
 }
 
-interface BaseFieldSchema extends UIFieldMetadata {
+interface BaseFieldSchema<TSubtype = never> extends UIFieldMetadata {
   type: FieldType
   name: string
   sortable?: boolean
@@ -145,11 +152,7 @@ interface BaseFieldSchema extends UIFieldMetadata {
   constraints?: FieldConstraints
   autocolumn?: boolean
   autoReason?: AutoReason.FOREIGN_KEY
-  subtype?: never
-}
-interface AttachmentFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
-  type: FieldType.ATTACHMENT
-  subtype?: FieldSubtype.SINGLE
+  subtype: TSubtype
 }
 
 interface OtherFieldMetadata extends BaseFieldSchema {
