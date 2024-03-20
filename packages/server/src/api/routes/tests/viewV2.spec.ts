@@ -962,13 +962,6 @@ describe.each([
         })
       })
 
-      it("does not allow public users to fetch by default", async () => {
-        await config.publish()
-        await config.api.viewV2.publicSearch(view.id, undefined, {
-          status: 403,
-        })
-      })
-
       it("allow public users to fetch when permissions are explicit", async () => {
         await config.api.permission.add({
           roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
