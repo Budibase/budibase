@@ -1,6 +1,4 @@
 import type Nano from "@budibase/nano"
-// @ts-ignore this import is actually used
-import type PouchDB from "pouchdb-find"
 import {
   AllDocsResponse,
   AnyDocument,
@@ -9,6 +7,7 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
+import type PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",
