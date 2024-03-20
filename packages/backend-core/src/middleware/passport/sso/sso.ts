@@ -5,7 +5,6 @@ import * as context from "../../../context"
 import fetch from "node-fetch"
 import {
   SaveSSOUserFunction,
-  SaveUserOpts,
   SSOAuthDetails,
   SSOUser,
   User,
@@ -14,10 +13,8 @@ import {
 // no-op function for user save
 // - this allows datasource auth and access token refresh to work correctly
 // - prefer no-op over an optional argument to ensure function is provided to login flows
-export const ssoSaveUserNoOp: SaveSSOUserFunction = (
-  user: SSOUser,
-  opts: SaveUserOpts
-) => Promise.resolve(user)
+export const ssoSaveUserNoOp: SaveSSOUserFunction = (user: SSOUser) =>
+  Promise.resolve(user)
 
 /**
  * Common authentication logic for third parties. e.g. OAuth, OIDC.

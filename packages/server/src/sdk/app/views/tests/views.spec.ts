@@ -351,6 +351,7 @@ describe("table sdk", () => {
         const view: ViewV2 = {
           ...basicView,
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { name, description, ...newTableSchema } = basicTable.schema
 
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
@@ -364,6 +365,7 @@ describe("table sdk", () => {
         const view: ViewV2 = {
           ...basicView,
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { description, ...newTableSchema } = {
           ...basicTable.schema,
           updatedDescription: {
@@ -448,6 +450,7 @@ describe("table sdk", () => {
             hiddenField: { visible: false },
           },
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { name, description, ...newTableSchema } = basicTable.schema
 
         const result = syncSchema(_.cloneDeep(view), newTableSchema, undefined)
@@ -471,6 +474,7 @@ describe("table sdk", () => {
             hiddenField: { visible: false },
           },
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { name, description, ...newTableSchema } = {
           ...basicTable.schema,
           newField1: {
@@ -502,6 +506,7 @@ describe("table sdk", () => {
             hiddenField: { visible: false },
           },
         }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { description, ...newTableSchema } = {
           ...basicTable.schema,
           updatedDescription: {

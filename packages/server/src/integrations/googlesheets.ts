@@ -168,6 +168,7 @@ class GoogleSheetsIntegration implements DatasourcePlus {
     return ""
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getStringConcat(parts: string[]) {
     return ""
   }
