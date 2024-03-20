@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Budibase types",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "src/index.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
@@ -23,6 +23,6 @@
     "typescript": "5.2.2"
   },
   "dependencies": {
-    "scim-patch": "^0.7.0"
+    "scim-patch": "^0.8.1"
   }
 }

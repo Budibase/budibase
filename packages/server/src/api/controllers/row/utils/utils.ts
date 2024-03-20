@@ -33,12 +33,12 @@ validateJs.extend(validateJs.validators.datetime, {
   },
 })
 
-export function processRelationshipFields(
+export async function processRelationshipFields(
   table: Table,
   tables: Record<string, Table>,
   row: Row,
   relationships: RelationshipsJson[]
-): Row {
+): Promise<Row> {
   for (let relationship of relationships) {
     const linkedTable = tables[relationship.tableName]
     if (!linkedTable || !row[relationship.column]) {
@@ -54,7 +54,7 @@ export function processRelationshipFields(
       }
       // process additional types
       relatedRow = processDates(table, relatedRow)
-      relatedRow = processFormulas(linkedTable, relatedRow)
+      relatedRow = await processFormulas(linkedTable, relatedRow)
       row[relationship.column][key] = relatedRow
     }
   }
@@ -115,13 +115,13 @@ export async function validate(
   })
 }
 
-export function sqlOutputProcessing(
+export async function sqlOutputProcessing(
   rows: DatasourcePlusQueryResponse,
   table: Table,
   tables: Record<string, Table>,
   relationships: RelationshipsJson[],
   opts?: { internal?: boolean }
-) {
+): Promise<Row[]> {
   if (!Array.isArray(rows) || rows.length === 0 || rows[0].read === true) {
     return []
   }
@@ -154,7 +154,7 @@ export function sqlOutputProcessing(
       table
     )
     if (thisRow._id == null) {
-      throw "Unable to generate row ID for SQL rows"
+      throw new Error("Unable to generate row ID for SQL rows")
     }
     finalRows[thisRow._id] = thisRow
     // do this at end once its been added to the final rows
@@ -168,9 +168,12 @@ export function sqlOutputProcessing(
   }
 
   // make sure all related rows are correct
-  let finalRowArray = Object.values(finalRows).map(row =>
-    processRelationshipFields(table, tables, row, relationships)
-  )
+  let finalRowArray = []
+  for (let row of Object.values(finalRows)) {
+    finalRowArray.push(
+      await processRelationshipFields(table, tables, row, relationships)
+    )
+  }
 
   // process some additional types
   finalRowArray = processDates(table, finalRowArray)

@@ -4,6 +4,11 @@ import { QueryOptions } from "../../definitions/datasource"
 import { isIsoDateString, SqlClient, isValidFilter } from "../utils"
 import SqlTableQueryBuilder from "./sqlTable"
 import {
+  BBReferenceFieldMetadata,
+  FieldSchema,
+  FieldSubtype,
+  FieldType,
+  JsonFieldMetadata,
   Operation,
   QueryJson,
   SqlQuery,
@@ -11,6 +16,7 @@ import {
   SearchFilters,
   SortDirection,
   SqlQueryBinding,
+  Table,
 } from "@budibase/types"
 import environment from "../../environment"
 
@@ -705,6 +711,39 @@ class SqlQueryBuilder extends SqlTableQueryBuilder {
       return row
     }
     return results.length ? results : [{ [operation.toLowerCase()]: true }]
+  }
+
+  convertJsonStringColumns(
+    table: Table,
+    results: Record<string, any>[],
+    aliases?: Record<string, string>
+  ): Record<string, any>[] {
+    for (const [name, field] of Object.entries(table.schema)) {
+      if (!this._isJsonColumn(field)) {
+        continue
+      }
+      const tableName = aliases?.[table.name] || table.name
+      const fullName = `${tableName}.${name}`
+      for (let row of results) {
+        if (typeof row[fullName] === "string") {
+          row[fullName] = JSON.parse(row[fullName])
+        }
+        if (typeof row[name] === "string") {
+          row[name] = JSON.parse(row[name])
+        }
+      }
+    }
+    return results
+  }
+
+  _isJsonColumn(
+    field: FieldSchema
+  ): field is JsonFieldMetadata | BBReferenceFieldMetadata {
+    return (
+      field.type === FieldType.JSON ||
+      (field.type === FieldType.BB_REFERENCE &&
+        field.subtype === FieldSubtype.USERS)
+    )
   }
 
   log(query: string, values?: SqlQueryBinding) {

@@ -23,6 +23,12 @@ const DISABLED_WRITE_CLIENTS: SqlClient[] = [
   SqlClient.ORACLE,
 ]
 
+const DISABLED_OPERATIONS: Operation[] = [
+  Operation.CREATE_TABLE,
+  Operation.UPDATE_TABLE,
+  Operation.DELETE_TABLE,
+]
+
 class CharSequence {
   static alphabet = "abcdefghijklmnopqrstuvwxyz"
   counters: number[]
@@ -59,13 +65,18 @@ export default class AliasTables {
   }
 
   isAliasingEnabled(json: QueryJson, datasource: Datasource) {
+    const operation = json.endpoint.operation
     const fieldLength = json.resource?.fields?.length
-    if (!fieldLength || fieldLength <= 0) {
+    if (
+      !fieldLength ||
+      fieldLength <= 0 ||
+      DISABLED_OPERATIONS.includes(operation)
+    ) {
       return false
     }
     try {
       const sqlClient = getSQLClient(datasource)
-      const isWrite = WRITE_OPERATIONS.includes(json.endpoint.operation)
+      const isWrite = WRITE_OPERATIONS.includes(operation)
       const isDisabledClient = DISABLED_WRITE_CLIENTS.includes(sqlClient)
       if (isWrite && isDisabledClient) {
         return false

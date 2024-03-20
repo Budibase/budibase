@@ -1,7 +1,7 @@
 import { validate as isValidUUID } from "uuid"
 import { processStringSync, encodeJSBinding } from "@budibase/string-templates"
 
-const { runJsHelpersTests } = require("@budibase/string-templates/test/utils")
+import { runJsHelpersTests } from "@budibase/string-templates/test/utils"
 
 import tk from "timekeeper"
 import { init } from ".."
@@ -30,12 +30,12 @@ describe("jsRunner (using isolated-vm)", () => {
     )
   }
 
-  it("it can run a basic javascript", async () => {
+  it("can run a basic javascript", async () => {
     const output = await processJS(`return 1 + 2`)
     expect(output).toBe(3)
   })
 
-  it("it can execute sloppy javascript", async () => {
+  it("can execute sloppy javascript", async () => {
     const output = await processJS(`a=2;b=3;return a + b`)
     expect(output).toBe(5)
   })

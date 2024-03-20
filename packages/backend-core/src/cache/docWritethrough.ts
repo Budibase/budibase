@@ -1,6 +1,6 @@
 import { AnyDocument, Database } from "@budibase/types"
 
-import { JobQueue, createQueue } from "../queue"
+import { JobQueue, Queue, createQueue } from "../queue"
 import * as dbUtils from "../db"
 
 interface ProcessDocMessage {
@@ -10,19 +10,28 @@ interface ProcessDocMessage {
 }
 
 const PERSIST_MAX_ATTEMPTS = 100
+let processor: DocWritethroughProcessor | undefined
 
-export const docWritethroughProcessorQueue = createQueue<ProcessDocMessage>(
-  JobQueue.DOC_WRITETHROUGH_QUEUE,
-  {
-    jobOptions: {
-      attempts: PERSIST_MAX_ATTEMPTS,
-    },
+export class DocWritethroughProcessor {
+  private static _queue: Queue
+
+  public static get queue() {
+    if (!DocWritethroughProcessor._queue) {
+      DocWritethroughProcessor._queue = createQueue<ProcessDocMessage>(
+        JobQueue.DOC_WRITETHROUGH_QUEUE,
+        {
+          jobOptions: {
+            attempts: PERSIST_MAX_ATTEMPTS,
+          },
+        }
+      )
+    }
+
+    return DocWritethroughProcessor._queue
   }
-)
 
-class DocWritethroughProcessor {
   init() {
-    docWritethroughProcessorQueue.process(async message => {
+    DocWritethroughProcessor.queue.process(async message => {
       try {
         await this.persistToDb(message.data)
       } catch (err: any) {
@@ -61,8 +70,6 @@ class DocWritethroughProcessor {
   }
 }
 
-export const processor = new DocWritethroughProcessor().init()
-
 export class DocWritethrough {
   private db: Database
   private _docId: string
@@ -77,10 +84,22 @@ export class DocWritethrough {
   }
 
   async patch(data: Record<string, any>) {
-    await docWritethroughProcessorQueue.add({
+    await DocWritethroughProcessor.queue.add({
       dbName: this.db.name,
       docId: this.docId,
       data,
     })
   }
+}
+
+export function init(): DocWritethroughProcessor {
+  processor = new DocWritethroughProcessor().init()
+  return processor
+}
+
+export function getProcessor(): DocWritethroughProcessor {
+  if (!processor) {
+    return init()
+  }
+  return processor
 }

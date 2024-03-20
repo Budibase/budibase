@@ -39,7 +39,7 @@ class InMemoryQueue implements Partial<Queue> {
   _opts?: QueueOptions
   _messages: JobMessage[]
   _queuedJobIds: Set<string>
-  _emitter: EventEmitter
+  _emitter: NodeJS.EventEmitter
   _runCount: number
   _addCount: number
 
