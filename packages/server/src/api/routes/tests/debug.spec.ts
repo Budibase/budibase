@@ -25,8 +25,8 @@ describe("/component", () => {
         cpuInfo: expect.any(String),
         hosting: "docker-compose",
         nodeVersion: expect.stringMatching(/^v\d+\.\d+\.\d+$/),
-        platform: "darwin",
-        totalMemory: expect.stringMatching(/^\d+GB$/),
+        platform: expect.any(String),
+        totalMemory: expect.stringMatching(/^[0-9\\.]+GB$/),
         uptime: expect.stringMatching(
           /^\d+ day\(s\), \d+ hour\(s\), \d+ minute\(s\)$/
         ),
