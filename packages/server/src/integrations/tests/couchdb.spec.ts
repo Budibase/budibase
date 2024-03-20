@@ -79,7 +79,7 @@ describe("CouchDB Integration", () => {
 
   it("calls the delete method with the correct params", async () => {
     const id = "1234"
-    const response = await config.integration.delete({ id })
+    await config.integration.delete({ id })
     expect(config.integration.client.get).toHaveBeenCalledWith(id)
     expect(config.integration.client.remove).toHaveBeenCalled()
   })

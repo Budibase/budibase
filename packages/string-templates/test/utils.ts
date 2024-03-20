@@ -34,7 +34,7 @@ export const getParsedManifest = () => {
       requiresBlock: boolean
     }>(manifest[collection])
       .filter(
-        ([_, details]) =>
+        ([, details]) =>
           details.example?.split("->").map(x => x.trim()).length > 1
       )
       .map(([name, details]): ExampleType => {
@@ -93,7 +93,7 @@ export const runJsHelpersTests = ({
 
     describe.each(Object.keys(jsExamples))("%s", collection => {
       const examplesToRun = jsExamples[collection]
-        .filter(([_, { requiresHbsBody }]) => !requiresHbsBody)
+        .filter(([, { requiresHbsBody }]) => !requiresHbsBody)
         .filter(([key]) => !testsToSkip?.includes(key))
 
       examplesToRun.length &&
