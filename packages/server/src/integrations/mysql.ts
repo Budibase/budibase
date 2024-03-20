@@ -13,8 +13,6 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
-  FieldType,
-  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,

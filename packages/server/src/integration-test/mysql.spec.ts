@@ -12,7 +12,6 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import _ from "lodash"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"

@@ -3,19 +3,18 @@ import * as triggers from "../triggers"
 import { loopAutomation } from "../../tests/utilities/structures"
 import { context } from "@budibase/backend-core"
 import * as setup from "./utilities"
-import { Row, Table } from "@budibase/types"
+import { Table } from "@budibase/types"
 import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),
-    table: Table,
-    row: Row
+    table: Table
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
     table = await config.createTable()
-    row = await config.createRow()
+    await config.createRow()
   })
 
   afterAll(setup.afterAll)
