@@ -147,6 +147,10 @@ interface BaseFieldSchema extends UIFieldMetadata {
   autoReason?: AutoReason.FOREIGN_KEY
   subtype?: never
 }
+interface AttachmentFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ATTACHMENT
+  subtype?: FieldSubtype.SINGLE
+}
 
 interface OtherFieldMetadata extends BaseFieldSchema {
   type: Exclude<
@@ -157,6 +161,7 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.FORMULA
     | FieldType.NUMBER
     | FieldType.LONGFORM
+    | FieldType.ATTACHMENT
   >
 }
 
@@ -168,6 +173,7 @@ export type FieldSchema =
   | FormulaFieldMetadata
   | NumberFieldMetadata
   | LongFormFieldMetadata
+  | AttachmentFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
 
