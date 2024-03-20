@@ -6,7 +6,6 @@ import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   FieldType,
   AutoFieldSubType,
-  FieldSubtype,
   Row,
   RowAttachment,
   Table,
