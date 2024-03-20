@@ -10,7 +10,7 @@ import {
   StaticDatabases,
   DEFAULT_TENANT_ID,
 } from "../constants"
-import { Database, IdentityContext } from "@budibase/types"
+import { Database, IdentityContext, Snippet, App } from "@budibase/types"
 import { ContextMap } from "./types"
 
 let TEST_APP_ID: string | null = null
@@ -122,10 +122,10 @@ export async function doInAutomationContext<T>(params: {
   automationId: string
   task: () => T
 }): Promise<T> {
-  const tenantId = getTenantIDFromAppID(params.appId)
+  await ensureSnippetContext()
   return newContext(
     {
-      tenantId,
+      tenantId: getTenantIDFromAppID(params.appId),
       appId: params.appId,
       automationId: params.automationId,
     },
@@ -279,6 +279,27 @@ export function doInScimContext(task: any) {
     isScim: true,
   }
   return newContext(updates, task)
+}
+
+export async function ensureSnippetContext() {
+  const ctx = getCurrentContext()
+
+  // If we've already added snippets to context, continue
+  if (!ctx || ctx.snippets) {
+    return
+  }
+
+  // Otherwise get snippets for this app and update context
+  let snippets: Snippet[] | undefined
+  const db = getAppDB()
+  if (db && !env.isTest()) {
+    const app = await db.get<App>(DocumentType.APP_METADATA)
+    snippets = app.snippets
+  }
+
+  // Always set snippets to a non-null value so that we can tell we've attempted
+  // to load snippets
+  ctx.snippets = snippets || []
 }
 
 export function getEnvironmentVariables() {

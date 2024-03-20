@@ -43,7 +43,6 @@ describe("/api/global/email", () => {
       }
       expect(res.body.message).toBeDefined()
       const testUrl = nodemailer.getTestMessageUrl(res.body)
-      console.log(`${purpose} URL: ${testUrl}`)
       expect(testUrl).toBeDefined()
       response = await fetch(testUrl)
       text = await response.text()

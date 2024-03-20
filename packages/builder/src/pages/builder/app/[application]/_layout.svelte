@@ -8,7 +8,7 @@
     userStore,
     deploymentStore,
   } from "stores/builder"
-  import { auth, apps } from "stores/portal"
+  import { auth, appsStore } from "stores/portal"
   import { TENANT_FEATURE_FLAGS, isEnabled } from "helpers/featureFlags"
   import {
     Icon,
@@ -52,7 +52,7 @@
       const pkg = await API.fetchAppPackage(application)
       await initialise(pkg)
 
-      await apps.load()
+      await appsStore.load()
       await deploymentStore.load()
 
       loaded = true
@@ -188,7 +188,7 @@
 {/if}
 
 <svelte:window on:keydown={handleKeyDown} />
-<Modal bind:this={commandPaletteModal}>
+<Modal bind:this={commandPaletteModal} zIndex={999999}>
   <CommandPalette />
 </Modal>
 

@@ -10,6 +10,8 @@
     navigationStore,
     selectedScreen,
     hoverStore,
+    componentTreeNodesStore,
+    snippets,
   } from "stores/builder"
   import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
@@ -68,6 +70,7 @@
       hostname: window.location.hostname,
       port: window.location.port,
     },
+    snippets: $snippets,
   }
 
   // Refresh the preview when required
@@ -130,6 +133,7 @@
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
       componentStore.select(data.id)
+      componentTreeNodesStore.makeNodeVisible(data.id)
     } else if (type === "hover-component") {
       hoverStore.hover(data.id, false)
     } else if (type === "update-prop") {
@@ -196,6 +200,16 @@
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
       await componentStore.addParent(componentId, parentType)
+    } else if (type === "provide-context") {
+      let context = data?.context
+      if (context) {
+        try {
+          context = JSON.parse(context)
+        } catch (error) {
+          context = null
+        }
+      }
+      previewStore.setSelectedComponentContext(context)
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }

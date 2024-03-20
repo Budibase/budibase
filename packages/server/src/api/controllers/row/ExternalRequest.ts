@@ -437,11 +437,11 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow, manyRelationships }
   }
 
-  processRelationshipFields(
+  async processRelationshipFields(
     table: Table,
     row: Row,
     relationships: RelationshipsJson[]
-  ): Row {
+  ): Promise<Row> {
     for (let relationship of relationships) {
       const linkedTable = this.tables[relationship.tableName]
       if (!linkedTable || !row[relationship.column]) {
@@ -457,7 +457,7 @@ export class ExternalRequest<T extends Operation> {
         }
         // process additional types
         relatedRow = processDates(table, relatedRow)
-        relatedRow = processFormulas(linkedTable, relatedRow)
+        relatedRow = await processFormulas(linkedTable, relatedRow)
         row[relationship.column][key] = relatedRow
       }
     }
@@ -521,7 +521,7 @@ export class ExternalRequest<T extends Operation> {
     return rows
   }
 
-  outputProcessing(
+  async outputProcessing(
     rows: Row[] = [],
     table: Table,
     relationships: RelationshipsJson[]
@@ -561,9 +561,12 @@ export class ExternalRequest<T extends Operation> {
     }
 
     // make sure all related rows are correct
-    let finalRowArray = Object.values(finalRows).map(row =>
-      this.processRelationshipFields(table, row, relationships)
-    )
+    let finalRowArray = []
+    for (let row of Object.values(finalRows)) {
+      finalRowArray.push(
+        await this.processRelationshipFields(table, row, relationships)
+      )
+    }
 
     // process some additional types
     finalRowArray = processDates(table, finalRowArray)
@@ -714,7 +717,7 @@ export class ExternalRequest<T extends Operation> {
 
       const rows = related[key]?.rows || []
 
-      function relationshipMatchPredicate({
+      const relationshipMatchPredicate = ({
         row,
         linkPrimary,
         linkSecondary,
@@ -722,7 +725,7 @@ export class ExternalRequest<T extends Operation> {
         row: Row
         linkPrimary: string
         linkSecondary?: string
-      }) {
+      }) => {
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
@@ -934,7 +937,11 @@ export class ExternalRequest<T extends Operation> {
         processed.manyRelationships
       )
     }
-    const output = this.outputProcessing(responseRows, table, relationships)
+    const output = await this.outputProcessing(
+      responseRows,
+      table,
+      relationships
+    )
     // if reading it'll just be an array of rows, return whole thing
     if (operation === Operation.READ) {
       return (
