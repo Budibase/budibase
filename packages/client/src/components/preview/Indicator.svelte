@@ -31,7 +31,7 @@
 </script>
 
 <div
-  in:fade={{
+  transition:fade|local={{
     delay: transition ? 100 : 0,
     duration: transition ? 100 : 0,
   }}
@@ -125,10 +125,6 @@
     color: white;
     font-size: 11px;
     font-weight: 600;
-  }
-
-  /* Icon styles */
-  .label :global(.spectrum-Icon + .text) {
   }
 
   /* Anchor */
