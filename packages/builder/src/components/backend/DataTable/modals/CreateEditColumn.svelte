@@ -34,7 +34,12 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
+  import {
+    FieldType,
+    FieldSubtype,
+    SourceName,
+    FieldTypeSubtypes,
+  } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -191,8 +196,10 @@
     // don't make field IDs for auto types
     if (type === AUTO_TYPE || autocolumn) {
       return type.toUpperCase()
-    } else {
+    } else if (type === FieldType.BB_REFERENCE) {
       return `${type}${subtype || ""}`.toUpperCase()
+    } else {
+      return type.toUpperCase()
     }
   }
 
@@ -705,17 +712,12 @@
     />
   {:else if editableColumn.type === FieldType.ATTACHMENT}
     <Toggle
-      value={editableColumn.constraints?.length?.maximum !== 1}
+      value={editableColumn.subtype !== FieldTypeSubtypes.ATTACHMENT.SINGLE}
       on:change={e => {
         if (!e.detail) {
-          editableColumn.constraints ??= { length: {} }
-          editableColumn.constraints.length ??= {}
-          editableColumn.constraints.length.maximum = 1
-          editableColumn.constraints.length.message =
-            "cannot contain multiple files"
+          editableColumn.subtype = FieldTypeSubtypes.ATTACHMENT.SINGLE
         } else {
-          delete editableColumn.constraints?.length?.maximum
-          delete editableColumn.constraints?.length?.message
+          delete editableColumn.subtype
         }
       }}
       thin
