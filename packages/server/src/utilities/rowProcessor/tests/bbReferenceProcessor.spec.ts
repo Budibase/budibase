@@ -67,8 +67,8 @@ describe("bbReferenceProcessor", () => {
         )
 
         expect(result).toEqual(userId)
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("throws an error given an invalid id", async () => {
@@ -78,9 +78,9 @@ describe("bbReferenceProcessor", () => {
           config.doInTenant(() =>
             processInputBBReferences(userId, FieldSubtype.USER)
           )
-        ).rejects.toThrowError(new InvalidBBRefError(userId, FieldSubtype.USER))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        ).rejects.toThrow(new InvalidBBRefError(userId, FieldSubtype.USER))
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("validates valid user ids as csv", async () => {
@@ -92,8 +92,8 @@ describe("bbReferenceProcessor", () => {
         )
 
         expect(result).toEqual(userIds.join(","))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
 
       it("throws an error given an invalid id in a csv", async () => {
@@ -110,9 +110,7 @@ describe("bbReferenceProcessor", () => {
           config.doInTenant(() =>
             processInputBBReferences(userIdCsv, FieldSubtype.USER)
           )
-        ).rejects.toThrowError(
-          new InvalidBBRefError(wrongId, FieldSubtype.USER)
-        )
+        ).rejects.toThrow(new InvalidBBRefError(wrongId, FieldSubtype.USER))
       })
 
       it("validate valid user object", async () => {
@@ -123,8 +121,8 @@ describe("bbReferenceProcessor", () => {
         )
 
         expect(result).toEqual(userId)
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("validate valid user object array", async () => {
@@ -135,8 +133,8 @@ describe("bbReferenceProcessor", () => {
         )
 
         expect(result).toEqual(userIds.join(","))
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith(userIds)
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith(userIds)
       })
 
       it("empty strings will return null", async () => {
@@ -185,8 +183,8 @@ describe("bbReferenceProcessor", () => {
             lastName: user.lastName,
           },
         ])
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId])
       })
 
       it("fetches user given a valid string id csv", async () => {
@@ -213,8 +211,8 @@ describe("bbReferenceProcessor", () => {
             }))
           )
         )
-        expect(cacheGetUsersSpy).toBeCalledTimes(1)
-        expect(cacheGetUsersSpy).toBeCalledWith([userId1, userId2])
+        expect(cacheGetUsersSpy).toHaveBeenCalledTimes(1)
+        expect(cacheGetUsersSpy).toHaveBeenCalledWith([userId1, userId2])
       })
     })
   })

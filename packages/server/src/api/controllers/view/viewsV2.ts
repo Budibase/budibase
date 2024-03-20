@@ -24,7 +24,7 @@ async function parseSchema(view: CreateViewRequest) {
         icon: schemaValue.icon,
       }
       Object.entries(fieldSchema)
-        .filter(([_, val]) => val === undefined)
+        .filter(([, val]) => val === undefined)
         .forEach(([key]) => {
           delete fieldSchema[key as keyof UIFieldMetadata]
         })

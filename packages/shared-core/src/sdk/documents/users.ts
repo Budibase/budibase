@@ -46,10 +46,7 @@ export function isAdminOrBuilder(
   return isBuilder(user, appId) || isAdmin(user)
 }
 
-export function isAdminOrGlobalBuilder(
-  user: User | ContextUser,
-  appId?: string
-): boolean {
+export function isAdminOrGlobalBuilder(user: User | ContextUser): boolean {
   return isGlobalBuilder(user) || isAdmin(user)
 }
 

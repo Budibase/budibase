@@ -33,7 +33,6 @@ export { default as staticRoutes } from "./static"
 export { default as publicRoutes } from "./public"
 
 const appBackupRoutes = pro.appBackups
-const scheduleRoutes = pro.schedules
 const environmentVariableRoutes = pro.environmentVariables
 
 export const mainRoutes: Router[] = [
@@ -65,7 +64,6 @@ export const mainRoutes: Router[] = [
   pluginRoutes,
   opsRoutes,
   debugRoutes,
-  scheduleRoutes,
   environmentVariableRoutes,
   // these need to be handled last as they still use /api/:tableId
   // this could be breaking as koa may recognise other routes as this

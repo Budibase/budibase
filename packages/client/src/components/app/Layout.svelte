@@ -36,6 +36,7 @@
   export let pageWidth
   export let logoLinkUrl
   export let openLogoLinkInNewTab
+  export let textAlign
 
   export let embedded = false
 
@@ -226,7 +227,7 @@
                   {/if}
                 {/if}
                 {#if !hideTitle && title}
-                  <Heading size="S">{title}</Heading>
+                  <Heading size="S" {textAlign}>{title}</Heading>
                 {/if}
               </div>
               {#if !embedded}
