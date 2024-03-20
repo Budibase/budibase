@@ -291,7 +291,10 @@
   <div
     id="side-panel-container"
     class:open={$sidePanelStore.open}
-    use:clickOutside={autoCloseSidePanel ? sidePanelStore.actions.close : null}
+    use:clickOutside={{
+      callback: autoCloseSidePanel ? sidePanelStore.actions.close : null,
+      allowedType: "mousedown",
+    }}
     class:builder={$builderStore.inBuilder}
   >
     <div class="side-panel-header">
