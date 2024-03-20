@@ -156,7 +156,7 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
 
-      const response = await config.api.permission.revoke(
+      await config.api.permission.revoke(
         {
           roleId: STD_ROLE_ID,
           resourceId: table._id,

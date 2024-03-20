@@ -6,7 +6,6 @@ import {
   PaginatedSearchRowResponse,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
-import { generator } from "@budibase/backend-core/tests"
 import sdk from "../../../sdk"
 
 export class ViewV2API extends TestAPI {

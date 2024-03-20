@@ -1,5 +1,4 @@
-import fs from "fs"
-
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 module FetchMock {
   const fetch = jest.requireActual("node-fetch")
 
