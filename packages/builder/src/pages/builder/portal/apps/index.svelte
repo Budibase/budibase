@@ -85,7 +85,7 @@
   }
 
   const automationErrorMessage = appId => {
-    const app = enrichedApps.find(app => app.devId === appId)
+    const app = $enrichedApps.find(app => app.devId === appId)
     const errors = automationErrors[appId]
     return `${app.name} - Automation error (${errorCount(errors)})`
   }

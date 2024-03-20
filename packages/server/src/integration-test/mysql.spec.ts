@@ -12,7 +12,6 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import _ from "lodash"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"
@@ -106,6 +105,7 @@ describe("mysql integrations", () => {
       plus: true,
       source: "MYSQL",
       type: "datasource_plus",
+      isSQL: true,
       _id: expect.any(String),
       _rev: expect.any(String),
       createdAt: expect.any(String),
@@ -306,7 +306,7 @@ describe("mysql integrations", () => {
       }
       delete expectedTable._add
 
-      expect(emitDatasourceUpdateMock).toBeCalledTimes(1)
+      expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
       const emittedDatasource: Datasource =
         emitDatasourceUpdateMock.mock.calls[0][1]
       expect(emittedDatasource.entities!["table"]).toEqual(expectedTable)

@@ -8,11 +8,10 @@ import {
 import { context, logging } from "@budibase/backend-core"
 import tracer from "dd-trace"
 import { IsolatedVM } from "./vm"
-import type { VM } from "@budibase/types"
 
 export function init() {
   setJSRunner((js: string, ctx: Record<string, any>) => {
-    return tracer.trace("runJS", {}, span => {
+    return tracer.trace("runJS", {}, () => {
       try {
         // Reuse an existing isolate from context, or make a new one
         const bbCtx = context.getCurrentContext()
@@ -36,6 +35,7 @@ export function init() {
         // Because we can't pass functions into an Isolate, we remove them from
         // the passed context and rely on the withHelpers() method to add them
         // back in.
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { helpers, snippets, ...rest } = ctx
         return vm.withContext(rest, () => vm.execute(js))
       } catch (error: any) {

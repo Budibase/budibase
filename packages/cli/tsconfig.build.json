@@ -11,11 +11,13 @@
     "types": ["node", "jest"],
     "outDir": "dist",
     "skipLibCheck": true,
+    "baseUrl": ".",
     "paths": {
       "@budibase/types": ["../types/src"],
       "@budibase/backend-core": ["../backend-core/src"],
       "@budibase/backend-core/*": ["../backend-core/*"],
-      "@budibase/shared-core": ["../shared-core/src"]
+      "@budibase/shared-core": ["../shared-core/src"],
+      "@budibase/string-templates": ["../string-templates/src"]
     }
   },
   "include": ["src/**/*"],

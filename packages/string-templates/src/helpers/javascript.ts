@@ -1,22 +1,24 @@
-const { atob, isBackendService, isJSAllowed } = require("../utilities")
-const cloneDeep = require("lodash.clonedeep")
-const { LITERAL_MARKER } = require("../helpers/constants")
-const { getJsHelperList } = require("./list")
-const { iifeWrapper } = require("../iife")
+import { atob, isJSAllowed } from "../utilities"
+import cloneDeep from "lodash/fp/cloneDeep"
+import { LITERAL_MARKER } from "../helpers/constants"
+import { getJsHelperList } from "./list"
+import { iifeWrapper } from "../iife"
 
 // The method of executing JS scripts depends on the bundle being built.
 // This setter is used in the entrypoint (either index.js or index.mjs).
-let runJS
-module.exports.setJSRunner = runner => (runJS = runner)
-module.exports.removeJSRunner = () => {
+let runJS: ((js: string, context: any) => any) | undefined = undefined
+export const setJSRunner = (runner: typeof runJS) => (runJS = runner)
+
+export const removeJSRunner = () => {
   runJS = undefined
 }
 
-let onErrorLog
-module.exports.setOnErrorLog = delegate => (onErrorLog = delegate)
+let onErrorLog: (message: Error) => void
+export const setOnErrorLog = (delegate: typeof onErrorLog) =>
+  (onErrorLog = delegate)
 
 // Helper utility to strip square brackets from a value
-const removeSquareBrackets = value => {
+const removeSquareBrackets = (value: string) => {
   if (!value || typeof value !== "string") {
     return value
   }
@@ -30,7 +32,7 @@ const removeSquareBrackets = value => {
 
 // Our context getter function provided to JS code as $.
 // Extracts a value from context.
-const getContextValue = (path, context) => {
+const getContextValue = (path: string, context: any) => {
   let data = context
   path.split(".").forEach(key => {
     if (data == null || typeof data !== "object") {
@@ -42,8 +44,8 @@ const getContextValue = (path, context) => {
 }
 
 // Evaluates JS code against a certain context
-module.exports.processJS = (handlebars, context) => {
-  if (!isJSAllowed() || (isBackendService() && !runJS)) {
+export function processJS(handlebars: string, context: any) {
+  if (!isJSAllowed() || !runJS) {
     throw new Error("JS disabled in environment.")
   }
   try {
@@ -53,8 +55,8 @@ module.exports.processJS = (handlebars, context) => {
 
     // Transform snippets into an object for faster access, and cache previously
     // evaluated snippets
-    let snippetMap = {}
-    let snippetCache = {}
+    let snippetMap: any = {}
+    let snippetCache: any = {}
     for (let snippet of context.snippets || []) {
       snippetMap[snippet.name] = snippet.code
     }
@@ -64,7 +66,7 @@ module.exports.processJS = (handlebars, context) => {
     // app context.
     const clonedContext = cloneDeep({ ...context, snippets: null })
     const sandboxContext = {
-      $: path => getContextValue(path, clonedContext),
+      $: (path: string) => getContextValue(path, clonedContext),
       helpers: getJsHelperList(),
 
       // Proxy to evaluate snippets when running in the browser
@@ -84,7 +86,7 @@ module.exports.processJS = (handlebars, context) => {
     // Create a sandbox with our context and run the JS
     const res = { data: runJS(js, sandboxContext) }
     return `{{${LITERAL_MARKER} js_result-${JSON.stringify(res)}}}`
-  } catch (error) {
+  } catch (error: any) {
     onErrorLog && onErrorLog(error)
 
     if (error.code === "ERR_SCRIPT_EXECUTION_TIMEOUT") {

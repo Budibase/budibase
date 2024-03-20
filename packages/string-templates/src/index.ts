@@ -1,24 +1,30 @@
-const vm = require("vm")
-const handlebars = require("handlebars")
-const { registerAll, registerMinimum } = require("./helpers/index")
-const processors = require("./processors")
-const { atob, btoa, isBackendService } = require("./utilities")
-const { iifeWrapper } = require("./iife")
-const manifest = require("../manifest.json")
-const {
+import { Context, createContext, runInNewContext } from "vm"
+import { create, TemplateDelegate } from "handlebars"
+import { registerAll, registerMinimum } from "./helpers/index"
+import { preprocess, postprocess } from "./processors"
+import {
+  atob,
+  btoa,
+  isBackendService,
   FIND_HBS_REGEX,
   FIND_ANY_HBS_REGEX,
   findDoubleHbsInstances,
-} = require("./utilities")
-const { convertHBSBlock } = require("./conversion")
-const javascript = require("./helpers/javascript")
-const { helpersToRemoveForJs } = require("./helpers/list")
+} from "./utilities"
+import { convertHBSBlock } from "./conversion"
+import { setJSRunner, removeJSRunner } from "./helpers/javascript"
+import { helpersToRemoveForJs } from "./helpers/list"
 
-const hbsInstance = handlebars.create()
+import manifest from "./manifest.json"
+import { ProcessOptions } from "./types"
+
+export { setJSRunner, setOnErrorLog } from "./helpers/javascript"
+export { iifeWrapper } from "./iife"
+
+const hbsInstance = create()
 registerAll(hbsInstance)
-const hbsInstanceNoHelpers = handlebars.create()
+const hbsInstanceNoHelpers = create()
 registerMinimum(hbsInstanceNoHelpers)
-const defaultOpts = {
+const defaultOpts: ProcessOptions = {
   noHelpers: false,
   cacheTemplates: false,
   noEscaping: false,
@@ -29,7 +35,7 @@ const defaultOpts = {
 /**
  * Utility function to check if the object is valid.
  */
-function testObject(object) {
+function testObject(object: any) {
   // JSON stringify will fail if there are any cycles, stops infinite recursion
   try {
     JSON.stringify(object)
@@ -41,8 +47,8 @@ function testObject(object) {
 /**
  * Creates a HBS template function for a given string, and optionally caches it.
  */
-let templateCache = {}
-function createTemplate(string, opts) {
+const templateCache: Record<string, TemplateDelegate<any>> = {}
+function createTemplate(string: string, opts?: ProcessOptions) {
   opts = { ...defaultOpts, ...opts }
 
   // Finalising adds a helper, can't do this with no helpers
@@ -53,11 +59,11 @@ function createTemplate(string, opts) {
     return templateCache[key]
   }
 
-  string = processors.preprocess(string, opts)
+  string = preprocess(string, opts)
 
   // Optionally disable built in HBS escaping
   if (opts.noEscaping) {
-    string = exports.disableEscaping(string)
+    string = disableEscaping(string)
   }
 
   // This does not throw an error when template can't be fulfilled,
@@ -78,24 +84,25 @@ function createTemplate(string, opts) {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<object|array>} The structure input, as fully updated as possible.
  */
-module.exports.processObject = async (object, context, opts) => {
+export async function processObject<T extends Record<string, any>>(
+  object: T,
+  context: object,
+  opts?: { noHelpers?: boolean; escapeNewlines?: boolean; onlyFound?: boolean }
+): Promise<T> {
   testObject(object)
-  for (let key of Object.keys(object || {})) {
+
+  for (const key of Object.keys(object || {})) {
     if (object[key] != null) {
-      let val = object[key]
+      const val = object[key]
+      let parsedValue
       if (typeof val === "string") {
-        object[key] = await module.exports.processString(
-          object[key],
-          context,
-          opts
-        )
+        parsedValue = await processString(object[key], context, opts)
       } else if (typeof val === "object") {
-        object[key] = await module.exports.processObject(
-          object[key],
-          context,
-          opts
-        )
+        parsedValue = await processObject(object[key], context, opts)
       }
+
+      // @ts-ignore
+      object[key] = parsedValue
     }
   }
   return object
@@ -109,9 +116,13 @@ module.exports.processObject = async (object, context, opts) => {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {Promise<string>} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processString = async (string, context, opts) => {
+export async function processString(
+  string: string,
+  context: object,
+  opts?: ProcessOptions
+): Promise<string> {
   // TODO: carry out any async calls before carrying out async call
-  return module.exports.processStringSync(string, context, opts)
+  return processStringSync(string, context, opts)
 }
 
 /**
@@ -123,14 +134,18 @@ module.exports.processString = async (string, context, opts) => {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {object|array} The structure input, as fully updated as possible.
  */
-module.exports.processObjectSync = (object, context, opts) => {
+export function processObjectSync(
+  object: { [x: string]: any },
+  context: any,
+  opts: any
+): object | Array<any> {
   testObject(object)
   for (let key of Object.keys(object || {})) {
     let val = object[key]
     if (typeof val === "string") {
-      object[key] = module.exports.processStringSync(object[key], context, opts)
+      object[key] = processStringSync(object[key], context, opts)
     } else if (typeof val === "object") {
-      object[key] = module.exports.processObjectSync(object[key], context, opts)
+      object[key] = processObjectSync(object[key], context, opts)
     }
   }
   return object
@@ -144,29 +159,32 @@ module.exports.processObjectSync = (object, context, opts) => {
  * @param {object|undefined} [opts] optional - specify some options for processing.
  * @returns {string} The enriched string, all templates should have been replaced if they can be.
  */
-module.exports.processStringSync = (string, context, opts) => {
+export function processStringSync(
+  string: string,
+  context?: object,
+  opts?: ProcessOptions
+): string {
   // Take a copy of input in case of error
   const input = string
   if (typeof string !== "string") {
     throw "Cannot process non-string types."
   }
-  function process(stringPart) {
+  function process(stringPart: string) {
     const template = createTemplate(stringPart, opts)
     const now = Math.floor(Date.now() / 1000) * 1000
-    return processors.postprocess(
-      template({
-        now: new Date(now).toISOString(),
-        __opts: {
-          ...opts,
-          input: stringPart,
-        },
-        ...context,
-      })
-    )
+    const processedString = template({
+      now: new Date(now).toISOString(),
+      __opts: {
+        ...opts,
+        input: stringPart,
+      },
+      ...context,
+    })
+    return postprocess(processedString)
   }
   try {
     if (opts && opts.onlyFound) {
-      const blocks = exports.findHBSBlocks(string)
+      const blocks = findHBSBlocks(string)
       for (let block of blocks) {
         const outcome = process(block)
         string = string.replace(block, outcome)
@@ -186,7 +204,7 @@ module.exports.processStringSync = (string, context, opts) => {
  * this function will find any double braces and switch to triple.
  * @param string the string to have double HBS statements converted to triple.
  */
-module.exports.disableEscaping = string => {
+export function disableEscaping(string: string) {
   const matches = findDoubleHbsInstances(string)
   if (matches == null) {
     return string
@@ -207,7 +225,7 @@ module.exports.disableEscaping = string => {
  * @param {string} property The property which is to be wrapped.
  * @returns {string} The wrapped property ready to be added to a templating string.
  */
-module.exports.makePropSafe = property => {
+export function makePropSafe(property: any): string {
   return `[${property}]`.replace("[[", "[").replace("]]", "]")
 }
 
@@ -217,7 +235,7 @@ module.exports.makePropSafe = property => {
  * @param [opts] optional - specify some options for processing.
  * @returns {boolean} Whether or not the input string is valid.
  */
-module.exports.isValid = (string, opts) => {
+export function isValid(string: any, opts?: any): boolean {
   const validCases = [
     "string",
     "number",
@@ -238,7 +256,7 @@ module.exports.isValid = (string, opts) => {
     })
     template(context)
     return true
-  } catch (err) {
+  } catch (err: any) {
     const msg = err && err.message ? err.message : err
     if (!msg) {
       return false
@@ -259,7 +277,7 @@ module.exports.isValid = (string, opts) => {
  * This manifest provides information about each of the helpers and how it can be used.
  * @returns The manifest JSON which has been generated from the helpers.
  */
-module.exports.getManifest = () => {
+export function getManifest() {
   return manifest
 }
 
@@ -268,8 +286,8 @@ module.exports.getManifest = () => {
  * @param handlebars the HBS expression to check
  * @returns {boolean} whether the expression is JS or not
  */
-module.exports.isJSBinding = handlebars => {
-  return module.exports.decodeJSBinding(handlebars) != null
+export function isJSBinding(handlebars: any): boolean {
+  return decodeJSBinding(handlebars) != null
 }
 
 /**
@@ -277,7 +295,7 @@ module.exports.isJSBinding = handlebars => {
  * @param javascript the JS code to encode
  * @returns {string} the JS HBS expression
  */
-module.exports.encodeJSBinding = javascript => {
+export function encodeJSBinding(javascript: string): string {
   return `{{ js "${btoa(javascript)}" }}`
 }
 
@@ -286,7 +304,7 @@ module.exports.encodeJSBinding = javascript => {
  * @param handlebars the JS HBS expression
  * @returns {string|null} the raw JS code
  */
-module.exports.decodeJSBinding = handlebars => {
+export function decodeJSBinding(handlebars: string): string | null {
   if (!handlebars || typeof handlebars !== "string") {
     return null
   }
@@ -311,7 +329,7 @@ module.exports.decodeJSBinding = handlebars => {
  * @param {string[]} strings The strings to look for.
  * @returns {boolean} Will return true if all strings found in HBS statement.
  */
-module.exports.doesContainStrings = (template, strings) => {
+export function doesContainStrings(template: string, strings: any[]): boolean {
   let regexp = new RegExp(FIND_HBS_REGEX)
   let matches = template.match(regexp)
   if (matches == null) {
@@ -319,8 +337,8 @@ module.exports.doesContainStrings = (template, strings) => {
   }
   for (let match of matches) {
     let hbs = match
-    if (exports.isJSBinding(match)) {
-      hbs = exports.decodeJSBinding(match)
+    if (isJSBinding(match)) {
+      hbs = decodeJSBinding(match)!
     }
     let allFound = true
     for (let string of strings) {
@@ -341,7 +359,7 @@ module.exports.doesContainStrings = (template, strings) => {
  * @param {string} string The string to search within.
  * @return {string[]} The found HBS blocks.
  */
-module.exports.findHBSBlocks = string => {
+export function findHBSBlocks(string: string): string[] {
   if (!string || typeof string !== "string") {
     return []
   }
@@ -362,18 +380,15 @@ module.exports.findHBSBlocks = string => {
  * @param {string} string The word or sentence to search for.
  * @returns {boolean} The this return true if the string is found, false if not.
  */
-module.exports.doesContainString = (template, string) => {
-  return exports.doesContainStrings(template, [string])
+export function doesContainString(template: any, string: any): boolean {
+  return doesContainStrings(template, [string])
 }
 
-module.exports.setJSRunner = javascript.setJSRunner
-module.exports.setOnErrorLog = javascript.setOnErrorLog
-
-module.exports.convertToJS = hbs => {
-  const blocks = exports.findHBSBlocks(hbs)
+export function convertToJS(hbs: string) {
+  const blocks = findHBSBlocks(hbs)
   let js = "return `",
-    prevBlock = null
-  const variables = {}
+    prevBlock: string | null = null
+  const variables: Record<string, any> = {}
   if (blocks.length === 0) {
     js += hbs
   }
@@ -387,7 +402,7 @@ module.exports.convertToJS = hbs => {
     prevBlock = block
     const { variable, value } = convertHBSBlock(block, count++)
     variables[variable] = value
-    js += `${stringPart.split()}\${${variable}}`
+    js += `${[stringPart]}\${${variable}}`
   }
   let varBlock = ""
   for (let [variable, value] of Object.entries(variables)) {
@@ -397,34 +412,34 @@ module.exports.convertToJS = hbs => {
   return `${varBlock}${js}`
 }
 
-module.exports.FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
+const _FIND_ANY_HBS_REGEX = FIND_ANY_HBS_REGEX
+export { _FIND_ANY_HBS_REGEX as FIND_ANY_HBS_REGEX }
 
-const errors = require("./errors")
-// We cannot use dynamic exports, otherwise the typescript file will not be generating it
-module.exports.JsErrorTimeout = errors.JsErrorTimeout
+export { JsErrorTimeout } from "./errors"
 
-module.exports.helpersToRemoveForJs = helpersToRemoveForJs
+const _helpersToRemoveForJs = helpersToRemoveForJs
+export { _helpersToRemoveForJs as helpersToRemoveForJs }
 
 function defaultJSSetup() {
   if (!isBackendService()) {
     /**
      * Use polyfilled vm to run JS scripts in a browser Env
      */
-    javascript.setJSRunner((js, context) => {
+    setJSRunner((js: string, context: Context) => {
       context = {
         ...context,
         alert: undefined,
         setInterval: undefined,
         setTimeout: undefined,
       }
-      vm.createContext(context)
-      return vm.runInNewContext(js, context, { timeout: 1000 })
+      createContext(context)
+      return runInNewContext(js, context, { timeout: 1000 })
     })
   } else {
-    javascript.removeJSRunner()
+    removeJSRunner()
   }
 }
 defaultJSSetup()
 
-module.exports.defaultJSSetup = defaultJSSetup
-module.exports.iifeWrapper = iifeWrapper
+const _defaultJSSetup = defaultJSSetup
+export { _defaultJSSetup as defaultJSSetup }

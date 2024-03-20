@@ -7,11 +7,12 @@ module.exports = {
 
           if (
             /^@budibase\/[^/]+\/.*$/.test(importPath) &&
-            importPath !== "@budibase/backend-core/tests"
+            importPath !== "@budibase/backend-core/tests" &&
+            importPath !== "@budibase/string-templates/test/utils"
           ) {
             context.report({
               node,
-              message: `Importing from @budibase is not allowed, except for @budibase/backend-core/tests.`,
+              message: `Importing from @budibase is not allowed, except for @budibase/backend-core/tests and @budibase/string-templates/test/utils.`,
             })
           }
         },
@@ -24,11 +25,9 @@ module.exports = {
       docs: {
         description:
           "disallow the use of 'test.com' in strings and replace it with 'example.com'",
-        category: "Possible Errors",
-        recommended: false,
       },
-      schema: [], // no options
-      fixable: "code", // Indicates that this rule supports automatic fixing
+      schema: [],
+      fixable: "code",
     },
     create: function (context) {
       return {
@@ -57,8 +56,6 @@ module.exports = {
       docs: {
         description:
           "enforce using the example.com domain for generator.email calls",
-        category: "Possible Errors",
-        recommended: false,
       },
       fixable: "code",
       schema: [],

@@ -41,17 +41,9 @@ COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
 
 
-WORKDIR /string-templates
-COPY packages/string-templates/package.json package.json
-RUN ../scripts/removeWorkspaceDependencies.sh package.json
-RUN --mount=type=cache,target=/root/.yarn YARN_CACHE_FOLDER=/root/.yarn yarn install --production=true --network-timeout 1000000
-COPY packages/string-templates .
-
-
 WORKDIR /app
 COPY packages/server/package.json .
 COPY packages/server/dist/yarn.lock .
-RUN cd ../string-templates && yarn link && cd - && yarn link @budibase/string-templates
 
 COPY scripts/removeWorkspaceDependencies.sh scripts/removeWorkspaceDependencies.sh
 RUN chmod +x ./scripts/removeWorkspaceDependencies.sh
