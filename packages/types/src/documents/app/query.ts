@@ -1,5 +1,4 @@
 import { Document } from "../document"
-import type { Row } from "./row"
 
 export interface QuerySchema {
   name?: string
