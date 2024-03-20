@@ -9,6 +9,7 @@ import {
   ViewTemplateOpts,
 } from "../"
 import { Writable } from "stream"
+import PouchDB from "pouchdb-find"
 
 export enum SearchIndex {
   ROWS = "rows",

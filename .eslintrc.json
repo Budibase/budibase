@@ -37,9 +37,11 @@
       "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
       "extends": ["eslint:recommended"],
+      "globals": {
+        "NodeJS": true
+      },
       "rules": {
         "no-unused-vars": "off",
-        "no-undef": "off",
         "no-prototype-builtins": "off",
         "local-rules/no-budibase-imports": "error"
       }
@@ -53,9 +55,11 @@
       "env": {
         "jest/globals": true
       },
+      "globals": {
+        "NodeJS": true
+      },
       "rules": {
         "no-unused-vars": "off",
-        "no-undef": "off",
         "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
