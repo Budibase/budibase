@@ -38,11 +38,15 @@ export interface Row extends Document {
 export enum FieldSubtype {
   USER = "user",
   USERS = "users",
+  SINGLE = "single",
 }
 
 export const FieldTypeSubtypes = {
   BB_REFERENCE: {
     USER: FieldSubtype.USER,
     USERS: FieldSubtype.USERS,
+  },
+  ATTACHMENT: {
+    SINGLE: FieldSubtype.SINGLE,
   },
 }
