@@ -129,10 +129,7 @@
     filteredUsers = $usersFetch.rows
       .filter(user => user.email !== $auth.user.email)
       .map(user => {
-        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(
-          user,
-          prodAppId
-        )
+        const isAdminOrGlobalBuilder = sdk.users.isAdminOrGlobalBuilder(user)
         const isAppBuilder = user.builder?.apps?.includes(prodAppId)
         let role
         if (isAdminOrGlobalBuilder) {

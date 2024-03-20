@@ -45,10 +45,6 @@ export const runMigration = async (
   options: MigrationOptions = {}
 ) => {
   const migrationType = migration.type
-  let tenantId: string | undefined
-  if (migrationType !== MigrationType.INSTALLATION) {
-    tenantId = context.getTenantId()
-  }
   const migrationName = migration.name
   const silent = migration.silent
 
