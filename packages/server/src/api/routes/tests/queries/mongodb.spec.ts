@@ -3,8 +3,6 @@ import * as setup from "../utilities"
 import { databaseTestProviders } from "../../../../integrations/tests/utils"
 import { MongoClient, type Collection, BSON } from "mongodb"
 
-jest.unmock("mongodb")
-
 const collection = "test_collection"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
