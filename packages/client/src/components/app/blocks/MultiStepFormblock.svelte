@@ -28,11 +28,10 @@
 
   $: id = $component.id
   $: selected = $component.selected
-  $: inBuilder = $builderStore.inBuilder
   $: builderStep = $builderStore.metadata?.step
   $: fetchSchema(dataSource)
   $: enrichedSteps = enrichSteps(steps, schema, id)
-  $: updateCurrentStep(enrichedSteps, selected, inBuilder, builderStep)
+  $: updateCurrentStep(enrichedSteps, selected, builderStep)
 
   // Provide additional data context for live binding eval
   export const getAdditionalDataContext = () => {
@@ -44,17 +43,15 @@
     }
   }
 
-  const updateCurrentStep = (steps, selected, inBuilder, builderStep) => {
-    // If we aren't in the builder or aren't selected then don't update the step
-    // context at all, allowing the normal form to take control.
-    if (!selected || !inBuilder) {
+  const updateCurrentStep = (steps, selected, builderStep) => {
+    // If we aren't selected in the builder then just allowing the normal form
+    // to take control.
+    if (!selected) {
       return
     }
 
     // Ensure we have a valid step selected
     let newStep = Math.min(builderStep || 0, steps.length - 1)
-
-    // Sanity check
     newStep = Math.max(newStep, 0)
 
     // Add 1 because the form component expects 1 indexed rather than 0 indexed
