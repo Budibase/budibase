@@ -1,7 +1,7 @@
 import { budibaseTempDir } from "../budibaseDir"
 import fs from "fs"
 import { join } from "path"
-import { ObjectStoreBuckets } from "../../constants"
+import { ObjectStoreBuckets, devClientVersion } from "../../constants"
 import { updateClientLibrary } from "./clientLibrary"
 import env from "../../environment"
 import { objectStore, context } from "@budibase/backend-core"
@@ -39,7 +39,7 @@ export const getComponentLibraryManifest = async (library: string) => {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
-    if (app.version === "0.0.0") {
+    if (app.version === devClientVersion) {
       const paths = [
         join(TOP_LEVEL_PATH, "packages/client", filename),
         join(process.cwd(), "client", filename),

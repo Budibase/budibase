@@ -36,6 +36,7 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
+import { devClientVersion } from "../../../constants"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -270,13 +271,13 @@ export const serveClientLibrary = async function (ctx: Ctx) {
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd() || (env.isDev() && version !== "0.0.0")) {
+  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev() && version === "0.0.0") {
+  } else if (env.isDev() && version === devClientVersion) {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {
