@@ -38,6 +38,7 @@
   {#if parameters.type === "set"}
     <Label small>Value</Label>
     <DrawerBindableInput
+      title="State value"
       {bindings}
       value={parameters.value}
       on:change={e => (parameters.value = e.detail)}

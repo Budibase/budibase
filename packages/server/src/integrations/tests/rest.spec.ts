@@ -418,9 +418,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
     })
   })
@@ -551,9 +551,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
     })

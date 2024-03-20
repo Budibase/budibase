@@ -191,7 +191,7 @@ function isValidBBReference(
 ): boolean {
   switch (columnSubtype) {
     case FieldSubtype.USER:
-    case FieldSubtype.USERS:
+    case FieldSubtype.USERS: {
       if (typeof columnData !== "string") {
         return false
       }
@@ -208,7 +208,7 @@ function isValidBBReference(
         user => !db.isGlobalUserID(user._id)
       )
       return !constainsWrongId
-
+    }
     default:
       throw utils.unreachable(columnSubtype)
   }
