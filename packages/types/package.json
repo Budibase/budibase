@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Budibase types",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "src/index.ts",
   "author": "Budibase",
   "license": "GPL-3.0",
   "scripts": {
