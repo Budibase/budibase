@@ -119,6 +119,7 @@ export interface FieldConstraints {
   length?: {
     minimum?: string | number | null
     maximum?: string | number | null
+    message?: string
   }
   numericality?: {
     greaterThanOrEqualTo: string | null
