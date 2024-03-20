@@ -6,6 +6,10 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
+import env from "../environment"
+
+export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+
 export enum FilterTypes {
   STRING = "string",
   FUZZY = "fuzzy",

@@ -704,6 +704,7 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, ...groupData } = g
                 return groupData
               })
@@ -723,6 +724,7 @@ describe("scim", () => {
           expect(response).toEqual({
             Resources: expect.arrayContaining(
               groups.map(g => {
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 const { members, displayName, ...groupData } = g
                 return groupData
               })
@@ -872,6 +874,7 @@ describe("scim", () => {
           qs: "excludedAttributes=members",
         })
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { members, ...expectedResponse } = group
 
         expect(response).toEqual(expectedResponse)
