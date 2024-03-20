@@ -1,6 +1,9 @@
-const helpers = require("@budibase/handlebars-helpers")
-const { date, duration } = require("./date")
-const { HelperFunctionBuiltin } = require("./constants")
+// @ts-ignore we don't have types for it
+import helpers from "@budibase/handlebars-helpers"
+
+import { date, duration } from "./date"
+import { HelperFunctionBuiltin } from "./constants"
+import Handlebars from "handlebars"
 
 /**
  * full list of supported helpers can be found here:
@@ -24,10 +27,10 @@ const ADDED_HELPERS = {
   duration: duration,
 }
 
-exports.externalCollections = EXTERNAL_FUNCTION_COLLECTIONS
-exports.addedHelpers = ADDED_HELPERS
+export const externalCollections = EXTERNAL_FUNCTION_COLLECTIONS
+export const addedHelpers = ADDED_HELPERS
 
-exports.registerAll = handlebars => {
+export function registerAll(handlebars: typeof Handlebars) {
   for (let [name, helper] of Object.entries(ADDED_HELPERS)) {
     handlebars.registerHelper(name, helper)
   }
@@ -52,17 +55,17 @@ exports.registerAll = handlebars => {
     })
   }
   // add date external functionality
-  exports.externalHelperNames = externalNames.concat(Object.keys(ADDED_HELPERS))
+  externalHelperNames = externalNames.concat(Object.keys(ADDED_HELPERS))
 }
 
-exports.unregisterAll = handlebars => {
+export function unregisterAll(handlebars: typeof Handlebars) {
   for (let name of Object.keys(ADDED_HELPERS)) {
     handlebars.unregisterHelper(name)
   }
-  for (let name of module.exports.externalHelperNames) {
+  for (let name of externalHelperNames) {
     handlebars.unregisterHelper(name)
   }
-  exports.externalHelperNames = []
+  externalHelperNames = []
 }
 
-exports.externalHelperNames = []
+export let externalHelperNames: any[] = []

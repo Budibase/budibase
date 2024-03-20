@@ -65,7 +65,7 @@ describe("/queries", () => {
 
   beforeEach(async () => {
     await withConnection(async connection => {
-      const resp = await connection.query(createTableSQL)
+      await connection.query(createTableSQL)
       await connection.query(insertSQL)
     })
   })

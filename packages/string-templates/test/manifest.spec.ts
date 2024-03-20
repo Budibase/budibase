@@ -1,4 +1,4 @@
-const vm = require("vm")
+import vm from "vm"
 
 jest.mock("@budibase/handlebars-helpers/lib/math", () => {
   const actual = jest.requireActual("@budibase/handlebars-helpers/lib/math")
@@ -17,14 +17,14 @@ jest.mock("@budibase/handlebars-helpers/lib/uuid", () => {
   }
 })
 
-const { processString, setJSRunner } = require("../src/index.js")
+import { processString, setJSRunner } from "../src/index"
 
-const tk = require("timekeeper")
-const { getParsedManifest, runJsHelpersTests } = require("./utils")
+import tk from "timekeeper"
+import { getParsedManifest, runJsHelpersTests } from "./utils"
 
 tk.freeze("2021-01-21T12:00:00")
 
-function escapeRegExp(string) {
+function escapeRegExp(string: string) {
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") // $& means the whole matched string
 }
 
@@ -40,15 +40,15 @@ describe("manifest", () => {
   describe("examples are valid", () => {
     describe.each(Object.keys(manifest))("%s", collection => {
       it.each(manifest[collection])("%s", async (_, { hbs, js }) => {
-        const context = {
-          double: i => i * 2,
-          isString: x => typeof x === "string",
+        const context: any = {
+          double: (i: number) => i * 2,
+          isString: (x: any) => typeof x === "string",
         }
 
         const arrays = hbs.match(/\[[^/\]]+\]/)
         arrays?.forEach((arrayString, i) => {
           hbs = hbs.replace(new RegExp(escapeRegExp(arrayString)), `array${i}`)
-          context[`array${i}`] = JSON.parse(arrayString.replace(/\'/g, '"'))
+          context[`array${i}`] = JSON.parse(arrayString.replace(/'/g, '"'))
         })
 
         let result = await processString(hbs, context)

@@ -10,10 +10,6 @@ interface SearchResponse<T> {
   totalRows: number
 }
 
-interface PaginatedSearchResponse<T> extends SearchResponse<T> {
-  hasNextPage: boolean
-}
-
 export type SearchParams<T> = {
   tableId?: string
   sort?: string
@@ -247,7 +243,7 @@ export class QueryBuilder<T> {
     }
     // Escape characters
     if (!this.#noEscaping && escape && originalType === "string") {
-      value = `${value}`.replace(/[ \/#+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
+      value = `${value}`.replace(/[ /#+\-&|!(){}\]^"~*?:\\]/g, "\\$&")
     }
 
     // Wrap in quotes

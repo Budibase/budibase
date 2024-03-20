@@ -6,6 +6,7 @@
   import { Utils } from "@budibase/frontend-core"
   import FormBlockWrapper from "./form/FormBlockWrapper.svelte"
   import { get, writable } from "svelte/store"
+  import FormBlockComponent from "./FormBlockComponent.svelte"
 
   export let actionType
   export let rowId
@@ -22,22 +23,6 @@
   // Set current step context to force child form to use it
   const currentStep = writable(1)
   setContext("current-step", currentStep)
-
-  const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
-  }
 
   let schema
 
@@ -78,27 +63,6 @@
     currentStep.set(newStep + 1)
   }
 
-  const getPropsForField = field => {
-    if (field._component) {
-      return field
-    }
-    return {
-      field: field.name,
-      label: field.name,
-      placeholder: field.name,
-      _instanceName: field.name,
-    }
-  }
-
-  const getComponentForField = field => {
-    const fieldSchemaName = field.field || field.name
-    if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
-      return null
-    }
-    const type = schema[fieldSchemaName].type
-    return FieldTypeToComponentMap[type]
-  }
-
   const fetchSchema = async () => {
     schema = (await fetchDatasourceSchema(dataSource)) || {}
   }
@@ -111,6 +75,7 @@
       .filter(field => !field.autocolumn)
       .map(field => ({
         name: field.name,
+        active: true,
       }))
   }
 
@@ -205,15 +170,7 @@
               class:mobile={$context.device.mobile}
             >
               {#each step.fields as field, fieldIdx (`${field.field || field.name}_${fieldIdx}`)}
-                {#if getComponentForField(field)}
-                  <BlockComponent
-                    type={getComponentForField(field)}
-                    props={getPropsForField(field)}
-                    order={fieldIdx}
-                    interactive
-                    name={field.field}
-                  />
-                {/if}
+                <FormBlockComponent {field} {schema} order={fieldIdx} />
               {/each}
             </div>
           </BlockComponent>

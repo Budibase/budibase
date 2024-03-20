@@ -25,9 +25,9 @@ describe("/api/global/groups", () => {
     it("should be able to create a new group", async () => {
       const group = structures.groups.UserGroup()
       await config.api.groups.saveGroup(group)
-      expect(events.group.created).toBeCalledTimes(1)
-      expect(events.group.updated).not.toBeCalled()
-      expect(events.group.permissionsEdited).not.toBeCalled()
+      expect(events.group.created).toHaveBeenCalledTimes(1)
+      expect(events.group.updated).not.toHaveBeenCalled()
+      expect(events.group.permissionsEdited).not.toHaveBeenCalled()
     })
 
     it("should not allow undefined names", async () => {
@@ -57,7 +57,7 @@ describe("/api/global/groups", () => {
     it("should trim names", async () => {
       const group = { ...structures.groups.UserGroup(), name: "   group name " }
       await config.api.groups.saveGroup(group)
-      expect(events.group.created).toBeCalledWith(
+      expect(events.group.created).toHaveBeenCalledWith(
         expect.objectContaining({ name: "group name" })
       )
     })
@@ -100,8 +100,8 @@ describe("/api/global/groups", () => {
       }
       await config.api.groups.saveGroup(updatedGroup)
 
-      expect(events.group.updated).toBeCalledTimes(1)
-      expect(events.group.permissionsEdited).not.toBeCalled()
+      expect(events.group.updated).toHaveBeenCalledTimes(1)
+      expect(events.group.permissionsEdited).not.toHaveBeenCalled()
     })
 
     describe("scim", () => {
@@ -135,7 +135,7 @@ describe("/api/global/groups", () => {
           },
         })
 
-        expect(events.group.updated).not.toBeCalled()
+        expect(events.group.updated).not.toHaveBeenCalled()
       })
 
       it("update will not amend the SCIM fields", async () => {
@@ -151,7 +151,7 @@ describe("/api/global/groups", () => {
           expect: 200,
         })
 
-        expect(events.group.updated).toBeCalledTimes(1)
+        expect(events.group.updated).toHaveBeenCalledTimes(1)
         expect(
           (
             await config.api.groups.find(group._id!, {
@@ -176,7 +176,7 @@ describe("/api/global/groups", () => {
       let oldGroup = await config.api.groups.saveGroup(group)
       await config.api.groups.deleteGroup(oldGroup.body._id, oldGroup.body._rev)
 
-      expect(events.group.deleted).toBeCalledTimes(1)
+      expect(events.group.deleted).toHaveBeenCalledTimes(1)
     })
   })
 

@@ -1,11 +1,11 @@
-const { getJsHelperList } = require("../helpers")
+import { getJsHelperList } from "../helpers"
 
-function getLayers(fullBlock) {
+function getLayers(fullBlock: string): string[] {
   let layers = []
   while (fullBlock.length) {
     const start = fullBlock.lastIndexOf("("),
       end = fullBlock.indexOf(")")
-    let layer
+    let layer: string
     if (start === -1 || end === -1) {
       layer = fullBlock.trim()
       fullBlock = ""
@@ -21,7 +21,7 @@ function getLayers(fullBlock) {
   return layers
 }
 
-function getVariable(variableName) {
+function getVariable(variableName: string) {
   if (!variableName || typeof variableName !== "string") {
     return variableName
   }
@@ -47,10 +47,12 @@ function getVariable(variableName) {
   return `$("${variableName}")`
 }
 
-function buildList(parts, value) {
+function buildList(parts: string[], value: any) {
   function build() {
     return parts
-      .map(part => (part.startsWith("helper") ? part : getVariable(part)))
+      .map((part: string) =>
+        part.startsWith("helper") ? part : getVariable(part)
+      )
       .join(", ")
   }
   if (!value) {
@@ -60,12 +62,12 @@ function buildList(parts, value) {
   }
 }
 
-function splitBySpace(layer) {
-  const parts = []
+function splitBySpace(layer: string) {
+  const parts: string[] = []
   let started = null,
     endChar = null,
     last = 0
-  function add(str) {
+  function add(str: string) {
     const startsWith = ["]"]
     while (startsWith.indexOf(str.substring(0, 1)) !== -1) {
       str = str.substring(1, str.length)
@@ -103,7 +105,7 @@ function splitBySpace(layer) {
   return parts
 }
 
-module.exports.convertHBSBlock = (block, blockNumber) => {
+export function convertHBSBlock(block: string, blockNumber: number) {
   const braceLength = block[2] === "{" ? 3 : 2
   block = block.substring(braceLength, block.length - braceLength).trim()
   const layers = getLayers(block)
@@ -114,7 +116,7 @@ module.exports.convertHBSBlock = (block, blockNumber) => {
     const parts = splitBySpace(layer)
     if (value || parts.length > 1 || list[parts[0]]) {
       // first of layer should always be the helper
-      const helper = parts.splice(0, 1)
+      const [helper] = parts.splice(0, 1)
       if (list[helper]) {
         value = `helpers.${helper}(${buildList(parts, value)})`
       }

@@ -14,8 +14,6 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
-  FieldType,
-  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -254,7 +252,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
 
       switch (this.config.authType) {
-        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY: {
           const { clientId, tenantId, clientSecret } =
             this.config.adConfig || {}
           const clientApp = new ConfidentialClientApplication({
@@ -276,7 +274,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           break
-        case MSSQLConfigAuthType.NTLM:
+        }
+        case MSSQLConfigAuthType.NTLM: {
           const { domain, trustServerCertificate } =
             this.config.ntlmConfig || {}
           clientCfg.authentication = {
@@ -288,6 +287,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           clientCfg.options ??= {}
           clientCfg.options.trustServerCertificate = !!trustServerCertificate
           break
+        }
         case null:
         case undefined:
           break
@@ -506,7 +506,11 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
     const processFn = (result: any) => {
       if (json?.meta?.table && result.recordset) {
-        return this.convertJsonStringColumns(json.meta.table, result.recordset)
+        return this.convertJsonStringColumns(
+          json.meta.table,
+          result.recordset,
+          json.tableAliases
+        )
       } else if (result.recordset) {
         return result.recordset
       }
