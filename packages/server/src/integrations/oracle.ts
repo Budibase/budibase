@@ -455,7 +455,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           operation !== Operation.DELETE
         ) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM "${json.endpoint.entityId}" WHERE ROWID = '${response.lastRowid}'`,
           })
           return lastRow.rows as Row[]
         } else {

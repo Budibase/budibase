@@ -20,7 +20,7 @@ import sdk from "../../../sdk"
 import * as uuid from "uuid"
 
 import tk from "timekeeper"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import { TableToBuild } from "../../../tests/utilities/TestConfiguration"
 
 tk.freeze(mocks.date.MOCK_DATE)
@@ -64,8 +64,8 @@ describe("/tables", () => {
         "Table TestTable saved successfully."
       )
       expect(res.body.name).toEqual("TestTable")
-      expect(events.table.created).toBeCalledTimes(1)
-      expect(events.table.created).toBeCalledWith(res.body)
+      expect(events.table.created).toHaveBeenCalledTimes(1)
+      expect(events.table.created).toHaveBeenCalledWith(res.body)
     })
 
     it("creates all the passed fields", async () => {
@@ -135,12 +135,12 @@ describe("/tables", () => {
 
       const res = await createTable(table)
 
-      expect(events.table.created).toBeCalledTimes(1)
-      expect(events.table.created).toBeCalledWith(res.body)
-      expect(events.table.imported).toBeCalledTimes(1)
-      expect(events.table.imported).toBeCalledWith(res.body)
-      expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(res.body, 1)
+      expect(events.table.created).toHaveBeenCalledTimes(1)
+      expect(events.table.created).toHaveBeenCalledWith(res.body)
+      expect(events.table.imported).toHaveBeenCalledTimes(1)
+      expect(events.table.imported).toHaveBeenCalledWith(res.body)
+      expect(events.rows.imported).toHaveBeenCalledTimes(1)
+      expect(events.rows.imported).toHaveBeenCalledWith(res.body, 1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -164,8 +164,8 @@ describe("/tables", () => {
         .expect("Content-Type", /json/)
         .expect(200)
 
-      expect(events.table.updated).toBeCalledTimes(1)
-      expect(events.table.updated).toBeCalledWith(res.body)
+      expect(events.table.updated).toHaveBeenCalledTimes(1)
+      expect(events.table.updated).toHaveBeenCalledWith(res.body)
     })
 
     it("updates all the row fields for a table when a schema key is renamed", async () => {
@@ -335,8 +335,8 @@ describe("/tables", () => {
         .expect(200)
 
       expect(events.table.created).not.toHaveBeenCalled()
-      expect(events.rows.imported).toBeCalledTimes(1)
-      expect(events.rows.imported).toBeCalledWith(
+      expect(events.rows.imported).toHaveBeenCalledTimes(1)
+      expect(events.rows.imported).toHaveBeenCalledWith(
         expect.objectContaining({
           name: "TestTable",
           _id: table._id,
@@ -417,8 +417,8 @@ describe("/tables", () => {
     it("should fetch views", async () => {
       const tableId = config.table!._id!
       const views = [
-        await config.api.viewV2.create({ tableId }),
-        await config.api.viewV2.create({ tableId }),
+        await config.api.viewV2.create({ tableId, name: generator.guid() }),
+        await config.api.viewV2.create({ tableId, name: generator.guid() }),
       ]
 
       const res = await request
@@ -455,7 +455,7 @@ describe("/tables", () => {
         },
       }))
 
-      await config.api.viewV2.create({ tableId })
+      await config.api.viewV2.create({ tableId, name: generator.guid() })
       await config.createLegacyView()
 
       const res = await config.api.table.fetch()
@@ -527,8 +527,8 @@ describe("/tables", () => {
         .expect("Content-Type", /json/)
         .expect(200)
       expect(res.body.message).toEqual(`Table ${testTable._id} deleted.`)
-      expect(events.table.deleted).toBeCalledTimes(1)
-      expect(events.table.deleted).toBeCalledWith({
+      expect(events.table.deleted).toHaveBeenCalledTimes(1)
+      expect(events.table.deleted).toHaveBeenCalledWith({
         ...testTable,
         tableId: testTable._id,
       })

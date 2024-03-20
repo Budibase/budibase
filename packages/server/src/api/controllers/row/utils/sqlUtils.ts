@@ -102,19 +102,10 @@ export function updateRelationshipColumns(
     columns[relationship.column] = linked
   }
   for (let [column, related] of Object.entries(columns)) {
-    let rowId = row._id
-    if (opts?.internal) {
-      const { _id } = basicProcessing({
-        row,
-        table,
-        isLinked: false,
-        internal: opts?.internal,
-      })
-      rowId = _id!
-    }
-    if (!rowId) {
+    if (!row._id) {
       continue
     }
+    const rowId: string = row._id
     if (!Array.isArray(rows[rowId][column])) {
       rows[rowId][column] = []
     }

@@ -8,15 +8,10 @@ export interface EndpointMatcher {
    * ALL is also accepted to cover all verbs.
    */
   method: string
-  /**
-   * The route must match exactly - not just begins with
-   */
-  strict?: boolean
 }
 
 export interface RegexMatcher {
   regex: RegExp
   method: string
-  strict: boolean
   route: string
 }

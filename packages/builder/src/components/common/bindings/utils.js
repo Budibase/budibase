@@ -38,4 +38,11 @@ export class BindingHelpers {
       this.insertAtPos({ start, end, value: insertVal })
     }
   }
+
+  // Adds a snippet to the expression
+  onSelectSnippet(snippet) {
+    const pos = this.getCaretPosition()
+    const { start, end } = pos
+    this.insertAtPos({ start, end, value: `snippets.${snippet.name}` })
+  }
 }

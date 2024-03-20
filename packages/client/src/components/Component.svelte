@@ -565,13 +565,23 @@
 
     // If we don't know, check and cache
     if (used == null) {
-      used = bindingString.indexOf(`[${key}]`) !== -1
+      const searchString = key === "snippets" ? key : `[${key}]`
+      used = bindingString.indexOf(searchString) !== -1
       knownContextKeyMap[key] = used
     }
 
     // Enrich settings if we use this key
     if (used) {
       enrichComponentSettings($context, settingsDefinitionMap)
+    }
+  }
+
+  const getDataContext = () => {
+    const normalContext = get(context)
+    const additionalContext = ref?.getAdditionalDataContext?.()
+    return {
+      ...normalContext,
+      ...additionalContext,
     }
   }
 
@@ -583,7 +593,7 @@
           component: instance._component,
           getSettings: () => cachedSettings,
           getRawSettings: () => ({ ...staticSettings, ...dynamicSettings }),
-          getDataContext: () => get(context),
+          getDataContext,
           reload: () => initialise(instance, true),
           setEphemeralStyles: styles => (ephemeralStyles = styles),
           state: store,

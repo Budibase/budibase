@@ -2,6 +2,7 @@
   import BlockComponent from "components/BlockComponent.svelte"
   import Placeholder from "components/app/Placeholder.svelte"
   import { getContext } from "svelte"
+  import FormBlockComponent from "../FormBlockComponent.svelte"
 
   export let dataSource
   export let actionType
@@ -14,49 +15,11 @@
   export let buttonPosition = "bottom"
   export let schema
 
-  const FieldTypeToComponentMap = {
-    string: "stringfield",
-    number: "numberfield",
-    bigint: "bigintfield",
-    options: "optionsfield",
-    array: "multifieldselect",
-    boolean: "booleanfield",
-    longform: "longformfield",
-    datetime: "datetimefield",
-    attachment: "attachmentfield",
-    link: "relationshipfield",
-    json: "jsonfield",
-    barcodeqr: "codescanner",
-    bb_reference: "bbreferencefield",
-  }
   const context = getContext("context")
 
   let formId
 
   $: renderHeader = buttons || title
-
-  const getComponentForField = field => {
-    const fieldSchemaName = field.field || field.name
-    if (!fieldSchemaName || !schema?.[fieldSchemaName]) {
-      return null
-    }
-    const type = schema[fieldSchemaName].type
-    return FieldTypeToComponentMap[type]
-  }
-
-  const getPropsForField = field => {
-    let fieldProps = field._component
-      ? {
-          ...field,
-        }
-      : {
-          field: field.name,
-          label: field.name,
-          placeholder: field.name,
-          _instanceName: field.name,
-        }
-    return fieldProps
-  }
 </script>
 
 {#if fields?.length}
@@ -132,15 +95,7 @@
         <BlockComponent type="container">
           <div class="form-block fields" class:mobile={$context.device.mobile}>
             {#each fields as field, idx}
-              {#if getComponentForField(field) && field.active}
-                <BlockComponent
-                  type={getComponentForField(field)}
-                  props={getPropsForField(field)}
-                  order={idx}
-                  interactive
-                  name={field?.field}
-                />
-              {/if}
+              <FormBlockComponent {field} {schema} order={idx} />
             {/each}
           </div>
         </BlockComponent>

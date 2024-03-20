@@ -12,15 +12,6 @@ class TestConfiguration {
   }
 }
 
-function disableConsole() {
-  jest.spyOn(console, "error")
-  // @ts-ignore
-  console.error.mockImplementation(() => {})
-
-  // @ts-ignore
-  return console.error.mockRestore
-}
-
 describe("MongoDB Integration", () => {
   let config: any
   let indexName = "Users"
@@ -96,8 +87,6 @@ describe("MongoDB Integration", () => {
   })
 
   it("throws an error when an invalid query.extra.actionType is passed for each method", async () => {
-    const restore = disableConsole()
-
     const query = {
       extra: { collection: "testCollection", actionType: "deleteOne" },
     }
@@ -109,7 +98,6 @@ describe("MongoDB Integration", () => {
       error = err
     }
     expect(error).toBeDefined()
-    restore()
   })
 
   it("creates ObjectIds if the field contains a match on ObjectId", async () => {

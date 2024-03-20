@@ -29,7 +29,7 @@
   <Label small>Row ID</Label>
   <DrawerBindableInput
     {bindings}
-    title="Row ID to Fetch"
+    title="Row ID"
     value={parameters.rowId}
     on:change={value => (parameters.rowId = value.detail)}
   />

@@ -299,7 +299,7 @@ describe("Captures of real examples", () => {
           type: "datasource",
           isSQL: false,
         })
-      )
+      ).toEqual(false)
     })
 
     it("should disable when no fields", () => {

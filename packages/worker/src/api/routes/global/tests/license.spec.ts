@@ -22,7 +22,7 @@ describe("/api/global/license", () => {
     it("returns 200", async () => {
       const res = await config.api.license.refresh()
       expect(res.status).toBe(200)
-      expect(licensing.cache.refresh).toBeCalledTimes(1)
+      expect(licensing.cache.refresh).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -42,7 +42,9 @@ describe("/api/global/license", () => {
         licenseKey: "licenseKey",
       })
       expect(res.status).toBe(200)
-      expect(licensing.keys.activateLicenseKey).toBeCalledWith("licenseKey")
+      expect(licensing.keys.activateLicenseKey).toHaveBeenCalledWith(
+        "licenseKey"
+      )
     })
   })
 
@@ -64,7 +66,7 @@ describe("/api/global/license", () => {
   describe("DELETE /api/global/license/key", () => {
     it("returns 204", async () => {
       const res = await config.api.license.deleteLicenseKey()
-      expect(licensing.keys.deleteLicenseKey).toBeCalledTimes(1)
+      expect(licensing.keys.deleteLicenseKey).toHaveBeenCalledTimes(1)
       expect(res.status).toBe(204)
     })
   })
@@ -74,9 +76,9 @@ describe("/api/global/license", () => {
       const res = await config.api.license.activateOfflineLicense({
         offlineLicenseToken: "offlineLicenseToken",
       })
-      expect(licensing.offline.activateOfflineLicenseToken).toBeCalledWith(
-        "offlineLicenseToken"
-      )
+      expect(
+        licensing.offline.activateOfflineLicenseToken
+      ).toHaveBeenCalledWith("offlineLicenseToken")
       expect(res.status).toBe(200)
     })
   })
@@ -102,7 +104,9 @@ describe("/api/global/license", () => {
     it("returns 204", async () => {
       const res = await config.api.license.deleteOfflineLicense()
       expect(res.status).toBe(204)
-      expect(licensing.offline.deleteOfflineLicenseToken).toBeCalledTimes(1)
+      expect(licensing.offline.deleteOfflineLicenseToken).toHaveBeenCalledTimes(
+        1
+      )
     })
   })
 

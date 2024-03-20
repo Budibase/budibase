@@ -143,7 +143,7 @@ export function bindingTypeCoerce(bindings: SqlQueryBinding) {
 }
 
 class MySQLIntegration extends Sql implements DatasourcePlus {
-  private config: MySQLConfig
+  private readonly config: MySQLConfig
   private client?: mysql.Connection
 
   constructor(config: MySQLConfig) {
@@ -387,7 +387,17 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
     try {
       const queryFn = (query: any) =>
         this.internalQuery(query, { connect: false, disableCoercion: true })
-      return await this.queryWithReturning(json, queryFn)
+      const processFn = (result: any) => {
+        if (json?.meta?.table && Array.isArray(result)) {
+          return this.convertJsonStringColumns(
+            json.meta.table,
+            result,
+            json.tableAliases
+          )
+        }
+        return result
+      }
+      return await this.queryWithReturning(json, queryFn, processFn)
     } finally {
       await this.disconnect()
     }

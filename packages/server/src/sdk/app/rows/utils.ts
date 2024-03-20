@@ -14,7 +14,7 @@ import { makeExternalQuery } from "../../../integrations/base/query"
 import { Format } from "../../../api/controllers/view/exporters"
 import sdk from "../.."
 import { isRelationshipColumn } from "../../../db/utils"
-import { SqlClient } from "../../../integrations/utils"
+import { SqlClient, isSQL } from "../../../integrations/utils"
 
 const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
   [SourceName.POSTGRES]: SqlClient.POSTGRES,
@@ -37,7 +37,7 @@ const SQL_CLIENT_SOURCE_MAP: Record<SourceName, SqlClient | undefined> = {
 }
 
 export function getSQLClient(datasource: Datasource): SqlClient {
-  if (!datasource.isSQL) {
+  if (!isSQL(datasource)) {
     throw new Error("Cannot get SQL Client for non-SQL datasource")
   }
   const lookup = SQL_CLIENT_SOURCE_MAP[datasource.source]

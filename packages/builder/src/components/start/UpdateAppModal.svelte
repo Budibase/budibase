@@ -7,7 +7,7 @@
     Layout,
     Label,
   } from "@budibase/bbui"
-  import { apps } from "stores/portal"
+  import { appsStore } from "stores/portal"
   import { onMount } from "svelte"
   import { createValidationStore } from "helpers/validation/yup"
   import * as appValidation from "helpers/validation/yup/app"
@@ -37,7 +37,7 @@
   }
 
   const setupValidation = async () => {
-    const applications = svelteGet(apps)
+    const applications = svelteGet(appsStore).apps
     appValidation.name(validation, {
       apps: applications,
       currentApp: {
@@ -62,7 +62,7 @@
 
   async function updateApp() {
     try {
-      await apps.update(app.appId, {
+      await appsStore.save(app.appId, {
         name: $values.name?.trim(),
         url: $values.url?.trim(),
         icon: {

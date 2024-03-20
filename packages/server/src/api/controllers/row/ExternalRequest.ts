@@ -10,7 +10,6 @@ import {
   Operation,
   PaginationJson,
   RelationshipFieldMetadata,
-  RelationshipsJson,
   Row,
   SearchFilters,
   SortJson,
@@ -31,16 +30,12 @@ import {
   buildSqlFieldList,
   generateIdForRow,
   sqlOutputProcessing,
-  updateRelationshipColumns,
-  fixArrayTypes,
   isManyToMany,
-  processRelationshipFields,
 } from "./utils"
 import { getDatasourceAndQuery } from "../../../sdk/app/rows/utils"
 import { processObjectSync } from "@budibase/string-templates"
 import { cloneDeep } from "lodash/fp"
 import { db as dbCore } from "@budibase/backend-core"
-import { processDates } from "../../../utilities/rowProcessor"
 import AliasTables from "./alias"
 import sdk from "../../../sdk"
 import env from "../../../environment"
@@ -205,57 +200,6 @@ function getEndpoint(tableId: string | undefined, operation: string) {
   }
 }
 
-// need to handle table name + field or just field, depending on if relationships used
-function extractFieldValue({
-  row,
-  tableName,
-  fieldName,
-  isLinked,
-}: {
-  row: Row
-  tableName: string
-  fieldName: string
-  isLinked: boolean
-}) {
-  let value = row[`${tableName}.${fieldName}`]
-  if (value == null && !isLinked) {
-    value = row[fieldName]
-  }
-  return value
-}
-
-function basicProcessing({
-  row,
-  table,
-  isLinked,
-}: {
-  row: Row
-  table: Table
-  isLinked: boolean
-}): Row {
-  const thisRow: Row = {}
-  // filter the row down to what is actually the row (not joined)
-  for (let field of Object.values(table.schema)) {
-    const fieldName = field.name
-
-    const value = extractFieldValue({
-      row,
-      tableName: table.name,
-      fieldName,
-      isLinked,
-    })
-
-    // all responses include "select col as table.col" so that overlaps are handled
-    if (value != null) {
-      thisRow[fieldName] = value
-    }
-  }
-  thisRow._id = generateIdForRow(row, table, isLinked)
-  thisRow.tableId = table._id
-  thisRow._rev = "rev"
-  return thisRow
-}
-
 function isOneSide(
   field: RelationshipFieldMetadata
 ): field is OneToManyRelationshipFieldMetadata {
@@ -397,58 +341,6 @@ export class ExternalRequest<T extends Operation> {
     return { row: newRow, manyRelationships }
   }
 
-  outputProcessing(
-    rows: Row[] = [],
-    table: Table,
-    relationships: RelationshipsJson[]
-  ) {
-    if (!rows || rows.length === 0 || rows[0].read === true) {
-      return []
-    }
-    const tableMap = this.tables
-    let finalRows: { [key: string]: Row } = {}
-    for (let row of rows) {
-      const rowId = generateIdForRow(row, table)
-      row._id = rowId
-      // this is a relationship of some sort
-      if (finalRows[rowId]) {
-        finalRows = updateRelationshipColumns(
-          table,
-          tableMap,
-          row,
-          finalRows,
-          relationships
-        )
-        continue
-      }
-      const thisRow = fixArrayTypes(
-        basicProcessing({ row, table, isLinked: false }),
-        table
-      )
-      if (thisRow._id == null) {
-        throw "Unable to generate row ID for SQL rows"
-      }
-      finalRows[thisRow._id] = thisRow
-      // do this at end once its been added to the final rows
-      finalRows = updateRelationshipColumns(
-        table,
-        tableMap,
-        row,
-        finalRows,
-        relationships
-      )
-    }
-
-    // make sure all related rows are correct
-    let finalRowArray = Object.values(finalRows).map(row =>
-      processRelationshipFields(table, this.tables, row, relationships)
-    )
-
-    // process some additional types
-    finalRowArray = processDates(table, finalRowArray)
-    return finalRowArray
-  }
-
   /**
    * This is a cached lookup, of relationship records, this is mainly for creating/deleting junction
    * information.
@@ -548,7 +440,7 @@ export class ExternalRequest<T extends Operation> {
 
       const rows = related[key]?.rows || []
 
-      function relationshipMatchPredicate({
+      const relationshipMatchPredicate = ({
         row,
         linkPrimary,
         linkSecondary,
@@ -556,7 +448,7 @@ export class ExternalRequest<T extends Operation> {
         row: Row
         linkPrimary: string
         linkSecondary?: string
-      }) {
+      }) => {
         const matchesPrimaryLink =
           row[linkPrimary] === relationship.id ||
           row[linkPrimary] === body?.[linkPrimary]
@@ -739,7 +631,7 @@ export class ExternalRequest<T extends Operation> {
         processed.manyRelationships
       )
     }
-    const output = sqlOutputProcessing(
+    const output = await sqlOutputProcessing(
       response,
       table,
       this.tables,
