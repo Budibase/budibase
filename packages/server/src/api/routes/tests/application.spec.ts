@@ -19,6 +19,7 @@ import env from "../../../environment"
 import { type App } from "@budibase/types"
 import tk from "timekeeper"
 import * as uuid from "uuid"
+import { structures } from "@budibase/backend-core/tests"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -356,7 +357,7 @@ describe("/applications", () => {
 
     it("should reject an unknown app id with a 404", async () => {
       await config.api.application.duplicateApp(
-        app.appId.slice(0, -1) + "a",
+        structures.db.id(),
         {
           name: "to-dupe 123",
           url: "/to-dupe-123",
