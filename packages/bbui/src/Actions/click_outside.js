@@ -39,7 +39,7 @@ const handleClick = event => {
       return
     }
 
-    if (event.type && event.type !== handler.allowedType) {
+    if (handler.allowedType && event.type !== handler.allowedType) {
       return
     }
 
@@ -48,7 +48,6 @@ const handleClick = event => {
 }
 document.documentElement.addEventListener("click", handleClick, true)
 document.documentElement.addEventListener("mousedown", handleClick, true)
-document.documentElement.addEventListener("contextmenu", handleClick, true)
 
 /**
  * Adds or updates a click handler
