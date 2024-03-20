@@ -20,7 +20,6 @@ fetch.mockSearch()
 
 const config = setup.getConfig()!
 
-jest.unmock("mysql2/promise")
 jest.mock("../websockets", () => ({
   clientAppSocket: jest.fn(),
   gridAppSocket: jest.fn(),
