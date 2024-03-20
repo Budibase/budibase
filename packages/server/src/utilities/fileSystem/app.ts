@@ -7,6 +7,7 @@ import env from "../../environment"
 import { objectStore, context } from "@budibase/backend-core"
 import { TOP_LEVEL_PATH } from "./filesystem"
 import { DocumentType } from "../../db/utils"
+import { App } from "@budibase/types"
 
 export const NODE_MODULES_PATH = join(TOP_LEVEL_PATH, "node_modules")
 

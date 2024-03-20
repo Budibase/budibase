@@ -1,7 +1,12 @@
 <script>
   import { onMount, onDestroy } from "svelte"
   import { params, goto } from "@roxi/routify"
-  import { licensing, auth, sideBarCollapsed, enrichedApps } from "stores/portal"
+  import {
+    licensing,
+    auth,
+    sideBarCollapsed,
+    enrichedApps,
+  } from "stores/portal"
   import AppRowContext from "components/start/AppRowContext.svelte"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {

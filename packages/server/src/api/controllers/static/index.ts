@@ -2,7 +2,7 @@ import { InvalidFileExtensions } from "@budibase/shared-core"
 import AppComponent from "./templates/BudibaseApp.svelte"
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets, devClientVersion } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
@@ -36,7 +36,6 @@ import {
 
 import send from "koa-send"
 import { getThemeVariables } from "../../../constants/themes"
-import { devClientVersion } from "../../../constants"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`

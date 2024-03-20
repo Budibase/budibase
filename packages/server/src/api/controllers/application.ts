@@ -750,7 +750,7 @@ export async function setRevertableVersion(
   const db = context.getAppDB()
   const app = await db.get<App>(DocumentType.APP_METADATA)
   app.revertableVersion = ctx.request.body.revertableVersion
-  const response = await db.put(app)
+  await db.put(app)
 
   ctx.status = 200
 }
