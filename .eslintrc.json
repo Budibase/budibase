@@ -42,7 +42,6 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "no-prototype-builtins": "off",
         "local-rules/no-budibase-imports": "error"
       }
     },
@@ -60,7 +59,6 @@
       },
       "rules": {
         "no-unused-vars": "off",
-        "no-prototype-builtins": "off",
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
         "no-console": "warn",
