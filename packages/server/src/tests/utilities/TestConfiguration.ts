@@ -49,7 +49,6 @@ import {
   AuthToken,
   Automation,
   CreateViewRequest,
-  Ctx,
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
@@ -580,7 +579,7 @@ export default class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string): Promise<App> {
+  async createApp(appName: string, url?: string): Promise<App> {
     // create dev app
     // clear any old app
     this.appId = undefined
@@ -589,6 +588,7 @@ export default class TestConfiguration {
       async () =>
         (await this._req(appController.create, {
           name: appName,
+          url,
         })) as App
     )
     this.appId = this.app.appId

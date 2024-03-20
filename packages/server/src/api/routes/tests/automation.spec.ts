@@ -95,8 +95,8 @@ describe("/automations", () => {
       expect(res.body.message).toEqual("Automation created successfully")
       expect(res.body.automation.name).toEqual("My Automation")
       expect(res.body.automation._id).not.toEqual(null)
-      expect(events.automation.created).toBeCalledTimes(1)
-      expect(events.automation.stepCreated).not.toBeCalled()
+      expect(events.automation.created).toHaveBeenCalledTimes(1)
+      expect(events.automation.stepCreated).not.toHaveBeenCalled()
     })
 
     it("creates an automation with steps", async () => {
@@ -114,8 +114,8 @@ describe("/automations", () => {
       expect(res.body.message).toEqual("Automation created successfully")
       expect(res.body.automation.name).toEqual("My Automation")
       expect(res.body.automation._id).not.toEqual(null)
-      expect(events.automation.created).toBeCalledTimes(1)
-      expect(events.automation.stepCreated).toBeCalledTimes(2)
+      expect(events.automation.created).toHaveBeenCalledTimes(1)
+      expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -158,7 +158,7 @@ describe("/automations", () => {
       automation = await config.createAutomation(automation)
       await setup.delay(500)
       const res = await testAutomation(config, automation)
-      expect(events.automation.tested).toBeCalledTimes(1)
+      expect(events.automation.tested).toHaveBeenCalledTimes(1)
       // this looks a bit mad but we don't actually have a way to wait for a response from the automation to
       // know that it has finished all of its actions - this is currently the best way
       // also when this runs in CI it is very temper-mental so for now trying to make run stable by repeating until it works
@@ -265,10 +265,10 @@ describe("/automations", () => {
         `Automation ${automation._id} updated successfully.`
       )
       // events
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.stepCreated).not.toBeCalled()
-      expect(events.automation.stepDeleted).not.toBeCalled()
-      expect(events.automation.triggerUpdated).not.toBeCalled()
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.stepCreated).not.toHaveBeenCalled()
+      expect(events.automation.stepDeleted).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
     it("updates a automations name using POST request", async () => {
@@ -293,10 +293,10 @@ describe("/automations", () => {
         `Automation ${automation._id} updated successfully.`
       )
       // events
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.stepCreated).not.toBeCalled()
-      expect(events.automation.stepDeleted).not.toBeCalled()
-      expect(events.automation.triggerUpdated).not.toBeCalled()
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.stepCreated).not.toHaveBeenCalled()
+      expect(events.automation.stepDeleted).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
     it("updates an automation trigger", async () => {
@@ -310,10 +310,10 @@ describe("/automations", () => {
       await update(automation)
 
       // events
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.stepCreated).not.toBeCalled()
-      expect(events.automation.stepDeleted).not.toBeCalled()
-      expect(events.automation.triggerUpdated).toBeCalledTimes(1)
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.stepCreated).not.toHaveBeenCalled()
+      expect(events.automation.stepDeleted).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).toHaveBeenCalledTimes(1)
     })
 
     it("adds automation steps", async () => {
@@ -327,10 +327,10 @@ describe("/automations", () => {
       await update(automation)
 
       // events
-      expect(events.automation.stepCreated).toBeCalledTimes(2)
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.stepDeleted).not.toBeCalled()
-      expect(events.automation.triggerUpdated).not.toBeCalled()
+      expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.stepDeleted).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
     it("removes automation steps", async () => {
@@ -344,10 +344,10 @@ describe("/automations", () => {
       await update(automation)
 
       // events
-      expect(events.automation.stepDeleted).toBeCalledTimes(2)
-      expect(events.automation.stepCreated).not.toBeCalled()
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.triggerUpdated).not.toBeCalled()
+      expect(events.automation.stepDeleted).toHaveBeenCalledTimes(2)
+      expect(events.automation.stepCreated).not.toHaveBeenCalled()
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
 
     it("adds and removes automation steps", async () => {
@@ -360,10 +360,10 @@ describe("/automations", () => {
       await update(automation)
 
       // events
-      expect(events.automation.stepCreated).toBeCalledTimes(2)
-      expect(events.automation.stepDeleted).toBeCalledTimes(1)
-      expect(events.automation.created).not.toBeCalled()
-      expect(events.automation.triggerUpdated).not.toBeCalled()
+      expect(events.automation.stepCreated).toHaveBeenCalledTimes(2)
+      expect(events.automation.stepDeleted).toHaveBeenCalledTimes(1)
+      expect(events.automation.created).not.toHaveBeenCalled()
+      expect(events.automation.triggerUpdated).not.toHaveBeenCalled()
     })
   })
 
@@ -400,7 +400,7 @@ describe("/automations", () => {
         .expect(200)
 
       expect(res.body.id).toEqual(automation._id)
-      expect(events.automation.deleted).toBeCalledTimes(1)
+      expect(events.automation.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

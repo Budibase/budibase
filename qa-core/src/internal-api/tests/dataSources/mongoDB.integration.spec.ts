@@ -2,7 +2,7 @@ import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Query } from "@budibase/types"
 
-xdescribe("Internal API - Data Sources: MongoDB", () => {
+describe.skip("Internal API - Data Sources: MongoDB", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {

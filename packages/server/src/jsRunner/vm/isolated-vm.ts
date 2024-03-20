@@ -6,8 +6,8 @@ import crypto from "crypto"
 import querystring from "querystring"
 
 import { BundleType, loadBundle } from "../bundles"
-import { VM } from "@budibase/types"
-import { iifeWrapper } from "../utilities"
+import { Snippet, VM } from "@budibase/types"
+import { iifeWrapper } from "@budibase/string-templates"
 import environment from "../../environment"
 
 class ExecutionTimeoutError extends Error {
@@ -98,6 +98,26 @@ export class IsolatedVM implements VM {
     return this
   }
 
+  withSnippets(snippets?: Snippet[]) {
+    // Transform snippets into a map for faster access
+    let snippetMap: Record<string, string> = {}
+    for (let snippet of snippets || []) {
+      snippetMap[snippet.name] = snippet.code
+    }
+    const snippetsSource = loadBundle(BundleType.SNIPPETS)
+    const script = this.isolate.compileScriptSync(`
+      const snippetDefinitions = ${JSON.stringify(snippetMap)};
+      const snippetCache = {};
+      ${snippetsSource};
+      snippets = snippets.default;
+    `)
+    script.runSync(this.vm, { timeout: this.invocationTimeout, release: false })
+    new Promise(() => {
+      script.release()
+    })
+    return this
+  }
+
   withContext<T>(context: Record<string, any>, executeWithContext: () => T) {
     this.addToContext(context)
 
@@ -150,7 +170,8 @@ export class IsolatedVM implements VM {
       }
 
       decode(...input: any) {
-        // @ts-ignore
+        // @ts-expect-error - this is going to run in the isolate, where this function will be available
+        // eslint-disable-next-line no-undef
         return textDecoderCb({
           constructorArgs: this.constructorArgs,
           functionArgs: input,

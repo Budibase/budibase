@@ -143,7 +143,6 @@
           value={field.value}
           allowJS={false}
           {allowHelpers}
-          fillWidth={true}
           drawerLeft={bindingDrawerLeft}
         />
       {:else}

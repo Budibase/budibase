@@ -16,7 +16,7 @@ import {
   ViewV2,
 } from "@budibase/types"
 import * as setup from "./utilities"
-import { mocks } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 
 const { basicRow } = setup.structures
 const { BUILTIN_ROLE_IDS } = roles
@@ -44,7 +44,10 @@ describe("/permission", () => {
 
     table = (await config.createTable()) as typeof table
     row = await config.createRow()
-    view = await config.api.viewV2.create({ tableId: table._id })
+    view = await config.api.viewV2.create({
+      tableId: table._id!,
+      name: generator.guid(),
+    })
     perms = await config.api.permission.add({
       roleId: STD_ROLE_ID,
       resourceId: table._id,
@@ -153,7 +156,7 @@ describe("/permission", () => {
         level: PermissionLevel.READ,
       })
 
-      const response = await config.api.permission.revoke(
+      await config.api.permission.revoke(
         {
           roleId: STD_ROLE_ID,
           resourceId: table._id,
