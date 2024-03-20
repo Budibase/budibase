@@ -132,7 +132,7 @@ function logging(queue: Queue, jobQueue: JobQueue) {
         // A Job is waiting to be processed as soon as a worker is idling.
         console.info(...getLogParams(eventType, BullEvent.WAITING, { jobId }))
       })
-      .on(BullEvent.ACTIVE, async (job: Job, jobPromise: any) => {
+      .on(BullEvent.ACTIVE, async (job: Job) => {
         // A job has started. You can use `jobPromise.cancel()`` to abort it.
         await doInJobContext(job, () => {
           console.info(...getLogParams(eventType, BullEvent.ACTIVE, { job }))

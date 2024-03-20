@@ -74,7 +74,7 @@ describe("/views", () => {
 
   describe("create", () => {
     it("returns a success message when the view is successfully created", async () => {
-      const res = await saveView()
+      await saveView()
       expect(events.view.created).toHaveBeenCalledTimes(1)
     })
 
