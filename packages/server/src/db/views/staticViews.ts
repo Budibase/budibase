@@ -30,8 +30,8 @@ export async function createLinkView() {
       if (doc.type === "link") {
         let doc1 = doc.doc1
         let doc2 = doc.doc2
+        // @ts-expect-error emit is available in a CouchDB map function
         // eslint-disable-next-line no-undef
-        // @ts-ignore
         emit([doc1.tableId, doc1.rowId], {
           id: doc2.rowId,
           thisId: doc1.rowId,
@@ -39,8 +39,8 @@ export async function createLinkView() {
         })
         // if linking to same table can't emit twice
         if (doc1.tableId !== doc2.tableId) {
+          // @ts-expect-error emit is available in a CouchDB map function
           // eslint-disable-next-line no-undef
-          // @ts-ignore
           emit([doc2.tableId, doc2.rowId], {
             id: doc1.rowId,
             thisId: doc2.rowId,
@@ -101,8 +101,8 @@ export async function createAllSearchIndex() {
           if (Array.isArray(input[key])) {
             for (let val of input[key]) {
               if (typeof val !== "object") {
+                // @ts-expect-error index is available in a CouchDB map function
                 // eslint-disable-next-line no-undef
-                // @ts-ignore
                 index(idxKey, val, { store: true })
               }
             }
@@ -110,12 +110,12 @@ export async function createAllSearchIndex() {
             continue
           }
           if (typeof input[key] === "string") {
+            // @ts-expect-error index is available in a CouchDB map function
             // eslint-disable-next-line no-undef
-            // @ts-ignore
             index(idxKey, input[key].toLowerCase(), { store: true })
           } else if (typeof input[key] !== "object") {
+            // @ts-expect-error index is available in a CouchDB map function
             // eslint-disable-next-line no-undef
-            // @ts-ignore
             index(idxKey, input[key], { store: true })
           } else {
             idx(input[key], idxKey)
@@ -123,8 +123,8 @@ export async function createAllSearchIndex() {
         }
       }
       if (doc._id!.startsWith("ro_")) {
+        // @ts-expect-error index is available in a CouchDB map function
         // eslint-disable-next-line no-undef
-        // @ts-ignore
         index("default", doc._id)
         idx(doc)
       }

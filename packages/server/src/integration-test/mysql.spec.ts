@@ -12,7 +12,6 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import _ from "lodash"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"
@@ -106,6 +105,7 @@ describe("mysql integrations", () => {
       plus: true,
       source: "MYSQL",
       type: "datasource_plus",
+      isSQL: true,
       _id: expect.any(String),
       _rev: expect.any(String),
       createdAt: expect.any(String),

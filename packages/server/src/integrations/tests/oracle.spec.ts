@@ -44,7 +44,7 @@ describe("Oracle Integration", () => {
 
   it("calls the update method with the correct params", async () => {
     const sql = "update table users set name = 'test';"
-    const response = await config.integration.update({
+    await config.integration.update({
       sql,
     })
     expect(oracledb.executeMock).toHaveBeenCalledWith(sql, [], options)

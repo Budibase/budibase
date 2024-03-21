@@ -97,7 +97,7 @@ describe("redlockImpl", () => {
             executionTimeMs: lockTtl * 2,
           })
         ).rejects.toThrow(
-          `Unable to fully release the lock on resource \"lock:${config.tenantId}_persist_writethrough\".`
+          `Unable to fully release the lock on resource "lock:${config.tenantId}_persist_writethrough".`
         )
       }
     )

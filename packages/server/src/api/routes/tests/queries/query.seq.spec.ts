@@ -330,6 +330,7 @@ describe("/queries", () => {
           ],
         },
       ]
+
       pg.queryMock.mockImplementation(() => ({
         rows,
       }))

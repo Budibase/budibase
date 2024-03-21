@@ -1,3 +1,5 @@
+import Handlebars from "handlebars"
+
 export default class Helper {
   private name: any
   private fn: any
