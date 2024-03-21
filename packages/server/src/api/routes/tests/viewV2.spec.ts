@@ -20,8 +20,6 @@ import * as uuid from "uuid"
 import { databaseTestProviders } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
 
-jest.unmock("mysql2")
-jest.unmock("mysql2/promise")
 jest.unmock("mssql")
 jest.unmock("pg")
 
