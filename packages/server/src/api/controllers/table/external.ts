@@ -61,9 +61,6 @@ export async function destroy(ctx: UserCtx) {
   const tableToDelete: TableRequest = await sdk.tables.getTable(
     ctx.params.tableId
   )
-  if (!tableToDelete || !tableToDelete.created) {
-    ctx.throw(400, "Cannot delete tables which weren't created in Budibase.")
-  }
   const datasourceId = getDatasourceId(tableToDelete)
   try {
     const { datasource, table } = await sdk.tables.external.destroy(
