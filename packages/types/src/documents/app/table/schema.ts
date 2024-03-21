@@ -112,6 +112,12 @@ export interface BBReferenceFieldMetadata
   relationshipType?: RelationshipType
 }
 
+export interface AttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ATTACHMENT
+  subtype?: FieldSubtype.SINGLE
+}
+
 export interface FieldConstraints {
   type?: string
   email?: boolean
@@ -119,6 +125,7 @@ export interface FieldConstraints {
   length?: {
     minimum?: string | number | null
     maximum?: string | number | null
+    message?: string
   }
   numericality?: {
     greaterThanOrEqualTo: string | null
@@ -156,6 +163,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.FORMULA
     | FieldType.NUMBER
     | FieldType.LONGFORM
+    | FieldType.BB_REFERENCE
+    | FieldType.ATTACHMENT
   >
 }
 
@@ -169,6 +178,7 @@ export type FieldSchema =
   | LongFormFieldMetadata
   | BBReferenceFieldMetadata
   | JsonFieldMetadata
+  | AttachmentFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -202,4 +212,10 @@ export function isBBReferenceField(
   field: FieldSchema
 ): field is BBReferenceFieldMetadata {
   return field.type === FieldType.BB_REFERENCE
+}
+
+export function isAttachmentField(
+  field: FieldSchema
+): field is AttachmentFieldMetadata {
+  return field.type === FieldType.ATTACHMENT
 }
