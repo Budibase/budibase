@@ -12,6 +12,7 @@ export default class PosthogClient {
     posthog.init(this.token, {
       autocapture: false,
       capture_pageview: false,
+      advanced_disable_feature_flags_on_first_load: true,
     })
     posthog.set_config({ persistence: "cookie" })
 
