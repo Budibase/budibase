@@ -104,6 +104,26 @@ describe("Test that the object processing works correctly", () => {
     }
     expect(error).toBeNull()
   })
+
+  it("should be able to handle booleans", async () => {
+    const output = await processObject(
+      {
+        first: true,
+        second: "true",
+        third: "another string",
+        forth: "with {{ template }}",
+      },
+      {
+        template: "value",
+      }
+    )
+    expect(output).toEqual({
+      first: true,
+      second: "true",
+      third: "another string",
+      forth: "with value",
+    })
+  })
 })
 
 describe("check returning objects", () => {
