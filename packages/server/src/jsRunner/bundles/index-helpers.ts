@@ -1,3 +1,4 @@
+// eslint-disable-next-line local-rules/no-budibase-imports
 import { getJsHelperList } from "@budibase/string-templates/src/helpers/list"
 
 export default {
