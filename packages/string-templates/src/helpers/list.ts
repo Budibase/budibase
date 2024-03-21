@@ -57,7 +57,7 @@ export function getJsHelperList() {
   }
   helpers = {
     ...helpers,
-    addedHelpers,
+    ...addedHelpers,
   }
 
   for (const toRemove of helpersToRemoveForJs) {
