@@ -5,7 +5,7 @@ import { UserGroup as UserGroupType, UserGroupRoles } from "@budibase/types"
 export function UserGroup(): UserGroupType {
   const appsCount = generator.integer({ min: 0, max: 3 })
   const roles = Array.from({ length: appsCount }).reduce(
-    (p: UserGroupRoles, v) => {
+    (p: UserGroupRoles) => {
       return {
         ...p,
         [db.generateAppID()]: generator.pickone(["ADMIN", "POWER", "BASIC"]),

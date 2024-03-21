@@ -16,7 +16,7 @@ describe("/applications/:appId/import", () => {
 
   it("should be able to perform import", async () => {
     const appId = config.getAppId()
-    const res = await request
+    await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
       .attach("appExport", path.join(__dirname, "assets", "export.tar.gz"))

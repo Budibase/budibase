@@ -3,7 +3,7 @@ import { DBTestConfiguration } from "../../../tests/extra"
 import * as tenants from "../tenants"
 
 describe("tenants", () => {
-  const config = new DBTestConfiguration()
+  new DBTestConfiguration()
 
   describe("addTenant", () => {
     it("concurrently adds multiple tenants safely", async () => {

@@ -10,10 +10,6 @@ interface SearchResponse<T> {
   totalRows: number
 }
 
-interface PaginatedSearchResponse<T> extends SearchResponse<T> {
-  hasNextPage: boolean
-}
-
 export type SearchParams<T> = {
   tableId?: string
   sort?: string

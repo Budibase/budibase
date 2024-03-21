@@ -58,7 +58,7 @@ export const definition: AutomationStepSchema = {
   },
 }
 
-export async function run({ inputs, context }: AutomationStepInput) {
+export async function run({ inputs }: AutomationStepInput) {
   if (!environment.OPENAI_API_KEY) {
     return {
       success: false,

@@ -12,7 +12,6 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import _ from "lodash"
 import { databaseTestProviders } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"
@@ -21,7 +20,6 @@ fetch.mockSearch()
 
 const config = setup.getConfig()!
 
-jest.unmock("mysql2/promise")
 jest.mock("../websockets", () => ({
   clientAppSocket: jest.fn(),
   gridAppSocket: jest.fn(),
