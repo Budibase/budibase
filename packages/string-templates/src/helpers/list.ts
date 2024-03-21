@@ -42,7 +42,7 @@ export function getJsHelperList() {
 
   helpers = {}
   for (let collection of Object.values(externalCollections)) {
-    for (let [key, func] of Object.entries<any>(collection)) {
+    for (let [key, func] of Object.entries<any>(collection())) {
       // Handlebars injects the hbs options to the helpers by default. We are adding an empty {} as a last parameter to simulate it
       helpers[key] = (...props: any) => func(...props, {})
     }
