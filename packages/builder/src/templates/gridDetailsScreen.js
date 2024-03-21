@@ -33,7 +33,7 @@ const createScreen = datasource => {
   const buttonGroup = new Component("@budibase/standard-components/buttongroup")
   const createButton = new Component("@budibase/standard-components/button")
 
-  createButton.instanceName(`${datasource.label} - Create`).customProps({
+  createButton.customProps({
     onClick: [
       {
         id: 0,
@@ -47,7 +47,7 @@ const createScreen = datasource => {
     type: "cta",
   })
 
-  buttonGroup.customProps({
+  buttonGroup.instanceName(`${datasource.label} - Create`).customProps({
     hAlign: "right",
     buttons: [createButton.json()],
   })
@@ -71,7 +71,7 @@ const createScreen = datasource => {
   const createFormBlock = new Component(
     "@budibase/standard-components/formblock"
   )
-  createFormBlock.instanceName("Create row formblock").customProps({
+  createFormBlock.instanceName("Create row form block").customProps({
     dataSource: datasource,
     labelPosition: "left",
     buttonPosition: "top",
@@ -98,7 +98,7 @@ const createScreen = datasource => {
   ).instanceName("Edit row side panel")
 
   const editFormBlock = new Component("@budibase/standard-components/formblock")
-  editFormBlock.instanceName("Edit row formblock").customProps({
+  editFormBlock.instanceName("Edit row form block").customProps({
     dataSource: datasource,
     labelPosition: "left",
     buttonPosition: "top",
