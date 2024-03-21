@@ -319,6 +319,7 @@ describe("postgres integrations", () => {
       },
       plus: true,
       source: "POSTGRES",
+      isSQL: true,
       type: "datasource_plus",
       _id: expect.any(String),
       _rev: expect.any(String),

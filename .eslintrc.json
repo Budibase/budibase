@@ -36,14 +36,14 @@
       "files": ["**/*.ts"],
       "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint"],
       "extends": ["eslint:recommended"],
+      "globals": {
+        "NodeJS": true
+      },
       "rules": {
         "no-unused-vars": "off",
-        "no-inner-declarations": "off",
-        "no-case-declarations": "off",
-        "no-useless-escape": "off",
-        "no-undef": "off",
-        "no-prototype-builtins": "off",
+        "@typescript-eslint/no-unused-vars": "error",
         "local-rules/no-budibase-imports": "error"
       }
     },
@@ -51,18 +51,17 @@
       "files": ["**/*.spec.ts"],
       "excludedFiles": ["qa-core/**"],
       "parser": "@typescript-eslint/parser",
-      "plugins": ["jest"],
+      "plugins": ["jest", "@typescript-eslint"],
       "extends": ["eslint:recommended", "plugin:jest/recommended"],
       "env": {
         "jest/globals": true
       },
+      "globals": {
+        "NodeJS": true
+      },
       "rules": {
         "no-unused-vars": "off",
-        "no-inner-declarations": "off",
-        "no-case-declarations": "off",
-        "no-useless-escape": "off",
-        "no-undef": "off",
-        "no-prototype-builtins": "off",
+        "@typescript-eslint/no-unused-vars": "error",
         "local-rules/no-test-com": "error",
         "local-rules/email-domain-example-com": "error",
         "no-console": "warn",

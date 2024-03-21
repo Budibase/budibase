@@ -3,7 +3,8 @@
   "compilerOptions": {
     "baseUrl": "..",
     "rootDir": "src",
-    "composite": true
+    "composite": true,
+    "types": ["node", "jest"]
   },
   "exclude": ["node_modules", "dist"]
 }

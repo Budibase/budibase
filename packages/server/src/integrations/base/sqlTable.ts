@@ -59,7 +59,7 @@ function generateSchema(
       case FieldType.BARCODEQR:
         schema.text(key)
         break
-      case FieldType.BB_REFERENCE:
+      case FieldType.BB_REFERENCE: {
         const subtype = column.subtype as FieldSubtype
         switch (subtype) {
           case FieldSubtype.USER:
@@ -72,6 +72,7 @@ function generateSchema(
             throw utils.unreachable(subtype)
         }
         break
+      }
       case FieldType.NUMBER:
         // if meta is specified then this is a junction table entry
         if (column.meta && column.meta.toKey && column.meta.toTable) {

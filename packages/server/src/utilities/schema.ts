@@ -34,21 +34,6 @@ interface ValidationResults {
   errors: Record<string, string>
 }
 
-const PARSERS: any = {
-  [FieldType.NUMBER]: (attribute?: string) => {
-    if (!attribute) {
-      return attribute
-    }
-    return Number(attribute)
-  },
-  [FieldType.DATETIME]: (attribute?: string) => {
-    if (!attribute) {
-      return attribute
-    }
-    return new Date(attribute).toISOString()
-  },
-}
-
 export function isSchema(schema: any): schema is Schema {
   return (
     typeof schema === "object" &&
@@ -191,7 +176,7 @@ function isValidBBReference(
 ): boolean {
   switch (columnSubtype) {
     case FieldSubtype.USER:
-    case FieldSubtype.USERS:
+    case FieldSubtype.USERS: {
       if (typeof columnData !== "string") {
         return false
       }
@@ -208,7 +193,7 @@ function isValidBBReference(
         user => !db.isGlobalUserID(user._id)
       )
       return !constainsWrongId
-
+    }
     default:
       throw utils.unreachable(columnSubtype)
   }

@@ -5,7 +5,7 @@ import {
 } from "@budibase/string-templates"
 import sdk from "../sdk"
 import { Row } from "@budibase/types"
-import { LoopInput, LoopStep, LoopStepType } from "../definitions/automations"
+import { LoopInput, LoopStepType } from "../definitions/automations"
 
 /**
  * When values are input to the system generally they will be of type string as this is required for template strings.
