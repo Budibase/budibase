@@ -31,6 +31,7 @@ import {
   RelationshipFieldMetadata,
   FieldType,
   FieldTypeSubtypes,
+  AttachmentFieldMetadata,
 } from "@budibase/types"
 
 export async function clearColumns(table: Table, columnNames: string[]) {
@@ -90,11 +91,14 @@ export async function checkForColumnUpdates(
     await checkForViewUpdates(updatedTable, deletedColumns, columnRename)
   }
 
-  for (const attachmentColumn of Object.values(updatedTable.schema).filter(
-    column =>
+  const changedAttachmentSubtypeColumns = Object.values(
+    updatedTable.schema
+  ).filter(
+    (column): column is AttachmentFieldMetadata =>
       column.type === FieldType.ATTACHMENT &&
       column.subtype !== oldTable?.schema[column.name]?.subtype
-  )) {
+  )
+  for (const attachmentColumn of changedAttachmentSubtypeColumns) {
     if (attachmentColumn.subtype === FieldTypeSubtypes.ATTACHMENT.SINGLE) {
       attachmentColumn.constraints ??= { length: {} }
       attachmentColumn.constraints.length ??= {}
