@@ -120,7 +120,7 @@ describe("redis", () => {
 
       await redis.bulkStore(data, ttl)
 
-      for (const [key, value] of Object.entries(data)) {
+      for (const key of Object.keys(data)) {
         expect(await redis.get(key)).toBe(null)
       }
 

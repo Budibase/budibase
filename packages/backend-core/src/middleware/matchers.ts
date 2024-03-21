@@ -28,7 +28,7 @@ export const buildMatcherRegex = (
 }
 
 export const matches = (ctx: BBContext, options: RegexMatcher[]) => {
-  return options.find(({ regex, method, route }) => {
+  return options.find(({ regex, method }) => {
     const urlMatch = regex.test(ctx.request.url)
     const methodMatch =
       method === "ALL"
