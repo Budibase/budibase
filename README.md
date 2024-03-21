@@ -132,6 +132,11 @@ Deploy Budibase using Docker, Kubernetes, and Digital Ocean on your existing inf
 - [Digital Ocean](https://docs.budibase.com/docs/digitalocean)
 - [Portainer](https://docs.budibase.com/docs/portainer)
 
+### One-Click Deployment
+
+[![Deploy at RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploy.png)](https://repocloud.io/details/?app_id=84)
+
+[![Deploy at Elastio](https://pub-da36157c854648669813f3f76c526c2b.r2.dev/deploy-on-elestio-black.png)](https://elest.io/open-source/budibase)
 
 ### [Get started with Budibase Cloud](https://budibase.com)
 
