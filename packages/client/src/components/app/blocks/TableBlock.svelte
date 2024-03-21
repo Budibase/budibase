@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { get } from "svelte/store"
   import { generate } from "shortid"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
@@ -33,8 +34,9 @@
   export let sidePanelDeleteLabel
   export let notificationOverride
 
-  const { fetchDatasourceSchema, API } = getContext("sdk")
+  const { fetchDatasourceSchema, API, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
   const stateKey = `ID_${generate()}`
 
   let formId
@@ -91,6 +93,17 @@
             },
           },
         ]
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(context)[dataProviderId]?.rows
+    const goldenRow = generateGoldenSample(rows)
+    return {
+      eventContext: {
+        row: goldenRow,
+      },
+    }
+  }
 
   const setDeleteLabel = sidePanelDeleteLabel => {
     // Accommodate old config to ensure delete button does not reappear
