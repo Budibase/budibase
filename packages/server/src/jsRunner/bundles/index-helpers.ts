@@ -1,6 +1,4 @@
-const {
-  getJsHelperList,
-} = require("../../../../string-templates/src/helpers/list.js")
+import { getJsHelperList } from "../../../../string-templates/src/helpers/list"
 
 export default {
   ...getJsHelperList(),
