@@ -25,8 +25,6 @@ import merge from "lodash/merge"
 import { quotas } from "@budibase/pro"
 import { roles } from "@budibase/backend-core"
 
-jest.unmock("mysql2")
-jest.unmock("mysql2/promise")
 jest.unmock("mssql")
 jest.unmock("pg")
 
