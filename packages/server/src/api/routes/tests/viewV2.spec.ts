@@ -5,23 +5,26 @@ import {
   FieldSchema,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  PermissionLevel,
+  QuotaUsageType,
   SaveTableRequest,
   SearchQueryOperators,
   SortOrder,
   SortType,
+  StaticQuotaName,
   Table,
   TableSourceType,
   UIFieldMetadata,
   UpdateViewRequest,
   ViewV2,
 } from "@budibase/types"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, mocks } from "@budibase/backend-core/tests"
 import * as uuid from "uuid"
 import { databaseTestProviders } from "../../../integrations/tests/utils"
 import merge from "lodash/merge"
+import { quotas } from "@budibase/pro"
+import { roles } from "@budibase/backend-core"
 
-jest.unmock("mysql2")
-jest.unmock("mysql2/promise")
 jest.unmock("mssql")
 jest.unmock("pg")
 
@@ -33,6 +36,7 @@ describe.each([
   ["mariadb", databaseTestProviders.mariadb],
 ])("/v2/views (%s)", (_, dsProvider) => {
   const config = setup.getConfig()
+  const isInternal = !dsProvider
 
   let table: Table
   let datasource: Datasource
@@ -98,6 +102,18 @@ describe.each([
     }
     setup.afterAll()
   })
+
+  const getRowUsage = async () => {
+    const { total } = await config.doInContext(undefined, () =>
+      quotas.getCurrentUsageValues(QuotaUsageType.STATIC, StaticQuotaName.ROWS)
+    )
+    return total
+  }
+
+  const assertRowUsage = async (expected: number) => {
+    const usage = await getRowUsage()
+    expect(usage).toBe(expected)
+  }
 
   describe("create", () => {
     it("persist the view when the view is successfully created", async () => {
@@ -523,6 +539,470 @@ describe.each([
       row = await config.api.row.get(table._id!, row._id!)
       expect(row.Story).toBeUndefined()
       expect(row.Country).toEqual("Aussy")
+    })
+  })
+
+  describe("row operations", () => {
+    let table: Table, view: ViewV2
+    beforeEach(async () => {
+      table = await config.api.table.save(
+        saveTableRequest({
+          schema: {
+            one: { type: FieldType.STRING, name: "one" },
+            two: { type: FieldType.STRING, name: "two" },
+          },
+        })
+      )
+      view = await config.api.viewV2.create({
+        tableId: table._id!,
+        name: generator.guid(),
+        schema: {
+          two: { visible: true },
+        },
+      })
+    })
+
+    describe("create", () => {
+      it("should persist a new row with only the provided view fields", async () => {
+        const newRow = await config.api.row.save(view.id, {
+          tableId: table!._id,
+          _viewId: view.id,
+          one: "foo",
+          two: "bar",
+        })
+
+        const row = await config.api.row.get(table._id!, newRow._id!)
+        expect(row.one).toBeUndefined()
+        expect(row.two).toEqual("bar")
+      })
+    })
+
+    describe("patch", () => {
+      it("should update only the view fields for a row", async () => {
+        const newRow = await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        await config.api.row.patch(view.id, {
+          tableId: table._id!,
+          _id: newRow._id!,
+          _rev: newRow._rev!,
+          one: "newFoo",
+          two: "newBar",
+        })
+
+        const row = await config.api.row.get(table._id!, newRow._id!)
+        expect(row.one).toEqual("foo")
+        expect(row.two).toEqual("newBar")
+      })
+    })
+
+    describe("destroy", () => {
+      it("should be able to delete a row", async () => {
+        const createdRow = await config.api.row.save(table._id!, {})
+        const rowUsage = await getRowUsage()
+        await config.api.row.bulkDelete(view.id, { rows: [createdRow] })
+        await assertRowUsage(rowUsage - 1)
+        await config.api.row.get(table._id!, createdRow._id!, {
+          status: 404,
+        })
+      })
+
+      it("should be able to delete multiple rows", async () => {
+        const rows = await Promise.all([
+          config.api.row.save(table._id!, {}),
+          config.api.row.save(table._id!, {}),
+          config.api.row.save(table._id!, {}),
+        ])
+        const rowUsage = await getRowUsage()
+
+        await config.api.row.bulkDelete(view.id, { rows: [rows[0], rows[2]] })
+
+        await assertRowUsage(rowUsage - 2)
+
+        await config.api.row.get(table._id!, rows[0]._id!, {
+          status: 404,
+        })
+        await config.api.row.get(table._id!, rows[2]._id!, {
+          status: 404,
+        })
+        await config.api.row.get(table._id!, rows[1]._id!, { status: 200 })
+      })
+    })
+
+    describe("search", () => {
+      it("returns empty rows from view when no schema is passed", async () => {
+        const rows = await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
+        )
+        const response = await config.api.viewV2.search(view.id)
+        expect(response.rows).toHaveLength(10)
+        expect(response).toEqual({
+          rows: expect.arrayContaining(
+            rows.map(r => ({
+              _viewId: view.id,
+              tableId: table._id,
+              _id: r._id,
+              _rev: r._rev,
+              ...(isInternal
+                ? {
+                    type: "row",
+                    updatedAt: expect.any(String),
+                    createdAt: expect.any(String),
+                  }
+                : {}),
+            }))
+          ),
+          ...(isInternal
+            ? {}
+            : {
+                hasNextPage: false,
+                bookmark: null,
+              }),
+        })
+      })
+
+      it("searching respects the view filters", async () => {
+        await config.api.row.save(table._id!, {
+          one: "foo",
+          two: "bar",
+        })
+        const two = await config.api.row.save(table._id!, {
+          one: "foo2",
+          two: "bar2",
+        })
+
+        const view = await config.api.viewV2.create({
+          tableId: table._id!,
+          name: generator.guid(),
+          query: [
+            {
+              operator: SearchQueryOperators.EQUAL,
+              field: "two",
+              value: "bar2",
+            },
+          ],
+          schema: {
+            two: { visible: true },
+          },
+        })
+
+        const response = await config.api.viewV2.search(view.id)
+        expect(response.rows).toHaveLength(1)
+        expect(response).toEqual({
+          rows: expect.arrayContaining([
+            {
+              _viewId: view.id,
+              tableId: table._id,
+              two: two.two,
+              _id: two._id,
+              _rev: two._rev,
+              ...(isInternal
+                ? {
+                    type: "row",
+                    createdAt: expect.any(String),
+                    updatedAt: expect.any(String),
+                  }
+                : {}),
+            },
+          ]),
+          ...(isInternal
+            ? {}
+            : {
+                hasNextPage: false,
+                bookmark: null,
+              }),
+        })
+      })
+
+      it("views without data can be returned", async () => {
+        const response = await config.api.viewV2.search(view.id)
+        expect(response.rows).toHaveLength(0)
+      })
+
+      it("respects the limit parameter", async () => {
+        await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
+        )
+        const limit = generator.integer({ min: 1, max: 8 })
+        const response = await config.api.viewV2.search(view.id, {
+          limit,
+          query: {},
+        })
+        expect(response.rows).toHaveLength(limit)
+      })
+
+      it("can handle pagination", async () => {
+        await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
+        )
+        const rows = (await config.api.viewV2.search(view.id)).rows
+
+        const page1 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          query: {},
+        })
+        expect(page1).toEqual({
+          rows: expect.arrayContaining(rows.slice(0, 4)),
+          totalRows: isInternal ? 10 : undefined,
+          hasNextPage: true,
+          bookmark: expect.anything(),
+        })
+
+        const page2 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          bookmark: page1.bookmark,
+          query: {},
+        })
+        expect(page2).toEqual({
+          rows: expect.arrayContaining(rows.slice(4, 8)),
+          totalRows: isInternal ? 10 : undefined,
+          hasNextPage: true,
+          bookmark: expect.anything(),
+        })
+
+        const page3 = await config.api.viewV2.search(view.id, {
+          paginate: true,
+          limit: 4,
+          bookmark: page2.bookmark,
+          query: {},
+        })
+        expect(page3).toEqual({
+          rows: expect.arrayContaining(rows.slice(8)),
+          totalRows: isInternal ? 10 : undefined,
+          hasNextPage: false,
+          bookmark: expect.anything(),
+        })
+      })
+
+      const sortTestOptions: [
+        {
+          field: string
+          order?: SortOrder
+          type?: SortType
+        },
+        string[]
+      ][] = [
+        [
+          {
+            field: "name",
+            order: SortOrder.ASCENDING,
+            type: SortType.STRING,
+          },
+          ["Alice", "Bob", "Charly", "Danny"],
+        ],
+        [
+          {
+            field: "name",
+          },
+          ["Alice", "Bob", "Charly", "Danny"],
+        ],
+        [
+          {
+            field: "name",
+            order: SortOrder.DESCENDING,
+          },
+          ["Danny", "Charly", "Bob", "Alice"],
+        ],
+        [
+          {
+            field: "name",
+            order: SortOrder.DESCENDING,
+            type: SortType.STRING,
+          },
+          ["Danny", "Charly", "Bob", "Alice"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.ASCENDING,
+            type: SortType.number,
+          },
+          ["Danny", "Alice", "Charly", "Bob"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.ASCENDING,
+          },
+          ["Danny", "Alice", "Charly", "Bob"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.DESCENDING,
+          },
+          ["Bob", "Charly", "Alice", "Danny"],
+        ],
+        [
+          {
+            field: "age",
+            order: SortOrder.DESCENDING,
+            type: SortType.number,
+          },
+          ["Bob", "Charly", "Alice", "Danny"],
+        ],
+      ]
+
+      describe("sorting", () => {
+        let table: Table
+        const viewSchema = { age: { visible: true }, name: { visible: true } }
+
+        beforeAll(async () => {
+          table = await config.api.table.save(
+            saveTableRequest({
+              name: `users_${uuid.v4()}`,
+              type: "table",
+              schema: {
+                name: {
+                  type: FieldType.STRING,
+                  name: "name",
+                },
+                surname: {
+                  type: FieldType.STRING,
+                  name: "surname",
+                },
+                age: {
+                  type: FieldType.NUMBER,
+                  name: "age",
+                },
+                address: {
+                  type: FieldType.STRING,
+                  name: "address",
+                },
+                jobTitle: {
+                  type: FieldType.STRING,
+                  name: "jobTitle",
+                },
+              },
+            })
+          )
+
+          const users = [
+            { name: "Alice", age: 25 },
+            { name: "Bob", age: 30 },
+            { name: "Charly", age: 27 },
+            { name: "Danny", age: 15 },
+          ]
+          await Promise.all(
+            users.map(u =>
+              config.api.row.save(table._id!, {
+                tableId: table._id,
+                ...u,
+              })
+            )
+          )
+        })
+
+        it.each(sortTestOptions)(
+          "allow sorting (%s)",
+          async (sortParams, expected) => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              sort: sortParams,
+              schema: viewSchema,
+            })
+
+            const response = await config.api.viewV2.search(view.id)
+
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
+              expected.map(name => expect.objectContaining({ name }))
+            )
+          }
+        )
+
+        it.each(sortTestOptions)(
+          "allow override the default view sorting (%s)",
+          async (sortParams, expected) => {
+            const view = await config.api.viewV2.create({
+              tableId: table._id!,
+              name: generator.guid(),
+              sort: {
+                field: "name",
+                order: SortOrder.ASCENDING,
+                type: SortType.STRING,
+              },
+              schema: viewSchema,
+            })
+
+            const response = await config.api.viewV2.search(view.id, {
+              sort: sortParams.field,
+              sortOrder: sortParams.order,
+              sortType: sortParams.type,
+              query: {},
+            })
+
+            expect(response.rows).toHaveLength(4)
+            expect(response.rows).toEqual(
+              expected.map(name => expect.objectContaining({ name }))
+            )
+          }
+        )
+      })
+    })
+
+    describe("permissions", () => {
+      beforeEach(async () => {
+        mocks.licenses.useViewPermissions()
+        await Promise.all(
+          Array.from({ length: 10 }, () => config.api.row.save(table._id!, {}))
+        )
+      })
+
+      it("does not allow public users to fetch by default", async () => {
+        await config.publish()
+        await config.api.viewV2.publicSearch(view.id, undefined, {
+          status: 403,
+        })
+      })
+
+      it("allow public users to fetch when permissions are explicit", async () => {
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          level: PermissionLevel.READ,
+          resourceId: view.id,
+        })
+        await config.publish()
+
+        const response = await config.api.viewV2.publicSearch(view.id)
+
+        expect(response.rows).toHaveLength(10)
+      })
+
+      it("allow public users to fetch when permissions are inherited", async () => {
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          level: PermissionLevel.READ,
+          resourceId: table._id!,
+        })
+        await config.publish()
+
+        const response = await config.api.viewV2.publicSearch(view.id)
+
+        expect(response.rows).toHaveLength(10)
+      })
+
+      it("respects inherited permissions, not allowing not public views from public tables", async () => {
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.PUBLIC,
+          level: PermissionLevel.READ,
+          resourceId: table._id!,
+        })
+        await config.api.permission.add({
+          roleId: roles.BUILTIN_ROLE_IDS.POWER,
+          level: PermissionLevel.READ,
+          resourceId: view.id,
+        })
+        await config.publish()
+
+        await config.api.viewV2.publicSearch(view.id, undefined, {
+          status: 403,
+        })
+      })
     })
   })
 })
