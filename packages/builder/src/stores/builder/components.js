@@ -11,7 +11,6 @@ import {
   findComponentParent,
   findAllMatchingComponents,
   makeComponentUnique,
-  findComponentType,
 } from "helpers/components"
 import { getComponentFieldOptions } from "helpers/formFields"
 import { selectedScreen } from "./screens"
