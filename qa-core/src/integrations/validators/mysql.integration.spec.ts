@@ -1,8 +1,6 @@
 import { GenericContainer } from "testcontainers"
 import mysql from "../../../../packages/server/src/integrations/mysql"
 
-jest.unmock("mysql2/promise")
-
 describe("datasource validators", () => {
   describe("mysql", () => {
     let host: string

@@ -17,8 +17,6 @@ import {
   generator,
 } from "@budibase/backend-core/tests"
 
-jest.unmock("mysql2/promise")
-
 jest.setTimeout(30000)
 
 describe("external search", () => {
