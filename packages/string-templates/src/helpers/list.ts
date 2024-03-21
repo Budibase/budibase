@@ -1,5 +1,9 @@
 import { date, duration } from "./date"
 
+/* 
+@budibase/handlebars-helpers is not treeshakeable, so we can't use the barrel files. 
+Otherwise, we have issues when generating the isolated-vm bundle because of the treeshaking
+*/
 /* eslint-disable local-rules/no-budibase-imports */
 // @ts-expect-error
 import math from "@budibase/handlebars-helpers/lib/math"
