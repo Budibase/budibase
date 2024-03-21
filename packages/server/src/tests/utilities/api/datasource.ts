@@ -45,4 +45,17 @@ export class DatasourceAPI extends TestAPI {
       expectations,
     })
   }
+
+  delete = async (datasource: Datasource, expectations?: Expectations) => {
+    return await this._delete(
+      `/api/datasources/${datasource._id!}/${datasource._rev!}`,
+      { expectations }
+    )
+  }
+
+  get = async (id: string, expectations?: Expectations) => {
+    return await this._get<Datasource>(`/api/datasources/${id}`, {
+      expectations,
+    })
+  }
 }

@@ -10,5 +10,5 @@ else
   # --maxWorkers performs better in development
   export NODE_OPTIONS="--no-node-snapshot $NODE_OPTIONS"
   echo "jest --coverage --maxWorkers=2 --forceExit $@"
-  jest --coverage --maxWorkers=2 --forceExit $@
+  jest --maxWorkers=2 --forceExit $@
 fi

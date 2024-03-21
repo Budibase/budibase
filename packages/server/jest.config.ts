@@ -60,6 +60,8 @@ const config: Config.InitialOptions = {
     "!src/db/views/staticViews.*",
     "!src/**/*.spec.{js,ts}",
     "!src/tests/**/*.{js,ts}",
+    // The use of coverage in the JS runner bundles breaks tests
+    "!src/jsRunner/bundles/**/*.{js,ts}",
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }
