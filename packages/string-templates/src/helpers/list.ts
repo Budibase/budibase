@@ -1,5 +1,6 @@
 import { date, duration } from "./date"
 
+/* eslint-disable local-rules/no-budibase-imports */
 // @ts-expect-error
 import math from "@budibase/handlebars-helpers/lib/math"
 // @ts-expect-error
@@ -18,6 +19,7 @@ import object from "@budibase/handlebars-helpers/lib/object"
 import regex from "@budibase/handlebars-helpers/lib/regex"
 // @ts-expect-error
 import uuid from "@budibase/handlebars-helpers/lib/uuid"
+/* eslint-enable local-rules/no-budibase-imports */
 
 // https://github.com/evanw/esbuild/issues/56
 const externalCollections = {
