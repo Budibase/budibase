@@ -96,7 +96,7 @@ describe("/queries", () => {
         async collection => await collection.insertOne({ name, nested: [] })
       )
 
-      const preview = await config.api.query.previewQuery({
+      const preview = await config.api.query.preview({
         name: "New Query",
         datasourceId: datasource._id!,
         fields: {
@@ -167,7 +167,7 @@ describe("/queries", () => {
 
       await withCollection(collection => collection.insertOne(item))
 
-      const preview = await config.api.query.previewQuery({
+      const preview = await config.api.query.preview({
         name: "New Query",
         datasourceId: datasource._id!,
         fields: {

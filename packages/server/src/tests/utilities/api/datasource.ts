@@ -4,6 +4,7 @@ import {
   CreateDatasourceResponse,
   UpdateDatasourceResponse,
   UpdateDatasourceRequest,
+  QueryJson,
 } from "@budibase/types"
 import { Expectations, TestAPI } from "./base"
 
@@ -55,6 +56,13 @@ export class DatasourceAPI extends TestAPI {
 
   get = async (id: string, expectations?: Expectations) => {
     return await this._get<Datasource>(`/api/datasources/${id}`, {
+      expectations,
+    })
+  }
+
+  query = async (query: QueryJson, expectations?: Expectations) => {
+    return await this._post<any>(`/api/datasources/query`, {
+      body: query,
       expectations,
     })
   }

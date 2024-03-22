@@ -2,7 +2,7 @@ import { generateQueryID } from "../../../db/utils"
 import { Thread, ThreadType } from "../../../threads"
 import { save as saveDatasource } from "../datasource"
 import { RestImporter } from "./import"
-import { invalidateDynamicVariables } from "../../../threads/utils"
+import { invalidateCachedVariable } from "../../../threads/utils"
 import env from "../../../environment"
 import { events, context, utils, constants } from "@budibase/backend-core"
 import sdk from "../../../sdk"
@@ -401,7 +401,7 @@ const removeDynamicVariables = async (queryId: string) => {
     const variablesToDelete = dynamicVariables!.filter(
       (dv: any) => dv.queryId === queryId
     )
-    await invalidateDynamicVariables(variablesToDelete)
+    await invalidateCachedVariable(variablesToDelete)
   }
 }
 

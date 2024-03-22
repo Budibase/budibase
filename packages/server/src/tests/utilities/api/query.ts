@@ -27,7 +27,7 @@ export class QueryAPI extends TestAPI {
     )
   }
 
-  previewQuery = async (
+  preview = async (
     queryPreview: PreviewQueryRequest,
     expectations?: Expectations
   ) => {

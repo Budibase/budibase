@@ -1,4 +1,10 @@
-import { Datasource, Query, QueryPreview, SourceName } from "@budibase/types"
+import {
+  Datasource,
+  Operation,
+  Query,
+  QueryPreview,
+  SourceName,
+} from "@budibase/types"
 import * as setup from "../utilities"
 import { databaseTestProviders } from "../../../../integrations/tests/utils"
 import pg from "pg"
@@ -6,6 +12,7 @@ import mysql from "mysql2/promise"
 import mssql from "mssql"
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
+import { getCachedVariable } from "../../../../../src/threads/utils"
 
 jest.unmock("pg")
 
@@ -257,7 +264,7 @@ describe.each([
         schema: {},
         readable: true,
       }
-      const response = await config.api.query.previewQuery(request)
+      const response = await config.api.query.preview(request)
       expect(response.schema).toEqual({
         birthday: {
           name: "birthday",
@@ -313,7 +320,7 @@ describe.each([
         readable: true,
       }
 
-      const response = await config.api.query.previewQuery(request)
+      const response = await config.api.query.preview(request)
 
       expect(response.schema).toEqual({
         foo: {
@@ -350,7 +357,7 @@ describe.each([
         },
       })
 
-      const preview = await config.api.query.previewQuery({
+      const preview = await config.api.query.preview({
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
@@ -400,7 +407,7 @@ describe.each([
 
       await config.api.query.delete(basedOnQuery)
 
-      const preview = await config.api.query.previewQuery({
+      const preview = await config.api.query.preview({
         datasourceId: datasource._id!,
         queryVerb: "read",
         fields: {
@@ -747,6 +754,31 @@ describe.each([
 
         const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
         expect(rows).toHaveLength(0)
+      })
+    })
+  })
+
+  describe("query through datasource", () => {
+    it("should be able to query a pg datasource", async () => {
+      const res = await config.api.datasource.query({
+        endpoint: {
+          datasourceId: datasource._id!,
+          operation: Operation.READ,
+          entityId: "test_table",
+        },
+        resource: {
+          fields: ["id", "name"],
+        },
+        filters: {
+          string: {
+            name: "two",
+          },
+        },
+      })
+      expect(res).toHaveLength(1)
+      expect(res[0]).toEqual({
+        id: 2,
+        name: "two",
       })
     })
   })
