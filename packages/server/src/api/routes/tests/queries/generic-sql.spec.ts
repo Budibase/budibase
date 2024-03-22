@@ -12,7 +12,6 @@ import mysql from "mysql2/promise"
 import mssql from "mssql"
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
-import { getCachedVariable } from "../../../../../src/threads/utils"
 
 jest.unmock("pg")
 
