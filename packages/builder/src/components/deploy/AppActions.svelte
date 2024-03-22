@@ -44,6 +44,7 @@
   let appActionPopoverOpen = false
   let appActionPopoverAnchor
   let publishing = false
+  let lastOpened
 
   $: filteredApps = $appsStore.apps.filter(app => app.devId === application)
   $: selectedApp = filteredApps?.length ? filteredApps[0] : null
@@ -57,7 +58,7 @@
     $appStore.version &&
     $appStore.upgradableVersion !== $appStore.version
   $: canPublish = !publishing && loaded && $sortedScreens.length > 0
-  $: lastDeployed = getLastDeployedString($deploymentStore)
+  $: lastDeployed = getLastDeployedString($deploymentStore, lastOpened)
 
   const initialiseApp = async () => {
     const applicationPkg = await API.fetchAppPackage($appStore.devId)
@@ -201,6 +202,7 @@
       class="app-action-button publish app-action-popover"
       on:click={() => {
         if (!appActionPopoverOpen) {
+          lastOpened = new Date()
           appActionPopover.show()
         } else {
           appActionPopover.hide()
