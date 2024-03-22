@@ -1,4 +1,3 @@
-
 {
   // Use IntelliSense to learn about possible attributes.
   // Hover to view descriptions of existing attributes.
@@ -20,6 +19,12 @@
       "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
       "args": ["${workspaceFolder}/packages/worker/src/index.ts"],
       "cwd": "${workspaceFolder}/packages/worker"
+    },
+    {
+      "type": "chrome",
+      "name": "Debug client",
+      "request": "launch",
+      "url": "http://localhost:10000"
     }
   ],
   "compounds": [

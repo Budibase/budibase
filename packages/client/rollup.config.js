@@ -31,6 +31,10 @@ const devPaths = production
         find: "@budibase/types",
         replacement: path.resolve("../types/dist/index"),
       },
+      {
+        find: "@budibase/string-templates",
+        replacement: path.resolve("../string-templates/dist/bundle"),
+      },
     ]
 
 export default {
