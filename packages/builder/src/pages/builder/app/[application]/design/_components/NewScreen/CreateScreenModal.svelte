@@ -19,7 +19,8 @@
   import { goto } from "@roxi/routify"
   import { TOUR_KEYS } from "components/portal/onboarding/tours.js"
   import formScreen from "templates/formScreen"
-  import rowListScreen from "templates/rowListScreen"
+  import gridListScreen from "templates/gridListScreen"
+  import gridDetailsScreen from "templates/gridDetailsScreen"
 
   let mode
   let pendingScreen
@@ -127,7 +128,7 @@
     screenAccessRole = Roles.BASIC
     formType = null
 
-    if (mode === "table" || mode === "grid" || mode === "form") {
+    if (mode === "grid" || mode === "gridDetails" || mode === "form") {
       datasourceModal.show()
     } else if (mode === "blank") {
       let templates = getTemplates($tables.list)
@@ -153,7 +154,10 @@
 
   // Handler for Datasource Screen Creation
   const completeDatasourceScreenCreation = async () => {
-    templates = rowListScreen(selectedDatasources, mode)
+    templates =
+      mode === "grid"
+        ? gridListScreen(selectedDatasources)
+        : gridDetailsScreen(selectedDatasources)
 
     const screens = templates.map(template => {
       let screenTemplate = template.create()
