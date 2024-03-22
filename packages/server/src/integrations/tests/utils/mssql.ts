@@ -41,6 +41,9 @@ export async function datasource(): Promise<Datasource> {
       port,
       user: "sa",
       password: "Password_123",
+      options: {
+        encrypt: false,
+      },
     },
   }
 }
