@@ -56,11 +56,15 @@
   const exportApp = async () => {
     const id = published ? app.prodId : app.devId
     const url = `/api/backups/export?appId=${id}`
+
     try {
-      await downloadFile(url, {
+      const downloaded = await downloadFile(url, {
         excludeRows: !includeInternalTablesRows,
         encryptPassword: password,
       })
+      if (!downloaded) {
+        notifications.error("Error exporting the app.")
+      }
     } catch (error) {
       notifications.error(error.message || "Error downloading the exported app")
     }
