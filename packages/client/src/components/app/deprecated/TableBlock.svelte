@@ -1,5 +1,6 @@
 <script>
   import { getContext } from "svelte"
+  import { get } from "svelte/store"
   import { generate } from "shortid"
   import Block from "components/Block.svelte"
   import BlockComponent from "components/BlockComponent.svelte"
@@ -33,8 +34,9 @@
   export let sidePanelDeleteLabel
   export let notificationOverride
 
-  const { fetchDatasourceSchema, API } = getContext("sdk")
+  const { fetchDatasourceSchema, API, generateGoldenSample } = getContext("sdk")
   const component = getContext("component")
+  const context = getContext("context")
   const stateKey = `ID_${generate()}`
 
   let formId
@@ -48,20 +50,7 @@
   let schemaLoaded = false
 
   $: deleteLabel = setDeleteLabel(sidePanelDeleteLabel, sidePanelShowDelete)
-
-  const setDeleteLabel = sidePanelDeleteLabel => {
-    // Accommodate old config to ensure delete button does not reappear
-    let labelText = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
-
-    // Empty text is considered hidden.
-    if (labelText?.trim() === "") {
-      return ""
-    }
-
-    // Default to "Delete" if the value is unset
-    return labelText || "Delete"
-  }
-
+  $: id = $component.id
   $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
@@ -104,6 +93,30 @@
             },
           },
         ]
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const rows = get(context)[dataProviderId]?.rows
+    const goldenRow = generateGoldenSample(rows)
+    return {
+      eventContext: {
+        row: goldenRow,
+      },
+    }
+  }
+
+  const setDeleteLabel = sidePanelDeleteLabel => {
+    // Accommodate old config to ensure delete button does not reappear
+    let labelText = sidePanelShowDelete === false ? "" : sidePanelDeleteLabel
+
+    // Empty text is considered hidden.
+    if (labelText?.trim() === "") {
+      return ""
+    }
+
+    // Default to "Delete" if the value is unset
+    return labelText || "Delete"
+  }
 
   // Load the datasource schema so we can determine column types
   const fetchSchema = async dataSource => {
@@ -267,7 +280,7 @@
               dataSource,
               buttonPosition: "top",
               buttons: Utils.buildFormBlockButtonConfig({
-                _id: $component.id + "-form-edit",
+                _id: id + "-form-edit",
                 showDeleteButton: deleteLabel !== "",
                 showSaveButton: true,
                 saveButtonLabel: sidePanelSaveLabel || "Save",
@@ -301,7 +314,7 @@
               dataSource,
               buttonPosition: "top",
               buttons: Utils.buildFormBlockButtonConfig({
-                _id: $component.id + "-form-new",
+                _id: id + "-form-new",
                 showDeleteButton: false,
                 showSaveButton: true,
                 saveButtonLabel: "Save",

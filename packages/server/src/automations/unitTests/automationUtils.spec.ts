@@ -1,4 +1,4 @@
-import { LoopStep, LoopStepType } from "../../definitions/automations"
+import { LoopStepType } from "../../definitions/automations"
 import {
   typecastForLooping,
   cleanInputValues,
