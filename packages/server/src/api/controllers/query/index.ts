@@ -105,6 +105,12 @@ export async function save(ctx: UserCtx<Query, Query>) {
     query.nullDefaultSupport = true
     eventFn = () => events.query.created(datasource, query)
   } else {
+    // check if flag has previously been set, don't let it change
+    // allow it to be explicitly set to false via API incase this is ever needed
+    const existingQuery = await db.get<Query>(query._id)
+    if (existingQuery.nullDefaultSupport && query.nullDefaultSupport == null) {
+      query.nullDefaultSupport = true
+    }
     eventFn = () => events.query.updated(datasource, query)
   }
   const response = await db.put(query)
@@ -285,6 +291,7 @@ export async function preview(
       parameters: enrichParameters(query),
       transformer: query.transformer,
       schema: query.schema,
+      nullDefaultSupport: query.nullDefaultSupport,
       queryId,
       datasource,
       // have to pass down to the thread runner - can't put into context now
@@ -353,6 +360,7 @@ async function execute(
       queryId: ctx.params.queryId,
       // have to pass down to the thread runner - can't put into context now
       environmentVariables: envVars,
+      nullDefaultSupport: query.nullDefaultSupport,
       ctx: {
         user: ctx.user,
         auth: { ...authConfigCtx },

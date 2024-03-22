@@ -33,7 +33,7 @@ describe("/queries", () => {
     ) {
       combinedQuery.fields.extra.collection = collection
     }
-    return await config.api.query.create(combinedQuery)
+    return await config.api.query.save(combinedQuery)
   }
 
   async function withClient(
