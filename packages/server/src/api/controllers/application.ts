@@ -26,7 +26,6 @@ import {
   env as envCore,
   ErrorCode,
   events,
-  HTTPError,
   migrations,
   objectStore,
   roles,

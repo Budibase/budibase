@@ -246,15 +246,18 @@
       return
     }
 
+    const cacheId = `${definition.name}${
+      definition?.deprecated === true ? "_deprecated" : ""
+    }`
     // Get the settings definition for this component, and cache it
-    if (SettingsDefinitionCache[definition.name]) {
-      settingsDefinition = SettingsDefinitionCache[definition.name]
-      settingsDefinitionMap = SettingsDefinitionMapCache[definition.name]
+    if (SettingsDefinitionCache[cacheId]) {
+      settingsDefinition = SettingsDefinitionCache[cacheId]
+      settingsDefinitionMap = SettingsDefinitionMapCache[cacheId]
     } else {
       settingsDefinition = getSettingsDefinition(definition)
       settingsDefinitionMap = getSettingsDefinitionMap(settingsDefinition)
-      SettingsDefinitionCache[definition.name] = settingsDefinition
-      SettingsDefinitionMapCache[definition.name] = settingsDefinitionMap
+      SettingsDefinitionCache[cacheId] = settingsDefinition
+      SettingsDefinitionMapCache[cacheId] = settingsDefinitionMap
     }
 
     // Parse the instance settings, and cache them

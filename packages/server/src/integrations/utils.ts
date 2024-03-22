@@ -330,7 +330,7 @@ function copyExistingPropsOver(
 
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
-      if (!existingTableSchema.hasOwnProperty(key)) {
+      if (!Object.prototype.hasOwnProperty.call(existingTableSchema, key)) {
         continue
       }
       const column = existingTableSchema[key]

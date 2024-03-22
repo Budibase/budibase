@@ -1,8 +1,11 @@
 import { features } from "@budibase/backend-core"
 import env from "./environment"
 
+// eslint-disable-next-line no-unused-vars
 enum AppFeature {
+  // eslint-disable-next-line no-unused-vars
   API = "api",
+  // eslint-disable-next-line no-unused-vars
   AUTOMATIONS = "automations",
 }
 

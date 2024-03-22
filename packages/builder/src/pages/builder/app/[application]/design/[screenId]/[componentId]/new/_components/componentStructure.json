@@ -3,8 +3,6 @@
     "name": "Blocks",
     "icon": "Article",
     "children": [
-      "gridblock",
-      "tableblock",
       "cardsblock",
       "repeaterblock",
       "formblock",
@@ -16,7 +14,7 @@
   {
     "name": "Layout",
     "icon": "ClassicGridView",
-    "children": ["container", "section", "grid", "sidepanel"]
+    "children": ["container", "section", "sidepanel"]
   },
   {
     "name": "Data",
@@ -24,7 +22,7 @@
     "children": [
       "dataprovider",
       "repeater",
-      "table",
+      "gridblock",
       "spreadsheet",
       "dynamicfilter",
       "daterangepicker"
