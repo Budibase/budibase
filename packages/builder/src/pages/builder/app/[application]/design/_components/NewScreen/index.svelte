@@ -2,8 +2,8 @@
   import { Body } from "@budibase/bbui"
   import CreationPage from "components/common/CreationPage.svelte"
   import blankImage from "./images/blank.png"
-  import tableImage from "./images/table.png"
-  import gridImage from "./images/grid.png"
+  import tableInline from "./images/tableInline.png"
+  import tableDetails from "./images/tableDetails.png"
   import formImage from "./images/form.png"
   import CreateScreenModal from "./CreateScreenModal.svelte"
   import { screenStore } from "stores/builder"
@@ -38,23 +38,23 @@
         </div>
       </div>
 
-      <div class="card" on:click={() => createScreenModal.show("table")}>
+      <div class="card" on:click={() => createScreenModal.show("grid")}>
         <div class="image">
-          <img alt="" src={tableImage} />
+          <img alt="" src={tableInline} />
         </div>
         <div class="text">
-          <Body size="S">Table</Body>
-          <Body size="XS">View, edit and delete rows on a table</Body>
+          <Body size="S">Table with inline editing</Body>
+          <Body size="XS">View, edit and delete rows inline</Body>
         </div>
       </div>
 
-      <div class="card" on:click={() => createScreenModal.show("grid")}>
+      <div class="card" on:click={() => createScreenModal.show("gridDetails")}>
         <div class="image">
-          <img alt="" src={gridImage} />
+          <img alt="" src={tableDetails} />
         </div>
         <div class="text">
-          <Body size="S">Grid</Body>
-          <Body size="XS">View and manipulate rows on a grid</Body>
+          <Body size="S">Table with details panel</Body>
+          <Body size="XS">Manage your row details in a side panel</Body>
         </div>
       </div>
 
@@ -111,6 +111,11 @@
 
   .image img {
     width: 100%;
+  }
+
+  .card .image {
+    min-height: 130px;
+    min-width: 235px;
   }
 
   .text {
