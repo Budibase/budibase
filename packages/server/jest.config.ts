@@ -4,7 +4,6 @@ import * as fs from "fs"
 import { join } from "path"
 
 const baseConfig: Config.InitialProjectOptions = {
-  preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
   moduleFileExtensions: [
     "js",
