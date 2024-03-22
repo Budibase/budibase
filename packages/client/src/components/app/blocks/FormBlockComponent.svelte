@@ -19,6 +19,7 @@
     link: "relationshipfield",
     json: "jsonfield",
     barcodeqr: "codescanner",
+    signature: "signaturefield",
     bb_reference: "bbreferencefield",
   }
 

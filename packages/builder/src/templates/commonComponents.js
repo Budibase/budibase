@@ -13,6 +13,7 @@ const fieldTypeToComponentMap = {
   attachment: "attachmentfield",
   link: "relationshipfield",
   json: "jsonfield",
+  signature: "signaturefield",
   barcodeqr: "codescanner",
 }
 

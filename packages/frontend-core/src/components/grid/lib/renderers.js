@@ -10,12 +10,14 @@ import FormulaCell from "../cells/FormulaCell.svelte"
 import JSONCell from "../cells/JSONCell.svelte"
 import AttachmentCell from "../cells/AttachmentCell.svelte"
 import BBReferenceCell from "../cells/BBReferenceCell.svelte"
+import SignatureCell from "../cells/SignatureCell.svelte"
 
 const TypeComponentMap = {
   text: TextCell,
   options: OptionsCell,
   datetime: DateCell,
   barcodeqr: TextCell,
+  signature: SignatureCell,
   longform: LongFormCell,
   array: MultiSelectCell,
   number: NumberCell,

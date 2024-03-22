@@ -4112,6 +4112,55 @@
       }
     ]
   },
+  "signaturefield": {
+    "name": "Signature",
+    "icon": "AnnotatePen",
+    "styles": ["size"],
+    "size": {
+      "width": 400,
+      "height": 50
+    },
+    "settings": [
+      {
+        "type": "field/signature",
+        "label": "Field",
+        "key": "field",
+        "required": true
+      },
+      {
+        "type": "text",
+        "label": "Label",
+        "key": "label"
+      },
+      {
+        "type": "text",
+        "label": "Help text",
+        "key": "helpText"
+      },
+      {
+        "type": "boolean",
+        "label": "Disabled",
+        "key": "disabled",
+        "defaultValue": false
+      },
+      {
+        "type": "event",
+        "label": "On change",
+        "key": "onChange",
+        "context": [
+          {
+            "label": "Field Value",
+            "key": "value"
+          }
+        ]
+      },
+      {
+        "type": "validation/string",
+        "label": "Validation",
+        "key": "validation"
+      }
+    ]
+  },
   "embeddedmap": {
     "name": "Embedded Map",
     "icon": "Location",
