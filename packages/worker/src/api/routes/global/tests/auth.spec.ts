@@ -13,6 +13,8 @@ import { events, constants } from "@budibase/backend-core"
 import { Response } from "superagent"
 
 import * as userSdk from "../../../../sdk/users"
+import nock from "nock"
+import * as jwt from "jsonwebtoken"
 
 function getAuthCookie(response: Response) {
   return response.headers["set-cookie"]
@@ -274,45 +276,9 @@ describe("/api/global/auth", () => {
     })
   })
 
-  describe("init", () => {
-    describe("POST /api/global/auth/init", () => {})
-
-    describe("GET /api/global/auth/init", () => {})
-  })
-
-  describe("datasource", () => {
-    // MULTI TENANT
-
-    describe("GET /api/global/auth/:tenantId/datasource/:provider", () => {})
-
-    describe("GET /api/global/auth/:tenantId/datasource/:provider/callback", () => {})
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/datasource/:provider/callback", () => {})
-  })
-
-  describe("google", () => {
-    // MULTI TENANT
-
-    describe("GET /api/global/auth/:tenantId/google", () => {})
-
-    describe("GET /api/global/auth/:tenantId/google/callback", () => {})
-
-    // SINGLE TENANT
-
-    describe("GET /api/global/auth/google/callback", () => {})
-
-    describe("GET /api/admin/auth/google/callback", () => {})
-  })
-
   describe("oidc", () => {
-    beforeEach(async () => {
-      jest.clearAllMocks()
-      mockGetWellKnownConfig()
-
-      // see: __mocks__/oauth
-      // for associated mocking inside passport
+    afterEach(() => {
+      nock.cleanAll()
     })
 
     const generateOidcConfig = async () => {
@@ -321,21 +287,16 @@ describe("/api/global/auth", () => {
       return chosenConfig.uuid
     }
 
-    const mockGetWellKnownConfig = () => {
-      mocks.fetch.mockReturnValue({
-        ok: true,
-        json: () => ({
+    // MULTI TENANT
+    describe("GET /api/global/auth/:tenantId/oidc/configs/:configId", () => {
+      it("redirects to auth provider", async () => {
+        nock("http://someconfigurl").get("/").times(1).reply(200, {
           issuer: "test",
           authorization_endpoint: "http://localhost/auth",
           token_endpoint: "http://localhost/token",
           userinfo_endpoint: "http://localhost/userinfo",
-        }),
-      })
-    }
+        })
 
-    // MULTI TENANT
-    describe("GET /api/global/auth/:tenantId/oidc/configs/:configId", () => {
-      it("redirects to auth provider", async () => {
         const configId = await generateOidcConfig()
 
         const res = await config.api.configs.getOIDCConfig(configId)
@@ -352,10 +313,43 @@ describe("/api/global/auth", () => {
 
     describe("GET /api/global/auth/:tenantId/oidc/callback", () => {
       it("logs in", async () => {
+        nock("http://someconfigurl").get("/").times(2).reply(200, {
+          issuer: "test",
+          authorization_endpoint: "http://localhost/auth",
+          token_endpoint: "http://localhost/token",
+          userinfo_endpoint: "http://localhost/userinfo",
+        })
+
+        const token = jwt.sign(
+          {
+            iss: "test",
+            sub: "sub",
+            aud: "clientId",
+            exp: Math.floor(Date.now() / 1000) + 60 * 60,
+            email: "oauth@example.com",
+          },
+          "secret"
+        )
+
+        nock("http://localhost").post("/token").reply(200, {
+          access_token: "access",
+          refresh_token: "refresh",
+          id_token: token,
+        })
+
+        nock("http://localhost").get("/userinfo?schema=openid").reply(200, {
+          sub: "sub",
+          email: "oauth@example.com",
+        })
+
         const configId = await generateOidcConfig()
         const preAuthRes = await config.api.configs.getOIDCConfig(configId)
-
         const res = await config.api.configs.OIDCCallback(configId, preAuthRes)
+        if (res.status > 399) {
+          throw new Error(
+            `OIDC callback failed with status ${res.status}: ${res.text}`
+          )
+        }
 
         expect(events.auth.login).toHaveBeenCalledWith(
           "oidc",
