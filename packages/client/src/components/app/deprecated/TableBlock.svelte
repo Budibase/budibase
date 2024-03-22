@@ -50,6 +50,7 @@
   let schemaLoaded = false
 
   $: deleteLabel = setDeleteLabel(sidePanelDeleteLabel, sidePanelShowDelete)
+  $: id = $component.id
   $: isDSPlus = dataSource?.type === "table" || dataSource?.type === "viewV2"
   $: fetchSchema(dataSource)
   $: enrichSearchColumns(searchColumns, schema).then(
@@ -279,7 +280,7 @@
               dataSource,
               buttonPosition: "top",
               buttons: Utils.buildFormBlockButtonConfig({
-                _id: $component.id + "-form-edit",
+                _id: id + "-form-edit",
                 showDeleteButton: deleteLabel !== "",
                 showSaveButton: true,
                 saveButtonLabel: sidePanelSaveLabel || "Save",
@@ -313,7 +314,7 @@
               dataSource,
               buttonPosition: "top",
               buttons: Utils.buildFormBlockButtonConfig({
-                _id: $component.id + "-form-new",
+                _id: id + "-form-new",
                 showDeleteButton: false,
                 showSaveButton: true,
                 saveButtonLabel: "Save",
