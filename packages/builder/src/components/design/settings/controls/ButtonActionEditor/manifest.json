@@ -161,6 +161,11 @@
       "name": "Clear Row Selection",
       "type": "data",
       "component": "ClearRowSelection"
+    },
+    {
+      "name": "Download file",
+      "type": "data",
+      "component": "DownloadFile"
     }
   ]
 }
