@@ -34,12 +34,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import {
-    FieldType,
-    FieldSubtype,
-    SourceName,
-    FieldTypeSubtypes,
-  } from "@budibase/types"
+  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
