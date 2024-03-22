@@ -15,6 +15,7 @@ export enum FieldType {
   JSON = "json",
   INTERNAL = "internal",
   BARCODEQR = "barcodeqr",
+  SIGNATURE = "signature",
   BIGINT = "bigint",
   BB_REFERENCE = "bb_reference",
 }

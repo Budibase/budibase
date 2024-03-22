@@ -113,6 +113,14 @@ export const TYPE_TRANSFORM_MAP: any = {
     [undefined]: undefined,
     parse: parseArrayString,
   },
+  //Review this
+  [FieldType.SIGNATURE]: {
+    //@ts-ignore
+    [null]: [],
+    //@ts-ignore
+    [undefined]: undefined,
+    parse: parseArrayString,
+  },
   [FieldType.BOOLEAN]: {
     "": null,
     //@ts-ignore

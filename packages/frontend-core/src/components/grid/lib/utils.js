@@ -10,6 +10,7 @@ const TypeIconMap = {
   options: "Dropdown",
   datetime: "Date",
   barcodeqr: "Camera",
+  signature: "AnnotatePen",
   longform: "TextAlignLeft",
   array: "Dropdown",
   number: "123",
@@ -30,7 +31,6 @@ export const getColumnIcon = column => {
     return "MagicWand"
   }
   const { type, subtype } = column.schema
-
   const result =
     typeof TypeIconMap[type] === "object" && subtype
       ? TypeIconMap[type][subtype]
