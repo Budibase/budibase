@@ -17,8 +17,14 @@
 
   const component = getContext("component")
   const context = getContext("context")
-  const { styleable, getAction, ActionTypes, rowSelectionStore } =
-    getContext("sdk")
+  const {
+    styleable,
+    getAction,
+    ActionTypes,
+    rowSelectionStore,
+    generateGoldenSample,
+  } = getContext("sdk")
+
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -61,6 +67,16 @@
   // Build our data context
   $: dataContext = {
     selectedRows,
+  }
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const goldenRow = generateGoldenSample(data)
+    return {
+      eventContext: {
+        row: goldenRow,
+      },
+    }
   }
 
   const getFields = (
