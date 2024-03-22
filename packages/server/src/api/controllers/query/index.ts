@@ -149,11 +149,9 @@ function enrichParameters(
   // first check parameters are all valid
   validateQueryInputs(requestParameters)
   // make sure parameters are fully enriched with defaults
-  for (let parameter of query.parameters) {
-    let value: string | null = requestParameters[parameter.name]
-    if (!value) {
-      value = parameter.default
-    }
+  for (const parameter of query.parameters) {
+    let value: string | null =
+      requestParameters[parameter.name] || parameter.default
     if (query.nullDefaultSupport && paramNotSet(value)) {
       value = null
     }

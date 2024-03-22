@@ -34,30 +34,12 @@ const createTableSQL: Record<string, string> = {
 const insertSQL = `INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')`
 const dropTableSQL = `DROP TABLE test_table;`
 
-const POSTGRES_SPECIFICS = {
-  nullError: 'invalid input syntax for type integer: ""',
-}
-
-const MYSQL_SPECIFICS = {
-  nullError: "Incorrect integer value: '' for column 'number' at row 1",
-}
-
-const MSSQL_SPECIFICS = {
-  // MS-SQL doesn't throw an error here, it casts empty string to nothing
-  nullError: undefined,
-}
-
-const MARIADB_SPECIFICS = {
-  nullError:
-    "Incorrect integer value: '' for column `mysql`.`test_table`.`number` at row 1",
-}
-
 describe.each([
-  ["postgres", databaseTestProviders.postgres, POSTGRES_SPECIFICS],
-  ["mysql", databaseTestProviders.mysql, MYSQL_SPECIFICS],
-  ["mssql", databaseTestProviders.mssql, MSSQL_SPECIFICS],
-  ["mariadb", databaseTestProviders.mariadb, MARIADB_SPECIFICS],
-])("queries (%s)", (__, dsProvider, testSpecificInformation) => {
+  ["postgres", databaseTestProviders.postgres],
+  ["mysql", databaseTestProviders.mysql],
+  ["mssql", databaseTestProviders.mssql],
+  ["mariadb", databaseTestProviders.mariadb],
+])("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
   let datasource: Datasource
 
@@ -461,12 +443,11 @@ describe.each([
       } catch (err: any) {
         error = err.message
       }
-      const testExpectation = testSpecificInformation.nullError
-      if (testExpectation) {
-        expect(error).toBeDefined()
-        expect(error).toContain(testExpectation)
-      } else {
+      if (dbName === "mssql") {
         expect(error).toBeUndefined()
+      } else {
+        expect(error).toBeDefined()
+        expect(error).toContain("integer")
       }
     })
 

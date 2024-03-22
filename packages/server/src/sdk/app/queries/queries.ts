@@ -70,8 +70,8 @@ export async function enrichArrayContext(
   inputs = {}
 ): Promise<any[]> {
   const map: Record<string, any> = {}
-  for (let [key, value] of Object.entries(fields)) {
-    map[key] = value
+  for (let index in fields) {
+    map[index] = fields[index]
   }
   const output = await enrichContext(map, inputs)
   const outputArray: any[] = []
