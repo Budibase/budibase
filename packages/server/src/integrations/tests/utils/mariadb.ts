@@ -24,7 +24,10 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
 export async function start(): Promise<StartedTestContainer> {
   return await new GenericContainer("mariadb:lts")
     .withExposedPorts(3306)
-    .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
+    .withEnvironment({
+      MARIADB_ROOT_PASSWORD: "password",
+      DEBUG: "testcontainers*",
+    })
     .withWaitStrategy(new MariaDBWaitStrategy())
     .start()
 }

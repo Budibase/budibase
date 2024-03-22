@@ -9,6 +9,7 @@ export async function start(): Promise<StartedTestContainer> {
     .withEnvironment({
       MONGO_INITDB_ROOT_USERNAME: "mongo",
       MONGO_INITDB_ROOT_PASSWORD: "password",
+      DEBUG: "testcontainers*",
     })
     .withWaitStrategy(
       Wait.forSuccessfulCommand(

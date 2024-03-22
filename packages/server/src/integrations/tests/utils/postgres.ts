@@ -6,7 +6,10 @@ let container: StartedTestContainer | undefined
 export async function start(): Promise<StartedTestContainer> {
   return await new GenericContainer("postgres:16.1-bullseye")
     .withExposedPorts(5432)
-    .withEnvironment({ POSTGRES_PASSWORD: "password" })
+    .withEnvironment({
+      POSTGRES_PASSWORD: "password",
+      DEBUG: "testcontainers*",
+    })
     .withWaitStrategy(
       Wait.forSuccessfulCommand(
         "pg_isready -h localhost -p 5432"

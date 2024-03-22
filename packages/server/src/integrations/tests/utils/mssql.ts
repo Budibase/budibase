@@ -16,6 +16,7 @@ export async function start(): Promise<StartedTestContainer> {
       // versions without a valid license, and we cannot use the Developer
       // version in production.
       MSSQL_PID: "Developer",
+      DEBUG: "testcontainers*",
     })
     .withWaitStrategy(
       Wait.forSuccessfulCommand(

@@ -27,7 +27,10 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
 export async function start(): Promise<StartedTestContainer> {
   return await new GenericContainer("mysql:8.3")
     .withExposedPorts(3306)
-    .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
+    .withEnvironment({
+      MYSQL_ROOT_PASSWORD: "password",
+      DEBUG: "testcontainers*",
+    })
     .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
     .start()
 }
