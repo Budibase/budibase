@@ -12,31 +12,51 @@ const createTableSQL: Record<string, string> = {
     CREATE TABLE test_table (
         id serial PRIMARY KEY,
         name VARCHAR ( 50 ) NOT NULL,
-        birthday TIMESTAMP
+        birthday TIMESTAMP,
+        number INT
     );`,
   [SourceName.MYSQL]: `
     CREATE TABLE test_table (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
-        birthday TIMESTAMP
+        birthday TIMESTAMP,
+        number INT
     );`,
   [SourceName.SQL_SERVER]: `
     CREATE TABLE test_table (
         id INT IDENTITY(1,1) PRIMARY KEY,
         name NVARCHAR(50) NOT NULL,
-        birthday DATETIME
+        birthday DATETIME,
+        number INT
     );`,
 }
 
 const insertSQL = `INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')`
 const dropTableSQL = `DROP TABLE test_table;`
 
+const POSTGRES_SPECIFICS = {
+  nullError: 'invalid input syntax for type integer: ""',
+}
+
+const MYSQL_SPECIFICS = {
+  nullError: "Incorrect integer value: '' for column 'number' at row 1",
+}
+
+const MSSQL_SPECIFICS = {
+  nullError: "Cannot convert undefined or null to object",
+}
+
+const MARIADB_SPECIFICS = {
+  nullError:
+    "Incorrect integer value: '' for column `mysql`.`test_table`.`number` at row 1",
+}
+
 describe.each([
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
-])("queries (%s)", (__, dsProvider) => {
+  ["postgres", databaseTestProviders.postgres, POSTGRES_SPECIFICS],
+  ["mysql", databaseTestProviders.mysql, MYSQL_SPECIFICS],
+  ["mssql", databaseTestProviders.mssql, MSSQL_SPECIFICS],
+  ["mariadb", databaseTestProviders.mariadb, MARIADB_SPECIFICS],
+])("queries (%s)", (__, dsProvider, testSpecificInformation) => {
   const config = setup.getConfig()
   let datasource: Datasource
 
@@ -51,7 +71,7 @@ describe.each([
       transformer: "return data",
       readable: true,
     }
-    return await config.api.query.create({ ...defaultQuery, ...query })
+    return await config.api.query.save({ ...defaultQuery, ...query })
   }
 
   async function rawQuery(sql: string): Promise<any> {
@@ -396,6 +416,53 @@ describe.each([
 
       const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
       expect(rows).toHaveLength(0)
+    })
+  })
+
+  // this parameter really only impacts SQL queries
+  describe("confirm nullDefaultSupport", () => {
+    const queryParams = {
+      fields: {
+        sql: "INSERT INTO test_table (name, number) VALUES ({{ bindingName }}, {{ bindingNumber }})",
+      },
+      parameters: [
+        {
+          name: "bindingName",
+          default: "",
+        },
+        {
+          name: "bindingNumber",
+          default: "",
+        },
+      ],
+      queryVerb: "create",
+    }
+
+    it("should error for old queries", async () => {
+      const query = await createQuery(queryParams)
+      await config.api.query.save({ ...query, nullDefaultSupport: false })
+      let error: string | undefined
+      try {
+        await config.api.query.execute(query._id!, {
+          parameters: {
+            bindingName: "testing",
+          },
+        })
+      } catch (err: any) {
+        error = err.message
+      }
+      expect(error).toBeDefined()
+      expect(error).toContain(testSpecificInformation.nullError)
+    })
+
+    it("should not error for new queries", async () => {
+      const query = await createQuery(queryParams)
+      const results = await config.api.query.execute(query._id!, {
+        parameters: {
+          bindingName: "testing",
+        },
+      })
+      expect(results).toEqual({ data: [{ created: true }] })
     })
   })
 })
