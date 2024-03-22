@@ -4673,6 +4673,7 @@
     }
   },
   "table": {
+    "deprecated": true,
     "name": "Table",
     "icon": "Table",
     "illegalChildren": ["section"],
@@ -5418,6 +5419,7 @@
     ]
   },
   "tableblock": {
+    "deprecated": true,
     "block": true,
     "name": "Table Block",
     "icon": "Table",
@@ -6595,7 +6597,7 @@
     ]
   },
   "gridblock": {
-    "name": "Grid Block",
+    "name": "Table",
     "icon": "Table",
     "styles": ["size"],
     "size": {
