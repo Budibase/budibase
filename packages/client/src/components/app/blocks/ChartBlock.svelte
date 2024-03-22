@@ -8,6 +8,7 @@
   export let sortColumn
   export let sortOrder
   export let limit
+  export let autoRefresh
 
   // Block
   export let chartTitle
@@ -65,6 +66,7 @@
       sortColumn,
       sortOrder,
       limit,
+      autoRefresh,
     }}
   >
     {#if dataProviderId && chartType}

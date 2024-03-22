@@ -31,6 +31,7 @@
   export let cardButtonOnClick
   export let linkColumn
   export let noRowsMessage
+  export let autoRefresh
 
   const context = getContext("context")
   const { fetchDatasourceSchema, generateGoldenSample } = getContext("sdk")
@@ -184,6 +185,7 @@
           sortOrder,
           paginate,
           limit,
+          autoRefresh,
         }}
         order={1}
       >
