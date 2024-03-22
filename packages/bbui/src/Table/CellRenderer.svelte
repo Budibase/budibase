@@ -12,6 +12,7 @@
   export let schema
   export let value
   export let customRenderers = []
+  export let snippets
 
   let renderer
   const typeMap = {
@@ -44,7 +45,7 @@
     if (!template) {
       return value
     }
-    return processStringSync(template, { value })
+    return processStringSync(template, { value, snippets })
   }
 </script>
 
