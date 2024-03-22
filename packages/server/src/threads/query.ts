@@ -109,7 +109,7 @@ class QueryRunner {
       )
     }
 
-    let query
+    let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
       query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
