@@ -79,7 +79,8 @@ const removeHandler = id => {
 export default (element, opts) => {
   const id = Math.random()
   const update = newOpts => {
-    const callback = newOpts?.callback || newOpts
+    const callback =
+      newOpts?.callback || (typeof newOpts === "function" ? newOpts : null)
     const anchor = newOpts?.anchor || element
     const allowedType = newOpts?.allowedType || "click"
     updateHandler(id, element, anchor, callback, allowedType)

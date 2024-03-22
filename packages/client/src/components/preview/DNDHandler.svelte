@@ -345,8 +345,7 @@
 <IndicatorSet
   componentId={$dndParent}
   color="var(--spectrum-global-color-static-green-500)"
-  zIndex="930"
-  transition
+  zIndex={920}
   prefix="Inside"
 />
 
