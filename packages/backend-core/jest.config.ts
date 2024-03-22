@@ -1,8 +1,9 @@
 import { Config } from "@jest/types"
 
 const baseConfig: Config.InitialProjectOptions = {
-  preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./tests/jestEnv.ts"],
+  globalSetup: "./src/tests/globalSetup.ts",
+  globalTeardown: "./src/tests/globalTeardown.ts",
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
   transform: {
     "^.+\\.ts?$": "@swc/jest",
