@@ -16,6 +16,7 @@
   export let noRowsMessage
 
   const component = getContext("component")
+  const context = getContext("context")
   const { styleable, getAction, ActionTypes, rowSelectionStore } =
     getContext("sdk")
   const customColumnKey = `custom-${Math.random()}`
@@ -28,6 +29,7 @@
 
   let selectedRows = []
 
+  $: snippets = $context.snippets
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -178,6 +180,7 @@
       {quiet}
       {compact}
       {customRenderers}
+      {snippets}
       allowSelectRows={allowSelectRows && table}
       bind:selectedRows
       allowEditRows={false}
