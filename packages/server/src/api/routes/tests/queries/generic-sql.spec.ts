@@ -43,7 +43,8 @@ const MYSQL_SPECIFICS = {
 }
 
 const MSSQL_SPECIFICS = {
-  nullError: "Cannot convert undefined or null to object",
+  // MS-SQL doesn't throw an error here, it casts empty string to nothing
+  nullError: undefined,
 }
 
 const MARIADB_SPECIFICS = {
@@ -241,26 +242,31 @@ describe.each([
           id: 1,
           name: "one",
           birthday: null,
+          number: null,
         },
         {
           id: 2,
           name: "two",
           birthday: null,
+          number: null,
         },
         {
           id: 3,
           name: "three",
           birthday: null,
+          number: null,
         },
         {
           id: 4,
           name: "four",
           birthday: null,
+          number: null,
         },
         {
           id: 5,
           name: "five",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -283,6 +289,7 @@ describe.each([
           id: 2,
           name: "one",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -311,6 +318,7 @@ describe.each([
           id: 1,
           name: "one",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -349,7 +357,9 @@ describe.each([
       ])
 
       const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
-      expect(rows).toEqual([{ id: 1, name: "foo", birthday: null }])
+      expect(rows).toEqual([
+        { id: 1, name: "foo", birthday: null, number: null },
+      ])
     })
 
     it("should be able to execute an update that updates no rows", async () => {
@@ -451,8 +461,13 @@ describe.each([
       } catch (err: any) {
         error = err.message
       }
-      expect(error).toBeDefined()
-      expect(error).toContain(testSpecificInformation.nullError)
+      const testExpectation = testSpecificInformation.nullError
+      if (testExpectation) {
+        expect(error).toBeDefined()
+        expect(error).toContain(testExpectation)
+      } else {
+        expect(error).toBeUndefined()
+      }
     })
 
     it("should not error for new queries", async () => {
