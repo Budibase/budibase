@@ -12,6 +12,7 @@
   export let schema
   export let value
   export let customRenderers = []
+  export let snippets
 
   let renderer
   const typeMap = {
@@ -32,6 +33,8 @@
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
   $: cellValue = getCellValue(value, schema.template)
 
+  $: console.log(snippets)
+
   const getType = schema => {
     // Use a string renderer for dates if we use a custom template
     if (schema?.type === "datetime" && schema?.template) {
@@ -44,7 +47,7 @@
     if (!template) {
       return value
     }
-    return processStringSync(template, { value })
+    return processStringSync(template, { value, snippets })
   }
 </script>
 
