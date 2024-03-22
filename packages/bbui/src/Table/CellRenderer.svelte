@@ -33,8 +33,6 @@
   $: renderer = customRenderer?.component ?? typeMap[type] ?? StringRenderer
   $: cellValue = getCellValue(value, schema.template)
 
-  $: console.log(snippets)
-
   const getType = schema => {
     // Use a string renderer for dates if we use a custom template
     if (schema?.type === "datetime" && schema?.template) {
