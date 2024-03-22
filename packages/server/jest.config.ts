@@ -44,12 +44,6 @@ const config: Config.InitialOptions = {
   projects: [
     {
       ...baseConfig,
-      displayName: "sequential test",
-      testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
-      runner: "jest-serial-runner",
-    },
-    {
-      ...baseConfig,
       testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
     },
   ],

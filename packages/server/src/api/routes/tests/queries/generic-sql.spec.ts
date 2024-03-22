@@ -13,8 +13,6 @@ import mssql from "mssql"
 import { Expectations } from "src/tests/utilities/api/base"
 import { events } from "@budibase/backend-core"
 
-jest.unmock("pg")
-
 const createTableSQL: Record<string, string> = {
   [SourceName.POSTGRES]: `
     CREATE TABLE test_table (
