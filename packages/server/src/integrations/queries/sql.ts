@@ -1,7 +1,6 @@
 import { findHBSBlocks } from "@budibase/string-templates"
 import { DatasourcePlus } from "@budibase/types"
 import sdk from "../../sdk"
-import { enrichArrayContext } from "../../sdk/app/queries/queries"
 
 const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
 
