@@ -163,7 +163,7 @@
       "component": "ClearRowSelection"
     },
     {
-      "name": "Download file",
+      "name": "Download File",
       "type": "data",
       "component": "DownloadFile"
     }

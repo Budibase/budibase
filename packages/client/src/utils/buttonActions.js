@@ -400,6 +400,23 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const downloadFileHandler = (action, context) => {
+  download(action.parameters.value, `file.jpg`)
+  // const x = processStringSync(action.parameters.value, context)
+  // console.warn(x)
+
+  // // Built total context for this action
+  // const totalContext = {
+  //   ...context,
+  //   state: get(stateStore),
+  //   actions: buttonContext,
+  // }
+
+  // action = enrichDataBindings(action, totalContext)
+
+  // console.error(action)
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -418,6 +435,7 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Download File"]: downloadFileHandler,
 }
 
 const confirmTextMap = {
