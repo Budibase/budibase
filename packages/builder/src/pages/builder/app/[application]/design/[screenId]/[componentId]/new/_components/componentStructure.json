@@ -3,8 +3,6 @@
     "name": "Blocks",
     "icon": "Article",
     "children": [
-      "gridblock",
-      "tableblock",
       "cardsblock",
       "repeaterblock",
       "formblock",
@@ -24,7 +22,7 @@
     "children": [
       "dataprovider",
       "repeater",
-      "table",
+      "gridblock",
       "spreadsheet",
       "dynamicfilter",
       "daterangepicker"
