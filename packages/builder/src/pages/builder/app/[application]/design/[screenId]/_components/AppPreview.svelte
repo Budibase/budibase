@@ -249,12 +249,12 @@
 <div class="component-container">
   {#if loading}
     <div
-      class={`loading ${$builderStore.theme}`}
+      class={`loading ${$themeStore.theme}`}
       class:tablet={$previewStore.previewDevice === "tablet"}
       class:mobile={$previewStore.previewDevice === "mobile"}
     >
       <ClientAppSkeleton
-        sideNav={$builderStore.navigation?.navigation === "Left"}
+        sideNav={$navigationStore?.navigation === "Left"}
         hideFooter
         hideDevTools
       />

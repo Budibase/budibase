@@ -1,5 +1,4 @@
 const fs = require('node:fs/promises');
-const path = require("path")
 const util = require('node:util');
 const { argv } = require('node:process');
 const exec = util.promisify(require('node:child_process').exec);

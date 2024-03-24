@@ -183,7 +183,7 @@ export const serveApp = async function (ctx: UserCtx) {
 
       const { head, html, css } = AppComponent.render({
         title: branding?.platformTitle || `${appInfo.name}`,
-        showSkeletonLoader: appInfo.features.skeletonLoader ?? false,
+        showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
         hideDevTools,
         sideNav,
         hideFooter,
