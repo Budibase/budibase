@@ -2,14 +2,13 @@
   import { API } from "api"
   import clientVersions from "./clientVersions.json"
   import { appStore } from "stores/builder"
-  import { Select } from '@budibase/bbui'
+  import { Select } from "@budibase/bbui"
 
   export let revertableVersion
   $: appId = $appStore.appId
 
   const handleChange = e => {
     const value = e.value
-    console.log(e.detail);
     if (value == null) return
 
     API.setRevertableVersion(appId, value)

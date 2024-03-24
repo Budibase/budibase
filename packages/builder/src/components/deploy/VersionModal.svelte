@@ -66,8 +66,9 @@
       // Don't wait for the async refresh, since this causes modal flashing
       refreshAppPackage()
       notifications.success(
-         $appStore.revertableVersion ? 
-        `App reverted successfully to version ${$appStore.revertableVersion}` : 'App reverted successfully'
+        $appStore.revertableVersion
+          ? `App reverted successfully to version ${$appStore.revertableVersion}`
+          : "App reverted successfully"
       )
     } catch (err) {
       notifications.error(`Error reverting app: ${err}`)
