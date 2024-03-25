@@ -42,7 +42,6 @@
   .main {
     height: 100%;
     overflow: auto;
-    overflow-x: hidden;
   }
   .padding .main {
     padding: var(--spacing-xl);
