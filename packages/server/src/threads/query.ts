@@ -26,10 +26,11 @@ class QueryRunner {
   fields: any
   parameters: any
   pagination: any
-  transformer: string
+  transformer: string | null
   cachedVariables: any[]
   ctx: any
   queryResponse: any
+  nullDefaultSupport: boolean
   noRecursiveQuery: boolean
   hasRerun: boolean
   hasRefreshedOAuth: boolean
@@ -45,6 +46,7 @@ class QueryRunner {
     this.transformer = input.transformer
     this.queryId = input.queryId!
     this.schema = input.schema
+    this.nullDefaultSupport = !!input.nullDefaultSupport
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -59,7 +61,14 @@ class QueryRunner {
   }
 
   async execute(): Promise<QueryResponse> {
-    let { datasource, fields, queryVerb, transformer, schema } = this
+    let {
+      datasource,
+      fields,
+      queryVerb,
+      transformer,
+      schema,
+      nullDefaultSupport,
+    } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -100,10 +109,12 @@ class QueryRunner {
       )
     }
 
-    let query
+    let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
+        nullDefaultSupport,
+      })
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
@@ -137,7 +148,9 @@ class QueryRunner {
         data: rows,
         params: enrichedParameters,
       }
-      rows = vm.withContext(ctx, () => vm.execute(transformer))
+      if (transformer != null) {
+        rows = vm.withContext(ctx, () => vm.execute(transformer!))
+      }
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -191,13 +204,15 @@ class QueryRunner {
     })
     return new QueryRunner(
       {
-        datasource,
+        schema: query.schema,
         queryVerb: query.queryVerb,
         fields: query.fields,
-        parameters,
         transformer: query.transformer,
-        queryId,
+        nullDefaultSupport: query.nullDefaultSupport,
         ctx: this.ctx,
+        parameters,
+        datasource,
+        queryId,
       },
       { noRecursiveQuery: true }
     ).execute()
