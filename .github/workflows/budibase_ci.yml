@@ -161,6 +161,8 @@ jobs:
           docker pull postgres:16.1-bullseye
           docker pull mongo:7.0-jammy
           docker pull mariadb:lts
+          docker pull testcontainers/ryuk:0.3.0
+          docker pull budibase/couchdb
 
       - run: yarn --frozen-lockfile
 
