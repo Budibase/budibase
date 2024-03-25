@@ -5,9 +5,10 @@ import sdk from "../../sdk"
 const CONST_CHAR_REGEX = new RegExp("'[^']*'", "g")
 
 export async function interpolateSQL(
-  fields: { [key: string]: any },
+  fields: { sql: string; bindings: any[] },
   parameters: { [key: string]: any },
-  integration: DatasourcePlus
+  integration: DatasourcePlus,
+  opts: { nullDefaultSupport: boolean }
 ) {
   let sql = fields.sql
   if (!sql || typeof sql !== "string") {
@@ -64,7 +65,14 @@ export async function interpolateSQL(
   }
   // replicate the knex structure
   fields.sql = sql
-  fields.bindings = await sdk.queries.enrichContext(variables, parameters)
+  fields.bindings = await sdk.queries.enrichArrayContext(variables, parameters)
+  if (opts.nullDefaultSupport) {
+    for (let index in fields.bindings) {
+      if (fields.bindings[index] === "") {
+        fields.bindings[index] = null
+      }
+    }
+  }
   // check for arrays in the data
   let updated: string[] = []
   for (let i = 0; i < variables.length; i++) {

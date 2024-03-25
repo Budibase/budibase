@@ -31,7 +31,7 @@ describe("/queries", () => {
     ) {
       combinedQuery.fields.extra.collection = collection
     }
-    return await config.api.query.create(combinedQuery)
+    return await config.api.query.save(combinedQuery)
   }
 
   async function withClient<T>(
@@ -464,7 +464,7 @@ describe("/queries", () => {
     })
   })
 
-  it("should ignore be able to save deeply nested data", async () => {
+  it("should be able to save deeply nested data", async () => {
     const data = {
       foo: "bar",
       data: [
