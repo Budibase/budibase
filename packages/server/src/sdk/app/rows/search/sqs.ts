@@ -4,17 +4,19 @@ import {
   QueryJson,
   RelationshipFieldMetadata,
   Row,
-  SearchFilters,
+  SearchFilters, SearchParams,
   SortType,
   Table,
-  UserCtx,
+  SortJson,
+  SortOrder,
+  SortDirection,
 } from "@budibase/types"
-import SqlQueryBuilder from "../../../integrations/base/sql"
-import { SqlClient } from "../../../integrations/utils"
-import { buildInternalRelationships, sqlOutputProcessing } from "./utils"
-import sdk from "../../../sdk"
+import SqlQueryBuilder from "../../../../integrations/base/sql"
+import { SqlClient } from "../../../../integrations/utils"
+import { buildInternalRelationships, sqlOutputProcessing } from "../../../../api/controllers/row/utils"
+import sdk from "../../../index"
 import { context } from "@budibase/backend-core"
-import { CONSTANT_INTERNAL_ROW_COLS } from "../../../db/utils"
+import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
 
 function buildInternalFieldList(
   table: Table,
@@ -87,16 +89,15 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-export async function sqlSearch(ctx: UserCtx) {
-  const { tableId } = ctx.params
-  const { paginate, query, ...params } = ctx.request.body
+export async function search(options: SearchParams) {
+  const { tableId, paginate, query, ...params } = options
 
   const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)
   const allTables = await sdk.tables.getAllInternalTables()
   const allTablesMap = buildTableMap(allTables)
   const table = allTables.find(table => table._id === tableId)
   if (!table) {
-    ctx.throw(400, "Unable to find table")
+    throw new Error("Unable to find table")
   }
 
   const relationships = buildInternalRelationships(table)
@@ -127,13 +128,15 @@ export async function sqlSearch(ctx: UserCtx) {
 
   if (params.sort && !params.sortType) {
     const sortField = table.schema[params.sort]
-    const sortType = sortField.type == "number" ? "number" : "string"
-    request.sort = {
+    const sortType = sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+    const sortDirection = params.sortOrder === SortOrder.ASCENDING ? SortDirection.ASCENDING : SortDirection.DESCENDING
+    const sortObj: SortJson = {
       [sortField.name]: {
-        direction: params.sortOrder,
+        direction: sortDirection,
         type: sortType as SortType,
       },
     }
+    request.sort = sortObj
   }
   if (paginate) {
     request.paginate = {

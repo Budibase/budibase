@@ -818,7 +818,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.ASCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Danny", "Alice", "Charly", "Bob"],
         ],
@@ -840,7 +840,7 @@ describe.each([
           {
             field: "age",
             order: SortOrder.DESCENDING,
-            type: SortType.number,
+            type: SortType.NUMBER,
           },
           ["Bob", "Charly", "Alice", "Danny"],
         ],

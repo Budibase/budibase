@@ -560,7 +560,7 @@ export class ExternalRequest<T extends Operation> {
           break
         case FieldType.NUMBER:
           if (sort && sort[sortColumn]) {
-            sort[sortColumn].type = SortType.number
+            sort[sortColumn].type = SortType.NUMBER
           }
           break
       }

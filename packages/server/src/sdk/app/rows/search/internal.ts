@@ -34,8 +34,13 @@ import { ExportRowsParams, ExportRowsResult } from "../search"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { breakRowIdField } from "../../../../integrations/utils"
+import * as sqs from "./sqs"
 
 export async function search(options: SearchParams) {
+  if (env.SQS_SEARCH_ENABLE) {
+    return sqs.search(options)
+  }
+
   const { tableId } = options
 
   const { paginate, query } = options
