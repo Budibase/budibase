@@ -197,4 +197,13 @@ export const buildAppEndpoints = API => ({
       url: `/api/applications/${appId}/sample`,
     })
   },
+
+  setRevertableVersion: async (appId, revertableVersion) => {
+    return await API.post({
+      url: `/api/applications/${appId}/setRevertableVersion`,
+      body: {
+        revertableVersion,
+      },
+    })
+  },
 })

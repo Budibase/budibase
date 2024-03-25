@@ -78,6 +78,7 @@ describe("/queries", () => {
         _rev: res.body._rev,
         _id: res.body._id,
         ...query,
+        nullDefaultSupport: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -103,6 +104,7 @@ describe("/queries", () => {
         _rev: res.body._rev,
         _id: res.body._id,
         ...query,
+        nullDefaultSupport: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
@@ -130,6 +132,7 @@ describe("/queries", () => {
           _id: query._id,
           createdAt: new Date().toISOString(),
           ...basicQuery(datasource._id),
+          nullDefaultSupport: true,
           updatedAt: new Date().toISOString(),
           readable: true,
         },
@@ -245,10 +248,10 @@ describe("/queries", () => {
       expect(responseBody.rows.length).toEqual(1)
       expect(events.query.previewed).toHaveBeenCalledTimes(1)
       delete datasource.config
-      expect(events.query.previewed).toHaveBeenCalledWith(
-        datasource,
-        queryPreview
-      )
+      expect(events.query.previewed).toHaveBeenCalledWith(datasource, {
+        ...queryPreview,
+        nullDefaultSupport: true,
+      })
     })
 
     it("should apply authorization to endpoint", async () => {
