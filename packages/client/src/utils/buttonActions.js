@@ -401,7 +401,12 @@ const closeSidePanelHandler = () => {
 }
 
 const downloadFileHandler = async (action, context) => {
-  const { url, file_name } = action.parameters.value
+  let { url, file_name, type, attachment } = action.parameters
+  if (type === "attachment") {
+    const attachmentObject = JSON.parse(attachment)
+    url = attachmentObject.url
+    file_name = attachmentObject.name
+  }
 
   const response = await fetch(url)
 
