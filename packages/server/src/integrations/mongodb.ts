@@ -23,7 +23,7 @@ import {
 } from "mongodb"
 import environment from "../environment"
 
-interface MongoDBConfig {
+export interface MongoDBConfig {
   connectionString: string
   db: string
   tlsCertificateKeyFile: string
@@ -348,7 +348,7 @@ const getSchema = () => {
 
 const SCHEMA: Integration = getSchema()
 
-class MongoIntegration implements IntegrationBase {
+export class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
   private client: MongoClient
 
