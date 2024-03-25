@@ -1,11 +1,10 @@
 jest.unmock("node-fetch")
+jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
 import { objectStore } from "@budibase/backend-core"
-import env from "../../../../environment"
 import tk from "timekeeper"
-jest.unmock("aws-sdk")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 

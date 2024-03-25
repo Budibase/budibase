@@ -11,7 +11,7 @@ class ObjectStoreWaitStrategy extends AbstractWaitStrategy {
   }
 }
 
-export async function start() {
+export async function start(): Promise<{ host: string; port: number }> {
   container = await new GenericContainer("minio/minio")
     .withExposedPorts(9000)
     .withCommand(["server", "/data"])
@@ -24,7 +24,8 @@ export async function start() {
 
   const host = container.getHost()
   const port = container.getMappedPort(9000)
-  env._set("MINIO_URL", `http:/${host}:${port}`)
+  env._set("MINIO_URL", `http://0.0.0.0:${port}`)
+  return { host, port }
 }
 
 export async function stop() {
