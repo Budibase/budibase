@@ -400,21 +400,23 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
-const downloadFileHandler = (action, context) => {
-  download(action.parameters.value, `file.jpg`)
-  // const x = processStringSync(action.parameters.value, context)
-  // console.warn(x)
+const downloadFileHandler = async (action, context) => {
+  const { url, file_name } = action.parameters.value
 
-  // // Built total context for this action
-  // const totalContext = {
-  //   ...context,
-  //   state: get(stateStore),
-  //   actions: buttonContext,
-  // }
+  const response = await fetch(url)
 
-  // action = enrichDataBindings(action, totalContext)
+  if (!response.ok) {
+    throw "TODO"
+  }
 
-  // console.error(action)
+  const objectUrl = URL.createObjectURL(await response.blob())
+
+  const link = document.createElement("a")
+  link.href = objectUrl
+  link.download = file_name
+  link.click()
+
+  URL.revokeObjectURL(objectUrl)
 }
 
 const handlerMap = {
