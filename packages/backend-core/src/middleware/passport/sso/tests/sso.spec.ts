@@ -114,11 +114,11 @@ describe("sso", () => {
           // tenant id added
           ssoUser.tenantId = context.getTenantId()
 
-          expect(mockSaveUser).toBeCalledWith(ssoUser, {
+          expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, ssoUser)
+          expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
         })
       })
     })
@@ -159,11 +159,11 @@ describe("sso", () => {
           // existing id preserved
           ssoUser._id = existingUser._id
 
-          expect(mockSaveUser).toBeCalledWith(ssoUser, {
+          expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, ssoUser)
+          expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
         })
       })
 
@@ -187,11 +187,11 @@ describe("sso", () => {
           // existing id preserved
           ssoUser._id = existingUser._id
 
-          expect(mockSaveUser).toBeCalledWith(ssoUser, {
+          expect(mockSaveUser).toHaveBeenCalledWith(ssoUser, {
             hashPassword: false,
             requirePassword: false,
           })
-          expect(mockDone).toBeCalledWith(null, ssoUser)
+          expect(mockDone).toHaveBeenCalledWith(null, ssoUser)
         })
       })
     })

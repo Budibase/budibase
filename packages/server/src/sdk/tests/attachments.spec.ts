@@ -44,7 +44,7 @@ import { db as dbCore } from "@budibase/backend-core"
 import sdk from "../index"
 
 describe("should be able to re-write attachment URLs", () => {
-  it("it should update URLs on a number of rows over the limit", async () => {
+  it("should update URLs on a number of rows over the limit", async () => {
     const db = dbCore.getDB("app_aaa")
     await db.put(table)
     const limit = 30

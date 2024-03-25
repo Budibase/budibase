@@ -8,14 +8,13 @@ import {
   QueryResponse,
 } from "./definitions"
 import { IsolatedVM } from "../jsRunner/vm"
-import { iifeWrapper } from "../jsRunner/utilities"
+import { iifeWrapper, processStringSync } from "@budibase/string-templates"
 import { getIntegration } from "../integrations"
-import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { Datasource, Query, SourceName } from "@budibase/types"
+import { Datasource, Query, SourceName, Row } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
@@ -115,7 +114,7 @@ class QueryRunner {
     }
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
-    let rows = output,
+    let rows = output as Row[],
       info = undefined,
       extra = undefined,
       pagination = undefined
@@ -170,7 +169,12 @@ class QueryRunner {
     }
 
     // get all the potential fields in the schema
-    let keys = rows.flatMap(Object.keys)
+    const keysSet: Set<string> = new Set()
+    rows.forEach(row => {
+      const keys = Object.keys(row)
+      keys.forEach(key => keysSet.add(key))
+    })
+    const keys: string[] = [...keysSet]
 
     if (integration.end) {
       integration.end()

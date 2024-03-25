@@ -18,7 +18,6 @@ import {
   Row,
   LinkDocumentValue,
   FieldType,
-  LinkDocument,
   ContextUser,
 } from "@budibase/types"
 import sdk from "../../sdk"
@@ -202,7 +201,8 @@ export async function attachFullLinkedDocs(
           table => table._id === linkedTableId
         )
         if (linkedTable) {
-          row[link.fieldName].push(processFormulas(linkedTable, linkedRow))
+          const processed = await processFormulas(linkedTable, linkedRow)
+          row[link.fieldName].push(processed)
         }
       }
     }

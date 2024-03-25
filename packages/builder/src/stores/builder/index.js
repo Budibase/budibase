@@ -1,10 +1,6 @@
 import { layoutStore } from "./layouts.js"
 import { appStore } from "./app.js"
-import {
-  componentStore,
-  selectedComponent,
-  selectedComponentPath,
-} from "./components"
+import { componentStore, selectedComponent } from "./components"
 import { navigationStore } from "./navigation.js"
 import { themeStore } from "./theme.js"
 import { screenStore, selectedScreen, sortedScreens } from "./screens.js"
@@ -18,6 +14,7 @@ import {
 } from "./automations.js"
 import { userStore, userSelectedResourceMap, isOnlyUser } from "./users.js"
 import { deploymentStore } from "./deployments.js"
+import { snippets } from "./snippets"
 
 // Backend
 import { tables } from "./tables"
@@ -30,8 +27,10 @@ import { integrations } from "./integrations"
 import { sortedIntegrations } from "./sortedIntegrations"
 import { queries } from "./queries"
 import { flags } from "./flags"
+import componentTreeNodesStore from "./componentTreeNodes"
 
 export {
+  componentTreeNodesStore,
   layoutStore,
   appStore,
   componentStore,
@@ -50,7 +49,6 @@ export {
   isOnlyUser,
   deploymentStore,
   selectedComponent,
-  selectedComponentPath,
   tables,
   views,
   viewsV2,
@@ -62,6 +60,7 @@ export {
   queries,
   flags,
   hoverStore,
+  snippets,
 }
 
 export const reset = () => {
@@ -101,6 +100,7 @@ export const initialise = async pkg => {
   builderStore.init(application)
   navigationStore.syncAppNavigation(application?.navigation)
   themeStore.syncAppTheme(application)
+  snippets.syncMetadata(application)
   screenStore.syncAppScreens(pkg)
   layoutStore.syncAppLayouts(pkg)
   resetBuilderHistory()

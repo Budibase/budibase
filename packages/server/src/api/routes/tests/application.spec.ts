@@ -16,8 +16,10 @@ import * as setup from "./utilities"
 import { AppStatus } from "../../../db/utils"
 import { events, utils, context } from "@budibase/backend-core"
 import env from "../../../environment"
-import type { App } from "@budibase/types"
+import { type App } from "@budibase/types"
 import tk from "timekeeper"
+import * as uuid from "uuid"
+import { structures } from "@budibase/backend-core/tests"
 
 describe("/applications", () => {
   let config = setup.getConfig()
@@ -29,15 +31,107 @@ describe("/applications", () => {
   beforeEach(async () => {
     app = await config.api.application.create({ name: utils.newid() })
     const deployment = await config.api.application.publish(app.appId)
-    expect(deployment.status).toBe("SUCCESS")
+    if (deployment.status !== "SUCCESS") {
+      throw new Error("Failed to publish app")
+    }
     jest.clearAllMocks()
+  })
+
+  // These need to go first for the app totals to make sense
+  describe("permissions", () => {
+    it("should only return apps a user has access to", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      user = await config.globalUser({
+        ...user,
+        builder: {
+          apps: [config.getProdAppId()],
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const role = await config.api.roles.save({
+        name: "Test",
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      user = await config.globalUser({
+        ...user,
+        roles: {
+          [config.getProdAppId()]: role.name,
+        },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
+
+    it("should only return apps a user has access to through a custom role on a group", async () => {
+      let user = await config.createUser({
+        builder: { global: false },
+        admin: { global: false },
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(0)
+      })
+
+      const roleName = uuid.v4().replace(/-/g, "")
+      const role = await config.api.roles.save({
+        name: roleName,
+        inherits: "PUBLIC",
+        permissionId: "read_only",
+        version: "name",
+      })
+
+      const group = await config.createGroup(role._id!)
+
+      user = await config.globalUser({
+        ...user,
+        userGroups: [group._id!],
+      })
+
+      await config.withUser(user, async () => {
+        const apps = await config.api.application.fetch()
+        expect(apps).toHaveLength(1)
+      })
+    })
   })
 
   describe("create", () => {
     it("creates empty app", async () => {
       const app = await config.api.application.create({ name: utils.newid() })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
     })
 
     it("creates app from template", async () => {
@@ -48,8 +142,8 @@ describe("/applications", () => {
         templateString: "{}",
       })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.templateImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.templateImported).toHaveBeenCalledTimes(1)
     })
 
     it("creates app from file", async () => {
@@ -59,8 +153,8 @@ describe("/applications", () => {
         templateFile: "src/api/routes/tests/data/export.txt",
       })
       expect(app._id).toBeDefined()
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.fileImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -90,8 +184,22 @@ describe("/applications", () => {
       expect(app.navigation!.navTextColor).toBe(
         "var(--spectrum-global-color-gray-50)"
       )
-      expect(events.app.created).toBeCalledTimes(1)
-      expect(events.app.fileImported).toBeCalledTimes(1)
+      expect(events.app.created).toHaveBeenCalledTimes(1)
+      expect(events.app.fileImported).toHaveBeenCalledTimes(1)
+    })
+
+    it("should reject with a known name", async () => {
+      await config.api.application.create(
+        { name: app.name },
+        { body: { message: "App name is already in use." }, status: 400 }
+      )
+    })
+
+    it("should reject with a known url", async () => {
+      await config.api.application.create(
+        { name: "made up", url: app?.url! },
+        { body: { message: "App URL is already in use." }, status: 400 }
+      )
     })
   })
 
@@ -123,32 +231,32 @@ describe("/applications", () => {
         name: "TEST_APP",
       })
       expect(updatedApp._rev).toBeDefined()
-      expect(events.app.updated).toBeCalledTimes(1)
+      expect(events.app.updated).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("publish", () => {
     it("should publish app with dev app ID", async () => {
       await config.api.application.publish(app.appId)
-      expect(events.app.published).toBeCalledTimes(1)
+      expect(events.app.published).toHaveBeenCalledTimes(1)
     })
 
     it("should publish app with prod app ID", async () => {
       await config.api.application.publish(app.appId.replace("_dev", ""))
-      expect(events.app.published).toBeCalledTimes(1)
+      expect(events.app.published).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("manage client library version", () => {
     it("should be able to update the app client library version", async () => {
       await config.api.application.updateClient(app.appId)
-      expect(events.app.versionUpdated).toBeCalledTimes(1)
+      expect(events.app.versionUpdated).toHaveBeenCalledTimes(1)
     })
 
     it("should be able to revert the app client library version", async () => {
       await config.api.application.updateClient(app.appId)
       await config.api.application.revertClient(app.appId)
-      expect(events.app.versionReverted).toBeCalledTimes(1)
+      expect(events.app.versionReverted).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -205,26 +313,83 @@ describe("/applications", () => {
   describe("unpublish", () => {
     it("should unpublish app with dev app ID", async () => {
       await config.api.application.unpublish(app.appId)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should unpublish app with prod app ID", async () => {
       await config.api.application.unpublish(app.appId.replace("_dev", ""))
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
   })
 
   describe("delete", () => {
     it("should delete published app and dev apps with dev app ID", async () => {
       await config.api.application.delete(app.appId)
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
     })
 
     it("should delete published app and dev app with prod app ID", async () => {
       await config.api.application.delete(app.appId.replace("_dev", ""))
-      expect(events.app.deleted).toBeCalledTimes(1)
-      expect(events.app.unpublished).toBeCalledTimes(1)
+      expect(events.app.deleted).toHaveBeenCalledTimes(1)
+      expect(events.app.unpublished).toHaveBeenCalledTimes(1)
+    })
+  })
+
+  describe("POST /api/applications/:appId/duplicate", () => {
+    it("should duplicate an existing app", async () => {
+      const resp = await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: "to-dupe copy",
+          url: "/to-dupe-copy",
+        },
+        {
+          status: 200,
+        }
+      )
+
+      expect(events.app.duplicated).toHaveBeenCalled()
+      expect(resp.duplicateAppId).toBeDefined()
+      expect(resp.sourceAppId).toEqual(app.appId)
+      expect(resp.duplicateAppId).not.toEqual(app.appId)
+    })
+
+    it("should reject an unknown app id with a 404", async () => {
+      await config.api.application.duplicateApp(
+        structures.db.id(),
+        {
+          name: "to-dupe 123",
+          url: "/to-dupe-123",
+        },
+        {
+          status: 404,
+        }
+      )
+    })
+
+    it("should reject with a known name", async () => {
+      await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: app.name,
+          url: "/known-name",
+        },
+        { body: { message: "App name is already in use." }, status: 400 }
+      )
+      expect(events.app.duplicated).not.toHaveBeenCalled()
+    })
+
+    it("should reject with a known url", async () => {
+      await config.api.application.duplicateApp(
+        app.appId,
+        {
+          name: "this is fine",
+          url: app.url,
+        },
+        { body: { message: "App URL is already in use." }, status: 400 }
+      )
+      expect(events.app.duplicated).not.toHaveBeenCalled()
     })
   })
 
@@ -246,20 +411,6 @@ describe("/applications", () => {
       // doesn't exist in dev
       const devLogs = await config.getAutomationLogs()
       expect(devLogs.data.length).toBe(0)
-    })
-  })
-
-  describe("permissions", () => {
-    it("should only return apps a user has access to", async () => {
-      const user = await config.createUser({
-        builder: { global: false },
-        admin: { global: false },
-      })
-
-      await config.withUser(user, async () => {
-        const apps = await config.api.application.fetch()
-        expect(apps).toHaveLength(0)
-      })
     })
   })
 })

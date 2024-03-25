@@ -24,9 +24,12 @@ export class DDInstrumentedDatabase implements Database {
     return this.db.name
   }
 
-  exists(): Promise<boolean> {
+  exists(docId?: string): Promise<boolean> {
     return tracer.trace("db.exists", span => {
-      span?.addTags({ db_name: this.name })
+      span?.addTags({ db_name: this.name, doc_id: docId })
+      if (docId) {
+        return this.db.exists(docId)
+      }
       return this.db.exists()
     })
   }

@@ -66,8 +66,8 @@ export function searchInputMapping(table: Table, options: SearchParams) {
   }
   for (let [key, column] of Object.entries(table.schema)) {
     switch (column.type) {
-      case FieldType.BB_REFERENCE:
-        const subtype = column.subtype as FieldSubtype
+      case FieldType.BB_REFERENCE: {
+        const subtype = column.subtype
         switch (subtype) {
           case FieldSubtype.USER:
           case FieldSubtype.USERS:
@@ -77,6 +77,7 @@ export function searchInputMapping(table: Table, options: SearchParams) {
             utils.unreachable(subtype)
         }
         break
+      }
     }
   }
   return options

@@ -88,14 +88,42 @@ describe("Builder store", () => {
     )
   })
 
-  it("Sync a highlighted setting key to state", ctx => {
-    expect(ctx.test.store.highlightedSettingKey).toBeNull()
+  it("Sync a highlighted setting key to state. Default to info type", ctx => {
+    expect(ctx.test.store.highlightedSetting).toBeNull()
 
     ctx.test.builderStore.highlightSetting("testing")
 
     expect(ctx.test.store).toStrictEqual({
       ...INITIAL_BUILDER_STATE,
-      highlightedSettingKey: "testing",
+      highlightedSetting: {
+        key: "testing",
+        type: "info",
+      },
+    })
+  })
+
+  it("Sync a highlighted setting key to state. Use provided type", ctx => {
+    expect(ctx.test.store.highlightedSetting).toBeNull()
+
+    ctx.test.builderStore.highlightSetting("testing", "error")
+
+    expect(ctx.test.store).toStrictEqual({
+      ...INITIAL_BUILDER_STATE,
+      highlightedSetting: {
+        key: "testing",
+        type: "error",
+      },
+    })
+  })
+
+  it("Sync a highlighted setting key to state. Unset when no value is passed", ctx => {
+    expect(ctx.test.store.highlightedSetting).toBeNull()
+
+    ctx.test.builderStore.highlightSetting("testing", "error")
+    ctx.test.builderStore.highlightSetting()
+
+    expect(ctx.test.store).toStrictEqual({
+      ...INITIAL_BUILDER_STATE,
     })
   })
 

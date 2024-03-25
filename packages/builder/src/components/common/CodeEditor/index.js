@@ -1,4 +1,3 @@
-import { EditorView } from "@codemirror/view"
 import { getManifest } from "@budibase/string-templates"
 import sanitizeHtml from "sanitize-html"
 import { groupBy } from "lodash"
@@ -27,123 +26,33 @@ export const SECTIONS = {
   },
 }
 
-export const getDefaultTheme = opts => {
-  const { height, resize, dark } = opts
-  return EditorView.theme(
-    {
-      "&.cm-focused .cm-cursor": {
-        borderLeftColor: "var(--spectrum-alias-text-color)",
-      },
-      "&": {
-        height: height ? `${height}` : "",
-        lineHeight: "1.3",
-        border:
-          "var(--spectrum-alias-border-size-thin) solid var(--spectrum-alias-border-color)",
-        borderRadius: "var(--border-radius-s)",
-        backgroundColor:
-          "var( --spectrum-textfield-m-background-color, var(--spectrum-global-color-gray-50) )",
-        resize: resize ? `${resize}` : "",
-        overflow: "hidden",
-        color: "var(--spectrum-alias-text-color)",
-      },
-      "& .cm-tooltip.cm-tooltip-autocomplete > ul": {
-        fontFamily:
-          "var(--spectrum-alias-body-text-font-family, var(--spectrum-global-font-family-base))",
-        maxHeight: "16em",
-      },
-      "& .cm-placeholder": {
-        color: "var(--spectrum-alias-text-color)",
-        fontStyle: "italic",
-      },
-      "&.cm-focused": {
-        outline: "none",
-        borderColor: "var(--spectrum-alias-border-color-mouse-focus)",
-      },
-      // AUTO COMPLETE
-      "& .cm-completionDetail": {
-        fontStyle: "unset",
-        textTransform: "uppercase",
-        fontSize: "10px",
-        backgroundColor: "var(--spectrum-global-color-gray-100)",
-        color: "var(--spectrum-global-color-gray-600)",
-      },
-      "& .cm-completionLabel": {
-        marginLeft:
-          "calc(var(--spectrum-alias-workflow-icon-size-m) + var(--spacing-m))",
-      },
-      "& .info-bubble": {
-        fontSize: "var(--font-size-s)",
-        display: "grid",
-        gridGap: "var(--spacing-s)",
-        gridTemplateColumns: "1fr",
-        color: "var(--spectrum-global-color-gray-800)",
-      },
-      "& .cm-tooltip": {
-        marginLeft: "var(--spacing-s)",
-        border: "1px solid var(--spectrum-global-color-gray-300)",
-        borderRadius:
-          "var( --spectrum-popover-border-radius, var(--spectrum-alias-border-radius-regular) )",
-        backgroundColor: "var(--spectrum-global-color-gray-50)",
-      },
-      // Section header
-      "& .info-section": {
-        display: "flex",
-        padding: "var(--spacing-s)",
-        gap: "var(--spacing-m)",
-        borderBottom: "1px solid var(--spectrum-global-color-gray-200)",
-        color: "var(--spectrum-global-color-gray-800)",
-        fontWeight: "bold",
-      },
-      "& .info-section .spectrum-Icon": {
-        color: "var(--spectrum-global-color-gray-600)",
-      },
-      // Autocomplete Option
-      "& .cm-tooltip.cm-tooltip-autocomplete .autocomplete-option": {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        fontSize: "var(--spectrum-alias-font-size-default)",
-        padding: "var(--spacing-s)",
-        color: "var(--spectrum-global-color-gray-800)",
-      },
-      "& .cm-tooltip-autocomplete ul li[aria-selected].autocomplete-option": {
-        backgroundColor: "var(--spectrum-global-color-gray-200)",
-      },
-      "& .binding-wrap": {
-        color: "var(--spectrum-global-color-blue-700)",
-        fontFamily: "monospace",
-      },
-    },
-    { dark }
-  )
-}
-
 export const buildHelperInfoNode = (completion, helper) => {
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
 
   const exampleNodeHtml = helper.example
-    ? `<div class="binding__example">${helper.example}</div>`
+    ? `<div class="binding__example helper">${helper.example}</div>`
     : ""
   const descriptionMarkup = sanitizeHtml(helper.description, {
     allowedTags: [],
     allowedAttributes: {},
   })
-  const descriptionNodeHtml = `<div class="binding__description">${descriptionMarkup}</div>`
+  const descriptionNodeHtml = `<div class="binding__description helper">${descriptionMarkup}</div>`
 
   ele.innerHTML = `
-    ${exampleNodeHtml}
     ${descriptionNodeHtml}
+    ${exampleNodeHtml}
   `
   return ele
 }
 
 const toSpectrumIcon = name => {
   return `<svg
-    class="spectrum-Icon spectrum-Icon--sizeM"
+    class="spectrum-Icon spectrum-Icon--sizeS"
     focusable="false"
     aria-hidden="false"
     aria-label="${name}-section-icon"
+    style="color:var(--spectrum-global-color-gray-700)"
   >
     <use style="pointer-events: none;" xlink:href="#spectrum-icon-18-${name}" />
   </svg>`
@@ -152,7 +61,9 @@ const toSpectrumIcon = name => {
 export const buildSectionHeader = (type, sectionName, icon, rank) => {
   const ele = document.createElement("div")
   ele.classList.add("info-section")
-  ele.classList.add(type)
+  if (type) {
+    ele.classList.add(type)
+  }
   ele.innerHTML = `${toSpectrumIcon(icon)}<span>${sectionName}</span>`
   return {
     name: sectionName,
@@ -174,7 +85,7 @@ export const helpersToCompletion = (helpers, mode) => {
       },
       type: "helper",
       section: helperSection,
-      detail: "FUNCTION",
+      detail: "Function",
       apply: (view, completion, from, to) => {
         insertBinding(view, from, to, key, mode)
       },
@@ -189,6 +100,29 @@ export const getHelperCompletions = mode => {
     acc = acc || []
     return [...acc, ...helpersToCompletion(manifest[key], mode)]
   }, [])
+}
+
+export const snippetAutoComplete = snippets => {
+  return function myCompletions(context) {
+    if (!snippets?.length) {
+      return null
+    }
+    const word = context.matchBefore(/\w*/)
+    if (word.from == word.to && !context.explicit) {
+      return null
+    }
+    return {
+      from: word.from,
+      options: snippets.map(snippet => ({
+        label: `snippets.${snippet.name}`,
+        type: "text",
+        simple: true,
+        apply: (view, completion, from, to) => {
+          insertSnippet(view, from, to, completion.label)
+        },
+      })),
+    }
+  }
 }
 
 const bindingFilter = (options, query) => {
@@ -252,21 +186,12 @@ export const jsAutocomplete = baseCompletions => {
 }
 
 export const buildBindingInfoNode = (completion, binding) => {
+  if (!binding.valueHTML || binding.value == null) {
+    return null
+  }
   const ele = document.createElement("div")
   ele.classList.add("info-bubble")
-
-  const exampleNodeHtml = binding.readableBinding
-    ? `<div class="binding__example">{{ ${binding.readableBinding} }}</div>`
-    : ""
-
-  const descriptionNodeHtml = binding.description
-    ? `<div class="binding__description">${binding.description}</div>`
-    : ""
-
-  ele.innerHTML = `
-    ${exampleNodeHtml}
-    ${descriptionNodeHtml}
-  `
+  ele.innerHTML = `<div class="binding__example">${binding.valueHTML}</div>`
   return ele
 }
 
@@ -345,6 +270,20 @@ export const insertBinding = (view, from, to, text, mode) => {
   })
 }
 
+export const insertSnippet = (view, from, to, text) => {
+  let cursorPos = from + text.length
+  view.dispatch({
+    changes: {
+      from,
+      to,
+      insert: text,
+    },
+    selection: {
+      anchor: cursorPos,
+    },
+  })
+}
+
 export const bindingsToCompletions = (bindings, mode) => {
   const bindingByCategory = groupBy(bindings, "category")
   const categoryMeta = bindings?.reduce((acc, ele) => {
@@ -374,7 +313,7 @@ export const bindingsToCompletions = (bindings, mode) => {
       ...bindingByCategory[catKey].reduce((acc, binding) => {
         let displayType = binding.fieldSchema?.type || binding.display?.type
         acc.push({
-          label: binding.display?.name || "NO NAME",
+          label: binding.display?.name || binding.readableBinding || "NO NAME",
           info: completion => {
             return buildBindingInfoNode(completion, binding)
           },
