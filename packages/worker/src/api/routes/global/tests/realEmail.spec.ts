@@ -5,6 +5,7 @@ import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
 import { objectStore } from "@budibase/backend-core"
 import tk from "timekeeper"
+
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
