@@ -48,6 +48,10 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "HTML Contents",
         },
+        attachments: {
+          type: AutomationIOType.STRING,
+          title: "Attachments",
+        },
         addInvite: {
           type: AutomationIOType.BOOLEAN,
           title: "Add calendar invite",
@@ -110,11 +114,13 @@ export async function run({ inputs }: AutomationStepInput) {
     summary,
     location,
     url,
+    attachments,
   } = inputs
   if (!contents) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
+  let parsedAttachments = automationUtils.stringSplit(attachments) || []
   try {
     let response = await sendSmtpEmail({
       to,
@@ -124,6 +130,7 @@ export async function run({ inputs }: AutomationStepInput) {
       cc,
       bcc,
       automation: true,
+      attachments: parsedAttachments,
       invite: addInvite
         ? {
             startTime,

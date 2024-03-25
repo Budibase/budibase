@@ -97,6 +97,7 @@ export interface SendEmailOpts {
   bcc?: boolean
   automation?: boolean
   invite?: EmailInvite
+  attachments?: string[]
 }
 
 export const AutomationStepIdArray = [

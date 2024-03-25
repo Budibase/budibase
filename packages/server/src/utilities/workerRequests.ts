@@ -104,6 +104,7 @@ export async function sendSmtpEmail({
   bcc,
   automation,
   invite,
+  attachments,
 }: {
   to: string
   from: string
@@ -112,6 +113,7 @@ export async function sendSmtpEmail({
   cc: string
   bcc: string
   automation: boolean
+  attachments?: string[]
   invite?: EmailInvite
 }) {
   // tenant ID will be set in header
@@ -129,6 +131,7 @@ export async function sendSmtpEmail({
         purpose: "custom",
         automation,
         invite,
+        attachments,
       },
     })
   )

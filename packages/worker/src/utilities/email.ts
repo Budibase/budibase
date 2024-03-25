@@ -4,8 +4,10 @@ import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs, cache } from "@budibase/backend-core"
+import { configs, cache, context as appContext } from "@budibase/backend-core"
 import ical from "ical-generator"
+import fetch from "node-fetch"
+import path from "path"
 
 const nodemailer = require("nodemailer")
 
@@ -161,6 +163,25 @@ export async function sendEmail(
       user: opts?.user,
       contents: opts?.contents,
     }),
+  }
+
+  if (opts?.attachments) {
+    const baseUrl = appContext.getPlatformURL()
+    const attachments = await Promise.all(
+      opts.attachments?.map(async signedUrl => {
+        const response = await fetch(baseUrl + signedUrl)
+        const filename = path.basename(new URL(baseUrl + signedUrl).pathname)
+
+        return {
+          filename: filename,
+          content: response.body,
+        }
+      })
+    )
+    message = {
+      ...message,
+      attachments,
+    }
   }
 
   message = {
