@@ -50,6 +50,7 @@ describe("test the outgoing webhook action", () => {
       cc: "cc",
       bcc: "bcc",
       addInvite: true,
+      attachments: "attachment1,attachment2",
       ...invite,
     }
     let resp = generateResponse(inputs.to, inputs.from)
@@ -69,6 +70,7 @@ describe("test the outgoing webhook action", () => {
       bcc: "bcc",
       invite,
       automation: true,
+      attachments: ["attachment1", "attachment2"],
     })
   })
 })

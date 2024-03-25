@@ -1,7 +1,11 @@
 jest.unmock("node-fetch")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
-
+import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
+import { objectStore } from "@budibase/backend-core"
+import env from "../../../../environment"
+import tk from "timekeeper"
+jest.unmock("aws-sdk")
 const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
 
@@ -12,14 +16,16 @@ describe("/api/global/email", () => {
   const config = new TestConfiguration()
 
   beforeAll(async () => {
+    await objectStoreTestProviders.minio.start()
     await config.beforeAll()
   })
 
   afterAll(async () => {
+    await objectStoreTestProviders.minio.stop()
     await config.afterAll()
   })
 
-  async function sendRealEmail(purpose: string) {
+  async function sendRealEmail(purpose: string, attachments?: string[]) {
     let response, text
     try {
       const timeout = () =>
@@ -35,8 +41,14 @@ describe("/api/global/email", () => {
         )
       await Promise.race([config.saveEtherealSmtpConfig(), timeout()])
       await Promise.race([config.saveSettingsConfig(), timeout()])
-
-      const res = await config.api.emails.sendEmail(purpose).timeout(20000)
+      let res
+      if (attachments) {
+        res = await config.api.emails
+          .sendEmail(purpose, attachments)
+          .timeout(20000)
+      } else {
+        res = await config.api.emails.sendEmail(purpose).timeout(20000)
+      }
       // ethereal hiccup, can't test right now
       if (res.status >= 300) {
         return
@@ -80,5 +92,20 @@ describe("/api/global/email", () => {
 
   it("should be able to send a password recovery email", async () => {
     await sendRealEmail(EmailTemplatePurpose.PASSWORD_RECOVERY)
+  })
+
+  it("should be able to send an email with attachments", async () => {
+    tk.reset()
+    let bucket = "test-bucket"
+    let filename = "test.txt"
+    await objectStore.upload({
+      bucket,
+      filename,
+      body: Buffer.from("test data"),
+    })
+    tk.freeze(mocks.date.MOCK_DATE)
+    let presignedUrl = await objectStore.getPresignedUrl(bucket, filename, 600)
+
+    await sendRealEmail(EmailTemplatePurpose.WELCOME, [presignedUrl])
   })
 })

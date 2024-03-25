@@ -6,11 +6,12 @@ export class EmailAPI extends TestAPI {
     super(config)
   }
 
-  sendEmail = (purpose: string) => {
+  sendEmail = (purpose: string, attachments?: string[]) => {
     return this.request
       .post(`/api/global/email/send`)
       .send({
         email: "test@example.com",
+        attachments,
         purpose,
         tenantId: this.config.getTenantId(),
         userId: this.config.user?._id!,
