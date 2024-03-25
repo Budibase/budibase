@@ -89,6 +89,9 @@ export async function enrichContext(
   if (!fields || !inputs) {
     return enrichedQuery
   }
+  if (Array.isArray(fields)) {
+    return enrichArrayContext(fields, inputs)
+  }
   const env = await getEnvironmentVariables()
   const parameters = { ...inputs, env }
   // enrich the fields with dynamic parameters
