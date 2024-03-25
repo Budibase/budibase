@@ -45,8 +45,8 @@ function createSMTPTransport(config?: SMTPInnerConfig) {
       host: "smtp.ethereal.email",
       secure: false,
       auth: {
-        user: "jeremy22@ethereal.email",
-        pass: "EkeTST7Zr2TEsWtkRh",
+        user: "seamus99@ethereal.email",
+        pass: "5ghVteZAqj6jkKJF9R",
       },
     }
   }
