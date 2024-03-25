@@ -2,7 +2,8 @@ import { Config } from "@jest/types"
 import * as fs from "fs"
 
 const config: Config.InitialOptions = {
-  preset: "@trendyol/jest-testcontainers",
+  globalSetup: "./src/tests/globalSetup.ts",
+  globalTeardown: "./src/tests/globalTeardown.ts",
   setupFiles: ["./src/tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
   collectCoverageFrom: ["src/**/*.{js,ts}", "../backend-core/src/**/*.{js,ts}"],
