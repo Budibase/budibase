@@ -13,7 +13,7 @@ describe("datasource validators", () => {
 
     beforeAll(async () => {
       const container = await new GenericContainer(
-        "mcr.microsoft.com/mssql/server"
+        "mcr.microsoft.com/mssql/server:2022-latest"
       )
         .withExposedPorts(1433)
         .withEnv("ACCEPT_EULA", "Y")
