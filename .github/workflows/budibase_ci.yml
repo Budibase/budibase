@@ -138,6 +138,8 @@ jobs:
 
   test-server:
     runs-on: ubuntu-latest
+    env:
+      DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -151,7 +153,17 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
+
+      - name: Pull testcontainers images
+        run: |
+          docker pull mcr.microsoft.com/mssql/server:2022-latest
+          docker pull mysql:8.3
+          docker pull postgres:16.1-bullseye
+          docker pull mongo:7.0-jammy
+          docker pull mariadb:lts
+
       - run: yarn --frozen-lockfile
+
       - name: Test server
         run: |
           if ${{ env.USE_NX_AFFECTED }}; then
