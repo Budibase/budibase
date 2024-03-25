@@ -1,8 +1,12 @@
 <html>
-
+  <script>
+    document.fonts.ready.then(() => {
+      window.parent.postMessage({ type: "docLoaded" });
+    })
+  </script>
   <head>
     {{{head}}}
-    <style>{{{style}}}</style>
+    <style>{{{css}}}</style>
   </head>
 
   <script>
