@@ -3,7 +3,7 @@
   import { Table } from "@budibase/bbui"
   import SlotRenderer from "./SlotRenderer.svelte"
   import { canBeSortColumn } from "@budibase/shared-core"
-  import Provider from "../../context/Provider.svelte"
+  import Provider from "components/context/Provider.svelte"
 
   export let dataProvider
   export let columns
@@ -16,8 +16,15 @@
   export let noRowsMessage
 
   const component = getContext("component")
-  const { styleable, getAction, ActionTypes, rowSelectionStore } =
-    getContext("sdk")
+  const context = getContext("context")
+  const {
+    styleable,
+    getAction,
+    ActionTypes,
+    rowSelectionStore,
+    generateGoldenSample,
+  } = getContext("sdk")
+
   const customColumnKey = `custom-${Math.random()}`
   const customRenderers = [
     {
@@ -28,6 +35,7 @@
 
   let selectedRows = []
 
+  $: snippets = $context.snippets
   $: hasChildren = $component.children
   $: loading = dataProvider?.loading ?? false
   $: data = dataProvider?.rows || []
@@ -59,6 +67,16 @@
   // Build our data context
   $: dataContext = {
     selectedRows,
+  }
+
+  // Provide additional data context for live binding eval
+  export const getAdditionalDataContext = () => {
+    const goldenRow = generateGoldenSample(data)
+    return {
+      eventContext: {
+        row: goldenRow,
+      },
+    }
   }
 
   const getFields = (
@@ -178,6 +196,7 @@
       {quiet}
       {compact}
       {customRenderers}
+      {snippets}
       allowSelectRows={allowSelectRows && table}
       bind:selectedRows
       allowEditRows={false}
