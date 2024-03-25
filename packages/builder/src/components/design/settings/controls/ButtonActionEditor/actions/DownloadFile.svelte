@@ -3,7 +3,6 @@
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
   import { FieldType } from "@budibase/types"
-  import { processStringSync } from "@budibase/string-templates"
 
   export let parameters
   export let bindings = []
@@ -11,8 +10,6 @@
   $: fileBindings = bindings?.filter(
     b => b.fieldSchema?.type === FieldType.ATTACHMENT
   )
-
-  let selectedAttachment
 
   const fileOptions = [
     {
@@ -24,14 +21,6 @@
       value: "url",
     },
   ]
-
-  const onAttachmentSelect = e => {
-    const fileData = processStringSync(e.detail, bindings)
-    parameters.value ??= {}
-    parameters.value.file_name = e.detail.name
-    parameters.value.url = e.detail.url
-    console.log({ parameters, bindings, fileData })
-  }
 
   onMount(() => {
     if (!parameters.type) {
@@ -46,9 +35,6 @@
     placeholder={null}
     bind:value={parameters.type}
     options={fileOptions}
-    on:change={() => {
-      delete parameters.value
-    }}
   />
   {#if parameters.type === "attachment"}
     <Label small>Attachment</Label>
@@ -56,25 +42,23 @@
       title="Attachment"
       bindings={fileBindings}
       allowHelpers={false}
-      bind:value={selectedAttachment}
-      on:change={onAttachmentSelect}
+      value={parameters.attachment}
+      on:change={value => (parameters.attachment = value.detail)}
     />
   {:else}
     <Label small>URL</Label>
     <DrawerBindableInput
       title="URL"
       {bindings}
-      value={parameters.value?.url}
-      on:change={e =>
-        (parameters.value = { ...parameters.value, url: e.detail })}
+      value={parameters.url}
+      on:change={value => (parameters.url = value.detail)}
     />
     <Label small>File name</Label>
     <DrawerBindableInput
       title="File name"
       {bindings}
-      value={parameters.value?.file_name}
-      on:change={e =>
-        (parameters.value = { ...parameters.value, file_name: e.detail })}
+      value={parameters.file_name}
+      on:change={value => (parameters.file_name = value.detail)}
     />
   {/if}
 </div>
