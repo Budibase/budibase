@@ -7,12 +7,25 @@ export const INITIAL_HOVER_STATE = {
 }
 
 export class HoverStore extends BudiStore {
+  hoverTimeout
+
   constructor() {
     super({ ...INITIAL_HOVER_STATE })
     this.hover = this.hover.bind(this)
   }
 
   hover(componentId, notifyClient = true) {
+    clearTimeout(this.hoverTimeout)
+    if (componentId) {
+      this.processHover(componentId, notifyClient)
+    } else {
+      this.hoverTimeout = setTimeout(() => {
+        this.processHover(componentId, notifyClient)
+      }, 10)
+    }
+  }
+
+  processHover(componentId, notifyClient) {
     if (componentId === get(this.store).componentId) {
       return
     }

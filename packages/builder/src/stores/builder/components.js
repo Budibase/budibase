@@ -279,12 +279,10 @@ export class ComponentStore extends BudiStore {
       else {
         if (setting.type === "dataProvider") {
           // Validate data provider exists, or else clear it
-          const treeId = parent?._id || component._id
-          const path = findComponentPath(screen?.props, treeId)
-          const providers = path.filter(component =>
-            component._component?.endsWith("/dataprovider")
+          const providers = findAllMatchingComponents(
+            screen?.props,
+            x => x._component === "@budibase/standard-components/dataprovider"
           )
-          // Validate non-empty values
           const valid = providers?.some(dp => value.includes?.(dp._id))
           if (!valid) {
             if (providers.length) {

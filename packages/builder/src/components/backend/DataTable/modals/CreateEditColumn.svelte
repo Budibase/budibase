@@ -34,12 +34,7 @@
   import { getBindings } from "components/backend/DataTable/formula"
   import JSONSchemaModal from "./JSONSchemaModal.svelte"
   import { ValidColumnNameRegex } from "@budibase/shared-core"
-  import {
-    FieldType,
-    FieldSubtype,
-    SourceName,
-    FieldTypeSubtypes,
-  } from "@budibase/types"
+  import { FieldType, FieldSubtype, SourceName } from "@budibase/types"
   import RelationshipSelector from "components/common/RelationshipSelector.svelte"
   import { RowUtils } from "@budibase/frontend-core"
   import ServerBindingPanel from "components/common/bindings/ServerBindingPanel.svelte"
@@ -709,21 +704,6 @@
       disabled={!isCreating}
       thin
       text="Allow multiple users"
-    />
-  {:else if editableColumn.type === FieldType.ATTACHMENT}
-    <Toggle
-      value={editableColumn.subtype !== FieldTypeSubtypes.ATTACHMENT.SINGLE &&
-        // Checking config before the subtype was added
-        editableColumn.constraints?.length?.maximum !== 1}
-      on:change={e => {
-        if (!e.detail) {
-          editableColumn.subtype = FieldTypeSubtypes.ATTACHMENT.SINGLE
-        } else {
-          delete editableColumn.subtype
-        }
-      }}
-      thin
-      text="Allow multiple"
     />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}
