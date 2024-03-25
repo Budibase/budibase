@@ -1,7 +1,13 @@
-import rowListScreen from "./rowListScreen"
+import gridListScreen from "./gridListScreen"
+import gridDetailsScreen from "./gridDetailsScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
+import formScreen from "./formScreen"
 
-const allTemplates = datasources => [...rowListScreen(datasources)]
+const allTemplates = datasources => [
+  ...gridListScreen(datasources),
+  ...gridDetailsScreen(datasources),
+  ...formScreen(datasources),
+]
 
 // Allows us to apply common behaviour to all create() functions
 const createTemplateOverride = template => () => {
@@ -19,6 +25,7 @@ export default datasources => {
   })
   const fromScratch = enrichTemplate(createFromScratchScreen)
   const tableTemplates = allTemplates(datasources).map(enrichTemplate)
+
   return [
     fromScratch,
     ...tableTemplates.sort((templateA, templateB) => {

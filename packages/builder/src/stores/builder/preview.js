@@ -4,6 +4,7 @@ const INITIAL_PREVIEW_STATE = {
   previewDevice: "desktop",
   previewEventHandler: null,
   showPreview: false,
+  selectedComponentContext: null,
 }
 
 export const createPreviewStore = () => {
@@ -52,6 +53,17 @@ export const createPreviewStore = () => {
     })
   }
 
+  const setSelectedComponentContext = context => {
+    store.update(state => {
+      state.selectedComponentContext = context
+      return state
+    })
+  }
+
+  const requestComponentContext = () => {
+    sendEvent("request-context")
+  }
+
   return {
     subscribe: store.subscribe,
     setDevice,
@@ -60,6 +72,8 @@ export const createPreviewStore = () => {
     startDrag,
     stopDrag,
     showPreview,
+    setSelectedComponentContext,
+    requestComponentContext,
   }
 }
 

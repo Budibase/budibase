@@ -11,7 +11,6 @@ export const buildMatcherRegex = (
   return patterns.map(pattern => {
     let route = pattern.route
     const method = pattern.method
-    const strict = pattern.strict ? pattern.strict : false
 
     // if there is a param in the route
     // use a wildcard pattern
@@ -24,24 +23,17 @@ export const buildMatcherRegex = (
       }
     }
 
-    return { regex: new RegExp(route), method, strict, route }
+    return { regex: new RegExp(route), method, route }
   })
 }
 
 export const matches = (ctx: BBContext, options: RegexMatcher[]) => {
-  return options.find(({ regex, method, strict, route }) => {
-    let urlMatch
-    if (strict) {
-      urlMatch = ctx.request.url === route
-    } else {
-      urlMatch = regex.test(ctx.request.url)
-    }
-
+  return options.find(({ regex, method }) => {
+    const urlMatch = regex.test(ctx.request.url)
     const methodMatch =
       method === "ALL"
         ? true
         : ctx.request.method.toLowerCase() === method.toLowerCase()
-
     return urlMatch && methodMatch
   })
 }

@@ -133,7 +133,7 @@ export async function refreshOAuthToken(
   configId?: string
 ): Promise<RefreshResponse> {
   switch (providerType) {
-    case SSOProviderType.OIDC:
+    case SSOProviderType.OIDC: {
       if (!configId) {
         return { err: { data: "OIDC config id not provided" } }
       }
@@ -142,12 +142,14 @@ export async function refreshOAuthToken(
         return { err: { data: "OIDC configuration not found" } }
       }
       return refreshOIDCAccessToken(oidcConfig, refreshToken)
-    case SSOProviderType.GOOGLE:
+    }
+    case SSOProviderType.GOOGLE: {
       let googleConfig = await configs.getGoogleConfig()
       if (!googleConfig) {
         return { err: { data: "Google configuration not found" } }
       }
       return refreshGoogleAccessToken(googleConfig, refreshToken)
+    }
   }
 }
 

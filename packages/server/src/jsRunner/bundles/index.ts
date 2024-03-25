@@ -1,15 +1,15 @@
-import { utils } from "@budibase/shared-core"
-import environment from "../../environment"
 import fs from "fs"
 
 export const enum BundleType {
   HELPERS = "helpers",
   BSON = "bson",
+  SNIPPETS = "snippets",
 }
 
 const bundleSourceFile: Record<BundleType, string> = {
   [BundleType.HELPERS]: "./index-helpers.ivm.bundle.js",
   [BundleType.BSON]: "./bson.ivm.bundle.js",
+  [BundleType.SNIPPETS]: "./snippets.ivm.bundle.js",
 }
 const bundleSourceCode: Partial<Record<BundleType, string>> = {}
 

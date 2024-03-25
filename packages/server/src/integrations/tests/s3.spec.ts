@@ -1,5 +1,3 @@
-const AWS = require("aws-sdk")
-
 import { default as S3Integration } from "../s3"
 
 jest.mock("aws-sdk")
@@ -79,7 +77,7 @@ describe("S3 Integration", () => {
     })
   })
 
-  it("calls the delete method with the correct params ", async () => {
+  it("calls the delete method with the correct params", async () => {
     await config.integration.delete({
       bucket: "test",
       delete: `{

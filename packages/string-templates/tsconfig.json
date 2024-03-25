@@ -1,11 +1,15 @@
 {
   "include": ["src/**/*"],
   "compilerOptions": {
-    "allowJs": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
+    "target": "es6",
+    "moduleResolution": "node",
+    "noImplicitAny": true,
+    "incremental": true,
+    "lib": ["dom"],
     "outDir": "dist",
     "esModuleInterop": true,
-    "types": ["node", "jest"]
+    "types": ["node", "jest"],
+    "resolveJsonModule": true
   }
 }

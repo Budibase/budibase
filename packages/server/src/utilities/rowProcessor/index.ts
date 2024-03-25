@@ -6,7 +6,6 @@ import { TYPE_TRANSFORM_MAP } from "./map"
 import {
   FieldType,
   AutoFieldSubType,
-  FieldSubtype,
   Row,
   RowAttachment,
   Table,
@@ -159,10 +158,7 @@ export async function inputProcessing(
     }
 
     if (field.type === FieldType.BB_REFERENCE && value) {
-      clonedRow[key] = await processInputBBReferences(
-        value,
-        field.subtype as FieldSubtype
-      )
+      clonedRow[key] = await processInputBBReferences(value, field.subtype)
     }
   }
 
@@ -238,14 +234,14 @@ export async function outputProcessing<T extends Row[] | Row>(
       for (let row of enriched) {
         row[property] = await processOutputBBReferences(
           row[property],
-          column.subtype as FieldSubtype
+          column.subtype
         )
       }
     }
   }
 
   // process formulas after the complex types had been processed
-  enriched = processFormulas(table, enriched, { dynamic: true })
+  enriched = await processFormulas(table, enriched, { dynamic: true })
 
   if (opts.squash) {
     enriched = (await linkRows.squashLinksToPrimaryDisplay(

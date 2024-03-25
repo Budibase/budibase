@@ -17,6 +17,7 @@ export const DEFAULT_CONFIG = {
     adminUser: { checked: false },
     sso: { checked: false },
   },
+  maintenance: [],
   offlineMode: false,
 }
 
@@ -48,6 +49,7 @@ export function createAdminStore() {
       store.isDev = environment.isDev
       store.baseUrl = environment.baseUrl
       store.offlineMode = environment.offlineMode
+      store.maintenance = environment.maintenance
       return store
     })
   }
