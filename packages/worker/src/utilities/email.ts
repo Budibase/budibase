@@ -168,9 +168,15 @@ export async function sendEmail(
   if (opts?.attachments) {
     const baseUrl = appContext.getPlatformURL()
     const attachments = await Promise.all(
-      opts.attachments?.map(async signedUrl => {
-        const response = await fetch(baseUrl + signedUrl)
-        const filename = path.basename(new URL(baseUrl + signedUrl).pathname)
+      opts.attachments?.map(async attachmentUrl => {
+        const isFullyFormedUrl =
+          attachmentUrl.startsWith("http://") ||
+          attachmentUrl.startsWith("https://")
+
+        const url = isFullyFormedUrl ? attachmentUrl : baseUrl + attachmentUrl
+
+        const response = await fetch(url)
+        const filename = path.basename(new URL(url).pathname)
 
         return {
           filename: filename,
