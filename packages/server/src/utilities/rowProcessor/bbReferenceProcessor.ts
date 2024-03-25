@@ -7,7 +7,7 @@ const ROW_PREFIX = DocumentType.ROW + SEPARATOR
 
 export async function processInputBBReferences(
   value: string | string[] | { _id: string } | { _id: string }[],
-  subtype: FieldSubtype
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
 ): Promise<string | string[] | null> {
   let referenceIds: string[] = []
 
@@ -61,7 +61,7 @@ export async function processInputBBReferences(
 
 export async function processOutputBBReferences(
   value: string | string[],
-  subtype: FieldSubtype
+  subtype: FieldSubtype.USER | FieldSubtype.USERS
 ) {
   if (value === null || value === undefined) {
     // Already processed or nothing to process

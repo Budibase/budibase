@@ -60,7 +60,7 @@ function generateSchema(
         schema.text(key)
         break
       case FieldType.BB_REFERENCE: {
-        const subtype = column.subtype as FieldSubtype
+        const subtype = column.subtype
         switch (subtype) {
           case FieldSubtype.USER:
             schema.text(key)

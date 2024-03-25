@@ -4,8 +4,6 @@ import { databaseTestProviders } from "../../../../integrations/tests/utils"
 import { MongoClient, type Collection, BSON } from "mongodb"
 import { generator } from "@budibase/backend-core/tests"
 
-jest.unmock("mongodb")
-
 const collection = "test_collection"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
@@ -247,6 +245,44 @@ describe("/queries", () => {
       const result = await config.api.query.execute(query._id!)
 
       expect(result.data).toEqual([{ value: 5 }])
+    })
+
+    it("should be able to updateOne by ObjectId", async () => {
+      const insertResult = await withCollection(c =>
+        c.insertOne({ name: "one" })
+      )
+      const query = await createQuery({
+        fields: {
+          json: {
+            filter: { _id: { $eq: `ObjectId("${insertResult.insertedId}")` } },
+            update: { $set: { name: "newName" } },
+          },
+          extra: {
+            actionType: "updateOne",
+          },
+        },
+        queryVerb: "update",
+      })
+
+      const result = await config.api.query.execute(query._id!)
+
+      expect(result.data).toEqual([
+        {
+          acknowledged: true,
+          matchedCount: 1,
+          modifiedCount: 1,
+          upsertedCount: 0,
+          upsertedId: null,
+        },
+      ])
+
+      await withCollection(async collection => {
+        const doc = await collection.findOne({ name: { $eq: "newName" } })
+        expect(doc).toEqual({
+          _id: insertResult.insertedId,
+          name: "newName",
+        })
+      })
     })
 
     it("a count query with a transformer", async () => {
@@ -532,6 +568,87 @@ describe("/queries", () => {
             name: "newName",
           })
         }
+      })
+    })
+  })
+
+  it("should throw an error if the incorrect actionType is specified", async () => {
+    const verbs = ["read", "create", "update", "delete"]
+    for (const verb of verbs) {
+      const query = await createQuery({
+        fields: { json: {}, extra: { actionType: "invalid" } },
+        queryVerb: verb,
+      })
+      await config.api.query.execute(query._id!, undefined, { status: 400 })
+    }
+  })
+
+  it("should ignore extra brackets in query", async () => {
+    const query = await createQuery({
+      fields: {
+        json: { foo: "te}st" },
+        extra: {
+          actionType: "insertOne",
+        },
+      },
+      queryVerb: "create",
+    })
+
+    const result = await config.api.query.execute(query._id!)
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        insertedId: expectValidId,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const doc = await collection.findOne({ foo: { $eq: "te}st" } })
+      expect(doc).toEqual({
+        _id: expectValidBsonObjectId,
+        foo: "te}st",
+      })
+    })
+  })
+
+  it("should be able to save deeply nested data", async () => {
+    const data = {
+      foo: "bar",
+      data: [
+        { cid: 1 },
+        { cid: 2 },
+        {
+          nested: {
+            name: "test",
+            ary: [1, 2, 3],
+            aryOfObjects: [{ a: 1 }, { b: 2 }],
+          },
+        },
+      ],
+    }
+    const query = await createQuery({
+      fields: {
+        json: data,
+        extra: {
+          actionType: "insertOne",
+        },
+      },
+      queryVerb: "create",
+    })
+
+    const result = await config.api.query.execute(query._id!)
+    expect(result.data).toEqual([
+      {
+        acknowledged: true,
+        insertedId: expectValidId,
+      },
+    ])
+
+    await withCollection(async collection => {
+      const doc = await collection.findOne({ foo: { $eq: "bar" } })
+      expect(doc).toEqual({
+        _id: expectValidBsonObjectId,
+        ...data,
       })
     })
   })
