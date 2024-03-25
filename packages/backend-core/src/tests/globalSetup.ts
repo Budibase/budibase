@@ -2,7 +2,6 @@ import { GenericContainer, Wait } from "testcontainers"
 
 export default async function setup() {
   const container = await new GenericContainer("budibase/couchdb")
-    .withName("couchdb-service")
     .withExposedPorts(5984)
     .withEnvironment({
       COUCHDB_PASSWORD: "budibase",
