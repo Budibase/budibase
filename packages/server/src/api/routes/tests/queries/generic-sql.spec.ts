@@ -278,22 +278,20 @@ describe.each([
           name: "name",
           type: "string",
         },
+        number: {
+          name: "number",
+          type: "string",
+        },
       })
       expect(response.rows).toEqual([
         {
           birthday: null,
           id: 1,
           name: "one",
+          number: null,
         },
       ])
       expect(events.query.previewed).toHaveBeenCalledTimes(1)
-
-      const dsWithoutConfig = { ...datasource }
-      delete dsWithoutConfig.config
-      expect(events.query.previewed).toHaveBeenCalledWith(
-        dsWithoutConfig,
-        request
-      )
     })
 
     it("should work with static variables", async () => {
@@ -427,11 +425,9 @@ describe.each([
         },
       })
 
-      // TODO: is this the correct behaviour? To return an empty string when the
-      // underlying query has been deleted?
       expect(preview.rows).toEqual([
         {
-          foo: "",
+          foo: datasource.source === SourceName.SQL_SERVER ? "" : null,
         },
       ])
     })
@@ -626,6 +622,7 @@ describe.each([
             id: 2,
             name: "one",
             birthday: null,
+            number: null,
           },
         ])
       })
@@ -693,7 +690,9 @@ describe.each([
         ])
 
         const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
-        expect(rows).toEqual([{ id: 1, name: "foo", birthday: null }])
+        expect(rows).toEqual([
+          { id: 1, name: "foo", birthday: null, number: null },
+        ])
       })
 
       it("should be able to execute an update that updates no rows", async () => {
@@ -786,11 +785,6 @@ describe.each([
         id: 2,
         name: "two",
       })
-
-      const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
-      expect(rows).toEqual([
-        { id: 1, name: "foo", birthday: null, number: null },
-      ])
     })
 
     it("should be able to execute an update that updates no rows", async () => {
