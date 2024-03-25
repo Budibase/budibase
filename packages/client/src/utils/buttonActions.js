@@ -401,28 +401,32 @@ const closeSidePanelHandler = () => {
 }
 
 const downloadFileHandler = async (action, _context) => {
-  let { url, file_name, type, attachment } = action.parameters
-  if (type === "attachment") {
-    const attachmentObject = JSON.parse(attachment)
-    url = attachmentObject.url
-    file_name = attachmentObject.name
-  }
+  try {
+    let { url, file_name, type, attachment } = action.parameters
+    if (type === "attachment") {
+      const attachmentObject = JSON.parse(attachment)
+      url = attachmentObject.url
+      file_name = attachmentObject.name
+    }
 
-  const response = await fetch(url)
+    const response = await fetch(url)
 
-  if (!response.ok) {
+    if (!response.ok) {
+      throw `Url is not valid: ${url}`
+    }
+
+    const objectUrl = URL.createObjectURL(await response.blob())
+
+    const link = document.createElement("a")
+    link.href = objectUrl
+    link.download = file_name
+    link.click()
+
+    URL.revokeObjectURL(objectUrl)
+  } catch (e) {
+    console.error(e)
     notificationStore.actions.error("File cannot be downloaded")
-    return
   }
-
-  const objectUrl = URL.createObjectURL(await response.blob())
-
-  const link = document.createElement("a")
-  link.href = objectUrl
-  link.download = file_name
-  link.click()
-
-  URL.revokeObjectURL(objectUrl)
 }
 
 const handlerMap = {
