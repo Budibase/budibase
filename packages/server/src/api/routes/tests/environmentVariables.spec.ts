@@ -143,7 +143,10 @@ describe("/api/env/variables", () => {
     delete response.body.datasource.config
     expect(events.query.previewed).toHaveBeenCalledWith(
       response.body.datasource,
-      queryPreview
+      {
+        ...queryPreview,
+        nullDefaultSupport: true,
+      }
     )
     expect(pg.Client).toHaveBeenCalledWith({ password: "test", ssl: undefined })
   })
