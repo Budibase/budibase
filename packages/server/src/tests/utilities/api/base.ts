@@ -187,7 +187,9 @@ export abstract class TestAPI {
       expect(response.body).toMatchObject(expectations.body)
     }
 
-    if (response.text && response.text.length > 0) {
+    const isChunked = response.headers["transfer-encoding"] === "chunked"
+    const textLength = response.text ? new Blob([response.text]).size : 0
+    if (response.text && textLength > 0 && !isChunked) {
       // @ts-expect-error - we know this exists, it's just not in the types
       const request = response.request as Test
       const contentLength = response.headers["content-length"]
@@ -196,7 +198,7 @@ export abstract class TestAPI {
           `Failed request "${request.method} ${request.url}": Content-Length header not present, but response has a body (body length ${response.text.length})`
         )
       }
-      if (parseInt(contentLength) !== response.text.length) {
+      if (parseInt(contentLength) !== textLength) {
         throw new Error(
           `Failed request "${request.method} ${request.url}": Content-Length header does not match response body length (header: ${contentLength}, body: ${response.text.length})`
         )
