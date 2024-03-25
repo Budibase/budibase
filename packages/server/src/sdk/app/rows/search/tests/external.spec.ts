@@ -26,7 +26,7 @@ describe("external search", () => {
   const rows: Row[] = []
 
   beforeAll(async () => {
-    const container = await new GenericContainer("mysql")
+    const container = await new GenericContainer("mysql:8.3")
       .withExposedPorts(3306)
       .withEnvironment({
         MYSQL_ROOT_PASSWORD: "admin",
