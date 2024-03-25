@@ -464,7 +464,7 @@ describe("/queries", () => {
     })
   })
 
-  it("should ignore be able to save deeply nested data", async () => {
+  it("should be able to save deeply nested data", async () => {
     const data = {
       foo: "bar",
       data: [
