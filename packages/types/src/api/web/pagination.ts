@@ -5,7 +5,7 @@ export enum SortOrder {
 
 export enum SortType {
   STRING = "string",
-  number = "number",
+  NUMBER = "number",
 }
 
 export interface BasicPaginationRequest {

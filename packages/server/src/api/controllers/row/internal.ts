@@ -7,14 +7,9 @@ import {
   outputProcessing,
 } from "../../../utilities/rowProcessor"
 import * as utils from "./utils"
-// import { fullSearch, paginatedSearch } from "./internalSearch"
-// import { getGlobalUsersFromMetadata } from "../../../utilities/global"
 import { cloneDeep } from "lodash/fp"
 import { context } from "@budibase/backend-core"
 import { finaliseRow, updateRelatedFormula } from "./staticFormula"
-import { csv, json, jsonWithSchema, Format } from "../view/exporters"
-import { apiFileReturn } from "../../../utilities/fileSystem"
-import { sqlSearch } from "./internalSql"
 import {
   FieldType,
   LinkDocumentValue,
@@ -27,12 +22,6 @@ import {
 import sdk from "../../../sdk"
 import { getLinkedTableIDs } from "../../../db/linkedRows/linkUtils"
 import { flatten } from "lodash"
-
-// const CALCULATION_TYPES = {
-//   SUM: "sum",
-//   COUNT: "count",
-//   STATS: "stats",
-// }
 
 export async function patch(ctx: UserCtx<PatchRowRequest, PatchRowResponse>) {
   const tableId = utils.getTableId(ctx)
@@ -192,102 +181,6 @@ export async function bulkDestroy(ctx: UserCtx) {
   await updateRelatedFormula(table, processedRows)
   await Promise.all(updates)
   return { response: { ok: true }, rows: processedRows }
-}
-
-export async function search(ctx: UserCtx) {
-  return await sqlSearch(ctx)
-  // // Fetch the whole table when running in cypress, as search doesn't work
-  // if (!env.COUCH_DB_URL && env.isCypress()) {
-  //   return { rows: await fetch(ctx) }
-  // }
-  //
-  // const { tableId } = ctx.params
-  // const db = context.getAppDB()
-  // const { paginate, query, ...params } = ctx.request.body
-  // params.version = ctx.version
-  // params.tableId = tableId
-  //
-  // let table
-  // if (params.sort && !params.sortType) {
-  //   table = await db.get(tableId)
-  //   const schema = table.schema
-  //   const sortField = schema[params.sort]
-  //   params.sortType = sortField.type == "number" ? "number" : "string"
-  // }
-  //
-  // let response
-  // if (paginate) {
-  //   response = await paginatedSearch(query, params)
-  // } else {
-  //   response = await fullSearch(query, params)
-  // }
-  //
-  // // Enrich search results with relationships
-  // if (response.rows && response.rows.length) {
-  //   // enrich with global users if from users table
-  //   if (tableId === InternalTables.USER_METADATA) {
-  //     response.rows = await getGlobalUsersFromMetadata(response.rows)
-  //   }
-  //   table = table || (await db.get(tableId))
-  //   response.rows = await outputProcessing(table, response.rows)
-  // }
-  //
-  // return response
-}
-
-export async function exportRows(ctx: UserCtx) {
-  const db = context.getAppDB()
-  const table = (await db.get(ctx.params.tableId)) as Table
-  const rowIds = ctx.request.body.rows
-  let format = ctx.query.format
-  if (typeof format !== "string") {
-    ctx.throw(400, "Format parameter is not valid")
-  }
-  const { columns, query } = ctx.request.body
-
-  let result: Row[] = []
-  if (rowIds) {
-    let response = (
-      await db.allDocs({
-        include_docs: true,
-        keys: rowIds,
-      })
-    ).rows.map(row => row.doc)
-
-    result = (await outputProcessing(table, response)) as Row[]
-  } else if (query) {
-    let searchResponse = await search(ctx)
-    result = searchResponse.rows
-  }
-
-  let rows: Row[] = []
-  let schema = table.schema
-
-  // Filter data to only specified columns if required
-  if (columns && columns.length) {
-    for (let i = 0; i < result.length; i++) {
-      rows[i] = {}
-      for (let column of columns) {
-        rows[i][column] = result[i][column]
-      }
-    }
-  } else {
-    rows = result
-  }
-
-  let exportRows = sdk.rows.utils.cleanExportRows(rows, schema, format, columns)
-  if (format === Format.CSV) {
-    ctx.attachment("export.csv")
-    return apiFileReturn(csv(Object.keys(rows[0]), exportRows))
-  } else if (format === Format.JSON) {
-    ctx.attachment("export.json")
-    return apiFileReturn(json(exportRows))
-  } else if (format === Format.JSON_WITH_SCHEMA) {
-    ctx.attachment("export.json")
-    return apiFileReturn(jsonWithSchema(schema, exportRows))
-  } else {
-    throw "Format not recognised"
-  }
 }
 
 export async function fetchEnrichedRow(ctx: UserCtx) {
