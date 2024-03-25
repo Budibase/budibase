@@ -9,7 +9,7 @@ describe("datasource validators", () => {
     let port: number
 
     beforeAll(async () => {
-      const container = await new GenericContainer("postgres")
+      const container = await new GenericContainer("postgres:16.1-bullseye")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .start()
