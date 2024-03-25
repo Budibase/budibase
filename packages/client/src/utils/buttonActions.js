@@ -400,7 +400,7 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
-const downloadFileHandler = async (action, context) => {
+const downloadFileHandler = async (action, _context) => {
   let { url, file_name, type, attachment } = action.parameters
   if (type === "attachment") {
     const attachmentObject = JSON.parse(attachment)
