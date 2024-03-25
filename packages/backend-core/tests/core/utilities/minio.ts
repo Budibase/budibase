@@ -24,7 +24,7 @@ export async function start(): Promise<{ host: string; port: number }> {
 
   const host = container.getHost()
   const port = container.getMappedPort(9000)
-  env._set("MINIO_URL", `http://0.0.0.0:${port}`)
+  env._set("MINIO_URL", `http:/${host}:${port}`)
   return { host, port }
 }
 
