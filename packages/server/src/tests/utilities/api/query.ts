@@ -8,7 +8,7 @@ import {
 import { Expectations, TestAPI } from "./base"
 
 export class QueryAPI extends TestAPI {
-  create = async (body: Query): Promise<Query> => {
+  save = async (body: Query): Promise<Query> => {
     return await this._post<Query>(`/api/queries`, { body })
   }
 

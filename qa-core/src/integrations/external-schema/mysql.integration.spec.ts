@@ -6,7 +6,7 @@ describe("datasource validators", () => {
     let config: any
 
     beforeAll(async () => {
-      const container = await new GenericContainer("mysql")
+      const container = await new GenericContainer("mysql:8.3")
         .withExposedPorts(3306)
         .withEnv("MYSQL_ROOT_PASSWORD", "admin")
         .withEnv("MYSQL_DATABASE", "db")
