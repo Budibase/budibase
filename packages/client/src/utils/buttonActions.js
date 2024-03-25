@@ -411,7 +411,8 @@ const downloadFileHandler = async (action, context) => {
   const response = await fetch(url)
 
   if (!response.ok) {
-    throw "TODO"
+    notificationStore.actions.error("File cannot be downloaded")
+    return
   }
 
   const objectUrl = URL.createObjectURL(await response.blob())
