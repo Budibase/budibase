@@ -28,7 +28,7 @@ jest.mock("uuid", () => ({ v4: () => "00000000-0000-0000-0000-000000000000" }))
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
 import fetch from "node-fetch"
-import { objectStoreTestProviders } from "./utils"
+import { objectStoreTestProviders } from "@budibase/backend-core/tests"
 import { Readable } from "stream"
 
 const FormData = require("form-data")
@@ -628,6 +628,7 @@ describe("REST Integration", () => {
 
   describe("File Handling", () => {
     beforeAll(async () => {
+      jest.unmock("aws-sdk")
       await objectStoreTestProviders.minio.start()
     })
 
@@ -668,7 +669,9 @@ describe("REST Integration", () => {
       expect(response.data).toEqual({
         size: responseData.byteLength,
         name: "00000000-0000-0000-0000-000000000000.tar.gz",
-        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.tar.gz"
+        ),
         extension: "tar.gz",
         key: expect.stringContaining(
           "app-id/00000000-0000-0000-0000-000000000000.tar.gz"
@@ -710,7 +713,9 @@ describe("REST Integration", () => {
       expect(response.data).toEqual({
         size: responseData.byteLength,
         name: "00000000-0000-0000-0000-000000000000.pdf",
-        url: "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf",
+        url: expect.stringContaining(
+          "/files/signed/tmp-file-attachments/app-id/00000000-0000-0000-0000-000000000000.pdf"
+        ),
         extension: "pdf",
         key: expect.stringContaining(
           "app-id/00000000-0000-0000-0000-000000000000.pdf"
