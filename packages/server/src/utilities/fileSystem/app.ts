@@ -40,7 +40,7 @@ export const getComponentLibraryManifest = async (library: string) => {
     const db = context.getAppDB()
     const app = await db.get<App>(DocumentType.APP_METADATA)
 
-    if (app.version === devClientVersion) {
+    if (app.version === devClientVersion || env.isTest()) {
       const paths = [
         join(TOP_LEVEL_PATH, "packages/client", filename),
         join(process.cwd(), "client", filename),
