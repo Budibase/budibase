@@ -12,19 +12,22 @@ const createTableSQL: Record<string, string> = {
     CREATE TABLE test_table (
         id serial PRIMARY KEY,
         name VARCHAR ( 50 ) NOT NULL,
-        birthday TIMESTAMP
+        birthday TIMESTAMP,
+        number INT
     );`,
   [SourceName.MYSQL]: `
     CREATE TABLE test_table (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(50) NOT NULL,
-        birthday TIMESTAMP
+        birthday TIMESTAMP,
+        number INT
     );`,
   [SourceName.SQL_SERVER]: `
     CREATE TABLE test_table (
         id INT IDENTITY(1,1) PRIMARY KEY,
         name NVARCHAR(50) NOT NULL,
-        birthday DATETIME
+        birthday DATETIME,
+        number INT
     );`,
 }
 
@@ -36,7 +39,7 @@ describe.each([
   ["mysql", databaseTestProviders.mysql],
   ["mssql", databaseTestProviders.mssql],
   ["mariadb", databaseTestProviders.mariadb],
-])("queries (%s)", (__, dsProvider) => {
+])("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
   let datasource: Datasource
 
@@ -51,7 +54,7 @@ describe.each([
       transformer: "return data",
       readable: true,
     }
-    return await config.api.query.create({ ...defaultQuery, ...query })
+    return await config.api.query.save({ ...defaultQuery, ...query })
   }
 
   async function rawQuery(sql: string): Promise<any> {
@@ -221,26 +224,31 @@ describe.each([
           id: 1,
           name: "one",
           birthday: null,
+          number: null,
         },
         {
           id: 2,
           name: "two",
           birthday: null,
+          number: null,
         },
         {
           id: 3,
           name: "three",
           birthday: null,
+          number: null,
         },
         {
           id: 4,
           name: "four",
           birthday: null,
+          number: null,
         },
         {
           id: 5,
           name: "five",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -263,6 +271,7 @@ describe.each([
           id: 2,
           name: "one",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -291,6 +300,7 @@ describe.each([
           id: 1,
           name: "one",
           birthday: null,
+          number: null,
         },
       ])
     })
@@ -329,7 +339,9 @@ describe.each([
       ])
 
       const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
-      expect(rows).toEqual([{ id: 1, name: "foo", birthday: null }])
+      expect(rows).toEqual([
+        { id: 1, name: "foo", birthday: null, number: null },
+      ])
     })
 
     it("should be able to execute an update that updates no rows", async () => {
@@ -396,6 +408,57 @@ describe.each([
 
       const rows = await rawQuery("SELECT * FROM test_table WHERE id = 1")
       expect(rows).toHaveLength(0)
+    })
+  })
+
+  // this parameter really only impacts SQL queries
+  describe("confirm nullDefaultSupport", () => {
+    const queryParams = {
+      fields: {
+        sql: "INSERT INTO test_table (name, number) VALUES ({{ bindingName }}, {{ bindingNumber }})",
+      },
+      parameters: [
+        {
+          name: "bindingName",
+          default: "",
+        },
+        {
+          name: "bindingNumber",
+          default: "",
+        },
+      ],
+      queryVerb: "create",
+    }
+
+    it("should error for old queries", async () => {
+      const query = await createQuery(queryParams)
+      await config.api.query.save({ ...query, nullDefaultSupport: false })
+      let error: string | undefined
+      try {
+        await config.api.query.execute(query._id!, {
+          parameters: {
+            bindingName: "testing",
+          },
+        })
+      } catch (err: any) {
+        error = err.message
+      }
+      if (dbName === "mssql") {
+        expect(error).toBeUndefined()
+      } else {
+        expect(error).toBeDefined()
+        expect(error).toContain("integer")
+      }
+    })
+
+    it("should not error for new queries", async () => {
+      const query = await createQuery(queryParams)
+      const results = await config.api.query.execute(query._id!, {
+        parameters: {
+          bindingName: "testing",
+        },
+      })
+      expect(results).toEqual({ data: [{ created: true }] })
     })
   })
 })
