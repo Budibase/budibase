@@ -5,7 +5,7 @@ import {
   PreviewQueryRequest,
   PreviewQueryResponse,
 } from "@budibase/types"
-import { TestAPI } from "./base"
+import { Expectations, TestAPI } from "./base"
 
 export class QueryAPI extends TestAPI {
   create = async (body: Query): Promise<Query> => {
@@ -14,12 +14,14 @@ export class QueryAPI extends TestAPI {
 
   execute = async (
     queryId: string,
-    body?: ExecuteQueryRequest
+    body?: ExecuteQueryRequest,
+    expectations?: Expectations
   ): Promise<ExecuteQueryResponse> => {
     return await this._post<ExecuteQueryResponse>(
       `/api/v2/queries/${queryId}`,
       {
         body,
+        expectations,
       }
     )
   }
