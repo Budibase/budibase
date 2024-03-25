@@ -8,7 +8,7 @@
   $: appId = $appStore.appId
 
   const handleChange = e => {
-    const value = e.value
+    const value = e.detail
     if (value == null) return
 
     API.setRevertableVersion(appId, value)
