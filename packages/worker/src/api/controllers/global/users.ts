@@ -127,8 +127,8 @@ export const adminUser = async (
     try {
       const finalUser = await userSdk.db.createAdminUser(
         email,
-        password,
         tenantId,
+        password,
         {
           ssoId,
           hashPassword,
