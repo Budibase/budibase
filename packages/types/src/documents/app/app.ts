@@ -71,6 +71,7 @@ export interface AppIcon {
 export interface AppFeatures {
   componentValidation?: boolean
   disableUserMetadata?: boolean
+  skeletonLoader?: boolean
 }
 
 export interface AutomationSettings {

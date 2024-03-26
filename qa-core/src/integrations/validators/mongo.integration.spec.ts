@@ -26,7 +26,7 @@ describe("datasource validators", () => {
     beforeAll(async () => {
       const user = generator.name()
       const password = generator.hash()
-      const container = await new GenericContainer("mongo")
+      const container = await new GenericContainer("mongo:7.0-jammy")
         .withExposedPorts(27017)
         .withEnv("MONGO_INITDB_ROOT_USERNAME", user)
         .withEnv("MONGO_INITDB_ROOT_PASSWORD", password)
