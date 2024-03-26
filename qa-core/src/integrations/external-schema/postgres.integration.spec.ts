@@ -17,7 +17,7 @@ describe("getExternalSchema", () => {
     }
 
     beforeAll(async () => {
-      const container = await new GenericContainer("postgres:13.12")
+      const container = await new GenericContainer("postgres:16.1-bullseye")
         .withExposedPorts(5432)
         .withEnv("POSTGRES_PASSWORD", "password")
         .start()
