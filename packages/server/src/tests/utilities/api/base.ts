@@ -1,6 +1,7 @@
 import TestConfiguration from "../TestConfiguration"
-import { SuperTest, Test, Response } from "supertest"
+import request, { SuperTest, Test, Response } from "supertest"
 import { ReadStream } from "fs"
+import { getServer } from "../../../app"
 
 type Headers = Record<string, string | string[] | undefined>
 type Method = "get" | "post" | "put" | "patch" | "delete"
@@ -107,26 +108,29 @@ export abstract class TestAPI {
     const headersFn = publicUser
       ? this.config.publicHeaders.bind(this.config)
       : this.config.defaultHeaders.bind(this.config)
-    let request = this.request[method](url).set(
+
+    const app = getServer()
+    let req = request(app)[method](url)
+    req = req.set(
       headersFn({
         "x-budibase-include-stacktrace": "true",
       })
     )
     if (headers) {
-      request = request.set(headers)
+      req = req.set(headers)
     }
     if (body) {
-      request = request.send(body)
+      req = req.send(body)
     }
     for (const [key, value] of Object.entries(fields)) {
-      request = request.field(key, value)
+      req = req.field(key, value)
     }
 
     for (const [key, value] of Object.entries(files)) {
       if (isAttachedFile(value)) {
-        request = request.attach(key, value.file, value.name)
+        req = req.attach(key, value.file, value.name)
       } else {
-        request = request.attach(key, value as any)
+        req = req.attach(key, value as any)
       }
     }
     if (expectations?.headers) {
@@ -136,11 +140,11 @@ export abstract class TestAPI {
             `Got an undefined expected value for header "${key}", if you want to check for the absence of a header, use headersNotPresent`
           )
         }
-        request = request.expect(key, value as any)
+        req = req.expect(key, value as any)
       }
     }
 
-    return await request
+    return await req
   }
 
   protected _checkResponse = (
