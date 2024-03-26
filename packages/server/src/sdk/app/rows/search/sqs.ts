@@ -4,16 +4,19 @@ import {
   QueryJson,
   RelationshipFieldMetadata,
   Row,
-  SearchFilters, SearchParams,
+  SearchFilters,
+  SearchParams,
+  SortDirection,
+  SortOrder,
   SortType,
   Table,
-  SortJson,
-  SortOrder,
-  SortDirection,
 } from "@budibase/types"
 import SqlQueryBuilder from "../../../../integrations/base/sql"
 import { SqlClient } from "../../../../integrations/utils"
-import { buildInternalRelationships, sqlOutputProcessing } from "../../../../api/controllers/row/utils"
+import {
+  buildInternalRelationships,
+  sqlOutputProcessing,
+} from "../../../../api/controllers/row/utils"
 import sdk from "../../../index"
 import { context } from "@budibase/backend-core"
 import { CONSTANT_INTERNAL_ROW_COLS } from "../../../../db/utils"
@@ -128,17 +131,20 @@ export async function search(options: SearchParams) {
 
   if (params.sort && !params.sortType) {
     const sortField = table.schema[params.sort]
-    const sortType = sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
-    const sortDirection = params.sortOrder === SortOrder.ASCENDING ? SortDirection.ASCENDING : SortDirection.DESCENDING
-    const sortObj: SortJson = {
+    const sortType =
+      sortField.type === FieldType.NUMBER ? SortType.NUMBER : SortType.STRING
+    const sortDirection =
+      params.sortOrder === SortOrder.ASCENDING
+        ? SortDirection.ASCENDING
+        : SortDirection.DESCENDING
+    request.sort = {
       [sortField.name]: {
         direction: sortDirection,
         type: sortType as SortType,
       },
     }
-    request.sort = sortObj
   }
-  if (paginate) {
+  if (paginate && params.limit) {
     request.paginate = {
       limit: params.limit,
       page: params.bookmark,
