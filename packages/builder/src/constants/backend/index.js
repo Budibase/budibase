@@ -1,12 +1,12 @@
-import { FieldType, FieldSubtype } from "@budibase/types"
+import {
+  FieldType,
+  FieldSubtype,
+  INTERNAL_TABLE_SOURCE_ID,
+  AutoFieldSubType,
+  Hosting,
+} from "@budibase/types"
 
-export const AUTO_COLUMN_SUB_TYPES = {
-  AUTO_ID: "autoID",
-  CREATED_BY: "createdBy",
-  CREATED_AT: "createdAt",
-  UPDATED_BY: "updatedBy",
-  UPDATED_AT: "updatedAt",
-}
+export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
 
 export const AUTO_COLUMN_DISPLAY_NAMES = {
   AUTO_ID: "Auto ID",
@@ -108,9 +108,17 @@ export const FIELDS = {
   ATTACHMENT: {
     name: "Attachment",
     type: FieldType.ATTACHMENT,
-    icon: "Folder",
+    icon: "Multiple",
     constraints: {
       type: "array",
+      presence: false,
+    },
+  },
+  ATTACHMENT_SINGLE: {
+    name: "Attachment",
+    type: FieldType.ATTACHMENT_SINGLE,
+    icon: "Folder",
+    constraints: {
       presence: false,
     },
   },
@@ -167,10 +175,7 @@ export const FILE_TYPES = {
   DOCUMENT: ["odf", "docx", "doc", "pdf", "csv"],
 }
 
-export const HostingTypes = {
-  CLOUD: "cloud",
-  SELF: "self",
-}
+export const HostingTypes = Hosting
 
 export const Roles = {
   ADMIN: "ADMIN",
@@ -185,12 +190,6 @@ export function isAutoColumnUserRelationship(subtype) {
     subtype === AUTO_COLUMN_SUB_TYPES.CREATED_BY ||
     subtype === AUTO_COLUMN_SUB_TYPES.UPDATED_BY
   )
-}
-
-export const RelationshipType = {
-  MANY_TO_MANY: "many-to-many",
-  ONE_TO_MANY: "one-to-many",
-  MANY_TO_ONE: "many-to-one",
 }
 
 export const PrettyRelationshipDefinitions = {
@@ -218,7 +217,7 @@ export const SWITCHABLE_TYPES = [
   ...ALLOWABLE_NUMBER_TYPES,
 ]
 
-export const BUDIBASE_INTERNAL_DB_ID = "bb_internal"
+export const BUDIBASE_INTERNAL_DB_ID = INTERNAL_TABLE_SOURCE_ID
 export const DEFAULT_BB_DATASOURCE_ID = "datasource_internal_bb_default"
 export const BUDIBASE_DATASOURCE_TYPE = "budibase"
 export const DB_TYPE_INTERNAL = "internal"
@@ -265,10 +264,10 @@ export const IntegrationNames = {
 }
 
 export const SchemaTypeOptions = [
-  { label: "Text", value: "string" },
-  { label: "Number", value: "number" },
-  { label: "Boolean", value: "boolean" },
-  { label: "Datetime", value: "datetime" },
+  { label: "Text", value: FieldType.STRING },
+  { label: "Number", value: FieldType.NUMBER },
+  { label: "Boolean", value: FieldType.BOOLEAN },
+  { label: "Datetime", value: FieldType.DATETIME },
 ]
 
 export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({
@@ -305,10 +304,10 @@ export const PaginationLocations = [
 ]
 
 export const BannedSearchTypes = [
-  "link",
-  "attachment",
-  "formula",
-  "json",
+  FieldType.LINK,
+  FieldType.ATTACHMENT,
+  FieldType.FORMULA,
+  FieldType.JSON,
   "jsonarray",
   "queryarray",
 ]
