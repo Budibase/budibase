@@ -3,7 +3,6 @@ import * as fs from "fs"
 
 const config: Config.InitialOptions = {
   globalSetup: "./../../globalSetup.ts",
-  globalTeardown: "./../../globalTeardown.ts",
   setupFiles: ["./src/tests/jestEnv.ts"],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
   collectCoverageFrom: ["src/**/*.{js,ts}", "../backend-core/src/**/*.{js,ts}"],

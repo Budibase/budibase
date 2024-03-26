@@ -1,7 +1,7 @@
 import { GenericContainer, Wait } from "testcontainers"
 
 export default async function setup() {
-  const container = await new GenericContainer("budibase/couchdb")
+  await new GenericContainer("budibase/couchdb")
     .withExposedPorts(5984)
     .withEnvironment({
       COUCHDB_PASSWORD: "budibase",
@@ -22,8 +22,4 @@ export default async function setup() {
       ).withStartupTimeout(20000)
     )
     .start()
-
-  // @ts-ignore
-  // eslint-disable-next-line no-undef
-  globalThis.__COUCHDB_CONTAINER_ID__ = container.getId()
 }
