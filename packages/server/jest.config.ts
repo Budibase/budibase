@@ -44,12 +44,6 @@ const config: Config.InitialOptions = {
   projects: [
     {
       ...baseConfig,
-      displayName: "sequential test",
-      testMatch: ["<rootDir>/**/*.seq.spec.[jt]s"],
-      runner: "jest-serial-runner",
-    },
-    {
-      ...baseConfig,
       testMatch: ["<rootDir>/**/!(*.seq).spec.[jt]s"],
     },
   ],
@@ -60,6 +54,8 @@ const config: Config.InitialOptions = {
     "!src/db/views/staticViews.*",
     "!src/**/*.spec.{js,ts}",
     "!src/tests/**/*.{js,ts}",
+    // The use of coverage in the JS runner bundles breaks tests
+    "!src/jsRunner/bundles/**/*.{js,ts}",
   ],
   coverageReporters: ["lcov", "json", "clover"],
 }

@@ -1,6 +1,6 @@
 import { getQueryParams, getTableParams } from "../../db/utils"
 import { getIntegration } from "../../integrations"
-import { invalidateDynamicVariables } from "../../threads/utils"
+import { invalidateCachedVariable } from "../../threads/utils"
 import { context, db as dbCore, events } from "@budibase/backend-core"
 import {
   BuildSchemaFromSourceRequest,
@@ -121,7 +121,7 @@ async function invalidateVariables(
       }
     })
   }
-  await invalidateDynamicVariables(toInvalidate)
+  await invalidateCachedVariable(toInvalidate)
 }
 
 export async function update(

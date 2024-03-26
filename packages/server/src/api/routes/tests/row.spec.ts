@@ -30,7 +30,6 @@ const timestamp = new Date("2023-01-26T11:48:57.597Z").toISOString()
 tk.freeze(timestamp)
 
 jest.unmock("mssql")
-jest.unmock("pg")
 
 describe.each([
   ["internal", undefined],

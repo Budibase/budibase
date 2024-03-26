@@ -5,7 +5,7 @@ import { redis, db as dbCore } from "@budibase/backend-core"
 import * as jsRunner from "../jsRunner"
 
 const VARIABLE_TTL_SECONDS = 3600
-let client: any
+let client: redis.Client | null = null
 
 async function getClient() {
   if (!client) {
@@ -36,23 +36,15 @@ export function threadSetup() {
   db.init()
 }
 
-export async function checkCacheForDynamicVariable(
-  queryId: string,
-  variable: string
-) {
-  const cache = await getClient()
-  return cache.get(makeVariableKey(queryId, variable))
+export async function getCachedVariable(queryId: string, variable: string) {
+  return (await getClient()).get(makeVariableKey(queryId, variable))
 }
 
-export async function invalidateDynamicVariables(cachedVars: QueryVariable[]) {
+export async function invalidateCachedVariable(vars: QueryVariable[]) {
   const cache = await getClient()
-  let promises = []
-  for (let variable of cachedVars) {
-    promises.push(
-      cache.delete(makeVariableKey(variable.queryId, variable.name))
-    )
-  }
-  await Promise.all(promises)
+  await Promise.all(
+    vars.map(v => cache.delete(makeVariableKey(v.queryId, v.name)))
+  )
 }
 
 export async function storeDynamicVariable(
@@ -93,7 +85,7 @@ export default {
   hasExtraData,
   formatResponse,
   storeDynamicVariable,
-  invalidateDynamicVariables,
-  checkCacheForDynamicVariable,
+  invalidateDynamicVariables: invalidateCachedVariable,
+  checkCacheForDynamicVariable: getCachedVariable,
   threadSetup,
 }
