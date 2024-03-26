@@ -20,7 +20,7 @@
   let fieldState
   let fieldApi
 
-  $: isSingle = schema?.type === FieldType.ATTACHMENT_SINGLE
+  $: isSingle = type === FieldType.ATTACHMENT_SINGLE
   $: value =
     isSingle && !Array.isArray(fieldState?.value)
       ? fieldState?.value
