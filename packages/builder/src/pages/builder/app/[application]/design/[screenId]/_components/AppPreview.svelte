@@ -249,7 +249,7 @@
 <div class="component-container">
   {#if loading}
     <div
-      class={`loading spectrum spectrum--medium ${$themeStore.baseTheme} ${$themeStore.theme}`}
+      class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}
       class:tablet={$previewStore.previewDevice === "tablet"}
       class:mobile={$previewStore.previewDevice === "mobile"}
     >
