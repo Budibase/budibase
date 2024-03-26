@@ -1,6 +1,7 @@
 <script>
   import { onMount, getContext } from "svelte"
   import { Dropzone } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
 
   export let value
   export let focused = false
@@ -15,6 +16,9 @@
   const imageExtensions = ["png", "tiff", "gif", "raw", "jpg", "jpeg"]
 
   let isOpen = false
+
+  $: isSingle = schema?.type === FieldType.ATTACHMENT_SINGLE
+  $: arrayValue = (value && !Array.isArray(value) ? [value] : value) || []
 
   $: editable = focused && !readonly
   $: {
@@ -68,6 +72,15 @@
     }
   }
 
+  const onFileChange = e => {
+    let value = e.detail
+    if (isSingle) {
+      value = value[0] || null
+    }
+
+    onChange(value)
+  }
+
   onMount(() => {
     api = {
       focus: () => open(),
@@ -81,7 +94,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="attachment-cell" class:editable on:click={editable ? open : null}>
-  {#each value || [] as attachment}
+  {#each arrayValue as attachment}
     {#if isImage(attachment.extension)}
       <img src={attachment.url} alt={attachment.extension} />
     {:else}
@@ -95,9 +108,9 @@
 {#if isOpen}
   <div class="dropzone" class:invertX class:invertY>
     <Dropzone
-      {value}
+      value={arrayValue}
       compact
-      on:change={e => onChange(e.detail)}
+      on:change={onFileChange}
       maximum={schema.constraints?.length?.maximum}
       {processFiles}
       {deleteAttachments}
