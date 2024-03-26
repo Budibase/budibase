@@ -20,6 +20,11 @@
   let fieldState
   let fieldApi
 
+  $: value =
+    fieldState?.value && type === FieldType.ATTACHMENT_SINGLE
+      ? [fieldState.value]
+      : fieldState?.value
+
   const { API, notificationStore } = getContext("sdk")
   const formContext = getContext("form")
   const BYTES_IN_MB = 1000000
@@ -54,6 +59,7 @@
   }
 
   const deleteAttachments = async fileList => {
+    console.error({ fileList })
     try {
       return await API.deleteAttachments({
         keys: fileList,
@@ -65,9 +71,13 @@
   }
 
   const handleChange = e => {
-    const changed = fieldApi.setValue(e.detail)
+    let value = e.detail
+    if (type === FieldType.ATTACHMENT_SINGLE) {
+      value = value[0]
+    }
+    const changed = fieldApi.setValue(value)
     if (onChange && changed) {
-      onChange({ value: e.detail })
+      onChange({ value })
     }
   }
 </script>
@@ -87,7 +97,7 @@
 >
   {#if fieldState}
     <CoreDropzone
-      value={fieldState.value}
+      {value}
       disabled={fieldState.disabled || fieldState.readonly}
       error={fieldState.error}
       on:change={handleChange}
@@ -95,7 +105,7 @@
       {deleteAttachments}
       {handleFileTooLarge}
       {handleTooManyFiles}
-      {maximum}
+      maximum={type === FieldType.ATTACHMENT_SINGLE ? 1 : maximum}
       {extensions}
       {compact}
     />
