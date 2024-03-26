@@ -91,12 +91,12 @@
             label="Sticky header"
             control={Checkbox}
             value={$nav.sticky}
-            onChange={width => update("navWidth", width)}
+            onChange={sticky => update("sticky", sticky)}
           />
           <PropertyControl
             label="Width"
             control={Select}
-            onChange={position => update("navigation", position)}
+            onChange={position => update("navWidth", position)}
             value={$nav.navWidth}
             props={{
               placeholder: null,
