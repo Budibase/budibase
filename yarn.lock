@@ -5098,7 +5098,7 @@
   resolved "https://registry.yarnpkg.com/@tootallnate/once/-/once-2.0.0.tgz#f544a148d3ab35801c1f633a7441fd87c2e484bf"
   integrity sha512-XCuKFP5PS55gnMVu3dty8KPatLqUoy/ZYzDzAGCQ8JNFCkLXzmI7vNHCR+XpbZaMWQK/vQubr7PkYq8g470J/A==
 
-"@trendyol/jest-testcontainers@2.1.1", "@trendyol/jest-testcontainers@^2.1.1":
+"@trendyol/jest-testcontainers@2.1.1":
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/@trendyol/jest-testcontainers/-/jest-testcontainers-2.1.1.tgz#dced95cf9c37b75efe0a65db9b75ae8912f2f14a"
   integrity sha512-4iAc2pMsev4BTUzoA7jO1VvbTOU2N3juQUYa8TwiSPXPuQtxKwV9WB9ZEP+JQ+Pj15YqfGOXp5H0WNMPtapjiA==
@@ -9793,16 +9793,7 @@ docker-modem@^3.0.0:
     split-ca "^1.0.1"
     ssh2 "^1.11.0"
 
-dockerode@^3.2.1:
-  version "3.3.4"
-  resolved "https://registry.yarnpkg.com/dockerode/-/dockerode-3.3.4.tgz#875de614a1be797279caa9fe27e5637cf0e40548"
-  integrity sha512-3EUwuXnCU+RUlQEheDjmBE0B7q66PV9Rw5NiH1sXwINq0M9c5ERP9fxgkw36ZHOtzf4AGEEYySnkx/sACC9EgQ==
-  dependencies:
-    "@balena/dockerignore" "^1.0.2"
-    docker-modem "^3.0.0"
-    tar-fs "~2.0.1"
-
-dockerode@^3.3.5:
+dockerode@^3.2.1, dockerode@^3.3.5:
   version "3.3.5"
   resolved "https://registry.yarnpkg.com/dockerode/-/dockerode-3.3.5.tgz#7ae3f40f2bec53ae5e9a741ce655fff459745629"
   integrity sha512-/0YNa3ZDNeLr/tSckmD69+Gq+qVNhvKfAHNeZJBnp7EOP6RGKV8ORrJHkUn20So5wU+xxT7+1n5u8PjHbfjbSA==
