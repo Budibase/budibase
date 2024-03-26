@@ -20,9 +20,12 @@
   let fieldState
   let fieldApi
 
+  $: isSingle = schema?.type === FieldType.ATTACHMENT_SINGLE
   $: value =
-    fieldState?.value && type === FieldType.ATTACHMENT_SINGLE
-      ? [fieldState.value]
+    isSingle && !Array.isArray(fieldState?.value)
+      ? fieldState?.value
+        ? [fieldState.value]
+        : []
       : fieldState?.value
 
   const { API, notificationStore } = getContext("sdk")
@@ -72,8 +75,8 @@
 
   const handleChange = e => {
     let value = e.detail
-    if (type === FieldType.ATTACHMENT_SINGLE) {
-      value = value[0]
+    if (isSingle) {
+      value = value[0] || null
     }
     const changed = fieldApi.setValue(value)
     if (onChange && changed) {
@@ -105,7 +108,7 @@
       {deleteAttachments}
       {handleFileTooLarge}
       {handleTooManyFiles}
-      maximum={type === FieldType.ATTACHMENT_SINGLE ? 1 : maximum}
+      maximum={isSingle ? 1 : maximum}
       {extensions}
       {compact}
     />
