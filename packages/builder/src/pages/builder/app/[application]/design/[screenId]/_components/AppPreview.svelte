@@ -247,7 +247,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
-  {#if loading || true}
+  {#if loading}
     <div
       class={`loading spectrum spectrum--medium ${$themeStore.baseTheme} ${$themeStore.theme}`}
       class:tablet={$previewStore.previewDevice === "tablet"}
