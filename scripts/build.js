@@ -3,7 +3,7 @@
 const start = Date.now()
 
 const fs = require("fs")
-const { readdir, copyFile, mkdir } = require('node:fs/promises');
+const { cp, readdir, copyFile, mkdir } = require('node:fs/promises');
 const path = require("path")
 
 const { build } = require("esbuild")
@@ -17,12 +17,6 @@ const { nodeExternalsPlugin } = require("esbuild-node-externals")
 const svelteCompilePlugin = {
   name: 'svelteCompile',
   setup(build) {
-    // This resolve handler is necessary to bundle the Svelte runtime into the the final output,
-    // otherwise the bundled script will attempt to resolve it at runtime
-    build.onResolve({ filter: /svelte\/internal/ }, async () => {
-      return { path: `${process.cwd()}/../../node_modules/svelte/src/runtime/internal/ssr.js` }
-    })
-
     // Compiles `.svelte` files into JS classes so that they can be directly imported into our
     // Typescript packages
     build.onLoad({ filter: /\.svelte$/ }, async (args) => {
@@ -37,7 +31,7 @@ const svelteCompilePlugin = {
           contents: js.code,
           // The loader this is passed to, basically how the above provided content is "treated",
           // the contents provided above will be transpiled and bundled like any other JS file.
-          loader: 'js', 
+          loader: 'js',
           // Where to resolve any imports present in the loaded file
           resolveDir: dir
         }
@@ -80,11 +74,11 @@ async function runBuild(entry, outfile) {
     plugins: [
       svelteCompilePlugin,
       TsconfigPathsPlugin({ tsconfig: tsconfigPathPluginContent }),
-      nodeExternalsPlugin(),
+      nodeExternalsPlugin({
+        allowList: ["@budibase/frontend-core", "svelte"]
+      }),
     ],
     preserveSymlinks: true,
-    loader: {
-    },
     metafile: true,
     external: [
       "deasync",
@@ -109,13 +103,23 @@ async function runBuild(entry, outfile) {
     await Promise.all(fileCopyPromises)
   })()
 
+  const oldClientVersions = (async () => {
+    try {
+      await cp('./build/oldClientVersions', './dist/oldClientVersions', { recursive: true });
+    } catch (e) {
+      if (e.code !== "EEXIST" && e.code !== "ENOENT") {
+        throw e;
+      }
+    }
+  })()
+
   const mainBuild = build({
     ...sharedConfig,
     platform: "node",
     outfile,
   })
 
-  await Promise.all([hbsFiles, mainBuild])
+  await Promise.all([hbsFiles, mainBuild, oldClientVersions])
 
   fs.writeFileSync(
     `dist/${path.basename(outfile)}.meta.json`,
