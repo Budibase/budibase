@@ -6,6 +6,7 @@ import {
   Row,
   SearchFilters,
   SearchParams,
+  SearchResponse,
   SortDirection,
   SortOrder,
   SortType,
@@ -92,7 +93,7 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-export async function search(options: SearchParams) {
+export async function search(options: SearchParams): Promise<SearchResponse> {
   const { tableId, paginate, query, ...params } = options
 
   const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)
@@ -164,9 +165,15 @@ export async function search(options: SearchParams) {
     const rows = await db.sql<Row>(sql)
 
     return {
-      rows: sqlOutputProcessing(rows, table!, allTablesMap, relationships, {
-        internal: true,
-      }),
+      rows: await sqlOutputProcessing(
+        rows,
+        table!,
+        allTablesMap,
+        relationships,
+        {
+          internal: true,
+        }
+      ),
     }
   } catch (err: any) {
     const msg = typeof err === "string" ? err : err.message

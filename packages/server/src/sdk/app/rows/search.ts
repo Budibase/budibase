@@ -1,9 +1,16 @@
-import { Row, SearchFilters, SearchParams, SortOrder } from "@budibase/types"
+import {
+  Row,
+  SearchFilters,
+  SearchParams,
+  SearchResponse,
+} from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
-import { Format } from "../../../api/controllers/view/exporters"
 import { NoEmptyFilterStrings } from "../../../constants"
+import * as sqs from "./search/sqs"
+import env from "../../../environment"
+import { ExportRowsParams, ExportRowsResult } from "./search/types"
 
 export { isValidFilter } from "../../../integrations/utils"
 
@@ -49,29 +56,15 @@ export function removeEmptyFilters(filters: SearchFilters) {
   return filters
 }
 
-export async function search(options: SearchParams): Promise<{
-  rows: any[]
-  hasNextPage?: boolean
-  bookmark?: number | null
-}> {
-  return pickApi(options.tableId).search(options)
-}
-
-export interface ExportRowsParams {
-  tableId: string
-  format: Format
-  delimiter?: string
-  rowIds?: string[]
-  columns?: string[]
-  query?: SearchFilters
-  sort?: string
-  sortOrder?: SortOrder
-  customHeaders?: { [key: string]: string }
-}
-
-export interface ExportRowsResult {
-  fileName: string
-  content: string
+export async function search(options: SearchParams): Promise<SearchResponse> {
+  const isExternalTable = isExternalTableID(options.tableId)
+  if (isExternalTable) {
+    return external.search(options)
+  } else if (env.SQS_SEARCH_ENABLE) {
+    return sqs.search(options)
+  } else {
+    return internal.search(options)
+  }
 }
 
 export async function exportRows(

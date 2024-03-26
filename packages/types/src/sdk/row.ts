@@ -1,5 +1,6 @@
 import { SortOrder, SortType } from "../api"
 import { SearchFilters } from "./search"
+import { Row } from "../documents"
 
 export interface SearchParams {
   tableId: string
@@ -13,4 +14,10 @@ export interface SearchParams {
   version?: string
   disableEscaping?: boolean
   fields?: string[]
+}
+
+export interface SearchResponse {
+  rows: Row[]
+  hasNextPage?: boolean
+  bookmark?: string | number
 }
