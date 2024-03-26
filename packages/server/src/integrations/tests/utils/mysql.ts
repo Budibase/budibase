@@ -1,8 +1,6 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-
-let container: StartedTestContainer | undefined
 
 class MySQLWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -24,18 +22,14 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
   }
 }
 
-export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer("mysql:8.3")
+export async function mysql(): Promise<Datasource> {
+  const container = await new GenericContainer("mysql:8.3")
+    .withName("budibase-test-mysql")
+    .withReuse()
     .withExposedPorts(3306)
     .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
     .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
     .start()
-}
-
-export async function datasource(): Promise<Datasource> {
-  if (!container) {
-    container = await start()
-  }
   const host = container.getHost()
   const port = container.getMappedPort(3306)
 
@@ -50,12 +44,5 @@ export async function datasource(): Promise<Datasource> {
       password: "password",
       database: "mysql",
     },
-  }
-}
-
-export async function stop() {
-  if (container) {
-    await container.stop()
-    container = undefined
   }
 }

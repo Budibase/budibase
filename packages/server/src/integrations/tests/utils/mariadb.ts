@@ -1,8 +1,6 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
-
-let container: StartedTestContainer | undefined
 
 class MariaDBWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -21,18 +19,15 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
   }
 }
 
-export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer("mariadb:lts")
+export async function mariadb(): Promise<Datasource> {
+  const container = await new GenericContainer("mariadb:lts")
+    .withName("budibase-test-mariadb")
+    .withReuse()
     .withExposedPorts(3306)
     .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
     .withWaitStrategy(new MariaDBWaitStrategy())
     .start()
-}
 
-export async function datasource(): Promise<Datasource> {
-  if (!container) {
-    container = await start()
-  }
   const host = container.getHost()
   const port = container.getMappedPort(3306)
 
@@ -47,12 +42,5 @@ export async function datasource(): Promise<Datasource> {
       password: "password",
       database: "mysql",
     },
-  }
-}
-
-export async function stop() {
-  if (container) {
-    await container.stop()
-    container = undefined
   }
 }
