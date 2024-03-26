@@ -3,7 +3,6 @@ import { Config } from "@jest/types"
 const baseConfig: Config.InitialProjectOptions = {
   setupFiles: ["./tests/jestEnv.ts"],
   globalSetup: "./../../globalSetup.ts",
-  globalTeardown: "./../../globalTeardown.ts",
   setupFilesAfterEnv: ["./tests/jestSetup.ts"],
   transform: {
     "^.+\\.ts?$": "@swc/jest",

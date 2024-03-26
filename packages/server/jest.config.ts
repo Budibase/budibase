@@ -18,7 +18,6 @@ const baseConfig: Config.InitialProjectOptions = {
   ],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
   globalSetup: "./../../globalSetup.ts",
-  globalTeardown: "./../../globalTeardown.ts",
   transform: {
     "^.+\\.ts?$": "@swc/jest",
     "^.+\\.js?$": "@swc/jest",
