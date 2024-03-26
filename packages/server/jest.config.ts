@@ -17,8 +17,8 @@ const baseConfig: Config.InitialProjectOptions = {
     "svelte",
   ],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
-  globalSetup: "./src/tests/globalSetup.ts",
-  globalTeardown: "./src/tests/globalTeardown.ts",
+  globalSetup: "./../../globalSetup.ts",
+  globalTeardown: "./../../globalTeardown.ts",
   transform: {
     "^.+\\.ts?$": "@swc/jest",
     "^.+\\.js?$": "@swc/jest",
