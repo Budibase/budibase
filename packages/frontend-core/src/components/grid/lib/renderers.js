@@ -23,6 +23,7 @@ const TypeComponentMap = {
   [FieldType.NUMBER]: NumberCell,
   [FieldType.BOOLEAN]: BooleanCell,
   [FieldType.ATTACHMENT]: AttachmentCell,
+  [FieldType.ATTACHMENT_SINGLE]: AttachmentCell,
   [FieldType.LINK]: RelationshipCell,
   [FieldType.FORMULA]: FormulaCell,
   [FieldType.JSON]: JSONCell,
