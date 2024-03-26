@@ -227,7 +227,7 @@ describe.each([
 
       view = await config.api.viewV2.create({
         tableId: table._id!,
-        name: "View A",
+        name: generator.guid(),
       })
     })
 
@@ -303,12 +303,13 @@ describe.each([
 
     it("can update an existing view name", async () => {
       const tableId = table._id!
-      await config.api.viewV2.update({ ...view, name: "View B" })
+      const newName = generator.guid()
+      await config.api.viewV2.update({ ...view, name: newName })
 
       expect(await config.api.table.get(tableId)).toEqual(
         expect.objectContaining({
           views: {
-            "View B": { ...view, name: "View B", schema: expect.anything() },
+            [newName]: { ...view, name: newName, schema: expect.anything() },
           },
         })
       )
