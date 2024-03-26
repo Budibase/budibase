@@ -16,7 +16,7 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { databaseTestProviders } from "../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../integrations/tests/utils"
 import { Client } from "pg"
 // @ts-ignore
 fetch.mockSearch()
@@ -41,18 +41,17 @@ describe("postgres integrations", () => {
     makeRequest = generateMakeRequest(apiKey, true)
 
     postgresDatasource = await config.api.datasource.create(
-      await databaseTestProviders.postgres.datasource()
+      await getDatasource(DatabaseName.POSTGRES)
     )
-  })
-
-  afterAll(async () => {
-    await databaseTestProviders.postgres.stop()
   })
 
   beforeEach(async () => {
     async function createAuxTable(prefix: string) {
       return await config.createTable({
-        name: `${prefix}_${generator.word({ length: 6 })}`,
+        name: `${prefix}_${generator
+          .guid()
+          .replaceAll("-", "")
+          .substring(0, 6)}`,
         type: "table",
         primary: ["id"],
         primaryDisplay: "title",
@@ -89,7 +88,7 @@ describe("postgres integrations", () => {
     }
 
     primaryPostgresTable = await config.createTable({
-      name: `p_${generator.word({ length: 6 })}`,
+      name: `p_${generator.guid().replaceAll("-", "").substring(0, 6)}`,
       type: "table",
       primary: ["id"],
       schema: {
@@ -251,7 +250,7 @@ describe("postgres integrations", () => {
 
   async function createDefaultPgTable() {
     return await config.createTable({
-      name: generator.word({ length: 10 }),
+      name: generator.guid().replaceAll("-", "").substring(0, 10),
       type: "table",
       primary: ["id"],
       schema: {
@@ -1043,7 +1042,7 @@ describe("postgres integrations", () => {
     it("should be able to verify the connection", async () => {
       await config.api.datasource.verify(
         {
-          datasource: await databaseTestProviders.postgres.datasource(),
+          datasource: await getDatasource(DatabaseName.POSTGRES),
         },
         {
           body: {
@@ -1054,7 +1053,7 @@ describe("postgres integrations", () => {
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await databaseTestProviders.postgres.datasource()
+      const dbConfig = await getDatasource(DatabaseName.POSTGRES)
       await config.api.datasource.verify(
         {
           datasource: {
@@ -1089,21 +1088,21 @@ describe("postgres integrations", () => {
 
   describe("POST /api/datasources/:datasourceId/schema", () => {
     let client: Client
+    let tableName: string
 
     beforeEach(async () => {
-      client = new Client(
-        (await databaseTestProviders.postgres.datasource()).config!
-      )
+      tableName = generator.guid().replaceAll("-", "").substring(0, 10)
+      client = new Client((await getDatasource(DatabaseName.POSTGRES)).config!)
       await client.connect()
     })
 
     afterEach(async () => {
-      await client.query(`DROP TABLE IF EXISTS "table"`)
+      await client.query(`DROP TABLE IF EXISTS "${tableName}"`)
       await client.end()
     })
 
     it("recognises when a table has no primary key", async () => {
-      await client.query(`CREATE TABLE "table" (id SERIAL)`)
+      await client.query(`CREATE TABLE "${tableName}" (id SERIAL)`)
 
       const response = await makeRequest(
         "post",
@@ -1111,12 +1110,14 @@ describe("postgres integrations", () => {
       )
 
       expect(response.body.errors).toEqual({
-        table: "Table must have a primary key.",
+        [tableName]: "Table must have a primary key.",
       })
     })
 
     it("recognises when a table is using a reserved column name", async () => {
-      await client.query(`CREATE TABLE "table" (_id SERIAL PRIMARY KEY) `)
+      await client.query(
+        `CREATE TABLE "${tableName}" (_id SERIAL PRIMARY KEY) `
+      )
 
       const response = await makeRequest(
         "post",
@@ -1124,18 +1125,22 @@ describe("postgres integrations", () => {
       )
 
       expect(response.body.errors).toEqual({
-        table: "Table contains invalid columns.",
+        [tableName]: "Table contains invalid columns.",
       })
     })
   })
 
   describe("Integration compatibility with postgres search_path", () => {
-    let client: Client, pathDatasource: Datasource
-    const schema1 = "test1",
-      schema2 = "test-2"
+    let client: Client,
+      pathDatasource: Datasource,
+      schema1: string,
+      schema2: string
 
-    beforeAll(async () => {
-      const dsConfig = await databaseTestProviders.postgres.datasource()
+    beforeEach(async () => {
+      schema1 = generator.guid().replaceAll("-", "")
+      schema2 = generator.guid().replaceAll("-", "")
+
+      const dsConfig = await getDatasource(DatabaseName.POSTGRES)
       const dbConfig = dsConfig.config!
 
       client = new Client(dbConfig)
@@ -1153,7 +1158,7 @@ describe("postgres integrations", () => {
       pathDatasource = await config.api.datasource.create(pathConfig)
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
       await client.query(`DROP SCHEMA "${schema1}" CASCADE;`)
       await client.query(`DROP SCHEMA "${schema2}" CASCADE;`)
       await client.end()

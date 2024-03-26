@@ -1,12 +1,12 @@
 import { Datasource, SourceName } from "@budibase/types"
-import { GenericContainer, Wait, StartedTestContainer } from "testcontainers"
+import { GenericContainer, Wait } from "testcontainers"
 
-let container: StartedTestContainer | undefined
-
-export async function start(): Promise<StartedTestContainer> {
-  return await new GenericContainer(
+export async function mssql(): Promise<Datasource> {
+  const container = await new GenericContainer(
     "mcr.microsoft.com/mssql/server:2022-latest"
   )
+    .withName("budibase-test-mssql")
+    .withReuse()
     .withExposedPorts(1433)
     .withEnvironment({
       ACCEPT_EULA: "Y",
@@ -23,12 +23,7 @@ export async function start(): Promise<StartedTestContainer> {
       )
     )
     .start()
-}
 
-export async function datasource(): Promise<Datasource> {
-  if (!container) {
-    container = await start()
-  }
   const host = container.getHost()
   const port = container.getMappedPort(1433)
 
@@ -45,12 +40,5 @@ export async function datasource(): Promise<Datasource> {
         encrypt: false,
       },
     },
-  }
-}
-
-export async function stop() {
-  if (container) {
-    await container.stop()
-    container = undefined
   }
 }
