@@ -3,7 +3,6 @@ import {
   generateMakeRequest,
   MakeRequestResponse,
 } from "../api/routes/public/tests/utils"
-import { v4 as uuidv4 } from "uuid"
 import * as setup from "../api/routes/tests/utilities"
 import {
   Datasource,
@@ -12,9 +11,10 @@ import {
   TableRequest,
   TableSourceType,
 } from "@budibase/types"
-import { databaseTestProviders } from "../integrations/tests/utils"
+import { DatabaseName, getDatasource } from "../integrations/tests/utils"
 import mysql from "mysql2/promise"
 import { builderSocket } from "../websockets"
+import { generator } from "@budibase/backend-core/tests"
 // @ts-ignore
 fetch.mockSearch()
 
@@ -47,17 +47,13 @@ describe("mysql integrations", () => {
     makeRequest = generateMakeRequest(apiKey, true)
 
     mysqlDatasource = await config.api.datasource.create(
-      await databaseTestProviders.mysql.datasource()
+      await getDatasource(DatabaseName.MYSQL)
     )
-  })
-
-  afterAll(async () => {
-    await databaseTestProviders.mysql.stop()
   })
 
   beforeEach(async () => {
     primaryMySqlTable = await config.createTable({
-      name: uuidv4(),
+      name: generator.guid().replaceAll("-", "_").substring(0, 10),
       type: "table",
       primary: ["id"],
       schema: {
@@ -117,7 +113,7 @@ describe("mysql integrations", () => {
     it("should be able to verify the connection", async () => {
       await config.api.datasource.verify(
         {
-          datasource: await databaseTestProviders.mysql.datasource(),
+          datasource: await getDatasource(DatabaseName.MYSQL),
         },
         {
           body: {
@@ -128,7 +124,7 @@ describe("mysql integrations", () => {
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await databaseTestProviders.mysql.datasource()
+      const dbConfig = await getDatasource(DatabaseName.MYSQL)
       await config.api.datasource.verify(
         {
           datasource: {
@@ -168,7 +164,7 @@ describe("mysql integrations", () => {
     const database2 = "test-2"
 
     beforeAll(async () => {
-      const dsConfig = await databaseTestProviders.mysql.datasource()
+      const dsConfig = await getDatasource(DatabaseName.MYSQL)
       const dbConfig = dsConfig.config!
 
       client = await mysql.createConnection(dbConfig)
@@ -237,11 +233,11 @@ describe("mysql integrations", () => {
     beforeEach(async () => {
       client = await mysql.createConnection(
         (
-          await databaseTestProviders.mysql.datasource()
+          await getDatasource(DatabaseName.MYSQL)
         ).config!
       )
       mysqlDatasource = await config.api.datasource.create(
-        await databaseTestProviders.mysql.datasource()
+        await getDatasource(DatabaseName.MYSQL)
       )
     })
 
@@ -253,7 +249,7 @@ describe("mysql integrations", () => {
       const addColumnToTable: TableRequest = {
         type: "table",
         sourceType: TableSourceType.EXTERNAL,
-        name: "table",
+        name: generator.guid().replaceAll("-", "_").substring(0, 10),
         sourceId: mysqlDatasource._id!,
         primary: ["id"],
         schema: {
@@ -301,14 +297,16 @@ describe("mysql integrations", () => {
           },
         },
         created: true,
-        _id: `${mysqlDatasource._id}__table`,
+        _id: `${mysqlDatasource._id}__${addColumnToTable.name}`,
       }
       delete expectedTable._add
 
       expect(emitDatasourceUpdateMock).toHaveBeenCalledTimes(1)
       const emittedDatasource: Datasource =
         emitDatasourceUpdateMock.mock.calls[0][1]
-      expect(emittedDatasource.entities!["table"]).toEqual(expectedTable)
+      expect(emittedDatasource.entities![expectedTable.name]).toEqual(
+        expectedTable
+      )
     })
 
     it("will rename a column", async () => {
