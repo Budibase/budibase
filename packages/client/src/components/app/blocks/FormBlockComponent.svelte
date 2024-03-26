@@ -66,6 +66,11 @@
           maximum: schema?.constraints?.length?.maximum,
         }
       },
+      [FieldType.ATTACHMENT_SINGLE]: () => {
+        return {
+          type: FieldType.ATTACHMENT_SINGLE,
+        }
+      },
     }
 
     const fieldSchema = getFieldSchema(field)

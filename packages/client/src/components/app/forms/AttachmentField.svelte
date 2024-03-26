@@ -1,6 +1,7 @@
 <script>
   import Field from "./Field.svelte"
   import { CoreDropzone } from "@budibase/bbui"
+  import { FieldType } from "@budibase/types"
   import { getContext } from "svelte"
 
   export let field
@@ -14,6 +15,7 @@
   export let maximum = undefined
   export let span
   export let helpText = null
+  export let type = FieldType.ATTACHMENT
 
   let fieldState
   let fieldApi
@@ -78,7 +80,7 @@
   {validation}
   {span}
   {helpText}
-  type="attachment"
+  {type}
   bind:fieldState
   bind:fieldApi
   defaultValue={[]}
