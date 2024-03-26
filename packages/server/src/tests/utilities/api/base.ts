@@ -77,7 +77,8 @@ export abstract class TestAPI {
   protected _requestRaw = async (
     method: "get" | "post" | "put" | "patch" | "delete",
     url: string,
-    opts?: RequestOpts
+    opts?: RequestOpts,
+    attempt = 0
   ): Promise<Response> => {
     const {
       headers = {},
@@ -144,7 +145,21 @@ export abstract class TestAPI {
       }
     }
 
-    return await req
+    try {
+      return await req
+    } catch (e: any) {
+      // We've found that occasionally the connection between supertest and the
+      // server supertest starts gets reset. Not sure why, but retrying it
+      // appears to work. I don't particularly like this, but it's better than
+      // flakiness.
+      if (e.code === "ECONNRESET") {
+        if (attempt > 2) {
+          throw e
+        }
+        return await this._requestRaw(method, url, opts, attempt + 1)
+      }
+      throw e
+    }
   }
 
   protected _checkResponse = (
@@ -174,7 +189,18 @@ export abstract class TestAPI {
         }
       }
 
-      throw new Error(message)
+      if (response.error) {
+        // Sometimes the error can be between supertest and the app, and when
+        // that happens response.error is sometimes populated with `text` that
+        // gives more detail about the error. The `message` is almost always
+        // useless from what I've seen.
+        if (response.error.text) {
+          response.error.message = response.error.text
+        }
+        throw new Error(message, { cause: response.error })
+      } else {
+        throw new Error(message)
+      }
     }
 
     if (expectations?.headersNotPresent) {
