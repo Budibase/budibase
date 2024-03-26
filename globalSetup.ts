@@ -7,9 +7,12 @@ export default async function setup() {
       COUCHDB_PASSWORD: "budibase",
       COUCHDB_USER: "budibase",
     })
-    .withCopyFilesToContainer([
+    .withCopyContentToContainer([
       {
-        source: "./test-couchdb.ini",
+        content: `
+          [log]
+          level = warn
+        `,
         target: "/opt/couchdb/etc/local.d/test-couchdb.ini",
       },
     ])
@@ -20,6 +23,7 @@ export default async function setup() {
     )
     .start()
 
+  // @ts-ignore
   // eslint-disable-next-line no-undef
   globalThis.__COUCHDB_CONTAINER_ID__ = container.getId()
 }
