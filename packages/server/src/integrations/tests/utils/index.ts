@@ -46,11 +46,3 @@ export async function getDatasources(
 ): Promise<Datasource[]> {
   return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
 }
-
-export const databaseTestProviders = {
-  postgres,
-  mongodb,
-  mysql,
-  mssql,
-  mariadb,
-}
