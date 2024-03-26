@@ -9,6 +9,7 @@ export enum FieldType {
   ARRAY = "array",
   DATETIME = "datetime",
   ATTACHMENT = "attachment",
+  ATTACHMENT_SINGLE = "attachment_single",
   LINK = "link",
   FORMULA = "formula",
   AUTO = "auto",
