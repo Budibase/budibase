@@ -17,6 +17,7 @@ const TypeIconMap = {
   [FieldType.NUMBER]: "123",
   [FieldType.BOOLEAN]: "Boolean",
   [FieldType.ATTACHMENT]: "AppleFiles",
+  [FieldType.ATTACHMENTS]: "AppleFiles",
   [FieldType.LINK]: "DataCorrelated",
   [FieldType.FORMULA]: "Calculator",
   [FieldType.JSON]: "Brackets",
