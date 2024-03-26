@@ -7,6 +7,7 @@ import {
   Row,
   SearchFilters,
   SearchParams,
+  SearchResponse,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
 import { handleRequest } from "../../../../api/controllers/row/external"
@@ -15,18 +16,18 @@ import {
   breakRowIdField,
 } from "../../../../integrations/utils"
 import { utils } from "@budibase/shared-core"
-import { ExportRowsParams, ExportRowsResult } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "./types"
 import { HTTPError, db } from "@budibase/backend-core"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
 
-export async function search(options: SearchParams) {
+export async function search(options: SearchParams): Promise<SearchResponse> {
   const { tableId } = options
   const { paginate, query, ...params } = options
   const { limit } = params
-  let bookmark = (params.bookmark && parseInt(params.bookmark)) || null
+  let bookmark = (params.bookmark && parseInt(params.bookmark)) || undefined
   if (paginate && !bookmark) {
     bookmark = 1
   }

@@ -12,6 +12,7 @@ import {
   Row,
   Table,
   SearchParams,
+  SearchResponse,
   DocumentType,
 } from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
@@ -30,17 +31,12 @@ import {
   migrateToInMemoryView,
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
-import { ExportRowsParams, ExportRowsResult } from "../search"
+import { ExportRowsParams, ExportRowsResult } from "./types"
 import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { breakRowIdField } from "../../../../integrations/utils"
-import * as sqs from "./sqs"
 
-export async function search(options: SearchParams) {
-  if (env.SQS_SEARCH_ENABLE) {
-    return sqs.search(options)
-  }
-
+export async function search(options: SearchParams): Promise<SearchResponse> {
   const { tableId } = options
 
   const { paginate, query } = options
@@ -106,10 +102,10 @@ export async function exportRows(
   const db = context.getAppDB()
   const table = await sdk.tables.getTable(tableId)
 
-  let result
+  let result: Row[] = []
   if (rowIds) {
     let response = (
-      await db.allDocs({
+      await db.allDocs<Row>({
         include_docs: true,
         keys: rowIds.map((row: string) => {
           const ids = breakRowIdField(row)
@@ -122,9 +118,9 @@ export async function exportRows(
           return ids[0]
         }),
       })
-    ).rows.map(row => row.doc)
+    ).rows.map(row => row.doc!)
 
-    result = await outputProcessing(table, response)
+    result = await outputProcessing<Row[]>(table, response)
   } else if (query) {
     let searchResponse = await search({
       tableId,
