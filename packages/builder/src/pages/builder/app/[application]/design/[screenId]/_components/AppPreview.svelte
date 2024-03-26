@@ -247,9 +247,9 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
-  {#if loading}
+  {#if loading || true}
     <div
-      class={`loading ${$themeStore.theme}`}
+      class={`loading spectrum spectrum--medium ${$themeStore.baseTheme} ${$themeStore.theme}`}
       class:tablet={$previewStore.previewDevice === "tablet"}
       class:mobile={$previewStore.previewDevice === "mobile"}
     >
