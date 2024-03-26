@@ -63,7 +63,7 @@ export interface SearchUsersRequest {
 
 export interface CreateAdminUserRequest {
   email: string
-  password: string
+  password?: string
   tenantId: string
   ssoId?: string
 }

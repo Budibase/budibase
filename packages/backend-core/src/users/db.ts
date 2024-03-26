@@ -500,13 +500,13 @@ export class UserDB {
 
   static async createAdminUser(
     email: string,
-    password: string,
     tenantId: string,
+    password?: string,
     opts?: CreateAdminUserOpts
   ) {
     const user: User = {
       email: email,
-      password: password,
+      password,
       createdAt: Date.now(),
       roles: {},
       builder: {
