@@ -9,7 +9,7 @@ export default async function setup() {
     })
     .withCopyFilesToContainer([
       {
-        source: "./src/tests/test-couchdb.ini",
+        source: "./test-couchdb.ini",
         target: "/opt/couchdb/etc/local.d/test-couchdb.ini",
       },
     ])
@@ -20,7 +20,6 @@ export default async function setup() {
     )
     .start()
 
-  // @ts-expect-error
   // eslint-disable-next-line no-undef
   globalThis.__COUCHDB_CONTAINER_ID__ = container.getId()
 }
