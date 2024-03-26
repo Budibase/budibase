@@ -42,6 +42,7 @@ export const FieldTypeToComponentMap = {
   [FieldType.LONGFORM]: "longformfield",
   [FieldType.DATETIME]: "datetimefield",
   [FieldType.ATTACHMENT]: "attachmentfield",
+  [FieldType.ATTACHMENT_SINGLE]: "attachmentfield",
   [FieldType.LINK]: "relationshipfield",
   [FieldType.JSON]: "jsonfield",
   [FieldType.BARCODEQR]: "codescanner",
