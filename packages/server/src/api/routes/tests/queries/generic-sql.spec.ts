@@ -1,6 +1,9 @@
 import { Datasource, Query, SourceName } from "@budibase/types"
 import * as setup from "../utilities"
-import { databaseTestProviders } from "../../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+} from "../../../../integrations/tests/utils"
 import pg from "pg"
 import mysql from "mysql2/promise"
 import mssql from "mssql"
@@ -34,12 +37,14 @@ const createTableSQL: Record<string, string> = {
 const insertSQL = `INSERT INTO test_table (name) VALUES ('one'), ('two'), ('three'), ('four'), ('five')`
 const dropTableSQL = `DROP TABLE test_table;`
 
-describe.each([
-  ["postgres", databaseTestProviders.postgres],
-  ["mysql", databaseTestProviders.mysql],
-  ["mssql", databaseTestProviders.mssql],
-  ["mariadb", databaseTestProviders.mariadb],
-])("queries (%s)", (dbName, dsProvider) => {
+describe.each(
+  [
+    DatabaseName.POSTGRES,
+    DatabaseName.MYSQL,
+    DatabaseName.SQL_SERVER,
+    DatabaseName.MARIADB,
+  ].map(name => [name, getDatasource(name)])
+)("queries (%s)", (dbName, dsProvider) => {
   const config = setup.getConfig()
   let datasource: Datasource
 
@@ -61,7 +66,7 @@ describe.each([
     // We re-fetch the datasource here because the one returned by
     // config.api.datasource.create has the password field blanked out, and we
     // need the password to connect to the database.
-    const ds = await dsProvider.datasource()
+    const ds = await dsProvider
     switch (ds.source) {
       case SourceName.POSTGRES: {
         const client = new pg.Client(ds.config!)
@@ -97,9 +102,7 @@ describe.each([
 
   beforeAll(async () => {
     await config.init()
-    datasource = await config.api.datasource.create(
-      await dsProvider.datasource()
-    )
+    datasource = await config.api.datasource.create(await dsProvider)
   })
 
   beforeEach(async () => {
@@ -112,7 +115,6 @@ describe.each([
   })
 
   afterAll(async () => {
-    await dsProvider.stop()
     setup.afterAll()
   })
 
@@ -443,7 +445,7 @@ describe.each([
       } catch (err: any) {
         error = err.message
       }
-      if (dbName === "mssql") {
+      if (dbName === DatabaseName.SQL_SERVER) {
         expect(error).toBeUndefined()
       } else {
         expect(error).toBeDefined()
