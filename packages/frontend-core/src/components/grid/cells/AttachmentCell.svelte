@@ -20,6 +20,8 @@
   $: isSingle = schema?.type === FieldType.ATTACHMENT_SINGLE
   $: arrayValue = (value && !Array.isArray(value) ? [value] : value) || []
 
+  $: maximum = isSingle ? 1 : schema.constraints?.length?.maximum
+
   $: editable = focused && !readonly
   $: {
     if (!focused) {
@@ -111,7 +113,7 @@
       value={arrayValue}
       compact
       on:change={onFileChange}
-      maximum={schema.constraints?.length?.maximum}
+      {maximum}
       {processFiles}
       {deleteAttachments}
       {handleFileTooLarge}
