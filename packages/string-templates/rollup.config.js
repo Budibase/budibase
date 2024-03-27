@@ -17,6 +17,12 @@ const config = (format, outputFile) => ({
     format,
     file: outputFile,
   },
+  onwarn(warning, warn) {
+    if (warning.code === "EVAL") {
+      return
+    }
+    warn(warning)
+  },
   plugins: [
     typescript(),
     resolve({
