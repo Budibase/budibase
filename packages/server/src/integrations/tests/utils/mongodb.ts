@@ -1,7 +1,7 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 
-export async function mongodb(): Promise<Datasource> {
+export async function getDatasource(): Promise<Datasource> {
   const container = await new GenericContainer("mongo:7.0-jammy")
     .withName("budibase-test-mongodb")
     .withReuse()

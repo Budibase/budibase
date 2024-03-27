@@ -1,11 +1,11 @@
 jest.unmock("pg")
 
-import { Datasource } from "@budibase/types"
-import { postgres } from "./postgres"
-import { mongodb } from "./mongodb"
-import { mysql } from "./mysql"
-import { mssql } from "./mssql"
-import { mariadb } from "./mariadb"
+import { Datasource, SourceName } from "@budibase/types"
+import * as postgres from "./postgres"
+import * as mongodb from "./mongodb"
+import * as mysql from "./mysql"
+import * as mssql from "./mssql"
+import * as mariadb from "./mariadb"
 
 export type DatasourceProvider = () => Promise<Datasource>
 
@@ -18,11 +18,11 @@ export enum DatabaseName {
 }
 
 const providers: Record<DatabaseName, DatasourceProvider> = {
-  [DatabaseName.POSTGRES]: postgres,
-  [DatabaseName.MONGODB]: mongodb,
-  [DatabaseName.MYSQL]: mysql,
-  [DatabaseName.SQL_SERVER]: mssql,
-  [DatabaseName.MARIADB]: mariadb,
+  [DatabaseName.POSTGRES]: postgres.getDatasource,
+  [DatabaseName.MONGODB]: mongodb.getDatasource,
+  [DatabaseName.MYSQL]: mysql.getDatasource,
+  [DatabaseName.SQL_SERVER]: mssql.getDatasource,
+  [DatabaseName.MARIADB]: mariadb.getDatasource,
 }
 
 export function getDatasourceProviders(
@@ -45,4 +45,21 @@ export async function getDatasources(
   ...sourceNames: DatabaseName[]
 ): Promise<Datasource[]> {
   return Promise.all(sourceNames.map(sourceName => providers[sourceName]()))
+}
+
+export async function rawQuery(ds: Datasource, sql: string): Promise<any> {
+  switch (ds.source) {
+    case SourceName.POSTGRES: {
+      return postgres.rawQuery(ds, sql)
+    }
+    case SourceName.MYSQL: {
+      return mysql.rawQuery(ds, sql)
+    }
+    case SourceName.SQL_SERVER: {
+      return mssql.rawQuery(ds, sql)
+    }
+    default: {
+      throw new Error(`Unsupported source: ${ds.source}`)
+    }
+  }
 }

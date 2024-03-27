@@ -1,7 +1,9 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
+import mssql from "mssql"
+import { generator } from "@budibase/backend-core/tests"
 
-export async function mssql(): Promise<Datasource> {
+export async function getDatasource(): Promise<Datasource> {
   const container = await new GenericContainer(
     "mcr.microsoft.com/mssql/server:2022-latest"
   )
@@ -27,7 +29,7 @@ export async function mssql(): Promise<Datasource> {
   const host = container.getHost()
   const port = container.getMappedPort(1433)
 
-  return {
+  const datasource: Datasource = {
     type: "datasource_plus",
     source: SourceName.SQL_SERVER,
     plus: true,
@@ -40,5 +42,29 @@ export async function mssql(): Promise<Datasource> {
         encrypt: false,
       },
     },
+  }
+
+  const database = generator.guid().replaceAll("-", "")
+  await rawQuery(datasource, `CREATE DATABASE "${database}"`)
+  datasource.config!.database = database
+
+  return datasource
+}
+
+export async function rawQuery(ds: Datasource, sql: string) {
+  if (!ds.config) {
+    throw new Error("Datasource config is missing")
+  }
+  if (ds.source !== SourceName.SQL_SERVER) {
+    throw new Error("Datasource source is not SQL Server")
+  }
+
+  const pool = new mssql.ConnectionPool(ds.config! as mssql.config)
+  const client = await pool.connect()
+  try {
+    const { recordset } = await client.query(sql)
+    return recordset
+  } finally {
+    await pool.close()
   }
 }
