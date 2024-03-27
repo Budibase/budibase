@@ -3,11 +3,12 @@ jest.unmock("aws-sdk")
 import { TestConfiguration } from "../../../../tests"
 import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
-import { objectStore } from "@budibase/backend-core"
+import { objectStore, env } from "@budibase/backend-core"
 import tk from "timekeeper"
 
-const nodemailer = require("nodemailer")
 const fetch = require("node-fetch")
+
+const nodemailer = require("nodemailer")
 
 // for the real email tests give them a long time to try complete/fail
 jest.setTimeout(30000)
@@ -96,16 +97,21 @@ describe("/api/global/email", () => {
 
   it("should be able to send an email with attachments", async () => {
     tk.reset()
-    let bucket = "test-bucket"
+    let bucket = "testbucket"
     let filename = "test.txt"
     await objectStore.upload({
       bucket,
       filename,
       body: Buffer.from("test data"),
     })
-    tk.freeze(mocks.date.MOCK_DATE)
-    let presignedUrl = await objectStore.getPresignedUrl(bucket, filename, 600)
+    let presignedUrl = await objectStore.getPresignedUrl(
+      bucket,
+      filename,
+      60000
+    )
 
-    await sendRealEmail(EmailTemplatePurpose.WELCOME, [presignedUrl])
+    let url = env.MINIO_URL + presignedUrl.split("files/signed")[1]
+    tk.freeze(mocks.date.MOCK_DATE)
+    await sendRealEmail(EmailTemplatePurpose.WELCOME, [url])
   })
 })

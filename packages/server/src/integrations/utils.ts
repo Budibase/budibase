@@ -500,7 +500,7 @@ export async function handleFileResponse(
       type: response.headers["content-type"],
     })
   }
-  presignedUrl = await objectStore.getPresignedUrl(bucket, key, 600)
+  presignedUrl = await objectStore.getPresignedUrl(bucket, key, 60000)
   return {
     data: {
       size,

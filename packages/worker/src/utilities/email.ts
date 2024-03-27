@@ -174,13 +174,30 @@ export async function sendEmail(
           attachmentUrl.startsWith("https://")
 
         const url = isFullyFormedUrl ? attachmentUrl : baseUrl + attachmentUrl
+        let headers
 
-        const response = await fetch(url)
+        if (env.isTest()) {
+          headers = {
+            Host: "minio-service",
+          }
+        }
+
+        let response
+        if (headers) {
+          response = await fetch(url, {
+            headers,
+          })
+        } else {
+          response = await fetch(url)
+        }
+        if (!response.ok) {
+          throw new Error(`unexpected response ${response.statusText}`)
+        }
         const filename = path.basename(new URL(url).pathname)
 
         return {
           filename: filename,
-          content: response.body,
+          content: response?.body,
         }
       })
     )
