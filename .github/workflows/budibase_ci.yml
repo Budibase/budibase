@@ -243,8 +243,13 @@ jobs:
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
-          any_commit=$(git log origin/master...$base_commit_excluding_merges)
+          pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
+
+          any_commit=$(git log $base_commit_excluding_merges...$pro_commit)
+
           if [ -n "$any_commit" ]; then
+            echo $any_commit
+
             echo "An error occurred: <error_message>"
             echo 'Submodule commit does not match the latest commit on the "${{ steps.get_pro_commits.outputs.target_branch }}" branch.'
             echo 'Refer to the pro repo to merge your changes: https://github.com/Budibase/budibase-pro/blob/master/docs/getting_started.md'
