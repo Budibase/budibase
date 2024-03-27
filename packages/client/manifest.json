@@ -4322,7 +4322,7 @@
       }
     ]
   },
-  "singleattachmentfield": {
+  "attachmentsinglefield": {
     "name": "Single Attachment",
     "icon": "Attach",
     "styles": ["size"],
