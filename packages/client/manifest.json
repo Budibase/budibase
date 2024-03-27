@@ -1629,10 +1629,11 @@
         "required": true
       },
       {
-        "type": "multifield",
+        "type": "chartmultifield",
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
+        "fieldValidator": "chart",
         "required": true
       },
       {
@@ -1787,7 +1788,7 @@
         "required": true
       },
       {
-        "type": "multifield",
+        "type": "chartmultifield",
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
@@ -1940,7 +1941,7 @@
         "required": true
       },
       {
-        "type": "multifield",
+        "type": "chartmultifield",
         "label": "Data columns",
         "key": "valueColumns",
         "dependsOn": "dataProvider",
@@ -2105,8 +2106,8 @@
         "required": true
       },
       {
-        "type": "field",
-        "label": "Data columns",
+        "type": "chartfield",
+        "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
         "required": true
@@ -2234,7 +2235,7 @@
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "Data columns",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
@@ -2363,28 +2364,28 @@
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "Open column",
         "key": "openColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "Close column",
         "key": "closeColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "High column",
         "key": "highColumn",
         "dependsOn": "dataProvider",
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "Low column",
         "key": "lowColumn",
         "dependsOn": "dataProvider",
@@ -2448,7 +2449,7 @@
         "required": true
       },
       {
-        "type": "field",
+        "type": "chartfield",
         "label": "Data column",
         "key": "valueColumn",
         "dependsOn": "dataProvider",
@@ -5265,7 +5266,7 @@
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
@@ -5290,7 +5291,7 @@
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Data column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
@@ -5315,7 +5316,7 @@
             "required": true
           },
           {
-            "type": "multifield",
+            "type": "chartmultifield",
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
@@ -5362,7 +5363,7 @@
         },
         "settings": [
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Value column",
             "key": "valueColumn",
             "dependsOn": "dataSource",
@@ -5410,7 +5411,7 @@
             "required": true
           },
           {
-            "type": "multifield",
+            "type": "chartmultifield",
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
@@ -5459,7 +5460,7 @@
             "required": true
           },
           {
-            "type": "multifield",
+            "type": "chartmultifield",
             "label": "Data columns",
             "key": "valueColumns",
             "dependsOn": "dataSource",
@@ -5520,28 +5521,28 @@
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Open column",
             "key": "openColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Close column",
             "key": "closeColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "High column",
             "key": "highColumn",
             "dependsOn": "dataSource",
             "required": true
           },
           {
-            "type": "field",
+            "type": "chartfield",
             "label": "Low column",
             "key": "lowColumn",
             "dependsOn": "dataSource",

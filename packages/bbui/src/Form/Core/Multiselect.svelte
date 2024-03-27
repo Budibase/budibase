@@ -9,6 +9,8 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let getOptionsIcon = () => null
+  export let getOptionsIconToolip = () => null
   export let readonly = false
   export let autocomplete = false
   export let sort = false
@@ -80,6 +82,8 @@
 
 <Picker
   on:loadMore
+  {getOptionsIcon}
+  {getOptionsIconTooltip}
   {id}
   {disabled}
   {readonly}

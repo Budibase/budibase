@@ -9,8 +9,10 @@ import TableSelect from "./controls/TableSelect.svelte"
 import ColorPicker from "./controls/ColorPicker.svelte"
 import { IconSelect } from "./controls/IconSelect"
 import FieldSelect from "./controls/FieldSelect.svelte"
+import ChartFieldSelect from "./controls/ChartFieldSelect.svelte"
 import SortableFieldSelect from "./controls/SortableFieldSelect.svelte"
 import MultiFieldSelect from "./controls/MultiFieldSelect.svelte"
+import ChartMultiFieldSelect from "./controls/ChartMultiFieldSelect.svelte"
 import SearchFieldSelect from "./controls/SearchFieldSelect.svelte"
 import SchemaSelect from "./controls/SchemaSelect.svelte"
 import SectionSelect from "./controls/SectionSelect.svelte"
@@ -46,7 +48,9 @@ const componentMap = {
   color: ColorPicker,
   icon: IconSelect,
   field: FieldSelect,
+  chartfield: ChartFieldSelect,
   multifield: MultiFieldSelect,
+  chartmultifield: ChartMultiFieldSelect,
   searchfield: SearchFieldSelect,
   options: OptionsEditor,
   schema: SchemaSelect,
