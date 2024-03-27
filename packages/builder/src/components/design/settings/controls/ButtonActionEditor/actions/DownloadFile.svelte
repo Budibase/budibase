@@ -17,7 +17,7 @@
       value: "attachment",
     },
     {
-      label: "Url",
+      label: "URL",
       value: "url",
     },
   ]
