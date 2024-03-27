@@ -242,7 +242,7 @@ jobs:
       - name: Check submodule merged to base branch
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
-          base_commit_excluding_merges=${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
+          base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           any_commit=$(git log origin/master...$base_commit_excluding_merges)
           if [ -n "$any_commit" ]; then
             echo "An error occurred: <error_message>"
