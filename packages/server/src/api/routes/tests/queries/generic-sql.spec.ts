@@ -5,9 +5,6 @@ import {
   getDatasource,
   rawQuery,
 } from "../../../../integrations/tests/utils"
-import pg from "pg"
-import mysql from "mysql2/promise"
-import mssql from "mssql"
 
 jest.unmock("pg")
 
