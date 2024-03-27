@@ -43,6 +43,7 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
+      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
