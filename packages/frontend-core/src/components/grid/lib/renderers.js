@@ -11,6 +11,7 @@ import BooleanCell from "../cells/BooleanCell.svelte"
 import FormulaCell from "../cells/FormulaCell.svelte"
 import JSONCell from "../cells/JSONCell.svelte"
 import AttachmentCell from "../cells/AttachmentCell.svelte"
+import AttachmentSingleCell from "../cells/AttachmentSingleCell.svelte"
 import BBReferenceCell from "../cells/BBReferenceCell.svelte"
 
 const TypeComponentMap = {
@@ -23,7 +24,7 @@ const TypeComponentMap = {
   [FieldType.NUMBER]: NumberCell,
   [FieldType.BOOLEAN]: BooleanCell,
   [FieldType.ATTACHMENT]: AttachmentCell,
-  [FieldType.ATTACHMENT_SINGLE]: AttachmentCell,
+  [FieldType.ATTACHMENT_SINGLE]: AttachmentSingleCell,
   [FieldType.LINK]: RelationshipCell,
   [FieldType.FORMULA]: FormulaCell,
   [FieldType.JSON]: JSONCell,
