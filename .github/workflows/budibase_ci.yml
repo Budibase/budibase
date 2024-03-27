@@ -156,6 +156,9 @@ jobs:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
+          large-packages: false
+          swap-storage: false
+          docker-images: false
           android: true
 
       - name: Pull testcontainers images
