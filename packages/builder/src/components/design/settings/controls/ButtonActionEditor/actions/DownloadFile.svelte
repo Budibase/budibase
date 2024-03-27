@@ -57,8 +57,8 @@
     <DrawerBindableInput
       title="File name"
       {bindings}
-      value={parameters.file_name}
-      on:change={value => (parameters.file_name = value.detail)}
+      value={parameters.fileName}
+      on:change={value => (parameters.fileName = value.detail)}
     />
   {/if}
 </div>
