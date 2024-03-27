@@ -1,5 +1,5 @@
 <script>
-  import LinksEditor from "./LinksEditor.svelte"
+  import NavItemConfiguration from "./NavItemConfiguration.svelte"
   import { get } from "svelte/store"
   import Panel from "components/design/Panel.svelte"
   import {
@@ -75,7 +75,7 @@
 
   {#if $selectedScreen?.showNavigation}
     <DetailSummary name="Customize" initiallyShow collapsible={false}>
-      <LinksEditor />
+      <NavItemConfiguration />
       <div class="settings">
         <PropertyControl
           label="Position"

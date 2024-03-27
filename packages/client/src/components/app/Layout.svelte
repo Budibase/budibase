@@ -105,7 +105,7 @@
 
   const getValidLinks = (allLinks, userRoleHierarchy) => {
     // Strip links missing required info
-    let validLinks = (allLinks || []).filter(link => link.text && link.url)
+    let validLinks = (allLinks || []).filter(link => link.text)
     // Filter to only links allowed by the current role
     return validLinks.filter(link => {
       const role = link.roleId || Constants.Roles.BASIC
