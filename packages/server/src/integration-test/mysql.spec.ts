@@ -18,6 +18,13 @@ import { generator } from "@budibase/backend-core/tests"
 // @ts-ignore
 fetch.mockSearch()
 
+function uniqueTableName(length?: number): string {
+  return generator
+    .guid()
+    .replaceAll("-", "_")
+    .substring(0, length || 10)
+}
+
 const config = setup.getConfig()!
 
 jest.mock("../websockets", () => ({
@@ -53,7 +60,7 @@ describe("mysql integrations", () => {
 
   beforeEach(async () => {
     primaryMySqlTable = await config.createTable({
-      name: generator.guid().replaceAll("-", "_").substring(0, 10),
+      name: uniqueTableName(),
       type: "table",
       primary: ["id"],
       schema: {
@@ -249,7 +256,7 @@ describe("mysql integrations", () => {
       const addColumnToTable: TableRequest = {
         type: "table",
         sourceType: TableSourceType.EXTERNAL,
-        name: generator.guid().replaceAll("-", "_").substring(0, 10),
+        name: uniqueTableName(),
         sourceId: mysqlDatasource._id!,
         primary: ["id"],
         schema: {

@@ -1,6 +1,8 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
+import { rawQuery } from "./mysql"
+import { generator } from "@budibase/backend-core/tests"
 
 class MariaDBWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -19,7 +21,7 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
   }
 }
 
-export async function mariadb(): Promise<Datasource> {
+export async function getDatasource(): Promise<Datasource> {
   const container = await new GenericContainer("mariadb:lts")
     .withName("budibase-test-mariadb")
     .withReuse()
@@ -31,16 +33,23 @@ export async function mariadb(): Promise<Datasource> {
   const host = container.getHost()
   const port = container.getMappedPort(3306)
 
-  return {
+  const config = {
+    host,
+    port,
+    user: "root",
+    password: "password",
+    database: "mysql",
+  }
+
+  const datasource = {
     type: "datasource_plus",
     source: SourceName.MYSQL,
     plus: true,
-    config: {
-      host,
-      port,
-      user: "root",
-      password: "password",
-      database: "mysql",
-    },
+    config,
   }
+
+  const database = generator.guid().replaceAll("-", "")
+  await rawQuery(datasource, `CREATE DATABASE \`${database}\``)
+  datasource.config.database = database
+  return datasource
 }

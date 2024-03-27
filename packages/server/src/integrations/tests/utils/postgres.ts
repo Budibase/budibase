@@ -1,7 +1,9 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
+import pg from "pg"
+import { generator } from "@budibase/backend-core/tests"
 
-export async function postgres(): Promise<Datasource> {
+export async function getDatasource(): Promise<Datasource> {
   const container = await new GenericContainer("postgres:16.1-bullseye")
     .withName("budibase-test-postgres")
     .withReuse()
@@ -16,7 +18,7 @@ export async function postgres(): Promise<Datasource> {
   const host = container.getHost()
   const port = container.getMappedPort(5432)
 
-  return {
+  const datasource: Datasource = {
     type: "datasource_plus",
     source: SourceName.POSTGRES,
     plus: true,
@@ -31,5 +33,29 @@ export async function postgres(): Promise<Datasource> {
       rejectUnauthorized: false,
       ca: false,
     },
+  }
+
+  const database = generator.guid().replaceAll("-", "")
+  await rawQuery(datasource, `CREATE DATABASE "${database}"`)
+  datasource.config!.database = database
+
+  return datasource
+}
+
+export async function rawQuery(ds: Datasource, sql: string) {
+  if (!ds.config) {
+    throw new Error("Datasource config is missing")
+  }
+  if (ds.source !== SourceName.POSTGRES) {
+    throw new Error("Datasource source is not Postgres")
+  }
+
+  const client = new pg.Client(ds.config)
+  await client.connect()
+  try {
+    const { rows } = await client.query(sql)
+    return rows
+  } finally {
+    await client.end()
   }
 }
