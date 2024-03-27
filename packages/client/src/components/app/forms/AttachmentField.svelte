@@ -16,17 +16,13 @@
   export let span
   export let helpText = null
   export let type = FieldType.ATTACHMENT
+  export let fieldApiMapper = {
+    get: value => value,
+    set: value => value,
+  }
 
   let fieldState
   let fieldApi
-
-  $: isSingle = type === FieldType.ATTACHMENT_SINGLE
-  $: value =
-    isSingle && !Array.isArray(fieldState?.value)
-      ? fieldState?.value
-        ? [fieldState.value]
-        : []
-      : fieldState?.value
 
   const { API, notificationStore } = getContext("sdk")
   const formContext = getContext("form")
@@ -73,10 +69,7 @@
   }
 
   const handleChange = e => {
-    let value = e.detail
-    if (isSingle) {
-      value = value[0] || null
-    }
+    const value = fieldApiMapper.set(e.detail)
     const changed = fieldApi.setValue(value)
     if (onChange && changed) {
       onChange({ value })
@@ -99,7 +92,7 @@
 >
   {#if fieldState}
     <CoreDropzone
-      {value}
+      value={fieldApiMapper.get(fieldState.value)}
       disabled={fieldState.disabled || fieldState.readonly}
       error={fieldState.error}
       on:change={handleChange}
@@ -107,7 +100,7 @@
       {deleteAttachments}
       {handleFileTooLarge}
       {handleTooManyFiles}
-      maximum={isSingle ? 1 : maximum}
+      {maximum}
       {extensions}
       {compact}
     />
