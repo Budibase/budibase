@@ -402,11 +402,11 @@ const closeSidePanelHandler = () => {
 
 const downloadFileHandler = async (action, _context) => {
   try {
-    let { url, file_name, type, attachment } = action.parameters
+    let { url, fileName, type, attachment } = action.parameters
     if (type === "attachment") {
       const attachmentObject = JSON.parse(attachment)
       url = attachmentObject.url
-      file_name = attachmentObject.name
+      fileName = attachmentObject.name
     }
 
     const response = await fetch(url)
@@ -419,7 +419,7 @@ const downloadFileHandler = async (action, _context) => {
 
     const link = document.createElement("a")
     link.href = objectUrl
-    link.download = file_name
+    link.download = fileName
     link.click()
 
     URL.revokeObjectURL(objectUrl)
