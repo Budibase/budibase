@@ -16,8 +16,12 @@ import {
 import _ from "lodash"
 import { generator } from "@budibase/backend-core/tests"
 import { utils } from "@budibase/backend-core"
-import { DatabaseName, getDatasource } from "../integrations/tests/utils"
-import { Client } from "pg"
+import {
+  DatabaseName,
+  getDatasource,
+  rawQuery,
+} from "../integrations/tests/utils"
+
 // @ts-ignore
 fetch.mockSearch()
 
@@ -28,7 +32,8 @@ jest.mock("../websockets")
 
 describe("postgres integrations", () => {
   let makeRequest: MakeRequestResponse,
-    postgresDatasource: Datasource,
+    rawDatasource: Datasource,
+    datasource: Datasource,
     primaryPostgresTable: Table,
     oneToManyRelationshipInfo: ForeignTableInfo,
     manyToOneRelationshipInfo: ForeignTableInfo,
@@ -40,9 +45,8 @@ describe("postgres integrations", () => {
 
     makeRequest = generateMakeRequest(apiKey, true)
 
-    postgresDatasource = await config.api.datasource.create(
-      await getDatasource(DatabaseName.POSTGRES)
-    )
+    rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+    datasource = await config.api.datasource.create(rawDatasource)
   })
 
   beforeEach(async () => {
@@ -66,7 +70,7 @@ describe("postgres integrations", () => {
             type: FieldType.STRING,
           },
         },
-        sourceId: postgresDatasource._id,
+        sourceId: datasource._id,
         sourceType: TableSourceType.EXTERNAL,
       })
     }
@@ -143,7 +147,7 @@ describe("postgres integrations", () => {
           main: true,
         },
       },
-      sourceId: postgresDatasource._id,
+      sourceId: datasource._id,
       sourceType: TableSourceType.EXTERNAL,
     })
   })
@@ -260,7 +264,7 @@ describe("postgres integrations", () => {
           autocolumn: true,
         },
       },
-      sourceId: postgresDatasource._id,
+      sourceId: datasource._id,
       sourceType: TableSourceType.EXTERNAL,
     })
   }
@@ -298,19 +302,16 @@ describe("postgres integrations", () => {
   }
 
   it("validate table schema", async () => {
-    const res = await makeRequest(
-      "get",
-      `/api/datasources/${postgresDatasource._id}`
-    )
+    const res = await makeRequest("get", `/api/datasources/${datasource._id}`)
 
     expect(res.status).toBe(200)
     expect(res.body).toEqual({
       config: {
         ca: false,
-        database: "postgres",
-        host: postgresDatasource.config!.host,
+        database: expect.any(String),
+        host: datasource.config!.host,
         password: "--secret-value--",
-        port: postgresDatasource.config!.port,
+        port: datasource.config!.port,
         rejectUnauthorized: false,
         schema: "public",
         ssl: false,
@@ -1078,7 +1079,7 @@ describe("postgres integrations", () => {
     it("should fetch information about postgres datasource", async () => {
       const primaryName = primaryPostgresTable.name
       const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: postgresDatasource,
+        datasource: datasource,
       })
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
@@ -1087,26 +1088,22 @@ describe("postgres integrations", () => {
   })
 
   describe("POST /api/datasources/:datasourceId/schema", () => {
-    let client: Client
     let tableName: string
 
     beforeEach(async () => {
       tableName = generator.guid().replaceAll("-", "").substring(0, 10)
-      client = new Client((await getDatasource(DatabaseName.POSTGRES)).config!)
-      await client.connect()
     })
 
     afterEach(async () => {
-      await client.query(`DROP TABLE IF EXISTS "${tableName}"`)
-      await client.end()
+      await rawQuery(rawDatasource, `DROP TABLE IF EXISTS "${tableName}"`)
     })
 
     it("recognises when a table has no primary key", async () => {
-      await client.query(`CREATE TABLE "${tableName}" (id SERIAL)`)
+      await rawQuery(rawDatasource, `CREATE TABLE "${tableName}" (id SERIAL)`)
 
       const response = await makeRequest(
         "post",
-        `/api/datasources/${postgresDatasource._id}/schema`
+        `/api/datasources/${datasource._id}/schema`
       )
 
       expect(response.body.errors).toEqual({
@@ -1115,13 +1112,14 @@ describe("postgres integrations", () => {
     })
 
     it("recognises when a table is using a reserved column name", async () => {
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE "${tableName}" (_id SERIAL PRIMARY KEY) `
       )
 
       const response = await makeRequest(
         "post",
-        `/api/datasources/${postgresDatasource._id}/schema`
+        `/api/datasources/${datasource._id}/schema`
       )
 
       expect(response.body.errors).toEqual({
@@ -1131,8 +1129,8 @@ describe("postgres integrations", () => {
   })
 
   describe("Integration compatibility with postgres search_path", () => {
-    let client: Client,
-      pathDatasource: Datasource,
+    let rawDatasource: Datasource,
+      datasource: Datasource,
       schema1: string,
       schema2: string
 
@@ -1140,39 +1138,38 @@ describe("postgres integrations", () => {
       schema1 = generator.guid().replaceAll("-", "")
       schema2 = generator.guid().replaceAll("-", "")
 
-      const dsConfig = await getDatasource(DatabaseName.POSTGRES)
-      const dbConfig = dsConfig.config!
+      rawDatasource = await getDatasource(DatabaseName.POSTGRES)
+      const dbConfig = rawDatasource.config!
 
-      client = new Client(dbConfig)
-      await client.connect()
-      await client.query(`CREATE SCHEMA "${schema1}";`)
-      await client.query(`CREATE SCHEMA "${schema2}";`)
+      await rawQuery(rawDatasource, `CREATE SCHEMA "${schema1}";`)
+      await rawQuery(rawDatasource, `CREATE SCHEMA "${schema2}";`)
 
       const pathConfig: any = {
-        ...dsConfig,
+        ...rawDatasource,
         config: {
           ...dbConfig,
           schema: `${schema1}, ${schema2}`,
         },
       }
-      pathDatasource = await config.api.datasource.create(pathConfig)
+      datasource = await config.api.datasource.create(pathConfig)
     })
 
     afterEach(async () => {
-      await client.query(`DROP SCHEMA "${schema1}" CASCADE;`)
-      await client.query(`DROP SCHEMA "${schema2}" CASCADE;`)
-      await client.end()
+      await rawQuery(rawDatasource, `DROP SCHEMA "${schema1}" CASCADE;`)
+      await rawQuery(rawDatasource, `DROP SCHEMA "${schema2}" CASCADE;`)
     })
 
     it("discovers tables from any schema in search path", async () => {
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE "${schema1}".table1 (id1 SERIAL PRIMARY KEY);`
       )
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE "${schema2}".table2 (id2 SERIAL PRIMARY KEY);`
       )
       const response = await makeRequest("post", "/api/datasources/info", {
-        datasource: pathDatasource,
+        datasource: datasource,
       })
       expect(response.status).toBe(200)
       expect(response.body.tableNames).toBeDefined()
@@ -1183,15 +1180,17 @@ describe("postgres integrations", () => {
 
     it("does not mix columns from different tables", async () => {
       const repeated_table_name = "table_same_name"
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE "${schema1}".${repeated_table_name} (id SERIAL PRIMARY KEY, val1 TEXT);`
       )
-      await client.query(
+      await rawQuery(
+        rawDatasource,
         `CREATE TABLE "${schema2}".${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
       )
       const response = await makeRequest(
         "post",
-        `/api/datasources/${pathDatasource._id}/schema`,
+        `/api/datasources/${datasource._id}/schema`,
         {
           tablesFilter: [repeated_table_name],
         }
