@@ -43,7 +43,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
       - run: yarn lint
 
@@ -62,7 +61,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
 
       # Run build all the projects
@@ -105,7 +103,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
       - name: Test
         run: |
@@ -130,7 +127,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
       - name: Test worker
         run: |
@@ -168,7 +164,6 @@ jobs:
           docker pull testcontainers/ryuk:0.5.1
           docker pull budibase/couchdb
 
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
 
       - name: Test server
@@ -193,7 +188,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-      - run: yarn set version 1.22.19
       - run: yarn --frozen-lockfile
       - name: Build packages
         run: yarn build --scope @budibase/server --scope @budibase/worker
