@@ -242,6 +242,7 @@ jobs:
       - name: Check submodule merged to base branch
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
+          cd packages/pro
           base_commit_excluding_merges='${{ steps.get_pro_commits.outputs.base_commit_excluding_merges }}'
           pro_commit='${{ steps.get_pro_commits.outputs.pro_commit }}'
 
