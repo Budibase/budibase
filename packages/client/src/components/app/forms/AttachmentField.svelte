@@ -62,7 +62,6 @@
   }
 
   const deleteAttachments = async fileList => {
-    console.error({ fileList })
     try {
       return await API.deleteAttachments({
         keys: fileList,
