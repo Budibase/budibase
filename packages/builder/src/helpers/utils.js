@@ -1,3 +1,4 @@
+import { FieldType } from "@budibase/types"
 import { ActionStepID } from "constants/backend/automations"
 import { TableNames } from "constants"
 import {
@@ -20,20 +21,20 @@ export function buildAutoColumn(tableName, name, subtype) {
   switch (subtype) {
     case AUTO_COLUMN_SUB_TYPES.UPDATED_BY:
     case AUTO_COLUMN_SUB_TYPES.CREATED_BY:
-      type = FIELDS.LINK.type
+      type = FieldType.LINK
       constraints = FIELDS.LINK.constraints
       break
     case AUTO_COLUMN_SUB_TYPES.AUTO_ID:
-      type = FIELDS.NUMBER.type
+      type = FieldType.NUMBER
       constraints = FIELDS.NUMBER.constraints
       break
     case AUTO_COLUMN_SUB_TYPES.UPDATED_AT:
     case AUTO_COLUMN_SUB_TYPES.CREATED_AT:
-      type = FIELDS.DATETIME.type
+      type = FieldType.DATETIME
       constraints = FIELDS.DATETIME.constraints
       break
     default:
-      type = FIELDS.STRING.type
+      type = FieldType.STRING
       constraints = FIELDS.STRING.constraints
       break
   }

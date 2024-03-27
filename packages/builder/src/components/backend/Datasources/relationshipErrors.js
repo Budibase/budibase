@@ -1,4 +1,4 @@
-import { RelationshipType } from "constants/backend"
+import { RelationshipType } from "@budibase/types"
 
 const typeMismatch = "Column type of the foreign key must match the primary key"
 const columnBeingUsed = "Column name cannot be an existing column"

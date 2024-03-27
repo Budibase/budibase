@@ -67,7 +67,7 @@
   }
 
   $: showDropzone =
-    (!maximum || (maximum && value?.length < maximum)) && !disabled
+    (!maximum || (maximum && (value?.length || 0) < maximum)) && !disabled
 
   async function processFileList(fileList) {
     if (
