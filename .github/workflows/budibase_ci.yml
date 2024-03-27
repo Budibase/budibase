@@ -264,7 +264,15 @@ jobs:
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
           fetch-depth: 0
 
-      - name: Check account portal commit
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            src:
+              - packages/account-portal/**
+
+      - if: steps.changes.outputs.changes.src == 'true'
+        name: Check account portal commit
         id: get_accountportal_commits
         run: |
           cd packages/account-portal
