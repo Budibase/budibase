@@ -239,7 +239,7 @@ jobs:
             echo "Nothing to do - branch to branch merge."
           fi
 
-      - name: Check submodule merged to base branch
+      - name: Check submodule merged and latest on base branch
         if: ${{ steps.get_pro_commits.outputs.base_commit_excluding_merges != '' }}
         run: |
           cd packages/pro
