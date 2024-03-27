@@ -4,7 +4,6 @@ import * as fs from "fs"
 import { join } from "path"
 
 const baseConfig: Config.InitialProjectOptions = {
-  preset: "@trendyol/jest-testcontainers",
   setupFiles: ["./src/tests/jestEnv.ts"],
   moduleFileExtensions: [
     "js",
@@ -18,6 +17,7 @@ const baseConfig: Config.InitialProjectOptions = {
     "svelte",
   ],
   setupFilesAfterEnv: ["./src/tests/jestSetup.ts"],
+  globalSetup: "./../../globalSetup.ts",
   transform: {
     "^.+\\.ts?$": "@swc/jest",
     "^.+\\.js?$": "@swc/jest",

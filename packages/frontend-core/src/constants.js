@@ -3,6 +3,7 @@
  */
 export { OperatorOptions, SqlNumberTypeRangeMap } from "@budibase/shared-core"
 export { Feature as Features } from "@budibase/types"
+import { BpmCorrelationKey } from "@budibase/shared-core"
 
 // Cookie names
 export const Cookies = {
@@ -10,6 +11,7 @@ export const Cookies = {
   CurrentApp: "budibase:currentapp",
   ReturnUrl: "budibase:returnurl",
   AccountReturnUrl: "budibase:account:returnurl",
+  OnboardingProcessCorrelationKey: BpmCorrelationKey.ONBOARDING,
 }
 
 // Table names

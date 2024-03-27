@@ -20,7 +20,7 @@
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
-  import { ClientAppSkeleton } from "@budibase/frontend-core"
+  import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
@@ -137,7 +137,9 @@
       class:hide={!loading || !app?.features?.skeletonLoader}
       class="loading"
     >
-      <div class={`loadingThemeWrapper ${app.theme}`}>
+      <div
+        class={`loadingThemeWrapper ${getBaseTheme(app.theme)} ${app.theme}`}
+      >
         <ClientAppSkeleton
           noAnimation
           hideDevTools={app?.status === "published"}

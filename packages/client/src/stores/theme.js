@@ -1,7 +1,7 @@
 import { derived } from "svelte/store"
 import { appStore } from "./app"
 import { builderStore } from "./builder"
-import { Constants } from "@budibase/frontend-core"
+import { getBaseTheme } from "@budibase/frontend-core"
 
 // This is the good old acorn bug where having the word "g l o b a l" makes it
 // think that this is not ES6 compatible and starts throwing errors when using
@@ -29,13 +29,6 @@ const createThemeStore = () => {
       // Ensure theme is set
       theme = theme || defaultTheme
 
-      // Get base theme
-      let base =
-        Constants.Themes.find(x => `spectrum--${x.class}` === theme)?.base || ""
-      if (base) {
-        base = `spectrum--${base}`
-      }
-
       // Delete and nullish keys from the custom theme
       if (customTheme) {
         Object.entries(customTheme).forEach(([key, value]) => {
@@ -59,7 +52,7 @@ const createThemeStore = () => {
 
       return {
         theme,
-        baseTheme: base,
+        baseTheme: getBaseTheme(theme),
         customTheme,
         customThemeCss,
       }
