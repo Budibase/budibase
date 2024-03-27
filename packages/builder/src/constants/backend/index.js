@@ -5,6 +5,7 @@ import {
   AutoFieldSubType,
   Hosting,
 } from "@budibase/types"
+
 export { RelationshipType } from "@budibase/types"
 
 export const AUTO_COLUMN_SUB_TYPES = AutoFieldSubType
