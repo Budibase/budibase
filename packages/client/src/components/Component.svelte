@@ -283,6 +283,9 @@
         const dependsOnKey = setting.dependsOn.setting || setting.dependsOn
         const dependsOnValue = setting.dependsOn.value
         const realDependentValue = instance[dependsOnKey]
+        if (dependsOnValue === undefined && realDependentValue) {
+          return missing
+        }
         if (dependsOnValue == null && realDependentValue == null) {
           return false
         }

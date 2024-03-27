@@ -191,6 +191,9 @@
                 // Number fields
                 min: setting.min ?? null,
                 max: setting.max ?? null,
+
+                // Field select settings
+                fieldValidator: setting.fieldValidator,
               }}
               {bindings}
               {componentBindings}

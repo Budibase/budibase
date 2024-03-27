@@ -1,6 +1,7 @@
 <script>
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { get } from "lodash";
 
   // Common props
   export let title
@@ -80,9 +81,7 @@
 
     // Fetch, filter and sort data
     const { schema, rows } = dataProvider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row))
+    const data = rows
     if (!schema || !data.length) {
       return null
     }
@@ -112,11 +111,21 @@
       builder = builder.xType(labelFieldType)
       useDates = labelFieldType === "datetime"
     }
-    const series = valueColumns.map(column => ({
+    const series = (valueColumns ?? []).map(column => ({
       name: column,
       data: data.map(row => {
         if (!useDates) {
-          return row[column]
+          const value = get(row, column); 
+
+          if (Array.isArray(value)) {
+            return null;
+          }
+
+          if (Number.isNaN(parseInt(value, 10))) {
+            return null;
+          }
+
+          return value;
         } else {
           return [row[labelColumn], row[column]]
         }

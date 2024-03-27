@@ -26,6 +26,7 @@
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionIcon = () => null
+  export let getOptionIconTooltip = () => null
   export let useOptionIconImage = false
   export let getOptionColour = () => null
   export let getOptionSubtitle = () => null
@@ -202,7 +203,7 @@
           >
             {#if getOptionIcon(option, idx)}
               <span class="option-extra icon">
-                {#if useOptionIconImage}
+                {#if useoptioniconimage}
                   <img
                     src={getOptionIcon(option, idx)}
                     alt="icon"

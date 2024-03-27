@@ -76,14 +76,16 @@
       .animate(animate)
       .yUnits(yAxisUnits)
       .yTooltip(true)
-      .xType("datetime")
+      //.xType("datetime")
+      .candleStick()
 
     // Add data
+    //const parseDate = d => d
     const parseDate = d => (isNaN(d) ? Date.parse(d).valueOf() : parseInt(d))
-    const chartData = data.map(row => ({
-      x: parseDate(row[dateColumn]),
-      y: [row[openColumn], row[highColumn], row[lowColumn], row[closeColumn]],
-    }))
+    const chartData = data.map(row => ([
+      parseDate(row[dateColumn]),
+      row[openColumn], row[highColumn], row[lowColumn], row[closeColumn]
+    ]))
     builder = builder.series([{ data: chartData }])
 
     // Build chart options

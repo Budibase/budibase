@@ -1,6 +1,7 @@
 <script>
   import { ApexOptionsBuilder } from "./ApexOptionsBuilder"
   import ApexChart from "./ApexChart.svelte"
+  import { get } from "lodash";
 
   export let title
   export let dataProvider
@@ -71,9 +72,8 @@
 
     // Fetch data
     const { schema, rows } = dataProvider
-    const reducer = row => (valid, column) => valid && row[column] != null
-    const hasAllColumns = row => allCols.reduce(reducer(row), true)
-    const data = rows.filter(row => hasAllColumns(row)).slice(0, 100)
+
+    const data = rows.slice(0, 100)
     if (!schema || !data.length) {
       return null
     }
@@ -105,11 +105,21 @@
       }
       useDates = labelFieldType === "datetime"
     }
-    const series = valueColumns.map(column => ({
+    const series = (valueColumns ?? []).map(column => ({
       name: column,
       data: data.map(row => {
         if (!useDates) {
-          return row[column]
+          const value = get(row, column); 
+
+          if (Array.isArray(value)) {
+            return null;
+          }
+
+          if (Number.isNaN(parseInt(value, 10))) {
+            return null;
+          }
+
+          return value;
         } else {
           return [row[labelColumn], row[column]]
         }

@@ -7,6 +7,9 @@ export class ApexOptionsBuilder {
     }
     this.options = {
       series: [],
+      noData:{
+        text: "no data to show"
+      },
       legend: {
         show: false,
         position: "top",
@@ -99,7 +102,8 @@ export class ApexOptionsBuilder {
   }
 
   series(series) {
-    return this.setOption(["series"], series)
+    const foo = this.setOption(["series"], series)
+    return foo;
   }
 
   horizontal(horizontal) {
@@ -159,6 +163,15 @@ export class ApexOptionsBuilder {
       ["yaxis", "labels", "formatter"],
       this.formatters[units || "Default"]
     )
+  }
+
+  candleStick() {
+    //this.options.xaxis.convertedCatToNumeric = false;
+    this.options.xaxis.labels.formatter = (epoch) => {
+      return (new Date(epoch)).toDateString();
+    }
+
+    return this;
   }
 
   clearXFormatter() {
