@@ -16,7 +16,7 @@
     [FieldType.LONGFORM]: "longformfield",
     [FieldType.DATETIME]: "datetimefield",
     [FieldType.ATTACHMENT]: "attachmentfield",
-    [FieldType.ATTACHMENT_SINGLE]: "attachmentfield",
+    [FieldType.ATTACHMENT_SINGLE]: "singleattachmentfield",
     [FieldType.LINK]: "relationshipfield",
     [FieldType.JSON]: "jsonfield",
     [FieldType.BARCODEQR]: "codescanner",
@@ -64,11 +64,6 @@
       [FieldType.ATTACHMENT]: (_field, schema) => {
         return {
           maximum: schema?.constraints?.length?.maximum,
-        }
-      },
-      [FieldType.ATTACHMENT_SINGLE]: () => {
-        return {
-          type: FieldType.ATTACHMENT_SINGLE,
         }
       },
     }
