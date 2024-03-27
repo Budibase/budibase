@@ -2,9 +2,7 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 
 export async function getDatasource(): Promise<Datasource> {
-  const container = await new GenericContainer("mongo:7.0-jammy")
-    .withName("budibase-test-mongodb")
-    .withReuse()
+  let container = new GenericContainer("mongo:7.0-jammy")
     .withExposedPorts(27017)
     .withEnvironment({
       MONGO_INITDB_ROOT_USERNAME: "mongo",
@@ -15,10 +13,15 @@ export async function getDatasource(): Promise<Datasource> {
         `mongosh --eval "db.version()"`
       ).withStartupTimeout(10000)
     )
-    .start()
 
-  const host = container.getHost()
-  const port = container.getMappedPort(27017)
+  if (process.env.REUSE_CONTAINERS) {
+    container = container.withReuse()
+  }
+
+  const startedContainer = await container.start()
+
+  const host = startedContainer.getHost()
+  const port = startedContainer.getMappedPort(27017)
 
   return {
     type: "datasource",
