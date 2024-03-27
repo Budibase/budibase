@@ -1,9 +1,7 @@
 import { GenericContainer, Wait } from "testcontainers"
 
 export default async function setup() {
-  await new GenericContainer("budibase/couchdb")
-    .withName("budibase-test-couchdb")
-    .withReuse()
+  let couchdb = new GenericContainer("budibase/couchdb")
     .withExposedPorts(5984)
     .withEnvironment({
       COUCHDB_PASSWORD: "budibase",
@@ -23,5 +21,10 @@ export default async function setup() {
         "curl http://budibase:budibase@localhost:5984/_up"
       ).withStartupTimeout(20000)
     )
-    .start()
+
+  if (process.env.REUSE_CONTAINERS) {
+    couchdb = couchdb.withReuse()
+  }
+
+  await couchdb.start()
 }

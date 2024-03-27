@@ -22,16 +22,19 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
 }
 
 export async function getDatasource(): Promise<Datasource> {
-  const container = await new GenericContainer("mariadb:lts")
-    .withName("budibase-test-mariadb")
-    .withReuse()
+  let container = new GenericContainer("mariadb:lts")
     .withExposedPorts(3306)
     .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
     .withWaitStrategy(new MariaDBWaitStrategy())
-    .start()
 
-  const host = container.getHost()
-  const port = container.getMappedPort(3306)
+  if (process.env.REUSE_CONTAINERS) {
+    container = container.withReuse()
+  }
+
+  const startedContainer = await container.start()
+
+  const host = startedContainer.getHost()
+  const port = startedContainer.getMappedPort(3306)
 
   const config = {
     host,

@@ -4,11 +4,9 @@ import mssql from "mssql"
 import { generator } from "@budibase/backend-core/tests"
 
 export async function getDatasource(): Promise<Datasource> {
-  const container = await new GenericContainer(
+  let container = new GenericContainer(
     "mcr.microsoft.com/mssql/server:2022-latest"
   )
-    .withName("budibase-test-mssql")
-    .withReuse()
     .withExposedPorts(1433)
     .withEnvironment({
       ACCEPT_EULA: "Y",
@@ -24,10 +22,15 @@ export async function getDatasource(): Promise<Datasource> {
         "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password_123 -q 'SELECT 1'"
       )
     )
-    .start()
 
-  const host = container.getHost()
-  const port = container.getMappedPort(1433)
+  if (process.env.REUSE_CONTAINERS) {
+    container = container.withReuse()
+  }
+
+  const startedContainer = await container.start()
+
+  const host = startedContainer.getHost()
+  const port = startedContainer.getMappedPort(1433)
 
   const datasource: Datasource = {
     type: "datasource_plus",

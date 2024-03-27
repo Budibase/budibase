@@ -4,9 +4,7 @@ import pg from "pg"
 import { generator } from "@budibase/backend-core/tests"
 
 export async function getDatasource(): Promise<Datasource> {
-  const container = await new GenericContainer("postgres:16.1-bullseye")
-    .withName("budibase-test-postgres")
-    .withReuse()
+  let container = new GenericContainer("postgres:16.1-bullseye")
     .withExposedPorts(5432)
     .withEnvironment({ POSTGRES_PASSWORD: "password" })
     .withWaitStrategy(
@@ -14,9 +12,15 @@ export async function getDatasource(): Promise<Datasource> {
         "pg_isready -h localhost -p 5432"
       ).withStartupTimeout(10000)
     )
-    .start()
-  const host = container.getHost()
-  const port = container.getMappedPort(5432)
+
+  if (process.env.REUSE_CONTAINERS) {
+    container = container.withReuse()
+  }
+
+  const startedContainer = await container.start()
+
+  const host = startedContainer.getHost()
+  const port = startedContainer.getMappedPort(5432)
 
   const datasource: Datasource = {
     type: "datasource_plus",

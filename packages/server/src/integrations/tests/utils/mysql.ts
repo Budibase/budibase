@@ -25,15 +25,19 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
 }
 
 export async function getDatasource(): Promise<Datasource> {
-  const container = await new GenericContainer("mysql:8.3")
-    .withName("budibase-test-mysql")
-    .withReuse()
+  let container = new GenericContainer("mysql:8.3")
     .withExposedPorts(3306)
     .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
     .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
-    .start()
-  const host = container.getHost()
-  const port = container.getMappedPort(3306)
+
+  if (process.env.REUSE_CONTAINERS) {
+    container = container.withReuse()
+  }
+
+  const startedContainer = await container.start()
+
+  const host = startedContainer.getHost()
+  const port = startedContainer.getMappedPort(3306)
 
   const datasource: Datasource = {
     type: "datasource_plus",
