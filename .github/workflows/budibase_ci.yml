@@ -153,6 +153,11 @@ jobs:
           node-version: 20.x
           cache: yarn
 
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          android: true
+
       - name: Pull testcontainers images
         run: |
           docker pull mcr.microsoft.com/mssql/server:2022-latest
