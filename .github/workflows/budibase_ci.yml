@@ -271,7 +271,7 @@ jobs:
             src:
               - packages/account-portal/**
 
-      - if: steps.changes.outputs.changes.src == 'true'
+      - if: steps.changes.outputs.src == 'true'
         name: Check account portal commit
         id: get_accountportal_commits
         run: |
