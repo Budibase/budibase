@@ -66,7 +66,8 @@ jobs:
       # Run build all the projects
       - name: Build
         run: |
-          yarn build
+          yarn build:oss
+          yarn build:account-portal
       # Check the types of the projects built via esbuild
       - name: Check types
         run: |
