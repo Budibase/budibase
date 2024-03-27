@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-export DEBUG=testcontainers*
-
 if [[ -n $CI ]]
 then
   export NODE_OPTIONS="--max-old-space-size=4096 --no-node-snapshot $NODE_OPTIONS"
