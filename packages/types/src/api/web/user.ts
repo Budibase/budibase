@@ -68,6 +68,11 @@ export interface CreateAdminUserRequest {
   ssoId?: string
 }
 
+export interface AddSSoUserRequest {
+  ssoId: string
+  email: string
+}
+
 export interface CreateAdminUserResponse {
   _id: string
   _rev: string

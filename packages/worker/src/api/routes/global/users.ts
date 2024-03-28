@@ -66,6 +66,12 @@ router
     controller.save
   )
   .post(
+    "/api/global/users/sso",
+    cloudRestricted,
+    users.buildAddSsoSupport(),
+    controller.addSsoSupport
+  )
+  .post(
     "/api/global/users/bulk",
     auth.adminOnly,
     users.buildUserBulkUserValidation(),
