@@ -2,7 +2,10 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 import { rawQuery } from "./mysql"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
+import { startContainer } from "."
+
+let ports: Promise<testContainerUtils.Port[]>
 
 class MariaDBWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -22,22 +25,22 @@ class MariaDBWaitStrategy extends AbstractWaitStrategy {
 }
 
 export async function getDatasource(): Promise<Datasource> {
-  let container = new GenericContainer("mariadb:lts")
-    .withExposedPorts(3306)
-    .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
-    .withWaitStrategy(new MariaDBWaitStrategy())
-
-  if (process.env.REUSE_CONTAINERS) {
-    container = container.withReuse()
+  if (!ports) {
+    ports = startContainer(
+      new GenericContainer("mariadb:lts")
+        .withExposedPorts(3306)
+        .withEnvironment({ MARIADB_ROOT_PASSWORD: "password" })
+        .withWaitStrategy(new MariaDBWaitStrategy())
+    )
   }
 
-  const startedContainer = await container.start()
-
-  const host = startedContainer.getHost()
-  const port = startedContainer.getMappedPort(3306)
+  const port = (await ports).find(x => x.container === 3306)?.host
+  if (!port) {
+    throw new Error("MariaDB port not found")
+  }
 
   const config = {
-    host,
+    host: "127.0.0.1",
     port,
     user: "root",
     password: "password",

@@ -2,7 +2,10 @@ import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import { AbstractWaitStrategy } from "testcontainers/build/wait-strategies/wait-strategy"
 import mysql from "mysql2/promise"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
+import { startContainer } from "."
+
+let ports: Promise<testContainerUtils.Port[]>
 
 class MySQLWaitStrategy extends AbstractWaitStrategy {
   async waitUntilReady(container: any, boundPorts: any, startTime?: Date) {
@@ -25,26 +28,23 @@ class MySQLWaitStrategy extends AbstractWaitStrategy {
 }
 
 export async function getDatasource(): Promise<Datasource> {
-  let container = new GenericContainer("mysql:8.3")
-    .withExposedPorts(3306)
-    .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
-    .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
-
-  if (process.env.REUSE_CONTAINERS) {
-    container = container.withReuse()
+  if (!ports) {
+    ports = startContainer(
+      new GenericContainer("mysql:8.3")
+        .withExposedPorts(3306)
+        .withEnvironment({ MYSQL_ROOT_PASSWORD: "password" })
+        .withWaitStrategy(new MySQLWaitStrategy().withStartupTimeout(10000))
+    )
   }
 
-  const startedContainer = await container.start()
-
-  const host = startedContainer.getHost()
-  const port = startedContainer.getMappedPort(3306)
+  const port = (await ports).find(x => x.container === 3306)?.host
 
   const datasource: Datasource = {
     type: "datasource_plus",
     source: SourceName.MYSQL,
     plus: true,
     config: {
-      host,
+      host: "127.0.0.1",
       port,
       user: "root",
       password: "password",

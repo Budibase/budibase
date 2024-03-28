@@ -1,33 +1,33 @@
 import { Datasource, SourceName } from "@budibase/types"
 import { GenericContainer, Wait } from "testcontainers"
 import pg from "pg"
-import { generator } from "@budibase/backend-core/tests"
+import { generator, testContainerUtils } from "@budibase/backend-core/tests"
+import { startContainer } from "."
+
+let ports: Promise<testContainerUtils.Port[]>
 
 export async function getDatasource(): Promise<Datasource> {
-  let container = new GenericContainer("postgres:16.1-bullseye")
-    .withExposedPorts(5432)
-    .withEnvironment({ POSTGRES_PASSWORD: "password" })
-    .withWaitStrategy(
-      Wait.forSuccessfulCommand(
-        "pg_isready -h localhost -p 5432"
-      ).withStartupTimeout(10000)
+  if (!ports) {
+    ports = startContainer(
+      new GenericContainer("postgres:16.1-bullseye")
+        .withExposedPorts(5432)
+        .withEnvironment({ POSTGRES_PASSWORD: "password" })
+        .withWaitStrategy(
+          Wait.forSuccessfulCommand(
+            "pg_isready -h localhost -p 5432"
+          ).withStartupTimeout(10000)
+        )
     )
-
-  if (process.env.REUSE_CONTAINERS) {
-    container = container.withReuse()
   }
 
-  const startedContainer = await container.start()
-
-  const host = startedContainer.getHost()
-  const port = startedContainer.getMappedPort(5432)
+  const port = (await ports).find(x => x.container === 5432)?.host
 
   const datasource: Datasource = {
     type: "datasource_plus",
     source: SourceName.POSTGRES,
     plus: true,
     config: {
-      host,
+      host: "127.0.0.1",
       port,
       database: "postgres",
       user: "postgres",
