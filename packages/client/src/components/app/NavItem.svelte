@@ -15,11 +15,14 @@
   const sdk = getContext("sdk")
   const { linkable } = sdk
 
+  let renderKey
+
   $: expanded = !!$navStateStore[text]
   $: icon = !leftNav || expanded ? "ChevronDown" : "ChevronRight"
 
   const onClickLink = () => {
     dispatch("clickLink")
+    renderKey = Math.random()
   }
 
   const onClickDropdown = () => {
@@ -57,32 +60,34 @@
 {:else}
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <div class="dropdown" class:left={leftNav} class:expanded>
-    <div class="text" on:click={onClickDropdown}>
-      {text}
-      <Icon name={icon} />
-    </div>
-    <div class="sublinks-wrapper">
-      <div class="sublinks">
-        {#each subLinks || [] as subLink}
-          {#if subLink.internalLink}
-            <a
-              href={subLink.url}
-              on:click={onClickLink}
-              use:active={subLink.url}
-              use:linkable
-            >
-              {subLink.text}
-            </a>
-          {:else}
-            <a href={subLink.url} on:click={onClickLink}>
-              {subLink.text}
-            </a>
-          {/if}
-        {/each}
+  {#key renderKey}
+    <div class="dropdown" class:left={leftNav} class:expanded>
+      <div class="text" on:click={onClickDropdown}>
+        {text}
+        <Icon name={icon} />
+      </div>
+      <div class="sublinks-wrapper">
+        <div class="sublinks">
+          {#each subLinks || [] as subLink}
+            {#if subLink.internalLink}
+              <a
+                href={subLink.url}
+                on:click={onClickLink}
+                use:active={subLink.url}
+                use:linkable
+              >
+                {subLink.text}
+              </a>
+            {:else}
+              <a href={subLink.url} on:click={onClickLink}>
+                {subLink.text}
+              </a>
+            {/if}
+          {/each}
+        </div>
       </div>
     </div>
-  </div>
+  {/key}
 {/if}
 
 <style>
@@ -94,6 +99,7 @@
     font-size: var(--spectrum-global-dimension-font-size-200);
     transition: opacity 130ms ease-out;
     font-weight: 600;
+    user-select: none;
   }
   a.active {
     opacity: 1;
@@ -115,7 +121,6 @@
     justify-content: flex-start;
     align-items: center;
     gap: var(--spacing-xs);
-    user-select: none;
   }
   .sublinks-wrapper {
     position: absolute;
