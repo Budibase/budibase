@@ -43,7 +43,7 @@
     await save([...e.detail])
   }
 
-  const addLink = async () => {
+  const addNavItem = async () => {
     await save([
       ...navItems,
       {
@@ -76,7 +76,7 @@
     />
   {/if}
 
-  <div class="list-footer" on:click={addLink} class:empty={!navItems.length}>
+  <div class="list-footer" on:click={addNavItem} class:empty={!navItems.length}>
     <div class="add-button">Add nav item</div>
   </div>
 </div>
