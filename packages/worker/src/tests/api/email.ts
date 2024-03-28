@@ -1,3 +1,4 @@
+import { EmailAttachment } from "@budibase/types"
 import TestConfiguration from "../TestConfiguration"
 import { TestAPI } from "./base"
 
@@ -6,7 +7,7 @@ export class EmailAPI extends TestAPI {
     super(config)
   }
 
-  sendEmail = (purpose: string, attachments?: string[]) => {
+  sendEmail = (purpose: string, attachments?: EmailAttachment[]) => {
     return this.request
       .post(`/api/global/email/send`)
       .send({

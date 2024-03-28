@@ -373,10 +373,10 @@
       console.error(error)
     }
   })
-  const handleAttachmentParams = evt => {
+  const handleAttachmentParams = keyValuObj => {
     let params = {}
-    if (evt.length) {
-      for (let param of evt) {
+    if (keyValuObj.length) {
+      for (let param of keyValuObj) {
         params[param.name] = param.value
       }
     }

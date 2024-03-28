@@ -5,6 +5,7 @@ import { EmailTemplatePurpose } from "../../../../constants"
 import { objectStoreTestProviders, mocks } from "@budibase/backend-core/tests"
 import { objectStore, env } from "@budibase/backend-core"
 import tk from "timekeeper"
+import { EmailAttachment } from "@budibase/types"
 
 const fetch = require("node-fetch")
 
@@ -26,7 +27,10 @@ describe("/api/global/email", () => {
     await config.afterAll()
   })
 
-  async function sendRealEmail(purpose: string, attachments?: string[]) {
+  async function sendRealEmail(
+    purpose: string,
+    attachments?: EmailAttachment[]
+  ) {
     let response, text
     try {
       const timeout = () =>
@@ -110,8 +114,11 @@ describe("/api/global/email", () => {
       60000
     )
 
-    let url = env.MINIO_URL + presignedUrl.split("files/signed")[1]
+    let attachmentObject = {
+      url: env.MINIO_URL + presignedUrl.split("files/signed")[1],
+      filename,
+    }
     tk.freeze(mocks.date.MOCK_DATE)
-    await sendRealEmail(EmailTemplatePurpose.WELCOME, [url])
+    await sendRealEmail(EmailTemplatePurpose.WELCOME, [attachmentObject])
   })
 })
