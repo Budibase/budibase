@@ -136,7 +136,7 @@ jobs:
           fi
 
   test-server:
-    runs-on: ubuntu-latest
+    runs-on: budi-tubby-tornado-quad-core-150gb
     env:
       DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
     steps:
@@ -152,14 +152,6 @@ jobs:
         with:
           node-version: 20.x
           cache: yarn
-
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@main
-        with:
-          large-packages: false
-          swap-storage: false
-          docker-images: false
-          android: true
 
       - name: Pull testcontainers images
         run: |
