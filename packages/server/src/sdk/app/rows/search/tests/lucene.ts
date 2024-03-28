@@ -1,7 +1,7 @@
 const nodeFetch = require("node-fetch")
 
 nodeFetch.mockSearch()
-import * as search from "../../../sdk/app/rows/search/utils"
+import * as search from "../utils"
 import { RowSearchParams, SortOrder, SortType } from "@budibase/types"
 
 // this will be mocked out for _search endpoint
