@@ -400,6 +400,35 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
+const downloadFileHandler = async (action, _context) => {
+  try {
+    let { url, fileName, type, attachment } = action.parameters
+    if (type === "attachment") {
+      const attachmentObject = JSON.parse(attachment)
+      url = attachmentObject.url
+      fileName = attachmentObject.name
+    }
+
+    const response = await fetch(url)
+
+    if (!response.ok) {
+      throw `Url is not valid: ${url}`
+    }
+
+    const objectUrl = URL.createObjectURL(await response.blob())
+
+    const link = document.createElement("a")
+    link.href = objectUrl
+    link.download = fileName
+    link.click()
+
+    URL.revokeObjectURL(objectUrl)
+  } catch (e) {
+    console.error(e)
+    notificationStore.actions.error("File cannot be downloaded")
+  }
+}
+
 const handlerMap = {
   ["Fetch Row"]: fetchRowHandler,
   ["Save Row"]: saveRowHandler,
@@ -418,6 +447,7 @@ const handlerMap = {
   ["Prompt User"]: promptUserHandler,
   ["Open Side Panel"]: openSidePanelHandler,
   ["Close Side Panel"]: closeSidePanelHandler,
+  ["Download File"]: downloadFileHandler,
 }
 
 const confirmTextMap = {

@@ -34,3 +34,35 @@ export async function downloadStream(streamResponse) {
 
   URL.revokeObjectURL(blobUrl)
 }
+
+export async function downloadFile(url, body) {
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  })
+
+  if (!response.ok) {
+    return false
+  } else {
+    const contentDisposition = response.headers.get("Content-Disposition")
+
+    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(
+      contentDisposition
+    )
+
+    const filename = matches[1].replace(/['"]/g, "")
+
+    const url = URL.createObjectURL(await response.blob())
+
+    const link = document.createElement("a")
+    link.href = url
+    link.download = filename
+    link.click()
+
+    URL.revokeObjectURL(url)
+    return true
+  }
+}
