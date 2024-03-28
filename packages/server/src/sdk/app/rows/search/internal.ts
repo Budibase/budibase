@@ -1,19 +1,16 @@
-import {
-  context,
-  db,
-  HTTPError,
-  SearchParams as InternalSearchParams,
-} from "@budibase/backend-core"
+import { context, db, HTTPError } from "@budibase/backend-core"
 import env from "../../../../environment"
-import { fullSearch, paginatedSearch } from "./internalSearch"
+import { fullSearch, paginatedSearch, searchInputMapping } from "./utils"
 import { getRowParams, InternalTables } from "../../../../db/utils"
 import {
   Database,
-  Row,
-  Table,
-  SearchParams,
-  SearchResponse,
   DocumentType,
+  Row,
+  RowSearchParams,
+  SearchResponse,
+  SortType,
+  Table,
+  User,
 } from "@budibase/types"
 import { getGlobalUsersFromMetadata } from "../../../../utilities/global"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
@@ -32,16 +29,17 @@ import {
 } from "../../../../api/controllers/view/utils"
 import sdk from "../../../../sdk"
 import { ExportRowsParams, ExportRowsResult } from "./types"
-import { searchInputMapping } from "./utils"
 import pick from "lodash/pick"
 import { breakRowIdField } from "../../../../integrations/utils"
 
-export async function search(options: SearchParams): Promise<SearchResponse> {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const { tableId } = options
 
   const { paginate, query } = options
 
-  const params: InternalSearchParams<any> = {
+  const params: RowSearchParams = {
     tableId: options.tableId,
     sort: options.sort,
     sortOrder: options.sortOrder,
@@ -50,6 +48,7 @@ export async function search(options: SearchParams): Promise<SearchResponse> {
     bookmark: options.bookmark,
     version: options.version,
     disableEscaping: options.disableEscaping,
+    query: {},
   }
 
   let table = await sdk.tables.getTable(tableId)
@@ -57,7 +56,8 @@ export async function search(options: SearchParams): Promise<SearchResponse> {
   if (params.sort && !params.sortType) {
     const schema = table.schema
     const sortField = schema[params.sort]
-    params.sortType = sortField.type === "number" ? "number" : "string"
+    params.sortType =
+      sortField.type === "number" ? SortType.NUMBER : SortType.STRING
   }
 
   let response
@@ -71,7 +71,7 @@ export async function search(options: SearchParams): Promise<SearchResponse> {
   if (response.rows && response.rows.length) {
     // enrich with global users if from users table
     if (tableId === InternalTables.USER_METADATA) {
-      response.rows = await getGlobalUsersFromMetadata(response.rows)
+      response.rows = await getGlobalUsersFromMetadata(response.rows as User[])
     }
 
     if (options.fields) {

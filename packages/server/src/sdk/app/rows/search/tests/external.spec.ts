@@ -6,7 +6,7 @@ import {
   Row,
   SourceName,
   Table,
-  SearchParams,
+  RowSearchParams,
   TableSourceType,
 } from "@budibase/types"
 
@@ -110,7 +110,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
       }
@@ -127,7 +127,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {},
         fields: ["name", "age"],
@@ -151,7 +151,7 @@ describe("external search", () => {
     await config.doInContext(config.appId, async () => {
       const tableId = config.table!._id!
 
-      const searchParams: SearchParams = {
+      const searchParams: RowSearchParams = {
         tableId,
         query: {
           oneOf: {

@@ -1,18 +1,18 @@
 const nodeFetch = require("node-fetch")
 
 nodeFetch.mockSearch()
-import { SearchParams } from "@budibase/backend-core"
-import * as search from "../../../sdk/app/rows/search/internalSearch"
-import { Row } from "@budibase/types"
+import * as search from "../../../sdk/app/rows/search/utils"
+import { RowSearchParams, SortOrder, SortType } from "@budibase/types"
 
 // this will be mocked out for _search endpoint
-const PARAMS: SearchParams<Row> = {
+const PARAMS: RowSearchParams = {
+  query: {},
   tableId: "ta_12345679abcdef",
   version: "1",
   bookmark: undefined,
   sort: undefined,
-  sortOrder: "ascending",
-  sortType: "string",
+  sortOrder: SortOrder.ASCENDING,
+  sortType: SortType.STRING,
 }
 
 function checkLucene(resp: any, expected: any, params = PARAMS) {
