@@ -282,7 +282,14 @@
         </div>
       </div>
     {/if}
-    <div class="main-wrapper">
+    <div
+      class="main-wrapper"
+      on:click={() => {
+        if ($builderStore.inBuilder) {
+          builderStore.actions.selectComponent(null)
+        }
+      }}
+    >
       <div class="main size--{pageWidthClass}">
         <slot />
       </div>
