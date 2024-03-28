@@ -10,6 +10,7 @@ export enum AutomationIOType {
   ARRAY = "array",
   JSON = "json",
   DATE = "date",
+  ATTACHMENT = "attachment",
 }
 
 export enum AutomationCustomIOType {
@@ -80,6 +81,11 @@ export interface EmailInvite {
   url?: string
 }
 
+export interface EmailAttachment {
+  url: string
+  filename: string
+}
+
 export interface SendEmailOpts {
   // workspaceId If finer grain controls being used then this will lookup config for workspace.
   workspaceId?: string
@@ -97,7 +103,7 @@ export interface SendEmailOpts {
   bcc?: boolean
   automation?: boolean
   invite?: EmailInvite
-  attachments?: string[]
+  attachments?: EmailAttachment[]
 }
 
 export const AutomationStepIdArray = [

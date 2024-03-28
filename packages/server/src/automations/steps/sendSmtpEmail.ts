@@ -1,3 +1,4 @@
+import { string } from "joi"
 import { sendSmtpEmail } from "../../utilities/workerRequests"
 import * as automationUtils from "../automationUtils"
 import {
@@ -7,6 +8,7 @@ import {
   AutomationStepType,
   AutomationIOType,
   AutomationFeature,
+  EmailAttachment,
 } from "@budibase/types"
 
 export const definition: AutomationStepSchema = {
@@ -48,10 +50,6 @@ export const definition: AutomationStepSchema = {
           type: AutomationIOType.STRING,
           title: "HTML Contents",
         },
-        attachments: {
-          type: AutomationIOType.STRING,
-          title: "Attachments",
-        },
         addInvite: {
           type: AutomationIOType.BOOLEAN,
           title: "Add calendar invite",
@@ -76,10 +74,9 @@ export const definition: AutomationStepSchema = {
           title: "Location",
           dependsOn: "addInvite",
         },
-        url: {
-          type: AutomationIOType.STRING,
-          title: "URL",
-          dependsOn: "addInvite",
+        attachments: {
+          type: AutomationIOType.ATTACHMENT,
+          title: "Attachments",
         },
       },
       required: ["to", "from", "subject", "contents"],
@@ -120,7 +117,7 @@ export async function run({ inputs }: AutomationStepInput) {
     contents = "<h1>No content</h1>"
   }
   to = to || undefined
-  let parsedAttachments = automationUtils.stringSplit(attachments) || []
+
   try {
     let response = await sendSmtpEmail({
       to,
@@ -130,7 +127,7 @@ export async function run({ inputs }: AutomationStepInput) {
       cc,
       bcc,
       automation: true,
-      attachments: parsedAttachments,
+      attachments,
       invite: addInvite
         ? {
             startTime,

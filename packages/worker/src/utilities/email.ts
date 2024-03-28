@@ -164,16 +164,15 @@ export async function sendEmail(
       contents: opts?.contents,
     }),
   }
-
   if (opts?.attachments) {
     const baseUrl = appContext.getPlatformURL()
     const attachments = await Promise.all(
-      opts.attachments?.map(async attachmentUrl => {
+      opts.attachments?.map(async attachment => {
         const isFullyFormedUrl =
-          attachmentUrl.startsWith("http://") ||
-          attachmentUrl.startsWith("https://")
+          attachment.url.startsWith("http://") ||
+          attachment.url.startsWith("https://")
 
-        const url = isFullyFormedUrl ? attachmentUrl : baseUrl + attachmentUrl
+        const url = isFullyFormedUrl ? attachment.url : baseUrl + attachment.url
         let headers
 
         if (env.isTest()) {
@@ -193,10 +192,10 @@ export async function sendEmail(
         if (!response.ok) {
           throw new Error(`unexpected response ${response.statusText}`)
         }
-        const filename = path.basename(new URL(url).pathname)
+        const fallbackFilename = path.basename(new URL(url).pathname)
 
         return {
-          filename: filename,
+          filename: attachment.filename || fallbackFilename,
           content: response?.body,
         }
       })
