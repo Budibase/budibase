@@ -41,6 +41,15 @@ export const buildUserSaveValidation = () => {
   return auth.joiValidator.body(Joi.object(schema).required().unknown(true))
 }
 
+export const buildAddSsoSupport = () => {
+  return auth.joiValidator.body(
+    Joi.object({
+      ssoId: Joi.string().required(),
+      email: Joi.string().required(),
+    }).required()
+  )
+}
+
 export const buildUserBulkUserValidation = (isSelf = false) => {
   if (!isSelf) {
     schema = {
