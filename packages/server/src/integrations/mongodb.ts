@@ -22,6 +22,7 @@ import {
   InsertManyResult,
 } from "mongodb"
 import environment from "../environment"
+import { HOST_ADDRESS } from "./utils"
 
 export interface MongoDBConfig {
   connectionString: string
@@ -51,7 +52,7 @@ const getSchema = () => {
       connectionString: {
         type: DatasourceFieldType.STRING,
         required: true,
-        default: "mongodb://localhost:27017",
+        default: `mongodb://${HOST_ADDRESS}:27017`,
         display: "Connection string",
       },
       db: {
