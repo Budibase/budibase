@@ -6,99 +6,96 @@
     DrawerContent,
     Layout,
     Input,
-    Combobox,
     Drawer,
   } from "@budibase/bbui"
   import { flip } from "svelte/animate"
   import { dndzone } from "svelte-dnd-action"
   import { generate } from "shortid"
   import { screenStore } from "stores/builder"
-  import RoleSelect from "components/design/settings/controls/RoleSelect.svelte"
+  import DrawerBindableCombobox from "components/common/bindings/DrawerBindableCombobox.svelte"
 
   export let value = []
+  export let onChange
+  export let navItem
+  export let bindings
 
   const flipDurationMs = 150
 
-  let dragDisabled = true
   let drawer
+  let subLinks = value?.slice() || []
 
-  $: links = value || []
-  $: links.forEach(link => {
-    if (!link.id) {
-      link.id = generate()
+  $: count = value?.length ?? 0
+  $: buttonText = `${count || "No"} sub link${count === 1 ? "" : "s"}`
+  $: drawerTitle = navItem.text ? `${navItem.text} sub links` : "Sub links"
+  $: subLinks.forEach(subLink => {
+    if (!subLink.id) {
+      subLink.id = generate()
     }
   })
   $: urlOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
     .filter(x => x != null)
+    .sort()
 
-  const addLink = () => {
-    links = [...links, {}]
+  const addSubLink = () => {
+    subLinks = [...subLinks, {}]
   }
 
-  const removeLink = id => {
-    links = links.filter(link => link.id !== id)
+  const removeSubLink = id => {
+    subLinks = subLinks.filter(link => link.id !== id)
   }
 
-  const updateLinks = e => {
-    links = e.detail.items
+  const saveSubLinks = () => {
+    onChange(subLinks)
+    drawer.hide()
   }
 
-  const handleFinalize = e => {
-    updateLinks(e)
-    dragDisabled = true
+  const updateSubLinks = e => {
+    subLinks = e.detail.items
   }
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<Drawer bind:this={drawer}>
-  <DrawerContent>
+<Drawer bind:this={drawer} title={drawerTitle} on:drawerShow on:drawerHide>
+  <Button cta slot="buttons" on:click={saveSubLinks}>Save</Button>
+  <DrawerContent slot="body">
     <div class="container">
       <Layout noPadding gap="S">
-        {#if links?.length}
+        {#if subLinks?.length}
           <div
-            class="links"
+            class="subLinks"
             use:dndzone={{
-              items: links,
+              items: subLinks,
               flipDurationMs,
               dropTargetStyle: { outline: "none" },
-              dragDisabled,
             }}
-            on:finalize={handleFinalize}
-            on:consider={updateLinks}
+            on:consider={updateSubLinks}
+            on:finalize={updateSubLinks}
           >
-            {#each links as link (link.id)}
-              <div class="link" animate:flip={{ duration: flipDurationMs }}>
-                <div
-                  class="handle"
-                  aria-label="drag-handle"
-                  style={dragDisabled ? "cursor: grab" : "cursor: grabbing"}
-                  on:mousedown={() => (dragDisabled = false)}
-                >
-                  <Icon name="DragHandle" size="XL" />
-                </div>
-                <Input bind:value={link.text} placeholder="Text" />
-                <Combobox
-                  bind:value={link.url}
-                  placeholder="URL"
+            {#each subLinks as subLink (subLink.id)}
+              <div class="subLink" animate:flip={{ duration: flipDurationMs }}>
+                <Icon name="DragHandle" size="XL" />
+                <Input bind:value={subLink.text} placeholder="Text" />
+                <DrawerBindableCombobox
+                  value={subLink.url}
+                  on:change={e => (subLink.url = e.detail)}
+                  placeholder="Link"
                   options={urlOptions}
-                />
-                <RoleSelect
-                  bind:value={link.roleId}
-                  placeholder="Minimum role"
+                  {bindings}
                 />
                 <Icon
                   name="Close"
                   hoverable
                   size="S"
-                  on:click={() => removeLink(link.id)}
+                  on:click={() => removeSubLink(subLink.id)}
                 />
               </div>
             {/each}
           </div>
         {/if}
         <div>
-          <Button secondary icon="Add" on:click={addLink}>Add Link</Button>
+          <ActionButton quiet icon="Add" on:click={addSubLink}>
+            Add link
+          </ActionButton>
         </div>
       </Layout>
     </div>
@@ -106,7 +103,7 @@
 </Drawer>
 
 <div class="button">
-  <ActionButton>No sub links</ActionButton>
+  <ActionButton on:click={drawer.show}>{buttonText}</ActionButton>
 </div>
 
 <style>
@@ -118,14 +115,14 @@
     max-width: 800px;
     margin: 0 auto;
   }
-  .links {
+  .subLinks {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     gap: var(--spacing-m);
   }
-  .link {
+  .subLink {
     gap: var(--spacing-l);
     display: flex;
     flex-direction: row;
@@ -134,15 +131,11 @@
     border-radius: var(--border-radius-s);
     transition: background-color ease-in-out 130ms;
   }
-  .link:hover {
+  .subLink:hover {
     background-color: var(--spectrum-global-color-gray-100);
   }
-  .link > :global(.spectrum-Form-item) {
+  .subLink > :global(.spectrum-Form-item) {
     flex: 1 1 auto;
     width: 0;
-  }
-  .handle {
-    display: grid;
-    place-items: center;
   }
 </style>

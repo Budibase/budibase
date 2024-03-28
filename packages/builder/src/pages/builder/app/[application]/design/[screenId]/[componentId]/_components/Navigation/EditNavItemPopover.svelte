@@ -20,8 +20,8 @@
   ]
 
   let popover
-  let drawers = []
   let open = false
+  let drawerCount = 0
 
   $: urlOptions = $screenStore.screens
     .map(screen => screen.routing?.route)
@@ -52,7 +52,7 @@
 <Popover
   bind:this={popover}
   on:open={() => {
-    drawers = []
+    open = true
     $draggable.actions.select(navItem.id)
   }}
   on:close={() => {
@@ -63,8 +63,8 @@
   }}
   {anchor}
   align="left-outside"
-  showPopover={drawers.length === 0}
-  clickOutsideOverride={drawers.length > 0}
+  showPopover={drawerCount === 0}
+  clickOutsideOverride={drawerCount > 0}
   maxHeight={600}
   offset={18}
 >
@@ -87,6 +87,8 @@
       props={{
         updateOnChange: false,
       }}
+      on:drawerShow={() => drawerCount++}
+      on:drawerHide={() => drawerCount--}
     />
     {#if navItem.type === "sublinks"}
       <PropertyControl
@@ -94,6 +96,12 @@
         control={SubLinksDrawer}
         value={navItem.subLinks}
         onChange={update("subLinks")}
+        {bindings}
+        props={{
+          navItem,
+        }}
+        on:drawerShow={() => drawerCount++}
+        on:drawerHide={() => drawerCount--}
       />
     {:else}
       <PropertyControl
@@ -107,6 +115,8 @@
           appendBindingsAsOptions: false,
           placeholder: null,
         }}
+        on:drawerShow={() => drawerCount++}
+        on:drawerHide={() => drawerCount--}
       />
     {/if}
     <PropertyControl
