@@ -82,6 +82,12 @@
 </div>
 
 <style>
+  .link-configuration :global(.list-wrap > li:last-child),
+  .link-configuration :global(.list-wrap) {
+    border-bottom-left-radius: unset;
+    border-bottom-right-radius: unset;
+    border-bottom: none;
+  }
   .list-footer {
     width: 100%;
     border-bottom-left-radius: 4px;
@@ -94,11 +100,7 @@
     display: flex;
     justify-content: center;
     border: 1px solid var(--spectrum-alias-border-color-mid);
-    border-top: none;
     cursor: pointer;
-  }
-  .list-footer.empty {
-    border-top: 1px solid var(--spectrum-alias-border-color-mid);
   }
   .list-footer.empty {
     border-radius: 4px;
