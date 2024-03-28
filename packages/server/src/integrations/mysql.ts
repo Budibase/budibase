@@ -21,6 +21,7 @@ import {
   generateColumnDefinition,
   finaliseExternalTables,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
@@ -49,7 +50,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
