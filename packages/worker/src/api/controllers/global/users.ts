@@ -3,6 +3,7 @@ import env from "../../../environment"
 import {
   AcceptUserInviteRequest,
   AcceptUserInviteResponse,
+  AddSSoUserRequest,
   BulkUserRequest,
   BulkUserResponse,
   CloudAccount,
@@ -15,6 +16,7 @@ import {
   LockName,
   LockType,
   MigrationType,
+  PlatformUserByEmail,
   SaveUserResponse,
   SearchUsersRequest,
   User,
@@ -48,6 +50,25 @@ export const save = async (ctx: UserCtx<User, SaveUserResponse>) => {
       _rev: user._rev!,
       email: user.email,
     }
+  } catch (err: any) {
+    ctx.throw(err.status || 400, err)
+  }
+}
+
+export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
+  const { email, ssoId } = ctx.request.body
+  try {
+    // Status is changed to 404 from getUserDoc if user is not found
+    let userByEmail = (await platform.users.getUserDoc(
+      email
+    )) as PlatformUserByEmail
+    await platform.users.addSsoUser(
+      ssoId,
+      email,
+      userByEmail.userId,
+      userByEmail.tenantId
+    )
+    ctx.status = 200
   } catch (err: any) {
     ctx.throw(err.status || 400, err)
   }
@@ -127,8 +148,8 @@ export const adminUser = async (
     try {
       const finalUser = await userSdk.db.createAdminUser(
         email,
-        password,
         tenantId,
+        password,
         {
           ssoId,
           hashPassword,

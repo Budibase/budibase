@@ -16,7 +16,7 @@ describe("/applications/:appId/import", () => {
 
   it("should be able to perform import", async () => {
     const appId = config.getAppId()
-    const res = await request
+    await request
       .post(`/api/applications/${appId}/import`)
       .field("encryptionPassword", PASSWORD)
       .attach("appExport", path.join(__dirname, "assets", "export.tar.gz"))
@@ -25,8 +25,8 @@ describe("/applications/:appId/import", () => {
       .expect(200)
     const appPackage = await config.api.application.get(appId!)
     expect(appPackage.navigation?.links?.length).toBe(2)
-    expect(expect(appPackage.navigation?.links?.[0].url).toBe("/blank"))
-    expect(expect(appPackage.navigation?.links?.[1].url).toBe("/derp"))
+    expect(appPackage.navigation?.links?.[0].url).toBe("/blank")
+    expect(appPackage.navigation?.links?.[1].url).toBe("/derp")
     const screens = await config.api.screen.list()
     expect(screens.length).toBe(2)
     expect(screens[0].routing.route).toBe("/derp")

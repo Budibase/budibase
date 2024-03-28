@@ -22,6 +22,7 @@ import {
   finaliseExternalTables,
   getSqlQuery,
   SqlClient,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import {
@@ -63,7 +64,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -455,7 +456,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           operation !== Operation.DELETE
         ) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM "${json.endpoint.entityId}" WHERE ROWID = '${response.lastRowid}'`,
           })
           return lastRow.rows as Row[]
         } else {

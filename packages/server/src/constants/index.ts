@@ -6,6 +6,10 @@ import {
   TableSourceType,
 } from "@budibase/types"
 
+import env from "../environment"
+
+export const AWS_REGION = env.AWS_REGION ? env.AWS_REGION : "eu-west-1"
+
 export enum FilterTypes {
   STRING = "string",
   FUZZY = "fuzzy",
@@ -160,6 +164,8 @@ export enum AutomationErrors {
   MAX_ITERATIONS = "MAX_ITERATIONS_REACHED",
   FAILURE_CONDITION = "FAILURE_CONDITION_MET",
 }
+
+export const devClientVersion = "0.0.0"
 
 // pass through the list from the auth/core lib
 export const ObjectStoreBuckets = objectStore.ObjectStoreBuckets
