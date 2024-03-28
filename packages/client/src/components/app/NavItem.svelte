@@ -64,7 +64,7 @@
     </div>
     <div class="sublinks-wrapper">
       <div class="sublinks">
-        {#each subLinks as subLink}
+        {#each subLinks || [] as subLink}
           {#if subLink.internalLink}
             <a
               href={subLink.url}
