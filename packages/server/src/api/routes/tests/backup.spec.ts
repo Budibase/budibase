@@ -21,7 +21,7 @@ describe("/backups", () => {
     it("should be able to export app", async () => {
       const body = await config.api.backup.exportBasicBackup(config.getAppId()!)
       expect(body instanceof Buffer).toBe(true)
-      expect(events.app.exported).toBeCalledTimes(1)
+      expect(events.app.exported).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

@@ -159,3 +159,22 @@ export const InvalidFileExtensions = [
   "wsh",
   "zip",
 ]
+
+export enum BpmCorrelationKey {
+  ONBOARDING = "budibase:onboarding:correlationkey",
+}
+
+export enum BpmInstanceKey {
+  ONBOARDING = "budibase:onboarding:instancekey",
+}
+
+export enum BpmStatusKey {
+  ONBOARDING = "budibase:onboarding:status",
+}
+
+export enum BpmStatusValue {
+  STARTED = "started",
+  COMPLETING_ACCOUNT_INFO = "completing_account_info",
+  VERIFYING_EMAIL = "verifying_email",
+  COMPLETED = "completed",
+}

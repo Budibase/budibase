@@ -1,10 +1,8 @@
 import { InvalidFileExtensions } from "@budibase/shared-core"
-
 import AppComponent from "./templates/BudibaseApp.svelte"
-
 import { join } from "../../../utilities/centralPath"
 import * as uuid from "uuid"
-import { ObjectStoreBuckets } from "../../../constants"
+import { ObjectStoreBuckets, devClientVersion } from "../../../constants"
 import { processString } from "@budibase/string-templates"
 import {
   loadHandlebarsFile,
@@ -24,13 +22,20 @@ import AWS from "aws-sdk"
 import fs from "fs"
 import sdk from "../../../sdk"
 import * as pro from "@budibase/pro"
-import { App, Ctx, ProcessAttachmentResponse } from "@budibase/types"
+import {
+  UserCtx,
+  App,
+  Ctx,
+  ProcessAttachmentResponse,
+  Feature,
+} from "@budibase/types"
 import {
   getAppMigrationVersion,
   getLatestMigrationId,
 } from "../../../appMigrations"
 
 import send from "koa-send"
+import { getThemeVariables } from "../../../constants/themes"
 
 export const toggleBetaUiFeature = async function (ctx: Ctx) {
   const cookieName = `beta:${ctx.params.feature}`
@@ -146,7 +151,7 @@ const requiresMigration = async (ctx: Ctx) => {
   return requiresMigrations
 }
 
-export const serveApp = async function (ctx: Ctx) {
+export const serveApp = async function (ctx: UserCtx) {
   const needMigrations = await requiresMigration(ctx)
 
   const bbHeaderEmbed =
@@ -165,12 +170,23 @@ export const serveApp = async function (ctx: Ctx) {
   try {
     db = context.getAppDB({ skip_setup: true })
     const appInfo = await db.get<any>(DocumentType.APP_METADATA)
+
     let appId = context.getAppId()
+    const hideDevTools = !!ctx.params.appUrl
+    const sideNav = appInfo.navigation.navigation === "Left"
+    const hideFooter =
+      ctx?.user?.license?.features?.includes(Feature.BRANDING) || false
+    const themeVariables = getThemeVariables(appInfo?.theme)
 
     if (!env.isJest()) {
       const plugins = objectStore.enrichPluginURLs(appInfo.usedPlugins)
+
       const { head, html, css } = AppComponent.render({
         title: branding?.platformTitle || `${appInfo.name}`,
+        showSkeletonLoader: appInfo.features?.skeletonLoader ?? false,
+        hideDevTools,
+        sideNav,
+        hideFooter,
         metaImage:
           branding?.metaImageUrl ||
           "https://res.cloudinary.com/daog6scxm/image/upload/v1698759482/meta-images/plain-branded-meta-image-coral_ocxmgu.png",
@@ -195,7 +211,7 @@ export const serveApp = async function (ctx: Ctx) {
       ctx.body = await processString(appHbs, {
         head,
         body: html,
-        style: css.code,
+        css: `:root{${themeVariables}} ${css.code}`,
         appId,
         embedded: bbHeaderEmbed,
       })
@@ -247,18 +263,20 @@ export const serveBuilderPreview = async function (ctx: Ctx) {
 }
 
 export const serveClientLibrary = async function (ctx: Ctx) {
+  const version = ctx.request.query.version
+
   const appId = context.getAppId() || (ctx.request.query.appId as string)
   let rootPath = join(NODE_MODULES_PATH, "@budibase", "client", "dist")
   if (!appId) {
     ctx.throw(400, "No app ID provided - cannot fetch client library.")
   }
-  if (env.isProd()) {
+  if (env.isProd() || (env.isDev() && version !== devClientVersion)) {
     ctx.body = await objectStore.getReadStream(
       ObjectStoreBuckets.APPS,
       objectStore.clientLibraryPath(appId!)
     )
     ctx.set("Content-Type", "application/javascript")
-  } else if (env.isDev()) {
+  } else if (env.isDev() && version === devClientVersion) {
     // incase running from TS directly
     const tsPath = join(require.resolve("@budibase/client"), "..")
     return send(ctx, "budibase-client.js", {

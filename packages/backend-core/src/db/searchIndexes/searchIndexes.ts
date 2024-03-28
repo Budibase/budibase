@@ -34,12 +34,12 @@ export async function createUserIndex() {
         }
         let idxKey = prev != null ? `${prev}.${key}` : key
         if (typeof input[key] === "string") {
+          // @ts-expect-error index is available in a CouchDB map function
           // eslint-disable-next-line no-undef
-          // @ts-ignore
           index(idxKey, input[key].toLowerCase(), { facet: true })
         } else if (typeof input[key] !== "object") {
+          // @ts-expect-error index is available in a CouchDB map function
           // eslint-disable-next-line no-undef
-          // @ts-ignore
           index(idxKey, input[key], { facet: true })
         } else {
           idx(input[key], idxKey)

@@ -27,7 +27,7 @@ class Replication {
           return resolve(info)
         })
         .on("error", function (err) {
-          throw new Error(`Replication Error: ${err}`)
+          throw err
         })
     })
   }

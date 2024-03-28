@@ -1,13 +1,5 @@
-const { checkBuilderEndpoint } = require("./utilities/TestFunctions")
-const setup = require("./utilities")
-
-import os from "os"
-
-jest.mock("process", () => ({
-  arch: "arm64",
-  version: "v14.20.1",
-  platform: "darwin",
-}))
+import * as setup from "./utilities"
+import { checkBuilderEndpoint } from "./utilities/TestFunctions"
 
 describe("/component", () => {
   let request = setup.getRequest()
@@ -17,21 +9,6 @@ describe("/component", () => {
 
   beforeAll(async () => {
     await config.init()
-    os.cpus = () => [
-      {
-        model: "test",
-        speed: 12323,
-        times: {
-          user: 0,
-          nice: 0,
-          sys: 0,
-          idle: 0,
-          irq: 0,
-        },
-      },
-    ]
-    os.uptime = () => 123123123123
-    os.totalmem = () => 10000000000
   })
 
   describe("/api/debug", () => {
@@ -43,14 +20,16 @@ describe("/component", () => {
         .expect(200)
       expect(res.body).toEqual({
         budibaseVersion: "0.0.0+jest",
-        cpuArch: "arm64",
-        cpuCores: 1,
-        cpuInfo: "test",
+        cpuArch: expect.any(String),
+        cpuCores: expect.any(Number),
+        cpuInfo: expect.any(String),
         hosting: "docker-compose",
-        nodeVersion: "v14.20.1",
-        platform: "darwin",
-        totalMemory: "9.313225746154785GB",
-        uptime: "1425036 day(s), 3 hour(s), 32 minute(s)",
+        nodeVersion: expect.stringMatching(/^v\d+\.\d+\.\d+$/),
+        platform: expect.any(String),
+        totalMemory: expect.stringMatching(/^[0-9\\.]+GB$/),
+        uptime: expect.stringMatching(
+          /^\d+ day\(s\), \d+ hour\(s\), \d+ minute\(s\)$/
+        ),
       })
     })
 

@@ -62,8 +62,10 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processInputBBReferences).toBeCalledTimes(1)
-    expect(bbReferenceProcessor.processInputBBReferences).toBeCalledWith(
+    expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledTimes(
+      1
+    )
+    expect(bbReferenceProcessor.processInputBBReferences).toHaveBeenCalledWith(
       "123",
       "user"
     )
@@ -71,7 +73,7 @@ describe("rowProcessor - inputProcessing", () => {
     expect(row).toEqual({ ...newRow, user })
   })
 
-  it("it does not process BB references if on the schema but it is not populated", async () => {
+  it("does not process BB references if on the schema but it is not populated", async () => {
     const userId = generator.guid()
 
     const table: Table = {
@@ -107,12 +109,12 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
+    expect(bbReferenceProcessor.processInputBBReferences).not.toHaveBeenCalled()
     expect(row).toEqual({ ...newRow, user: undefined })
   })
 
   it.each([undefined, null, ""])(
-    "it does not process BB references the field is $%",
+    "does not process BB references the field is $%",
     async userValue => {
       const userId = generator.guid()
 
@@ -150,12 +152,14 @@ describe("rowProcessor - inputProcessing", () => {
 
       const { row } = await inputProcessing(userId, table, newRow)
 
-      expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
+      expect(
+        bbReferenceProcessor.processInputBBReferences
+      ).not.toHaveBeenCalled()
       expect(row).toEqual(newRow)
     }
   )
 
-  it("it does not process BB references if not in the schema", async () => {
+  it("does not process BB references if not in the schema", async () => {
     const userId = generator.guid()
 
     const table: Table = {
@@ -191,7 +195,7 @@ describe("rowProcessor - inputProcessing", () => {
 
     const { row } = await inputProcessing(userId, table, newRow)
 
-    expect(bbReferenceProcessor.processInputBBReferences).not.toBeCalled()
+    expect(bbReferenceProcessor.processInputBBReferences).not.toHaveBeenCalled()
     expect(row).toEqual({
       name: "Jack",
       user: 123,

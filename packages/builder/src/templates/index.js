@@ -1,9 +1,11 @@
-import rowListScreen from "./rowListScreen"
+import gridListScreen from "./gridListScreen"
+import gridDetailsScreen from "./gridDetailsScreen"
 import createFromScratchScreen from "./createFromScratchScreen"
 import formScreen from "./formScreen"
 
 const allTemplates = datasources => [
-  ...rowListScreen(datasources),
+  ...gridListScreen(datasources),
+  ...gridDetailsScreen(datasources),
   ...formScreen(datasources),
 ]
 

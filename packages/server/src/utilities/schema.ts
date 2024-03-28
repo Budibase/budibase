@@ -1,25 +1,13 @@
-import { FieldType, FieldSubtype } from "@budibase/types"
+import {
+  FieldType,
+  FieldSubtype,
+  TableSchema,
+  FieldSchema,
+  Row,
+} from "@budibase/types"
 import { ValidColumnNameRegex, utils } from "@budibase/shared-core"
 import { db } from "@budibase/backend-core"
 import { parseCsvExport } from "../api/controllers/view/exporters"
-
-interface SchemaColumn {
-  readonly name: string
-  readonly type: FieldType
-  readonly subtype: FieldSubtype
-  readonly autocolumn?: boolean
-  readonly constraints?: {
-    presence: boolean
-  }
-}
-
-interface Schema {
-  readonly [index: string]: SchemaColumn
-}
-
-interface Row {
-  [index: string]: any
-}
 
 type Rows = Array<Row>
 
@@ -34,27 +22,10 @@ interface ValidationResults {
   errors: Record<string, string>
 }
 
-const PARSERS: any = {
-  [FieldType.NUMBER]: (attribute?: string) => {
-    if (!attribute) {
-      return attribute
-    }
-    return Number(attribute)
-  },
-  [FieldType.DATETIME]: (attribute?: string) => {
-    if (!attribute) {
-      return attribute
-    }
-    return new Date(attribute).toISOString()
-  },
-}
-
-export function isSchema(schema: any): schema is Schema {
+export function isSchema(schema: any): schema is TableSchema {
   return (
     typeof schema === "object" &&
-    Object.values(schema).every(rawColumn => {
-      const column = rawColumn as SchemaColumn
-
+    Object.values<FieldSchema>(schema).every(column => {
       return (
         column !== null &&
         typeof column === "object" &&
@@ -69,7 +40,7 @@ export function isRows(rows: any): rows is Rows {
   return Array.isArray(rows) && rows.every(row => typeof row === "object")
 }
 
-export function validate(rows: Rows, schema: Schema): ValidationResults {
+export function validate(rows: Rows, schema: TableSchema): ValidationResults {
   const results: ValidationResults = {
     schemaValidation: {},
     allValid: false,
@@ -79,9 +50,11 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
 
   rows.forEach(row => {
     Object.entries(row).forEach(([columnName, columnData]) => {
-      const columnType = schema[columnName]?.type
-      const columnSubtype = schema[columnName]?.subtype
-      const isAutoColumn = schema[columnName]?.autocolumn
+      const {
+        type: columnType,
+        subtype: columnSubtype,
+        autocolumn: isAutoColumn,
+      } = schema[columnName]
 
       // If the column had an invalid value we don't want to override it
       if (results.schemaValidation[columnName] === false) {
@@ -138,7 +111,7 @@ export function validate(rows: Rows, schema: Schema): ValidationResults {
   return results
 }
 
-export function parse(rows: Rows, schema: Schema): Rows {
+export function parse(rows: Rows, schema: TableSchema): Rows {
   return rows.map(row => {
     const parsedRow: Row = {}
 
@@ -148,9 +121,7 @@ export function parse(rows: Rows, schema: Schema): Rows {
         return
       }
 
-      const columnType = schema[columnName].type
-      const columnSubtype = schema[columnName].subtype
-
+      const { type: columnType, subtype: columnSubtype } = schema[columnName]
       if (columnType === FieldType.NUMBER) {
         // If provided must be a valid number
         parsedRow[columnName] = columnData ? Number(columnData) : columnData
@@ -187,11 +158,11 @@ export function parse(rows: Rows, schema: Schema): Rows {
 
 function isValidBBReference(
   columnData: any,
-  columnSubtype: FieldSubtype
+  columnSubtype: FieldSubtype.USER | FieldSubtype.USERS
 ): boolean {
   switch (columnSubtype) {
     case FieldSubtype.USER:
-    case FieldSubtype.USERS:
+    case FieldSubtype.USERS: {
       if (typeof columnData !== "string") {
         return false
       }
@@ -208,7 +179,7 @@ function isValidBBReference(
         user => !db.isGlobalUserID(user._id)
       )
       return !constainsWrongId
-
+    }
     default:
       throw utils.unreachable(columnSubtype)
   }

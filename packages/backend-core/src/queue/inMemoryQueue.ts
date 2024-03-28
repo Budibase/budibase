@@ -39,7 +39,7 @@ class InMemoryQueue implements Partial<Queue> {
   _opts?: QueueOptions
   _messages: JobMessage[]
   _queuedJobIds: Set<string>
-  _emitter: EventEmitter
+  _emitter: NodeJS.EventEmitter
   _runCount: number
   _addCount: number
 
@@ -166,7 +166,7 @@ class InMemoryQueue implements Partial<Queue> {
     return []
   }
 
-  // eslint-disable-next-line no-unused-vars
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async removeJobs(pattern: string) {
     // no-op
   }

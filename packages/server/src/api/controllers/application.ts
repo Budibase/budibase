@@ -26,7 +26,6 @@ import {
   env as envCore,
   ErrorCode,
   events,
-  HTTPError,
   migrations,
   objectStore,
   roles,
@@ -307,6 +306,7 @@ async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
       features: {
         componentValidation: true,
         disableUserMetadata: true,
+        skeletonLoader: true,
       },
     }
 
@@ -487,10 +487,11 @@ export async function updateClient(ctx: UserCtx) {
   const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
     await backupClientLibrary(ctx.params.appId)
-    await updateClientLibrary(ctx.params.appId)
+    manifest = await updateClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -498,6 +499,10 @@ export async function updateClient(ctx: UserCtx) {
   const appPackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
+    features: {
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)
@@ -513,9 +518,10 @@ export async function revertClient(ctx: UserCtx) {
     ctx.throw(400, "There is no version to revert to")
   }
 
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
-    await revertClientLibrary(ctx.params.appId)
+    manifest = await revertClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -524,6 +530,10 @@ export async function revertClient(ctx: UserCtx) {
   const appPackageUpdates = {
     version: revertedToVersion,
     revertableVersion: undefined,
+    features: {
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
@@ -728,6 +738,21 @@ export async function updateAppPackage(
     await cache.app.invalidateAppMetadata(appId)
     return newAppPackage
   })
+}
+
+export async function setRevertableVersion(
+  ctx: UserCtx<{ revertableVersion: string }, App>
+) {
+  if (!env.isDev()) {
+    ctx.status = 403
+    return
+  }
+  const db = context.getAppDB()
+  const app = await db.get<App>(DocumentType.APP_METADATA)
+  app.revertableVersion = ctx.request.body.revertableVersion
+  await db.put(app)
+
+  ctx.status = 200
 }
 
 async function migrateAppNavigation() {

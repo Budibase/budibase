@@ -1,6 +1,7 @@
 import { features } from "@budibase/backend-core"
 import env from "./environment"
 
+// eslint-disable-next-line no-unused-vars
 enum WorkerFeature {}
 
 const featureList: WorkerFeature[] = features.processFeatureEnvVar(

@@ -28,7 +28,7 @@ describe("Airtable Integration", () => {
   })
 
   it("calls the create method with the correct params", async () => {
-    const response = await config.integration.create({
+    await config.integration.create({
       table: "test",
       json: {},
     })
@@ -40,7 +40,7 @@ describe("Airtable Integration", () => {
   })
 
   it("calls the read method with the correct params", async () => {
-    const response = await config.integration.read({
+    await config.integration.read({
       table: "test",
       view: "Grid view",
     })
@@ -51,7 +51,7 @@ describe("Airtable Integration", () => {
   })
 
   it("calls the update method with the correct params", async () => {
-    const response = await config.integration.update({
+    await config.integration.update({
       table: "table",
       id: "123",
       json: {
@@ -68,7 +68,7 @@ describe("Airtable Integration", () => {
 
   it("calls the delete method with the correct params", async () => {
     const ids = [1, 2, 3, 4]
-    const response = await config.integration.delete({
+    await config.integration.delete({
       ids,
     })
     expect(config.client.destroy).toHaveBeenCalledWith(ids)
