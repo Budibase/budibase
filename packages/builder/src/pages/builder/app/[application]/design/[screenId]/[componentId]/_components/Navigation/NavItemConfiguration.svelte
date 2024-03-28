@@ -6,9 +6,12 @@
   import { getSequentialName } from "helpers/duplicate"
   import { Constants } from "@budibase/frontend-core"
 
+  export let bindings
+
   $: navItems = enrichNavItems($navigationStore.links)
   $: navItemProps = {
     removeNavItem,
+    bindings,
   }
 
   const enrichNavItems = links => {

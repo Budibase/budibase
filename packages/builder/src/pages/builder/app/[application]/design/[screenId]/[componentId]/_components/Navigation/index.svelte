@@ -75,7 +75,7 @@
 
   {#if $selectedScreen?.showNavigation}
     <DetailSummary name="Customize" initiallyShow collapsible={false}>
-      <NavItemConfiguration />
+      <NavItemConfiguration {bindings} />
       <div class="settings">
         <PropertyControl
           label="Position"
