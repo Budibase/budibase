@@ -21,6 +21,7 @@ import {
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { PostgresColumn } from "./base/types"
@@ -72,7 +73,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
