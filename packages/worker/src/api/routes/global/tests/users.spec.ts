@@ -560,6 +560,7 @@ describe("/api/global/users", () => {
 
       it("if user ssoId is already assigned, no change will be applied", async () => {
         const user = await createSSOUser()
+        user.ssoId = "testssoId"
         await config.api.users
           .addSsoSupportInternalAPIAuth(user.ssoId, user.email)
           .expect(200)
