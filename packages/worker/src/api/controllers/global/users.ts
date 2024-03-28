@@ -59,7 +59,9 @@ export const addSsoSupport = async (ctx: Ctx<AddSSoUserRequest>) => {
   const { email, ssoId } = ctx.request.body
   try {
     // Status is changed to 404 from getUserDoc if user is not found
-    let userByEmail = (await platform.users.getUserDoc(email)) as PlatformUserByEmail
+    let userByEmail = (await platform.users.getUserDoc(
+      email
+    )) as PlatformUserByEmail
     await platform.users.addSsoUser(
       ssoId,
       email,
