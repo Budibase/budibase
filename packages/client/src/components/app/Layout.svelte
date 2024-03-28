@@ -117,21 +117,26 @@
       return []
     }
     return navItems
-      .filter(navitem => {
+      .filter(navItem => {
         // Strip nav items without text
-        if (!navitem.text) {
+        if (!navItem.text) {
+          return false
+        }
+
+        // Strip out links without URLs
+        if (navItem.type !== "sublinks" && !navItem.url) {
           return false
         }
 
         // Filter to only links allowed by the current role
-        const role = navitem.roleId || Constants.Roles.BASIC
+        const role = navItem.roleId || Constants.Roles.BASIC
         return userRoleHierarchy?.find(roleId => roleId === role)
       })
       .map(navItem => {
         const enrichedNavItem = enrichNavItem(navItem)
         if (navItem.type === "sublinks" && navItem.subLinks?.length) {
           enrichedNavItem.subLinks = navItem.subLinks
-            .filter(subLink => subLink.text)
+            .filter(subLink => subLink.text && subLink.url)
             .map(enrichNavItem)
         }
         return enrichedNavItem
