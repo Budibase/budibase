@@ -86,6 +86,7 @@ export function ssoUser(
     oauth2: opts.details?.oauth2,
     provider: opts.details?.provider!,
     providerType: opts.details?.providerType!,
+    ssoId: opts.details?.userId || uuid(),
     thirdPartyProfile: {
       email: base.email,
       picture: base.pictureUrl,
