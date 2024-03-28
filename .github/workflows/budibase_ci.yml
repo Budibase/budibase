@@ -138,7 +138,8 @@ jobs:
           fi
 
   test-server:
-    runs-on: ubuntu-latest
+    runs-on:
+      group: hosted-runners
     env:
       DEBUG: testcontainers,testcontainers:exec,testcontainers:build,testcontainers:pull
     steps:

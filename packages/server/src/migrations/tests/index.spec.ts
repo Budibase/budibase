@@ -25,8 +25,6 @@ const clearMigrations = async () => {
   }
 }
 
-jest.setTimeout(10000)
-
 describe("migrations", () => {
   const config = new TestConfig()
 

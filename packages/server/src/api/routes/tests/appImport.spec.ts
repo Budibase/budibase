@@ -1,7 +1,6 @@
 import * as setup from "./utilities"
 import path from "path"
 
-jest.setTimeout(15000)
 const PASSWORD = "testtest"
 
 describe("/applications/:appId/import", () => {

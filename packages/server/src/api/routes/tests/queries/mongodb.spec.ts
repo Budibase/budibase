@@ -1,14 +1,17 @@
 import { Datasource, Query } from "@budibase/types"
 import * as setup from "../utilities"
-import { databaseTestProviders } from "../../../../integrations/tests/utils"
+import {
+  DatabaseName,
+  getDatasource,
+} from "../../../../integrations/tests/utils"
 import { MongoClient, type Collection, BSON } from "mongodb"
-
-const collection = "test_collection"
+import { generator } from "@budibase/backend-core/tests"
 
 const expectValidId = expect.stringMatching(/^\w{24}$/)
 const expectValidBsonObjectId = expect.any(BSON.ObjectId)
 
 describe("/queries", () => {
+  let collection: string
   let config = setup.getConfig()
   let datasource: Datasource
 
@@ -37,7 +40,7 @@ describe("/queries", () => {
   async function withClient<T>(
     callback: (client: MongoClient) => Promise<T>
   ): Promise<T> {
-    const ds = await databaseTestProviders.mongodb.datasource()
+    const ds = await getDatasource(DatabaseName.MONGODB)
     const client = new MongoClient(ds.config!.connectionString)
     await client.connect()
     try {
@@ -52,25 +55,25 @@ describe("/queries", () => {
   ): Promise<T> {
     return await withClient(async client => {
       const db = client.db(
-        (await databaseTestProviders.mongodb.datasource()).config!.db
+        (await getDatasource(DatabaseName.MONGODB)).config!.db
       )
       return await callback(db.collection(collection))
     })
   }
 
   afterAll(async () => {
-    await databaseTestProviders.mongodb.stop()
     setup.afterAll()
   })
 
   beforeAll(async () => {
     await config.init()
     datasource = await config.api.datasource.create(
-      await databaseTestProviders.mongodb.datasource()
+      await getDatasource(DatabaseName.MONGODB)
     )
   })
 
   beforeEach(async () => {
+    collection = generator.guid()
     await withCollection(async collection => {
       await collection.insertMany([
         { name: "one" },
