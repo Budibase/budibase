@@ -1,7 +1,7 @@
 import {
   Row,
+  RowSearchParams,
   SearchFilters,
-  SearchParams,
   SearchResponse,
 } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -56,7 +56,9 @@ export function removeEmptyFilters(filters: SearchFilters) {
   return filters
 }
 
-export async function search(options: SearchParams): Promise<SearchResponse> {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const isExternalTable = isExternalTableID(options.tableId)
   if (isExternalTable) {
     return external.search(options)

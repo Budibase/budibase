@@ -6,7 +6,7 @@ import {
   IncludeRelationship,
   Row,
   SearchFilters,
-  SearchParams,
+  RowSearchParams,
   SearchResponse,
 } from "@budibase/types"
 import * as exporters from "../../../../api/controllers/view/exporters"
@@ -23,11 +23,14 @@ import pick from "lodash/pick"
 import { outputProcessing } from "../../../../utilities/rowProcessor"
 import sdk from "../../../"
 
-export async function search(options: SearchParams): Promise<SearchResponse> {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const { tableId } = options
   const { paginate, query, ...params } = options
   const { limit } = params
-  let bookmark = (params.bookmark && parseInt(params.bookmark)) || undefined
+  let bookmark =
+    (params.bookmark && parseInt(params.bookmark as string)) || undefined
   if (paginate && !bookmark) {
     bookmark = 1
   }
@@ -92,7 +95,7 @@ export async function search(options: SearchParams): Promise<SearchResponse> {
       rows = rows.map((r: any) => pick(r, fields))
     }
 
-    rows = await outputProcessing(table, rows, {
+    rows = await outputProcessing<Row[]>(table, rows, {
       preserveLinks: true,
       squash: true,
     })

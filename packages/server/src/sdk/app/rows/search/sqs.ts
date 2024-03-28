@@ -5,7 +5,7 @@ import {
   RelationshipFieldMetadata,
   Row,
   SearchFilters,
-  SearchParams,
+  RowSearchParams,
   SearchResponse,
   SortDirection,
   SortOrder,
@@ -93,7 +93,9 @@ function buildTableMap(tables: Table[]) {
   return tableMap
 }
 
-export async function search(options: SearchParams): Promise<SearchResponse> {
+export async function search(
+  options: RowSearchParams
+): Promise<SearchResponse<Row>> {
   const { tableId, paginate, query, ...params } = options
 
   const builder = new SqlQueryBuilder(SqlClient.SQL_LITE)

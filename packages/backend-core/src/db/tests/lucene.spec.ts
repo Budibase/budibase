@@ -1,9 +1,15 @@
 import { newid } from "../../docIds/newid"
 import { getDB } from "../db"
-import { Database, EmptyFilterOption } from "@budibase/types"
-import { QueryBuilder, paginatedSearch, fullSearch } from "../lucene"
+import {
+  Database,
+  EmptyFilterOption,
+  SortOrder,
+  SortType,
+} from "@budibase/types"
+import { fullSearch, paginatedSearch, QueryBuilder } from "../lucene"
 
 const INDEX_NAME = "main"
+const TABLE_ID = ""
 
 const index = `function(doc) {
   let props = ["property", "number", "array"]
@@ -25,8 +31,16 @@ describe("lucene", () => {
     dbName = `db-${newid()}`
     // create the DB for testing
     db = getDB(dbName)
-    await db.put({ _id: newid(), property: "word", array: ["1", "4"] })
-    await db.put({ _id: newid(), property: "word2", array: ["3", "1"] })
+    await db.put({
+      _id: newid(),
+      property: "word",
+      array: ["1", "4"],
+    })
+    await db.put({
+      _id: newid(),
+      property: "word2",
+      array: ["3", "1"],
+    })
     await db.put({
       _id: newid(),
       property: "word3",
@@ -338,10 +352,11 @@ describe("lucene", () => {
           },
         },
         {
+          tableId: TABLE_ID,
           limit: 1,
           sort: "property",
-          sortType: "string",
-          sortOrder: "desc",
+          sortType: SortType.STRING,
+          sortOrder: SortOrder.DESCENDING,
         }
       )
       expect(page.rows.length).toBe(1)
@@ -360,7 +375,10 @@ describe("lucene", () => {
             property: "wo",
           },
         },
-        {}
+        {
+          tableId: TABLE_ID,
+          query: {},
+        }
       )
       expect(page.rows.length).toBe(3)
     })
