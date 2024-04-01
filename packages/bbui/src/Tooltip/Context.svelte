@@ -1,18 +1,20 @@
 <script>
   import Portal from "svelte-portal"
+  import { fade } from 'svelte/transition';
 
   export let tooltip
   export let anchor
   export let visible = false
   export let hovering = false
 
-  let targetX = 0
-  let targetY = 0
-
-  let animationStartTime = 0;
+  let startX = 0
+  let startY = 0
+  let endX = 0
+  let endY = 0
 
   let x = 0;
   let y = 0;
+  let animationStartTime = 0;
 
   const updatePositionOnVisibilityChange = (visible, hovering) => {
     if (!visible && !hovering) {
@@ -29,69 +31,77 @@
     const rect = anchor.getBoundingClientRect();
     const tooltipWidth = tooltip?.getBoundingClientRect()?.width ?? 0;
 
-    targetX = rect.x - tooltipWidth
-    targetY = rect.y
+    startX = x
+    startY = y
+
+    endX = rect.x - tooltipWidth
+    endY = rect.y
+
     animationStartTime = document.timeline.currentTime
 
     if (x === 0 && y === 0) {
-      x = targetX
-      y = targetY
+      startX = endX
+      startY = endY
     }
   }
 
-  const animate = (invokedAnimationStartTime, frameTime, xRate = null, yRate = null) => {
-    console.log(frameTime);
+  const getNormalizedTime = (startTime, endTime, currentTime) => {
+    const distanceFromStart = currentTime - startTime;
+    const timeDiff = endTime - startTime;
+
+    return distanceFromStart / timeDiff;
+  }
+
+  const cubicBezierInterpolation = (p1, p2, p3, p4, t) => {
+    return Math.pow(1 - t, 3) * p1 +
+    3 * Math.pow(1 - t, 2) * t * p2 +
+    3 * (1 - t) * Math.pow(t, 2) * p3 +
+    Math.pow(t, 3) * p4;
+  }
+
+  // Made to match the interface of the css bezier curve function
+  const cubicBezierEasing = (a, b, c, d, t) => {
+    // CSS bezier curve function implicitly provides p1 and p4
+    const p1 = { x: 0, y: 0 }
+    const p2 = { x: a, y: b }
+    const p3 = { x: c, y: d }
+    const p4 = { x: 1, y: 1 }
+
+    return {
+      x: cubicBezierInterpolation(p1.x, p2.x, p3.x, p4.x, t),
+      y: cubicBezierInterpolation(p1.y, p2.y, p3.y, p4.y, t)
+    }
+  }
+
+  const linearInterpolation = (p1, p2, t) => {
+    return p1 + t * (p2 - p1);
+  }
+
+  const animate = (invokedAnimationStartTime, frameTime) => {
     if (invokedAnimationStartTime !== animationStartTime) {
       console.log("CANCEL ANIMATION ", invokedAnimationStartTime, " ", animationStartTime);
       return;
     }
-    console.log("animating");
 
-    const animationDurationInFrames = 10;
-    const easingRate = 2;
+    const animationDuration = 200
+    const normalizedTime = getNormalizedTime(invokedAnimationStartTime, invokedAnimationStartTime + animationDuration, frameTime)
 
-    const xDelta = targetX - x
-    const yDelta = targetY - y
-
-    if (xRate === null) {
-      xRate = Math.abs(xDelta) / animationDurationInFrames
+    if (normalizedTime >= 1) {
+      console.log("exiting");
+      return;
     }
 
-    if (yRate === null) {
-      yRate = Math.abs(yDelta) / animationDurationInFrames
-    }
+    const easing = cubicBezierEasing(0.25, 0.1, 0.25, 1, normalizedTime)
 
+    x = linearInterpolation(startX, endX, easing.x)
+    y = linearInterpolation(startY, endY, easing.y)
 
-    if (xDelta === 0 && yDelta === 0) return;
-
-    if (
-      (xDelta > 0 && xDelta <= xRate) ||
-      (xDelta < 0 && xDelta >= -xRate)
-    ) {
-      x = targetX;
-    } else if (xDelta > 0) {
-      x = x + xRate;
-    } else if (xDelta < 0) {
-      x = x - xRate;
-    }
-
-    if (
-      (yDelta > 0 && yDelta <= yRate) ||
-      (yDelta < 0 && yDelta >= -yRate)
-    ) {
-      y = targetY;
-    } else if (yDelta > 0) {
-      y = y + yRate;
-    } else if (yDelta < 0) {
-      y = y - yRate;
-    }
-
-    requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime, xRate, yRate))
+    requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime))
   }
 
   $: updatePosition(anchor, tooltip)
   $: updatePositionOnVisibilityChange(visible, hovering)
-  $: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime, null, null))
+  $: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime))
 
   const handleMouseenter = (e) => {
     hovering = true;
@@ -114,6 +124,7 @@
   >
     <slot />
   </div>
+  <slot name="previous" />
 </Portal>
 
 <style>
