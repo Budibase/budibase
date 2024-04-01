@@ -9,7 +9,7 @@
   let targetX = 0
   let targetY = 0
 
-  let animationId = 0;
+  let animationStartTime = 0;
 
   let x = 0;
   let y = 0;
@@ -31,7 +31,7 @@
 
     targetX = rect.x - tooltipWidth
     targetY = rect.y
-    animationId += 1
+    animationStartTime = document.timeline.currentTime
 
     if (x === 0 && y === 0) {
       x = targetX
@@ -39,14 +39,16 @@
     }
   }
 
-  const animate = (invokedAnimationId, xRate = null, yRate = null) => {
-    if (invokedAnimationId !== animationId) {
-      console.log("CANCEL ANIMATION ", invokedAnimationId, " ", animationId);
+  const animate = (invokedAnimationStartTime, frameTime, xRate = null, yRate = null) => {
+    console.log(frameTime);
+    if (invokedAnimationStartTime !== animationStartTime) {
+      console.log("CANCEL ANIMATION ", invokedAnimationStartTime, " ", animationStartTime);
       return;
     }
     console.log("animating");
 
     const animationDurationInFrames = 10;
+    const easingRate = 2;
 
     const xDelta = targetX - x
     const yDelta = targetY - y
@@ -84,12 +86,12 @@
       y = y - yRate;
     }
 
-    requestAnimationFrame(() => animate(invokedAnimationId, xRate, yRate))
+    requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime, xRate, yRate))
   }
 
   $: updatePosition(anchor, tooltip)
   $: updatePositionOnVisibilityChange(visible, hovering)
-  $: requestAnimationFrame(() => animate(animationId))
+  $: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime, null, null))
 
   const handleMouseenter = (e) => {
     hovering = true;

@@ -129,7 +129,7 @@
       } else {
         console.log("not long enough");
       }
-    }, 400)
+    }, 200)
   }
 
   const handleMouseleave = (e, option) => {
