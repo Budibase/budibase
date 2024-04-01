@@ -2,7 +2,7 @@ export const unsupported = Symbol("values-validator-unsupported")
 export const partialSupport = Symbol("values-validator-partial-support")
 export const supported = Symbol("values-validator-supported")
 
-const validatorMap = {
+export const validators = {
   chart: (fieldSchema) => {
     if (
       fieldSchema.type === "json" ||
@@ -14,7 +14,7 @@ const validatorMap = {
     ) {
       return {
         support: unsupported,
-        message: "This field cannot be used as a chart value"
+        message: `"${fieldSchema.type}" columns cannot be used as a chart value long long long long long long long long long`
       }
     }
 
@@ -38,5 +38,3 @@ const validatorMap = {
     }
   }
 };
-export default validatorMap;
-
