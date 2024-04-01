@@ -17,6 +17,7 @@
     TooltipType,
   } from "../../Tooltip/AbsTooltip.svelte"
   import ContextTooltip from "../../Tooltip/Context.svelte"
+  import { fade } from 'svelte/transition';
 
 
   export let id = null
@@ -59,6 +60,7 @@
   let contextTooltipId = 0;
   let contextTooltipAnchor = null
   let contextTooltipOption = null
+  let previousContextTooltipOption = null
   let contextTooltipVisible = false
 
   $: sortedOptions = getSortedOptions(options, getOptionLabel, sort)
@@ -124,10 +126,9 @@
     setTimeout(() => {
       if (contextTooltipId === invokedContextTooltipId) {
         contextTooltipAnchor = e.target;
+        previousContextTooltipOption = contextTooltipOption;
         contextTooltipOption = option;
         contextTooltipVisible = true;
-      } else {
-        console.log("not long enough");
       }
     }, 200)
   }
@@ -306,6 +307,11 @@
     class="tooltipContents"
   >
   {contextTooltipOption}
+  </div>
+  <div slot="previous"
+    class="tooltipContents"
+  >
+  {previousContextTooltipOption}
   </div>
   </ContextTooltip>
 
