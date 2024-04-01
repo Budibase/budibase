@@ -13,12 +13,17 @@
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
+  export let getOptionIcon = () => null
+  export let getOptionIconTooltip = () => null
+  export let getOptionTooltip = () => null
+  export let isOptionEnabled = () => true
   export let sort = false
   export let autoWidth = false
   export let autocomplete = false
   export let searchTerm = null
   export let customPopoverHeight
   export let helpText = null
+  export let align
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -29,6 +34,10 @@
 
 <Field {helpText} {label} {labelPosition} {error}>
   <Multiselect
+    {isOptionEnabled}
+    {getOptionIcon}
+    {getOptionIconTooltip}
+  {getOptionTooltip}
     {error}
     {disabled}
     {readonly}
@@ -41,6 +50,7 @@
     {autoWidth}
     {autocomplete}
     {customPopoverHeight}
+    {align}
     bind:searchTerm
     on:change={onChange}
     on:click
