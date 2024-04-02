@@ -25,7 +25,7 @@ const handleClick = event => {
       return
     }
 
-    // Ignore clicks for modals, unless the handler is registered from one
+    // Ignore clicks for modals, unless the handler is registered from a modal
     const sourceInModal = handler.anchor.closest(".spectrum-Underlay") != null
     const clickInModal = event.target.closest(".spectrum-Underlay") != null
     if (clickInModal && !sourceInModal) {
