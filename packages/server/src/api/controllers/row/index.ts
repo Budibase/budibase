@@ -1,4 +1,5 @@
 import { quotas } from "@budibase/pro"
+import { objectStore } from "@budibase/backend-core"
 import * as internal from "./internal"
 import * as external from "./external"
 import { isExternalTableID } from "../../../integrations/utils"
@@ -13,6 +14,7 @@ import {
   PatchRowRequest,
   PatchRowResponse,
   Row,
+  RowAttachment,
   SearchParams,
   SearchRowRequest,
   SearchRowResponse,
@@ -250,4 +252,22 @@ export const exportRows = async (
   })
   ctx.attachment(fileName)
   ctx.body = apiFileReturn(content)
+}
+
+export async function downloadAttachment(ctx: UserCtx) {
+  const { columnName } = ctx.params
+
+  const tableId = utils.getTableId(ctx)
+  const row = await pickApi(tableId).find(ctx)
+
+  if (!row[columnName]) {
+    ctx.throw(400, `'${columnName}' is not valid`)
+  }
+
+  const attachment: RowAttachment = row[columnName][0]
+  ctx.attachment(attachment.name)
+  ctx.body = await objectStore.getReadStream(
+    objectStore.ObjectStoreBuckets.APPS,
+    attachment.key
+  )
 }
