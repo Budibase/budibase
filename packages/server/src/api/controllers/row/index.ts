@@ -263,7 +263,8 @@ export async function downloadAttachment(ctx: UserCtx) {
   const tableId = utils.getTableId(ctx)
   const row = await pickApi(tableId).find(ctx)
 
-  if (!row[columnName]) {
+  const table = await sdk.tables.getTable(tableId)
+  if (!table.schema[columnName]) {
     ctx.throw(400, `'${columnName}' is not valid`)
   }
 
@@ -293,7 +294,6 @@ export async function downloadAttachment(ctx: UserCtx) {
       archive.append(attachmentStream, { name: attachment.name })
     }
 
-    const table = await sdk.tables.getTable(tableId)
     const displayName = row[table.primaryDisplay || "_id"]
     ctx.attachment(`${displayName}_${columnName}.zip`)
     archive.finalize()

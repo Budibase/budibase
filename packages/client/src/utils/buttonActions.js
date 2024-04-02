@@ -406,7 +406,12 @@ const downloadFileHandler = async action => {
     const { type } = action.parameters
     if (type === "attachment") {
       const { tableId, rowId, attachmentColumn } = action.parameters
-      const res = await API.downloadAttachment(tableId, rowId, attachmentColumn)
+      const res = await API.downloadAttachment(
+        tableId,
+        rowId,
+        attachmentColumn,
+        { suppressErrors: true }
+      )
       await downloadStream(res)
       return
     }
@@ -429,7 +434,11 @@ const downloadFileHandler = async action => {
     URL.revokeObjectURL(objectUrl)
   } catch (e) {
     console.error(e)
-    notificationStore.actions.error("File cannot be downloaded")
+    if (e.status === 404) {
+      notificationStore.actions.error("File is empty")
+    } else {
+      notificationStore.actions.error("File cannot be downloaded")
+    }
   }
 }
 

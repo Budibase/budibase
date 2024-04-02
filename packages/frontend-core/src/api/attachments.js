@@ -95,10 +95,11 @@ export const buildAttachmentEndpoints = API => {
      * @param rowId
      * @param columnName the attachments to delete
      */
-    downloadAttachment: async (tableId, rowId, columnName) => {
+    downloadAttachment: async (tableId, rowId, columnName, options) => {
       return await API.get({
         url: `/api/${tableId}/rows/${rowId}/attachment/${columnName}`,
         parseResponse: response => response,
+        suppressErrors: options?.suppressErrors,
       })
     },
   }
