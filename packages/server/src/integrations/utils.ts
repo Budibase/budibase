@@ -13,6 +13,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "../constants"
 import { helpers } from "@budibase/shared-core"
+import env from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -91,6 +92,14 @@ export enum SqlClient {
   MY_SQL = "mysql2",
   ORACLE = "oracledb",
 }
+
+const isCloud = env.isProd() && !env.SELF_HOSTED
+const isSelfHost = env.isProd() && env.SELF_HOSTED
+export const HOST_ADDRESS = isSelfHost
+  ? "host.docker.internal"
+  : isCloud
+  ? ""
+  : "localhost"
 
 export function isExternalTableID(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)
@@ -330,7 +339,7 @@ function copyExistingPropsOver(
 
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
-      if (!existingTableSchema.hasOwnProperty(key)) {
+      if (!Object.prototype.hasOwnProperty.call(existingTableSchema, key)) {
         continue
       }
       const column = existingTableSchema[key]

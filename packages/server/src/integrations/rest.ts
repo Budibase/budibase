@@ -283,7 +283,7 @@ class RestIntegration implements IntegrationBase {
         // content type defaults to plaintext
         input.body = string
         break
-      case BodyTypes.ENCODED:
+      case BodyTypes.ENCODED: {
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
           params.append(key, value as string)
@@ -293,7 +293,8 @@ class RestIntegration implements IntegrationBase {
         })
         input.body = params
         break
-      case BodyTypes.FORM_DATA:
+      }
+      case BodyTypes.FORM_DATA: {
         const form = new FormData()
         for (let [key, value] of Object.entries(object)) {
           form.append(key, value)
@@ -303,6 +304,7 @@ class RestIntegration implements IntegrationBase {
         })
         input.body = form
         break
+      }
       case BodyTypes.XML:
         if (object != null && Object.keys(object).length) {
           string = new XmlBuilder().buildObject(object)

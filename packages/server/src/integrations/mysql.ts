@@ -13,8 +13,6 @@ import {
   Schema,
   TableSourceType,
   DatasourcePlusQueryResponse,
-  FieldType,
-  FieldSubtype,
 } from "@budibase/types"
 import {
   getSqlQuery,
@@ -23,6 +21,7 @@ import {
   generateColumnDefinition,
   finaliseExternalTables,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import dayjs from "dayjs"
 import { NUMBER_REGEX } from "../utilities"
@@ -51,7 +50,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -390,7 +389,11 @@ class MySQLIntegration extends Sql implements DatasourcePlus {
         this.internalQuery(query, { connect: false, disableCoercion: true })
       const processFn = (result: any) => {
         if (json?.meta?.table && Array.isArray(result)) {
-          return this.convertJsonStringColumns(json.meta.table, result)
+          return this.convertJsonStringColumns(
+            json.meta.table,
+            result,
+            json.tableAliases
+          )
         }
         return result
       }

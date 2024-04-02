@@ -1,20 +1,19 @@
-import { Datasource, QuerySchema, Row } from "@budibase/types"
+import { Datasource, Row, Query } from "@budibase/types"
 
 export type WorkerCallback = (error: any, response?: any) => void
 
-export interface QueryEvent {
+export interface QueryEvent
+  extends Omit<Query, "datasourceId" | "name" | "parameters" | "readable"> {
   appId?: string
   datasource: Datasource
-  queryVerb: string
-  fields: { [key: string]: any }
-  parameters: { [key: string]: unknown }
   pagination?: any
-  transformer: any
   queryId?: string
   environmentVariables?: Record<string, string>
+  parameters: QueryEventParameters
   ctx?: any
-  schema?: Record<string, QuerySchema | string>
 }
+
+export type QueryEventParameters = Record<string, string | null>
 
 export interface QueryResponse {
   rows: Row[]

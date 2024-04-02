@@ -14,7 +14,6 @@
 <IndicatorSet
   componentId={!isScreen ? $builderStore.selectedComponentId : null}
   {color}
-  zIndex="910"
-  transition
+  zIndex={900}
   allowResizeAnchors
 />

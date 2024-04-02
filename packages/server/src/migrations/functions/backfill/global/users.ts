@@ -43,7 +43,7 @@ export const backfill = async (
     }
 
     if (user.roles) {
-      for (const [appId, role] of Object.entries(user.roles)) {
+      for (const [, role] of Object.entries(user.roles)) {
         await events.role.assigned(user, role, timestamp)
       }
     }

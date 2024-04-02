@@ -78,11 +78,12 @@ describe("/queries", () => {
         _rev: res.body._rev,
         _id: res.body._id,
         ...query,
+        nullDefaultSupport: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
-      expect(events.query.created).toBeCalledTimes(1)
-      expect(events.query.updated).not.toBeCalled()
+      expect(events.query.created).toHaveBeenCalledTimes(1)
+      expect(events.query.updated).not.toHaveBeenCalled()
     })
   })
 
@@ -103,11 +104,12 @@ describe("/queries", () => {
         _rev: res.body._rev,
         _id: res.body._id,
         ...query,
+        nullDefaultSupport: true,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       })
-      expect(events.query.created).not.toBeCalled()
-      expect(events.query.updated).toBeCalledTimes(1)
+      expect(events.query.created).not.toHaveBeenCalled()
+      expect(events.query.updated).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -130,6 +132,7 @@ describe("/queries", () => {
           _id: query._id,
           createdAt: new Date().toISOString(),
           ...basicQuery(datasource._id),
+          nullDefaultSupport: true,
           updatedAt: new Date().toISOString(),
           readable: true,
         },
@@ -210,8 +213,8 @@ describe("/queries", () => {
         .expect(200)
 
       expect(res.body).toEqual([])
-      expect(events.query.deleted).toBeCalledTimes(1)
-      expect(events.query.deleted).toBeCalledWith(datasource, query)
+      expect(events.query.deleted).toHaveBeenCalledTimes(1)
+      expect(events.query.deleted).toHaveBeenCalledWith(datasource, query)
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -243,9 +246,12 @@ describe("/queries", () => {
         b: { type: "number", name: "b" },
       })
       expect(responseBody.rows.length).toEqual(1)
-      expect(events.query.previewed).toBeCalledTimes(1)
+      expect(events.query.previewed).toHaveBeenCalledTimes(1)
       delete datasource.config
-      expect(events.query.previewed).toBeCalledWith(datasource, queryPreview)
+      expect(events.query.previewed).toHaveBeenCalledWith(datasource, {
+        ...queryPreview,
+        nullDefaultSupport: true,
+      })
     })
 
     it("should apply authorization to endpoint", async () => {
@@ -327,6 +333,7 @@ describe("/queries", () => {
           ],
         },
       ]
+
       pg.queryMock.mockImplementation(() => ({
         rows,
       }))
@@ -407,6 +414,21 @@ describe("/queries", () => {
           message: "No datasource implementation found.",
         },
       })
+    })
+
+    it("shouldn't allow handlebars to be passed as parameters", async () => {
+      const res = await request
+        .post(`/api/queries/${query._id}`)
+        .send({
+          parameters: {
+            a: "{{ 'test' }}",
+          },
+        })
+        .set(config.defaultHeaders())
+        .expect(400)
+      expect(res.body.message).toEqual(
+        "Parameter 'a' input contains a handlebars binding - this is not allowed."
+      )
     })
   })
 
