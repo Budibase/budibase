@@ -102,7 +102,6 @@
   }
 
   const getOptionTooltip = optionKey => {
-    console.log(optionKey)
     const support = fieldSupport[optionKey]?.support;
     const message = fieldSupport[optionKey]?.message;
 
