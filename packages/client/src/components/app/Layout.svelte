@@ -169,7 +169,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-  class="component {screenId} layout layout--{typeClass}"
+  class="component layout layout--{typeClass}"
   use:styleable={$component.styles}
   class:desktop={!mobile}
   class:mobile={!!mobile}
@@ -177,7 +177,7 @@
   data-name="Screen"
   data-icon="WebPage"
 >
-  <div class="{screenId}-dom screen-wrapper layout-body">
+  <div class="screen-wrapper layout-body">
     {#if typeClass !== "none"}
       <div
         class="interactive component {navigationId}"
@@ -286,7 +286,7 @@
       class="main-wrapper"
       on:click={() => {
         if ($builderStore.inBuilder) {
-          builderStore.actions.selectComponent(null)
+          builderStore.actions.selectComponent($builderStore.screen._id)
         }
       }}
     >
