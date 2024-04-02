@@ -8,10 +8,10 @@
   export let visible = false
   export let hovering = false
 
-  let startX = 0
-  let startY = 0
-  let endX = 0
-  let endY = 0
+  let previousX = 0
+  let previousY = 0
+  let currentX = 0
+  let currentY = 0
 
   let currentTooltipWidth = 0
   let currentTooltipHeight = 0
@@ -19,17 +19,10 @@
   let previousTooltipWidth = 0
   let previousTooltipHeight = 0
 
-  let x = 0;
-  let y = 0;
-  let w = 0;
-  let h = 0;
-
-  let animationStartTime = 0;
-
   const updatePositionOnVisibilityChange = (visible, hovering) => {
     if (!visible && !hovering) {
-      x = 0;
-      y = 0;
+      previousX = 0;
+      previousY = 0;
 
       previousTooltipWidth = 0
       previousTooltipHeight = 0
@@ -57,21 +50,24 @@
         previousTooltipHeight = currentTooltipHeight;
       }
 
-      startX = x
-      startY = y
+      previousX = currentX
+      previousY = currentY
 
-      endX = rect.x - currentTooltipWidth
-      endY = rect.y
+      // - width to align to left side of anchor
+      currentX = rect.x - currentTooltipWidth
+      currentY = rect.y
 
-      animationStartTime = document.timeline.currentTime
+      if (previousX === 0) {
+        previousX = currentX
+      }
 
-      if (x === 0 && y === 0) {
-        startX = endX
-        startY = endY
+      if (previousY === 0) {
+        previousY = currentY
       }
     })
   }
 
+  /*
   const getNormalizedTime = (startTime, endTime, currentTime) => {
     const distanceFromStart = currentTime - startTime;
     const timeDiff = endTime - startTime;
@@ -125,17 +121,13 @@
     x = linearInterpolation(startX, endX, easing.x)
     y = linearInterpolation(startY, endY, easing.y)
     w = linearInterpolation(previousTooltipWidth, currentTooltipWidth, easing.x)
-    console.log(currentTooltipWidth);
-    console.log(previousTooltipWidth);
-    console.log(w);
-    console.log("")
 
     requestAnimationFrame((newFrameTime) => animate(invokedAnimationStartTime, newFrameTime))
-  }
+  }*/
 
   $: updatePosition(anchor, currentTooltip, previousTooltip)
   $: updatePositionOnVisibilityChange(visible, hovering)
-  $: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime))
+  /*$: requestAnimationFrame((frameTime) => animate(animationStartTime, frameTime))*/
 
   const handleMouseenter = (e) => {
     hovering = true;
@@ -150,29 +142,30 @@
   <div
     on:mouseenter={handleMouseenter}
     on:mouseleave={handleMouseleave}
-    style:width={`${w}px`}
+    style:width={`${currentTooltipWidth}px`}
     style:height={`${currentTooltipHeight}px`}
-    style:left={`${x}px`}
-    style:top={`${y}px`}
+    style:left={`${currentX}px`}
+    style:top={`${currentY}px`}
     class="tooltip"
     class:visible={visible || hovering}
   >
-    <div class="screenSize">
+  <div class="screenSize"
+    style:left={`${-currentX}px`}
+    style:top={`${-currentY}px`}
+    >
       <div
+        style:left={`${currentX}px`}
+        style:top={`${currentY}px`}
         bind:this={currentTooltip}
         class="currentContent"
-        style:left={`${endX - x}px`}
-        style:top={`${endY - y}px`}
       >
         <slot />
       </div>
-    </div>
-    <div class="screenSize">
       <div
         bind:this={previousTooltip}
         class="previousContent"
-        style:left={`${startX - x}px`}
-        style:top={`${startY - y}px`}
+        style:left={`${previousX}px`}
+        style:top={`${previousY}px`}
       >
         <slot name="previous"/>
       </div>
@@ -181,10 +174,13 @@
 </Portal>
 
 <style>
+  /* Screen width absolute parent for tooltip content so that'd the applied width and height 
+     to the root doesn't affect their size */
   .screenSize {
     position: absolute;
     width: 100vw;
     height: 100vh;
+    transition: top 300ms ease-in, left 300ms ease-in;
   }
 
   .tooltip {
@@ -194,6 +190,7 @@
     background-color: red;
     opacity: 0;
     overflow: hidden;
+    transition: width 300ms ease-in, height 300ms ease-in, top 300ms ease-in, left 300ms ease-in;
   }
 
   .visible {
