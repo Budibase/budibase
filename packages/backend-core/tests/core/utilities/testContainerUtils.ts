@@ -1,80 +1,58 @@
+import { DatabaseImpl } from "../../../src/db"
 import { execSync } from "child_process"
 
-let dockerPsResult: string | undefined
-
-function formatDockerPsResult(serverName: string, port: number) {
-  const lines = dockerPsResult?.split("\n")
-  let first = true
-  if (!lines) {
-    return null
-  }
-  for (let line of lines) {
-    if (first) {
-      first = false
-      continue
-    }
-    let toLookFor = serverName.split("-service")[0]
-    if (!line.includes(toLookFor)) {
-      continue
-    }
-    const regex = new RegExp(`0.0.0.0:([0-9]*)->${port}`, "g")
-    const found = line.match(regex)
-    if (found) {
-      return found[0].split(":")[1].split("->")[0]
-    }
-  }
-  return null
+interface ContainerInfo {
+  Command: string
+  CreatedAt: string
+  ID: string
+  Image: string
+  Labels: string
+  LocalVolumes: string
+  Mounts: string
+  Names: string
+  Networks: string
+  Ports: string
+  RunningFor: string
+  Size: string
+  State: string
+  Status: string
 }
 
-function getTestContainerSettings(
-  serverName: string,
-  key: string
-): string | null {
-  const entry = Object.entries(global).find(
-    ([k]) =>
-      k.includes(`${serverName.toUpperCase()}`) &&
-      k.includes(`${key.toUpperCase()}`)
-  )
-  if (!entry) {
-    return null
-  }
-  return entry[1]
+function getTestcontainers(): ContainerInfo[] {
+  return execSync("docker ps --format json")
+    .toString()
+    .split("\n")
+    .filter(x => x.length > 0)
+    .map(x => JSON.parse(x) as ContainerInfo)
+    .filter(x => x.Labels.includes("org.testcontainers=true"))
 }
 
-function getContainerInfo(containerName: string, port: number) {
-  let assignedPort = getTestContainerSettings(
-    containerName.toUpperCase(),
-    `PORT_${port}`
-  )
-  if (!dockerPsResult) {
-    try {
-      const outputBuffer = execSync("docker ps")
-      dockerPsResult = outputBuffer.toString("utf8")
-    } catch (err) {
-      //no-op
-    }
-  }
-  const possiblePort = formatDockerPsResult(containerName, port)
-  if (possiblePort) {
-    assignedPort = possiblePort
-  }
-  const host = getTestContainerSettings(containerName.toUpperCase(), "IP")
-  return {
-    port: assignedPort,
-    host,
-    url: host && assignedPort && `http://${host}:${assignedPort}`,
-  }
+function getContainerByImage(image: string) {
+  return getTestcontainers().find(x => x.Image.startsWith(image))
 }
 
-function getCouchConfig() {
-  return getContainerInfo("couchdb", 5984)
+function getExposedPort(container: ContainerInfo, port: number) {
+  const match = container.Ports.match(new RegExp(`0.0.0.0:(\\d+)->${port}/tcp`))
+  if (!match) {
+    return undefined
+  }
+  return parseInt(match[1])
 }
 
 export function setupEnv(...envs: any[]) {
-  const couch = getCouchConfig()
+  const couch = getContainerByImage("budibase/couchdb")
+  if (!couch) {
+    throw new Error("CouchDB container not found")
+  }
+
+  const couchPort = getExposedPort(couch, 5984)
+  if (!couchPort) {
+    throw new Error("CouchDB port not found")
+  }
+
   const configs = [
-    { key: "COUCH_DB_PORT", value: couch.port },
-    { key: "COUCH_DB_URL", value: couch.url },
+    { key: "COUCH_DB_PORT", value: `${couchPort}` },
+    { key: "COUCH_DB_URL", value: `http://localhost:${couchPort}` },
   ]
 
   for (const config of configs.filter(x => !!x.value)) {
@@ -82,4 +60,7 @@ export function setupEnv(...envs: any[]) {
       env._set(config.key, config.value)
     }
   }
+
+  // @ts-expect-error
+  DatabaseImpl.nano = undefined
 }

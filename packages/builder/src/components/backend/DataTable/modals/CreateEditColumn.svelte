@@ -191,8 +191,10 @@
     // don't make field IDs for auto types
     if (type === AUTO_TYPE || autocolumn) {
       return type.toUpperCase()
-    } else {
+    } else if (type === FieldType.BB_REFERENCE) {
       return `${type}${subtype || ""}`.toUpperCase()
+    } else {
+      return type.toUpperCase()
     }
   }
 
@@ -702,24 +704,6 @@
       disabled={!isCreating}
       thin
       text="Allow multiple users"
-    />
-  {:else if editableColumn.type === FieldType.ATTACHMENT}
-    <Toggle
-      value={editableColumn.constraints?.length?.maximum !== 1}
-      on:change={e => {
-        if (!e.detail) {
-          editableColumn.constraints ??= { length: {} }
-          editableColumn.constraints.length ??= {}
-          editableColumn.constraints.length.maximum = 1
-          editableColumn.constraints.length.message =
-            "cannot contain multiple files"
-        } else {
-          delete editableColumn.constraints?.length?.maximum
-          delete editableColumn.constraints?.length?.message
-        }
-      }}
-      thin
-      text="Allow multiple"
     />
   {/if}
   {#if editableColumn.type === AUTO_TYPE || editableColumn.autocolumn}

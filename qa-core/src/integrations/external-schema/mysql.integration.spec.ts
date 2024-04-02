@@ -1,14 +1,12 @@
 import { GenericContainer } from "testcontainers"
 import mysql from "../../../../packages/server/src/integrations/mysql"
 
-jest.unmock("mysql2/promise")
-
 describe("datasource validators", () => {
   describe("mysql", () => {
     let config: any
 
     beforeAll(async () => {
-      const container = await new GenericContainer("mysql")
+      const container = await new GenericContainer("mysql:8.3")
         .withExposedPorts(3306)
         .withEnv("MYSQL_ROOT_PASSWORD", "admin")
         .withEnv("MYSQL_DATABASE", "db")

@@ -1,6 +1,12 @@
 <script>
+  import { onMount, onDestroy } from "svelte"
   import { params, goto } from "@roxi/routify"
-  import { auth, sideBarCollapsed, enrichedApps } from "stores/portal"
+  import {
+    licensing,
+    auth,
+    sideBarCollapsed,
+    enrichedApps,
+  } from "stores/portal"
   import AppRowContext from "components/start/AppRowContext.svelte"
   import FavouriteAppButton from "../FavouriteAppButton.svelte"
   import {
@@ -14,12 +20,17 @@
   import { sdk } from "@budibase/shared-core"
   import { API } from "api"
   import ErrorSVG from "./ErrorSVG.svelte"
+  import { getBaseTheme, ClientAppSkeleton } from "@budibase/frontend-core"
 
   $: app = $enrichedApps.find(app => app.appId === $params.appId)
   $: iframeUrl = getIframeURL(app)
   $: isBuilder = sdk.users.isBuilder($auth.user, app?.devId)
 
+  let loading = true
+
   const getIframeURL = app => {
+    loading = true
+
     if (app.status === "published") {
       return `/app${app.url}`
     }
@@ -37,6 +48,20 @@
   }
 
   $: fetchScreens(app?.devId)
+
+  const receiveMessage = async message => {
+    if (message.data.type === "docLoaded") {
+      loading = false
+    }
+  }
+
+  onMount(() => {
+    window.addEventListener("message", receiveMessage)
+  })
+
+  onDestroy(() => {
+    window.removeEventListener("message", receiveMessage)
+  })
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -108,7 +133,26 @@
       </Body>
     </div>
   {:else}
-    <iframe src={iframeUrl} title={app.name} />
+    <div
+      class:hide={!loading || !app?.features?.skeletonLoader}
+      class="loading"
+    >
+      <div
+        class={`loadingThemeWrapper ${getBaseTheme(app.theme)} ${app.theme}`}
+      >
+        <ClientAppSkeleton
+          noAnimation
+          hideDevTools={app?.status === "published"}
+          sideNav={app?.navigation.navigation === "Left"}
+          hideFooter={$licensing.brandingEnabled}
+        />
+      </div>
+    </div>
+    <iframe
+      class:hide={loading && app?.features?.skeletonLoader}
+      src={iframeUrl}
+      title={app.name}
+    />
   {/if}
 </div>
 
@@ -137,6 +181,23 @@
     align-items: center;
     gap: var(--spacing-xl);
     flex: 0 0 50px;
+  }
+
+  .loading {
+    height: 100%;
+    border: 1px solid var(--spectrum-global-color-gray-300);
+    border-radius: var(--spacing-s);
+    overflow: hidden;
+  }
+  .loadingThemeWrapper {
+    height: 100%;
+    container-type: inline-size;
+  }
+
+  .hide {
+    visibility: hidden;
+    height: 0;
+    border: none;
   }
 
   iframe {

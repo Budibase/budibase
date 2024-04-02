@@ -1,6 +1,5 @@
-const {
-  getJsHelperList,
-} = require("../../../../string-templates/src/helpers/list.js")
+// eslint-disable-next-line local-rules/no-budibase-imports
+import { getJsHelperList } from "@budibase/string-templates/src/helpers/list"
 
 export default {
   ...getJsHelperList(),

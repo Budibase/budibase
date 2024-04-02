@@ -8,7 +8,7 @@ import {
 } from "@budibase/types"
 
 import AWS from "aws-sdk"
-import { AWS_REGION } from "../db/dynamoClient"
+import { AWS_REGION } from "../constants"
 import { DocumentClient } from "aws-sdk/clients/dynamodb"
 
 interface DynamoDBConfig {

@@ -19,6 +19,7 @@ import {
   appStore,
   previewStore,
   tables,
+  componentTreeNodesStore,
 } from "stores/builder/index"
 import { buildFormSchema, getSchemaForDatasource } from "dataBinding"
 import {
@@ -29,7 +30,6 @@ import {
 } from "constants/backend"
 import BudiStore from "../BudiStore"
 import { Utils } from "@budibase/frontend-core"
-import componentTreeNodesStore from "stores/portal/componentTreeNodesStore"
 
 export const INITIAL_COMPONENTS_STATE = {
   components: {},
@@ -279,12 +279,10 @@ export class ComponentStore extends BudiStore {
       else {
         if (setting.type === "dataProvider") {
           // Validate data provider exists, or else clear it
-          const treeId = parent?._id || component._id
-          const path = findComponentPath(screen?.props, treeId)
-          const providers = path.filter(component =>
-            component._component?.endsWith("/dataprovider")
+          const providers = findAllMatchingComponents(
+            screen?.props,
+            x => x._component === "@budibase/standard-components/dataprovider"
           )
-          // Validate non-empty values
           const valid = providers?.some(dp => value.includes?.(dp._id))
           if (!valid) {
             if (providers.length) {
@@ -653,8 +651,11 @@ export class ComponentStore extends BudiStore {
     this.update(state => {
       state.selectedScreenId = targetScreenId
       state.selectedComponentId = newComponentId
+
       return state
     })
+
+    componentTreeNodesStore.makeNodeVisible(newComponentId)
   }
 
   getPrevious() {
@@ -663,7 +664,6 @@ export class ComponentStore extends BudiStore {
     const screen = get(selectedScreen)
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(x => x._id === componentId)
-    const componentTreeNodes = get(componentTreeNodesStore)
 
     // Check for screen and navigation component edge cases
     const screenComponentId = `${screen._id}-screen`
@@ -680,16 +680,16 @@ export class ComponentStore extends BudiStore {
 
     // If we have siblings above us, choose the sibling or a descendant
     if (index > 0) {
-      // If sibling before us accepts children, select a descendant
+      // If sibling before us accepts children, and is not collapsed, select a descendant
       const previousSibling = parent._children[index - 1]
       if (
         previousSibling._children?.length &&
-        componentTreeNodes[`nodeOpen-${previousSibling._id}`]
+        componentTreeNodesStore.isNodeExpanded(previousSibling._id)
       ) {
         let target = previousSibling
         while (
           target._children?.length &&
-          componentTreeNodes[`nodeOpen-${target._id}`]
+          componentTreeNodesStore.isNodeExpanded(target._id)
         ) {
           target = target._children[target._children.length - 1]
         }
@@ -711,7 +711,6 @@ export class ComponentStore extends BudiStore {
     const screen = get(selectedScreen)
     const parent = findComponentParent(screen.props, componentId)
     const index = parent?._children.findIndex(x => x._id === componentId)
-    const componentTreeNodes = get(componentTreeNodesStore)
 
     // Check for screen and navigation component edge cases
     const screenComponentId = `${screen._id}-screen`
@@ -720,11 +719,11 @@ export class ComponentStore extends BudiStore {
       return navComponentId
     }
 
-    // If we have children, select first child
+    // If we have children, select first child, and the node is not collapsed
     if (
       component._children?.length &&
       (state.selectedComponentId === navComponentId ||
-        componentTreeNodes[`nodeOpen-${component._id}`])
+        componentTreeNodesStore.isNodeExpanded(component._id))
     ) {
       return component._children[0]._id
     } else if (!parent) {
@@ -803,7 +802,10 @@ export class ComponentStore extends BudiStore {
         // sibling
         const previousSibling = parent._children[index - 1]
         const definition = this.getDefinition(previousSibling._component)
-        if (definition.hasChildren) {
+        if (
+          definition.hasChildren &&
+          componentTreeNodesStore.isNodeExpanded(previousSibling._id)
+        ) {
           previousSibling._children.push(originalComponent)
         }
 
@@ -852,10 +854,13 @@ export class ComponentStore extends BudiStore {
 
       // Move below the next sibling if we are not the last sibling
       if (index < parent._children.length) {
-        // If the next sibling has children, become the first child
+        // If the next sibling has children, and is not collapsed, become the first child
         const nextSibling = parent._children[index]
         const definition = this.getDefinition(nextSibling._component)
-        if (definition.hasChildren) {
+        if (
+          definition.hasChildren &&
+          componentTreeNodesStore.isNodeExpanded(nextSibling._id)
+        ) {
           nextSibling._children.splice(0, 0, originalComponent)
         }
 
@@ -1149,15 +1154,5 @@ export const selectedComponent = derived(
     const clone = selected ? cloneDeep(selected) : selected
     componentStore.migrateSettings(clone)
     return clone
-  }
-)
-
-export const selectedComponentPath = derived(
-  [componentStore, selectedScreen],
-  ([$store, $selectedScreen]) => {
-    return findComponentPath(
-      $selectedScreen?.props,
-      $store.selectedComponentId
-    ).map(component => component._id)
   }
 )
