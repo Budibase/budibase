@@ -185,6 +185,7 @@
 <style>
   .date-time-popover {
     padding: 8px;
+    overflow: hidden;
   }
   .footer {
     display: flex;
