@@ -1,10 +1,12 @@
 import path, { join } from "path"
 import { ObjectStoreBuckets } from "../../constants"
 import fs from "fs"
-import { objectStore } from "@budibase/backend-core"
+import { context, objectStore } from "@budibase/backend-core"
 import { resolve } from "../centralPath"
 import env from "../../environment"
 import { TOP_LEVEL_PATH } from "./filesystem"
+import { DocumentType } from "../../db/utils"
+import { App } from "@budibase/types"
 
 export function devClientLibPath() {
   return require.resolve("@budibase/client")
@@ -120,7 +122,12 @@ export async function updateClientLibrary(appId: string) {
       ContentType: "application/javascript",
     }
   )
-  await Promise.all([manifestUpload, clientUpload])
+
+  const manifestSrc = fs.promises.readFile(manifest, "utf8")
+
+  await Promise.all([manifestUpload, clientUpload, manifestSrc])
+
+  return JSON.parse(await manifestSrc)
 }
 
 /**
@@ -130,30 +137,49 @@ export async function updateClientLibrary(appId: string) {
  * @returns {Promise<void>}
  */
 export async function revertClientLibrary(appId: string) {
-  // Copy backups manifest to tmp directory
-  const tmpManifestPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "manifest.json.bak")
-  )
+  let manifestPath, clientPath
 
-  // Copy backup client lib to tmp
-  const tmpClientPath = await objectStore.retrieveToTmp(
-    ObjectStoreBuckets.APPS,
-    join(appId, "budibase-client.js.bak")
-  )
+  if (env.isDev()) {
+    const db = context.getAppDB()
+    const app = await db.get<App>(DocumentType.APP_METADATA)
+    clientPath = join(
+      __dirname,
+      `/oldClientVersions/${app.revertableVersion}/app.js`
+    )
+    manifestPath = join(
+      __dirname,
+      `/oldClientVersions/${app.revertableVersion}/manifest.json`
+    )
+  } else {
+    // Copy backups manifest to tmp directory
+    manifestPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      join(appId, "manifest.json.bak")
+    )
+
+    // Copy backup client lib to tmp
+    clientPath = await objectStore.retrieveToTmp(
+      ObjectStoreBuckets.APPS,
+      join(appId, "budibase-client.js.bak")
+    )
+  }
+
+  const manifestSrc = fs.promises.readFile(manifestPath, "utf8")
 
   // Upload backups as new versions
   const manifestUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "manifest.json"),
-    path: tmpManifestPath,
+    path: manifestPath,
     type: "application/json",
   })
   const clientUpload = objectStore.upload({
     bucket: ObjectStoreBuckets.APPS,
     filename: join(appId, "budibase-client.js"),
-    path: tmpClientPath,
+    path: clientPath,
     type: "application/javascript",
   })
-  await Promise.all([manifestUpload, clientUpload])
+  await Promise.all([manifestSrc, manifestUpload, clientUpload])
+
+  return JSON.parse(await manifestSrc)
 }
