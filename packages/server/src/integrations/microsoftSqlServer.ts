@@ -13,19 +13,22 @@ import {
   SourceName,
   Schema,
   TableSourceType,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   getSqlQuery,
   buildExternalTableId,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   SqlClient,
   checkExternalTables,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
 import { MSSQLTablesResponse, MSSQLColumn } from "./base/types"
 import { getReadableErrorMessage } from "./base/errorMapping"
 import sqlServer from "mssql"
+
 const DEFAULT_SCHEMA = "dbo"
 
 import { ConfidentialClientApplication } from "@azure/msal-node"
@@ -86,7 +89,6 @@ const SCHEMA: Integration = {
     user: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "localhost",
     },
     password: {
       type: DatasourceFieldType.PASSWORD,
@@ -94,7 +96,7 @@ const SCHEMA: Integration = {
     },
     server: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
     },
     port: {
       type: DatasourceFieldType.NUMBER,
@@ -250,7 +252,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
       }
 
       switch (this.config.authType) {
-        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY:
+        case MSSQLConfigAuthType.AZURE_ACTIVE_DIRECTORY: {
           const { clientId, tenantId, clientSecret } =
             this.config.adConfig || {}
           const clientApp = new ConfidentialClientApplication({
@@ -272,7 +274,8 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
             },
           }
           break
-        case MSSQLConfigAuthType.NTLM:
+        }
+        case MSSQLConfigAuthType.NTLM: {
           const { domain, trustServerCertificate } =
             this.config.ntlmConfig || {}
           clientCfg.authentication = {
@@ -284,6 +287,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
           clientCfg.options ??= {}
           clientCfg.options.trustServerCertificate = !!trustServerCertificate
           break
+        }
         case null:
         case undefined:
           break
@@ -328,6 +332,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         operation === Operation.CREATE
           ? `${query.sql}; SELECT SCOPE_IDENTITY() AS id;`
           : query.sql
+      this.log(sql, query.bindings)
       return await request.query(sql)
     } catch (err: any) {
       let readableMessage = getReadableErrorMessage(
@@ -428,15 +433,12 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
         const hasDefault = def.COLUMN_DEFAULT
         const isAuto = !!autoColumns.find(col => col === name)
         const required = !!requiredColumns.find(col => col === name)
-        schema[name] = {
+        schema[name] = generateColumnDefinition({
           autocolumn: isAuto,
-          name: name,
-          constraints: {
-            presence: required && !isAuto && !hasDefault,
-          },
-          ...convertSqlType(def.DATA_TYPE),
+          name,
+          presence: required && !isAuto && !hasDefault,
           externalType: def.DATA_TYPE,
-        }
+        })
       }
       tables[tableName] = {
         _id: buildExternalTableId(datasourceId, tableName),
@@ -494,7 +496,7 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     return response.recordset || [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const schema = this.config.schema
     await this.connect()
     if (schema && schema !== DEFAULT_SCHEMA && json?.endpoint) {
@@ -502,8 +504,18 @@ class SqlServerIntegration extends Sql implements DatasourcePlus {
     }
     const operation = this._operation(json)
     const queryFn = (query: any, op: string) => this.internalQuery(query, op)
-    const processFn = (result: any) =>
-      result.recordset ? result.recordset : [{ [operation]: true }]
+    const processFn = (result: any) => {
+      if (json?.meta?.table && result.recordset) {
+        return this.convertJsonStringColumns(
+          json.meta.table,
+          result.recordset,
+          json.tableAliases
+        )
+      } else if (result.recordset) {
+        return result.recordset
+      }
+      return [{ [operation]: true }]
+    }
     return this.queryWithReturning(json, queryFn, processFn)
   }
 

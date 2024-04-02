@@ -1,9 +1,9 @@
 import { createRoutingView } from "../../db/views/staticViews"
 import { ViewName, getQueryIndex, UNICODE_MAX } from "../../db/utils"
 import { context } from "@budibase/backend-core"
-import { ScreenRouting } from "@budibase/types"
+import { ScreenRouting, Document } from "@budibase/types"
 
-type ScreenRoutesView = {
+interface ScreenRoutesView extends Document {
   id: string
   routing: ScreenRouting
 }

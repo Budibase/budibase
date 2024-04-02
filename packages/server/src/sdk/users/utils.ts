@@ -7,12 +7,17 @@ import {
   InternalTables,
 } from "../../db/utils"
 import isEqual from "lodash/isEqual"
-import { ContextUser, UserMetadata, User, Database } from "@budibase/types"
+import {
+  ContextUser,
+  UserMetadata,
+  Database,
+  ContextUserMetadata,
+} from "@budibase/types"
 
 export function combineMetadataAndUser(
   user: ContextUser,
   metadata: UserMetadata | UserMetadata[]
-) {
+): ContextUserMetadata | null {
   const metadataId = generateUserMetadataID(user._id!)
   const found = Array.isArray(metadata)
     ? metadata.find(doc => doc._id === metadataId)
@@ -51,33 +56,33 @@ export function combineMetadataAndUser(
   return null
 }
 
-export async function rawUserMetadata(db?: Database) {
+export async function rawUserMetadata(db?: Database): Promise<UserMetadata[]> {
   if (!db) {
     db = context.getAppDB()
   }
   return (
-    await db.allDocs(
+    await db.allDocs<UserMetadata>(
       getUserMetadataParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
-export async function fetchMetadata() {
+export async function fetchMetadata(): Promise<ContextUserMetadata[]> {
   const global = await getGlobalUsers()
   const metadata = await rawUserMetadata()
-  const users = []
+  const users: ContextUserMetadata[] = []
   for (let user of global) {
     // find the metadata that matches up to the global ID
-    const info = metadata.find(meta => meta._id.includes(user._id))
+    const info = metadata.find(meta => meta._id!.includes(user._id!))
     // remove these props, not for the correct DB
     users.push({
       ...user,
       ...info,
       tableId: InternalTables.USER_METADATA,
       // make sure the ID is always a local ID, not a global one
-      _id: generateUserMetadataID(user._id),
+      _id: generateUserMetadataID(user._id!),
     })
   }
   return users
@@ -90,9 +95,10 @@ export async function syncGlobalUsers() {
     if (!(await db.exists())) {
       continue
     }
-    const resp = await Promise.all([getGlobalUsers(), rawUserMetadata(db)])
-    const users = resp[0] as User[]
-    const metadata = resp[1] as UserMetadata[]
+    const [users, metadata] = await Promise.all([
+      getGlobalUsers(),
+      rawUserMetadata(db),
+    ])
     const toWrite = []
     for (let user of users) {
       const combined = combineMetadataAndUser(user, metadata)

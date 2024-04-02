@@ -1,16 +1,21 @@
-import {
-  AutoFieldDefaultNames,
-  AutoFieldSubTypes,
-  FieldTypes,
-  FormulaTypes,
-} from "../../constants"
+import { AutoFieldDefaultNames } from "../../constants"
 import { processStringSync } from "@budibase/string-templates"
 import {
   AutoColumnFieldMetadata,
   FieldSchema,
   Row,
   Table,
+  FormulaType,
+  AutoFieldSubType,
+  FieldType,
 } from "@budibase/types"
+import tracer from "dd-trace"
+import { context } from "@budibase/backend-core"
+
+interface FormulaOpts {
+  dynamic?: boolean
+  contextRows?: Row[]
+}
 
 /**
  * If the subtype has been lost for any reason this works out what
@@ -24,15 +29,15 @@ export function fixAutoColumnSubType(
   }
   // the columns which get auto generated
   if (column.name.endsWith(AutoFieldDefaultNames.CREATED_BY)) {
-    column.subtype = AutoFieldSubTypes.CREATED_BY
+    column.subtype = AutoFieldSubType.CREATED_BY
   } else if (column.name.endsWith(AutoFieldDefaultNames.UPDATED_BY)) {
-    column.subtype = AutoFieldSubTypes.UPDATED_BY
+    column.subtype = AutoFieldSubType.UPDATED_BY
   } else if (column.name.endsWith(AutoFieldDefaultNames.CREATED_AT)) {
-    column.subtype = AutoFieldSubTypes.CREATED_AT
+    column.subtype = AutoFieldSubType.CREATED_AT
   } else if (column.name.endsWith(AutoFieldDefaultNames.UPDATED_AT)) {
-    column.subtype = AutoFieldSubTypes.UPDATED_AT
+    column.subtype = AutoFieldSubType.UPDATED_AT
   } else if (column.name.endsWith(AutoFieldDefaultNames.AUTO_ID)) {
-    column.subtype = AutoFieldSubTypes.AUTO_ID
+    column.subtype = AutoFieldSubType.AUTO_ID
   }
   return column
 }
@@ -40,54 +45,64 @@ export function fixAutoColumnSubType(
 /**
  * Looks through the rows provided and finds formulas - which it then processes.
  */
-export function processFormulas(
+export async function processFormulas<T extends Row | Row[]>(
   table: Table,
-  rows: Row[] | Row,
-  { dynamic, contextRows }: any = { dynamic: true }
-) {
-  const single = !Array.isArray(rows)
-  let rowArray: Row[]
-  if (single) {
-    rowArray = [rows]
-    contextRows = contextRows ? [contextRows] : contextRows
-  } else {
-    rowArray = rows
-  }
-  for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.FORMULA) {
-      continue
-    }
+  inputRows: T,
+  { dynamic, contextRows }: FormulaOpts = { dynamic: true }
+): Promise<T> {
+  return tracer.trace("processFormulas", {}, async span => {
+    const numRows = Array.isArray(inputRows) ? inputRows.length : 1
+    span?.addTags({ table_id: table._id, dynamic, numRows })
+    const rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+    if (rows) {
+      // Ensure we have snippet context
+      await context.ensureSnippetContext()
 
-    const isStatic = schema.formulaType === FormulaTypes.STATIC
+      for (let [column, schema] of Object.entries(table.schema)) {
+        if (schema.type !== FieldType.FORMULA) {
+          continue
+        }
 
-    if (
-      schema.formula == null ||
-      (dynamic && isStatic) ||
-      (!dynamic && !isStatic)
-    ) {
-      continue
-    }
-    // iterate through rows and process formula
-    for (let i = 0; i < rowArray.length; i++) {
-      let row = rowArray[i]
-      let context = contextRows ? contextRows[i] : row
-      rowArray[i] = {
-        ...row,
-        [column]: processStringSync(schema.formula, context),
+        const isStatic = schema.formulaType === FormulaType.STATIC
+
+        if (
+          schema.formula == null ||
+          (dynamic && isStatic) ||
+          (!dynamic && !isStatic)
+        ) {
+          continue
+        }
+        // iterate through rows and process formula
+        for (let i = 0; i < rows.length; i++) {
+          let row = rows[i]
+          let context = contextRows ? contextRows[i] : row
+          let formula = schema.formula
+          rows[i] = {
+            ...row,
+            [column]: tracer.trace("processStringSync", {}, span => {
+              span?.addTags({ table_id: table._id, column, static: isStatic })
+              return processStringSync(formula, context)
+            }),
+          }
+        }
       }
     }
-  }
-  return single ? rowArray[0] : rowArray
+    return Array.isArray(inputRows) ? rows : rows[0]
+  })
 }
 
 /**
  * Processes any date columns and ensures that those without the ignoreTimezones
  * flag set are parsed as UTC rather than local time.
  */
-export function processDates(table: Table, rows: Row[]) {
-  let datesWithTZ = []
+export function processDates<T extends Row | Row[]>(
+  table: Table,
+  inputRows: T
+): T {
+  let rows = Array.isArray(inputRows) ? inputRows : [inputRows]
+  let datesWithTZ: string[] = []
   for (let [column, schema] of Object.entries(table.schema)) {
-    if (schema.type !== FieldTypes.DATETIME) {
+    if (schema.type !== FieldType.DATETIME) {
       continue
     }
     if (!schema.timeOnly && !schema.ignoreTimezones) {
@@ -102,5 +117,6 @@ export function processDates(table: Table, rows: Row[]) {
       }
     }
   }
-  return rows
+
+  return Array.isArray(inputRows) ? rows : rows[0]
 }

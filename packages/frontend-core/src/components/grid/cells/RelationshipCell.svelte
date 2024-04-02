@@ -1,27 +1,10 @@
-<script context="module">
-  // We can create a module level cache for all relationship cells to avoid
-  // having to fetch the table definition one time for each cell
-  let primaryDisplayCache = {}
-
-  const getPrimaryDisplayForTableId = async (API, tableId) => {
-    if (primaryDisplayCache[tableId]) {
-      return primaryDisplayCache[tableId]
-    }
-    const definition = await API.fetchTableDefinition(tableId)
-    const primaryDisplay =
-      definition?.primaryDisplay || definition?.schema?.[0]?.name
-    primaryDisplayCache[tableId] = primaryDisplay
-    return primaryDisplay
-  }
-</script>
-
 <script>
   import { getColor } from "../lib/utils"
   import { onMount, getContext } from "svelte"
   import { Icon, Input, ProgressCircle, clickOutside } from "@budibase/bbui"
   import { debounce } from "../../../utils/utils"
 
-  const { API, dispatch } = getContext("grid")
+  const { API, dispatch, cache } = getContext("grid")
 
   export let value
   export let api
@@ -147,7 +130,9 @@
     // Find the primary display for the related table
     if (!primaryDisplay) {
       searching = true
-      primaryDisplay = await getPrimaryDisplayForTableId(API, schema.tableId)
+      primaryDisplay = await cache.actions.getPrimaryDisplayForTableId(
+        schema.tableId
+      )
     }
 
     // Show initial list of results
@@ -195,7 +180,7 @@
   const toggleRow = async row => {
     if (value?.some(x => x._id === row._id)) {
       // If the row is already included, remove it and update the candidate
-      // row to be the the same position if possible
+      // row to be the same position if possible
       if (oneRowOnly) {
         await onChange([])
       } else {
@@ -247,6 +232,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="wrapper"
   class:editable
@@ -260,31 +247,29 @@
       class:wrap={editable || contentLines > 1}
       on:wheel={e => (focused ? e.stopPropagation() : null)}
     >
-      {#if Array.isArray(value) && value.length}
-        {#each value as relationship}
-          {#if relationship[primaryDisplay] || relationship.primaryDisplay}
-            <div class="badge">
-              <span
-                on:click={editable
-                  ? () => showRelationship(relationship._id)
-                  : null}
-              >
-                {readable(
-                  relationship[primaryDisplay] || relationship.primaryDisplay
-                )}
-              </span>
-              {#if editable}
-                <Icon
-                  name="Close"
-                  size="XS"
-                  hoverable
-                  on:click={() => toggleRow(relationship)}
-                />
-              {/if}
-            </div>
-          {/if}
-        {/each}
-      {/if}
+      {#each value || [] as relationship}
+        {#if relationship[primaryDisplay] || relationship.primaryDisplay}
+          <div class="badge">
+            <span
+              on:click={editable
+                ? () => showRelationship(relationship._id)
+                : null}
+            >
+              {readable(
+                relationship[primaryDisplay] || relationship.primaryDisplay
+              )}
+            </span>
+            {#if editable}
+              <Icon
+                name="Close"
+                size="XS"
+                hoverable
+                on:click={() => toggleRow(relationship)}
+              />
+            {/if}
+          </div>
+        {/if}
+      {/each}
       {#if editable}
         <div class="add" on:click={open}>
           <Icon name="Add" size="S" />
@@ -320,7 +305,7 @@
         <div class="searching">
           <ProgressCircle size="S" />
         </div>
-      {:else if Array.isArray(searchResults) && searchResults.length}
+      {:else if searchResults?.length}
         <div class="results">
           {#each searchResults as row, idx}
             <div

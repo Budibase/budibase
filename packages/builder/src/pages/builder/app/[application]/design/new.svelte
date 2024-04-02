@@ -1,9 +1,9 @@
 <script>
   import NewScreen from "./_components/NewScreen/index.svelte"
-  import { store } from "builderStore"
+  import { screenStore } from "stores/builder"
   import { goto } from "@roxi/routify"
 
-  $: onClose = getOnClose($store)
+  $: onClose = getOnClose($screenStore)
 
   const getOnClose = ({ screens, selectedScreenId }) => {
     if (!screens?.length) {

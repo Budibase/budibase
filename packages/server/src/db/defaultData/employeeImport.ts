@@ -13,6 +13,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Senior"],
     "Start Date": "2015-02-12T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Mandy",
@@ -28,6 +29,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Senior"],
     "Start Date": "2017-09-10T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Holly",
@@ -43,6 +45,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Senior"],
     "Start Date": "2022-02-12T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Francis",
@@ -58,6 +61,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Apprentice"],
     "Start Date": "2021-03-10T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Richard",
@@ -73,6 +77,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Apprentice"],
     "Start Date": "2020-07-09T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Donald",
@@ -88,6 +93,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Junior"],
     "Start Date": "2018-04-13T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Maria",
@@ -103,6 +109,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Manager"],
     "Start Date": "2016-05-22T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Suzy",
@@ -118,6 +125,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Senior", "Manager"],
     "Start Date": "2019-05-01T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Patrick",
@@ -133,6 +141,7 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Apprentice"],
     "Start Date": "2014-08-30T12:00:00.000",
+    "Badge Photo": [],
   },
   {
     "First Name": "Brayden",
@@ -148,5 +157,6 @@ export const employeeImport = [
     type: "row",
     "Employee Level": ["Contractor"],
     "Start Date": "2022-11-09T12:00:00.000",
+    "Badge Photo": [],
   },
 ]

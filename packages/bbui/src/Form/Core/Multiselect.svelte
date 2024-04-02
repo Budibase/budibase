@@ -6,7 +6,6 @@
   export let id = null
   export let placeholder = null
   export let disabled = false
-  export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -16,8 +15,6 @@
   export let autoWidth = false
   export let searchTerm = null
   export let customPopoverHeight
-  export let customPopoverOffsetBelow
-  export let customPopoverMaxHeight
   export let open = false
   export let loading
 
@@ -84,7 +81,6 @@
 <Picker
   on:loadMore
   {id}
-  {error}
   {disabled}
   {readonly}
   {fieldText}
@@ -100,7 +96,5 @@
   {sort}
   {autoWidth}
   {customPopoverHeight}
-  {customPopoverOffsetBelow}
-  {customPopoverMaxHeight}
   {loading}
 />

@@ -18,8 +18,12 @@ export const ObjectStoreBuckets = {
 }
 
 const bbTmp = join(tmpdir(), ".budibase")
-if (!fs.existsSync(bbTmp)) {
+try {
   fs.mkdirSync(bbTmp)
+} catch (e: any) {
+  if (e.code !== "EEXIST") {
+    throw e
+  }
 }
 
 export function budibaseTempDir() {

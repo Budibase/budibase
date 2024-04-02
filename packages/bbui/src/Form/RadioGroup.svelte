@@ -13,6 +13,7 @@
   export let getOptionLabel = option => extractProperty(option, "label")
   export let getOptionValue = option => extractProperty(option, "value")
   export let getOptionTitle = option => extractProperty(option, "label")
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -27,7 +28,7 @@
   }
 </script>
 
-<Field {label} {labelPosition} {error}>
+<Field {helpText} {label} {labelPosition} {error}>
   <RadioGroup
     {error}
     {disabled}

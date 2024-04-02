@@ -28,6 +28,8 @@ export enum AutomationCustomIOType {
   TRIGGER_SCHEMA = "triggerSchema",
   CRON = "cron",
   WEBHOOK_URL = "webhookUrl",
+  AUTOMATION = "automation",
+  AUTOMATION_FIELDS = "automationFields",
 }
 
 export enum AutomationTriggerStepId {
@@ -61,11 +63,13 @@ export enum AutomationActionStepId {
   LOOP = "LOOP",
   COLLECT = "COLLECT",
   OPENAI = "OPENAI",
+  TRIGGER_AUTOMATION_RUN = "TRIGGER_AUTOMATION_RUN",
   // these used to be lowercase step IDs, maintain for backwards compat
   discord = "discord",
   slack = "slack",
   zapier = "zapier",
   integromat = "integromat",
+  n8n = "n8n",
 }
 
 export interface EmailInvite {

@@ -2,7 +2,7 @@ version: "3.8"
 services:
   db:
     container_name: postgres
-    image: postgres:15-bullseye
+    image: postgres:16.1-bullseye
     restart: unless-stopped
     environment:
       POSTGRES_USER: root

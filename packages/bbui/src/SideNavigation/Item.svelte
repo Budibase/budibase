@@ -1,7 +1,9 @@
 <script>
   import { getContext } from "svelte"
+
   const multilevel = getContext("sidenav-type")
   import Badge from "../Badge/Badge.svelte"
+
   export let href = ""
   export let external = false
   export let heading = ""
@@ -11,6 +13,8 @@
   export let badge = ""
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 <li
   class="spectrum-SideNav-item"
   class:is-selected={selected}

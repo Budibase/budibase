@@ -5,6 +5,7 @@ import { structures } from "../../../tests"
 import { ContextUser, ServiceType } from "@budibase/types"
 import { doInAppContext } from "../../context"
 import env from "../../environment"
+
 env._set("SERVICE_TYPE", ServiceType.APPS)
 
 const appId = "app_aaa"
@@ -23,13 +24,13 @@ function buildUserCtx(user: ContextUser) {
 }
 
 function passed(throwFn: jest.Func, nextFn: jest.Func) {
-  expect(throwFn).not.toBeCalled()
-  expect(nextFn).toBeCalled()
+  expect(throwFn).not.toHaveBeenCalled()
+  expect(nextFn).toHaveBeenCalled()
 }
 
 function threw(throwFn: jest.Func) {
   // cant check next, the throw function doesn't actually throw - so it still continues
-  expect(throwFn).toBeCalled()
+  expect(throwFn).toHaveBeenCalled()
 }
 
 describe("adminOnly middleware", () => {

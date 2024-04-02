@@ -13,7 +13,7 @@
   } from "@budibase/bbui"
   import { onMount, createEventDispatcher } from "svelte"
   import { FIELDS } from "constants/backend"
-  import { generate } from "builderStore/schemaGenerator"
+  import { generate } from "helpers/schemaGenerator"
 
   export let schema = {}
   export let json

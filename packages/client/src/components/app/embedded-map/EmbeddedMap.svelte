@@ -307,7 +307,7 @@
       // Reset view
       resetView()
     } catch (e) {
-      console.log("There was a problem with the map", e)
+      console.error("There was a problem with the map", e)
     }
   }
 

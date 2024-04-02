@@ -1,10 +1,12 @@
-builder/*
 .data/
 .temp/
 packages/server/runtime_apps/
 .idea/
 bb-airgapped.tar.gz
 *.iml
+
+packages/server/build/oldClientVersions/**/*
+packages/builder/src/components/deploy/clientVersions.json
 
 # Logs
 logs
@@ -41,8 +43,11 @@ bower_components
 build/Release
 
 # Dependency directories
-/node_modules/
 jspm_packages/
+*.min.js
+*.map
+node_modules/
+dist/
 
 # TypeScript v1 declaration files
 typings/
@@ -105,3 +110,4 @@ budibase-component
 budibase-datasource
 
 *.iml
+.nx

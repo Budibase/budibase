@@ -2,27 +2,48 @@
   import DraggableList from "../DraggableList/DraggableList.svelte"
   import ButtonSetting from "./ButtonSetting.svelte"
   import { createEventDispatcher } from "svelte"
-  import { store } from "builderStore"
   import { Helpers } from "@budibase/bbui"
+  import { componentStore } from "stores/builder"
+  import { getEventContextBindings } from "dataBinding"
+  import { cloneDeep, isEqual } from "lodash/fp"
 
+  export let componentInstance
   export let componentBindings
   export let bindings
   export let value
+  export let key
+  export let nested
+  export let max
+  export let context
 
   const dispatch = createEventDispatcher()
 
   let focusItem
+  let cachedValue
 
-  $: buttonList = sanitizeValue(value) || []
-  $: buttonCount = buttonList.length
-  $: itemProps = {
-    componentBindings: componentBindings || [],
-    bindings,
-    removeButton,
-    canRemove: buttonCount > 1,
+  $: if (!isEqual(value, cachedValue)) {
+    cachedValue = cloneDeep(value)
   }
 
+  $: buttonList = sanitizeValue(cachedValue) || []
+  $: buttonCount = buttonList.length
+  $: eventContextBindings = getEventContextBindings({
+    componentInstance,
+    settingKey: key,
+  })
+  $: allBindings = [...bindings, ...eventContextBindings]
+  $: itemProps = {
+    componentBindings: componentBindings || [],
+    bindings: allBindings,
+    removeButton,
+    nested,
+  }
+  $: canAddButtons = max == null || buttonList.length < max
+
   const sanitizeValue = val => {
+    if (!Array.isArray(val)) {
+      return null
+    }
     return val?.map(button => {
       return button._component ? button : buildPseudoInstance(button)
     })
@@ -47,7 +68,7 @@
   }
 
   const buildPseudoInstance = cfg => {
-    return store.actions.components.createInstance(
+    return componentStore.createInstance(
       `@budibase/standard-components/button`,
       {
         _instanceName: Helpers.uuid(),
@@ -74,6 +95,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="button-configuration">
   {#if buttonCount}
     <DraggableList
@@ -86,11 +109,16 @@
       focus={focusItem}
       draggable={buttonCount > 1}
     />
-
-    <div class="list-footer" on:click={addButton}>
-      <div class="add-button">Add button</div>
-    </div>
   {/if}
+
+  <div
+    class="list-footer"
+    class:disabled={!canAddButtons}
+    on:click={addButton}
+    class:empty={!buttonCount}
+  >
+    <div class="add-button">Add button</div>
+  </div>
 </div>
 
 <style>
@@ -120,15 +148,21 @@
       var(--spectrum-table-border-color, var(--spectrum-alias-border-color-mid));
     cursor: pointer;
   }
-
-  .add-button {
-    margin: var(--spacing-s);
+  .list-footer.empty {
+    border-radius: 4px;
   }
-
+  .list-footer.disabled {
+    color: var(--spectrum-global-color-gray-500);
+    pointer-events: none;
+  }
   .list-footer:hover {
     background-color: var(
       --spectrum-table-row-background-color-hover,
       var(--spectrum-alias-highlight-hover)
     );
+  }
+
+  .add-button {
+    margin: var(--spacing-s);
   }
 </style>

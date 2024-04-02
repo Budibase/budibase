@@ -6,8 +6,8 @@
   export let direction = "vertical"
   export let value = null
   export let options = []
-  export let error = null
   export let disabled = false
+  export let readonly = false
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
   export let getOptionTitle = option => option
@@ -39,7 +39,7 @@
       <div
         title={getOptionTitle(option)}
         class="spectrum-Radio spectrum-FieldGroup-item spectrum-Radio--emphasized"
-        class:is-invalid={!!error}
+        class:readonly
       >
         <input
           on:change={onChange}
@@ -61,5 +61,8 @@
 <style>
   .spectrum-Radio-input {
     opacity: 0;
+  }
+  .readonly {
+    pointer-events: none;
   }
 </style>

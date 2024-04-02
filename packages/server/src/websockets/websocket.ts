@@ -1,10 +1,9 @@
-import { Server } from "socket.io"
+import { Server, Socket } from "socket.io"
 import http from "http"
 import Koa from "koa"
 import { userAgent } from "koa-useragent"
 import { auth, Header, redis } from "@budibase/backend-core"
 import { createAdapter } from "@socket.io/redis-adapter"
-import { Socket } from "socket.io"
 import { getSocketPubSubClients } from "../utilities/redis"
 import { SocketEvent, SocketSessionTTL } from "@budibase/shared-core"
 import { SocketSession } from "@budibase/types"
@@ -263,10 +262,12 @@ export class BaseSocket {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async onConnect(socket: Socket) {
     // Override
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async onDisconnect(socket: Socket) {
     // Override
   }

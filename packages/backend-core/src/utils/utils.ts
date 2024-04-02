@@ -11,7 +11,7 @@ import {
   TenantResolutionStrategy,
 } from "@budibase/types"
 import type { SetOption } from "cookies"
-const jwt = require("jsonwebtoken")
+import jwt, { Secret } from "jsonwebtoken"
 
 const APP_PREFIX = DocumentType.APP + SEPARATOR
 const PROD_APP_PREFIX = "/app/"
@@ -31,8 +31,8 @@ export async function resolveAppUrl(ctx: Ctx) {
   const appUrl = ctx.path.split("/")[2]
   let possibleAppUrl = `/${appUrl.toLowerCase()}`
 
-  let tenantId: string | null = context.getTenantId()
-  if (env.MULTI_TENANCY) {
+  let tenantId: string | undefined = context.getTenantId()
+  if (!env.isDev() && env.MULTI_TENANCY) {
     // always use the tenant id from the subdomain in multi tenancy
     // this ensures the logged-in user tenant id doesn't overwrite
     // e.g. in the case of viewing a public app while already logged-in to another tenant
@@ -41,7 +41,7 @@ export async function resolveAppUrl(ctx: Ctx) {
     })
   }
 
-  // search prod apps for a url that matches
+  // search prod apps for an url that matches
   const apps: App[] = await context.doInTenant(
     tenantId,
     () => getAllApps({ dev: false }) as Promise<App[]>
@@ -59,10 +59,7 @@ export function isServingApp(ctx: Ctx) {
     return true
   }
   // prod app
-  if (ctx.path.startsWith(PROD_APP_PREFIX)) {
-    return true
-  }
-  return false
+  return ctx.path.startsWith(PROD_APP_PREFIX)
 }
 
 export function isServingBuilder(ctx: Ctx): boolean {
@@ -99,7 +96,7 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   }
 
   // look in the path
-  const pathId = parseAppIdFromUrl(ctx.path)
+  const pathId = parseAppIdFromUrlPath(ctx.path)
   if (!appId && pathId) {
     appId = confirmAppId(pathId)
   }
@@ -119,34 +116,37 @@ export async function getAppIdFromCtx(ctx: Ctx) {
   // referer header is present from a builder redirect
   const referer = ctx.request.headers.referer
   if (!appId && referer?.includes(BUILDER_APP_PREFIX)) {
-    const refererId = parseAppIdFromUrl(ctx.request.headers.referer)
+    const refererId = parseAppIdFromUrlPath(ctx.request.headers.referer)
     appId = confirmAppId(refererId)
   }
 
   return appId
 }
 
-function parseAppIdFromUrl(url?: string) {
+function parseAppIdFromUrlPath(url?: string) {
   if (!url) {
     return
   }
-  return url.split("/").find(subPath => subPath.startsWith(APP_PREFIX))
+  return url
+    .split("?")[0] // Remove any possible query string
+    .split("/")
+    .find(subPath => subPath.startsWith(APP_PREFIX))
 }
 
 /**
  * opens the contents of the specified encrypted JWT.
  * @return the contents of the token.
  */
-export function openJwt(token: string) {
+export function openJwt<T>(token?: string): T | undefined {
   if (!token) {
-    return token
+    return undefined
   }
   try {
-    return jwt.verify(token, env.JWT_SECRET)
+    return jwt.verify(token, env.JWT_SECRET as Secret) as T
   } catch (e) {
     if (env.JWT_SECRET_FALLBACK) {
       // fallback to enable rotation
-      return jwt.verify(token, env.JWT_SECRET_FALLBACK)
+      return jwt.verify(token, env.JWT_SECRET_FALLBACK) as T
     } else {
       throw e
     }
@@ -158,13 +158,9 @@ export function isValidInternalAPIKey(apiKey: string) {
     return true
   }
   // fallback to enable rotation
-  if (
-    env.INTERNAL_API_KEY_FALLBACK &&
-    env.INTERNAL_API_KEY_FALLBACK === apiKey
-  ) {
-    return true
-  }
-  return false
+  return !!(
+    env.INTERNAL_API_KEY_FALLBACK && env.INTERNAL_API_KEY_FALLBACK === apiKey
+  )
 }
 
 /**
@@ -172,14 +168,14 @@ export function isValidInternalAPIKey(apiKey: string) {
  * @param ctx The request which is to be manipulated.
  * @param name The name of the cookie to get.
  */
-export function getCookie(ctx: Ctx, name: string) {
+export function getCookie<T>(ctx: Ctx, name: string) {
   const cookie = ctx.cookies.get(name)
 
   if (!cookie) {
-    return cookie
+    return undefined
   }
 
-  return openJwt(cookie)
+  return openJwt<T>(cookie)
 }
 
 /**
@@ -196,7 +192,7 @@ export function setCookie(
   opts = { sign: true }
 ) {
   if (value && opts && opts.sign) {
-    value = jwt.sign(value, env.JWT_SECRET)
+    value = jwt.sign(value, env.JWT_SECRET as Secret)
   }
 
   const config: SetOption = {
@@ -236,4 +232,18 @@ export function timeout(timeMs: number) {
 
 export function isAudited(event: Event) {
   return !!AuditedEventFriendlyName[event]
+}
+
+export function hasCircularStructure(json: any) {
+  if (typeof json !== "object") {
+    return false
+  }
+  try {
+    JSON.stringify(json)
+  } catch (err) {
+    if (err instanceof Error && err?.message.includes("circular structure")) {
+      return true
+    }
+  }
+  return false
 }

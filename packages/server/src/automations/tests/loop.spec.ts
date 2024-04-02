@@ -3,27 +3,28 @@ import * as triggers from "../triggers"
 import { loopAutomation } from "../../tests/utilities/structures"
 import { context } from "@budibase/backend-core"
 import * as setup from "./utilities"
+import { Table } from "@budibase/types"
+import { LoopInput, LoopStepType } from "../../definitions/automations"
 
 describe("Attempt to run a basic loop automation", () => {
   let config = setup.getConfig(),
-    table: any,
-    row: any
+    table: Table
 
   beforeEach(async () => {
     await automation.init()
     await config.init()
     table = await config.createTable()
-    row = await config.createRow()
+    await config.createRow()
   })
 
   afterAll(setup.afterAll)
 
-  async function runLoop(loopOpts?: any) {
+  async function runLoop(loopOpts?: LoopInput) {
     const appId = config.getAppId()
     return await context.doInAppContext(appId, async () => {
       const params = { fields: { appId } }
       return await triggers.externalTrigger(
-        loopAutomation(table._id, loopOpts),
+        loopAutomation(table._id!, loopOpts),
         params,
         { getResponses: true }
       )
@@ -37,9 +38,17 @@ describe("Attempt to run a basic loop automation", () => {
 
   it("test a loop with a string", async () => {
     const resp = await runLoop({
-      type: "String",
+      option: LoopStepType.STRING,
       binding: "a,b,c",
     })
     expect(resp.steps[2].outputs.iterations).toBe(3)
+  })
+
+  it("test a loop with a binding that returns an integer", async () => {
+    const resp = await runLoop({
+      option: LoopStepType.ARRAY,
+      binding: "{{ 1 }}",
+    })
+    expect(resp.steps[2].outputs.iterations).toBe(1)
   })
 })

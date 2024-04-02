@@ -13,6 +13,7 @@ export enum PermissionType {
   AUTOMATION = "automation",
   WEBHOOK = "webhook",
   BUILDER = "builder",
+  CREATOR = "creator",
   GLOBAL_BUILDER = "globalBuilder",
   QUERY = "query",
   VIEW = "view",

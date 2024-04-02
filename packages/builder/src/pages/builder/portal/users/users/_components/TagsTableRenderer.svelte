@@ -1,5 +1,6 @@
 <script>
   import { Tag, Tags } from "@budibase/bbui"
+
   export let value
 
   const displayLimit = 5

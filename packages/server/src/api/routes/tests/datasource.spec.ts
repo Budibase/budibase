@@ -7,6 +7,8 @@ import sdk from "../../../sdk"
 
 import tk from "timekeeper"
 import { mocks } from "@budibase/backend-core/tests"
+import { QueryPreview } from "@budibase/types"
+
 tk.freeze(mocks.date.MOCK_DATE)
 
 let { basicDatasource } = setup.structures
@@ -38,7 +40,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Test")
       expect(res.body.errors).toEqual({})
-      expect(events.datasource.created).toBeCalledTimes(1)
+      expect(events.datasource.created).toHaveBeenCalledTimes(1)
     })
   })
 
@@ -54,7 +56,7 @@ describe("/datasources", () => {
 
       expect(res.body.datasource.name).toEqual("Updated Test")
       expect(res.body.errors).toBeUndefined()
-      expect(events.datasource.updated).toBeCalledTimes(1)
+      expect(events.datasource.updated).toHaveBeenCalledTimes(1)
     })
 
     describe("dynamic variables", () => {
@@ -62,26 +64,29 @@ describe("/datasources", () => {
         datasource: any,
         fields: { path: string; queryString: string }
       ) {
-        return config.previewQuery(
-          request,
-          config,
-          datasource,
+        const queryPreview: QueryPreview = {
           fields,
-          undefined,
-          ""
-        )
+          datasourceId: datasource._id,
+          parameters: [],
+          transformer: null,
+          queryVerb: "read",
+          name: datasource.name,
+          schema: {},
+          readable: true,
+        }
+        return config.api.query.previewQuery(queryPreview)
       }
 
       it("should invalidate changed or removed variables", async () => {
         const { datasource, query } = await config.dynamicVariableDatasource()
         // preview once to cache variables
         await preview(datasource, {
-          path: "www.test.com",
+          path: "www.example.com",
           queryString: "test={{ variable3 }}",
         })
         // check variables in cache
         let contents = await checkCacheForDynamicVariable(
-          query._id,
+          query._id!,
           "variable3"
         )
         expect(contents.rows.length).toEqual(1)
@@ -97,7 +102,7 @@ describe("/datasources", () => {
         expect(res.body.errors).toBeUndefined()
 
         // check variables no longer in cache
-        contents = await checkCacheForDynamicVariable(query._id, "variable3")
+        contents = await checkCacheForDynamicVariable(query._id!, "variable3")
         expect(contents).toBe(null)
       })
     })
@@ -191,7 +196,7 @@ describe("/datasources", () => {
         .expect(200)
 
       expect(res.body.length).toEqual(1)
-      expect(events.datasource.deleted).toBeCalledTimes(1)
+      expect(events.datasource.deleted).toHaveBeenCalledTimes(1)
     })
 
     it("should apply authorization to endpoint", async () => {

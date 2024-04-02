@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from "svelte"
-  import { queries } from "stores/backend"
-  import { Select } from "@budibase/bbui"
+  import { queries } from "stores/builder"
+  import { Select, Label } from "@budibase/bbui"
   import DrawerBindableInput from "../../common/bindings/DrawerBindableInput.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
 
@@ -27,42 +27,55 @@
   $: if (value?.queryId == null) value = { queryId: "" }
 </script>
 
-<div class="block-field">
-  <Select
-    label="Query"
-    on:change={onChangeQuery}
-    value={value.queryId}
-    options={$queries.list}
-    getOptionValue={query => query._id}
-    getOptionLabel={query => query.name}
-  />
+<div class="schema-field">
+  <Label>Query</Label>
+  <div class="field-width">
+    <Select
+      on:change={onChangeQuery}
+      value={value.queryId}
+      options={$queries.list}
+      getOptionValue={query => query._id}
+      getOptionLabel={query => query.name}
+    />
+  </div>
 </div>
 
 {#if parameters.length}
-  <div class="schema-fields">
-    {#each parameters as field}
-      <DrawerBindableInput
-        panel={AutomationBindingPanel}
-        extraThin
-        value={value[field.name]}
-        on:change={e => onChange(e, field)}
-        label={field.name}
-        type="string"
-        {bindings}
-        fillWidth={true}
-        updateOnChange={false}
-      />
-    {/each}
-  </div>
+  {#each parameters as field}
+    <div class="schema-field">
+      <Label>{field.name}</Label>
+      <div class="field-width">
+        <DrawerBindableInput
+          panel={AutomationBindingPanel}
+          extraThin
+          value={value[field.name]}
+          on:change={e => onChange(e, field)}
+          type="string"
+          {bindings}
+          updateOnChange={false}
+        />
+      </div>
+    </div>
+  {/each}
 {/if}
 
 <style>
-  .schema-fields {
-    display: grid;
-    grid-gap: var(--spacing-xl);
-    margin-top: var(--spacing-xl);
+  .field-width {
+    width: 320px;
   }
-  .schema-fields :global(label) {
+
+  .schema-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    margin-bottom: 10px;
+  }
+
+  .schema-field :global(label) {
     text-transform: capitalize;
   }
 </style>

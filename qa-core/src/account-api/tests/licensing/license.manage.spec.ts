@@ -1,6 +1,7 @@
 import TestConfiguration from "../../config/TestConfiguration"
 import * as fixtures from "../../fixtures"
 import { Hosting, PlanType } from "@budibase/types"
+
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 describe("license management", () => {
@@ -35,21 +36,22 @@ describe("license management", () => {
     const [plansRes, planBody] = await config.api.licenses.getPlans()
 
     // Select priceId from premium plan
-    let premiumPriceId = null
-    let businessPriceId = ""
+    let premiumPrice = null
+    let businessPriceId: ""
     for (const plan of planBody) {
-      if (plan.type === PlanType.PREMIUM) {
-        premiumPriceId = plan.prices[0].priceId
+      if (plan.type === PlanType.PREMIUM_PLUS) {
+        premiumPrice = plan.prices[0]
       }
-      if (plan.type === PlanType.BUSINESS) {
+      if (plan.type === PlanType.ENTERPRISE_BASIC) {
         businessPriceId = plan.prices[0].priceId
       }
     }
 
     // Create checkout session for price
-    const checkoutSessionRes = await config.api.stripe.createCheckoutSession(
-      premiumPriceId
-    )
+    const checkoutSessionRes = await config.api.stripe.createCheckoutSession({
+      id: premiumPrice.priceId,
+      type: premiumPrice.type,
+    })
     const checkoutSessionUrl = checkoutSessionRes[1].url
     expect(checkoutSessionUrl).toContain("checkout.stripe.com")
 
@@ -83,7 +85,7 @@ describe("license management", () => {
       customer: customer.id,
       items: [
         {
-          price: premiumPriceId,
+          price: premiumPrice.priceId,
           quantity: 1,
         },
       ],
@@ -96,7 +98,7 @@ describe("license management", () => {
       await config.loginAsAccount(createAccountRequest)
       await config.api.stripe.linkStripeCustomer(account.accountId, customer.id)
       const [_, selfBodyPremium] = await config.api.accounts.self()
-      expect(selfBodyPremium.license.plan.type).toBe(PlanType.PREMIUM)
+      expect(selfBodyPremium.license.plan.type).toBe(PlanType.PREMIUM_PLUS)
 
       // Create portal session - Check URL
       const [portalRes, portalSessionBody] =
@@ -108,7 +110,7 @@ describe("license management", () => {
 
       // License updated to Business
       const [selfRes, selfBodyBusiness] = await config.api.accounts.self()
-      expect(selfBodyBusiness.license.plan.type).toBe(PlanType.BUSINESS)
+      expect(selfBodyBusiness.license.plan.type).toBe(PlanType.ENTERPRISE_BASIC)
     })
   })
 })

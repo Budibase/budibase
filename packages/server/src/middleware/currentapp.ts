@@ -5,18 +5,25 @@ import {
   tenancy,
   context,
   users,
+  auth,
 } from "@budibase/backend-core"
 import { generateUserMetadataID, isDevAppID } from "../db/utils"
 import { getCachedSelf } from "../utilities/global"
 import env from "../environment"
 import { isWebhookEndpoint } from "./utils"
 import { UserCtx, ContextUser } from "@budibase/types"
+import tracer from "dd-trace"
 
 export default async (ctx: UserCtx, next: any) => {
   // try to get the appID from the request
   let requestAppId = await utils.getAppIdFromCtx(ctx)
   if (!requestAppId) {
     return next()
+  }
+
+  if (requestAppId) {
+    const span = tracer.scope().active()
+    span?.setTag("appId", requestAppId)
   }
 
   // deny access to application preview
@@ -69,28 +76,42 @@ export default async (ctx: UserCtx, next: any) => {
     return next()
   }
 
-  return context.doInAppContext(appId, async () => {
-    // if the user not in the right tenant then make sure they have no permissions
-    // need to judge this only based on the request app ID,
-    if (
-      env.MULTI_TENANCY &&
-      ctx.user?._id &&
-      requestAppId &&
-      !tenancy.isUserInAppTenant(requestAppId, ctx.user)
-    ) {
-      // don't error, simply remove the users rights (they are a public user)
-      ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
-      ctx.isAuthenticated = false
-      roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+  if (ctx.user) {
+    const span = tracer.scope().active()
+    if (ctx.user._id) {
+      span?.setTag("userId", ctx.user._id)
     }
+    span?.setTag("tenantId", ctx.user.tenantId)
+  }
 
+  const userId = ctx.user ? generateUserMetadataID(ctx.user._id!) : undefined
+
+  // if the user is not in the right tenant then make sure to wipe their cookie
+  // also cleanse any information about them that has been allocated
+  // this avoids apps making calls to say the worker which are cross tenant,
+  // we simply remove the authentication
+  if (
+    env.MULTI_TENANCY &&
+    userId &&
+    requestAppId &&
+    !tenancy.isUserInAppTenant(requestAppId, ctx.user)
+  ) {
+    // clear out the user
+    ctx.user = users.cleanseUserObject(ctx.user) as ContextUser
+    ctx.isAuthenticated = false
+    roleId = roles.BUILTIN_ROLE_IDS.PUBLIC
+    // remove the cookie, so future calls are public
+    await auth.platformLogout({
+      ctx,
+      userId,
+    })
+  }
+
+  return context.doInAppContext(appId, async () => {
     ctx.appId = appId
     if (roleId) {
       ctx.roleId = roleId
       const globalId = ctx.user ? ctx.user._id : undefined
-      const userId = ctx.user
-        ? generateUserMetadataID(ctx.user._id!)
-        : undefined
       ctx.user = {
         ...ctx.user!,
         // override userID with metadata one

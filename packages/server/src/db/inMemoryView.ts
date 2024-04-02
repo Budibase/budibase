@@ -1,13 +1,14 @@
 import newid from "./newid"
-import { Row, View, Document } from "@budibase/types"
+import { Row, Document, DBView } from "@budibase/types"
 
 // bypass the main application db config
 // use in memory pouchdb directly
 import { db as dbCore } from "@budibase/backend-core"
+
 const Pouch = dbCore.getPouch({ inMemory: true })
 
 export async function runView(
-  view: View,
+  view: DBView,
   calculation: string,
   group: boolean,
   data: Row[]

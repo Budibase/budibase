@@ -8,6 +8,7 @@
   export let id = null
   export let fullScreenOffset = 0
   export let disabled = false
+  export let readonly = false
   export let easyMDEOptions
 
   const dispatch = createEventDispatcher()
@@ -18,7 +19,10 @@
   // Ensure the value is updated if the value prop changes outside the editor's
   // control
   $: checkValue(value)
-  $: mde?.codemirror.on("change", debouncedUpdate)
+  $: mde?.codemirror.on("blur", update)
+  $: if (readonly || disabled) {
+    mde?.togglePreview()
+  }
 
   const checkValue = val => {
     if (mde && val !== latestValue) {
@@ -26,21 +30,10 @@
     }
   }
 
-  const debounce = (fn, interval) => {
-    let timeout
-    return () => {
-      clearTimeout(timeout)
-      timeout = setTimeout(fn, interval)
-    }
-  }
-
   const update = () => {
     latestValue = mde.value()
     dispatch("change", latestValue)
   }
-
-  // Debounce the update function to avoid spamming it constantly
-  const debouncedUpdate = debounce(update, 250)
 </script>
 
 {#key height}
@@ -54,6 +47,7 @@
     easyMDEOptions={{
       initialValue: value,
       placeholder,
+      toolbar: disabled || readonly ? false : undefined,
       ...easyMDEOptions,
     }}
   />

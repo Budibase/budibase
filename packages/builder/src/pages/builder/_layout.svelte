@@ -1,6 +1,6 @@
 <script>
   import { isActive, redirect, params } from "@roxi/routify"
-  import { admin, auth, licensing } from "stores/portal"
+  import { admin, auth, licensing, navigation } from "stores/portal"
   import { onMount } from "svelte"
   import { CookieUtils, Constants } from "@budibase/frontend-core"
   import { API } from "api"
@@ -16,6 +16,8 @@
   $: user = $auth.user
 
   $: useAccountPortal = cloud && !$admin.disableAccountPortal
+
+  navigation.actions.init($redirect)
 
   const validateTenantId = async () => {
     const host = window.location.host
@@ -68,6 +70,10 @@
     try {
       await auth.getSelf()
       await admin.init()
+
+      if ($admin.maintenance.length > 0) {
+        $redirect("./maintenance")
+      }
 
       if ($auth.user) {
         await licensing.init()

@@ -15,6 +15,8 @@
   $: active = prop && (bool ? !!currentValue : currentValue === value)
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   {title}
   class:rotate

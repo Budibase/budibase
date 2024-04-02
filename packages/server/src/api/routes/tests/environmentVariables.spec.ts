@@ -1,4 +1,5 @@
 const pg = require("pg")
+
 jest.mock("pg", () => {
   return {
     Client: jest.fn().mockImplementation(() => ({
@@ -13,6 +14,8 @@ jest.mock("pg", () => {
 import * as setup from "./utilities"
 import { mocks } from "@budibase/backend-core/tests"
 import { env, events } from "@budibase/backend-core"
+import { QueryPreview } from "@budibase/types"
+
 const structures = setup.structures
 
 env._set("ENCRYPTION_KEY", "budibase")
@@ -118,26 +121,32 @@ describe("/api/env/variables", () => {
       .expect(200)
     expect(response.body.datasource._id).toBeDefined()
 
-    const query = {
+    const queryPreview: QueryPreview = {
       datasourceId: response.body.datasource._id,
-      parameters: {},
+      parameters: [],
       fields: {},
       queryVerb: "read",
       name: response.body.datasource.name,
+      transformer: null,
+      schema: {},
+      readable: true,
     }
     const res = await request
       .post(`/api/queries/preview`)
-      .send(query)
+      .send(queryPreview)
       .set(config.defaultHeaders())
       .expect("Content-Type", /json/)
       .expect(200)
     expect(res.body.rows.length).toEqual(0)
-    expect(events.query.previewed).toBeCalledTimes(1)
+    expect(events.query.previewed).toHaveBeenCalledTimes(1)
     // API doesn't include config in response
     delete response.body.datasource.config
-    expect(events.query.previewed).toBeCalledWith(
+    expect(events.query.previewed).toHaveBeenCalledWith(
       response.body.datasource,
-      query
+      {
+        ...queryPreview,
+        nullDefaultSupport: true,
+      }
     )
     expect(pg.Client).toHaveBeenCalledWith({ password: "test", ssl: undefined })
   })

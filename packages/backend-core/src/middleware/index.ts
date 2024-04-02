@@ -2,6 +2,7 @@ export * as local from "./passport/local"
 export * as google from "./passport/sso/google"
 export * as oidc from "./passport/sso/oidc"
 import * as datasourceGoogle from "./passport/datasource/google"
+
 export const datasource = {
   google: datasourceGoogle,
 }

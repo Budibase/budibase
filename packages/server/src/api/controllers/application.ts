@@ -47,32 +47,39 @@ import {
   PlanType,
   Screen,
   UserCtx,
+  CreateAppRequest,
+  FetchAppDefinitionResponse,
+  FetchAppPackageResponse,
+  DuplicateAppRequest,
+  DuplicateAppResponse,
 } from "@budibase/types"
 import { BASE_LAYOUT_PROP_IDS } from "../../constants/layouts"
 import sdk from "../../sdk"
 import { builderSocket } from "../../websockets"
+import { sdk as sharedCoreSDK } from "@budibase/shared-core"
+import * as appMigrations from "../../appMigrations"
 
 // utility function, need to do away with this
 async function getLayouts() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Layout>(
       getLayoutParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 async function getScreens() {
   const db = context.getAppDB()
   return (
-    await db.allDocs(
+    await db.allDocs<Screen>(
       getScreenParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map((row: any) => row.doc)
+  ).rows.map(row => row.doc!)
 }
 
 function getUserRoleId(ctx: UserCtx) {
@@ -114,10 +121,10 @@ function checkAppName(
 }
 
 interface AppTemplate {
-  templateString: string
-  useTemplate: string
+  templateString?: string
+  useTemplate?: string
   file?: {
-    type: string
+    type?: string
     path: string
     password?: string
   }
@@ -172,14 +179,16 @@ export const addSampleData = async (ctx: UserCtx) => {
   ctx.status = 200
 }
 
-export async function fetch(ctx: UserCtx) {
+export async function fetch(ctx: UserCtx<void, App[]>) {
   ctx.body = await sdk.applications.fetch(
     ctx.query.status as AppStatus,
     ctx.user
   )
 }
 
-export async function fetchAppDefinition(ctx: UserCtx) {
+export async function fetchAppDefinition(
+  ctx: UserCtx<void, FetchAppDefinitionResponse>
+) {
   const layouts = await getLayouts()
   const userRoleId = getUserRoleId(ctx)
   const accessController = new roles.AccessController()
@@ -194,10 +203,12 @@ export async function fetchAppDefinition(ctx: UserCtx) {
   }
 }
 
-export async function fetchAppPackage(ctx: UserCtx) {
+export async function fetchAppPackage(
+  ctx: UserCtx<void, FetchAppPackageResponse>
+) {
   const db = context.getAppDB()
   const appId = context.getAppId()
-  let application = await db.get<any>(DocumentType.APP_METADATA)
+  let application = await db.get<App>(DocumentType.APP_METADATA)
   const layouts = await getLayouts()
   let screens = await getScreens()
   const license = await licensing.cache.getCachedLicense()
@@ -229,17 +240,21 @@ export async function fetchAppPackage(ctx: UserCtx) {
   }
 }
 
-async function performAppCreate(ctx: UserCtx) {
+async function performAppCreate(ctx: UserCtx<CreateAppRequest, App>) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
-  const name = ctx.request.body.name,
-    possibleUrl = ctx.request.body.url,
-    encryptionPassword = ctx.request.body.encryptionPassword
+  const {
+    name,
+    url,
+    encryptionPassword,
+    useTemplate,
+    templateKey,
+    templateString,
+  } = ctx.request.body
 
   checkAppName(ctx, apps, name)
-  const url = sdk.applications.getAppUrl({ name, url: possibleUrl })
-  checkAppUrl(ctx, apps, url)
+  const appUrl = sdk.applications.getAppUrl({ name, url })
+  checkAppUrl(ctx, apps, appUrl)
 
-  const { useTemplate, templateKey, templateString } = ctx.request.body
   const instanceConfig: AppTemplate = {
     useTemplate,
     key: templateKey,
@@ -249,6 +264,10 @@ async function performAppCreate(ctx: UserCtx) {
     instanceConfig.file = {
       ...(ctx.request.files.templateFile as any),
       password: encryptionPassword,
+    }
+  } else if (typeof ctx.request.body.file?.path === "string") {
+    instanceConfig.file = {
+      path: ctx.request.body.file?.path,
     }
   }
   const tenantId = tenancy.isMultiTenant() ? tenancy.getTenantId() : null
@@ -266,7 +285,7 @@ async function performAppCreate(ctx: UserCtx) {
       version: envCore.VERSION,
       componentLibraries: ["@budibase/standard-components"],
       name: name,
-      url: url,
+      url: appUrl,
       template: templateKey,
       instance,
       tenantId: tenancy.getTenantId(),
@@ -287,6 +306,7 @@ async function performAppCreate(ctx: UserCtx) {
       features: {
         componentValidation: true,
         disableUserMetadata: true,
+        skeletonLoader: true,
       },
     }
 
@@ -335,6 +355,12 @@ async function performAppCreate(ctx: UserCtx) {
       await createApp(appId)
     }
 
+    // Initialise the app migration version as the latest one
+    await appMigrations.updateAppMigrationMetadata({
+      appId,
+      version: appMigrations.getLatestMigrationId(),
+    })
+
     await cache.app.invalidateAppMetadata(appId, newApplication)
     return newApplication
   })
@@ -353,12 +379,20 @@ async function creationEvents(request: any, app: App) {
     else if (request.files?.templateFile) {
       creationFns.push(a => events.app.fileImported(a))
     }
+    // from server file path
+    else if (request.body.file) {
+      // explicitly pass in the newly created app id
+      creationFns.push(a => events.app.duplicated(a, app.appId))
+    }
     // unknown
     else {
       console.error("Could not determine template creation event")
     }
   }
-  creationFns.push(a => events.app.created(a))
+
+  if (!request.duplicate) {
+    creationFns.push(a => events.app.created(a))
+  }
 
   for (let fn of creationFns) {
     await fn(app)
@@ -372,8 +406,10 @@ async function appPostCreate(ctx: UserCtx, app: App) {
     tenantId,
     appId: app.appId,
   })
+
   await creationEvents(ctx.request, app)
-  // app import & template creation
+
+  // app import, template creation and duplication
   if (ctx.request.body.useTemplate === "true") {
     const { rows } = await getUniqueRows([app.appId])
     const rowCount = rows ? rows.length : 0
@@ -394,9 +430,15 @@ async function appPostCreate(ctx: UserCtx, app: App) {
       }
     }
   }
+
+  // If the user is a creator, we need to give them access to the new app
+  if (sharedCoreSDK.users.hasCreatorPermissions(ctx.user)) {
+    const user = await users.UserDB.getUser(ctx.user._id!)
+    await users.addAppBuilder(user, app.appId)
+  }
 }
 
-export async function create(ctx: UserCtx) {
+export async function create(ctx: UserCtx<CreateAppRequest, App>) {
   const newApplication = await quotas.addApp(() => performAppCreate(ctx))
   await appPostCreate(ctx, newApplication)
   await cache.bustCache(cache.CacheKey.CHECKLIST)
@@ -406,7 +448,9 @@ export async function create(ctx: UserCtx) {
 
 // This endpoint currently operates as a PATCH rather than a PUT
 // Thus name and url fields are handled only if present
-export async function update(ctx: UserCtx) {
+export async function update(
+  ctx: UserCtx<{ name?: string; url?: string }, App>
+) {
   const apps = (await dbCore.getAllApps({ dev: true })) as App[]
   // validation
   const name = ctx.request.body.name,
@@ -431,6 +475,9 @@ export async function update(ctx: UserCtx) {
     name: app.name,
     url: app.url,
     icon: app.icon,
+    automations: {
+      chainAutomations: app.automations?.chainAutomations,
+    },
   })
 }
 
@@ -440,10 +487,11 @@ export async function updateClient(ctx: UserCtx) {
   const application = await db.get<App>(DocumentType.APP_METADATA)
   const currentVersion = application.version
 
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
     await backupClientLibrary(ctx.params.appId)
-    await updateClientLibrary(ctx.params.appId)
+    manifest = await updateClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -451,6 +499,10 @@ export async function updateClient(ctx: UserCtx) {
   const appPackageUpdates = {
     version: updatedToVersion,
     revertableVersion: currentVersion,
+    features: {
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionUpdated(app, currentVersion, updatedToVersion)
@@ -466,9 +518,10 @@ export async function revertClient(ctx: UserCtx) {
     ctx.throw(400, "There is no version to revert to")
   }
 
+  let manifest
   // Update client library and manifest
   if (!env.isTest()) {
-    await revertClientLibrary(ctx.params.appId)
+    manifest = await revertClientLibrary(ctx.params.appId)
   }
 
   // Update versions in app package
@@ -476,7 +529,11 @@ export async function revertClient(ctx: UserCtx) {
   const revertedToVersion = application.revertableVersion
   const appPackageUpdates = {
     version: revertedToVersion,
-    revertableVersion: null,
+    revertableVersion: undefined,
+    features: {
+      ...(application.features ?? {}),
+      skeletonLoader: manifest?.features?.skeletonLoader ?? false,
+    },
   }
   const app = await updateAppPackage(appPackageUpdates, ctx.params.appId)
   await events.app.versionReverted(app, currentVersion, revertedToVersion)
@@ -596,12 +653,78 @@ export async function importToApp(ctx: UserCtx) {
   ctx.body = { message: "app updated" }
 }
 
-export async function updateAppPackage(appPackage: any, appId: any) {
+/**
+ * Create a copy of the latest dev application.
+ * Performs an export of the app, then imports from the export dir path
+ */
+export async function duplicateApp(
+  ctx: UserCtx<DuplicateAppRequest, DuplicateAppResponse>
+) {
+  const { name: appName, url: possibleUrl } = ctx.request.body
+  const { appId: sourceAppId } = ctx.params
+  const [app] = await dbCore.getAppsByIDs([sourceAppId])
+
+  if (!app) {
+    ctx.throw(404, "Source app not found")
+  }
+
+  const apps = (await dbCore.getAllApps({ dev: true })) as App[]
+
+  checkAppName(ctx, apps, appName)
+  const url = sdk.applications.getAppUrl({ name: appName, url: possibleUrl })
+  checkAppUrl(ctx, apps, url)
+
+  const tmpPath = await sdk.backups.exportApp(sourceAppId, {
+    excludeRows: false,
+    tar: false,
+  })
+
+  const createRequestBody: CreateAppRequest = {
+    name: appName,
+    url: possibleUrl,
+    useTemplate: "true",
+    // The app export path
+    file: {
+      path: tmpPath,
+    },
+  }
+
+  // Build a new request
+  const createRequest = {
+    roleId: ctx.roleId,
+    user: {
+      ...ctx.user,
+      _id: dbCore.getGlobalIDFromUserMetadataID(ctx.user._id || ""),
+    },
+    request: {
+      body: createRequestBody,
+    },
+  } as UserCtx<CreateAppRequest, App>
+
+  // Build the new application
+  await create(createRequest)
+  const { body: newApplication } = createRequest
+
+  if (!newApplication) {
+    ctx.throw(500, "There was a problem duplicating the application")
+  }
+
+  ctx.body = {
+    duplicateAppId: newApplication?.appId,
+    sourceAppId,
+  }
+  ctx.status = 200
+}
+
+export async function updateAppPackage(
+  appPackage: Partial<App>,
+  appId: string
+) {
   return context.doInAppContext(appId, async () => {
     const db = context.getAppDB()
     const application = await db.get<App>(DocumentType.APP_METADATA)
 
-    const newAppPackage = { ...application, ...appPackage }
+    const newAppPackage: App = { ...application, ...appPackage }
     if (appPackage._rev !== application._rev) {
       newAppPackage._rev = application._rev
     }
@@ -615,6 +738,21 @@ export async function updateAppPackage(appPackage: any, appId: any) {
     await cache.app.invalidateAppMetadata(appId)
     return newAppPackage
   })
+}
+
+export async function setRevertableVersion(
+  ctx: UserCtx<{ revertableVersion: string }, App>
+) {
+  if (!env.isDev()) {
+    ctx.status = 403
+    return
+  }
+  const db = context.getAppDB()
+  const app = await db.get<App>(DocumentType.APP_METADATA)
+  app.revertableVersion = ctx.request.body.revertableVersion
+  await db.put(app)
+
+  ctx.status = 200
 }
 
 async function migrateAppNavigation() {

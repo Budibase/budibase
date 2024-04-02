@@ -1,6 +1,5 @@
 import env from "../environment"
 import * as eventHelpers from "./events"
-import * as accounts from "../accounts"
 import * as accountSdk from "../accounts"
 import * as cache from "../cache"
 import { getGlobalDB, getIdentity, getTenantId } from "../context"
@@ -11,12 +10,10 @@ import * as sessions from "../security/sessions"
 import * as usersCore from "./users"
 import {
   Account,
-  AllDocsResponse,
   BulkUserCreated,
   BulkUserDeleted,
   isSSOAccount,
   isSSOUser,
-  RowResponse,
   SaveUserOpts,
   User,
   UserStatus,
@@ -30,6 +27,7 @@ import {
 } from "./utils"
 import { searchExistingEmails } from "./lookup"
 import { hash } from "../utils"
+import { validatePassword } from "../security"
 
 type QuotaUpdateFn = (
   change: number,
@@ -45,6 +43,12 @@ type GroupFns = {
   addUsers: GroupUpdateFn
   getBulk: GroupGetFn
   getGroupBuilderAppIds: GroupBuildersFn
+}
+type CreateAdminUserOpts = {
+  ssoId?: string
+  hashPassword?: boolean
+  requirePassword?: boolean
+  skipPasswordValidation?: boolean
 }
 type FeatureFns = { isSSOEnforced: FeatureFn; isAppBuildersEnabled: FeatureFn }
 
@@ -113,6 +117,14 @@ export class UserDB {
       if (await UserDB.isPreventPasswordActions(user, account)) {
         throw new HTTPError("Password change is disabled for this user", 400)
       }
+
+      if (!opts.skipPasswordValidation) {
+        const passwordValidation = validatePassword(password)
+        if (!passwordValidation.valid) {
+          throw new HTTPError(passwordValidation.error, 400)
+        }
+      }
+
       hashedPassword = opts.hashPassword ? await hash(password) : password
     } else if (dbUser) {
       hashedPassword = dbUser.password
@@ -149,12 +161,12 @@ export class UserDB {
 
   static async allUsers() {
     const db = getGlobalDB()
-    const response = await db.allDocs(
+    const response = await db.allDocs<User>(
       dbUtils.getGlobalUserParams(null, {
         include_docs: true,
       })
     )
-    return response.rows.map((row: any) => row.doc)
+    return response.rows.map(row => row.doc!)
   }
 
   static async countUsersByApp(appId: string) {
@@ -212,13 +224,6 @@ export class UserDB {
       throw new Error("_id or email is required")
     }
 
-    if (
-      user.builder?.apps?.length &&
-      !(await UserDB.features.isAppBuildersEnabled())
-    ) {
-      throw new Error("Unable to update app builders, please check license")
-    }
-
     let dbUser: User | undefined
     if (_id) {
       // try to get existing user from db
@@ -246,7 +251,8 @@ export class UserDB {
     }
 
     const change = dbUser ? 0 : 1 // no change if there is existing user
-    const creatorsChange = isCreator(dbUser) !== isCreator(user) ? 1 : 0
+    const creatorsChange =
+      (await isCreator(dbUser)) !== (await isCreator(user)) ? 1 : 0
     return UserDB.quotas.addUsers(change, creatorsChange, async () => {
       await validateUniqueUser(email, tenantId)
 
@@ -303,7 +309,7 @@ export class UserDB {
 
   static async bulkCreate(
     newUsersRequested: User[],
-    groups: string[]
+    groups?: string[]
   ): Promise<BulkUserCreated> {
     const tenantId = getTenantId()
 
@@ -328,9 +334,9 @@ export class UserDB {
         })
         continue
       }
-      newUser.userGroups = groups
+      newUser.userGroups = groups || []
       newUsers.push(newUser)
-      if (isCreator(newUser)) {
+      if (await isCreator(newUser)) {
         newCreators.push(newUser)
       }
     }
@@ -413,15 +419,13 @@ export class UserDB {
     }
 
     // Get users and delete
-    const allDocsResponse: AllDocsResponse<User> = await db.allDocs({
+    const allDocsResponse = await db.allDocs<User>({
       include_docs: true,
       keys: userIds,
     })
-    const usersToDelete: User[] = allDocsResponse.rows.map(
-      (user: RowResponse<User>) => {
-        return user.doc
-      }
-    )
+    const usersToDelete = allDocsResponse.rows.map(user => {
+      return user.doc!
+    })
 
     // Delete from DB
     const toDelete = usersToDelete.map(user => ({
@@ -429,12 +433,16 @@ export class UserDB {
       _deleted: true,
     }))
     const dbResponse = await usersCore.bulkUpdateGlobalUsers(toDelete)
-    const creatorsToDelete = usersToDelete.filter(isCreator)
+
+    const creatorsEval = await Promise.all(usersToDelete.map(isCreator))
+    const creatorsToDeleteCount = creatorsEval.filter(
+      creator => !!creator
+    ).length
 
     for (let user of usersToDelete) {
       await bulkDeleteProcessing(user)
     }
-    await UserDB.quotas.removeUsers(toDelete.length, creatorsToDelete.length)
+    await UserDB.quotas.removeUsers(toDelete.length, creatorsToDeleteCount)
 
     // Build Response
     // index users by id
@@ -469,7 +477,7 @@ export class UserDB {
     if (!env.SELF_HOSTED && !env.DISABLE_ACCOUNT_PORTAL) {
       // root account holder can't be deleted from inside budibase
       const email = dbUser.email
-      const account = await accounts.getAccount(email)
+      const account = await accountSdk.getAccount(email)
       if (account) {
         if (dbUser.userId === getIdentity()!._id) {
           throw new HTTPError('Please visit "Account" to delete this user', 400)
@@ -483,11 +491,43 @@ export class UserDB {
 
     await db.remove(userId, dbUser._rev)
 
-    const creatorsToDelete = isCreator(dbUser) ? 1 : 0
+    const creatorsToDelete = (await isCreator(dbUser)) ? 1 : 0
     await UserDB.quotas.removeUsers(1, creatorsToDelete)
     await eventHelpers.handleDeleteEvents(dbUser)
     await cache.user.invalidateUser(userId)
     await sessions.invalidateSessions(userId, { reason: "deletion" })
+  }
+
+  static async createAdminUser(
+    email: string,
+    tenantId: string,
+    password?: string,
+    opts?: CreateAdminUserOpts
+  ) {
+    const user: User = {
+      email: email,
+      password,
+      createdAt: Date.now(),
+      roles: {},
+      builder: {
+        global: true,
+      },
+      admin: {
+        global: true,
+      },
+      tenantId,
+    }
+    if (opts?.ssoId) {
+      user.ssoId = opts.ssoId
+    }
+    // always bust checklist beforehand, if an error occurs but can proceed, don't get
+    // stuck in a cycle
+    await cache.bustCache(cache.CacheKey.CHECKLIST)
+    return await UserDB.save(user, {
+      hashPassword: opts?.hashPassword,
+      requirePassword: opts?.requirePassword,
+      skipPasswordValidation: opts?.skipPasswordValidation,
+    })
   }
 
   static async getGroups(groupIds: string[]) {

@@ -1,5 +1,6 @@
 import {
   ConnectionInfo,
+  Database,
   DatasourceFeature,
   DatasourceFieldType,
   Document,
@@ -8,6 +9,7 @@ import {
   QueryType,
 } from "@budibase/types"
 import { db as dbCore } from "@budibase/backend-core"
+import { HOST_ADDRESS } from "./utils"
 
 interface CouchDBConfig {
   url: string
@@ -27,7 +29,7 @@ const SCHEMA: Integration = {
     url: {
       type: DatasourceFieldType.STRING,
       required: true,
-      default: "http://localhost:5984",
+      default: `http://${HOST_ADDRESS}:5984`,
     },
     database: {
       type: DatasourceFieldType.STRING,
@@ -66,7 +68,7 @@ const SCHEMA: Integration = {
 }
 
 class CouchDBIntegration implements IntegrationBase {
-  private readonly client: dbCore.DatabaseImpl
+  private readonly client: Database
 
   constructor(config: CouchDBConfig) {
     this.client = dbCore.DatabaseWithConnection(config.database, config.url)

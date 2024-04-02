@@ -15,10 +15,10 @@ export default function positionDropdown(element, opts) {
       align,
       maxHeight,
       maxWidth,
+      minWidth,
       useAnchorWidth,
       offset = 5,
       customUpdate,
-      offsetBelow,
     } = opts
     if (!anchor) {
       return
@@ -29,20 +29,28 @@ export default function positionDropdown(element, opts) {
     const elementBounds = element.getBoundingClientRect()
     let styles = {
       maxHeight: null,
-      minWidth: null,
+      minWidth,
       maxWidth,
       left: null,
       top: null,
     }
 
     if (typeof customUpdate === "function") {
-      styles = customUpdate(anchorBounds, elementBounds, styles)
+      styles = customUpdate(anchorBounds, elementBounds, {
+        ...styles,
+        offset: opts.offset,
+      })
     } else {
       // Determine vertical styles
       const topSpace = anchorBounds.top
       const bottomSpace = window.innerHeight - anchorBounds.bottom
-      if (align === "right-outside") {
-        styles.top = anchorBounds.top
+      if (align === "right-outside" || align === "left-outside") {
+        styles.top =
+          anchorBounds.top + anchorBounds.height / 2 - elementBounds.height / 2
+        styles.maxHeight = maxHeight
+        if (styles.top + elementBounds.height > window.innerHeight) {
+          styles.top = window.innerHeight - elementBounds.height
+        }
       } else if (
         window.innerHeight - anchorBounds.bottom < (maxHeight || 100) &&
         topSpace - bottomSpace > 100
@@ -50,7 +58,7 @@ export default function positionDropdown(element, opts) {
         styles.top = anchorBounds.top - elementBounds.height - offset
         styles.maxHeight = maxHeight || 240
       } else {
-        styles.top = anchorBounds.bottom + (offsetBelow || offset)
+        styles.top = anchorBounds.bottom + offset
         styles.maxHeight =
           maxHeight || window.innerHeight - anchorBounds.bottom - 20
       }

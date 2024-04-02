@@ -1,14 +1,34 @@
+import { context } from "@budibase/backend-core"
 import { migrate as migrationImpl, MIGRATIONS } from "../../migrations"
-import { BBContext } from "@budibase/types"
+import { Ctx } from "@budibase/types"
+import {
+  getAppMigrationVersion,
+  getLatestMigrationId,
+} from "../../appMigrations"
 
-export async function migrate(ctx: BBContext) {
+export async function migrate(ctx: Ctx) {
   const options = ctx.request.body
   // don't await as can take a while, just return
   migrationImpl(options)
   ctx.status = 200
 }
 
-export async function fetchDefinitions(ctx: BBContext) {
+export async function fetchDefinitions(ctx: Ctx) {
   ctx.body = MIGRATIONS
+  ctx.status = 200
+}
+
+export async function getMigrationStatus(ctx: Ctx) {
+  const appId = context.getAppId()
+
+  if (!appId) {
+    ctx.throw("AppId could not be found")
+  }
+
+  const latestAppliedMigration = await getAppMigrationVersion(appId)
+
+  const migrated = latestAppliedMigration === getLatestMigrationId()
+
+  ctx.body = { migrated }
   ctx.status = 200
 }

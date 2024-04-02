@@ -4,7 +4,7 @@
     tables,
     datasources,
     sortedIntegrations as integrations,
-  } from "stores/backend"
+  } from "stores/builder"
 
   import { hasData } from "stores/selectors"
   import { notifications, Body, Icon, AbsTooltip } from "@budibase/bbui"
@@ -77,7 +77,7 @@
     </DatasourceOption>
     <DatasourceOption
       on:click={() => internalTableModal.show({ promptUpload: true })}
-      title="Upload data"
+      title="Upload CSV / JSON"
       description="Non-relational"
       {disabled}
     >

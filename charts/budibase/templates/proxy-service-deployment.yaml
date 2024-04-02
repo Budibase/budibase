@@ -2,12 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    kompose.cmd: kompose convert
-    kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.proxy.deploymentAnnotations }}
 {{- toYaml .Values.services.proxy.deploymentAnnotations | indent 4 -}}
 {{ end }}
-  creationTimestamp: null
   labels:
     app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.deploymentLabels }}
@@ -19,17 +16,15 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: budibase-proxy
+  minReadySeconds: 10
   strategy:
     type: RollingUpdate
   template:
     metadata:
       annotations:
-        kompose.cmd: kompose convert
-        kompose.version: 1.21.0 (992df58d8)
 {{ if .Values.services.proxy.templateAnnotations }}
 {{- toYaml .Values.services.proxy.templateAnnotations | indent 8 -}}
 {{ end }}
-      creationTimestamp: null
       labels:
         app.kubernetes.io/name: budibase-proxy
 {{ if .Values.services.proxy.templateLabels }}
@@ -105,5 +100,19 @@ spec:
       {{ end }}
       restartPolicy: Always
       serviceAccountName: ""
+      {{ if .Values.services.proxy.command }}
+      command:
+      {{- toYaml .Values.services.proxy.command | nindent 8 }}
+      {{ end }}
+      {{ if .Values.services.proxy.args }}
+      args:
+      {{- toYaml .Values.services.proxy.args | nindent 8 }}
+      {{ end }}
       volumes:
+      {{ if .Values.services.proxy.ndots }}
+      dnsConfig:
+        options:
+          - name: ndots
+            value: {{ .Values.services.proxy.ndots | quote }}
+      {{ end }}
 status: {}

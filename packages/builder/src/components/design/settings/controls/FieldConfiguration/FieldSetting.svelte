@@ -1,11 +1,11 @@
 <script>
-  import EditComponentPopover from "../EditComponentPopover.svelte"
+  import EditComponentPopover from "../EditComponentPopover/EditComponentPopover.svelte"
   import { Toggle, Icon } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import { cloneDeep } from "lodash/fp"
-  import { store } from "builderStore"
-  import { runtimeToReadableBinding } from "builderStore/dataBinding"
+  import { runtimeToReadableBinding } from "dataBinding"
   import { isJSBinding } from "@budibase/string-templates"
+  import { componentStore } from "stores/builder"
 
   export let item
   export let componentBindings
@@ -37,7 +37,7 @@
   }
 
   $: readableText = getReadableText(item)
-  $: componentDef = store.actions.components.getDefinition(item._component)
+  $: componentDef = componentStore.getDefinition(item._component)
 </script>
 
 <div class="list-item-body">
@@ -58,7 +58,15 @@
     <div class="field-label">{readableText}</div>
   </div>
   <div class="list-item-right">
-    <Toggle on:change={onToggle(item)} text="" value={item.active} thin />
+    <Toggle
+      on:change={onToggle(item)}
+      on:click={e => {
+        e.stopPropagation()
+      }}
+      text=""
+      value={item.active}
+      thin
+    />
   </div>
 </div>
 

@@ -2,6 +2,7 @@
   import { Select, Body } from "@budibase/bbui"
   import { onMount } from "svelte"
   import DrawerBindableInput from "components/common/bindings/DrawerBindableInput.svelte"
+
   export let parameters
   export let bindings
 

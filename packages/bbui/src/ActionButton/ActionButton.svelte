@@ -41,6 +41,7 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <span
   class="btn-wrap"
   on:mouseover={() => (showTooltip = true)}
@@ -130,5 +131,6 @@
     max-width: 150px;
     transform: translateX(-50%);
     text-align: center;
+    z-index: 1;
   }
 </style>

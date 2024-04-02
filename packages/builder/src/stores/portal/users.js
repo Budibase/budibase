@@ -3,6 +3,7 @@ import { API } from "api"
 import { update } from "lodash"
 import { licensing } from "."
 import { sdk } from "@budibase/shared-core"
+import { Constants } from "@budibase/frontend-core"
 
 export function createUsersStore() {
   const { subscribe, set } = writable({})
@@ -77,6 +78,9 @@ export function createUsersStore() {
         case "developer":
           body.builder = { global: true }
           break
+        case "creator":
+          body.builder = { creator: true, global: false }
+          break
         case "admin":
           body.admin = { global: true }
           body.builder = { global: true }
@@ -120,12 +124,18 @@ export function createUsersStore() {
     return await API.removeAppBuilder({ userId, appId })
   }
 
-  const getUserRole = user =>
-    sdk.users.isAdmin(user)
-      ? "admin"
-      : sdk.users.isBuilder(user)
-      ? "developer"
-      : "appUser"
+  const getUserRole = user => {
+    if (sdk.users.isAdmin(user)) {
+      return Constants.BudibaseRoles.Admin
+    } else if (sdk.users.isBuilder(user)) {
+      return Constants.BudibaseRoles.Developer
+    } else if (sdk.users.hasCreatorPermissions(user)) {
+      return Constants.BudibaseRoles.Creator
+    } else {
+      return Constants.BudibaseRoles.AppUser
+    }
+  }
+
   const refreshUsage =
     fn =>
     async (...args) => {

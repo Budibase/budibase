@@ -7,12 +7,13 @@ import { users } from "../validation"
 import * as selfController from "../../controllers/global/self"
 
 const router: Router = new Router()
+const OPTIONAL_STRING = Joi.string().optional().allow(null).allow("")
 
 function buildAdminInitValidation() {
   return auth.joiValidator.body(
     Joi.object({
       email: Joi.string().required(),
-      password: Joi.string(),
+      password: OPTIONAL_STRING,
       tenantId: Joi.string().required(),
       ssoId: Joi.string(),
     })
@@ -63,6 +64,12 @@ router
     createUserAdminOnly,
     users.buildUserSaveValidation(),
     controller.save
+  )
+  .post(
+    "/api/global/users/sso",
+    cloudRestricted,
+    users.buildAddSsoSupport(),
+    controller.addSsoSupport
   )
   .post(
     "/api/global/users/bulk",

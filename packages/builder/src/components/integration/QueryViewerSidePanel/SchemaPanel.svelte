@@ -1,6 +1,6 @@
 <script>
   import KeyValueBuilder from "../KeyValueBuilder.svelte"
-  import { SchemaTypeOptions } from "constants/backend"
+  import { SchemaTypeOptionsExpanded } from "constants/backend"
 
   export let schema
   export let onSchemaChange = () => {}
@@ -24,6 +24,7 @@
     object={schema}
     name="field"
     headings
-    options={SchemaTypeOptions}
+    options={SchemaTypeOptionsExpanded}
+    compare={(option, value) => option.type === value.type}
   />
 {/key}

@@ -1,7 +1,7 @@
 <script>
   import { goto } from "@roxi/routify"
   import { Button, Table } from "@budibase/bbui"
-  import { queries } from "stores/backend"
+  import { queries } from "stores/builder"
   import CapitaliseRenderer from "components/common/renderers/CapitaliseRenderer.svelte"
   import RestImportButton from "./RestImportButton.svelte"
   import Panel from "../Panel.svelte"

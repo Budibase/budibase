@@ -11,6 +11,7 @@
   export let updateOnChange = true
   export let quiet = false
   export let inputRef
+  export let helpText = null
 
   const dispatch = createEventDispatcher()
   const onChange = e => {
@@ -19,7 +20,7 @@
   }
 </script>
 
-<Field {label} {labelPosition}>
+<Field {helpText} {label} {labelPosition}>
   <Search
     {updateOnChange}
     {disabled}

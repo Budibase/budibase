@@ -1,8 +1,9 @@
-import { Row, SearchFilters, SearchParams } from "@budibase/types"
+import { Row, SearchFilters, SearchParams, SortOrder } from "@budibase/types"
 import { isExternalTableID } from "../../../integrations/utils"
 import * as internal from "./search/internal"
 import * as external from "./search/external"
 import { Format } from "../../../api/controllers/view/exporters"
+
 export { isValidFilter, removeEmptyFilters } from "../../../integrations/utils"
 
 export interface ViewParams {
@@ -29,9 +30,13 @@ export async function search(options: SearchParams): Promise<{
 export interface ExportRowsParams {
   tableId: string
   format: Format
+  delimiter?: string
   rowIds?: string[]
   columns?: string[]
   query?: SearchFilters
+  sort?: string
+  sortOrder?: SortOrder
+  customHeaders?: { [key: string]: string }
 }
 
 export interface ExportRowsResult {

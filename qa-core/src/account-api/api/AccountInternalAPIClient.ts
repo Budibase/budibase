@@ -1,6 +1,5 @@
-import { Response } from "node-fetch"
+import fetch, { Response, HeadersInit } from "node-fetch"
 import env from "../../environment"
-import fetch, { HeadersInit } from "node-fetch"
 import { State } from "../../types"
 import { Header } from "@budibase/backend-core"
 

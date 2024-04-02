@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://www.budibase.com">
-    <img alt="Budibase" src="https://d33wubrfki0l68.cloudfront.net/aac32159d7207b5085e74a7ef67afbb7027786c5/2b1fd/img/logo/bb-emblem.svg" width="60" />
+    <img alt="Budibase" src="https://res.cloudinary.com/daog6scxm/image/upload/v1696515725/Branding/Assets/Symbol/RGB/Full%20Colour/Budibase_Symbol_RGB_FullColour_cbqvha_1_z5cwq2.svg" width="60" />
   </a>
 </p>
 <h1 align="center">
@@ -207,8 +207,7 @@ Desde comunicar un bug a solventar un error en el codigo, toda contribucion es a
 implementar una nueva funcionalidad o un realizar un cambio en la API, por favor crea un [nuevo mensaje aqui](https://github.com/Budibase/budibase/issues),
 de esta manera nos encargaremos que tu trabajo no sea en vano.
 
-Aqui tienes instrucciones de como configurar tu entorno Budibase para [Debian](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-DEBIAN.md) 
-y [MacOSX](https://github.com/Budibase/budibase/tree/HEAD/docs/DEV-SETUP-MACOSX.md)
+Aqui tienes instrucciones de como configurar tu entorno Budibase para [aquí](https://github.com/Budibase/budibase/tree/HEAD/docs/CONTRIBUTING.md).
 
 ### No estas seguro por donde empezar?
 Un buen lugar para empezar a contribuir con nosotros es [aqui](https://github.com/Budibase/budibase/projects/22).

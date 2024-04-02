@@ -1,8 +1,7 @@
 <script>
   import { goto, params } from "@roxi/routify"
-  import { store } from "builderStore"
   import { cloneDeep } from "lodash/fp"
-  import { tables, datasources } from "stores/backend"
+  import { tables, datasources, screenStore } from "stores/builder"
   import {
     ActionMenu,
     Icon,
@@ -17,7 +16,7 @@
 
   export let table
 
-  let editorModal
+  let editorModal, editTableNameModal
   let confirmDeleteDialog
   let error = ""
 
@@ -29,10 +28,9 @@
   let deleteTableName
 
   $: externalTable = table?.sourceType === DB_TYPE_EXTERNAL
-  $: allowDeletion = !externalTable || table?.created
 
   function showDeleteModal() {
-    templateScreens = $store.screens.filter(
+    templateScreens = $screenStore.screens.filter(
       screen => screen.autoTableId === table._id
     )
     willBeDeleted = ["All table data"].concat(
@@ -47,7 +45,7 @@
       await tables.delete(table)
       // Screens need deleted one at a time because of undo/redo
       for (let screen of templateScreens) {
-        await store.actions.screens.delete(screen)
+        await screenStore.delete(screen)
       }
       if (table.sourceType === DB_TYPE_EXTERNAL) {
         await datasources.fetch()
@@ -57,7 +55,7 @@
         $goto(`./datasource/${table.datasourceId}`)
       }
     } catch (error) {
-      notifications.error("Error deleting table")
+      notifications.error(`Error deleting table - ${error.message}`)
     }
   }
 
@@ -87,32 +85,33 @@
   }
 </script>
 
-{#if allowDeletion}
-  <ActionMenu>
-    <div slot="control" class="icon">
-      <Icon s hoverable name="MoreSmallList" />
-    </div>
-    {#if !externalTable}
-      <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
-    {/if}
-    <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
-  </ActionMenu>
-{/if}
+<ActionMenu>
+  <div slot="control" class="icon">
+    <Icon s hoverable name="MoreSmallList" />
+  </div>
+  {#if !externalTable}
+    <MenuItem icon="Edit" on:click={editorModal.show}>Edit</MenuItem>
+  {/if}
+  <MenuItem icon="Delete" on:click={showDeleteModal}>Delete</MenuItem>
+</ActionMenu>
 
 <Modal bind:this={editorModal} on:show={initForm}>
   <ModalContent
+    bind:this={editTableNameModal}
     title="Edit Table"
     confirmText="Save"
     onConfirm={save}
     disabled={updatedName === originalName || error}
   >
-    <Input
-      label="Table Name"
-      thin
-      bind:value={updatedName}
-      on:input={checkValid}
-      {error}
-    />
+    <form on:submit|preventDefault={() => editTableNameModal.confirm()}>
+      <Input
+        label="Table Name"
+        thin
+        bind:value={updatedName}
+        on:input={checkValid}
+        {error}
+      />
+    </form>
   </ModalContent>
 </Modal>
 <ConfirmDialog

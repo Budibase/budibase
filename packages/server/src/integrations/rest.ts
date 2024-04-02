@@ -10,6 +10,7 @@ import {
   RestAuthType,
   RestBasicAuthConfig,
   RestBearerAuthConfig,
+  HttpMethod,
 } from "@budibase/types"
 import get from "lodash/get"
 import * as https from "https"
@@ -86,30 +87,30 @@ const SCHEMA: Integration = {
   query: {
     create: {
       readable: true,
-      displayName: "POST",
+      displayName: HttpMethod.POST,
       type: QueryType.FIELDS,
       fields: coreFields,
     },
     read: {
-      displayName: "GET",
+      displayName: HttpMethod.GET,
       readable: true,
       type: QueryType.FIELDS,
       fields: coreFields,
     },
     update: {
-      displayName: "PUT",
+      displayName: HttpMethod.PUT,
       readable: true,
       type: QueryType.FIELDS,
       fields: coreFields,
     },
     patch: {
-      displayName: "PATCH",
+      displayName: HttpMethod.PATCH,
       readable: true,
       type: QueryType.FIELDS,
       fields: coreFields,
     },
     delete: {
-      displayName: "DELETE",
+      displayName: HttpMethod.DELETE,
       type: QueryType.FIELDS,
       fields: coreFields,
     },
@@ -131,7 +132,10 @@ class RestIntegration implements IntegrationBase {
     let data, raw, headers
     const contentType = response.headers.get("content-type") || ""
     try {
-      if (contentType.includes("application/json")) {
+      if (response.status === 204) {
+        data = []
+        raw = []
+      } else if (contentType.includes("application/json")) {
         data = await response.json()
         raw = JSON.stringify(data)
       } else if (
@@ -279,7 +283,7 @@ class RestIntegration implements IntegrationBase {
         // content type defaults to plaintext
         input.body = string
         break
-      case BodyTypes.ENCODED:
+      case BodyTypes.ENCODED: {
         const params = new URLSearchParams()
         for (let [key, value] of Object.entries(object)) {
           params.append(key, value as string)
@@ -289,7 +293,8 @@ class RestIntegration implements IntegrationBase {
         })
         input.body = params
         break
-      case BodyTypes.FORM_DATA:
+      }
+      case BodyTypes.FORM_DATA: {
         const form = new FormData()
         for (let [key, value] of Object.entries(object)) {
           form.append(key, value)
@@ -299,6 +304,7 @@ class RestIntegration implements IntegrationBase {
         })
         input.body = form
         break
+      }
       case BodyTypes.XML:
         if (object != null && Object.keys(object).length) {
           string = new XmlBuilder().buildObject(object)
@@ -355,7 +361,7 @@ class RestIntegration implements IntegrationBase {
       path = "",
       queryString = "",
       headers = {},
-      method = "GET",
+      method = HttpMethod.GET,
       disabledHeaders,
       bodyType,
       requestBody,
@@ -410,23 +416,23 @@ class RestIntegration implements IntegrationBase {
   }
 
   async create(opts: RestQuery) {
-    return this._req({ ...opts, method: "POST" })
+    return this._req({ ...opts, method: HttpMethod.POST })
   }
 
   async read(opts: RestQuery) {
-    return this._req({ ...opts, method: "GET" })
+    return this._req({ ...opts, method: HttpMethod.GET })
   }
 
   async update(opts: RestQuery) {
-    return this._req({ ...opts, method: "PUT" })
+    return this._req({ ...opts, method: HttpMethod.PUT })
   }
 
   async patch(opts: RestQuery) {
-    return this._req({ ...opts, method: "PATCH" })
+    return this._req({ ...opts, method: HttpMethod.PATCH })
   }
 
   async delete(opts: RestQuery) {
-    return this._req({ ...opts, method: "DELETE" })
+    return this._req({ ...opts, method: HttpMethod.DELETE })
   }
 }
 

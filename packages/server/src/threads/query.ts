@@ -1,30 +1,36 @@
 import { default as threadUtils } from "./utils"
+
 threadUtils.threadSetup()
-import { WorkerCallback, QueryEvent, QueryVariable } from "./definitions"
-import ScriptRunner from "../utilities/scriptRunner"
+import {
+  WorkerCallback,
+  QueryEvent,
+  QueryVariable,
+  QueryResponse,
+} from "./definitions"
+import { IsolatedVM } from "../jsRunner/vm"
+import { iifeWrapper, processStringSync } from "@budibase/string-templates"
 import { getIntegration } from "../integrations"
-import { processStringSync } from "@budibase/string-templates"
 import { context, cache, auth } from "@budibase/backend-core"
 import { getGlobalIDFromUserMetadataID } from "../db/utils"
 import sdk from "../sdk"
 import { cloneDeep } from "lodash/fp"
-import { SourceName } from "@budibase/types"
+import { Datasource, Query, SourceName, Row } from "@budibase/types"
 
 import { isSQL } from "../integrations/utils"
 import { interpolateSQL } from "../integrations/queries/sql"
-import { Query } from "@budibase/types"
 
 class QueryRunner {
-  datasource: any
+  datasource: Datasource
   queryVerb: string
   queryId: string
   fields: any
   parameters: any
   pagination: any
-  transformer: any
+  transformer: string | null
   cachedVariables: any[]
   ctx: any
   queryResponse: any
+  nullDefaultSupport: boolean
   noRecursiveQuery: boolean
   hasRerun: boolean
   hasRefreshedOAuth: boolean
@@ -38,8 +44,9 @@ class QueryRunner {
     this.parameters = input.parameters
     this.pagination = input.pagination
     this.transformer = input.transformer
-    this.queryId = input.queryId
+    this.queryId = input.queryId!
     this.schema = input.schema
+    this.nullDefaultSupport = !!input.nullDefaultSupport
     this.noRecursiveQuery = flags.noRecursiveQuery
     this.cachedVariables = []
     // Additional context items for enrichment
@@ -53,8 +60,15 @@ class QueryRunner {
     this.hasDynamicVariables = false
   }
 
-  async execute(): Promise<any> {
-    let { datasource, fields, queryVerb, transformer, schema } = this
+  async execute(): Promise<QueryResponse> {
+    let {
+      datasource,
+      fields,
+      queryVerb,
+      transformer,
+      schema,
+      nullDefaultSupport,
+    } = this
     let datasourceClone = cloneDeep(datasource)
     let fieldsClone = cloneDeep(fields)
 
@@ -63,7 +77,7 @@ class QueryRunner {
       throw "Integration type does not exist."
     }
 
-    if (datasourceClone.config.authConfigs) {
+    if (datasourceClone.config?.authConfigs) {
       const updatedConfigs = []
       for (let config of datasourceClone.config.authConfigs) {
         updatedConfigs.push(await sdk.queries.enrichContext(config, this.ctx))
@@ -88,17 +102,19 @@ class QueryRunner {
     const enrichedContext = { ...enrichedParameters, ...this.ctx }
 
     // Parse global headers
-    if (datasourceClone.config.defaultHeaders) {
+    if (datasourceClone.config?.defaultHeaders) {
       datasourceClone.config.defaultHeaders = await sdk.queries.enrichContext(
         datasourceClone.config.defaultHeaders,
         enrichedContext
       )
     }
 
-    let query
+    let query: Record<string, any>
     // handle SQL injections by interpolating the variables
     if (isSQL(datasourceClone)) {
-      query = await interpolateSQL(fieldsClone, enrichedContext, integration)
+      query = await interpolateSQL(fieldsClone, enrichedContext, integration, {
+        nullDefaultSupport,
+      })
     } else {
       query = await sdk.queries.enrichContext(fieldsClone, enrichedContext)
     }
@@ -109,7 +125,7 @@ class QueryRunner {
     }
 
     let output = threadUtils.formatResponse(await integration[queryVerb](query))
-    let rows = output,
+    let rows = output as Row[],
       info = undefined,
       extra = undefined,
       pagination = undefined
@@ -122,11 +138,19 @@ class QueryRunner {
 
     // transform as required
     if (transformer) {
-      const runner = new ScriptRunner(transformer, {
+      transformer = iifeWrapper(transformer)
+      let vm = new IsolatedVM()
+      if (datasource.source === SourceName.MONGODB) {
+        vm = vm.withParsingBson(rows)
+      }
+
+      const ctx = {
         data: rows,
         params: enrichedParameters,
-      })
-      rows = runner.execute()
+      }
+      if (transformer != null) {
+        rows = vm.withContext(ctx, () => vm.execute(transformer!))
+      }
     }
 
     // if the request fails we retry once, invalidating the cached value
@@ -147,11 +171,6 @@ class QueryRunner {
       return this.execute()
     }
 
-    // check for undefined response
-    if (!rows) {
-      rows = []
-    }
-
     // needs to an array for next step
     if (!Array.isArray(rows)) {
       rows = [rows]
@@ -163,7 +182,12 @@ class QueryRunner {
     }
 
     // get all the potential fields in the schema
-    let keys = rows.flatMap(Object.keys)
+    const keysSet: Set<string> = new Set()
+    rows.forEach(row => {
+      const keys = Object.keys(row)
+      keys.forEach(key => keysSet.add(key))
+    })
+    const keys: string[] = [...keysSet]
 
     if (integration.end) {
       integration.end()
@@ -180,13 +204,15 @@ class QueryRunner {
     })
     return new QueryRunner(
       {
-        datasource,
+        schema: query.schema,
         queryVerb: query.queryVerb,
         fields: query.fields,
-        parameters,
         transformer: query.transformer,
-        queryId,
+        nullDefaultSupport: query.nullDefaultSupport,
         ctx: this.ctx,
+        parameters,
+        datasource,
+        queryId,
       },
       { noRecursiveQuery: true }
     ).execute()

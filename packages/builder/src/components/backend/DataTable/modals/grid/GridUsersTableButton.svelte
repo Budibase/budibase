@@ -1,15 +1,12 @@
 <script>
   import { ActionButton, Popover, Heading, Body, Button } from "@budibase/bbui"
-  import { store } from "builderStore"
+  import { builderStore } from "stores/builder"
 
   let anchor
   let open = false
 
   const openSidePanel = () => {
-    store.update(state => ({
-      ...state,
-      builderSidePanel: true,
-    }))
+    builderStore.showBuilderSidePanel()
     open = false
   }
 </script>

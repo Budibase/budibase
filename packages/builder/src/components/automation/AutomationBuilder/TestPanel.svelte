@@ -1,7 +1,7 @@
 <script>
   import { Icon, Divider } from "@budibase/bbui"
   import TestDisplay from "./TestDisplay.svelte"
-  import { automationStore } from "builderStore"
+  import { automationStore } from "stores/builder"
 
   export let automation
 </script>
@@ -9,7 +9,7 @@
 <div class="title">
   <div class="title-text">
     <Icon name="MultipleCheck" />
-    <div style="padding-left: var(--spacing-l)">Test Details</div>
+    <div style="padding-left: var(--spacing-l); ">Test Details</div>
   </div>
   <div style="padding-right: var(--spacing-xl)">
     <Icon
@@ -40,6 +40,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    padding-top: var(--spacing-s);
   }
 
   .title :global(h1) {

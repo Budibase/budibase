@@ -10,6 +10,7 @@ export const ActionTypes = {
   ClearForm: "ClearForm",
   ChangeFormStep: "ChangeFormStep",
   ScrollTo: "ScrollTo",
+  ClearRowSelection: "ClearRowSelection",
 }
 
 export const DNDPlaceholderID = "dnd-placeholder"

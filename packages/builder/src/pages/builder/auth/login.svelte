@@ -8,6 +8,8 @@
     Layout,
     notifications,
     Link,
+    FancyForm,
+    FancyInput,
   } from "@budibase/bbui"
   import { goto } from "@roxi/routify"
   import { auth, organisation, oidc, admin } from "stores/portal"
@@ -16,7 +18,6 @@
   import { handleError } from "./_components/utils"
   import Logo from "assets/bb-emblem.svg"
   import { TestimonialPage } from "@budibase/frontend-core/src/components"
-  import { FancyForm, FancyInput } from "@budibase/bbui"
   import { onMount } from "svelte"
 
   let loaded = false
@@ -30,7 +31,7 @@
   async function login() {
     form.validate()
     if (Object.keys(errors).length > 0) {
-      console.log("errors", errors)
+      console.error("errors", errors)
       return
     }
     try {

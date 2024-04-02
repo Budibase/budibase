@@ -13,7 +13,7 @@
   import { getColumnIcon } from "../lib/utils"
   import MigrationModal from "../controls/MigrationModal.svelte"
   import { debounce } from "../../../utils/utils"
-  import { FieldType, FormulaTypes } from "@budibase/types"
+  import { FieldType, FormulaType } from "@budibase/types"
   import { TableNames } from "../../../constants"
 
   export let column
@@ -96,7 +96,7 @@
     const { type, formulaType } = col.schema
     return (
       searchableTypes.includes(type) ||
-      (type === FieldType.FORMULA && formulaType === FormulaTypes.STATIC)
+      (type === FieldType.FORMULA && formulaType === FormulaType.STATIC)
     )
   }
 
@@ -243,6 +243,8 @@
   <MigrationModal {column} />
 </Modal>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="header-cell"
   class:open
@@ -315,7 +317,7 @@
   align="right"
   offset={0}
   popoverTarget={document.getElementById(`grid-${rand}`)}
-  customZindex={100}
+  customZindex={50}
 >
   {#if editIsOpen}
     <div

@@ -3,15 +3,16 @@
   import Placeholder from "./Placeholder.svelte"
   import Container from "./Container.svelte"
 
+  const { Provider, ContextScopes } = getContext("sdk")
+  const component = getContext("component")
+
   export let dataProvider
   export let noRowsMessage
   export let direction
   export let hAlign
   export let vAlign
   export let gap
-
-  const { Provider } = getContext("sdk")
-  const component = getContext("component")
+  export let scope = ContextScopes.Local
 
   $: rows = dataProvider?.rows ?? []
   $: loaded = dataProvider?.loaded ?? true
@@ -22,7 +23,7 @@
     <Placeholder />
   {:else if rows.length > 0}
     {#each rows as row, index}
-      <Provider data={{ ...row, index }}>
+      <Provider data={{ ...row, index }} {scope}>
         <slot />
       </Provider>
     {/each}

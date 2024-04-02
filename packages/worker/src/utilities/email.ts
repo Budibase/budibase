@@ -3,10 +3,10 @@ import { EmailTemplatePurpose, TemplateType } from "../constants"
 import { getTemplateByPurpose, EmailTemplates } from "../constants/templates"
 import { getSettingsTemplateContext } from "./templates"
 import { processString } from "@budibase/string-templates"
-import { getResetPasswordCode, getInviteCode } from "./redis"
 import { User, SendEmailOpts, SMTPInnerConfig } from "@budibase/types"
-import { configs } from "@budibase/backend-core"
+import { configs, cache } from "@budibase/backend-core"
 import ical from "ical-generator"
+
 const nodemailer = require("nodemailer")
 
 const TEST_MODE = env.ENABLE_EMAIL_TEST_MODE && env.isDev()
@@ -61,9 +61,9 @@ async function getLinkCode(
 ) {
   switch (purpose) {
     case EmailTemplatePurpose.PASSWORD_RECOVERY:
-      return getResetPasswordCode(user._id!, info)
+      return cache.passwordReset.createCode(user._id!, info)
     case EmailTemplatePurpose.INVITATION:
-      return getInviteCode(email, info)
+      return cache.invite.createCode(email, info)
     default:
       return null
   }
@@ -99,8 +99,6 @@ async function buildEmail(
   if (!base || !body || !core) {
     throw "Unable to build email, missing base components"
   }
-  base = base.contents
-  body = body.contents
 
   let name = user ? user.name : undefined
   if (user && !name && user.firstName) {
@@ -114,15 +112,10 @@ async function buildEmail(
     user: user || {},
   }
 
-  // Prepend the core template
-  const fullBody = core + body
-
-  body = await processString(fullBody, context)
-
   // this should now be the core email HTML
-  return processString(base, {
+  return processString(base.contents, {
     ...context,
-    body,
+    body: await processString(core + body?.contents, context),
   })
 }
 

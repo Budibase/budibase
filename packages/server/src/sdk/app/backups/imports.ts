@@ -1,24 +1,30 @@
 import { db as dbCore, encryption, objectStore } from "@budibase/backend-core"
-import { Database, Row } from "@budibase/types"
-import { getAutomationParams, TABLE_ROW_PREFIX } from "../../../db/utils"
-import { budibaseTempDir } from "../../../utilities/budibaseDir"
-import { DB_EXPORT_FILE, GLOBAL_DB_EXPORT_FILE } from "./constants"
-import { downloadTemplate } from "../../../utilities/fileSystem"
-import { ObjectStoreBuckets } from "../../../constants"
-import { join } from "path"
-import fs from "fs"
-import sdk from "../../"
 import {
+  Database,
+  Row,
   Automation,
   AutomationTriggerStepId,
   RowAttachment,
 } from "@budibase/types"
-const uuid = require("uuid/v4")
-const tar = require("tar")
+import { getAutomationParams } from "../../../db/utils"
+import { budibaseTempDir } from "../../../utilities/budibaseDir"
+import {
+  DB_EXPORT_FILE,
+  GLOBAL_DB_EXPORT_FILE,
+  ATTACHMENT_DIRECTORY,
+} from "./constants"
+import { downloadTemplate } from "../../../utilities/fileSystem"
+import { ObjectStoreBuckets } from "../../../constants"
+import { join } from "path"
+import fs from "fs"
+import fsp from "fs/promises"
+import sdk from "../../"
+import { v4 as uuid } from "uuid"
+import tar from "tar"
 
 type TemplateType = {
   file?: {
-    type: string
+    type?: string
     path: string
     password?: string
   }
@@ -112,12 +118,11 @@ async function getTemplateStream(template: TemplateType) {
   }
 }
 
-export function untarFile(file: { path: string }) {
+export async function untarFile(file: { path: string }) {
   const tmpPath = join(budibaseTempDir(), uuid())
-  fs.mkdirSync(tmpPath)
+  await fsp.mkdir(tmpPath)
   // extract the tarball
-  tar.extract({
-    sync: true,
+  await tar.extract({
     cwd: tmpPath,
     file: file.path,
   })
@@ -126,11 +131,13 @@ export function untarFile(file: { path: string }) {
 
 async function decryptFiles(path: string, password: string) {
   try {
-    for (let file of fs.readdirSync(path)) {
+    for (let file of await fsp.readdir(path)) {
       const inputPath = join(path, file)
-      const outputPath = inputPath.replace(/\.enc$/, "")
-      await encryption.decryptFile(inputPath, outputPath, password)
-      fs.rmSync(inputPath)
+      if (!inputPath.endsWith(ATTACHMENT_DIRECTORY)) {
+        const outputPath = inputPath.replace(/\.enc$/, "")
+        await encryption.decryptFile(inputPath, outputPath, password)
+        await fsp.rm(inputPath)
+      }
     }
   } catch (err: any) {
     if (err.message === "incorrect header check") {
@@ -158,13 +165,14 @@ export async function importApp(
   let dbStream: any
   const isTar = template.file && template?.file?.type?.endsWith("gzip")
   const isDirectory =
-    template.file && fs.lstatSync(template.file.path).isDirectory()
+    template.file && (await fsp.lstat(template.file.path)).isDirectory()
+  let tmpPath: string | undefined = undefined
   if (template.file && (isTar || isDirectory)) {
-    const tmpPath = isTar ? untarFile(template.file) : template.file.path
+    tmpPath = isTar ? await untarFile(template.file) : template.file.path
     if (isTar && template.file.password) {
       await decryptFiles(tmpPath, template.file.password)
     }
-    const contents = fs.readdirSync(tmpPath)
+    const contents = await fsp.readdir(tmpPath)
     // have to handle object import
     if (contents.length && opts.importObjStoreContents) {
       let promises = []
@@ -175,7 +183,7 @@ export async function importApp(
           continue
         }
         filename = join(prodAppId, filename)
-        if (fs.lstatSync(path).isDirectory()) {
+        if ((await fsp.lstat(path)).isDirectory()) {
           promises.push(
             objectStore.uploadDirectory(ObjectStoreBuckets.APPS, path, filename)
           )
@@ -202,5 +210,9 @@ export async function importApp(
   }
   await updateAttachmentColumns(prodAppId, db)
   await updateAutomations(prodAppId, db)
+  // clear up afterward
+  if (tmpPath) {
+    await fsp.rm(tmpPath, { recursive: true, force: true })
+  }
   return ok
 }

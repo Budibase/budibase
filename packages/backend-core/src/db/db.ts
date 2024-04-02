@@ -1,11 +1,9 @@
-import env from "../environment"
 import { directCouchQuery, DatabaseImpl } from "./couch"
-import { CouchFindOptions, Database } from "@budibase/types"
+import { CouchFindOptions, Database, DatabaseOpts } from "@budibase/types"
+import { DDInstrumentedDatabase } from "./instrumentation"
 
-const dbList = new Set()
-
-export function getDB(dbName?: string, opts?: any): Database {
-  return new DatabaseImpl(dbName, opts)
+export function getDB(dbName: string, opts?: DatabaseOpts): Database {
+  return new DDInstrumentedDatabase(new DatabaseImpl(dbName, opts))
 }
 
 // we have to use a callback for this so that we can close
@@ -14,19 +12,12 @@ export function getDB(dbName?: string, opts?: any): Database {
 export async function doWithDB<T>(
   dbName: string,
   cb: (db: Database) => Promise<T>,
-  opts = {}
+  opts?: DatabaseOpts
 ) {
   const db = getDB(dbName, opts)
   // need this to be async so that we can correctly close DB after all
   // async operations have been completed
   return await cb(db)
-}
-
-export function allDbs() {
-  if (!env.isTest()) {
-    throw new Error("Cannot be used outside test environment.")
-  }
-  return [...dbList]
 }
 
 export async function directCouchAllDbs(queryString?: string) {

@@ -41,12 +41,12 @@ describe("postgres integrations", () => {
     makeRequest = generateMakeRequest(apiKey, true)
 
     postgresDatasource = await config.api.datasource.create(
-      await databaseTestProviders.postgres.getDsConfig()
+      await databaseTestProviders.postgres.datasource()
     )
   })
 
   afterAll(async () => {
-    await databaseTestProviders.postgres.stopContainer()
+    await databaseTestProviders.postgres.stop()
   })
 
   beforeEach(async () => {
@@ -319,6 +319,7 @@ describe("postgres integrations", () => {
       },
       plus: true,
       source: "POSTGRES",
+      isSQL: true,
       type: "datasource_plus",
       _id: expect.any(String),
       _rev: expect.any(String),
@@ -398,7 +399,7 @@ describe("postgres integrations", () => {
         expect(res.status).toBe(200)
         expect(res.body).toEqual(updatedRow)
 
-        const persistedRow = await config.getRow(
+        const persistedRow = await config.api.row.get(
           primaryPostgresTable._id!,
           row.id
         )
@@ -923,7 +924,6 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })
@@ -932,29 +932,46 @@ describe("postgres integrations", () => {
             [m2mFieldName]: [
               {
                 _id: row._id,
-                primaryDisplay: "Invalid display column",
               },
             ],
           })
+          const m2oRel = {
+            [m2oFieldName]: [
+              {
+                _id: row._id,
+              },
+            ],
+          }
           expect(res.body[m2oFieldName]).toEqual([
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][0].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][1].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
             {
+              ...m2oRel,
               ...foreignRowsByType[RelationshipType.MANY_TO_ONE][2].row,
               [`fk_${manyToOneRelationshipInfo.table.name}_${manyToOneRelationshipInfo.fieldName}`]:
                 row.id,
             },
           ])
+          const o2mRel = {
+            [o2mFieldName]: [
+              {
+                _id: row._id,
+              },
+            ],
+          }
           expect(res.body[o2mFieldName]).toEqual([
             {
+              ...o2mRel,
               ...foreignRowsByType[RelationshipType.ONE_TO_MANY][0].row,
               _id: expect.any(String),
               _rev: expect.any(String),
@@ -1024,28 +1041,37 @@ describe("postgres integrations", () => {
 
   describe("POST /api/datasources/verify", () => {
     it("should be able to verify the connection", async () => {
-      const response = await config.api.datasource.verify({
-        datasource: await databaseTestProviders.postgres.getDsConfig(),
-      })
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(true)
+      await config.api.datasource.verify(
+        {
+          datasource: await databaseTestProviders.postgres.datasource(),
+        },
+        {
+          body: {
+            connected: true,
+          },
+        }
+      )
     })
 
     it("should state an invalid datasource cannot connect", async () => {
-      const dbConfig = await databaseTestProviders.postgres.getDsConfig()
-      const response = await config.api.datasource.verify({
-        datasource: {
-          ...dbConfig,
-          config: {
-            ...dbConfig.config,
-            password: "wrongpassword",
+      const dbConfig = await databaseTestProviders.postgres.datasource()
+      await config.api.datasource.verify(
+        {
+          datasource: {
+            ...dbConfig,
+            config: {
+              ...dbConfig.config,
+              password: "wrongpassword",
+            },
           },
         },
-      })
-
-      expect(response.status).toBe(200)
-      expect(response.body.connected).toBe(false)
-      expect(response.body.error).toBeDefined()
+        {
+          body: {
+            connected: false,
+            error: 'password authentication failed for user "postgres"',
+          },
+        }
+      )
     })
   })
 
@@ -1066,7 +1092,7 @@ describe("postgres integrations", () => {
 
     beforeEach(async () => {
       client = new Client(
-        (await databaseTestProviders.postgres.getDsConfig()).config!
+        (await databaseTestProviders.postgres.datasource()).config!
       )
       await client.connect()
     })
@@ -1100,6 +1126,78 @@ describe("postgres integrations", () => {
       expect(response.body.errors).toEqual({
         table: "Table contains invalid columns.",
       })
+    })
+  })
+
+  describe("Integration compatibility with postgres search_path", () => {
+    let client: Client, pathDatasource: Datasource
+    const schema1 = "test1",
+      schema2 = "test-2"
+
+    beforeAll(async () => {
+      const dsConfig = await databaseTestProviders.postgres.datasource()
+      const dbConfig = dsConfig.config!
+
+      client = new Client(dbConfig)
+      await client.connect()
+      await client.query(`CREATE SCHEMA "${schema1}";`)
+      await client.query(`CREATE SCHEMA "${schema2}";`)
+
+      const pathConfig: any = {
+        ...dsConfig,
+        config: {
+          ...dbConfig,
+          schema: `${schema1}, ${schema2}`,
+        },
+      }
+      pathDatasource = await config.api.datasource.create(pathConfig)
+    })
+
+    afterAll(async () => {
+      await client.query(`DROP SCHEMA "${schema1}" CASCADE;`)
+      await client.query(`DROP SCHEMA "${schema2}" CASCADE;`)
+      await client.end()
+    })
+
+    it("discovers tables from any schema in search path", async () => {
+      await client.query(
+        `CREATE TABLE "${schema1}".table1 (id1 SERIAL PRIMARY KEY);`
+      )
+      await client.query(
+        `CREATE TABLE "${schema2}".table2 (id2 SERIAL PRIMARY KEY);`
+      )
+      const response = await makeRequest("post", "/api/datasources/info", {
+        datasource: pathDatasource,
+      })
+      expect(response.status).toBe(200)
+      expect(response.body.tableNames).toBeDefined()
+      expect(response.body.tableNames).toEqual(
+        expect.arrayContaining(["table1", "table2"])
+      )
+    })
+
+    it("does not mix columns from different tables", async () => {
+      const repeated_table_name = "table_same_name"
+      await client.query(
+        `CREATE TABLE "${schema1}".${repeated_table_name} (id SERIAL PRIMARY KEY, val1 TEXT);`
+      )
+      await client.query(
+        `CREATE TABLE "${schema2}".${repeated_table_name} (id2 SERIAL PRIMARY KEY, val2 TEXT);`
+      )
+      const response = await makeRequest(
+        "post",
+        `/api/datasources/${pathDatasource._id}/schema`,
+        {
+          tablesFilter: [repeated_table_name],
+        }
+      )
+      expect(response.status).toBe(200)
+      expect(
+        response.body.datasource.entities[repeated_table_name].schema
+      ).toBeDefined()
+      const schema =
+        response.body.datasource.entities[repeated_table_name].schema
+      expect(Object.keys(schema).sort()).toEqual(["id", "val1"])
     })
   })
 })

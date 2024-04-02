@@ -120,6 +120,7 @@
 </script>
 
 {#if $showVScrollbar}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="v-scrollbar"
     style="--size:{ScrollBarSize}px; top:{barTop}px; height:{barHeight}px;"
@@ -129,6 +130,7 @@
   />
 {/if}
 {#if $showHScrollbar}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
     class="h-scrollbar"
     style="--size:{ScrollBarSize}px; left:{barLeft}px; width:{barWidth}px;"

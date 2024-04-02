@@ -1,4 +1,4 @@
-import { IdentityContext } from "@budibase/types"
+import { IdentityContext, Snippet, VM } from "@budibase/types"
 
 // keep this out of Budibase types, don't want to expose context info
 export type ContextMap = {
@@ -8,4 +8,8 @@ export type ContextMap = {
   environmentVariables?: Record<string, string>
   isScim?: boolean
   automationId?: string
+  isMigrating?: boolean
+  vm?: VM
+  cleanup?: (() => void | Promise<void>)[]
+  snippets?: Snippet[]
 }

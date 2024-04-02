@@ -7,6 +7,7 @@ import {
   ConnectionInfo,
 } from "@budibase/types"
 import {
+  Document,
   MongoClient,
   ObjectId,
   Filter,
@@ -15,13 +16,17 @@ import {
   UpdateOptions,
   OperationOptions,
   MongoClientOptions,
+  DeleteResult,
+  UpdateResult,
+  InsertOneResult,
+  InsertManyResult,
 } from "mongodb"
 import environment from "../environment"
+import { HOST_ADDRESS } from "./utils"
 
-interface MongoDBConfig {
+export interface MongoDBConfig {
   connectionString: string
   db: string
-  tlsCertificateFile: string
   tlsCertificateKeyFile: string
   tlsCAFile: string
 }
@@ -47,7 +52,7 @@ const getSchema = () => {
       connectionString: {
         type: DatasourceFieldType.STRING,
         required: true,
-        default: "mongodb://localhost:27017",
+        default: `mongodb://${HOST_ADDRESS}:27017`,
         display: "Connection string",
       },
       db: {
@@ -320,16 +325,11 @@ const getSchema = () => {
   if (environment.SELF_HOSTED) {
     schema.datasource = {
       ...schema.datasource,
-      //@ts-ignore
+      // @ts-ignore
       tls: {
         type: DatasourceFieldType.FIELD_GROUP,
         display: "Configure SSL",
         fields: {
-          tlsCertificateFile: {
-            type: DatasourceFieldType.STRING,
-            required: false,
-            display: "Certificate file path",
-          },
           tlsCertificateKeyFile: {
             type: DatasourceFieldType.STRING,
             required: false,
@@ -349,14 +349,13 @@ const getSchema = () => {
 
 const SCHEMA: Integration = getSchema()
 
-class MongoIntegration implements IntegrationBase {
+export class MongoIntegration implements IntegrationBase {
   private config: MongoDBConfig
   private client: MongoClient
 
   constructor(config: MongoDBConfig) {
     this.config = config
     const options: MongoClientOptions = {
-      tlsCertificateFile: config.tlsCertificateFile || undefined,
       tlsCertificateKeyFile: config.tlsCertificateKeyFile || undefined,
       tlsCAFile: config.tlsCAFile || undefined,
     }
@@ -465,7 +464,9 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async create(query: MongoDBQuery) {
+  async create(
+    query: MongoDBQuery
+  ): Promise<InsertOneResult | InsertManyResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -495,7 +496,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async read(query: MongoDBQuery) {
+  async read(query: MongoDBQuery): Promise<NonNullable<unknown>> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -511,7 +512,7 @@ class MongoIntegration implements IntegrationBase {
           }
         }
         case "findOne": {
-          return await collection.findOne(json)
+          return (await collection.findOne(json)) || {}
         }
         case "findOneAndUpdate": {
           if (typeof query.json === "string") {
@@ -525,7 +526,10 @@ class MongoIntegration implements IntegrationBase {
           return await collection.findOneAndUpdate(
             findAndUpdateJson.filter,
             findAndUpdateJson.update,
-            findAndUpdateJson.options
+            {
+              ...findAndUpdateJson.options,
+              includeResultMetadata: true,
+            }
           )
         }
         case "count": {
@@ -548,7 +552,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async update(query: MongoDBQuery) {
+  async update(query: MongoDBQuery): Promise<UpdateResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -592,7 +596,7 @@ class MongoIntegration implements IntegrationBase {
     }
   }
 
-  async delete(query: MongoDBQuery) {
+  async delete(query: MongoDBQuery): Promise<DeleteResult> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)
@@ -637,7 +641,7 @@ class MongoIntegration implements IntegrationBase {
     json: object
     steps: any[]
     extra: { [key: string]: string }
-  }) {
+  }): Promise<Document[]> {
     try {
       await this.connect()
       const db = this.client.db(this.config.db)

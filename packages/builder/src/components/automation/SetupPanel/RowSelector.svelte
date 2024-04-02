@@ -1,10 +1,11 @@
 <script>
-  import { tables } from "stores/backend"
-  import { Select, Checkbox } from "@budibase/bbui"
+  import { tables } from "stores/builder"
+  import { Select, Checkbox, Label } from "@budibase/bbui"
   import { createEventDispatcher } from "svelte"
   import RowSelectorTypes from "./RowSelectorTypes.svelte"
   import DrawerBindableSlot from "../../common/bindings/DrawerBindableSlot.svelte"
   import AutomationBindingPanel from "../../common/bindings/ServerBindingPanel.svelte"
+  import { TableNames } from "constants"
 
   const dispatch = createEventDispatcher()
 
@@ -99,41 +100,25 @@
   $: if (value?.tableId == null) value = { tableId: "" }
 </script>
 
-<Select
-  on:change={onChangeTable}
-  value={value.tableId}
-  options={$tables.list}
-  getOptionLabel={table => table.name}
-  getOptionValue={table => table._id}
-/>
+<div class="schema-fields">
+  <Label>Table</Label>
+  <div class="field-width">
+    <Select
+      on:change={onChangeTable}
+      value={value.tableId}
+      options={$tables.list.filter(table => table._id !== TableNames.USERS)}
+      getOptionLabel={table => table.name}
+      getOptionValue={table => table._id}
+    />
+  </div>
+</div>
 {#if schemaFields.length}
-  <div class="schema-fields">
-    {#each schemaFields as [field, schema]}
-      {#if !schema.autocolumn && schema.type !== "attachment"}
-        {#if isTestModal}
-          <RowSelectorTypes
-            {isTestModal}
-            {field}
-            {schema}
-            bindings={parsedBindings}
-            {value}
-            {onChange}
-          />
-        {:else}
-          <DrawerBindableSlot
-            fillWidth
-            title={value.title}
-            label={field}
-            panel={AutomationBindingPanel}
-            type={schema.type}
-            {schema}
-            value={value[field]}
-            on:change={e => onChange(e, field)}
-            {bindings}
-            allowJS={true}
-            updateOnChange={false}
-            drawerLeft="260px"
-          >
+  {#each schemaFields as [field, schema]}
+    {#if !schema.autocolumn && schema.type !== "attachment"}
+      <div class="schema-fields">
+        <Label>{field}</Label>
+        <div class="field-width">
+          {#if isTestModal}
             <RowSelectorTypes
               {isTestModal}
               {field}
@@ -142,28 +127,60 @@
               {value}
               {onChange}
             />
-          </DrawerBindableSlot>
-        {/if}
-      {/if}
-      {#if isUpdateRow && schema.type === "link"}
-        <div class="checkbox-field">
-          <Checkbox
-            value={meta.fields?.[field]?.clearRelationships}
-            text={"Clear relationships if empty?"}
-            size={"S"}
-            on:change={e => onChangeSetting(e, field)}
-          />
+          {:else}
+            <DrawerBindableSlot
+              title={value.title || field}
+              panel={AutomationBindingPanel}
+              type={schema.type}
+              {schema}
+              value={value[field]}
+              on:change={e => onChange(e, field)}
+              {bindings}
+              allowJS={true}
+              updateOnChange={false}
+              drawerLeft="260px"
+            >
+              <RowSelectorTypes
+                {isTestModal}
+                {field}
+                {schema}
+                bindings={parsedBindings}
+                {value}
+                {onChange}
+              />
+            </DrawerBindableSlot>
+          {/if}
+
+          {#if isUpdateRow && schema.type === "link"}
+            <div class="checkbox-field">
+              <Checkbox
+                value={meta.fields?.[field]?.clearRelationships}
+                text={"Clear relationships if empty?"}
+                size={"S"}
+                on:change={e => onChangeSetting(e, field)}
+              />
+            </div>
+          {/if}
         </div>
-      {/if}
-    {/each}
-  </div>
+      </div>
+    {/if}
+  {/each}
 {/if}
 
 <style>
+  .field-width {
+    width: 320px;
+  }
+
   .schema-fields {
-    display: grid;
-    grid-gap: var(--spacing-s);
-    margin-top: var(--spacing-s);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    margin-bottom: 10px;
   }
   .schema-fields :global(label) {
     text-transform: capitalize;

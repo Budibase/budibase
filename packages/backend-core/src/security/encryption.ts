@@ -73,6 +73,9 @@ export async function encryptFile(
   const outputFileName = `${filename}.enc`
 
   const filePath = join(dir, filename)
+  if (fs.lstatSync(filePath).isDirectory()) {
+    throw new Error("Unable to encrypt directory")
+  }
   const inputFile = fs.createReadStream(filePath)
   const outputFile = fs.createWriteStream(join(dir, outputFileName))
 
@@ -110,6 +113,9 @@ export async function decryptFile(
   outputPath: string,
   secret: string
 ) {
+  if (fs.lstatSync(inputPath).isDirectory()) {
+    throw new Error("Unable to encrypt directory")
+  }
   const { salt, iv } = await getSaltAndIV(inputPath)
   const inputFile = fs.createReadStream(inputPath, {
     start: SALT_LENGTH + IV_LENGTH,

@@ -8,10 +8,12 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let defaultValue = ""
   export let format = "auto"
   export let onChange
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -58,8 +60,10 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
+  {helpText}
   type="longform"
   bind:fieldState
   bind:fieldApi
@@ -71,6 +75,7 @@
         value={fieldState.value}
         on:change={handleChange}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}
@@ -88,6 +93,7 @@
         value={fieldState.value}
         on:change={handleChange}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}

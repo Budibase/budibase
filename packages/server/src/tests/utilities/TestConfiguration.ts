@@ -17,7 +17,6 @@ import {
   basicWebhook,
 } from "./structures"
 import {
-  auth,
   cache,
   constants,
   context,
@@ -28,7 +27,18 @@ import {
   sessions,
   tenancy,
 } from "@budibase/backend-core"
-import * as controllers from "./controllers"
+import {
+  app as appController,
+  deploy as deployController,
+  role as roleController,
+  automation as automationController,
+  webhook as webhookController,
+  query as queryController,
+  screen as screenController,
+  layout as layoutController,
+  view as viewController,
+} from "./controllers"
+
 import { cleanup } from "../../utilities/fileSystem"
 import newid from "../../db/newid"
 import { generateUserMetadataID } from "../../db/utils"
@@ -42,20 +52,27 @@ import {
   Datasource,
   FieldType,
   INTERNAL_TABLE_SOURCE_ID,
+  Layout,
+  Query,
   RelationshipFieldMetadata,
   RelationshipType,
   Row,
-  SearchFilters,
+  Screen,
+  SearchParams,
   SourceName,
   Table,
   TableSourceType,
   User,
-  UserRoles,
+  UserCtx,
   View,
+  Webhook,
+  WithRequired,
 } from "@budibase/types"
 
 import API from "./api"
 import { cloneDeep } from "lodash"
+import jwt, { Secret } from "jsonwebtoken"
+import { Server } from "http"
 
 mocks.licenses.init(pro)
 
@@ -64,37 +81,28 @@ mocks.licenses.useUnlimited()
 
 dbInit()
 
-type DefaultUserValues = {
-  globalUserId: string
-  email: string
-  firstName: string
-  lastName: string
-  csrfToken: string
-}
-
-interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
+export interface TableToBuild extends Omit<Table, "sourceId" | "sourceType"> {
   sourceId?: string
   sourceType?: TableSourceType
 }
 
-class TestConfiguration {
-  server: any
-  request: supertest.SuperTest<supertest.Test> | undefined
+export default class TestConfiguration {
+  server?: Server
+  request?: supertest.SuperTest<supertest.Test>
   started: boolean
-  appId: string | null
-  allApps: any[]
+  appId?: string
+  allApps: App[]
   app?: App
-  prodApp: any
-  prodAppId: any
-  user: any
-  globalUserId: any
-  userMetadataId: any
+  prodApp?: App
+  prodAppId?: string
+  user?: User
+  userMetadataId?: string
   table?: Table
-  automation: any
+  automation?: Automation
   datasource?: Datasource
   tenantId?: string
-  defaultUserValues: DefaultUserValues
   api: API
+  csrfToken?: string
 
   constructor(openServer = true) {
     if (openServer) {
@@ -107,21 +115,10 @@ class TestConfiguration {
     } else {
       this.started = false
     }
-    this.appId = null
+    this.appId = undefined
     this.allApps = []
-    this.defaultUserValues = this.populateDefaultUserValues()
 
     this.api = new API(this)
-  }
-
-  populateDefaultUserValues(): DefaultUserValues {
-    return {
-      globalUserId: `us_${newid()}`,
-      email: generator.email(),
-      firstName: generator.first(),
-      lastName: generator.last(),
-      csrfToken: generator.hash(),
-    }
   }
 
   getRequest() {
@@ -129,42 +126,86 @@ class TestConfiguration {
   }
 
   getApp() {
+    if (!this.app) {
+      throw new Error("app has not been initialised, call config.init() first")
+    }
     return this.app
   }
 
   getProdApp() {
+    if (!this.prodApp) {
+      throw new Error(
+        "prodApp has not been initialised, call config.init() first"
+      )
+    }
     return this.prodApp
   }
 
   getAppId() {
+    if (!this.appId) {
+      throw new Error(
+        "appId has not been initialised, call config.init() first"
+      )
+    }
     return this.appId
   }
 
   getProdAppId() {
+    if (!this.prodAppId) {
+      throw new Error(
+        "prodAppId has not been initialised, call config.init() first"
+      )
+    }
     return this.prodAppId
   }
 
+  getUser(): User {
+    if (!this.user) {
+      throw new Error("User has not been initialised, call config.init() first")
+    }
+    return this.user
+  }
+
   getUserDetails() {
+    const user = this.getUser()
     return {
-      globalId: this.defaultUserValues.globalUserId,
-      email: this.defaultUserValues.email,
-      firstName: this.defaultUserValues.firstName,
-      lastName: this.defaultUserValues.lastName,
+      globalId: user._id!,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
     }
   }
 
+  getAutomation() {
+    if (!this.automation) {
+      throw new Error(
+        "automation has not been initialised, call config.init() first"
+      )
+    }
+    return this.automation
+  }
+
+  getDatasource() {
+    if (!this.datasource) {
+      throw new Error(
+        "datasource has not been initialised, call config.init() first"
+      )
+    }
+    return this.datasource
+  }
+
   async doInContext<T>(
-    appId: string | null,
+    appId: string | undefined,
     task: () => Promise<T>
   ): Promise<T> {
-    if (!appId) {
-      appId = this.appId
-    }
-
     const tenant = this.getTenantId()
     return tenancy.doInTenant(tenant, () => {
+      if (!appId) {
+        appId = this.appId
+      }
+
       // check if already in a context
-      if (context.getAppId() == null && appId !== null) {
+      if (context.getAppId() == null && appId) {
         return context.doInAppContext(appId, async () => {
           return task()
         })
@@ -213,28 +254,67 @@ class TestConfiguration {
    */
   setEnv(newEnvVars: Partial<typeof env>): () => void {
     const oldEnv = cloneDeep(env)
-    const oldCoreEnv = cloneDeep(coreEnv)
 
     let key: keyof typeof newEnvVars
     for (key in newEnvVars) {
       env._set(key, newEnvVars[key])
-      coreEnv._set(key, newEnvVars[key])
     }
 
     return () => {
       for (const [key, value] of Object.entries(oldEnv)) {
         env._set(key, value)
       }
+    }
+  }
 
-      for (const [key, value] of Object.entries(oldCoreEnv)) {
+  async withCoreEnv(
+    newEnvVars: Partial<typeof coreEnv>,
+    f: () => Promise<void>
+  ) {
+    let cleanup = this.setCoreEnv(newEnvVars)
+    try {
+      await f()
+    } finally {
+      cleanup()
+    }
+  }
+
+  /*
+   * Sets the environment variables to the given values and returns a function
+   * that can be called to reset the environment variables to their original values.
+   */
+  setCoreEnv(newEnvVars: Partial<typeof coreEnv>): () => void {
+    const oldEnv = cloneDeep(env)
+
+    let key: keyof typeof newEnvVars
+    for (key in newEnvVars) {
+      coreEnv._set(key, newEnvVars[key])
+    }
+
+    return () => {
+      for (const [key, value] of Object.entries(oldEnv)) {
         coreEnv._set(key, value)
       }
     }
   }
 
+  async withUser(user: User, f: () => Promise<void>) {
+    const oldUser = this.user
+    this.user = user
+    try {
+      return await f()
+    } finally {
+      this.user = oldUser
+    }
+  }
+
   // UTILS
 
-  _req(body: any, params: any, controlFunc: any) {
+  _req<Req extends Record<string, any> | void, Res>(
+    handler: (ctx: UserCtx<Req, Res>) => Promise<void>,
+    body?: Req,
+    params?: Record<string, string | undefined>
+  ): Promise<Res> {
     // create a fake request ctx
     const request: any = {}
     const appId = this.appId
@@ -249,97 +329,70 @@ class TestConfiguration {
     if (params) {
       request.params = params
     }
+    request.throw = (status: number, message: string) => {
+      throw new Error(`Error ${status} - ${message}`)
+    }
     return this.doInContext(appId, async () => {
-      await controlFunc(request)
+      await handler(request)
       return request.body
     })
   }
 
   // USER / AUTH
-  async globalUser({
-    id = this.defaultUserValues.globalUserId,
-    firstName = this.defaultUserValues.firstName,
-    lastName = this.defaultUserValues.lastName,
-    builder = true,
-    admin = false,
-    email = this.defaultUserValues.email,
-    roles,
-  }: any = {}) {
+  async globalUser(config: Partial<User> = {}): Promise<User> {
+    const {
+      _id = `us_${newid()}`,
+      firstName = generator.first(),
+      lastName = generator.last(),
+      builder = { global: true },
+      admin = { global: false },
+      email = generator.email({ domain: "example.com" }),
+      tenantId = this.getTenantId(),
+      roles = {},
+    } = config
+
     const db = tenancy.getTenantDB(this.getTenantId())
-    let existing
+    let existing: Partial<User> = {}
     try {
-      existing = await db.get<any>(id)
+      existing = await db.get<User>(_id)
     } catch (err) {
-      existing = { email }
+      // ignore
     }
     const user: User = {
-      _id: id,
+      _id,
       ...existing,
-      roles: roles || {},
-      tenantId: this.getTenantId(),
+      ...config,
+      _rev: existing._rev,
+      email,
+      roles,
+      tenantId,
       firstName,
       lastName,
+      builder,
+      admin,
     }
-    await sessions.createASession(id, {
-      sessionId: "sessionid",
+    await sessions.createASession(_id, {
+      sessionId: this.sessionIdForUser(_id),
       tenantId: this.getTenantId(),
-      csrfToken: this.defaultUserValues.csrfToken,
+      csrfToken: this.csrfToken,
     })
-    if (builder) {
-      user.builder = { global: true }
-    } else {
-      user.builder = { global: false }
-    }
-    if (admin) {
-      user.admin = { global: true }
-    } else {
-      user.admin = { global: false }
-    }
     const resp = await db.put(user)
+    await cache.user.invalidateUser(_id)
     return {
       _rev: resp.rev,
       ...user,
     }
   }
 
-  async createUser(
-    user: {
-      id?: string
-      firstName?: string
-      lastName?: string
-      email?: string
-      builder?: boolean
-      admin?: boolean
-      roles?: UserRoles
-    } = {}
-  ): Promise<User> {
-    let { id, firstName, lastName, email, builder, admin, roles } = user
-    firstName = firstName || this.defaultUserValues.firstName
-    lastName = lastName || this.defaultUserValues.lastName
-    email = email || this.defaultUserValues.email
-    roles = roles || {}
-    if (builder == null) {
-      builder = true
-    }
-    const globalId = !id ? `us_${Math.random()}` : `us_${id}`
-    const resp = await this.globalUser({
-      id: globalId,
-      firstName,
-      lastName,
-      email,
-      builder,
-      admin,
-      roles,
-    })
-    await cache.user.invalidateUser(globalId)
-    return resp
+  async createUser(user: Partial<User> = {}): Promise<User> {
+    return await this.globalUser(user)
   }
 
   async createGroup(roleId: string = roles.BUILTIN_ROLE_IDS.BASIC) {
     return context.doInTenant(this.tenantId!, async () => {
       const baseGroup = structures.userGroups.userGroup()
       baseGroup.roles = {
-        [this.prodAppId]: roleId,
+        [this.getProdAppId()]: roleId,
       }
       const { id, rev } = await pro.sdk.groups.save(baseGroup)
       return {
@@ -362,8 +415,22 @@ class TestConfiguration {
     })
   }
 
-  async login({ roleId, userId, builder, prodApp = false }: any = {}) {
-    const appId = prodApp ? this.prodAppId : this.appId
+  sessionIdForUser(userId: string): string {
+    return `sessionid-${userId}`
+  }
+
+  async login({
+    roleId,
+    userId,
+    builder,
+    prodApp,
+  }: {
+    roleId?: string
+    userId: string
+    builder: boolean
+    prodApp: boolean
+  }) {
+    const appId = prodApp ? this.getProdAppId() : this.getAppId()
     return context.doInAppContext(appId, async () => {
       userId = !userId ? `us_uuid1` : userId
       if (!this.request) {
@@ -372,22 +439,22 @@ class TestConfiguration {
       // make sure the user exists in the global DB
       if (roleId !== roles.BUILTIN_ROLE_IDS.PUBLIC) {
         await this.globalUser({
-          id: userId,
-          builder,
-          roles: { [this.prodAppId]: roleId },
+          _id: userId,
+          builder: { global: builder },
+          roles: { [appId]: roleId || roles.BUILTIN_ROLE_IDS.BASIC },
         })
       }
       await sessions.createASession(userId, {
-        sessionId: "sessionid",
+        sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       })
       // have to fake this
       const authObj = {
         userId,
-        sessionId: "sessionid",
+        sessionId: this.sessionIdForUser(userId),
         tenantId: this.getTenantId(),
       }
-      const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+      const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
       // returning necessary request headers
       await cache.user.invalidateUser(userId)
@@ -403,17 +470,18 @@ class TestConfiguration {
 
   defaultHeaders(extras = {}, prodApp = false) {
     const tenantId = this.getTenantId()
+    const user = this.getUser()
     const authObj: AuthToken = {
-      userId: this.defaultUserValues.globalUserId,
-      sessionId: "sessionid",
+      userId: user._id!,
+      sessionId: this.sessionIdForUser(user._id!),
       tenantId,
     }
-    const authToken = auth.jwt.sign(authObj, coreEnv.JWT_SECRET)
+    const authToken = jwt.sign(authObj, coreEnv.JWT_SECRET as Secret)
 
     const headers: any = {
       Accept: "application/json",
       Cookie: [`${constants.Cookie.Auth}=${authToken}`],
-      [constants.Header.CSRF_TOKEN]: this.defaultUserValues.csrfToken,
+      [constants.Header.CSRF_TOKEN]: this.csrfToken,
       Host: this.tenantHost(),
       ...extras,
     }
@@ -443,7 +511,7 @@ class TestConfiguration {
 
   async basicRoleHeaders() {
     return await this.roleHeaders({
-      email: this.defaultUserValues.email,
+      email: generator.email({ domain: "example.com" }),
       builder: false,
       prodApp: true,
       roleId: roles.BUILTIN_ROLE_IDS.BASIC,
@@ -451,12 +519,12 @@ class TestConfiguration {
   }
 
   async roleHeaders({
-    email = this.defaultUserValues.email,
+    email = generator.email({ domain: "example.com" }),
     roleId = roles.BUILTIN_ROLE_IDS.ADMIN,
     builder = false,
     prodApp = true,
   } = {}) {
-    return this.login({ email, roleId, builder, prodApp })
+    return this.login({ userId: email, roleId, builder, prodApp })
   }
 
   // TENANCY
@@ -475,21 +543,26 @@ class TestConfiguration {
   }
 
   async newTenant(appName = newid()): Promise<App> {
-    this.defaultUserValues = this.populateDefaultUserValues()
+    this.csrfToken = generator.hash()
+
     this.tenantId = structures.tenant.id()
     this.user = await this.globalUser()
-    this.globalUserId = this.user._id
-    this.userMetadataId = generateUserMetadataID(this.globalUserId)
+    this.userMetadataId = generateUserMetadataID(this.user._id!)
+
     return this.createApp(appName)
   }
 
-  doInTenant(task: any) {
+  doInTenant<T>(task: () => T) {
     return context.doInTenant(this.getTenantId(), task)
   }
 
   // API
 
-  async generateApiKey(userId = this.defaultUserValues.globalUserId) {
+  async generateApiKey(userId?: string) {
+    const user = this.getUser()
+    if (!userId) {
+      userId = user._id!
+    }
     const db = tenancy.getTenantDB(this.getTenantId())
     const id = dbCore.generateDevInfoID(userId)
     let devInfo: any
@@ -506,62 +579,63 @@ class TestConfiguration {
   }
 
   // APP
-  async createApp(appName: string): Promise<App> {
+  async createApp(appName: string, url?: string): Promise<App> {
     // create dev app
     // clear any old app
-    this.appId = null
-    await context.doInAppContext(null, async () => {
-      this.app = await this._req(
-        { name: appName },
-        null,
-        controllers.app.create
-      )
-      this.appId = this.app?.appId!
-    })
-    return await context.doInAppContext(this.appId, async () => {
+    this.appId = undefined
+    this.app = await context.doInTenant(
+      this.tenantId!,
+      async () =>
+        (await this._req(appController.create, {
+          name: appName,
+          url,
+        })) as App
+    )
+    this.appId = this.app.appId
+    return await context.doInAppContext(this.app.appId!, async () => {
       // create production app
       this.prodApp = await this.publish()
 
       this.allApps.push(this.prodApp)
-      this.allApps.push(this.app)
+      this.allApps.push(this.app!)
 
-      return this.app
+      return this.app!
     })
   }
 
   async publish() {
-    await this._req(null, null, controllers.deploy.publishApp)
+    await this._req(deployController.publishApp)
     // @ts-ignore
     const prodAppId = this.getAppId().replace("_dev", "")
     this.prodAppId = prodAppId
 
     return context.doInAppContext(prodAppId, async () => {
       const db = context.getProdAppDB()
-      return await db.get(dbCore.DocumentType.APP_METADATA)
+      return await db.get<App>(dbCore.DocumentType.APP_METADATA)
     })
   }
 
   async unpublish() {
-    const response = await this._req(
-      null,
-      { appId: this.appId },
-      controllers.app.unpublish
-    )
-    this.prodAppId = null
-    this.prodApp = null
+    const response = await this._req(appController.unpublish, {
+      appId: this.appId,
+    })
+    this.prodAppId = undefined
+    this.prodApp = undefined
     return response
   }
 
   // TABLE
 
-  async updateTable(
+  async upsertTable(
     config?: TableToBuild,
     { skipReassigning } = { skipReassigning: false }
   ): Promise<Table> {
     config = config || basicTable()
-    config.sourceType = config.sourceType || TableSourceType.INTERNAL
-    config.sourceId = config.sourceId || INTERNAL_TABLE_SOURCE_ID
-    const response = await this._req(config, null, controllers.table.save)
+    const response = await this.api.table.save({
+      ...config,
+      sourceType: config.sourceType || TableSourceType.INTERNAL,
+      sourceId: config.sourceId || INTERNAL_TABLE_SOURCE_ID,
+    })
     if (!skipReassigning) {
       this.table = response
     }
@@ -579,7 +653,7 @@ class TestConfiguration {
     if (!config.sourceId) {
       config.sourceId = INTERNAL_TABLE_SOURCE_ID
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async createExternalTable(
@@ -594,12 +668,12 @@ class TestConfiguration {
       config.sourceId = this.datasource._id
       config.sourceType = TableSourceType.EXTERNAL
     }
-    return this.updateTable(config, options)
+    return this.upsertTable(config, options)
   }
 
   async getTable(tableId?: string) {
     tableId = tableId || this.table!._id!
-    return this._req(null, { tableId }, controllers.table.find)
+    return this.api.table.get(tableId)
   }
 
   async createLinkedTable(
@@ -647,37 +721,29 @@ class TestConfiguration {
     if (!this.table) {
       throw "Test requires table to be configured."
     }
-    const tableId = (config && config.tableId) || this.table._id
+    const tableId = (config && config.tableId) || this.table._id!
     config = config || basicRow(tableId!)
-    return this._req(config, { tableId }, controllers.row.save)
-  }
-
-  async getRow(tableId: string, rowId: string): Promise<Row> {
-    return this._req(null, { tableId, rowId }, controllers.row.find)
+    return this.api.row.save(tableId, config)
   }
 
   async getRows(tableId: string) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    return this._req(null, { tableId }, controllers.row.fetch)
+    return this.api.row.fetch(tableId)
   }
 
-  async searchRows(tableId: string, searchParams: SearchFilters = {}) {
+  async searchRows(tableId: string, searchParams?: SearchParams) {
     if (!tableId && this.table) {
       tableId = this.table._id!
     }
-    const body = {
-      query: searchParams,
-    }
-    return this._req(body, { tableId }, controllers.row.search)
+    return this.api.row.search(tableId, searchParams)
   }
 
   // ROLE
 
   async createRole(config?: any) {
-    config = config || basicRole()
-    return this._req(config, null, controllers.role.save)
+    return this._req(roleController.save, config || basicRole())
   }
 
   // VIEW
@@ -690,7 +756,7 @@ class TestConfiguration {
       tableId: this.table!._id,
       name: generator.guid(),
     }
-    return this._req(view, null, controllers.view.v1.save)
+    return this._req(viewController.v1.save, view)
   }
 
   async createView(
@@ -714,63 +780,60 @@ class TestConfiguration {
 
   // AUTOMATION
 
-  async createAutomation(config?: any) {
+  async createAutomation(config?: Automation) {
     config = config || basicAutomation()
     if (config._rev) {
       delete config._rev
     }
-    this.automation = (
-      await this._req(config, null, controllers.automation.create)
-    ).automation
+    const res = await this._req(automationController.create, config)
+    this.automation = res.automation
     return this.automation
   }
 
   async getAllAutomations() {
-    return this._req(null, null, controllers.automation.fetch)
+    return this._req(automationController.fetch)
   }
 
-  async deleteAutomation(automation?: any) {
+  async deleteAutomation(automation?: Automation) {
     automation = automation || this.automation
     if (!automation) {
       return
     }
-    return this._req(
-      null,
-      { id: automation._id, rev: automation._rev },
-      controllers.automation.destroy
-    )
+    return this._req(automationController.destroy, undefined, {
+      id: automation._id,
+      rev: automation._rev,
+    })
   }
 
-  async createWebhook(config?: any) {
+  async createWebhook(config?: Webhook) {
     if (!this.automation) {
       throw "Must create an automation before creating webhook."
     }
-    config = config || basicWebhook(this.automation._id)
-    return (await this._req(config, null, controllers.webhook.save)).webhook
+    config = config || basicWebhook(this.automation._id!)
+
+    return (await this._req(webhookController.save, config)).webhook
   }
 
   // DATASOURCE
 
   async createDatasource(config?: {
     datasource: Datasource
-  }): Promise<Datasource> {
+  }): Promise<WithRequired<Datasource, "_id">> {
     config = config || basicDatasource()
-    const response = await this._req(config, null, controllers.datasource.save)
-    this.datasource = response.datasource
-    return this.datasource!
+    const response = await this.api.datasource.create(config.datasource)
+    this.datasource = response
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async updateDatasource(datasource: Datasource): Promise<Datasource> {
-    const response = await this._req(
-      datasource,
-      { datasourceId: datasource._id },
-      controllers.datasource.update
-    )
-    this.datasource = response.datasource
-    return this.datasource!
+  async updateDatasource(
+    datasource: Datasource
+  ): Promise<WithRequired<Datasource, "_id">> {
+    const response = await this.api.datasource.update(datasource)
+    this.datasource = response
+    return { ...this.datasource, _id: this.datasource!._id! }
   }
 
-  async restDatasource(cfg?: any) {
+  async restDatasource(cfg?: Record<string, any>) {
     return this.createDatasource({
       datasource: {
         ...basicDatasource().datasource,
@@ -782,6 +845,7 @@ class TestConfiguration {
 
   async dynamicVariableDatasource() {
     let datasource = await this.restDatasource()
+
     const basedOnQuery = await this.createQuery({
       ...basicQuery(datasource._id!),
       fields: {
@@ -816,7 +880,7 @@ class TestConfiguration {
   }
 
   async getAutomationLogs() {
-    return context.doInAppContext(this.appId, async () => {
+    return context.doInAppContext(this.getAppId(), async () => {
       const now = new Date()
       return await pro.sdk.automations.logs.logSearch({
         startDate: new Date(now.getTime() - 100000).toISOString(),
@@ -826,49 +890,26 @@ class TestConfiguration {
 
   // QUERY
 
-  async previewQuery(
-    request: any,
-    config: any,
-    datasource: any,
-    fields: any,
-    params: any,
-    verb?: string
-  ) {
-    return request
-      .post(`/api/queries/preview`)
-      .send({
-        datasourceId: datasource._id,
-        parameters: params || {},
-        fields,
-        queryVerb: verb || "read",
-        name: datasource.name,
-      })
-      .set(config.defaultHeaders())
-      .expect("Content-Type", /json/)
-      .expect(200)
-  }
-
-  async createQuery(config?: any) {
-    if (!this.datasource && !config) {
-      throw "No datasource created for query."
-    }
-    config = config || basicQuery(this.datasource!._id!)
-    return this._req(config, null, controllers.query.save)
+  async createQuery(config?: Query) {
+    return this._req(
+      queryController.save,
+      config || basicQuery(this.getDatasource()._id!)
+    )
   }
 
   // SCREEN
 
-  async createScreen(config?: any) {
+  async createScreen(config?: Screen) {
     config = config || basicScreen()
-    return this._req(config, null, controllers.screen.save)
+    return this._req(screenController.save, config)
   }
 
   // LAYOUT
 
-  async createLayout(config?: any) {
+  async createLayout(config?: Layout) {
     config = config || basicLayout()
-    return await this._req(config, null, controllers.layout.save)
+    return await this._req(layoutController.save, config)
   }
 }
 
-export = TestConfiguration
+module.exports = TestConfiguration

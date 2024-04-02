@@ -9,7 +9,7 @@
     Body,
   } from "@budibase/bbui"
   import { API } from "api"
-  import { automationStore, store } from "../../builderStore"
+  import { initialise } from "stores/builder"
 
   export let app
 
@@ -28,8 +28,8 @@
       const appId = app.devId
       await API.updateAppFromExport(appId, data)
       const pkg = await API.fetchAppPackage(appId)
-      await store.actions.initialise(pkg)
-      await automationStore.actions.fetch()
+      await initialise(pkg)
+
       notifications.success("App updated successfully")
     } catch (err) {
       notifications.error(`Failed to update app - ${err.message || err}`)

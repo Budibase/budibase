@@ -1,4 +1,4 @@
-import { context, db as dbCore } from "@budibase/backend-core"
+import { context, db as dbCore, events } from "@budibase/backend-core"
 import { findHBSBlocks, processObjectSync } from "@budibase/string-templates"
 import {
   Datasource,
@@ -14,18 +14,30 @@ import {
 } from "@budibase/types"
 import { cloneDeep } from "lodash/fp"
 import { getEnvironmentVariables } from "../../utils"
-import { getDefinitions, getDefinition } from "../../../integrations"
+import {
+  getDefinitions,
+  getDefinition,
+  getIntegration,
+} from "../../../integrations"
 import merge from "lodash/merge"
 import {
   BudibaseInternalDB,
+  generateDatasourceID,
   getDatasourceParams,
   getDatasourcePlusParams,
   getTableParams,
+  DocumentType,
 } from "../../../db/utils"
 import sdk from "../../index"
-import datasource from "../../../api/routes/datasource"
+import { setupCreationAuth as googleSetupCreationAuth } from "../../../integrations/googlesheets"
+import { helpers } from "@budibase/shared-core"
 
 const ENV_VAR_PREFIX = "env."
+
+function addDatasourceFlags(datasource: Datasource) {
+  datasource.isSQL = helpers.isSQL(datasource)
+  return datasource
+}
 
 export async function fetch(opts?: {
   enriched: boolean
@@ -50,13 +62,13 @@ export async function fetch(opts?: {
   } as Datasource
 
   // Get external datasources
-  const datasources = (
-    await db.allDocs(
+  let datasources = (
+    await db.allDocs<Datasource>(
       getDatasourceParams(null, {
         include_docs: true,
       })
     )
-  ).rows.map(row => row.doc)
+  ).rows.map(row => row.doc!)
 
   const allDatasources: Datasource[] = await sdk.datasources.removeSecrets([
     bbInternalDb,
@@ -69,6 +81,7 @@ export async function fetch(opts?: {
     }
   }
 
+  datasources = datasources.map(datasource => addDatasourceFlags(datasource))
   if (opts?.enriched) {
     const envVars = await getEnvironmentVariables()
     const promises = datasources.map(datasource =>
@@ -144,6 +157,7 @@ async function enrichDatasourceWithValues(
 }
 
 export async function enrich(datasource: Datasource) {
+  datasource = addDatasourceFlags(datasource)
   const { datasource: response } = await enrichDatasourceWithValues(datasource)
   return response
 }
@@ -153,7 +167,8 @@ export async function get(
   opts?: { enriched: boolean }
 ): Promise<Datasource> {
   const appDb = context.getAppDB()
-  const datasource = await appDb.get<Datasource>(datasourceId)
+  let datasource = await appDb.get<Datasource>(datasourceId)
+  datasource = addDatasourceFlags(datasource)
   if (opts?.enriched) {
     return (await enrichDatasourceWithValues(datasource)).datasource
   } else {
@@ -223,7 +238,7 @@ export async function removeSecretSingle(datasource: Datasource) {
 }
 
 export function mergeConfigs(update: Datasource, old: Datasource) {
-  if (!update.config) {
+  if (!update.config || !old.config) {
     return update
   }
   // specific to REST datasources, fix the auth configs again if required
@@ -265,11 +280,84 @@ export function mergeConfigs(update: Datasource, old: Datasource) {
 export async function getExternalDatasources(): Promise<Datasource[]> {
   const db = context.getAppDB()
 
-  const externalDatasources = await db.allDocs<Datasource>(
+  let dsResponse = await db.allDocs<Datasource>(
     getDatasourcePlusParams(undefined, {
       include_docs: true,
     })
   )
 
-  return externalDatasources.rows.map(r => r.doc)
+  const externalDatasources = dsResponse.rows.map(r => r.doc!)
+  return externalDatasources.map(datasource => addDatasourceFlags(datasource))
+}
+
+export async function save(
+  datasource: Datasource,
+  opts?: { fetchSchema?: boolean; tablesFilter?: string[] }
+): Promise<{ datasource: Datasource; errors: Record<string, string> }> {
+  const db = context.getAppDB()
+  const plus = datasource.plus
+
+  const fetchSchema = opts?.fetchSchema || false
+  const tablesFilter = opts?.tablesFilter || []
+
+  datasource = addDatasourceFlags({
+    _id: generateDatasourceID({ plus }),
+    ...datasource,
+    type: plus ? DocumentType.DATASOURCE_PLUS : DocumentType.DATASOURCE,
+  })
+
+  let errors: Record<string, string> = {}
+  if (fetchSchema) {
+    const schema = await sdk.datasources.buildFilteredSchema(
+      datasource,
+      tablesFilter
+    )
+    datasource.entities = schema.tables
+    setDefaultDisplayColumns(datasource)
+    errors = schema.errors
+  }
+
+  if (preSaveAction[datasource.source]) {
+    await preSaveAction[datasource.source](datasource)
+  }
+
+  const dbResp = await db.put(
+    sdk.tables.populateExternalTableSchemas(datasource)
+  )
+  await events.datasource.created(datasource)
+  datasource._rev = dbResp.rev
+
+  // Drain connection pools when configuration is changed
+  if (datasource.source) {
+    const source = await getIntegration(datasource.source)
+    if (source && source.pool) {
+      await source.pool.end()
+    }
+  }
+
+  return { datasource, errors }
+}
+
+const preSaveAction: Partial<Record<SourceName, any>> = {
+  [SourceName.GOOGLE_SHEETS]: async (datasource: Datasource) => {
+    await googleSetupCreationAuth(datasource.config as any)
+  },
+}
+
+/**
+ * Make sure all datasource entities have a display name selected
+ */
+export function setDefaultDisplayColumns(datasource: Datasource) {
+  //
+  for (let entity of Object.values(datasource.entities || {})) {
+    if (entity.primaryDisplay) {
+      continue
+    }
+    const notAutoColumn = Object.values(entity.schema).find(
+      schema => !schema.autocolumn
+    )
+    if (notAutoColumn) {
+      entity.primaryDisplay = notAutoColumn.name
+    }
+  }
 }

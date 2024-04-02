@@ -1,4 +1,5 @@
 import { default as ElasticSearchIntegration } from "../elasticsearch"
+
 jest.mock("@elastic/elasticsearch")
 
 class TestConfiguration {
@@ -21,7 +22,7 @@ describe("Elasticsearch Integration", () => {
     const body = {
       name: "Hello",
     }
-    const response = await config.integration.create({
+    await config.integration.create({
       index: indexName,
       json: body,
     })

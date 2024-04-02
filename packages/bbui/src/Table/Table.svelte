@@ -42,6 +42,7 @@
   export let customPlaceholder = false
   export let showHeaderBorder = true
   export let placeholderText = "No rows found"
+  export let snippets = []
 
   const dispatch = createEventDispatcher()
 
@@ -303,6 +304,8 @@
 </script>
 
 {#key fields?.length}
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div
     class="wrapper"
     class:wrapper--quiet={quiet}
@@ -423,6 +426,7 @@
                   <CellRenderer
                     {customRenderers}
                     {row}
+                    {snippets}
                     schema={schema[field]}
                     value={deepGet(row, field)}
                     on:clickrelationship
@@ -468,6 +472,7 @@
     --table-border: 1px solid var(--spectrum-alias-border-color-mid);
     --cell-padding: var(--spectrum-global-dimension-size-250);
     overflow: auto;
+    display: contents;
   }
   .wrapper--quiet {
     --table-bg: var(--spectrum-alias-background-color-transparent);

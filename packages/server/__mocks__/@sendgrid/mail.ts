@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 module SendgridMock {
   class Email {
     constructor() {
@@ -11,7 +12,7 @@ module SendgridMock {
     }
 
     async send(msg: any) {
-      if (msg.to === "invalid@test.com") {
+      if (msg.to === "invalid@example.com") {
         throw "Invalid"
       }
       return msg

@@ -4,8 +4,7 @@
   import GridScrollWrapper from "./GridScrollWrapper.svelte"
   import DataCell from "../cells/DataCell.svelte"
   import { fade } from "svelte/transition"
-  import { GutterWidth } from "../lib/constants"
-  import { NewRowID } from "../lib/constants"
+  import { GutterWidth, NewRowID } from "../lib/constants"
   import GutterCell from "../cells/GutterCell.svelte"
   import KeyboardShortcut from "./KeyboardShortcut.svelte"
 
@@ -154,6 +153,8 @@
 </script>
 
 <!-- New row FAB -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <TempTooltip
   text="Click here to create your first row"
   condition={hasNoRows && $loaded && !$filter?.length && !$refreshing}

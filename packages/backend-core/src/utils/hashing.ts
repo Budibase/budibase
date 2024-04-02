@@ -1,4 +1,5 @@
 import env from "../environment"
+
 export * from "../docIds/newid"
 const bcrypt = env.JS_BCRYPT ? require("bcryptjs") : require("bcrypt")
 

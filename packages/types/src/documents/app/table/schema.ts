@@ -2,9 +2,10 @@
 // column size, position and whether it can be viewed
 import { FieldSubtype, FieldType } from "../row"
 import {
-  AutoFieldSubTypes,
+  AutoFieldSubType,
   AutoReason,
-  FormulaTypes,
+  FormulaType,
+  JsonFieldSubType,
   RelationshipType,
 } from "./constants"
 
@@ -21,7 +22,8 @@ interface BaseRelationshipFieldMetadata
   main?: boolean
   fieldName: string
   tableId: string
-  subtype?: AutoFieldSubTypes.CREATED_BY | AutoFieldSubTypes.UPDATED_BY
+  tableRev?: string
+  subtype?: AutoFieldSubType.CREATED_BY | AutoFieldSubType.UPDATED_BY
 }
 
 // External tables use junction tables, internal tables don't require them
@@ -61,7 +63,7 @@ export interface AutoColumnFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.AUTO
   autocolumn: true
-  subtype?: AutoFieldSubTypes
+  subtype?: AutoFieldSubType
   lastID?: number
   // if the column was turned to an auto-column for SQL, explains why (primary, foreign etc)
   autoReason?: AutoReason
@@ -69,7 +71,7 @@ export interface AutoColumnFieldMetadata
 
 export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.NUMBER
-  subtype?: AutoFieldSubTypes.AUTO_ID
+  subtype?: AutoFieldSubType.AUTO_ID
   lastID?: number
   autoReason?: AutoReason.FOREIGN_KEY
   // used specifically when Budibase generates external tables, this denotes if a number field
@@ -80,11 +82,16 @@ export interface NumberFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   }
 }
 
+export interface JsonFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.JSON
+  subtype?: JsonFieldSubType.ARRAY
+}
+
 export interface DateFieldMetadata extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.DATETIME
   ignoreTimezones?: boolean
   timeOnly?: boolean
-  subtype?: AutoFieldSubTypes.CREATED_AT | AutoFieldSubTypes.UPDATED_AT
+  subtype?: AutoFieldSubType.CREATED_AT | AutoFieldSubType.UPDATED_AT
 }
 
 export interface LongFormFieldMetadata extends BaseFieldSchema {
@@ -95,13 +102,20 @@ export interface LongFormFieldMetadata extends BaseFieldSchema {
 export interface FormulaFieldMetadata extends BaseFieldSchema {
   type: FieldType.FORMULA
   formula: string
-  formulaType?: FormulaTypes
+  formulaType?: FormulaType
 }
 
 export interface BBReferenceFieldMetadata
   extends Omit<BaseFieldSchema, "subtype"> {
   type: FieldType.BB_REFERENCE
   subtype: FieldSubtype.USER | FieldSubtype.USERS
+  relationshipType?: RelationshipType
+}
+
+export interface AttachmentFieldMetadata
+  extends Omit<BaseFieldSchema, "subtype"> {
+  type: FieldType.ATTACHMENT
+  subtype?: FieldSubtype.SINGLE
 }
 
 export interface FieldConstraints {
@@ -111,6 +125,7 @@ export interface FieldConstraints {
   length?: {
     minimum?: string | number | null
     maximum?: string | number | null
+    message?: string
   }
   numericality?: {
     greaterThanOrEqualTo: string | null
@@ -148,6 +163,8 @@ interface OtherFieldMetadata extends BaseFieldSchema {
     | FieldType.FORMULA
     | FieldType.NUMBER
     | FieldType.LONGFORM
+    | FieldType.BB_REFERENCE
+    | FieldType.ATTACHMENT
   >
 }
 
@@ -160,6 +177,8 @@ export type FieldSchema =
   | NumberFieldMetadata
   | LongFormFieldMetadata
   | BBReferenceFieldMetadata
+  | JsonFieldMetadata
+  | AttachmentFieldMetadata
 
 export interface TableSchema {
   [key: string]: FieldSchema
@@ -193,4 +212,10 @@ export function isBBReferenceField(
   field: FieldSchema
 ): field is BBReferenceFieldMetadata {
   return field.type === FieldType.BB_REFERENCE
+}
+
+export function isAttachmentField(
+  field: FieldSchema
+): field is AttachmentFieldMetadata {
+  return field.type === FieldType.ATTACHMENT
 }

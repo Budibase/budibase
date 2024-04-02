@@ -7,8 +7,10 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let defaultValue = ""
   export let onChange
+  export let helpText = null
 
   const component = getContext("component")
   const validation = [
@@ -48,8 +50,10 @@
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   {defaultValue}
+  {helpText}
   type="json"
   bind:fieldState
   bind:fieldApi
@@ -60,6 +64,7 @@
         value={serialiseValue(fieldState.value)}
         on:change={handleChange}
         disabled={fieldState.disabled}
+        readonly={fieldState.readonly}
         error={fieldState.error}
         id={fieldState.fieldId}
         {placeholder}

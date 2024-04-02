@@ -55,6 +55,7 @@ const environment = {
   CHECKLIST_CACHE_TTL: parseIntSafe(process.env.CHECKLIST_CACHE_TTL) || 3600,
   SESSION_UPDATE_PERIOD: process.env.SESSION_UPDATE_PERIOD,
   ENCRYPTED_TEST_PUBLIC_API_KEY: process.env.ENCRYPTED_TEST_PUBLIC_API_KEY,
+  SESSION_EXPIRY_SECONDS: process.env.SESSION_EXPIRY_SECONDS,
   /**
    * Mock the email service in use - links to ethereal hosted emails are logged instead.
    */

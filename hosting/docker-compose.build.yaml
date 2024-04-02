@@ -6,7 +6,7 @@ services:
   app-service:
     build:
       context: ..
-      dockerfile: packages/server/Dockerfile.v2
+      dockerfile: packages/server/Dockerfile
       args:
         - BUDIBASE_VERSION=0.0.0+dev-docker
     container_name: build-bbapps
@@ -36,7 +36,7 @@ services:
   worker-service:
     build:
       context: ..
-      dockerfile: packages/worker/Dockerfile.v2
+      dockerfile: packages/worker/Dockerfile
       args:
         - BUDIBASE_VERSION=0.0.0+dev-docker
     container_name: build-bbworker

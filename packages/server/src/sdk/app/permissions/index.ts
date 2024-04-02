@@ -1,4 +1,4 @@
-import { db, env, roles } from "@budibase/backend-core"
+import { db, roles } from "@budibase/backend-core"
 import { features } from "@budibase/pro"
 import {
   DocumentType,
@@ -61,7 +61,7 @@ export async function getInheritablePermissions(
 export async function allowsExplicitPermissions(resourceId: string) {
   if (isViewID(resourceId)) {
     const allowed = await features.isViewPermissionEnabled()
-    const minPlan = !allowed ? PlanType.BUSINESS : undefined
+    const minPlan = !allowed ? PlanType.PREMIUM_PLUS : undefined
 
     return {
       allowed,
@@ -133,7 +133,7 @@ export async function getDependantResources(
       }
 
       const permissions = await getResourcePerms(view.id)
-      for (const [level, roleInfo] of Object.entries(permissions)) {
+      for (const [, roleInfo] of Object.entries(permissions)) {
         if (roleInfo.type === PermissionSource.INHERITED) {
           dependants[VirtualDocumentType.VIEW] ??= new Set()
           dependants[VirtualDocumentType.VIEW].add(view.id)

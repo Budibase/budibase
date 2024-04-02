@@ -7,6 +7,10 @@ import {
   GetResourcePermsResponse,
   ResourcePermissionInfo,
   GetDependantResourcesResponse,
+  AddPermissionResponse,
+  AddPermissionRequest,
+  RemovePermissionRequest,
+  RemovePermissionResponse,
 } from "@budibase/types"
 import { getRoleParams } from "../../db/utils"
 import {
@@ -16,21 +20,21 @@ import {
 import { removeFromArray } from "../../utilities"
 import sdk from "../../sdk"
 
-const PermissionUpdateType = {
-  REMOVE: "remove",
-  ADD: "add",
+const enum PermissionUpdateType {
+  REMOVE = "remove",
+  ADD = "add",
 }
 
 const SUPPORTED_LEVELS = CURRENTLY_SUPPORTED_LEVELS
 
 // utility function to stop this repetition - permissions always stored under roles
 async function getAllDBRoles(db: Database) {
-  const body = await db.allDocs(
+  const body = await db.allDocs<Role>(
     getRoleParams(null, {
       include_docs: true,
     })
   )
-  return body.rows.map(row => row.doc)
+  return body.rows.map(row => row.doc!)
 }
 
 async function updatePermissionOnRole(
@@ -39,7 +43,7 @@ async function updatePermissionOnRole(
     resourceId,
     level,
   }: { roleId: string; resourceId: string; level: PermissionLevel },
-  updateType: string
+  updateType: PermissionUpdateType
 ) {
   const allowedAction = await sdk.permissions.resourceActionAllowed({
     resourceId,
@@ -79,7 +83,7 @@ async function updatePermissionOnRole(
     ) {
       rolePermissions[resourceId] =
         typeof rolePermissions[resourceId] === "string"
-          ? [rolePermissions[resourceId]]
+          ? [rolePermissions[resourceId] as unknown as string]
           : []
     }
     // handle the removal/updating the role which has this permission first
@@ -107,11 +111,15 @@ async function updatePermissionOnRole(
   }
 
   const response = await db.bulkDocs(docUpdates)
-  return response.map((resp: any) => {
+  return response.map(resp => {
     const version = docUpdates.find(role => role._id === resp.id)?.version
-    resp._id = roles.getExternalRoleID(resp.id, version)
-    delete resp.id
-    return resp
+    const _id = roles.getExternalRoleID(resp.id, version)
+    return {
+      _id,
+      rev: resp.rev,
+      error: resp.error,
+      reason: resp.reason,
+    }
   })
 }
 
@@ -189,13 +197,14 @@ export async function getDependantResources(
   }
 }
 
-export async function addPermission(ctx: UserCtx) {
-  ctx.body = await updatePermissionOnRole(ctx.params, PermissionUpdateType.ADD)
+export async function addPermission(ctx: UserCtx<void, AddPermissionResponse>) {
+  const params: AddPermissionRequest = ctx.params
+  ctx.body = await updatePermissionOnRole(params, PermissionUpdateType.ADD)
 }
 
-export async function removePermission(ctx: UserCtx) {
-  ctx.body = await updatePermissionOnRole(
-    ctx.params,
-    PermissionUpdateType.REMOVE
-  )
+export async function removePermission(
+  ctx: UserCtx<void, RemovePermissionResponse>
+) {
+  const params: RemovePermissionRequest = ctx.params
+  ctx.body = await updatePermissionOnRole(params, PermissionUpdateType.REMOVE)
 }

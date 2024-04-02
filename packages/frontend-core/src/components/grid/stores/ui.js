@@ -16,8 +16,10 @@ export const createStores = context => {
   const hoveredRowId = writable(null)
   const rowHeight = writable(get(props).fixedRowHeight || DefaultRowHeight)
   const previousFocusedRowId = writable(null)
+  const previousFocusedCellId = writable(null)
   const gridFocused = writable(false)
   const isDragging = writable(false)
+  const buttonColumnWidth = writable(0)
 
   // Derive the current focused row ID
   const focusedRowId = derived(
@@ -47,10 +49,12 @@ export const createStores = context => {
     focusedCellAPI,
     focusedRowId,
     previousFocusedRowId,
+    previousFocusedCellId,
     hoveredRowId,
     rowHeight,
     gridFocused,
     isDragging,
+    buttonColumnWidth,
     selectedRows: {
       ...selectedRows,
       actions: {
@@ -127,6 +131,7 @@ export const initialise = context => {
   const {
     focusedRowId,
     previousFocusedRowId,
+    previousFocusedCellId,
     rows,
     focusedCellId,
     selectedRows,
@@ -177,6 +182,13 @@ export const initialise = context => {
   focusedRowId.subscribe(id => {
     previousFocusedRowId.set(lastFocusedRowId)
     lastFocusedRowId = id
+  })
+
+  // Remember the last focused cell ID so that we can store the previous one
+  let lastFocusedCellId = null
+  focusedCellId.subscribe(id => {
+    previousFocusedCellId.set(lastFocusedCellId)
+    lastFocusedCellId = id
   })
 
   // Remove hovered row when a cell is selected

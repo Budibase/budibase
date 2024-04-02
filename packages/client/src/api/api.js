@@ -77,4 +77,10 @@ export const API = createAPIClient({
     // Log all errors to console
     console.warn(`[Client] HTTP ${status} on ${method}:${url}\n\t${message}`)
   },
+  onMigrationDetected: _appId => {
+    if (!window.MIGRATING_APP) {
+      // We will force a reload, that will display the updating screen until the migration is running
+      window.location.reload()
+    }
+  },
 })

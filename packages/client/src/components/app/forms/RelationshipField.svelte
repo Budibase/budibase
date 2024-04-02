@@ -1,7 +1,7 @@
 <script>
   import { CoreSelect, CoreMultiselect } from "@budibase/bbui"
-  import { fetchData } from "@budibase/frontend-core"
-  import { getContext } from "svelte"
+  import { fetchData, Utils } from "@budibase/frontend-core"
+  import { getContext, onMount } from "svelte"
   import Field from "./Field.svelte"
   import { FieldTypes } from "../../../constants"
 
@@ -11,6 +11,7 @@
   export let label
   export let placeholder
   export let disabled = false
+  export let readonly = false
   export let validation
   export let autocomplete = true
   export let defaultValue
@@ -18,6 +19,8 @@
   export let filter
   export let datasourceType = "table"
   export let primaryDisplay
+  export let span
+  export let helpText = null
 
   let fieldState
   let fieldApi
@@ -25,6 +28,7 @@
   let tableDefinition
   let searchTerm
   let open
+  let initialValue
 
   $: type =
     datasourceType === "table" ? FieldTypes.LINK : FieldTypes.BB_REFERENCE
@@ -105,8 +109,20 @@
     }
   }
 
-  $: fetchRows(searchTerm, primaryDisplay, defaultValue)
+  $: forceFetchRows(filter)
+  $: debouncedFetchRows(
+    searchTerm,
+    primaryDisplay,
+    initialValue || defaultValue
+  )
 
+  const forceFetchRows = async () => {
+    // if the filter has changed, then we need to reset the options, clear the selection, and re-fetch
+    optionsObj = {}
+    fieldApi?.setValue([])
+    selectedValue = []
+    debouncedFetchRows(searchTerm, primaryDisplay, defaultValue)
+  }
   const fetchRows = async (searchTerm, primaryDisplay, defaultVal) => {
     const allRowsFetched =
       $fetch.loaded &&
@@ -116,15 +132,31 @@
     if (allRowsFetched || !primaryDisplay) {
       return
     }
-    if (defaultVal && !optionsObj[defaultVal]) {
+    // must be an array
+    if (defaultVal && !Array.isArray(defaultVal)) {
+      defaultVal = defaultVal.split(",")
+    }
+    if (defaultVal && defaultVal.some(val => !optionsObj[val])) {
       await fetch.update({
-        query: { equal: { _id: defaultVal } },
+        query: { oneOf: { _id: defaultVal } },
       })
     }
+
+    // Ensure we match all filters, rather than any
+    const baseFilter = (filter || []).filter(x => x.operator !== "allOr")
     await fetch.update({
-      query: { string: { [primaryDisplay]: searchTerm } },
+      filter: [
+        ...baseFilter,
+        {
+          // Use a big numeric prefix to avoid clashing with an existing filter
+          field: `999:${primaryDisplay}`,
+          operator: "string",
+          value: searchTerm,
+        },
+      ],
     })
   }
+  const debouncedFetchRows = Utils.debounce(fetchRows, 250)
 
   const flatten = values => {
     if (!values) {
@@ -137,7 +169,9 @@
       typeof value === "object" ? value._id : value
     )
     // Make sure field state is valid
-    fieldApi.setValue(values)
+    if (values?.length > 0) {
+      fieldApi.setValue(values)
+    }
     return values
   }
 
@@ -177,15 +211,28 @@
       fetch.nextPage()
     }
   }
+
+  onMount(() => {
+    // if the form is in 'Update' mode, then we need to fetch the matching row so that the value is correctly set
+    if (fieldState?.value) {
+      initialValue =
+        fieldSchema?.relationshipType !== "one-to-many"
+          ? flatten(fieldState?.value) ?? []
+          : flatten(fieldState?.value)?.[0]
+    }
+  })
 </script>
 
 <Field
   {label}
   {field}
   {disabled}
+  {readonly}
   {validation}
   defaultValue={expandedDefaultValue}
   {type}
+  {span}
+  {helpText}
   bind:fieldState
   bind:fieldApi
   bind:fieldSchema
@@ -200,6 +247,7 @@
       on:loadMore={loadMore}
       id={fieldState.fieldId}
       disabled={fieldState.disabled}
+      readonly={fieldState.readonly}
       error={fieldState.error}
       getOptionLabel={getDisplayName}
       getOptionValue={option => option._id}
@@ -207,7 +255,6 @@
       bind:searchTerm
       loading={$fetch.loading}
       bind:open
-      customPopoverMaxHeight={400}
     />
   {/if}
 </Field>

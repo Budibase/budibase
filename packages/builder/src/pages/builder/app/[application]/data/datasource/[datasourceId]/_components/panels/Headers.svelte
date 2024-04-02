@@ -5,7 +5,7 @@
     getRestBindings,
     readableToRuntimeBinding,
     runtimeToReadableMap,
-  } from "builderStore/dataBinding"
+  } from "dataBinding"
   import { cloneDeep } from "lodash/fp"
   import SaveDatasourceButton from "./SaveDatasourceButton.svelte"
   import Panel from "./Panel.svelte"

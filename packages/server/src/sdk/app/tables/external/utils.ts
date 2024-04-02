@@ -1,5 +1,6 @@
 import {
   Datasource,
+  FieldType,
   ManyToManyRelationshipFieldMetadata,
   ManyToOneRelationshipFieldMetadata,
   OneToManyRelationshipFieldMetadata,
@@ -8,7 +9,6 @@ import {
   Table,
   TableSourceType,
 } from "@budibase/types"
-import { FieldTypes } from "../../../../constants"
 import {
   foreignKeyStructure,
   generateForeignKey,
@@ -26,7 +26,7 @@ export function cleanupRelationships(
   // clean up relationships in couch table schemas
   for (let [key, schema] of Object.entries(tableToIterate.schema)) {
     if (
-      schema.type === FieldTypes.LINK &&
+      schema.type === FieldType.LINK &&
       (!oldTable || table.schema[key] == null)
     ) {
       const schemaTableId = schema.tableId
@@ -42,10 +42,13 @@ export function cleanupRelationships(
       for (let [relatedKey, relatedSchema] of Object.entries(
         relatedTable.schema
       )) {
-        if (
-          relatedSchema.type === FieldTypes.LINK &&
-          relatedSchema.fieldName === foreignKey
-        ) {
+        if (relatedSchema.type !== FieldType.LINK) {
+          continue
+        }
+        // if they both have the same field name it will appear as if it needs to be removed,
+        // don't cleanup in this scenario
+        const sameFieldNameForBoth = relatedSchema.name === schema.name
+        if (relatedSchema.fieldName === foreignKey && !sameFieldNameForBoth) {
           delete relatedTable.schema[relatedKey]
         }
       }

@@ -12,7 +12,7 @@ import { generator } from "./generator"
 import { tenant } from "."
 
 export const newEmail = () => {
-  return `${uuid()}@test.com`
+  return `${uuid()}@example.com`
 }
 
 export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
@@ -21,11 +21,11 @@ export const user = (userProps?: Partial<Omit<User, "userId">>): User => {
     _id: userId,
     userId,
     email: newEmail(),
-    password: "test",
+    password: "password",
     roles: { app_test: "admin" },
     firstName: generator.first(),
     lastName: generator.last(),
-    pictureUrl: "http://test.com",
+    pictureUrl: "http://example.com",
     tenantId: tenant.id(),
     ...userProps,
   }

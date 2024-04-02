@@ -1,19 +1,24 @@
 <script>
   import { get } from "svelte/store"
   import { onMount, onDestroy } from "svelte"
-  import { store, selectedScreen, currentAsset } from "builderStore"
-  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
   import {
-    ProgressCircle,
-    Layout,
-    Heading,
-    Body,
-    Icon,
-    notifications,
-  } from "@budibase/bbui"
+    previewStore,
+    builderStore,
+    themeStore,
+    componentStore,
+    appStore,
+    navigationStore,
+    selectedScreen,
+    hoverStore,
+    componentTreeNodesStore,
+    snippets,
+  } from "stores/builder"
+  import ConfirmDialog from "components/common/ConfirmDialog.svelte"
+  import { Layout, Heading, Body, Icon, notifications } from "@budibase/bbui"
   import ErrorSVG from "@budibase/frontend-core/assets/error.svg?raw"
-  import { findComponent, findComponentPath } from "builderStore/componentUtils"
+  import { findComponent, findComponentPath } from "helpers/components"
   import { isActive, goto } from "@roxi/routify"
+  import { ClientAppSkeleton } from "@budibase/frontend-core"
 
   let iframe
   let layout
@@ -35,29 +40,31 @@
   $: screen = $selectedScreen
 
   // Determine selected component ID
-  $: selectedComponentId = $store.selectedComponentId
+  $: selectedComponentId = $componentStore.selectedComponentId
 
   $: previewData = {
-    appId: $store.appId,
+    appId: $appStore.appId,
     layout,
     screen,
     selectedComponentId,
-    theme: $store.theme,
-    customTheme: $store.customTheme,
-    previewDevice: $store.previewDevice,
-    messagePassing: $store.clientFeatures.messagePassing,
-    navigation: $store.navigation,
+    theme: $themeStore.theme,
+    customTheme: $themeStore.customTheme,
+    previewDevice: $previewStore.previewDevice,
+    messagePassing: $appStore.clientFeatures.messagePassing,
+    navigation: $navigationStore,
     hiddenComponentIds:
-      $store.componentToPaste?._id && $store.componentToPaste?.isCut
-        ? [$store.componentToPaste?._id]
+      $componentStore.componentToPaste?._id &&
+      $componentStore.componentToPaste?.isCut
+        ? [$componentStore.componentToPaste?._id]
         : [],
     isBudibaseEvent: true,
-    usedPlugins: $store.usedPlugins,
+    usedPlugins: $appStore.usedPlugins,
     location: {
       protocol: window.location.protocol,
       hostname: window.location.hostname,
       port: window.location.port,
     },
+    snippets: $snippets,
   }
 
   // Refresh the preview when required
@@ -78,7 +85,10 @@
       })
     )
   }
-  $: store.actions.preview.registerEventHandler(sendPreviewEvent)
+
+  $: previewStore.registerEventHandler((name, payload) => {
+    return sendPreviewEvent(name, payload)
+  })
 
   // Update the iframe with the builder info to render the correct preview
   const refreshContent = message => {
@@ -116,11 +126,14 @@
       loading = false
       error = event.error || "An unknown error occurred"
     } else if (type === "select-component" && data.id) {
-      $store.selectedComponentId = data.id
+      componentStore.select(data.id)
+      componentTreeNodesStore.makeNodeVisible(data.id)
+    } else if (type === "hover-component") {
+      hoverStore.hover(data.id, false)
     } else if (type === "update-prop") {
-      await store.actions.components.updateSetting(data.prop, data.value)
+      await componentStore.updateSetting(data.prop, data.value)
     } else if (type === "update-styles") {
-      await store.actions.components.updateStyles(data.styles, data.id)
+      await componentStore.updateStyles(data.styles, data.id)
     } else if (type === "delete-component" && data.id) {
       // Legacy type, can be deleted in future
       confirmDeleteComponent(data.id)
@@ -128,17 +141,17 @@
       const { key, ctrlKey } = data
       document.dispatchEvent(new KeyboardEvent("keydown", { key, ctrlKey }))
     } else if (type === "duplicate-component" && data.id) {
-      const rootComponent = get(currentAsset).props
+      const rootComponent = get(selectedScreen).props
       const component = findComponent(rootComponent, data.id)
-      store.actions.components.copy(component)
-      await store.actions.components.paste(component)
+      componentStore.copy(component)
+      await componentStore.paste(component)
     } else if (type === "preview-loaded") {
       // Wait for this event to show the client library if intelligent
       // loading is supported
       loading = false
     } else if (type === "move-component") {
       const { componentId, destinationComponentId } = data
-      const rootComponent = get(currentAsset).props
+      const rootComponent = get(selectedScreen).props
 
       // Get source and destination components
       const source = findComponent(rootComponent, componentId)
@@ -153,13 +166,13 @@
 
       // Cut and paste the component to the new destination
       if (source && destination) {
-        store.actions.components.copy(source, true, false)
-        await store.actions.components.paste(destination, data.mode)
+        componentStore.copy(source, true, false)
+        await componentStore.paste(destination, data.mode)
       }
     } else if (type === "request-add-component") {
       toggleAddComponent()
     } else if (type === "highlight-setting") {
-      store.actions.settings.highlight(data.setting)
+      builderStore.highlightSetting(data.setting, "error")
 
       // Also scroll setting into view
       const selector = `#${data.setting}-prop-control`
@@ -172,15 +185,25 @@
       }
     } else if (type === "eject-block") {
       const { id, definition } = data
-      await store.actions.components.handleEjectBlock(id, definition)
+      await componentStore.handleEjectBlock(id, definition)
     } else if (type === "reload-plugin") {
-      await store.actions.components.refreshDefinitions()
+      await componentStore.refreshDefinitions()
     } else if (type === "drop-new-component") {
       const { component, parent, index } = data
-      await store.actions.components.create(component, null, parent, index)
+      await componentStore.create(component, null, parent, index)
     } else if (type === "add-parent-component") {
       const { componentId, parentType } = data
-      await store.actions.components.addParent(componentId, parentType)
+      await componentStore.addParent(componentId, parentType)
+    } else if (type === "provide-context") {
+      let context = data?.context
+      if (context) {
+        try {
+          context = JSON.parse(context)
+        } catch (error) {
+          context = null
+        }
+      }
+      previewStore.setSelectedComponentContext(context)
     } else {
       console.warn(`Client sent unknown event type: ${type}`)
     }
@@ -193,7 +216,7 @@
 
   const deleteComponent = async () => {
     try {
-      await store.actions.components.delete({ _id: idToDelete })
+      await componentStore.delete({ _id: idToDelete })
     } catch (error) {
       notifications.error("Error deleting component")
     }
@@ -221,10 +244,20 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="component-container">
   {#if loading}
-    <div class="center">
-      <ProgressCircle />
+    <div
+      class={`loading ${$themeStore.baseTheme} ${$themeStore.theme}`}
+      class:tablet={$previewStore.previewDevice === "tablet"}
+      class:mobile={$previewStore.previewDevice === "mobile"}
+    >
+      <ClientAppSkeleton
+        sideNav={$navigationStore?.navigation === "Left"}
+        hideFooter
+        hideDevTools
+      />
     </div>
   {:else if error}
     <div class="center error">
@@ -241,8 +274,6 @@
     bind:this={iframe}
     src="/app/preview"
     class:hidden={loading || error}
-    class:tablet={$store.previewDevice === "tablet"}
-    class:mobile={$store.previewDevice === "mobile"}
   />
   <div
     class="add-component"
@@ -262,6 +293,25 @@
 />
 
 <style>
+  .loading {
+    position: absolute;
+    container-type: inline-size;
+    width: 100%;
+    height: 100%;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+  }
+
+  .loading.tablet {
+    width: calc(1024px + 6px);
+    max-height: calc(768px + 6px);
+  }
+
+  .loading.mobile {
+    width: calc(390px + 6px);
+    max-height: calc(844px + 6px);
+  }
+
   .component-container {
     grid-row-start: middle;
     grid-column-start: middle;

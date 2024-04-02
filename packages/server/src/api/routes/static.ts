@@ -6,6 +6,7 @@ import { permissions } from "@budibase/backend-core"
 import env from "../../environment"
 import { paramResource } from "../../middleware/resourceId"
 import { devClientLibPath } from "../../utilities/fileSystem"
+
 const { BUILDER, PermissionType, PermissionLevel } = permissions
 
 const router: Router = new Router()
@@ -50,8 +51,8 @@ router
     controller.deleteObjects
   )
   .get("/app/preview", authorized(BUILDER), controller.serveBuilderPreview)
-  .get("/:appId/:path*", controller.serveApp)
   .get("/app/:appUrl/:path*", controller.serveApp)
+  .get("/:appId/:path*", controller.serveApp)
   .post(
     "/api/attachments/:datasourceId/url",
     authorized(PermissionType.TABLE, PermissionLevel.READ),

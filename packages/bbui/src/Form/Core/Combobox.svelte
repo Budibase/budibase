@@ -10,7 +10,6 @@
   export let placeholder = "Choose an option or type"
   export let disabled = false
   export let readonly = false
-  export let error = null
   export let options = []
   export let getOptionLabel = option => option
   export let getOptionValue = option => option
@@ -36,15 +35,14 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
   class="spectrum-InputGroup"
   class:is-focused={open || focus}
-  class:is-invalid={!!error}
   class:is-disabled={disabled}
 >
   <div
     class="spectrum-Textfield spectrum-InputGroup-textfield"
-    class:is-invalid={!!error}
     class:is-disabled={disabled}
     class:is-focused={open || focus}
   >

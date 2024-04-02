@@ -5,7 +5,7 @@ import { QuotaUsageType, StaticQuotaName } from "@budibase/types"
 import { db as dbCore, context } from "@budibase/backend-core"
 
 describe("syncRows", () => {
-  let config = new TestConfig(false)
+  const config = new TestConfig()
 
   beforeEach(async () => {
     await config.init()
@@ -14,7 +14,7 @@ describe("syncRows", () => {
   afterAll(config.end)
 
   it("runs successfully", async () => {
-    return config.doInContext(null, async () => {
+    return config.doInContext(undefined, async () => {
       // create the usage quota doc and mock usages
       await quotas.getQuotaUsage()
       await quotas.setUsage(300, StaticQuotaName.ROWS, QuotaUsageType.STATIC)

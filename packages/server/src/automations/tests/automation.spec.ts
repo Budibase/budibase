@@ -36,7 +36,7 @@ describe("Run through some parts of the automations system", () => {
   it("should be able to init in builder", async () => {
     const automation: Automation = {
       ...basicAutomation(),
-      appId: config.appId,
+      appId: config.appId!,
     }
     const fields: any = { a: 1, appId: config.appId }
     await triggers.externalTrigger(automation, fields)

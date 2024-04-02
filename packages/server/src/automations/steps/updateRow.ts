@@ -84,9 +84,11 @@ export async function run({ inputs, appId, emitter }: AutomationStepInput) {
 
   // clear any undefined, null or empty string properties so that they aren't updated
   for (let propKey of Object.keys(inputs.row)) {
+    const clearRelationships =
+      inputs.meta?.fields?.[propKey]?.clearRelationships
     if (
-      (inputs.row[propKey] == null || inputs.row[propKey] === "") &&
-      !inputs.meta?.fields?.[propKey]?.clearRelationships
+      (inputs.row[propKey] == null || inputs.row[propKey]?.length === 0) &&
+      !clearRelationships
     ) {
       delete inputs.row[propKey]
     }

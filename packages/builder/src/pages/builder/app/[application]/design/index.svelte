@@ -1,10 +1,10 @@
 <script>
   import { redirect } from "@roxi/routify"
-  import { store as frontendStore } from "builderStore"
+  import { screenStore } from "stores/builder"
 
   $: {
-    if ($frontendStore.screens.length > 0) {
-      $redirect(`./${$frontendStore.screens[0]._id}`)
+    if ($screenStore.screens.length > 0) {
+      $redirect(`./${$screenStore.screens[0]._id}`)
     } else {
       $redirect("./new")
     }

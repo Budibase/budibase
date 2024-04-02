@@ -16,6 +16,7 @@ jest.mock("node-fetch", () => {
 import fetch from "node-fetch"
 import { default as RestIntegration } from "../rest"
 import { RestAuthType } from "@budibase/types"
+
 const FormData = require("form-data")
 const { URLSearchParams } = require("url")
 
@@ -69,7 +70,7 @@ describe("REST Integration", () => {
         Accept: "text/html",
       },
     }
-    const response = await config.integration.read(query)
+    await config.integration.read(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       headers: {
         Accept: "text/html",
@@ -90,7 +91,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.update(query)
+    await config.integration.update(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "PUT",
       body: '{"name":"test"}',
@@ -110,7 +111,7 @@ describe("REST Integration", () => {
         name: "test",
       }),
     }
-    const response = await config.integration.delete(query)
+    await config.integration.delete(query)
     expect(fetch).toHaveBeenCalledWith(`${BASE_URL}/api?test=1`, {
       method: "DELETE",
       headers: HEADERS,
@@ -185,9 +186,15 @@ describe("REST Integration", () => {
   })
 
   describe("response", () => {
-    function buildInput(json: any, text: any, header: any) {
+    const contentTypes = ["application/json", "text/plain", "application/xml"]
+    function buildInput(
+      json: any,
+      text: any,
+      header: any,
+      status: number = 200
+    ) {
       return {
-        status: 200,
+        status,
         json: json ? async () => json : undefined,
         text: text ? async () => text : undefined,
         headers: {
@@ -224,6 +231,18 @@ describe("REST Integration", () => {
       expect(output.extra.raw).toEqual(text)
       expect(output.extra.headers["content-type"]).toEqual("application/xml")
     })
+
+    test.each(contentTypes)(
+      "should not throw an error on 204 no content",
+      async contentType => {
+        const input = buildInput(undefined, null, contentType, 204)
+        const output = await config.integration.parseResponse(input)
+        expect(output.data).toEqual([])
+        expect(output.extra.raw).toEqual([])
+        expect(output.info.code).toEqual(204)
+        expect(output.extra.headers["content-type"]).toEqual(contentType)
+      }
+    )
   })
 
   describe("authentication", () => {
@@ -399,9 +418,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
     })
   })
@@ -532,9 +551,9 @@ describe("REST Integration", () => {
       })
       // @ts-ignore
       const sentData = fetch.mock.calls[0][1].body
-      expect(sentData.has(pageParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(pageParam)).toEqual(pageValue.toString())
-      expect(sentData.has(sizeParam))
+      expect(sentData.has(pageParam)).toEqual(true)
       expect(sentData.get(sizeParam)).toEqual(sizeValue.toString())
       expect(res.pagination.cursor).toEqual(123)
     })

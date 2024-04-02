@@ -1,7 +1,6 @@
 import {
   Event,
   Identity,
-  Group,
   IdentityType,
   AuditLogQueueEvent,
   AuditLogFn,
@@ -79,11 +78,11 @@ export default class AuditLogsProcessor implements EventProcessor {
     }
   }
 
-  async identify(identity: Identity, timestamp?: string | number) {
+  async identify() {
     // no-op
   }
 
-  async identifyGroup(group: Group, timestamp?: string | number) {
+  async identifyGroup() {
     // no-op
   }
 

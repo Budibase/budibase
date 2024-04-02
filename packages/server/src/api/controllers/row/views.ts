@@ -1,4 +1,3 @@
-import { quotas } from "@budibase/pro"
 import {
   UserCtx,
   ViewV2,
@@ -68,10 +67,7 @@ export async function searchView(
     paginate: body.paginate,
   }
 
-  const result = await quotas.addQuery(() => sdk.rows.search(searchOptions), {
-    datasourceId: view.tableId,
-  })
-
+  const result = await sdk.rows.search(searchOptions)
   result.rows.forEach(r => (r._viewId = view.id))
   ctx.body = result
 }

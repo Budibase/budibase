@@ -1,9 +1,8 @@
 <script>
   import KeyValueBuilder from "components/integration/KeyValueBuilder.svelte"
-  import { getUserBindings } from "builderStore/dataBinding"
-  export let bindable = true
+  import { getUserBindings } from "dataBinding"
+
   export let queryBindings = []
-  export let hideHeading = false
 
   const userBindings = getUserBindings()
 

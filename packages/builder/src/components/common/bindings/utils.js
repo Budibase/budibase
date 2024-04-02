@@ -1,38 +1,57 @@
-export function addHBSBinding(value, caretPos, binding) {
-  binding = typeof binding === "string" ? binding : binding.path
-  value = value == null ? "" : value
+import { decodeJSBinding } from "@budibase/string-templates"
+import { hbInsert, jsInsert } from "components/common/CodeEditor"
 
-  const left = caretPos?.start ? value.substring(0, caretPos.start) : ""
-  const right = caretPos?.end ? value.substring(caretPos.end) : ""
-  if (!left.includes("{{") || !right.includes("}}")) {
-    binding = `{{ ${binding} }}`
-  }
-  if (caretPos.start) {
-    value =
-      value.substring(0, caretPos.start) +
-      binding +
-      value.substring(caretPos.end, value.length)
-  } else {
-    value += binding
-  }
-  return value
+export const BindingType = {
+  READABLE: "readableBinding",
+  RUNTIME: "runtimeBinding",
 }
 
-export function addJSBinding(value, caretPos, binding, { helper } = {}) {
-  binding = typeof binding === "string" ? binding : binding.path
-  value = value == null ? "" : value
-  if (!helper) {
-    binding = `$("${binding}")`
-  } else {
-    binding = `helpers.${binding}()`
+export class BindingHelpers {
+  constructor(getCaretPosition, insertAtPos, { disableWrapping } = {}) {
+    this.getCaretPosition = getCaretPosition
+    this.insertAtPos = insertAtPos
+    this.disableWrapping = disableWrapping
   }
-  if (caretPos.start) {
-    value =
-      value.substring(0, caretPos.start) +
-      binding +
-      value.substring(caretPos.end, value.length)
-  } else {
-    value += binding
+
+  // Adds a JS/HBS helper to the expression
+  onSelectHelper(value, helper, { js, dontDecode }) {
+    const pos = this.getCaretPosition()
+    const { start, end } = pos
+    if (js) {
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
+      const insertVal = jsInsert(jsVal, start, end, helper.text, {
+        helper: true,
+      })
+      this.insertAtPos({ start, end, value: insertVal })
+    } else {
+      const insertVal = hbInsert(value, start, end, helper.text)
+      this.insertAtPos({ start, end, value: insertVal })
+    }
   }
-  return value
+
+  // Adds a data binding to the expression
+  onSelectBinding(
+    value,
+    binding,
+    { js, dontDecode, type = BindingType.READABLE }
+  ) {
+    const { start, end } = this.getCaretPosition()
+    if (js) {
+      const jsVal = dontDecode ? value : decodeJSBinding(value)
+      const insertVal = jsInsert(jsVal, start, end, binding[type], {
+        disableWrapping: this.disableWrapping,
+      })
+      this.insertAtPos({ start, end, value: insertVal })
+    } else {
+      const insertVal = hbInsert(value, start, end, binding[type])
+      this.insertAtPos({ start, end, value: insertVal })
+    }
+  }
+
+  // Adds a snippet to the expression
+  onSelectSnippet(snippet) {
+    const pos = this.getCaretPosition()
+    const { start, end } = pos
+    this.insertAtPos({ start, end, value: `snippets.${snippet.name}` })
+  }
 }

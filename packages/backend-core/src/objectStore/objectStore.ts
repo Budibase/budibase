@@ -1,4 +1,5 @@
 const sanitize = require("sanitize-s3-objectkey")
+
 import AWS from "aws-sdk"
 import stream, { Readable } from "stream"
 import fetch from "node-fetch"
@@ -6,7 +7,7 @@ import tar from "tar-fs"
 import zlib from "zlib"
 import { promisify } from "util"
 import { join } from "path"
-import fs from "fs"
+import fs, { ReadStream } from "fs"
 import env from "../environment"
 import { budibaseTempDir } from "./utils"
 import { v4 } from "uuid"
@@ -183,7 +184,7 @@ export async function upload({
 export async function streamUpload(
   bucketName: string,
   filename: string,
-  stream: any,
+  stream: ReadStream | ReadableStream,
   extra = {}
 ) {
   const objectStore = ObjectStore(bucketName)
@@ -254,7 +255,8 @@ export async function listAllObjects(bucketName: string, path: string) {
       objects = objects.concat(response.Contents)
     }
     isTruncated = !!response.IsTruncated
-  } while (isTruncated)
+    token = response.NextContinuationToken
+  } while (isTruncated && token)
   return objects
 }
 
@@ -304,20 +306,33 @@ export async function retrieveDirectory(bucketName: string, path: string) {
   let writePath = join(budibaseTempDir(), v4())
   fs.mkdirSync(writePath)
   const objects = await listAllObjects(bucketName, path)
-  let fullObjects = await Promise.all(
-    objects.map(obj => retrieve(bucketName, obj.Key!))
+  let streams = await Promise.all(
+    objects.map(obj => getReadStream(bucketName, obj.Key!))
   )
   let count = 0
+  const writePromises: Promise<Error>[] = []
   for (let obj of objects) {
     const filename = obj.Key!
-    const data = fullObjects[count++]
+    const stream = streams[count++]
     const possiblePath = filename.split("/")
-    if (possiblePath.length > 1) {
-      const dirs = possiblePath.slice(0, possiblePath.length - 1)
-      fs.mkdirSync(join(writePath, ...dirs), { recursive: true })
+    const dirs = possiblePath.slice(0, possiblePath.length - 1)
+    const possibleDir = join(writePath, ...dirs)
+    if (possiblePath.length > 1 && !fs.existsSync(possibleDir)) {
+      fs.mkdirSync(possibleDir, { recursive: true })
     }
-    fs.writeFileSync(join(writePath, ...possiblePath), data)
+    const writeStream = fs.createWriteStream(join(writePath, ...possiblePath), {
+      mode: 0o644,
+    })
+    stream.pipe(writeStream)
+    writePromises.push(
+      new Promise((resolve, reject) => {
+        stream.on("finish", resolve)
+        stream.on("error", reject)
+        writeStream.on("error", reject)
+      })
+    )
   }
+  await Promise.all(writePromises)
   return writePath
 }
 

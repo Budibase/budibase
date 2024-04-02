@@ -1,15 +1,15 @@
 <script>
   import { Select, ModalContent } from "@budibase/bbui"
   import { RoleUtils } from "@budibase/frontend-core"
-  import { roles } from "stores/backend"
+  import { roles, screenStore } from "stores/builder"
   import { get } from "svelte/store"
-  import { store } from "builderStore"
   import { onMount } from "svelte"
 
   export let onConfirm
   export let onCancel
   export let screenUrl
   export let screenAccessRole
+  export let confirmText = "Done"
 
   let error
 
@@ -26,7 +26,7 @@
     if (!url || !role) {
       return false
     }
-    return get(store).screens.some(
+    return get(screenStore).screens.some(
       screen =>
         screen.routing.route.toLowerCase() === url.toLowerCase() &&
         screen.routing.roleId === role
@@ -41,7 +41,7 @@
 
 <ModalContent
   title="Access"
-  confirmText="Done"
+  {confirmText}
   cancelText="Back"
   {onConfirm}
   {onCancel}

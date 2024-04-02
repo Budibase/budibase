@@ -1,8 +1,4 @@
-import {
-  Table,
-  SearchInputParams,
-  CreateTableParams,
-} from "@budibase/server/api/controllers/public/mapping/types"
+import { Table, SearchInputParams, CreateTableParams } from "../../../types"
 import { HeadersInit, Response } from "node-fetch"
 import { generateTable } from "../../fixtures/tables"
 import BudibasePublicAPIClient from "../BudibasePublicAPIClient"

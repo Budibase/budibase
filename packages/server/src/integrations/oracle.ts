@@ -1,4 +1,5 @@
 import {
+  FieldType,
   DatasourceFieldType,
   Integration,
   Operation,
@@ -11,17 +12,19 @@ import {
   ConnectionInfo,
   Schema,
   TableSourceType,
+  Row,
+  DatasourcePlusQueryResponse,
 } from "@budibase/types"
 import {
   buildExternalTableId,
   checkExternalTables,
-  convertSqlType,
+  generateColumnDefinition,
   finaliseExternalTables,
   getSqlQuery,
   SqlClient,
+  HOST_ADDRESS,
 } from "./utils"
 import Sql from "./base/sql"
-import { FieldTypes } from "../constants"
 import {
   BindParameters,
   Connection,
@@ -30,6 +33,7 @@ import {
   Result,
 } from "oracledb"
 import { OracleTable, OracleColumn, OracleColumnsResponse } from "./base/types"
+
 let oracledb: any
 try {
   oracledb = require("oracledb")
@@ -60,7 +64,7 @@ const SCHEMA: Integration = {
   datasource: {
     host: {
       type: DatasourceFieldType.STRING,
-      default: "localhost",
+      default: HOST_ADDRESS,
       required: true,
     },
     port: {
@@ -249,14 +253,6 @@ class OracleIntegration extends Sql implements DatasourcePlus {
     )
   }
 
-  private internalConvertType(column: OracleColumn) {
-    if (this.isBooleanType(column)) {
-      return { type: FieldTypes.BOOLEAN }
-    }
-
-    return convertSqlType(column.type)
-  }
-
   /**
    * Fetches the tables from the oracle table and assigns them to the datasource.
    * @param datasourceId - datasourceId to fetch
@@ -301,13 +297,15 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           const columnName = oracleColumn.name
           let fieldSchema = table.schema[columnName]
           if (!fieldSchema) {
-            fieldSchema = {
+            fieldSchema = generateColumnDefinition({
               autocolumn: OracleIntegration.isAutoColumn(oracleColumn),
               name: columnName,
-              constraints: {
-                presence: false,
-              },
-              ...this.internalConvertType(oracleColumn),
+              presence: false,
+              externalType: oracleColumn.type,
+            })
+
+            if (this.isBooleanType(oracleColumn)) {
+              fieldSchema.type = FieldType.BOOLEAN
             }
 
             table.schema[columnName] = fieldSchema
@@ -373,6 +371,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       const options: ExecuteOptions = { autoCommit: true }
       const bindings: BindParameters = query.bindings || []
 
+      this.log(query.sql, bindings)
       return await connection.execute<T>(query.sql, bindings, options)
     } finally {
       if (connection) {
@@ -424,9 +423,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       : [{ deleted: true }]
   }
 
-  async query(json: QueryJson) {
+  async query(json: QueryJson): DatasourcePlusQueryResponse {
     const operation = this._operation(json)
-    const input = this._query(json, { disableReturning: true })
+    const input = this._query(json, { disableReturning: true }) as SqlQuery
     if (Array.isArray(input)) {
       const responses = []
       for (let query of input) {
@@ -448,7 +447,7 @@ class OracleIntegration extends Sql implements DatasourcePlus {
       if (deletedRows?.rows?.length) {
         return deletedRows.rows
       } else if (response.rows?.length) {
-        return response.rows
+        return response.rows as Row[]
       } else {
         // get the last row that was updated
         if (
@@ -457,9 +456,9 @@ class OracleIntegration extends Sql implements DatasourcePlus {
           operation !== Operation.DELETE
         ) {
           const lastRow = await this.internalQuery({
-            sql: `SELECT * FROM \"${json.endpoint.entityId}\" WHERE ROWID = '${response.lastRowid}'`,
+            sql: `SELECT * FROM "${json.endpoint.entityId}" WHERE ROWID = '${response.lastRowid}'`,
           })
-          return lastRow.rows
+          return lastRow.rows as Row[]
         } else {
           return [{ [operation.toLowerCase()]: true }]
         }

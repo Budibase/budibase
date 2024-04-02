@@ -4,6 +4,7 @@
   import Icon from "../Icon/Icon.svelte"
   import Popover from "../Popover/Popover.svelte"
   import { onMount } from "svelte"
+
   const flipDurationMs = 150
 
   export let constraints
@@ -80,6 +81,8 @@
   })
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div>
   <div
     class="actions"

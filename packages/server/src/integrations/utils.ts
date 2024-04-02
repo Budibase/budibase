@@ -13,6 +13,7 @@ import {
   DEFAULT_BB_DATASOURCE_ID,
 } from "../constants"
 import { helpers } from "@budibase/shared-core"
+import env from "../environment"
 
 const DOUBLE_SEPARATOR = `${SEPARATOR}${SEPARATOR}`
 const ROW_ID_REGEX = /^\[.*]$/g
@@ -67,6 +68,10 @@ const SQL_BOOLEAN_TYPE_MAP = {
   tinyint: FieldType.BOOLEAN,
 }
 
+const SQL_OPTIONS_TYPE_MAP = {
+  "user-defined": FieldType.OPTIONS,
+}
+
 const SQL_MISC_TYPE_MAP = {
   json: FieldType.JSON,
   bigint: FieldType.BIGINT,
@@ -78,6 +83,7 @@ const SQL_TYPE_MAP = {
   ...SQL_STRING_TYPE_MAP,
   ...SQL_BOOLEAN_TYPE_MAP,
   ...SQL_MISC_TYPE_MAP,
+  ...SQL_OPTIONS_TYPE_MAP,
 }
 
 export enum SqlClient {
@@ -86,6 +92,14 @@ export enum SqlClient {
   MY_SQL = "mysql2",
   ORACLE = "oracledb",
 }
+
+const isCloud = env.isProd() && !env.SELF_HOSTED
+const isSelfHost = env.isProd() && env.SELF_HOSTED
+export const HOST_ADDRESS = isSelfHost
+  ? "host.docker.internal"
+  : isCloud
+  ? ""
+  : "localhost"
 
 export function isExternalTableID(tableId: string) {
   return tableId.includes(DocumentType.DATASOURCE)
@@ -178,25 +192,49 @@ export function breakRowIdField(_id: string | { _id: string }): any[] {
   }
 }
 
-export function convertSqlType(type: string) {
+export function generateColumnDefinition(config: {
+  externalType: string
+  autocolumn: boolean
+  name: string
+  presence: boolean
+  options?: string[]
+}) {
+  let { externalType, autocolumn, name, presence, options } = config
   let foundType = FieldType.STRING
-  const lcType = type.toLowerCase()
+  const lowerCaseType = externalType.toLowerCase()
   let matchingTypes = []
   for (let [external, internal] of Object.entries(SQL_TYPE_MAP)) {
-    if (lcType.includes(external)) {
+    if (lowerCaseType.includes(external)) {
       matchingTypes.push({ external, internal })
     }
   }
-  //Set the foundType based the longest match
+  // Set the foundType based the longest match
   if (matchingTypes.length > 0) {
     foundType = matchingTypes.reduce((acc, val) => {
       return acc.external.length >= val.external.length ? acc : val
     }).internal
   }
-  const schema: any = { type: foundType }
+
+  const constraints: {
+    presence: boolean
+    inclusion?: string[]
+  } = {
+    presence,
+  }
+  if (foundType === FieldType.OPTIONS) {
+    constraints.inclusion = options
+  }
+
+  const schema: any = {
+    type: foundType,
+    externalType,
+    autocolumn,
+    name,
+    constraints,
+  }
   if (foundType === FieldType.DATETIME) {
-    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lcType)
-    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lcType)
+    schema.dateOnly = SQL_DATE_ONLY_TYPES.includes(lowerCaseType)
+    schema.timeOnly = SQL_TIME_ONLY_TYPES.includes(lowerCaseType)
   }
   return schema
 }
@@ -276,8 +314,8 @@ export function shouldCopySpecialColumn(
 }
 
 /**
- * Looks for columns which need to be copied over into the new table definitions, like relationships
- * and options types.
+ * Looks for columns which need to be copied over into the new table definitions, like relationships,
+ * options types and views.
  * @param tableName The name of the table which is being checked.
  * @param table The specific table which is being checked.
  * @param entities All the tables that existed before - the old table definitions.
@@ -296,9 +334,12 @@ function copyExistingPropsOver(
     if (entities[tableName]?.created) {
       table.created = entities[tableName]?.created
     }
+
+    table.views = entities[tableName].views
+
     const existingTableSchema = entities[tableName].schema
     for (let key in existingTableSchema) {
-      if (!existingTableSchema.hasOwnProperty(key)) {
+      if (!Object.prototype.hasOwnProperty.call(existingTableSchema, key)) {
         continue
       }
       const column = existingTableSchema[key]
@@ -344,8 +385,8 @@ export function checkExternalTables(
       errors[name] = "Table must have a primary key."
     }
 
-    const schemaFields = Object.keys(table.schema)
-    if (schemaFields.find(f => invalidColumns.includes(f))) {
+    const columnNames = Object.keys(table.schema)
+    if (columnNames.find(f => invalidColumns.includes(f))) {
       errors[name] = "Table contains invalid columns."
     }
   }

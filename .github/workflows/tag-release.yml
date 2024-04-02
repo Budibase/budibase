@@ -1,4 +1,4 @@
-name: Tag release
+name: Release
 concurrency:
   group: tag-release
   cancel-in-progress: false
@@ -19,6 +19,8 @@ on:
 jobs:
   tag-release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag-release.outputs.version }}
 
     steps:
       - name: Fail if branch is not master
@@ -26,13 +28,14 @@ jobs:
         run: |
           echo "Ref is not master, you must run this job from master."
           exit 1
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       - run: cd scripts && yarn
       - name: Tag release
+        id: tag-release
         run: |
           cd scripts
           # setup the username and email.
@@ -41,3 +44,23 @@ jobs:
           BUMP_TYPE_INPUT=${{ github.event.inputs.versioning }}
           BUMP_TYPE=${BUMP_TYPE_INPUT:-"patch"}
           ./versionCommit.sh $BUMP_TYPE
+
+          cd ..
+          new_version=$(./scripts/getCurrentVersion.sh)
+          echo "version=$new_version" >> $GITHUB_OUTPUT
+
+  trigger-release:
+    needs: [tag-release]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: peter-evans/repository-dispatch@v2
+        with:
+          repository: budibase/budibase-deploys
+          event-type: release-prod
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          client-payload: |-
+            {
+              "TAG": "${{ needs.tag-release.outputs.version }}"
+            }

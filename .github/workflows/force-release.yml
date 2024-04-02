@@ -1,0 +1,46 @@
+name: Forced release
+concurrency:
+  group: tag-release
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ensure-is-master-tag:
+    name: Ensure is a master tag
+    runs-on: qa-arc-runner-set
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN || github.token }}
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Fail if ref is not a tag
+        run: |
+          if ! git show-ref -q --verify "refs/tags/${{ github.ref_name }}" 2>/dev/null; then
+            echo "'${{ github.ref_name }}' is not a valid tag."
+            exit 1
+          fi
+      - name: Fail if tag is not in master
+        run: |
+          if ! git merge-base --is-ancestor ${{ github.ref_name }} origin/master; then
+            echo "Tag is not in master. Release can only execute tags that are present on the master branch"
+            exit 1
+          fi
+
+  trigger-release:
+    needs: [ensure-is-master-tag]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peter-evans/repository-dispatch@v2
+        with:
+          repository: budibase/budibase-deploys
+          event-type: release-prod
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+          client-payload: |-
+            {
+              "TAG": "${{ github.ref_name }}"
+            }

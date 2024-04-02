@@ -96,6 +96,8 @@
   }
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
+<!-- svelte-ignore a11y-click-events-have-key-events -->
 <div class="spectrum-InputGroup">
   <div
     class:is-disabled={disabled || hbsValue.length}
@@ -184,7 +186,7 @@
       {#if environmentVariablesEnabled}
         <div on:click={() => showModal()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >
@@ -195,7 +197,7 @@
       {:else}
         <div on:click={() => handleUpgradePanel()} class="add-variable">
           <svg
-            class="spectrum-Icon spectrum-Icon--sizeS "
+            class="spectrum-Icon spectrum-Icon--sizeS"
             focusable="false"
             aria-hidden="true"
           >

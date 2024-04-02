@@ -271,6 +271,11 @@ export const SchemaTypeOptions = [
   { label: "Datetime", value: "datetime" },
 ]
 
+export const SchemaTypeOptionsExpanded = SchemaTypeOptions.map(el => ({
+  ...el,
+  value: { type: el.value },
+}))
+
 export const RawRestBodyTypes = {
   NONE: "none",
   FORM: "form",
@@ -305,6 +310,7 @@ export const BannedSearchTypes = [
   "formula",
   "json",
   "jsonarray",
+  "queryarray",
 ]
 
 export const DatasourceTypes = {

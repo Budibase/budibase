@@ -1,5 +1,6 @@
 import { generator } from "../../shared"
 import { ScreenRequest } from "../../types"
+
 const randomId = generator.guid()
 
 export const generateScreen = (roleId: string): ScreenRequest => ({
