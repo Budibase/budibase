@@ -1,5 +1,6 @@
 import { get } from "svelte/store"
 import download from "downloadjs"
+import { downloadStream } from "@budibase/frontend-core"
 import {
   routeStore,
   builderStore,
@@ -400,14 +401,17 @@ const closeSidePanelHandler = () => {
   sidePanelStore.actions.close()
 }
 
-const downloadFileHandler = async (action, _context) => {
+const downloadFileHandler = async action => {
   try {
-    let { url, fileName, type, attachment } = action.parameters
+    const { type } = action.parameters
     if (type === "attachment") {
-      const attachmentObject = JSON.parse(attachment)
-      url = attachmentObject.url
-      fileName = attachmentObject.name
+      const { tableId, rowId, attachmentColumn } = action.parameters
+      const res = await API.downloadAttachment(tableId, rowId, attachmentColumn)
+      await downloadStream(res)
+      return
     }
+
+    const { url, fileName } = action.parameters
 
     const response = await fetch(url)
 
