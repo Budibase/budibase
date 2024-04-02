@@ -1,3 +1,6 @@
+import stream from "stream"
+import archiver from "archiver"
+
 import { quotas } from "@budibase/pro"
 import { objectStore } from "@budibase/backend-core"
 import * as internal from "./internal"
@@ -264,10 +267,37 @@ export async function downloadAttachment(ctx: UserCtx) {
     ctx.throw(400, `'${columnName}' is not valid`)
   }
 
-  const attachment: RowAttachment = row[columnName][0]
-  ctx.attachment(attachment.name)
-  ctx.body = await objectStore.getReadStream(
-    objectStore.ObjectStoreBuckets.APPS,
-    attachment.key
-  )
+  const attachments: RowAttachment[] = row[columnName]
+
+  if (!attachments?.length) {
+    ctx.throw(404)
+  }
+
+  if (attachments.length === 1) {
+    const attachment = attachments[0]
+    ctx.attachment(attachment.name)
+    ctx.body = await objectStore.getReadStream(
+      objectStore.ObjectStoreBuckets.APPS,
+      attachment.key
+    )
+  } else {
+    const passThrough = new stream.PassThrough()
+    const archive = archiver.create("zip")
+    archive.pipe(passThrough)
+
+    for (const attachment of attachments) {
+      const attachmentStream = await objectStore.getReadStream(
+        objectStore.ObjectStoreBuckets.APPS,
+        attachment.key
+      )
+      archive.append(attachmentStream, { name: attachment.name })
+    }
+
+    const table = await sdk.tables.getTable(tableId)
+    const displayName = row[table.primaryDisplay || "_id"]
+    ctx.attachment(`${displayName}_${columnName}.zip`)
+    archive.finalize()
+    ctx.body = passThrough
+    ctx.type = "zip"
+  }
 }
